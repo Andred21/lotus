@@ -14,19 +14,19 @@ context_packet: null
 blocker: null
 lanes:
   lane-a:
-    active_feature: hardening
-    active_work_item: hardening-i18n-e-erros-api
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    active_feature: null
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: main-tree
-    branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4 na promoção
-    active_spec: docs/superpowers/specs/2026-08-29-hardening-i18n-e-erros-api-design.md
-    active_plan: docs/superpowers/plans/2026-08-29-hardening-i18n-e-erros-api.md
+    branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4; fechada em 2026-08-30, sem merge
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: hardening-performance-e-dados
+    last_completed_work_item: hardening-i18n-e-erros-api
   lane-b:
     active_feature: null
     active_work_item: prontidao-pre-nuvem
@@ -160,11 +160,11 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-08-30
+## Ocupação corrente — 2026-08-31
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `hardening-i18n-e-erros-api` (item 7) | Backend | main tree | `feat/hardening-i18n-e-erros-api` | `ready_for_review` |
+| `lane-a` | — | — | main tree | `feat/hardening-i18n-e-erros-api` (item 7 fechado em 2026-08-30, rebaseada sobre `main@afe273cf`; **sem merge**) | `idle` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -212,89 +212,28 @@ do script) e evidência em `audits/`. A sonda do DoD 1 é a ordem das tasks (wor
 não um commit de lockfile rebaixado; o script inclui `migrate --force` entre `pull` e `up`, que é o
 fluxo de deploy que o item 10 fixou (D7).
 
-**A `lane-a` fechou o item 6 em 2026-08-29** — `hardening-performance-e-dados`, narrativa integral
-em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
-`feat/hardening-performance-e-dados` nasceu de `main@f584432b`, foi **rebaseada sobre
-`main@b4101da9`** (que traz o item 18 da `lane-c`, PR #82) no fechamento, e **mesclou pelo PR #83**
-(merge `2ae48f31`). A colisão conhecida em `HistorialTable.tsx` foi resolvida nesse rebase, e cobrou uma extração: as
-linhas das duas lanes somadas passaram da régua de 150, então o filtro de estado saiu para
-`HistorialStatusFilter.tsx` — movimento literal, no molde que o `TurmaStatusFilter` registra desde
-2026-08-24. **E cobrou uma correção que não é do rebase, e sim deste bloco:** a reprovação
-intermitente do `pnpm test` que o gate anterior registrou como flake é um `setTimeout` do
-`useServerTable` disparando depois do teardown do jsdom (`window is not defined`), porque o vitest
-não tem `setupFiles` e nada desmonta o que o teste monta — os dois arquivos que vazavam ganharam
-`afterEach(cleanup)` e a suíte foi de 1 reprovação em 4 voltas para 6 verdes de 6; o mecanismo
-global virou a **P-69**. Essa correção **não entrou no PR #83** — ele mesclou em `2c66fbbe`, antes de
-ela existir, e a `main` passou algumas horas reproduzindo a reprovação; ela entrou pelo **PR #84**
-(merge `0a65d1e2`), de branch própria tirada da `main` já mesclada. As duas branches foram apagadas
-local e remotamente em 2026-08-29, com `git diff` vazio contra a `main` nas duas. A árvore é o main
-tree, que não se destrói, e voltou para `main`. A lane não recebe item novo sozinha: promoção é do
-João, contra o `backlog.md`.
-
-**Promoção do item 7 — 2026-08-29, `lane-a`.** Promoção explícita do João com a lane em `idle`,
-contra o `backlog.md`; `/planejar-bloco` recusou-se a promover sozinho e parou pedindo a seleção,
-como manda o gate. O item é marcado **`Contexto: não`**, então a lane nasce direto em
-`ready_for_planning` — não há Context Packet a gerar, e as fontes (`ADR-03`, `ADR-15`, fichas
-`D-07`, `D-18`, `D-36`) vivem todas no repositório. A branch `feat/hardening-i18n-e-erros-api` sai
-de `main@37e0e2d4`, que já é `origin/main` e traz os merges dos PRs #83, #84 e #85. **Árvore:** main
-tree, pelo precedente de todo bloco de backend (gate P-03). **Houve troca de foco:** `focused_lane`
-era `lane-c` e passou a `lane-a` neste mesmo commit, com o espelho do topo redesenhado junto — a
-`lane-c` não foi tocada.
-
-**Brainstorming do item 7 — 2026-08-29, spec escrita, a lane entra em `planning`.** Cinco decisões
-do João sobre uma medição que achou mais do que as fichas registravam: **D1** o backend traduz a
-frase do Dashboard e isso **derruba por escrito a D1 da spec de 2026-08-22** (a razão dela — "o
-`Accept-Language` hoje não existe" — não valia já naquele dia: o `SetLocale` e o header do axios
-existem); **D2** chave por domínio em `lang/<locale>/<dominio>.php`, recusados o `errors.php` único
-e o dicionário JSON com a frase como chave; **D3** o espanhol passa a ser só `es_CL` (o `lang/es/`
-é byte-idêntico ao `es_CL/` nos 8 arquivos e o `es_CL.json` nem existe); **D4** o bloco é só de
-backend — o `screenDetail` do front não vira a chave aqui, vira ficha; **D5** os defaults do
-framework também são localizados, por TIPO de exceção. Dois achados fora de ficha: o `detail` de
-401/403/404 é `getMessage()` cru em inglês, e o `phpunit.xml` não fixa `APP_LOCALE`, então a suíte
-herda o `.env` gitignored e roda em `en` na CI. Spec em
-`specs/2026-08-29-hardening-i18n-e-erros-api-design.md`.
-
-**Plano do item 7 — 2026-08-29, a lane entra em `ready_for_execution`.** Onze tasks em
-`plans/2026-08-29-hardening-i18n-e-erros-api.md`, na ordem da dependência: a fundação de locale e a
-catraca de paridade antes de qualquer chave; o envelope RFC 7807; depois um arquivo de `lang/` por
-domínio (`shared`, `commercial`, `operation`, `identity`, `certification`), com o Dashboard por
-último porque consome os rótulos de tipo de documento que as tasks de `operation` e `identity`
-publicam; a catraca contra literal só depois que todos os sítios estão limpos, senão ela reprovaria
-por causa do trabalho ainda não feito; e o DoD contra a API real no fim. A escrita do plano corrigiu
-uma medição da spec: o Dashboard tem **13 literais em 6 arquivos** mais uma constante, não 6 — e
-**quatro deles interpolam código de enum cru**, a doença da `D-38` num segundo lugar que a ficha não
-registrava. **Handoff: `executor: claude`** — o bloco toca o handler global de erro (lei §5.4),
-traduzir 41 recusas para três idiomas num produto de peso legal é julgamento e não mecânica, e três
-tasks dependem de conferir o código em volta antes de escrever. Execução exige
-`/executar-bloco hardening-i18n-e-erros-api`.
-
-**Execução das onze tasks — 2026-08-30, a lane entra em `ready_for_review`.** Retomada com a Task 3
-já commitada mas sem linha no ledger (sessão anterior cortada antes de logar); revisada contra o
-diff e a suíte antes de seguir. Cada task seguinte fechou o mesmo ciclo: RED, dicionário nos três
-locales, troca do sítio, GREEN, suíte cheia, achados fora da lista do plano (sempre teste
-pré-existente que casava a frase literal, nunca produção) corrigidos no mesmo commit, Pint, commit.
-**Dois desvios de forma reincidentes**, ambos já previstos pelo plano como contingência: `$missing`/
-`missingTypes()` é `array<TurmaDocumentType>` (enum), não array-shaped — `$doc->value`, nunca
-`$doc['value']` — nas Tasks 5 e 8 (esta com mais dois sítios que a ficha da D-38 não contava:
-`IdentityMetricsQuery` e `RedatorScopeQuery` interpolavam o código cru do documento de redator, não
-só o `OperationMetricsQuery` nomeado). **Um desvio de conteúdo, não de forma:** a Task 6 usou o
-literal es_CL REAL do `Redator.php`/`ArchiveRedatorAction.php` ("redactor") em vez do "relator" que
-o Step 3 do plano escreveu — a Global Constraint do plano ("es_CL é o texto de hoje, byte a byte")
-manda o código vencer o draft. A Task 9 fechou a catraca estática (`MensagemLiteralTest`), vista
-reprovando contra uma sonda negativa antes de confirmar verde. A Task 11 mediu o DoD contra a API
-real: os cinco primeiros PASS com evidência colada; o "500 mascarado" do título **não foi medido**
-(`APP_DEBUG=true` no container de dev desliga o próprio ramo que a sonda testaria) e ficou registrado
-como achado de cobertura, não como bloqueio. Gate final: suíte **1138 passed / 5 skipped**,
-`generated.ts` sem diff, `pnpm lint`/`build` verdes, Pint `passed` nos 87 arquivos PHP do bloco.
-**Duas pendências ficam para o `/fechar-sprint` deste bloco, não corrigidas aqui:** a `P-61`
-("`title` do `ProblemDetails` em português") ficou stale desde a Task 2 mas segue aberta em
-`abertas.md`/`README.md` — mover ficha para `encerradas.md` é mecânica de fechamento, não de
-execução; e a `P-70`, aberta pela Task 10 (`screenDetail.ts` ainda cala o `detail` do servidor),
-não entrou no índice `README.md` pelo mesmo motivo. A pendência real da Task 2
-(`ImmutableSystemRoleException`/`RedatorOnlyActionException` em português, fora do alcance da
-catraca da Task 9 porque usam parâmetro default de construtor, não `withMessages`) segue aberta e
-sem ficha própria — decisão de abrir uma cabe a quem fechar o bloco.
-
+**A `lane-a` fechou o item 7 em 2026-08-30** — `hardening-i18n-e-erros-api`, narrativa integral em
+`historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/hardening-i18n-e-erros-api` nasceu de `main@37e0e2d4`, foi **rebaseada sobre `main@afe273cf`**
+(que traz o item 19 da `lane-c`, PR #87, e o item 20 da `lane-b`, PR #86) no fechamento, e **ainda
+não mesclou** — o gate de fechamento não integra. Zero colisão de código: os oito conflitos do
+rebase foram todos em `docs/superpowers/`, resolvidos pela invariante de dono — **o espelho do topo
+não foi tocado**, porque a `focused_lane` passou a ser a `lane-b`, que está em `executing` com o
+item 20. O
+fechamento pagou o item 0 **remedindo o DoD contra a API real depois do review**, porque os quatro
+achados mudaram o envelope: recusa de domínio, 403 de redator, 404 de model binding **e** de rota
+inexistente, 422, 429, conta desativada no meio da sessão e as descrições do Dashboard, todos nos
+três locales, mais as três bordas de fallback (sem header, `es`, `fr-FR`) caindo em es-CL. Gate:
+suíte **1149 passed / 5 skipped**, `generated.ts` sem diff contra a `main` nem na árvore,
+`pnpm lint`/`build` verdes, pint `passed` nos 92 arquivos PHP do bloco. A **P-61** fechou por
+mecanismo e foi para `encerradas.md`; a **P-66** saiu do rastro, que é o primeiro fechamento
+posterior ao dela. **Nasceu uma pendência no próprio gate:** o 419 devolve `detail` literal em
+inglês nos três locales (`CSRF token mismatch.`) porque o `TokenMismatchException` traz `getMessage()`
+não vazio e vence o fallback do `detailFor()` — o `title` já sai localizado. É a **P-72**: o 419 não
+está entre os sete braços que a **D5** enumera, e o remédio é decisão de desenho do envelope
+(lei §5.4), não conserto de fechamento. A pendência que a execução deixou em aberto sem ficha — as
+recusas de role de sistema em português — **foi paga pelo review (Q-2)** e não virou ficha nenhuma.
+A lane volta a `idle` e não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -304,11 +243,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-30 | `hardening-i18n-e-erros-api` (paga a **P-61**, `D-07`, `D-18`, `D-36`, `D-38`, `D-58`; abre a **P-70**, a **P-71** e a **P-72**) | Item 7 da fila |
 | 2026-08-30 | `frontend-triagem-dos-audits-do-item-18` (paga a **P-63**; abre a `D-63`..`D-68` e rehospeda a **P-67** na `D-66`) | Item 19 da fila |
 | 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
 | 2026-08-29 | `hardening-performance-e-dados` (paga a **P-66** e o `D-15`; abre a **P-69**) | Item 6 da fila |
 | 2026-08-28 | `hardening-auditoria-privacidade-e-observabilidade` | Item 5 da fila |
-| 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

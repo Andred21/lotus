@@ -7,14 +7,40 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(uma: a **P-63**, fechada no bloco que este fechamento encerra. A **P-66** saiu neste
-fechamento (`frontend-triagem-dos-audits-do-item-18`, 2026-08-30), o primeiro posterior ao do
-`hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é mecanismo
-em migration, e o rastro dela está no git e na linha de entrega em `../historico/progress.md`. A
-**P-02** e a **P-33** saíram no fechamento do `hardening-performance-e-dados` (2026-08-29) e a
-**P-46** no do `frontend-estilizacao-padronizacao-de-componentes` (2026-08-29), os primeiros
-posteriores aos dos blocos que as encerraram. A **P-03** e a **P-15** saíram nos dois fechamentos de
-2026-08-25; os parágrafos adiante são o rastro delas.)*
+*(duas: a **P-61** e a **P-63**, fechadas nos dois blocos que fecharam em 2026-08-30. A **P-66**
+saiu no fechamento do `frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao
+do `hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é
+mecanismo em migration, e o rastro dela está no git e na linha de entrega em
+`../historico/progress.md`. A **P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de
+2026-08-29, e a **P-03** e a **P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro
+delas.)*
+
+### P-61 — os `title` do `ProblemDetails` estavam em português num produto es-CL
+
+**Fechada em 2026-08-30**, no `hardening-i18n-e-erros-api` (Task 2), por mecanismo: os sete `title`
+do `ProblemDetails::fromException` e o `detail` mascarado do 500 saíram do código e passaram a
+`lang/<locale>/problem.php` nos três locales, com o `LocaleParityTest` recusando chave que exista em
+um só. Medido contra a API real no gate de fechamento (2026-08-30), sem tocar em `generated.ts`:
+
+```
+404  es-CL Recurso no encontrado  | pt-BR Recurso não encontrado | en Resource not found
+403  es-CL Acceso denegado        | pt-BR Acesso negado          | en Access denied
+422  es-CL Error de validación    | pt-BR Erro de validação      | en Validation error
+401  es-CL No autenticado         | pt-BR Não autenticado        | en Not authenticated
+429  es-CL Demasiadas solicitudes | pt-BR Muitas solicitações    | en Too many requests
+```
+
+O `title` do 500 (`Error interno`) e o `detail` mascarado (`Ocurrió un error inesperado. Vuelva a
+intentarlo.`) não puderam ser medidos ao vivo — `APP_DEBUG=true` no container de dev desliga o
+próprio ramo de mascaramento —, e ficam provados pelas chaves nos três arquivos e pelo
+`EnvelopeLocalizadoTest`. A decisão de idioma que a ficha reservava ao João foi tomada por ele no
+brainstorming de 2026-08-29 (**D5** da spec): os defaults do framework são localizados por TIPO de
+exceção.
+
+O que a ficha **não** cobria e ficou aberto é o 419, que nasceu ficha própria — a
+[P-72](./abertas.md).
+
+---
 
 ### P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
 

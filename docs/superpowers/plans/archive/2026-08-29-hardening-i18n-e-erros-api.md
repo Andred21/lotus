@@ -8,7 +8,7 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3 · PHPUnit · `lang/` do Laravel · RFC 7807 via `App\Shared\Exceptions\ProblemDetails`.
 
-**Spec:** [`specs/2026-08-29-hardening-i18n-e-erros-api-design.md`](../specs/2026-08-29-hardening-i18n-e-erros-api-design.md)
+**Spec:** [`specs/2026-08-29-hardening-i18n-e-erros-api-design.md`](../../specs/archive/2026-08-29-hardening-i18n-e-erros-api-design.md)
 
 ## Global Constraints
 
