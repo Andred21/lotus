@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { AppTag } from '@shared/ui'
+import { AppTag, technicalDataClass } from '@shared/ui'
 import { formatIsoDate } from '@shared/lib'
 import type { DashboardSeverity } from '@shared/types/generated'
 
@@ -69,7 +69,7 @@ export function DashboardItemRow({
       </span>
       {date && (
         <span
-          className="order-2 ml-auto shrink-0 font-mono text-xs sm:order-0 sm:ml-0"
+          className={`order-2 ml-auto shrink-0 ${technicalDataClass} text-xs sm:order-0 sm:ml-0`}
           style={{ color: 'var(--text-color-secondary)' }}
         >
           {formatIsoDate(date)}

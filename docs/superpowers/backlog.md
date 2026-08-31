@@ -238,78 +238,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 
 ---
 
-## 19. `frontend-triagem-dos-audits-do-item-18`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não por padrão
-**Dependência satisfeita:** o item 18 fechou em 2026-08-29.
-**Fonte:** `audits/2026-08-28-item18-fase{1,2,3,4}.md` — quatro runs de `/lotus-ui-review` no
-navegador contra `refactor/frontend-estilizacao-componentes @ ddc37f36`, uma por fase do item 18.
-
-**Objetivo:** triar os 49 achados dessas quatro runs — **A:21 · B:26 · C:2** — separando defeito de
-decisão de design e de falso-positivo, e corrigir só o que sobreviver à triagem. **O audit reporta,
-não autoriza:** cada achado entra com veredito próprio, e recusar com razão escrita é resultado
-válido.
-
-**Por que triar antes de executar:** a fase 1 mediu e **contradisse o plano do item 18** — o
-presupuesto detail não tem "Voltar + CTA lado a lado"; "Volver a Comercial" ocupa linha própria
-acima do título. O agente que erra a favor erra contra. Além disso o contrato da skill teto em 10
-achados por run pressiona a encher a lista: parte dos `A` é registro de linha de base, não dívida.
-
-**Duas raízes explicam mais de um terço da lista** — tratá-las é mais barato que 49 correções item
-a item:
-- **`AppButton` sem `variant` cai no `.p-button` preenchido do Lara.** Explica o `C` da fase 4
-  (card de redator selecionado e não selecionado idênticos, `rgb(37,165,228)` sobre 94% do card nos
-  dois estados e nos dois temas), o UI-08 da fase 3 (os seis diálogos de certificação sem
-  `variant="primary"`, incluindo o que confirma emissão) e a ausência de delta do CTA provada na
-  fase 1.
-- **Grafia copiada literal em vez de consumida da peça** — o defeito que a rule já nomeia e que
-  reincidiu: fase 2 UI-04 (`AgendaPanel` e `KpiRow` copiam `sectionLabelClass` para emitir `h4`,
-  porque `SectionLabel` só aceita `h2 | h3`), fase 3 UI-02, fase 4 UI-06.
-
-**Os dois `C`:**
-- **fase 4 UI-01** — cards de redator indistinguíveis. Peso documental: o conjunto de redator
-  habilitado não dá para conferir na tela antes de salvar.
-- **fase 2 UI-10** — a 390x844 o card "Agenda" corta 26px do próprio conteúdo
-  (`clientWidth 261` contra `scrollWidth 287`, `overflow-hidden`, sem barra); o `truncate` funciona
-  mas a reticência cai fora da área visível, e o `title` de recuperação depende de hover.
-
-**Barato de verificar, mecanismo já rastreado até a linha** (leitura de código confirma ou derruba,
-sem navegador): fase 4 UI-02 (`useFieldProps` não devolve `invalid`, então `.p-invalid` nunca é
-alcançado — ~55 campos, e o Login escapa porque passa a prop na mão); fase 4 UI-03 (foco cai no
-`body` após submit recusado, sem live region); fase 3 UI-06 (`AppDataTable` fixa `dataKey="id"`
-contra `enrollment_id`, com erro de `key` determinístico no console); fase 3 UI-08 e fase 4 UI-01,
-acima.
-
-**Decisão do João, não conserto:** o degrau entre faixa de seção e título de card (fase 2 UI-02 e
-UI-03 — o `h3` do card é 33% maior que o `h2` que o encabeça, e o `h3` do Perfil é byte a byte a
-grafia do `h2` do Dashboard); o "1250 UF" do KPI de cotizaciones (fase 2 UI-08 — dois dados
-encostados que leem como um, e em es-CL o espaço é separador de milhar válido); a escala de raio
-com dois degraus em vez de três (fase 3 UI-05).
-
-**Suspeitos de falso-positivo, a derrubar ou confirmar primeiro:** fase 3 UI-09 (duplo fetch de
-`/api/certificates/emission-panel` — o próprio agente não isolou o gatilho; provável `staleTime` ou
-refetch por foco de janela do TanStack Query) e fase 3 UI-04 (opacidade de `disabled` divergindo por
-tema, registrada pelo agente como incoerência e **explicitamente não** como falha WCAG).
-
-**Sem evidência, não é achado — é lacuna a fechar quando houver dado:** `certificates` = 0 e
-`course_certificate_templates` = 0, então a porta 4 de `CertificateEligibility`
-(`assertTemplateDisponivel`) devolve `emission_blocked = 'sin_plantilla'` para toda turma, inclusive
-a turma 3 (`concluida`, 13 matrículas aprovadas, 1 redator designado). Ficaram sem pintar: o ramo
-`valid` de `/validar/<uuid>`, os seis diálogos da jornada, a costura header/body/footer do
-`AppDialog` nos dois temas e o **veredito do `CertificateFolio`** — que só renderiza em
-`ValidationPage.tsx:35` e `IssuedDialog.tsx:85`, e cujo docblock submete os próprios degraus de
-tamanho e tracking ao julgamento de uma run de `/lotus-ui-review`. É a primeira coisa a rever quando
-existir certificado real.
-
-**Fora:** redesenho de tela; as superfícies que o item 16 ainda não cobriu (Cursos, Pessoas,
-Administração têm run própria lá); qualquer correção do item 18 que já esteja no bloco ativo.
-
-**DoD:** todo achado das quatro runs com veredito escrito — corrigido com medida, virou ficha `D-*`,
-ou recusado com razão; nenhum `C` aberto; as correções que nascerem de raiz compartilhada resolvidas
-na raiz, não no sítio.
-
----
-
 ## 20. `prontidao-pre-nuvem`
 
 **Prioridade:** P0 para deploy (antecede o 10) · **Frente:** CI/GitHub/Infra · **Contexto:** não
@@ -350,6 +278,12 @@ digests impressos; catracas do frontend verdes; docs e estado coerentes.
 | `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
 | `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
 | `D-32` | Ordem de foco de `/perfil` abaixo de `xl` — a correção existiu e foi revertida por decisão de layout (2026-08-18). Escolher entre as três saídas da ficha antes de qualquer bloco. |
+| `D-63` | **Escala de heading** (f2 UI-02/03 do audit de 2026-08-28): a faixa de seção (`h2`, 12px caixa alta) é menor que o título de card (`h3`, 16px), e o `h3` do Perfil é byte a byte o `h2` do Dashboard. São dois REGISTROS — eyebrow e título — codificando profundidade por caixa e posição, não por corpo. Recomendação: **manter**; se o João quiser escala monotônica, o título de card sobe para `typography.ts` (hoje literal em `AppCard.tsx:147`) e o degrau muda numa constante. **Fato acrescentado pela run 5 (2026-08-30):** em `/validar/<uuid>` válido o `h1` do veredito ("Certificado válido") mede 18px/600 enquanto o folio ao lado mede 30px — o identificador é o maior texto da página pública e a resposta que a pessoa foi checar sai um degrau abaixo dele; a run manteve o `CertificateFolio` como está (medido nas três viewports, cabe a 390) e o degrau que ela recomenda mover é o do `h1`, que é desta ficha. Gatilho: decisão do João. |
+| `D-64` | **"1250 UF"** (f2 UI-08): no KPI de cotizaciones a contagem (Archivo 30px) e a grandeza (mono 12px) se encostam e leem como um número; em es-CL o espaço é separador de milhar válido. Recomendação: separador visível na MESMA linha — `·` com `aria-hidden` entre os dois, ou rótulo curto antes do valor —, sem terceira linha (razão em `KpiRow.tsx:104`). Gatilho: decisão do João. |
+| `D-65` | **Reserva da coluna presa em tablet** (f3 UI-01): `stickyActionsColumn('8rem')` fixo contra `tableWidths` em % sobre `min-w-[48rem]` — a 1024px a ação cobre 99px (65%) da última coluna de dado, em todas as 12 tabelas com ação presa. Duas direções: reserva em % do mesmo orçamento (reabre as 12 medições do item 17) ou sinal de rolagem no wrapper + `min-width` menor onde a reserva não cabe. Recomendação: a segunda, medida nas 12. Gatilho: bloco de tabelas. |
+| `D-66` | **Escala de raio** (f3 UI-05 + **P-67**): a rule diz `lg`/`md`/`full`; a tela tem 4px para botão, input e tag (tema), `rounded` = 4px, `rounded-md` (6px) só nos banners do `FormField`, `rounded-full` só no pill de contagem do `AppCard`. Recomendação: superfície `rounded-lg`; controle, faixa fina **e tag** herdam o raio do tema (4px = `rounded`); `rounded-full` só para círculo e cápsula de contagem; banners voltam ao raio do tema; os 10 sítios da P-67 se classificam por essa régua e a catraca nasce depois. Gatilho: decisão do João; hospeda a P-67. |
+| `D-67` | **Corpo do `notFound` público** (f3 UI-07): `/validar/<uuid>` inexistente mostra só o `h1` — zero `a`/`button`, sem eco do identificador. Recomendação: ecoar o identificador consultado em `identifierClass` e uma linha de passo seguinte ("verifica el código impreso o contacta a Lotus"), sem link e sem dado do certificado — texto de página pública de peso legal. Gatilho: decisão do João/Lotus sobre a redação. |
+| `D-68` | **Borda do input no tema claro** (f4 UI-05): `#cbd5e1` sobre `#ffffff` mede 1,48:1; a 1.4.11 pede 3:1 no limite do controle quando ele é o único indicador (o escuro tem poço de fundo e não depende do traço). Nenhum `-400` do Tailwind passa (slate-400 2,36:1); slate-500 `#64748b` mede 4,76:1. Recomendação: slate-500 na borda de repouso, via `scripts/generate-brand-theme.mjs`, medida nos dois temas antes de entrar. Gatilho: decisão do João — muda a cara de todo input do claro. |
 | `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
 | `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
 | `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |

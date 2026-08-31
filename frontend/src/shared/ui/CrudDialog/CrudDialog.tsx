@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDialog } from '../AppDialog'
 import { AppButton } from '../AppButton'
@@ -10,6 +10,27 @@ import type { DialogMode } from '@shared/lib'
  *
  * Os botões vivem no footer, inclusive o "Editar" do modo view: o header fica
  * só com título e conteúdo contextual (`headerExtra`).
+ *
+ * **Foco após envio reprovado.** O botão de salvar recebe `loading={pending}`;
+ * o Prime o desabilita, o navegador solta o foco de elemento `disabled` para o
+ * `<body>`, e ao reabilitar ninguém o traz de volta (f4 UI-03, run de
+ * 2026-08-28). Na descida de `pending` com o diálogo ainda aberto, o foco vai
+ * ao primeiro `[aria-invalid="true"]` do corpo — o `FormField` marca cada um,
+ * e o leitor de tela anuncia o `aria-describedby` dele —, e, sem campo
+ * inválido, volta ao botão de salvar se tiver caído no `<body>`. Mora aqui
+ * porque é este componente que conhece a borda de `pending`; ele não conhece
+ * os erros, e não precisa: o DOM já os carrega.
+ *
+ * **Foco na abertura.** O `Dialog` do Prime foca o primeiro focável que
+ * encontra, e esse é o botão de maximizar do header: quem abre por teclado
+ * começa por um controle de janela e gasta um Tab para chegar ao formulário
+ * (run 5 de 2026-08-30). Na subida de `visible` o foco vai ao primeiro controle
+ * do corpo; corpo sem controle (o modo `view` de puro texto) recebe o foco no
+ * próprio container, que é `tabIndex={-1}` para isso. Quem aponta o foco é este
+ * componente, então o `focusOnShow` do Prime sai — os dois disputariam, e o do
+ * Prime roda DEPOIS, num efeito de transição, e venceria. Por isso o foco entra
+ * pelo `onShow` do próprio Dialog, e não por um efeito nosso: no commit em que
+ * o efeito rodaria o conteúdo do portal ainda não está no documento.
  */
 export function CrudDialog({
   visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, submitLabel, headerExtra, children,
@@ -40,6 +61,30 @@ export function CrudDialog({
   children: ReactNode
 }) {
   const { t } = useTranslation()
+  const corpo = useRef<HTMLDivElement>(null)
+  const rodape = useRef<HTMLDivElement>(null)
+  const estavaPendente = useRef(false)
+
+  useEffect(() => {
+    const caiu = estavaPendente.current && !pending
+    estavaPendente.current = Boolean(pending)
+    if (!caiu || !visible) return
+    const invalido = corpo.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
+    if (invalido) {
+      invalido.focus()
+      return
+    }
+    if (document.activeElement === document.body) {
+      rodape.current?.querySelector<HTMLElement>('button:last-of-type')?.focus()
+    }
+  }, [pending, visible])
+
+  const focarCorpo = () => {
+    const primeiro = corpo.current?.querySelector<HTMLElement>(
+      'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])',
+    )
+    ;(primeiro ?? corpo.current)?.focus()
+  }
 
   const header = (
     <div className="flex items-center gap-4 pr-6">
@@ -50,12 +95,12 @@ export function CrudDialog({
 
   const footer =
     mode === 'view' ? (
-      <div className="flex justify-end gap-2">
+      <div ref={rodape} className="flex justify-end gap-2">
         <AppButton label={t('common.close')} text disabled={closeBlocked} onClick={onHide} />
         {onEdit && <AppButton variant="primary" label={t('common.edit')} icon="pi pi-pencil" onClick={onEdit} />}
       </div>
     ) : (
-      <div className="flex justify-end gap-2">
+      <div ref={rodape} className="flex justify-end gap-2">
         <AppButton label={t('common.cancel')} text disabled={closeBlocked} onClick={onHide} />
         <AppButton
           variant="primary"
@@ -75,9 +120,11 @@ export function CrudDialog({
       onHide={onHide}
       closable={!closeBlocked}
       closeOnEscape={!closeBlocked}
+      focusOnShow={false}
+      onShow={focarCorpo}
       footer={footer}
     >
-      {children}
+      <div ref={corpo} tabIndex={-1} className="outline-none">{children}</div>
     </AppDialog>
   )
 }

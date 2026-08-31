@@ -35,7 +35,7 @@ export function ProfileSecuritySection({ email }: { email: string }) {
 
   return (
     <AppCard className="p-4">
-      <FormSection title={t('profile.security.title')} />
+      <FormSection title={t('profile.security.title')} as="h2" />
 
       <form
         onSubmit={(e) => {
@@ -109,6 +109,7 @@ export function ProfileSecuritySection({ email }: { email: string }) {
 
         <div>
           <AppButton
+            variant="primary"
             type="submit"
             label={t('profile.security.save')}
             icon="pi pi-lock"

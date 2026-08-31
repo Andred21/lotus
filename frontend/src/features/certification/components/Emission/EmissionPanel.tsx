@@ -14,6 +14,7 @@ export function EmissionPanel() {
   const s = useEmissionPanelState()
   const turmaInputId = useId()
   const desdeInputId = useId()
+  const blockedId = useId()
 
   const turma = s.selected
 
@@ -89,16 +90,18 @@ export function EmissionPanel() {
             </p>
           </AppCard>
 
-          {turma.emission_blocked !== null && (
-            <AppTag severity="warning" value={t(`certificate.blocked.${turma.emission_blocked}`)} />
-          )}
-
-          <div className="flex justify-end">
+          {/* Motivo do bloqueio na MESMA linha do CTA que explica (era irmã
+            * solta a 536px, f3 UI-03); `aria-describedby` liga os controles. */}
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {turma.emission_blocked !== null && (
+              <AppTag id={blockedId} severity="warning" value={t(`certificate.blocked.${turma.emission_blocked}`)} />
+            )}
             <AppButton
               variant="primary"
               icon="pi pi-verified"
               label={t('certificate.emitAllPending', { count: s.counts.pendientes })}
               disabled={s.counts.pendientes === 0 || turma.emission_blocked !== null}
+              aria-describedby={turma.emission_blocked !== null ? blockedId : undefined}
               onClick={() => s.setBatchIssuing(true)}
             />
           </div>
@@ -109,6 +112,7 @@ export function EmissionPanel() {
               counts={s.counts}
               loading={s.loading}
               blocked={turma.emission_blocked !== null}
+              blockedReasonId={turma.emission_blocked !== null ? blockedId : undefined}
               onEmit={s.setIssuing}
               onView={(enrollment) => {
                 if (!enrollment.certificate) return

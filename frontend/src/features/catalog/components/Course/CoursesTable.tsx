@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, stickyActionsColumn } from '@shared/ui'
+import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, stickyActionsColumn, technicalDataClass } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
@@ -79,14 +79,14 @@ export function CoursesTable({
         header={t('course.workloadHours')}
         style={largura.workload}
         body={(c: CourseData) => (
-          <span className="font-semibold">{c.workload_hours}</span>
+          <span className={`${technicalDataClass} font-semibold`}>{c.workload_hours}</span>
         )}
       />
       <AppColumn
         header={t('course.redatorCount')}
         style={largura.redatorCount}
         body={(c: CourseData) => (
-          <span className="font-semibold">{c.redator_ids.length}</span>
+          <span className={`${technicalDataClass} font-semibold`}>{c.redator_ids.length}</span>
         )}
       />
       {archived && archivedColumns(t)}

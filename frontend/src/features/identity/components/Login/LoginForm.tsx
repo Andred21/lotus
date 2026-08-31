@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { AppInputText, AppPassword, AppButton, FormErrorBanner, pageTitleClass } from "@shared/ui";
-import { dangerText } from "@shared/styles/tokens";
+import { AppInputText, AppPassword, AppButton, FormErrorBanner, FormField, pageTitleClass } from "@shared/ui";
 import { useLoginForm } from "../../hooks/useLoginForm";
 
 interface Props {
@@ -52,54 +51,31 @@ export function LoginForm({ email, onEmailChange, autoFocusTitle }: Props) {
 
       <FormErrorBanner message={generalError} variant="inline" />
 
-      {/* O rótulo NÃO embrulha o campo: o olho da senha vive dentro do
-          AppPassword e tem nome acessível próprio, então um <label> por fora
-          somava os dois e o campo passava a se chamar "Contraseña Mostrar
-          contraseña" (UI-03 do review de 2026-08-13). Com htmlFor/id o rótulo
-          nomeia só o input.
-          O preço do htmlFor é que o erro do campo deixa de estar dentro do
-          rótulo, e aí só existe para quem vê a tela: `aria-describedby` o
-          reassocia e `aria-invalid` marca o estado, que o PrimeReact não
-          escreve (o `invalid` dele só pinta `.p-invalid`). Este par é o molde
-          que a P-37 manda copiar para o FormField — o `describedby` faz parte
-          do molde, não é acabamento. */}
-      <div className="flex flex-col gap-1">
-        <label htmlFor="login-email" className="font-medium" style={{ color: 'var(--text-color)' }}>{t("login.email")}</label>
+      {/* `FormField`: id por contexto, erro por prop, `invalid`/`aria-*` pelo
+          contexto (Task 2). O molde da P-37 nasceu aqui à mão e hoje vive no
+          `FormField` — dois recibos de rótulo (16px/500 aqui, 14px/400 lá) era
+          o custo de não consumi-lo (f4 UI-06, run de 2026-08-28). */}
+      <FormField label={t("login.email")} error={fieldErrors?.email?.[0]}>
         <AppInputText
-          id="login-email"
           leftIcon="pi pi-envelope"
           type="email"
           autoComplete="username"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
           placeholder={t("login.emailPlaceholder")}
-          invalid={!!fieldErrors?.email}
-          aria-invalid={!!fieldErrors?.email}
-          aria-describedby={fieldErrors?.email ? "login-email-error" : undefined}
         />
-        {fieldErrors?.email && (
-          <small id="login-email-error" style={{ color: dangerText }}>{fieldErrors.email[0]}</small>
-        )}
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="login-password" className="font-medium" style={{ color: 'var(--text-color)' }}>{t("login.password")}</label>
+      <FormField label={t("login.password")} error={fieldErrors?.password?.[0]}>
         <AppPassword
-          inputId="login-password"
           leftIcon="pi pi-lock"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          invalid={!!fieldErrors?.password}
-          aria-invalid={!!fieldErrors?.password}
-          aria-describedby={fieldErrors?.password ? "login-password-error" : undefined}
         />
-        {fieldErrors?.password && (
-          <small id="login-password-error" style={{ color: dangerText }}>{fieldErrors.password[0]}</small>
-        )}
-      </div>
+      </FormField>
 
-      <AppButton type="submit" label={t("login.submit")} loading={isSubmitting} />
+      <AppButton variant="primary" type="submit" label={t("login.submit")} loading={isSubmitting} />
 
       {/* Continua `<Link>` e não botão: o destino é URL de verdade, então href,
           botão do meio e menu de contexto seguem funcionando, e o back do

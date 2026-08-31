@@ -98,4 +98,25 @@ describe('os wrappers de shared/ui se associam ao rótulo do FormField', () => {
 
     expect(screen.getByRole('textbox').id).toBe('id-do-chamador')
   })
+
+  /**
+   * A TERCEIRA metade da associação, medida no CourseDialog em 422 (f4 UI-02 da
+   * run de 2026-08-28): `aria-invalid` chegava, `.p-invalid` não. A prop
+   * `invalid` do Prime é a única porta para a classe, e `useFieldProps` não a
+   * devolvia — a invalidez existia para o leitor de tela e não para quem vê.
+   * O Login escapava porque passa `invalid` na mão (P-37 com outra roupa).
+   */
+  it.each(COM_CONTROLE)('o erro PINTA o %s: `.p-invalid` chega ao controle', (_nome, controle) => {
+    const { container } = render(
+      <FormField label="Campo" error="Requerido">
+        {controle}
+      </FormField>,
+    )
+    expect(container.querySelector('.p-invalid')).not.toBeNull()
+  })
+
+  it('sem erro nenhum wrapper veste `.p-invalid`', () => {
+    const { container } = render(<FormField label="Campo"><AppInputText /></FormField>)
+    expect(container.querySelector('.p-invalid')).toBeNull()
+  })
 })

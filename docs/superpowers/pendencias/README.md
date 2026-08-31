@@ -21,14 +21,13 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (32)
+## Abertas (31)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-63 | O `role="list"` que o mini-reset exige não alcança lista renderizada por biblioteca — as 2 legendas do Recharts ficam sem ele | — (hospedeiro fechado em 2026-08-29 sem pagá-la; rehospedar é do João) | bloco que tocar gráfico ou o mini-reset e puder escolher o remédio; revisar 2026-10-31 |
-| P-67 | A escala de raio está escrita na rule e 10 sítios de `features/` ficaram fora dela, sem catraca — ela nasceria vermelha | `frontend-triagem-dos-audits-do-item-18` | bloco que triar os achados de raio das runs, ou que toque os 9 arquivos; revisar 2026-10-31 |
+| P-67 | A escala de raio está escrita na rule e 10 sítios de `features/` ficaram fora dela, sem catraca — ela nasceria vermelha | `D-66` (decisão do João) | a D-66 decidida — os 10 sítios se classificam pela régua escolhida; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -69,10 +68,16 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (1)
 
-**A P-66 fechou no `hardening-performance-e-dados` (2026-08-29) e está em rastro** — a poda de
-`login_logs` varria `created_at` sem índice, e a migration `2026_08_28_000001_add_performance_indexes`
-criou o `login_logs_created_at_index` que o `EXPLAIN` do `DELETE ... LIMIT 1000` passou a usar. Sai
-no próximo `/fechar-sprint` posterior a este.
+**A P-63 fechou no `frontend-triagem-dos-audits-do-item-18` (2026-08-29) e está em rastro** — a
+legenda do `AppLineChart` ganhou conteúdo próprio (`<ul role="list">`) e o mini-reset deixou de
+tirar semântica de lista renderizada por biblioteca. Sai no próximo `/fechar-sprint` posterior a
+este.
+
+**A P-66 saiu no fechamento do `frontend-triagem-dos-audits-do-item-18` (2026-08-30)**, o primeiro
+posterior ao do `hardening-performance-e-dados`, que a encerrou por mecanismo: a migration
+`2026_08_28_000001_add_performance_indexes` criou o `login_logs_created_at_index` que o `EXPLAIN` do
+`DELETE ... LIMIT 1000` passou a usar. O rastro fica no git e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-02, a P-33 e a P-46 saíram neste fechamento e no do item 18**, os primeiros posteriores aos dos
 blocos que as encerraram. A retenção de `audits` e de `login_logs` saiu por mecanismo

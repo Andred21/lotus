@@ -29,6 +29,11 @@ export function useEmissionPanel(enabled = true, desde?: string) {
         })
         .then((r) => r.data),
     enabled,
+    // O Historial monta um segundo observador desta chave (Reemitir); com
+    // `staleTime` 0 ele refazia o GET ao sair da aba Emisión (f3 UI-09).
+    // Precedente: `useCrudPage`/`CourseStep`. A invalidação pós-emissão
+    // ignora `staleTime`, então emitir continua repintando o painel.
+    staleTime: 30_000,
   })
 }
 

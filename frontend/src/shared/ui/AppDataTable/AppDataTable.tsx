@@ -103,6 +103,8 @@ export function AppDataTable<T extends DataTableValueArray>({
 
   return (
     <DataTable
+      // Default, não lei: o chamador cuja linha não tem `id` passa o seu
+      // (`EmissionStudentsTable`, `enrollment_id`) — o spread abaixo vence.
       dataKey="id"
       removableSort
       rowHover

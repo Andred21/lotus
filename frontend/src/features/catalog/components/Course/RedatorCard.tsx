@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { IdentityCell, AppButton, AppSelectableCard, AppTag } from '@shared/ui'
+import { IdentityCell, AppButton, AppSelectableCard, AppTag, identifierClass } from '@shared/ui'
 import { idoneidade, IDONEIDADE_SEVERITY } from '@shared/lib'
 import type { RedatorData } from '@shared/types/generated'
 
@@ -38,7 +38,7 @@ export function RedatorCard({
     >
       <IdentityCell
         title={redator.name}
-        description={<span className="font-mono">{redator.rut}</span>}
+        description={<span className={identifierClass}>{redator.rut}</span>}
         image={redator.photo_url}
       />
       <AppTag value={t(`suitability.${status}`)} severity={IDONEIDADE_SEVERITY[status]} />

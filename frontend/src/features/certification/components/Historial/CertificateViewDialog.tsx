@@ -34,9 +34,10 @@ export function CertificateViewDialog({ certificateId, certificate, loading, err
 
   const footer = (
     <div className="flex justify-end gap-2">
-      <AppButton label={t('common.close')} outlined onClick={onHide} />
+      <AppButton label={t('common.close')} text onClick={onHide} />
       {certificate && (
         <AppButton
+          variant="primary"
           label={t('certificate.downloadPdf')}
           icon="pi pi-download"
           loading={pdf.pending}

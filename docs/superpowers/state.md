@@ -51,13 +51,13 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-estilizacao-componentes   # aberta de main@b7283736; fechada em 2026-08-29, SEM merge
+    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4; fechada em 2026-08-30, sem merge ainda
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
+    last_completed_work_item: frontend-triagem-dos-audits-do-item-18
 last_completed_work_item: frontend-estilizacao-padronizacao-de-componentes
 state_basis_commit: 24e0f037
 updated_at: 2026-08-29T16:10:00-03:00
@@ -160,13 +160,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-08-29
+## Ocupação corrente — 2026-08-30
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree (em `main`) | — (`feat/hardening-performance-e-dados` mesclou, PR #83, e foi apagada) | `idle` |
 | `lane-b` | `prontidao-pre-nuvem` (item 20) | CI/GitHub/Infra | `../lotus-infra` | `chore/prontidao-pre-nuvem` | `ready_for_execution` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-estilizacao-componentes` (fechada em 2026-08-29, **sem merge**) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -232,16 +232,6 @@ tree, que não se destrói, e voltou para `main`. A lane não recebe item novo s
 João, contra o `backlog.md`.
 
 
-> **A linha da `lane-c` acima está divergente, e não é esta lane que a corrige.** Ela diz
-> `refactor/frontend-estilizacao-componentes` "fechada em 2026-08-29, **sem merge**"; a branch
-> mesclou (PR #82) e **já não existe** no repositório — o `git checkout` dela falha com
-> `did not match any file(s) known to git`. A `lane-c` também estava com a `main` em checkout na
-> worktree `../fix-frontend`, o que impedia o main tree de voltar para `main`; no fechamento do item
-> 6 essa worktree foi posta em **detached** no mesmo commit (`0a65d1e2`, árvore limpa, conteúdo
-> idêntico), sem tocar em arquivo nenhum dela. Registro aqui em vez de reescrever a linha porque a
-> invariante de dono manda que cada lane escreva só o que é dela, e a de divergência manda PARAR e
-> mostrar em vez de escolher fonte. A `lane-c` (ou o João) fecha isso quando retomar a árvore.
-
 ## Itens fechados — ponteiro, não narrativa
 
 O que cada bloco **entregou** está em `historico/progress.md`, uma linha com plano, spec, packet e
@@ -250,11 +240,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-08-30 | `frontend-triagem-dos-audits-do-item-18` (paga a **P-63**; abre a `D-63`..`D-68` e rehospeda a **P-67** na `D-66`) | Item 19 da fila |
 | 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
 | 2026-08-29 | `hardening-performance-e-dados` (paga a **P-66** e o `D-15`; abre a **P-69**) | Item 6 da fila |
 | 2026-08-28 | `hardening-auditoria-privacidade-e-observabilidade` | Item 5 da fila |
 | 2026-08-27 | `frontend-hardening-final` (paga a **P-46**, `D-03`, `D-33`, `D-35`) | Item 8 da fila |
-| 2026-08-26 | `cicd-ci-governanca-e-artefato` | Item 11 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

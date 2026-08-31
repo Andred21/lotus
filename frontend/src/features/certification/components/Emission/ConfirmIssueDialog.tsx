@@ -39,8 +39,9 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
 
   const footer = (
     <div className="flex justify-end gap-2">
-      <AppButton label={t('common.cancel')} outlined disabled={issue.isPending} onClick={onHide} />
+      <AppButton label={t('common.cancel')} text disabled={issue.isPending} onClick={onHide} />
       <AppButton
+        variant="primary"
         label={t('certificate.confirmEmit')}
         icon="pi pi-check"
         disabled={redatorId == null}

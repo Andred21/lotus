@@ -61,7 +61,23 @@ export function QuoteRow({
 
       <div className="flex items-center gap-2">
         {onReject && quote.status !== 'rejected' && (
-          <AppButton label={t('quote.reject')} severity="danger" outlined onClick={onReject} />
+          /* `px-3 py-2.5 text-sm`: a geometria do `compact` que o Aprobar ao
+           * lado usa, 44px/14px, escrita aqui porque o `compact` também pinta a
+           * superfície da marca — e esta é a recusa. Com a geometria cheia do
+           * tema o destrutivo saía 2px mais alto, 32px mais largo e dois pontos
+           * maior que o construtivo (f1 UI-02, run de 2026-08-28); com o
+           * `size="small"` do Prime sobrava o degrau inverso, 40 contra 44 (run
+           * 5 de 2026-08-30). O `border-2` fecha os 2px que faltavam: o
+           * `compact` do Aprobar traz borda de 2px pela camada de marca, e o
+           * `outlined` do Prime desenha 1px. O `severity` segue sendo o sinal do
+           * destrutivo. */
+          <AppButton
+            label={t('quote.reject')}
+            severity="danger"
+            outlined
+            className="border-2 px-3 py-2.5 text-sm"
+            onClick={onReject}
+          />
         )}
         {onApprove && quote.status !== 'approved' && (
           <AppButton variant="compact" label={t('quote.approve')} onClick={onApprove} />

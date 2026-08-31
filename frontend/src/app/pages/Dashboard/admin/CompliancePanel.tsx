@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag } from '@shared/ui'
+import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag, technicalDataClass } from '@shared/ui'
 import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
 import type { TurmaComplianceData } from '@shared/types/generated'
 import { complianceWidths } from './panelColumns'
@@ -61,7 +61,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
             // ("06-07- / 2026 — / 31-07- / 2026"), que é o formato de data
             // deixando de ser legível como data (UI-10 da revisão de
             // 2026-08-17).
-            <span className="font-mono text-xs whitespace-nowrap">
+            <span className={`${technicalDataClass} text-xs whitespace-nowrap`}>
               {t('dashboard.agenda.range', {
                 start: formatIsoDate(r.start_date),
                 end: formatIsoDate(r.end_date),

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppCard, StatValue, sectionLabelClass } from '@shared/ui'
+import { AppCard, StatValue, sectionLabelClass, technicalDataClass } from '@shared/ui'
 import type { AppCardTone } from '@shared/ui'
 
 export type Kpi = {
@@ -106,7 +106,7 @@ export function KpiRow({ items }: { items: Kpi[] }) {
                 * Aqui ela é o algarismo com unidade ao lado do algarismo
                 * principal — mono, que é o papel de dado técnico da spec §5. */}
               {kpi.hint && (
-                <span className="font-mono text-xs tabular-nums" style={{ color: 'var(--text-color-secondary)' }}>
+                <span className={`${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
                   {t(kpi.hint.i18nKey, { value: kpi.hint.value })}
                 </span>
               )}

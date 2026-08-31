@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { AppButton, AppInputText, FormErrorBanner, pageTitleClass } from '@shared/ui'
-import { dangerText } from '@shared/styles/tokens'
+import { AppButton, AppInputText, FormErrorBanner, FormField, pageTitleClass } from '@shared/ui'
 import { useForgotPassword } from '../../hooks/useForgotPassword'
 
 interface Props {
@@ -57,27 +56,17 @@ export function ForgotForm({ email, onEmailChange, autoFocusTitle }: Props) {
         <>
           <FormErrorBanner message={generalError} variant="inline" />
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="forgot-email" className="font-medium" style={{ color: 'var(--text-color)' }}>
-              {t('login.email')}
-            </label>
+          <FormField label={t('login.email')} error={fieldErrors?.email?.[0]}>
             <AppInputText
-              id="forgot-email"
               type="email"
               leftIcon="pi pi-envelope"
               autoComplete="username"
               value={email}
               onChange={(e) => onEmailChange(e.target.value)}
               placeholder={t('login.emailPlaceholder')}
-              invalid={!!fieldErrors?.email}
-              aria-invalid={!!fieldErrors?.email}
-              aria-describedby={fieldErrors?.email ? 'forgot-email-error' : undefined}
             />
-            {fieldErrors?.email && (
-              <small id="forgot-email-error" style={{ color: dangerText }}>{fieldErrors.email[0]}</small>
-            )}
-          </div>
-          <AppButton type="submit" label={t('password.forgotSubmit')} loading={isSubmitting} />
+          </FormField>
+          <AppButton variant="primary" type="submit" label={t('password.forgotSubmit')} loading={isSubmitting} />
         </>
       )}
 

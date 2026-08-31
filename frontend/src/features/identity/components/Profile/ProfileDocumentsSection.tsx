@@ -24,7 +24,7 @@ export function ProfileDocumentsSection({
 
   return (
     <AppCard className="p-4">
-      <FormSection title={t('profile.documents.title')} />
+      <FormSection title={t('profile.documents.title')} as="h2" />
 
       <p className="mt-1 text-xs" style={{ color: 'var(--text-color-secondary)' }}>
         {t('profile.documents.hint')}

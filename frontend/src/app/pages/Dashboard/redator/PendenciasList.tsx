@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
+import { AppCard, AppCardHeader, AppEmptyState, technicalDataClass } from '@shared/ui'
 import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
 import { turmaTabPath } from '@features/operation/lib/turmaTabs'
 import { warningText } from '@shared/styles/tokens'
@@ -76,7 +76,7 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
                     })}
                   </span>
                 </span>
-                <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+                <span className={`shrink-0 ${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
                   {t('dashboard.redator.pendencias.until', { date: formatIsoDate(item.end_date) })}
                 </span>
               </Link>

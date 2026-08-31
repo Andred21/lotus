@@ -44,7 +44,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
           <>
             <ImportResultSummary result={f.result} />
             <div className="flex justify-end">
-              <AppButton label={t('operation.enrollment.import.close')} onClick={f.close} />
+              <AppButton label={t('operation.enrollment.import.close')} text onClick={f.close} />
             </div>
           </>
         )}

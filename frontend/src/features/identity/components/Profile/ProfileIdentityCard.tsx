@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppPhotoField, FormField, FormSection } from '@shared/ui'
+import { AppCard, AppPhotoField, FormField, FormSection, identifierClass } from '@shared/ui'
 import type { ProfileData } from '@shared/types/generated'
 import { useProfilePhoto } from '../../hooks/useProfilePhoto'
 
@@ -65,15 +65,15 @@ export function ProfileIdentityCard({ profile }: { profile: ProfileData }) {
           <FormSection title={t('profile.identity.title')} />
         </div>
         <FormField label={t('profile.identity.email')} readOnly value={profile.email} />
-        {/* `font-mono` no RUT (D-29): é o dado técnico do próprio dono, e o token
-            já é o que `StudentsTable.tsx:46`, `RedatoresTable.tsx:47` e
-            `RedatorCard.tsx:41` usam para o RUT de terceiros. */}
+        {/* `identifierClass` no RUT (D-29): é o dado técnico do próprio dono, e a
+            constante já é o que `StudentsTable.tsx`, `RedatoresTable.tsx` e
+            `RedatorCard.tsx` usam para o RUT de terceiros. */}
         <FormField
           label={t('profile.identity.rut')}
           readOnly
           value={
             profile.rut ? (
-              <span className="font-mono">{profile.rut}</span>
+              <span className={identifierClass}>{profile.rut}</span>
             ) : (
               t('profile.identity.noRut')
             )
