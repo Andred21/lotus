@@ -211,7 +211,7 @@ class ClientCrudTest extends TestCase
 
         $this->postJson('/api/clients', $payload)
             ->assertStatus(422)
-            ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.');
+            ->assertJsonPath('errors.contacts.0', __('commercial.client.contact_required'));
     }
 
     /**
@@ -234,7 +234,7 @@ class ClientCrudTest extends TestCase
 
         $this->postJson('/api/clients', $payload)
             ->assertStatus(422)
-            ->assertJsonPath('errors.contacts.0', 'O cliente precisa de ao menos um contato.')
+            ->assertJsonPath('errors.contacts.0', __('commercial.client.contact_required'))
             ->assertJsonMissingPath('errors.email');
     }
 

@@ -21,13 +21,16 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (31)
+## Abertas (33)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
 | P-67 | A escala de raio está escrita na rule e 10 sítios de `features/` ficaram fora dela, sem catraca — ela nasceria vermelha | `D-66` (decisão do João) | a D-66 decidida — os 10 sítios se classificam pela régua escolhida; revisar 2026-10-31 |
+| P-70 | O `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado — erro de GET mostra a dica genérica em vez do que o servidor disse | `hardening-i18n-e-erros-api` (D4) | próximo bloco da frente de frontend que tocar política de erro de tela; revisar 2026-11-30 |
+| P-71 | Cinco recusas que o usuário lê continuam literais fora de `lang/` (`CorruptedSnapshotException`, `RedatorNaoElegivelException`, `TurmaConfiguracaoException`) — a catraca as segura em lista declarada, não as traduz | — | bloco que tocar `Certification/Services` ou `Operation/Exceptions`; revisar 2026-10-31 |
+| P-72 | O 419 devolve `detail` literal em inglês nos três locales (`CSRF token mismatch.`) — o `title` foi traduzido, o `detail` do `TokenMismatchException` vence o fallback | — | bloco que tocar `ProblemDetails::fromException` ou a proteção CSRF; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -60,13 +63,17 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
-| P-61 | Os `title` do `ProblemDetails` estão em **português** num produto es-CL — o `detail` do 429 foi traduzido no review de 2026-08-25 e deixou a inconsistência à mostra | João | bloco que tocar o `ProblemDetails` ou a camada de mensagens ao usuário; revisar 2026-10-31 |
-| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team, ou decisão do João sobre a visibilidade de `Andred21/lotus` (público hoje, medido em 2026-08-29); revisar 2026-10-31 |
+| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-69 | O vitest não tem `setupFiles`, então o `cleanup()` do Testing Library nunca roda — teste que monta hook com timer derruba a rodada inteira com `window is not defined`, sem reprovar asserção | João | João decidir se o `cleanup()` vira mecanismo global, ou bloco que toque `frontend/vite.config.ts`; revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (2)
+
+**A P-61 fechou no `hardening-i18n-e-erros-api` (2026-08-30) e está em rastro** — os sete `title` do
+`ProblemDetails` e o `detail` mascarado do 500 saíram do código para `lang/<locale>/problem.php` nos
+três locales, medidos contra a API real no gate de fechamento. Sai no próximo `/fechar-sprint`
+posterior a este.
 
 **A P-63 fechou no `frontend-triagem-dos-audits-do-item-18` (2026-08-29) e está em rastro** — a
 legenda do `AppLineChart` ganhou conteúdo próprio (`<ul role="list">`) e o mini-reset deixou de
@@ -79,7 +86,7 @@ posterior ao do `hardening-performance-e-dados`, que a encerrou por mecanismo: a
 `DELETE ... LIMIT 1000` passou a usar. O rastro fica no git e na linha de entrega em
 [`../historico/progress.md`](../historico/progress.md).
 
-**A P-02, a P-33 e a P-46 saíram neste fechamento e no do item 18**, os primeiros posteriores aos dos
+**A P-02, a P-33 e a P-46 saíram nos fechamentos de 2026-08-29** (itens 6 e 18), os primeiros posteriores aos dos
 blocos que as encerraram. A retenção de `audits` e de `login_logs` saiu por mecanismo
 (`RetentionPolicy`, `PodarAuditoria`, `PodarLogins`, o índice `audits_created_at_index` e o
 agendamento em `routes/console.php`/`scheduler`); a **P-46** saiu **remedida**, com o mini-reset

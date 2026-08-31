@@ -16,7 +16,7 @@ class RevokeCertificateAction
 
             if ($locked->status === CertificateStatus::Revocado) {
                 throw ValidationException::withMessages([
-                    'certificate' => 'El certificado ya fue revocado.',
+                    'certificate' => __('certification.certificate.already_revoked'),
                 ]);
             }
 

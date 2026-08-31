@@ -48,7 +48,7 @@ class SuperadminGuard
 
         if ($ativos->count() === 1) {
             throw ValidationException::withMessages([
-                'role' => 'Não é possível deixar o sistema sem superadmin ativo.',
+                'role' => __('identity.errors.last_superadmin'),
             ]);
         }
     }

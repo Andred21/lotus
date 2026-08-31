@@ -144,6 +144,14 @@ não há duplicação a evitar, porque os conjuntos de mensagem não se sobrepõ
 **Proveniência ratificada (doc-sync 2026-07-30):** a revisão não trazia atribuição nominal explícita
 no texto; confirmada como decisão do João no portão de triagem do bloco `hardening-doc-sync-sprint4`.
 
+**Emenda (2026-08-29, bloco `hardening-i18n-e-erros-api`).** O backend passa a suportar **três**
+locales — `en`, `es_CL`, `pt_BR` —, os mesmos três do front. O `lang/es/` saiu: era byte-idêntico ao
+`lang/es_CL/` nos oito arquivos, e como o Laravel não funde arquivo de tradução parcialmente, chave
+ausente em `es_CL` cai no `fallback_locale` e nunca em `es` — manter os dois só funcionaria
+duplicando 100% do conteúdo para sempre. `Accept-Language: es` passa a cair no fallback es-CL, que
+este ADR já fixava. `APP_FALLBACK_LOCALE` passa a `es_CL` no `.env.example` e no `phpunit.xml`, que
+não o fixava e deixava a suíte herdar o `.env` gitignored da máquina.
+
 **Nota:** filtrar recomendações de i18n que pressupõem Inertia (não usamos).
 
 ## ADR-16 — Tailwind como layout; tema do PrimeReact trocado em runtime

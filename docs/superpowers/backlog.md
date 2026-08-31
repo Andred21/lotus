@@ -42,24 +42,6 @@
 
 # Fila priorizada
 
-## 7. `hardening-i18n-e-erros-api`
-
-**Prioridade:** P1 · **Frente:** Backend · **Contexto:** não
-**Fonte:** ADR-03/15; `D-07`, `D-18`, `D-36`.
-
-**Objetivo:** eliminar mistura de idiomas nas mensagens emitidas pela API.
-
-**Escopo:** mover literais de `ValidationException` para `lang/` (**D-07**); localizar
-`title/detail` do RFC 7807 (**D-36**); localizar descrições dinâmicas do Dashboard (**D-18**);
-respeitar `Accept-Language`; manter ES-CL como fallback.
-
-**Nota:** a D-07 não precisa mais aguardar decisão de idioma — o ADR-15 já define mecanismo e
-fallback (es-CL); falta aplicar.
-
-**DoD:** a mesma falha em ES-CL/PT-BR/EN retorna envelope e mensagem coerentes com o locale.
-
----
-
 ## 9. `administracao-roles-permissoes-redesign`
 
 **Prioridade:** P1 · **Frente:** Frontend · **Contexto:** sim
@@ -329,19 +311,15 @@ digests impressos; catracas do frontend verdes; docs e estado coerentes.
 > régua e vista reprovar por sonda negativa no `TurmaStatusFilter`. A `D-34` continua sem
 > hospedeiro. A **P-63**, que era agrupada no item 18, ficou aberta: o hospedeiro fechou sem
 > pagá-la e rehospedar é do João.
-
-- **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo** →
-  `hardening-i18n-e-erros-api`. Commercial escreve em PT (`DeleteQuoteAction`,
-  `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`) — o usuário
-  chileno lê um ou outro conforme o endpoint. O ADR-15 já define mecanismo e fallback (es-CL);
-  falta aplicar.
-
-- **D-58 · `Turma::concluir()` recusa em espanhol fixo, fora do mecanismo de locale** →
-  `hardening-i18n-e-erros-api`. `backend/app/Domains/Operation/Models/Turma.php:200` monta a
-  mensagem de recusa em espanhol literal, como as demais da família **D-07**. É a metade da UI-01 da
-  run de Operação que ficou fora do fence da fatia 1 do item 16 (frontend puro), e a ficha não foi
-  escrita porque a Task 12 daquele plano foi cortada. Mesmo remédio da D-07/D-36: `__()` com chave
-  nas 4 `lang/`. **DoD:** a mesma recusa em es-CL, pt-BR e en devolve a mensagem no locale pedido.
+>
+> **Fechamento de 2026-08-30:** a `D-07`, a `D-18`, a `D-36`, a `D-38` e a `D-58` **saíram daqui
+> pagas** pelo item 7 (`hardening-i18n-e-erros-api`): toda mensagem que a API emite ao usuário sai
+> de `lang/<locale>/<dominio>.php` e responde ao `Accept-Language`, com `es_CL` de fallback, sob
+> duas catracas — `LocaleParityTest` (paridade das três traduções) e `MensagemLiteralTest` (frase
+> literal em `app/`, no `withMessages` e no `throw`). A `D-38` fechou em três sítios, não no único
+> que a ficha nomeava: `OperationMetricsQuery`, `IdentityMetricsQuery` e `RedatorScopeQuery`. O
+> rastro fica nos commits e em `historico/progress.md`. Cinco recusas que o bloco **não tocou**
+> continuam literais e viraram a **P-71**; o 419 virou a **P-72**.
 
 - **D-59 · O alternador Activos/Archivados do card "Cotizaciones" gasta uma linha própria** →
   `frontend-revisao-ui-por-modulo`. UI-03 da run de Comercial de 2026-08-25
@@ -389,14 +367,6 @@ digests impressos; catracas do frontend verdes; docs e estado coerentes.
   vivo virou caso de regressão, e **nada mede permissão órfã hoje**. A próxima nasce igual e ninguém
   vê. Quem absorver isto precisa de uma catraca sobre o catálogo de permissões, não sobre `use`.
 
-- **D-18 · `description` de pendências/alertas do Dashboard é string fixa em espanhol no backend**
-  → `hardening-i18n-e-erros-api`. Quatro produtores montam frase pronta
-  (`CommercialMetricsQuery.php:48`, `OperationMetricsQuery.php:128`,
-  `CertificationMetricsQuery.php:38`, `IdentityMetricsQuery.php:46`); o front não pode traduzir —
-  em `turma_docs_incomplete` a string carrega a lista de documentos faltantes. Mitigado pela D17
-  do B1 (rótulo do tipo traduzido vira a linha principal). Fecha junto da D-07, pelo mesmo
-  mecanismo.
-
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta** →
   **sem bloco hospedeiro desde 2026-08-23.** Estava no item 3 como **condicional** ("só se o
   contrato for tocado"), e a §2 da spec do `hardening-acesso-ownership-e-integridade` o declarou
@@ -413,13 +383,6 @@ digests impressos; catracas do frontend verdes; docs e estado coerentes.
   visibilidade vira campo explícito no payload e módulo próprio no backend — toca contrato e
   regenera `generated.ts` (lei §5.3).
 
-- **D-36 · O envelope RFC 7807 não é localizado** → `hardening-i18n-e-erros-api`.
-  `ProblemDetails.php:22-36,68,71` devolve `title`/`detail` literais em português, apesar de
-  `SetLocale` já traduzir por `Accept-Language` e de existirem `lang/{en,es,es_CL,pt_BR}`. Medido
-  2026-08-18 (BD-13) e remedido 2026-08-19 com os dois idiomas no MESMO envelope (`title` PT +
-  `detail` es-CL num 422 de restore). Custo de tela hoje: só o `CertificateViewDialog` imprime
-  `detail` cru. Correção: `__()` com chaves nas 4 `lang/`.
-
 - **D-37 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo** →
   `go-live-confiabilidade-e-recuperacao`. A migration `2026_08_18_000001` entra com `false` em
   todas as linhas: agregado arquivado antes de 2026-08-18 restaura o pai sem os filhos, em
@@ -428,18 +391,6 @@ digests impressos; catracas do frontend verdes; docs e estado coerentes.
   alcance é só banco de dev. Gatilho: primeiro deploy — conferir agregados arquivados pré-data e
   decidir caso a caso.
 
-- **D-38 · A descrição da pendência do Dashboard imprime o código do enum** →
-  `frontend-revisao-ui-por-modulo`. A frase chega pronta do backend (D17) como
-  `Documentación obligatoria incompleta: MANUAL, PRUEBAS, EVALUACION_REDATOR.`, e o
-  `CompliancePanel` — que monta a própria coluna — já passou a traduzir pelos mesmos códigos
-  (`operation.documents.type.*`, `ac4eef8a`). O mesmo dado aparece traduzido numa parte da tela e
-  cru na outra.
-  **Decidido em 2026-08-22 (D1 da spec da fatia 1), registrado em 2026-08-25:** o backend manda as
-  PARTES e o cliente compõe. Traduzir a frase no backend exige `Accept-Language`, que é exatamente o
-  que o item 7 (`hardening-i18n-e-erros-api`) instala junto de **D-18** e **D-36** — fazer agora
-  seria construir metade do item 7 fora dele. A execução é do item 7; nenhuma linha de código muda
-  por causa desta ficha até lá. O sítio vivo é `PendingList.tsx:30`, que imprime `item.description`
-  cru vindo de `OperationMetricsQuery.php:137`.
 
 ## Travados em decisão — não entram em bloco
 

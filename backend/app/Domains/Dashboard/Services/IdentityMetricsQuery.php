@@ -52,8 +52,8 @@ class IdentityMetricsQuery
                         : DashboardSeverity::Medium,
                     entity_id: $document->id,
                     description: $expired
-                        ? "Documento {$document->type} de relator vencido."
-                        : "Documento {$document->type} de relator próximo a vencer.",
+                        ? __('dashboard.alert.redator_document_expired', ['tipo' => __('identity.document_type.'.$document->type)])
+                        : __('dashboard.alert.redator_document_expiring', ['tipo' => __('identity.document_type.'.$document->type)]),
                     date: $document->valid_until->toDateString(),
                     navigation: ['redator_id' => (int) $document->fileable_id],
                 );

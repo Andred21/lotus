@@ -45,7 +45,7 @@ class CommercialMetricsQuery
             ->map(fn (Quote $quote): PendingItemData => $this->pendingItem(
                 quote: $quote,
                 type: PendingItemType::QuoteAwaitingApproval,
-                description: 'Cotización pendiente de aprobación.',
+                description: __('dashboard.pending.quote_pending_approval'),
                 date: $quote->planned_start_date?->toDateString(),
             ));
 
@@ -61,7 +61,7 @@ class CommercialMetricsQuery
             ->map(fn (Quote $quote): PendingItemData => $this->pendingItem(
                 quote: $quote,
                 type: PendingItemType::QuoteApprovedWithoutTurma,
-                description: 'Cotización aprobada sin clase configurada.',
+                description: __('dashboard.pending.quote_without_turma'),
                 date: $quote->approved_at?->toDateString(),
             ));
 

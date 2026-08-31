@@ -34,14 +34,14 @@ class StudentResolver
         $parsed = Rut::parse($rut);
 
         if (! $parsed->isValid()) {
-            throw ValidationException::withMessages(['rut' => 'RUT inválido.']);
+            throw ValidationException::withMessages(['rut' => __('identity.errors.rut_invalid')]);
         }
 
         $user = User::withTrashed()->where('rut', $parsed->format())->first();
 
         if ($user !== null && $user->type !== 'aluno') {
             throw ValidationException::withMessages([
-                'rut' => 'Este RUT pertence a um usuário de outro tipo.',
+                'rut' => __('identity.errors.rut_wrong_type'),
             ]);
         }
 
@@ -54,7 +54,7 @@ class StudentResolver
                 // como provisionar o User. Vira ValidationException por linha, nunca 500.
                 if ($email === null || $email === '') {
                     throw ValidationException::withMessages([
-                        'email' => 'E-mail é obrigatório para aluno novo.',
+                        'email' => __('identity.errors.student_email_required'),
                     ]);
                 }
 
@@ -104,7 +104,7 @@ class StudentResolver
         $parsed = Rut::parse($rut);
 
         if (! $parsed->isValid()) {
-            throw ValidationException::withMessages(['rut' => 'RUT inválido.']);
+            throw ValidationException::withMessages(['rut' => __('identity.errors.rut_invalid')]);
         }
 
         $formatted = $parsed->format();
@@ -116,7 +116,7 @@ class StudentResolver
 
         if ($user->type !== 'aluno') {
             throw ValidationException::withMessages([
-                'rut' => 'Este RUT pertence a um usuário de outro tipo.',
+                'rut' => __('identity.errors.rut_wrong_type'),
             ]);
         }
 

@@ -8,7 +8,6 @@ use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
-use App\Domains\Dashboard\Data\DashboardFilterData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
@@ -417,7 +416,7 @@ class DashboardEndpointTest extends TestCase
         $this->getJson(self::ENDPOINT.'?period_end=2020-01-01')
             ->assertStatus(422)
             ->assertHeader('content-type', 'application/problem+json')
-            ->assertJsonPath('errors.period_end', [DashboardFilterData::PERIODO_INVERTIDO]);
+            ->assertJsonPath('errors.period_end', [__('dashboard.filter.inverted_period')]);
 
         // O limite único que NÃO inverte segue válido: a regra é sobre a janela,
         // não sobre a ausência do campo.
@@ -432,7 +431,7 @@ class DashboardEndpointTest extends TestCase
         // Início posterior a hoje inverte contra o fim default.
         $this->getJson(self::ENDPOINT.'?period_start=2030-01-01')
             ->assertStatus(422)
-            ->assertJsonPath('errors.period_end', [DashboardFilterData::PERIODO_INVERTIDO]);
+            ->assertJsonPath('errors.period_end', [__('dashboard.filter.inverted_period')]);
     }
 
     /**

@@ -118,11 +118,11 @@ enum ContentClass: string
             $arquivos,
         ));
 
+        $tetoEmMb = intdiv(self::TETO_AGREGADO_KB, 1024);
+
         if ($somaEmKb > self::TETO_AGREGADO_KB) {
             throw ValidationException::withMessages([
-                $campo => 'El conjunto de archivos supera el máximo de '
-                    .intdiv(self::TETO_AGREGADO_KB, 1024)
-                    .' MB. Envíelos en solicitudes separadas.',
+                $campo => __('shared.file.set_too_large', ['max' => $tetoEmMb]),
             ]);
         }
     }

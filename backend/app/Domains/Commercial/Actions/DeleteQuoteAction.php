@@ -23,7 +23,7 @@ class DeleteQuoteAction
     {
         if ($quote->status === QuoteStatus::Approved) {
             throw ValidationException::withMessages([
-                'status' => 'Cotação aprovada não pode ser excluída. Recuse-a antes.',
+                'status' => __('commercial.quote.approved_cannot_delete'),
             ]);
         }
 

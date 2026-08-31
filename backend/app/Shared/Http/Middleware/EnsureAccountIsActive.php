@@ -2,10 +2,10 @@
 
 namespace App\Shared\Http\Middleware;
 
+use App\Domains\Identity\Exceptions\InactiveAccountException;
 use App\Shared\Alerts\DetectorDeAcessoSuspeito;
 use App\Shared\Logging\EventoDeSeguranca;
 use Closure;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,10 +22,16 @@ use Symfony\Component\HttpFoundation\Response;
  * Não custa consulta: o Sanctum já carregou o `User` para popular
  * `$request->user()`, e este middleware lê o objeto em mão.
  *
- * `AuthenticationException` e não `abort(401)`: o erro sobe ao handler global e
- * sai como RFC 7807 `application/problem+json` (lei §5.4, ADR-03). A sessão é
- * invalidada ANTES de lançar — deixar a linha viva devolveria 401 a cada
- * request até o cookie expirar, com a sessão ainda no banco.
+ * `InactiveAccountException` (um `AuthenticationException`) e não `abort(401)`:
+ * o erro sobe ao handler global e sai como RFC 7807 `application/problem+json`
+ * (lei §5.4, ADR-03). A sessão é invalidada ANTES de lançar — deixar a linha
+ * viva devolveria 401 a cada request até o cookie expirar, com a sessão ainda
+ * no banco.
+ *
+ * A subclasse existe para carregar `PublicDetail` (Q-1 do review de
+ * 2026-08-30): o `AuthenticationException` cru perde a frase para o `detail`
+ * genérico do envelope, e "sua conta não está ativa" é justamente o que
+ * distingue esta parada de um cookie vencido.
  */
 class EnsureAccountIsActive
 {
@@ -50,7 +56,7 @@ class EnsureAccountIsActive
 
             Auth::guard('web')->logout();
 
-            throw new AuthenticationException(__('auth.inactive'));
+            throw new InactiveAccountException(__('auth.inactive'));
         }
 
         return $next($request);

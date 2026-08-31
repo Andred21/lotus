@@ -48,9 +48,24 @@ return Application::configure(basePath: dirname(__DIR__))
         // isso que garante que o balde por usuário veja o usuário resolvido.
         $middleware->api(prepend: [
             'throttle:api',
-        ], append: [
-            SetLocale::class,
         ]);
+
+        // GLOBAL, e não `api(append:)` (Q-4 do review de 2026-08-30).
+        //
+        // Middleware de grupo só roda em rota que CASOU. Uma URL que não existe
+        // levanta `NotFoundHttpException` durante o roteamento — antes da pilha
+        // do grupo —, então o `SetLocale` apendado ao `api` nunca rodava ali e
+        // todo 404 de rota inválida saía no locale padrão, ignorando o
+        // `Accept-Language`. A pilha global roda ANTES do roteamento, que é o
+        // único ponto que alcança as duas famílias de 404 (a de rota inexistente
+        // e a de model binding).
+        //
+        // Seguro por não decidir nada: lê um header, normaliza e escolhe entre
+        // três valores fixos. Não toca sessão, usuário, banco nem cookie, então
+        // rodar antes da autenticação não abre superfície — o que ele define é o
+        // idioma da resposta, e a resposta de quem não autenticou também tem
+        // idioma.
+        $middleware->append(SetLocale::class);
 
         // Ponta B da revogação (spec D5): conta desligada ou com `type` fora de
         // {admin, redator} perde acesso no request seguinte, e não só no
@@ -84,6 +99,16 @@ return Application::configure(basePath: dirname(__DIR__))
         // lista abaixo. Lista completa dele (Kernel::$middlewarePriority), com
         // a nossa logo após o `AuthenticatesRequests` — é o ponto em que o
         // guard já resolveu o usuário da sessão.
+        //
+        // `SetLocale` NÃO entra nesta lista: ela é global (acima), e a
+        // ordenação por prioridade só vale para middleware DE ROTA. Ela esteve
+        // aqui entre 2026-08-29 e o Q-4 do review de 2026-08-30, quando era
+        // appendada ao grupo `api` — e precisava estar, porque o sort empurrava
+        // `AuthenticatesRequests` para antes dela e o 401 do `auth:sanctum`
+        // disparava com o locale ainda no padrão (`SetLocaleTest`, 3/8 casos
+        // reprovando). Ser global resolve o mesmo problema mais cedo e resolve
+        // junto o 404 de rota inexistente, que nenhuma posição nesta lista
+        // alcançaria.
         $middleware->priority([
             HandlePrecognitiveRequests::class,
             EncryptCookies::class,

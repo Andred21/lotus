@@ -68,7 +68,7 @@ class BatchIssueCertificatesAction
 
             if ($enrollment === null) {
                 throw ValidationException::withMessages([
-                    'enrollment' => 'La matrícula no existe.',
+                    'enrollment' => __('certification.enrollment.not_found'),
                 ]);
             }
 

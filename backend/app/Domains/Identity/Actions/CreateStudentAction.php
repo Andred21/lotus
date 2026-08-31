@@ -32,7 +32,7 @@ class CreateStudentAction
         return DB::transaction(function () use ($data) {
             if ($data->client_id instanceof Optional || $data->client_id === null) {
                 throw ValidationException::withMessages([
-                    'client_id' => 'O cliente é obrigatório no cadastro do aluno.',
+                    'client_id' => __('identity.errors.student_client_required'),
                 ]);
             }
 
@@ -42,7 +42,7 @@ class CreateStudentAction
 
             if ($client === null) {
                 throw ValidationException::withMessages([
-                    'client_id' => 'Cliente não encontrado.',
+                    'client_id' => __('identity.errors.student_client_not_found'),
                 ]);
             }
 

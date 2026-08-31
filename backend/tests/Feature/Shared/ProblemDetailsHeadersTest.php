@@ -27,7 +27,7 @@ class ProblemDetailsHeadersTest extends TestCase
         $resposta = $this->resposta(new ThrottleRequestsException('Too Many Attempts.', null, []));
 
         $this->assertSame(429, $resposta->getStatusCode());
-        $this->assertSame('Demasiadas solicitudes', $resposta->getData(true)['title']);
+        $this->assertSame(__('problem.title.too_many_requests'), $resposta->getData(true)['title']);
         $this->assertSame(
             'https://lotus.cl/errors/too-many-requests',
             $resposta->getData(true)['type'],
