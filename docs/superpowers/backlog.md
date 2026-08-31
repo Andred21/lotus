@@ -5,6 +5,9 @@
 > backlog nunca promove trabalho sozinho.
 >
 > **Consolidado em 2026-08-22 contra `main@bda90ce`, com foco em terminar a aplicação.**
+> **Saneado em 2026-08-31 contra `main@a304f317`:** os itens 6, 7, 18 e 19 fecharam e saíram da
+> contagem, a `D-60` saiu **paga** (por bloco que não era o hospedeiro dela) e a `D-61` foi
+> **absorvida pela `D-67`** — eram o mesmo defeito registrado duas vezes.
 > Histórico entregue → `historico/progress.md` · fichas `P-*` → `pendencias/abertas.md` ·
 > specs/planos → `specs/archive/` e `plans/archive/`. Não duplicar esses conteúdos aqui.
 > O registro canônico dos débitos `D-*` segue neste arquivo, na seção `# Débitos técnicos` —
@@ -237,7 +240,7 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 | `D-64` | **"1250 UF"** (f2 UI-08): no KPI de cotizaciones a contagem (Archivo 30px) e a grandeza (mono 12px) se encostam e leem como um número; em es-CL o espaço é separador de milhar válido. Recomendação: separador visível na MESMA linha — `·` com `aria-hidden` entre os dois, ou rótulo curto antes do valor —, sem terceira linha (razão em `KpiRow.tsx:104`). Gatilho: decisão do João. |
 | `D-65` | **Reserva da coluna presa em tablet** (f3 UI-01): `stickyActionsColumn('8rem')` fixo contra `tableWidths` em % sobre `min-w-[48rem]` — a 1024px a ação cobre 99px (65%) da última coluna de dado, em todas as 12 tabelas com ação presa. Duas direções: reserva em % do mesmo orçamento (reabre as 12 medições do item 17) ou sinal de rolagem no wrapper + `min-width` menor onde a reserva não cabe. Recomendação: a segunda, medida nas 12. Gatilho: bloco de tabelas. |
 | `D-66` | **Escala de raio** (f3 UI-05 + **P-67**): a rule diz `lg`/`md`/`full`; a tela tem 4px para botão, input e tag (tema), `rounded` = 4px, `rounded-md` (6px) só nos banners do `FormField`, `rounded-full` só no pill de contagem do `AppCard`. Recomendação: superfície `rounded-lg`; controle, faixa fina **e tag** herdam o raio do tema (4px = `rounded`); `rounded-full` só para círculo e cápsula de contagem; banners voltam ao raio do tema; os 10 sítios da P-67 se classificam por essa régua e a catraca nasce depois. Gatilho: decisão do João; hospeda a P-67. |
-| `D-67` | **Corpo do `notFound` público** (f3 UI-07): `/validar/<uuid>` inexistente mostra só o `h1` — zero `a`/`button`, sem eco do identificador. Recomendação: ecoar o identificador consultado em `identifierClass` e uma linha de passo seguinte ("verifica el código impreso o contacta a Lotus"), sem link e sem dado do certificado — texto de página pública de peso legal. Gatilho: decisão do João/Lotus sobre a redação. |
+| `D-67` | **Corpo do `notFound` público** (f3 UI-07): `/validar/<uuid>` inexistente mostra só o `h1` — zero `a`/`button`, sem eco do identificador. Recomendação: ecoar o identificador consultado em `identifierClass` e uma linha de passo seguinte ("verifica el código impreso o contacta a Lotus"), sem link e sem dado do certificado — texto de página pública de peso legal. **Absorve a `D-61`** (UI-04 da run de Certificados de 2026-08-25, o mesmo defeito registrado duas vezes): `ValidationPage.tsx:114-118` segue com um `StatusHeading` e nada mais, enquanto o ramo `revoked` logo abaixo acrescenta linha de detalhe — e quem valida é alguém DE FORA escaneando um QR, que não distingue código digitado errado de certificado inexistente. **DoD herdado da `D-61`:** o ramo `notFound` mostra título + linha de orientação aprovada, nas 3 locales. Gatilho: decisão do João/Lotus sobre a redação. |
 | `D-68` | **Borda do input no tema claro** (f4 UI-05): `#cbd5e1` sobre `#ffffff` mede 1,48:1; a 1.4.11 pede 3:1 no limite do controle quando ele é o único indicador (o escuro tem poço de fundo e não depende do traço). Nenhum `-400` do Tailwind passa (slate-400 2,36:1); slate-500 `#64748b` mede 4,76:1. Recomendação: slate-500 na borda de repouso, via `scripts/generate-brand-theme.mjs`, medida nos dois temas antes de entrar. Gatilho: decisão do João — muda a cara de todo input do claro. |
 | `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
 | `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
@@ -293,6 +296,18 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 > que a ficha nomeava: `OperationMetricsQuery`, `IdentityMetricsQuery` e `RedatorScopeQuery`. O
 > rastro fica nos commits e em `historico/progress.md`. Cinco recusas que o bloco **não tocou**
 > continuam literais e viraram a **P-71**; o 419 virou a **P-72**.
+>
+> **Saneamento de 2026-08-31 (main tree, com o João):** duas fichas saíram daqui.
+> A **`D-60` saiu paga**, e **não pelo hospedeiro que ela declarava**: o `frontend-revisao-ui-por-modulo`
+> (item 16) nunca rodou, mas o item 19 pagou o defeito pela f3 UI-03 do audit dele — o motivo do
+> bloqueio subiu para a MESMA linha do CTA e ganhou `aria-describedby`
+> (`EmissionPanel.tsx:92-105`), e os botões "Emitir" por linha também
+> (`EmissionStudentsTable.tsx:100-101`), que é o DoD inteiro da ficha. **O `/fechar-sprint` do item
+> 19 não removeu a linha porque a ficha estava agrupada em outro bloco** — a remoção fica aqui,
+> medida contra o código. A **`D-61` não saiu paga: saiu absorvida pela `D-67`**, que o próprio item
+> 19 abriu em 2026-08-30 para o MESMO defeito (`/validar/<uuid>` inexistente responde só com o
+> `h1`). Duas fichas para um defeito é duas decisões do João sobre a mesma frase; a `D-67` fica,
+> com o DoD da `D-61` herdado, e a `D-61` sai como ID queimado.
 
 - **D-59 · O alternador Activos/Archivados do card "Cotizaciones" gasta uma linha própria** →
   `frontend-revisao-ui-por-modulo`. UI-03 da run de Comercial de 2026-08-25
@@ -304,29 +319,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
   `AppCardHeader` (`AppCard.tsx:174`), que já existe; ficou de fora da fatia 2 porque é composição
   de UMA tela e pede remedir o detalhe inteiro nos três viewports. **DoD:** o card abre com o
   alternador na linha do cabeçalho e sem faixa vazia, medido nos três viewports.
-
-- **D-60 · O motivo que desabilita a emissão fica longe da ação, e as linhas não o repetem** →
-  `frontend-revisao-ui-por-modulo`. UI-03 da run de Certificados de 2026-08-25
-  (`audits/2026-08-25-lotus-ui-review-certificados.md`), classe `B`. Em `/certificados` aba Emisión,
-  a tag "El curso no tiene plantilla de certificado" (`EmissionPanel.tsx:62-64`) fica à esquerda e o
-  botão do lote que ela desabilita (`EmissionPanel.tsx:66-75`) à direita, com a largura do card
-  entre os dois; ao rolar até a tabela a tag sai da viewport e os 13 botões "Emitir" desabilitados
-  não carregam `title` nem tooltip que diga o porquê. Em 390x844 a pilha empilha e o par já fica
-  junto — o problema é a régua horizontal do desktop. Ficou de fora da fatia 2 porque há mais de um
-  remédio possível (aviso ao lado do botão, tooltip por linha, ou os dois) e cada um muda o que a
-  tela diz numa jornada de ESCRITA que a run read-only não pôde exercitar. **DoD:** com a emissão
-  bloqueada, o motivo é legível a partir do controle bloqueado, sem rolar de volta.
-
-- **D-61 · A validação pública de um código inexistente responde só com o título** →
-  `frontend-revisao-ui-por-modulo`. UI-04 da run de Certificados de 2026-08-25, classe `B`.
-  `ValidationPage.tsx:109-113` renderiza o ramo `notFound` com um `StatusHeading` e nada mais —
-  "Certificado no encontrado" —, enquanto o ramo `revoked` logo abaixo acrescenta linha de detalhe.
-  Quem valida é alguém DE FORA do sistema (fiscalizador, cliente) escaneando um QR, e a mensagem
-  sozinha não distingue código digitado errado de certificado inexistente nem oferece próximo passo,
-  numa tela de peso legal. **Travada em decisão do João:** o texto é copy pública em es-CL e não
-  deve ser inventada num passe de correção de UI. **DoD:** o ramo `notFound` mostra título + linha
-  de orientação aprovada, nas 3 locales.
-
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
