@@ -39,4 +39,35 @@ class SetLocaleTest extends TestCase
 
         $this->assertSame($esperado, app()->getLocale());
     }
+
+    /**
+     * O 404 de rota que NÃO EXISTE também fala o idioma pedido (Q-4 do review
+     * de 2026-08-30).
+     *
+     * Middleware de GRUPO só roda em rota que casou: `NotFoundHttpException`
+     * nasce durante o roteamento, antes da pilha do grupo `api`, então
+     * `SetLocale` apendada ali nunca chegava a rodar e todo 404 de URL inválida
+     * saía no locale padrão. O `EnvelopeLocalizadoTest` não pegava porque mede
+     * `/api/turmas/999999` — rota que casou, 404 de model binding, pilha
+     * inteira executada.
+     *
+     * O remédio é a pilha GLOBAL, que roda antes do roteamento.
+     */
+    #[Test]
+    #[DataProvider('cabecalhos')]
+    public function o_404_de_rota_inexistente_tambem_sai_no_locale_pedido(?string $header, string $esperado): void
+    {
+        $headers = $header === null ? [] : ['Accept-Language' => $header];
+
+        $corpo = $this->withHeaders($headers)
+            ->getJson('/api/rota-que-nunca-existiu')
+            ->assertNotFound()
+            ->json();
+
+        $this->assertSame($esperado, app()->getLocale());
+
+        app()->setLocale($esperado);
+        $this->assertSame(__('problem.title.not_found'), $corpo['title']);
+        $this->assertSame(__('problem.detail.not_found'), $corpo['detail']);
+    }
 }

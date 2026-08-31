@@ -29,7 +29,7 @@ class Role extends SpatieRole
         static::deleting(function (Role $role) {
             if ($role->isSystem()) {
                 throw new ImmutableSystemRoleException(
-                    "A role de sistema '{$role->name}' não pode ser removida.",
+                    __('identity.errors.system_role_not_deletable', ['role' => $role->name]),
                 );
             }
         });
@@ -39,7 +39,7 @@ class Role extends SpatieRole
 
             if ($wasSystem && ($role->isDirty('name') || $role->isDirty('guard_name'))) {
                 throw new ImmutableSystemRoleException(
-                    "A role de sistema '{$role->getOriginal('name')}' não pode ser renomeada.",
+                    __('identity.errors.system_role_not_renamable', ['role' => $role->getOriginal('name')]),
                 );
             }
         });

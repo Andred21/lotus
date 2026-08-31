@@ -3,11 +3,25 @@
 namespace Tests\Feature\Identity;
 
 use App\Domains\Identity\Enums\RedatorDocumentType;
+use App\Domains\Identity\Exceptions\ImmutableSystemRoleException;
+use App\Domains\Identity\Exceptions\RedatorOnlyActionException;
+use App\Domains\Identity\Models\Role;
+use App\Domains\Identity\Services\SystemRoleGuard;
+use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class MensagemDeIdentidadeLocalizadaTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(RolePermissionSeeder::class);
+    }
+
     private const CHAVES = [
         'identity.errors.rut_invalid',
         'identity.errors.rut_wrong_type',
@@ -22,10 +36,17 @@ class MensagemDeIdentidadeLocalizadaTest extends TestCase
         'identity.errors.documents_shape',
         'identity.errors.document_type_invalid',
         'identity.errors.permission_invalid',
+        // Q-2 do review de 2026-08-30: as cinco recusas que nasceram literais
+        // no construtor/no `throw`, fora do alcance da catraca de `withMessages`.
+        'identity.errors.system_role_immutable',
+        'identity.errors.system_role_permissions_immutable',
+        'identity.errors.system_role_not_deletable',
+        'identity.errors.system_role_not_renamable',
+        'identity.errors.redator_only_action',
     ];
 
     #[Test]
-    public function as_treze_mensagens_existem_nos_tres_locales(): void
+    public function as_dezoito_mensagens_existem_nos_tres_locales(): void
     {
         foreach (['es_CL', 'pt_BR', 'en'] as $locale) {
             app()->setLocale($locale);
@@ -54,6 +75,57 @@ class MensagemDeIdentidadeLocalizadaTest extends TestCase
                 $this->assertNotSame($chave, __($chave), "{$chave} falta em {$locale}.");
             }
         }
+    }
+
+    /**
+     * As quatro recusas de role de sistema saem de `lang/` — inclusive as três
+     * que interpolam o nome da role (Q-2 do review de 2026-08-30). Elas eram
+     * string crua em português no `throw`, e a catraca da Task 9 não as via
+     * porque só varre `withMessages`.
+     */
+    #[Test]
+    public function as_recusas_de_role_de_sistema_saem_de_lang(): void
+    {
+        $role = Role::findByName('admin');
+
+        foreach (['es_CL', 'pt_BR', 'en'] as $locale) {
+            app()->setLocale($locale);
+
+            $permissoes = $this->mensagemDe(fn () => app(SystemRoleGuard::class)->assertPermissionsMutable($role));
+            $this->assertSame(__('identity.errors.system_role_permissions_immutable', ['role' => 'admin']), $permissoes);
+            $this->assertStringContainsString('admin', $permissoes);
+
+            $remocao = $this->mensagemDe(fn () => $role->delete());
+            $this->assertSame(__('identity.errors.system_role_not_deletable', ['role' => 'admin']), $remocao);
+
+            $renome = $this->mensagemDe(function () use ($role) {
+                $role->name = 'admin-renomeada';
+                $role->save();
+            });
+            $this->assertSame(__('identity.errors.system_role_not_renamable', ['role' => 'admin']), $renome);
+            $role->name = 'admin';
+
+            $this->assertSame(
+                __('identity.errors.system_role_immutable'),
+                (new ImmutableSystemRoleException)->getMessage(),
+            );
+            $this->assertSame(
+                __('identity.errors.redator_only_action'),
+                (new RedatorOnlyActionException)->getMessage(),
+            );
+        }
+    }
+
+    /** @param  callable():mixed  $acao */
+    private function mensagemDe(callable $acao): string
+    {
+        try {
+            $acao();
+        } catch (ImmutableSystemRoleException $e) {
+            return $e->getMessage();
+        }
+
+        $this->fail('A recusa não aconteceu.');
     }
 
     #[Test]

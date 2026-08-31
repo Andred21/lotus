@@ -72,9 +72,11 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
   **Obrigatoriedade que depende do verbo mora na Action, não em `rules()`** — `rules()` é estático e
   não sabe se é POST ou PUT. `contacts` é `sometimes|array|min:1` no DTO e a exigência do create vive
   em `CreateClientAction`, **antes** da transação: checagem de entrada pura não paga banco nem se
-  esconde atrás de um erro de identidade. O texto da recusa é constante única do DTO
-  (`ClientData::CONTATO_OBRIGATORIO`), citada pelas duas Actions e pelo `messages()` — mesma regra,
-  mesma frase, nas três portas.
+  esconde atrás de um erro de identidade. O texto da recusa é **chave única de `lang/`**
+  (`commercial.client.contact_required`), citada pelas duas Actions e pelo `messages()` — mesma
+  regra, mesma frase, nas três portas. Era a constante `ClientData::CONTATO_OBRIGATORIO` até o
+  `hardening-i18n-e-erros-api` (2026-08-29) mover a frase para `lang/`: a unicidade é a mesma, o
+  dono mudou de DTO para dicionário, e agora ela também fala os três idiomas.
 - **Regra de coleção vale em TODOS os caminhos de escrita**, não só no da tela: o replace-total do
   pai **e** as rotas nested da própria entidade. Ref.: `PrimaryContactService::ensureSingle()`, que
   fecha "no máximo 1 principal" pelas Client Actions **e** pelas `Create/UpdateClientContactAction` —

@@ -32,6 +32,11 @@ return [
         'documents_shape' => 'The documents field must be a map of type => file.',
         'document_type_invalid' => 'Invalid document type: :tipo',
         'permission_invalid' => 'Invalid permission, or not assignable to a custom role.',
+        'system_role_immutable' => 'System roles are immutable.',
+        'system_role_permissions_immutable' => "The permissions of the ':role' system role are immutable.",
+        'system_role_not_deletable' => "The ':role' system role cannot be deleted.",
+        'system_role_not_renamable' => "The ':role' system role cannot be renamed.",
+        'redator_only_action' => 'Only instructors submit professional documentation.',
     ],
     'document_type' => [
         'CV' => 'Résumé',

@@ -32,6 +32,11 @@ return [
         'documents_shape' => 'El campo documents debe ser un mapa de tipo => archivo.',
         'document_type_invalid' => 'Tipo de documento inválido: :tipo',
         'permission_invalid' => 'Permiso inválido o no asignable a un rol personalizado.',
+        'system_role_immutable' => 'El rol de sistema es inmutable.',
+        'system_role_permissions_immutable' => "Los permisos del rol de sistema ':role' son inmutables.",
+        'system_role_not_deletable' => "El rol de sistema ':role' no puede ser eliminado.",
+        'system_role_not_renamable' => "El rol de sistema ':role' no puede ser renombrado.",
+        'redator_only_action' => 'Solo los redactores envían documentación profesional.',
     ],
     'document_type' => [
         'CV' => 'Currículum',

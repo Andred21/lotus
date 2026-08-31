@@ -21,7 +21,7 @@ class SystemRoleGuard
     {
         if ($role->isSystem()) {
             throw new ImmutableSystemRoleException(
-                "As permissões da role de sistema '{$role->name}' são imutáveis.",
+                __('identity.errors.system_role_permissions_immutable', ['role' => $role->name]),
             );
         }
     }
