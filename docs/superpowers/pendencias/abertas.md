@@ -321,6 +321,42 @@ repositório prova lock.
 
 # Documentação e mecanismo
 
+## P-73 — advisory transitiva nova reprova o `audit-dev` e segura a imagem da `main`
+
+**Bloco:** — · **Gatilho:** o João decidir o bump (ou o próximo bloco de frontend que possa
+absorvê-lo); fecha quando `pnpm audit` voltar a **0** em `frontend/` com o `package.json` intacto.
+Revisar em **2026-10-31**.
+
+**Medido em 2026-09-01**, no run de `push` em `main` do merge do item 21
+(`33562543853`, conclusão `failure`): `backend`, `frontend`, `types-drift` e `audit-prod` verdes,
+**`audit-dev` `failure`** — e **`image: skipped`**, que é a consequência medida, não a suposta.
+Reproduzido local com o comando exato do job (`ci.yml:221-223`, `pnpm audit` em
+`frontend/`):
+
+```
+2 vulnerabilities found
+Severity: 2 high
+```
+
+As duas são do **`browserslist`** (`<=4.28.6`, patched `>=4.28.7`), transitivas por
+`eslint-plugin-react-hooks > @babel/core > @babel/helper-compilation-targets > browserslist`:
+[GHSA-c83g-rgw3-j3cx](https://github.com/advisories/GHSA-c83g-rgw3-j3cx) e
+[GHSA-73wf-gq98-2v4g](https://github.com/advisories/GHSA-73wf-gq98-2v4g). O passo PHP do mesmo job
+(`composer audit --locked`) está limpo — `No security vulnerability advisories found.`
+
+**Não é regressão de bloco nenhum.** As advisories foram publicadas depois do bump que o item 20
+fez, e chegam por dependência de terceiro. O que mudou é a consequência: o item 20 tirou o
+`continue-on-error` do `audit-dev` e o pôs no `needs` do `image` (`ci.yml:338`), **de propósito** —
+"um run vermelho com par publicado era exatamente a incoerência que este `needs` existe para
+impedir". Então, enquanto isto estiver vermelho, **a `main` não publica imagem**.
+
+**Por que fica aberta:** o remédio é bump de lockfile (`package.json` intacto, como o item 20 fixou),
+e é decisão do João **quando** pagá-lo — a alternativa que a spec do item 20 recusou por escrito
+(`pnpm.overrides`) segue fora. A ficha existe porque este caso vai reincidir: advisory transitiva
+nova em devDep trava o release sem que nenhum bloco a tenha causado, e sem ficha o próximo a
+encontrar o vermelho vai medi-lo do zero.
+
+
 ## P-32 — a guarda da lição 13 confere path, não classe
 
 **Bloco:** BD-15 · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a
