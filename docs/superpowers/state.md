@@ -4,25 +4,25 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-decisoes-de-ui-pendentes
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md
 context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
     active_work_item: frontend-decisoes-de-ui-pendentes
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: main-tree
     branch: refactor/frontend-decisoes-de-ui-pendentes   # criada de main@a73e83e6 em 2026-08-31
     active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md
     context_packet: null   # Contexto: nao -- as fontes sao as proprias fichas e os audits locais
     blocker: null
     resume_state: null
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `planning` |
+| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `ready_for_execution` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -237,6 +237,20 @@ folio, separador `·` no KPI, eco do código no `notFound` público sem canal de
 do `/perfil` mudando do breakpoint que dói para o `xl`. O self-review achou uma violação de cor na
 linha que a D1 já edita (`CourseStep.tsx:93`): ela entra, e os outros quatro sítios de utility de
 paleta viram a **`D-69`** em vez de virar varredura.
+
+**O plano do item 21 está escrito e a `lane-a` entra em `ready_for_execution`** (2026-08-31): dez
+tasks em `plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md`, na ordem que a D7 da spec fixou —
+`D-66` nas Tasks 1–3 (tokens no `@theme`, os 15 sítios, a catraca), `D-68` na 4, as quatro fichas
+restantes nas 5–8, as fichas do backlog na 9 e o DoD end-to-end na 10. `executor: claude`, porque
+três das seis fichas só fecham contra uma medição de navegador que pode devolvê-las ao João, e
+delegar separaria quem decidiu de quem vê a medição contradizer.
+
+A escrita do plano remediu duas coisas que a spec não tinha: os sítios de raio em `features/`+`app/`
+são **15**, não 10 — os cinco a mais já escreviam `rounded-lg`/`rounded-md` e a catraca os alcança
+igual, então migram junto ou ela nasceria vermelha; e a `CATRACA_COR` do `eslint.config.js:401` é a
+lista de isenção que segura os cinco sítios de utility de paleta, com **exatamente os três arquivos
+da `D-69`** — o que dá à ficha um DoD mecanizado (`CATRACA_COR` chegar a `[]`) e confirma que o item
+21 não tira `CourseStep.tsx` da lista, porque a linha 102 fica.
 
 **A promoção pagou uma divergência de três vias que bloqueava a sessão.** Medida nesta sessão contra
 `main@a304f317`, antes de qualquer escrita: o espelho do topo dizia `executing` + `request_code_review`
