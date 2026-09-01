@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-decisoes-de-ui-pendentes
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -16,12 +16,12 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: frontend-decisoes-de-ui-pendentes
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: main-tree
     branch: refactor/frontend-decisoes-de-ui-pendentes   # criada de main@a73e83e6 em 2026-08-31
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
     active_plan: null
     context_packet: null   # Contexto: nao -- as fontes sao as proprias fichas e os audits locais
     blocker: null
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `ready_for_planning` |
+| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `planning` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -223,6 +223,20 @@ item 16** de propósito: sem régua escolhida, as runs de Cursos, Pessoas e Admi
 nova sobre a mesma dúvida. `Contexto: não` — as fontes são as próprias fichas e os audits locais que
 as originaram, todos no repositório. A branch `refactor/frontend-decisoes-de-ui-pendentes` nasce de
 `main@a73e83e6`, o commit que saneou o backlog.
+
+**A spec foi aprovada por seções em 2026-08-31** (`specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md`).
+O brainstorming remediu as fichas contra o código antes de decidir, e **três delas tinham premissa
+que o código não confirma**: a `D-65` descrevia uma reserva de `8rem` fixa e são sete valores nas 12
+tabelas, então ela **saiu do bloco** e ganha hospedeiro próprio (item 23, a criar); a `D-68` alcança
+21 bordas de controle e não só o input, mas nenhuma borda de card ou divisor, o que torna o remédio
+uma regra de FORMA no gerador em vez de troca no mapa de hex; e a rule de raio **briga com o tema em
+2px hoje**, o que explica por que os 10 sítios da P-67 escreveram `rounded`. As seis decisões: raio
+por token no `@theme` (um knob, `--radius-control` lendo o var do tema), borda de controle do claro
+em slate-500 (4,76:1), dois registros de heading mantidos com o `h1` de `/validar` subindo acima do
+folio, separador `·` no KPI, eco do código no `notFound` público sem canal de contato, e o `order-*`
+do `/perfil` mudando do breakpoint que dói para o `xl`. O self-review achou uma violação de cor na
+linha que a D1 já edita (`CourseStep.tsx:93`): ela entra, e os outros quatro sítios de utility de
+paleta viram a **`D-69`** em vez de virar varredura.
 
 **A promoção pagou uma divergência de três vias que bloqueava a sessão.** Medida nesta sessão contra
 `main@a304f317`, antes de qualquer escrita: o espelho do topo dizia `executing` + `request_code_review`
