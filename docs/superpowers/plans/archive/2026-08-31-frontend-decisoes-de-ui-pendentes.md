@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19 + TS · Tailwind v4 (`@theme`) · PrimeReact (tema gerado por `scripts/generate-brand-theme.mjs`) · ESLint flat config (`no-restricted-syntax`) · vitest (jsdom) · playwright-cli (medições).
 
-**Spec:** `docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md`
+**Spec:** `docs/superpowers/specs/archive/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md`
 **Context packet:** nenhum (`Contexto: não`; as fontes são as fichas e os audits locais)
 
 ## Global Constraints

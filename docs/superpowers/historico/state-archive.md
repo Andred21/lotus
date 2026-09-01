@@ -23,6 +23,130 @@
 
 ---
 
+## Fechado em 2026-09-01 — `frontend-decisoes-de-ui-pendentes` (item 21)
+
+**O item 21 assumiu a `lane-a` em 2026-08-31** — `frontend-decisoes-de-ui-pendentes`, criado no
+`backlog.md` e promovido explicitamente pelo João nesta sessão, junto com o item 22, que fica na
+fila. O pedido dele foi fechar as onze fichas travadas em decisão que nenhum bloco hospedava; o
+recorte por frente é decisão dele, tomada contra três opções: **decidir E aplicar** (decisão sem
+código continua sendo trava), **dois blocos** — o 21 leva as sete de desenho (`D-63`..`D-68` e
+`D-32`), o 22 as quatro de domínio e RBAC (`D-09`/`D-10`/`D-11`/`D-16`) — e **`lane-a`, main tree**,
+que estava `idle` e é onde backend pode rodar (P-03) se o 22 vier atrás. O 21 **precede a fatia 3 do
+item 16** de propósito: sem régua escolhida, as runs de Cursos, Pessoas e Administração abrem ficha
+nova sobre a mesma dúvida. `Contexto: não` — as fontes são as próprias fichas e os audits locais que
+as originaram, todos no repositório. A branch `refactor/frontend-decisoes-de-ui-pendentes` nasce de
+`main@a73e83e6`, o commit que saneou o backlog.
+
+**A spec foi aprovada por seções em 2026-08-31** (`specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md`).
+O brainstorming remediu as fichas contra o código antes de decidir, e **três delas tinham premissa
+que o código não confirma**: a `D-65` descrevia uma reserva de `8rem` fixa e são sete valores nas 12
+tabelas, então ela **saiu do bloco** e ganha hospedeiro próprio (item 23, a criar); a `D-68` alcança
+21 bordas de controle e não só o input, mas nenhuma borda de card ou divisor, o que torna o remédio
+uma regra de FORMA no gerador em vez de troca no mapa de hex; e a rule de raio **briga com o tema em
+2px hoje**, o que explica por que os 10 sítios da P-67 escreveram `rounded`. As seis decisões: raio
+por token no `@theme` (um knob, `--radius-control` lendo o var do tema), borda de controle do claro
+em slate-500 (4,76:1), dois registros de heading mantidos com o `h1` de `/validar` subindo acima do
+folio, separador `·` no KPI, eco do código no `notFound` público sem canal de contato, e o `order-*`
+do `/perfil` mudando do breakpoint que dói para o `xl`. O self-review achou uma violação de cor na
+linha que a D1 já edita (`CourseStep.tsx:93`): ela entra, e os outros quatro sítios de utility de
+paleta viram a **`D-69`** em vez de virar varredura.
+
+**O plano do item 21 está escrito e a `lane-a` entra em `ready_for_execution`** (2026-08-31): dez
+tasks em `plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md`, na ordem que a D7 da spec fixou —
+`D-66` nas Tasks 1–3 (tokens no `@theme`, os 15 sítios, a catraca), `D-68` na 4, as quatro fichas
+restantes nas 5–8, as fichas do backlog na 9 e o DoD end-to-end na 10. `executor: claude`, porque
+três das seis fichas só fecham contra uma medição de navegador que pode devolvê-las ao João, e
+delegar separaria quem decidiu de quem vê a medição contradizer.
+
+A escrita do plano remediu duas coisas que a spec não tinha: os sítios de raio em `features/`+`app/`
+são **15**, não 10 — os cinco a mais já escreviam `rounded-lg`/`rounded-md` e a catraca os alcança
+igual, então migram junto ou ela nasceria vermelha; e a `CATRACA_COR` do `eslint.config.js:401` é a
+lista de isenção que segura os cinco sítios de utility de paleta, com **exatamente os três arquivos
+da `D-69`** — o que dá à ficha um DoD mecanizado (`CATRACA_COR` chegar a `[]`) e confirma que o item
+21 não tira `CourseStep.tsx` da lista, porque a linha 102 fica.
+
+**A promoção pagou uma divergência de três vias que bloqueava a sessão.** Medida nesta sessão contra
+`main@a304f317`, antes de qualquer escrita: o espelho do topo dizia `executing` + `request_code_review`
+(par que a tabela de estados não admite — `executing` retoma a task pendente), a `lanes.lane-b` dizia
+`executing` + `continue_active_plan` e a tabela de ocupação dizia `ready_for_execution`. A verdade
+medida é a da `lane-b`: a fatia 1 do item 20 fechou e **mesclou** (PR #86, `308edc50` — `audit-dev`
+no `needs` do `image` em `ci.yml:338`, `scripts/provar-release.sh` no disco), e o que resta é a
+fatia 2, que é ação externa do João. As três vias foram alinhadas em `executing`, e o espelho do topo
+passou a apontar a `lane-a` — **fronteira durável, feita no main tree**, sem P-55 desta vez. Duas
+outras mentiras saíram junto: as branches da `lane-a` (PR #88, `a304f317`) e da `lane-c` (PR #87,
+`afe273cf`) estavam anotadas como **sem merge** e as duas já tinham mesclado, e o
+`state_basis_commit` estava dois dias atrás, em `24e0f037`.
+
+**As dez tasks do item 21 executaram em 2026-09-01 e a `lane-a` entra em `ready_for_review`.** Sete
+commits de código e dois de doc, na ordem que a D7 fixou: os dois tokens de raio no `@theme` e
+`shared/ui` (`97661217`), os 15 sítios de `features/`+`app/` (`9d5af40a`), a catraca `RAIO_LITERAL`
+nascendo verde e vista reprovar por sonda (`3c27c4f3`), a borda de controle do claro em slate-500
+por regra de FORMA no gerador (`d8c08e11`), o `cardTitleClass` e o `h1` de `/validar` subindo ao
+degrau do folio (`f4596362`), o separador `·` do KPI (`34793aa7`), o eco do código no `notFound`
+público (`6fae4d67`) e o `order-*` mudando de breakpoint no `/perfil` (`5ddce556`). O backlog pagou
+as seis fichas e a **P-67** (`a3571cc8`), e o audit fechou com a tabela de DoD contra evidência
+(`ab224072`). Gate final: `pnpm lint` **0**, build verde, **125 arquivos / 712 testes**,
+`generated.ts` com diff vazio e a catraca vista reprovar uma segunda vez no estado final.
+
+**O review de 2026-09-01 saiu com quatro achados, e o João aprovou os quatro.** Risco classificado
+como BAIXO — frontend visual, nenhum domínio das leis §5, `executor: claude` —, então sem segunda
+lente do Codex. Zero órfão: os 12 `rounded` que sobram em `features/` são prop booleana do
+`AppButton` ou classe do PrimeReact, e as bordas convertidas para slate-500 não caem sob nenhum
+seletor `disabled`/`readonly`. Os achados e o que cada um pagou: **Q-1** (`c480a805`) — de `sm` para
+cima o `<p>` do KPI ocupa a largura inteira e o `sm:justify-between` distribuía TRÊS filhos, então
+o separador da `D-64` ia parar no meio do card, longe dos algarismos que separa; ponto e grandeza
+viraram um filho só. O audit tinha medido contagem de linha e altura em 1024/1440, não a posição x
+do ponto — a prosa dele descrevia os 390px. **Q-2** (`9c167ee6`) — `--radius-control` referenciava
+`--border-radius` sem fallback, e essa folha entra por `<link>` de runtime: `var()` órfã invalida a
+declaração em tempo de valor computado e derrubaria o raio de todo controle para 0, em silêncio.
+**Q-3** (`afd5f3b0`) — a catraca `RAIO_LITERAL` não alcançava `rounded-t-lg`, `rounded-bl-md` nem
+`rounded-[6px]`; zero ocorrências hoje, mas é por essa porta que a P-67 volta. **Q-4** (`ec16ae17`)
+— o eco do código no `notFound` cortava em 64 char sem reticência, e código truncado que parece
+completo é pior que eco nenhum numa página de peso legal. Gate remedido depois das correções:
+`pnpm lint` **0**, build verde, **125 arquivos / 712 testes**, a catraca vista reprovar as três
+formas novas por sonda (`rounded-full`, `rounded-surface`, `rounded-control` e `p-button-rounded`
+seguem limpos) e o bundle com `--radius-control:var(--border-radius,4px)`. Nenhuma ficha nova, nada
+deferido para o backlog.
+
+**Três desvios ficaram registrados no audit, nenhum devolvendo ficha ao João.** (1) O teste da
+`D-68` previa 21 declarações de borda em `#64748b` e a saída tem 24 — três já eram slate-500 antes
+da passada; a invariante central (zero borda sobrando em `#cbd5e1`) bate. (2) A `D-67` mediu que
+`whitespace-nowrap` anula `break-all`, e o eco do código trocou `identifierClass` por
+`technicalDataClass`; `StatusHeading` e `NotFoundCard` saíram para arquivos irmãos por `max-lines`.
+(3) A premissa da spec §6 sobre `xl` foi medida em 1440x900: sobra um retorno de foco de 513px —
+dentro do critério de viewport (< 900px, e é a extensão rolável inteira), 8% fora da régua de "uma
+dobra e meia" (1,63 medida). O salto não é comparável ao de 390px, então o gatilho de devolução não
+disparou. **Três fichas novas nasceram** em vez de calar achado: `D-69`, `D-70` e o **item 23**, que
+hospeda a `D-65` reescrita com os sete valores de reserva medidos.
+
+**A `lane-a` fechou o item 21 em 2026-09-01** — `frontend-decisoes-de-ui-pendentes`, entrega em
+`historico/progress.md`. A branch `refactor/frontend-decisoes-de-ui-pendentes` nasceu de
+`main@a73e83e6` e foi **rebaseada sobre `main@de511ad9`** depois do gate — o gate de fechamento não
+integra; o rebase e a PR são passo da integração, pedidos pelo João em seguida. Os conflitos foram
+**todos** em `docs/superpowers/` (zero em código) e saíram pela invariante de dono: a `lane-a`
+escreveu a própria linha e a própria narrativa, e a `lane-b` do item 20 — que fechou e mesclou na
+`main` no PR #89 enquanto este bloco corria — ficou como a `main` a deixou. O `progress.md` recebeu
+as duas entregas e voltou a dez movendo a fatia 2 do `frontend-revisao-ui-por-modulo` para o
+`progress-archive.md`; a tabela `## Itens fechados` recebeu as duas linhas e voltou a cinco. **Gate
+re-rodado sobre a árvore rebaseada**, e não herdado do de antes do rebase. **O item 0 foi pago por
+re-medição mecanizada depois do review**, não herdado do audit: os quatro achados tinham mexido na
+catraca e no token, então a `RAIO_LITERAL` foi vista reprovar as **três** formas que o Q-3 abriu
+(`rounded-md`, `rounded-t-lg`, `rounded-[6px]`) por sonda negativa com `cp` do scratchpad, e o
+arquivo voltou com `git diff` vazio; o bundle carrega `--radius-control:var(--border-radius,4px)`;
+o tema claro tem **zero** borda em `#cbd5e1` e 24 em `#64748b`; os 12 `rounded` que sobram em
+`features/` são prova booleana do `AppButton`, com o lint em **0**. Gate: backend **1149 passed /
+5 skipped** (8930 asserções), frontend **125 arquivos / 714 testes** (os 712 do bloco mais os dois
+do `provar-release.test.ts` que a `main` trouxe), `pnpm build` verde,
+`generated.ts` com diff **vazio** após `typescript:transform`, **Pint N/A por escopo medido** (zero
+`.php` no diff do bloco). A **P-67** fechou por mecanismo e está em rastro em `encerradas.md`; a
+**P-61** e a **P-63** saíram do rastro, que é o primeiro fechamento posterior aos dos blocos que as
+encerraram. **Nenhuma pendência nasceu no gate** — o que a execução e o review acharam já tinha
+virado `D-69`, `D-70` e o item 23 no `backlog.md`. A `CATRACA_COR` segue com os três arquivos, que
+é o esperado: o DoD da `D-69` é ela chegar a `[]`, e o item 21 não a esvazia. A lane volta a `idle`
+e não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
+
+---
+
 ## Fechado em 2026-08-31 — `prontidao-pre-nuvem`, item 20 da fila
 
 **O item 20 assumiu a `lane-b` em 2026-08-29** — `prontidao-pre-nuvem`, criado no `backlog.md` e
@@ -180,6 +304,29 @@ Gate: suíte **1149 passed / 5 skipped** (eram 1138; +11 testes), `generated.ts`
 `passed` nos 14 arquivos, `pnpm lint`/`build` verdes. **Fica para o `/fechar-sprint`, além do que a
 execução já deixou:** a **P-71** nasceu com a linha do índice, e a **P-70** ganhou a dela no mesmo
 commit — o índice dizia 32 com 34 fichas no arquivo, e escrever a contagem certa exigia as duas.
+
+**A `lane-a` fechou o item 7 em 2026-08-30** — `hardening-i18n-e-erros-api`, narrativa integral em
+`historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/hardening-i18n-e-erros-api` nasceu de `main@37e0e2d4`, foi **rebaseada sobre `main@afe273cf`**
+(que traz o item 19 da `lane-c`, PR #87, e o item 20 da `lane-b`, PR #86) no fechamento, e **ainda
+não mesclou** — o gate de fechamento não integra. Zero colisão de código: os oito conflitos do
+rebase foram todos em `docs/superpowers/`, resolvidos pela invariante de dono — **o espelho do topo
+não foi tocado**, porque a `focused_lane` passou a ser a `lane-b`, que está em `executing` com o
+item 20. O
+fechamento pagou o item 0 **remedindo o DoD contra a API real depois do review**, porque os quatro
+achados mudaram o envelope: recusa de domínio, 403 de redator, 404 de model binding **e** de rota
+inexistente, 422, 429, conta desativada no meio da sessão e as descrições do Dashboard, todos nos
+três locales, mais as três bordas de fallback (sem header, `es`, `fr-FR`) caindo em es-CL. Gate:
+suíte **1149 passed / 5 skipped**, `generated.ts` sem diff contra a `main` nem na árvore,
+`pnpm lint`/`build` verdes, pint `passed` nos 92 arquivos PHP do bloco. A **P-61** fechou por
+mecanismo e foi para `encerradas.md`; a **P-66** saiu do rastro, que é o primeiro fechamento
+posterior ao dela. **Nasceu uma pendência no próprio gate:** o 419 devolve `detail` literal em
+inglês nos três locales (`CSRF token mismatch.`) porque o `TokenMismatchException` traz `getMessage()`
+não vazio e vence o fallback do `detailFor()` — o `title` já sai localizado. É a **P-72**: o 419 não
+está entre os sete braços que a **D5** enumera, e o remédio é decisão de desenho do envelope
+(lei §5.4), não conserto de fechamento. A pendência que a execução deixou em aberto sem ficha — as
+recusas de role de sistema em português — **foi paga pelo review (Q-2)** e não virou ficha nenhuma.
+A lane volta a `idle` e não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
 
 ---
 
