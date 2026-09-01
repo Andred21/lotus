@@ -64,7 +64,7 @@ export function ModuleFields({
           para 422). NUNCA bloqueia o submit — §5.7, registro não bloqueia ação. */}
       {hoursMismatch && (
         <p
-          className="rounded px-3 py-2 text-sm"
+          className="rounded-control px-3 py-2 text-sm"
           style={{
             background: warningSurface,
             color: warningText,

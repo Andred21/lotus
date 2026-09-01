@@ -47,7 +47,7 @@ export function DocumentTypeCard({
   }
 
   return (
-    <section className="rounded border p-4" style={{ borderColor: 'var(--surface-border)' }}>
+    <section className="rounded-surface border p-4" style={{ borderColor: 'var(--surface-border)' }}>
       <header className="flex items-center justify-between gap-4">
         <h4 className="font-medium">{turmaDocumentTypeLabel(type, t)}</h4>
         <AppTag

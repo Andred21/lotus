@@ -1,7 +1,7 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-a
 active_feature: null
 active_work_item: null
 workflow_state: idle
@@ -20,13 +20,13 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: feat/hardening-i18n-e-erros-api   # aberta de main@37e0e2d4; fechada em 2026-08-30, sem merge
+    branch: refactor/frontend-decisoes-de-ui-pendentes   # criada de main@a73e83e6 em 2026-08-31; fechada em 2026-09-01, ainda NAO mesclada
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: hardening-i18n-e-erros-api
+    last_completed_work_item: frontend-decisoes-de-ui-pendentes   # item 21, fechado em 2026-09-01
   lane-b:
     active_feature: null
     active_work_item: null
@@ -51,16 +51,16 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4; fechada em 2026-08-30, sem merge ainda
+    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4; fechada e mesclada em 2026-08-30 (PR #87, afe273cf)
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-triagem-dos-audits-do-item-18
-last_completed_work_item: prontidao-pre-nuvem
-state_basis_commit: a8c55efd
-updated_at: 2026-08-31T23:55:00-03:00
+last_completed_work_item: frontend-decisoes-de-ui-pendentes
+state_basis_commit: 03d535db
+updated_at: 2026-09-01T22:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,11 +160,11 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-08-31
+## Ocupação corrente — 2026-09-01
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `feat/hardening-i18n-e-erros-api` (item 7 fechado em 2026-08-30, rebaseada sobre `main@afe273cf`; **sem merge**) | `idle` |
+| `lane-a` | — | — | main tree | `refactor/frontend-decisoes-de-ui-pendentes` (item 21 **fechado** em 2026-09-01, ainda **sem merge**) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -189,28 +189,6 @@ na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segu
 
 **O item 12 fica estacionado, nao cancelado.** Ele segue no `backlog.md` (fila nao se mexe durante planejamento), o packet `status: blocked` fica guardado como evidencia e o campo `parked_work_item` da lane-b registra o vinculo. Quando o 10 provisionar o host, o packet do 12 regenera pelo gatilho de staleness que ele mesmo declara: *"um alvo AWS real ser provisionado"*.
 
-**A `lane-a` fechou o item 7 em 2026-08-30** — `hardening-i18n-e-erros-api`, narrativa integral em
-`historico/state-archive.md` e entrega em `historico/progress.md`. A branch
-`feat/hardening-i18n-e-erros-api` nasceu de `main@37e0e2d4`, foi **rebaseada sobre `main@afe273cf`**
-(que traz o item 19 da `lane-c`, PR #87, e o item 20 da `lane-b`, PR #86) no fechamento, e **ainda
-não mesclou** — o gate de fechamento não integra. Zero colisão de código: os oito conflitos do
-rebase foram todos em `docs/superpowers/`, resolvidos pela invariante de dono — **o espelho do topo
-não foi tocado**, porque a `focused_lane` passou a ser a `lane-b`, que está em `executing` com o
-item 20. O
-fechamento pagou o item 0 **remedindo o DoD contra a API real depois do review**, porque os quatro
-achados mudaram o envelope: recusa de domínio, 403 de redator, 404 de model binding **e** de rota
-inexistente, 422, 429, conta desativada no meio da sessão e as descrições do Dashboard, todos nos
-três locales, mais as três bordas de fallback (sem header, `es`, `fr-FR`) caindo em es-CL. Gate:
-suíte **1149 passed / 5 skipped**, `generated.ts` sem diff contra a `main` nem na árvore,
-`pnpm lint`/`build` verdes, pint `passed` nos 92 arquivos PHP do bloco. A **P-61** fechou por
-mecanismo e foi para `encerradas.md`; a **P-66** saiu do rastro, que é o primeiro fechamento
-posterior ao dela. **Nasceu uma pendência no próprio gate:** o 419 devolve `detail` literal em
-inglês nos três locales (`CSRF token mismatch.`) porque o `TokenMismatchException` traz `getMessage()`
-não vazio e vence o fallback do `detailFor()` — o `title` já sai localizado. É a **P-72**: o 419 não
-está entre os sete braços que a **D5** enumera, e o remédio é decisão de desenho do envelope
-(lei §5.4), não conserto de fechamento. A pendência que a execução deixou em aberto sem ficha — as
-recusas de role de sistema em português — **foi paga pelo review (Q-2)** e não virou ficha nenhuma.
-A lane volta a `idle` e não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -220,11 +198,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 | 2026-08-31 | `prontidao-pre-nuvem` (emenda a **P-62**: o pessoal está público e a decisão de visibilidade ficou com o João) | Item 20 da fila |
 | 2026-08-30 | `hardening-i18n-e-erros-api` (paga a **P-61**, `D-07`, `D-18`, `D-36`, `D-38`, `D-58`; abre a **P-70**, a **P-71** e a **P-72**) | Item 7 da fila |
 | 2026-08-30 | `frontend-triagem-dos-audits-do-item-18` (paga a **P-63**; abre a `D-63`..`D-68` e rehospeda a **P-67** na `D-66`) | Item 19 da fila |
 | 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
-| 2026-08-29 | `hardening-performance-e-dados` (paga a **P-66** e o `D-15`; abre a **P-69**) | Item 6 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

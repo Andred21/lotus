@@ -46,7 +46,7 @@ export function BudgetDialog({
       <section className="space-y-4">
         {isCreate && (
           <p
-            className="rounded px-3 py-2 text-sm"
+            className="rounded-control px-3 py-2 text-sm"
             style={{ background: 'var(--surface-ground)', color: 'var(--text-color-secondary)' }}
           >
             {t('budget.createHint')}

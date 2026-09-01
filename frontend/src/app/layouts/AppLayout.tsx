@@ -21,7 +21,7 @@ export function AppLayout() {
         * volta ao começo da barra. */}
       <a
         href="#contenido"
-        className="sr-only rounded-md border px-3 py-2 text-sm font-medium no-underline focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50"
+        className="sr-only rounded-control border px-3 py-2 text-sm font-medium no-underline focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50"
         style={{
           background: 'var(--surface-card)',
           borderColor: 'var(--surface-border)',

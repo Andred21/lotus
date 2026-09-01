@@ -26,17 +26,20 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — quem ordena é a cadeia de dependência: o **9** e o **16** são o que sobra do
-  código (o 6, o 7, o 18, o 19 e o 20 fecharam), 10→12 constroem a infra e o 13 é o gate final de
-  go-live.
+- **P0 não ordena** — quem ordena é a cadeia de dependência: o **21** destrava a fatia 3 do **16**,
+  o **22** e o **9** fecham o que sobra do código (o 6, o 7, o 18, o 19 e o 20 fecharam),
+  10→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
   em 2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
-  2026-08-27, o `5` em 2026-08-28, o `18` e o `6` em 2026-08-29, o `19` e o `7` em 2026-08-30, o
+  2026-08-27, o `5` em 2026-08-28, o `6` e o `18` em 2026-08-29, o `7` e o `19` em 2026-08-30, o
   `20` em 2026-08-31, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
-  provisionamento). A fila começa no `9` e salta os que já fecharam de propósito: o número é
-  identidade estável, citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar quebraria as citações e pareceria promoção.
-- **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
-  2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
+  provisionamento). A fila começa no `9` e salta os que já fecharam
+  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios
+  blocos. Renumerar quebraria as citações e pareceria promoção.
+- **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22, o `17` em
+  2026-08-24 e o `21` e o `22` em 2026-08-31 — os dois **abertos pelo João**, recortando por frente
+  as onze fichas travadas em decisão que nenhum bloco hospedava; o 21 e o 22 aparecem no topo da
+  fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
 - **O 16 e o 17 chegaram aqui pelo merge da `lane-c` em 2026-08-24.** Até ele, a fila canônica dos
   dois morava na branch `refactor/frontend-revisao-ui` (`eaa9e15c`, `bef4feb3`), por decisão do João
@@ -45,6 +48,32 @@
 ---
 
 # Fila priorizada
+
+## 22. `dominio-decisoes-de-rbac-e-semantica`
+
+**Prioridade:** P1 · **Frente:** Backend · **Contexto:** não
+**Fonte:** as fichas `D-09`, `D-10`, `D-11` e `D-16`.
+
+**Objetivo:** fechar as quatro decisões de domínio e RBAC travadas no João e aplicar o que cada uma
+decidir. São de frente diferente do item 21 — contrato, permissão e semântica de funil, não tinta.
+
+**Escopo:**
+- **`D-10`** — `GET /api/roles` deixa admin comum enumerar permissão de superadmin enquanto
+  `/api/permissions` é superadmin-only;
+- **`D-11`** — o dropdown de empresa do create de aluno chama `clientsApi` num módulo gated por
+  `identity.user.*`; duas mitigações de UI já foram revertidas por piorarem;
+- **`D-16`** — turma concluída com zero matrículas cai em `fully_issued`; o consumidor que faltava
+  existe desde 2026-08-17;
+- **`D-09`** — a UI não volta a zero contatos principais e o backend aceita zero; decidir qual
+  camada cede.
+
+**Fora:** a `D-34` (gate RBAC do Dashboard atravessando o seam como `null`) — **continua sem
+hospedeiro**, e escolher é do João; o candidato que sobrou é o item 9.
+
+**DoD:** as quatro fichas têm veredito escrito e o código que o veredito pedir, com prova de
+comportamento; mudança de contrato regenera `generated.ts` pelo DTO (lei §5.3).
+
+---
 
 ## 9. `administracao-roles-permissoes-redesign`
 
@@ -226,6 +255,22 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 ---
 
 
+## 23. `frontend-tabelas-reserva-e-rolagem`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não
+**Fonte:** a ficha `D-65`, remedida no brainstorming do item 21 (2026-08-31), e o audit
+`audits/2026-08-28-item18-fase3.md` (f3 UI-01) que a originou.
+
+Paga a **`D-65`**. A reserva da coluna presa é em `rem` contra `tableWidths` em %, sobre
+`min-w-[48rem]`: em 1024px a coluna presa come largura que as outras colunas já reservaram, e o
+efeito muda de tabela para tabela porque **a reserva não é uma constante**.
+
+Duas direções a medir nas 12 tabelas, a 1024px: (a) sinal de rolagem no wrapper, para que a
+rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor onde a reserva não
+cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
+
+---
+
 ---
 
 # Decisões não promovíveis isoladamente
@@ -236,13 +281,9 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 | `D-10` | Admin comum pode ou não enumerar permissões do superadmin via `GET /api/roles`. |
 | `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
 | `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
-| `D-32` | Ordem de foco de `/perfil` abaixo de `xl` — a correção existiu e foi revertida por decisão de layout (2026-08-18). Escolher entre as três saídas da ficha antes de qualquer bloco. |
-| `D-63` | **Escala de heading** (f2 UI-02/03 do audit de 2026-08-28): a faixa de seção (`h2`, 12px caixa alta) é menor que o título de card (`h3`, 16px), e o `h3` do Perfil é byte a byte o `h2` do Dashboard. São dois REGISTROS — eyebrow e título — codificando profundidade por caixa e posição, não por corpo. Recomendação: **manter**; se o João quiser escala monotônica, o título de card sobe para `typography.ts` (hoje literal em `AppCard.tsx:147`) e o degrau muda numa constante. **Fato acrescentado pela run 5 (2026-08-30):** em `/validar/<uuid>` válido o `h1` do veredito ("Certificado válido") mede 18px/600 enquanto o folio ao lado mede 30px — o identificador é o maior texto da página pública e a resposta que a pessoa foi checar sai um degrau abaixo dele; a run manteve o `CertificateFolio` como está (medido nas três viewports, cabe a 390) e o degrau que ela recomenda mover é o do `h1`, que é desta ficha. Gatilho: decisão do João. |
-| `D-64` | **"1250 UF"** (f2 UI-08): no KPI de cotizaciones a contagem (Archivo 30px) e a grandeza (mono 12px) se encostam e leem como um número; em es-CL o espaço é separador de milhar válido. Recomendação: separador visível na MESMA linha — `·` com `aria-hidden` entre os dois, ou rótulo curto antes do valor —, sem terceira linha (razão em `KpiRow.tsx:104`). Gatilho: decisão do João. |
-| `D-65` | **Reserva da coluna presa em tablet** (f3 UI-01): `stickyActionsColumn('8rem')` fixo contra `tableWidths` em % sobre `min-w-[48rem]` — a 1024px a ação cobre 99px (65%) da última coluna de dado, em todas as 12 tabelas com ação presa. Duas direções: reserva em % do mesmo orçamento (reabre as 12 medições do item 17) ou sinal de rolagem no wrapper + `min-width` menor onde a reserva não cabe. Recomendação: a segunda, medida nas 12. Gatilho: bloco de tabelas. |
-| `D-66` | **Escala de raio** (f3 UI-05 + **P-67**): a rule diz `lg`/`md`/`full`; a tela tem 4px para botão, input e tag (tema), `rounded` = 4px, `rounded-md` (6px) só nos banners do `FormField`, `rounded-full` só no pill de contagem do `AppCard`. Recomendação: superfície `rounded-lg`; controle, faixa fina **e tag** herdam o raio do tema (4px = `rounded`); `rounded-full` só para círculo e cápsula de contagem; banners voltam ao raio do tema; os 10 sítios da P-67 se classificam por essa régua e a catraca nasce depois. Gatilho: decisão do João; hospeda a P-67. |
-| `D-67` | **Corpo do `notFound` público** (f3 UI-07): `/validar/<uuid>` inexistente mostra só o `h1` — zero `a`/`button`, sem eco do identificador. Recomendação: ecoar o identificador consultado em `identifierClass` e uma linha de passo seguinte ("verifica el código impreso o contacta a Lotus"), sem link e sem dado do certificado — texto de página pública de peso legal. **Absorve a `D-61`** (UI-04 da run de Certificados de 2026-08-25, o mesmo defeito registrado duas vezes): `ValidationPage.tsx:114-118` segue com um `StatusHeading` e nada mais, enquanto o ramo `revoked` logo abaixo acrescenta linha de detalhe — e quem valida é alguém DE FORA escaneando um QR, que não distingue código digitado errado de certificado inexistente. **DoD herdado da `D-61`:** o ramo `notFound` mostra título + linha de orientação aprovada, nas 3 locales. Gatilho: decisão do João/Lotus sobre a redação. |
-| `D-68` | **Borda do input no tema claro** (f4 UI-05): `#cbd5e1` sobre `#ffffff` mede 1,48:1; a 1.4.11 pede 3:1 no limite do controle quando ele é o único indicador (o escuro tem poço de fundo e não depende do traço). Nenhum `-400` do Tailwind passa (slate-400 2,36:1); slate-500 `#64748b` mede 4,76:1. Recomendação: slate-500 na borda de repouso, via `scripts/generate-brand-theme.mjs`, medida nos dois temas antes de entrar. Gatilho: decisão do João — muda a cara de todo input do claro. |
+| `D-65` | **Reserva da coluna presa em tablet** (f3 UI-01): a reserva de `stickyActionsColumn` é em `rem` e as colunas são em %, sobre `min-w-[48rem]`: em 1024px a soma estoura e a coluna presa come largura alheia. **A ficha dizia `8rem` fixo nas 12 tabelas; remedido em 2026-08-31, são SETE valores**, vários condicionais ao ramo `archived` — `6rem` (`RolesTable`, `StudentsTable`, `BudgetsTable` ativo), `8rem` (`EmissionStudentsTable`, o único), `9rem` (`EnrollmentTable` + os ramos ativos de `TurmasTable`, `CoursesTable`, `UsersTable`, `ClientsTable`), `10rem` (`ArchivedEnrollmentsList` + os ramos `archived` de seis tabelas), `12rem` (`RedatoresTable` ativo), `16rem` (`HistorialTable`). Não se corrige numa constante: são 12 decisões. **Hospedeiro: item 23.** |
+| `D-69` | **Utility de paleta Tailwind em 4 sítios de `features/`** — a rule é explícita: *"Cor vem de variável do tema, escrita por `style`. Utility de paleta Tailwind (`bg-slate-50`, `text-red-600`) é o defeito, nos dois temas."* Medido em 2026-08-31 (self-review da spec do item 21): 5 sítios em 3 arquivos. O item 21 pagou **só** `CourseStep.tsx:93`, porque a D1 já reescrevia aquela linha. Sobram: `CourseStep.tsx:102` (`text-slate-500`), `QuoteWizard.tsx:47` (`text-slate-500`), `QuoteWizard.tsx:64` (`text-red-600`), `ManualButton.tsx:28` (`text-red-600`). **Dois são tinta de ERRO** — decidir qual variável de perigo o tema expõe é desenho, não conserto de passagem, e é o que trava a ficha. **DoD mecanizado:** `CATRACA_COR` em `frontend/eslint.config.js:401` chega a `[]` — a lista de isenção de `COR_HARDCODED` tem exatamente estes três arquivos, e zerá-la é a prova de que os quatro sítios morreram. **Sem hospedeiro.** |
+| `D-70` | **`/validar` diz "contacta a Lotus" sem canal** — o item 21 (`D-67`) pôs a linha de orientação no ramo `notFound` dos três locales, **sem canal**: publicar endereço ou telefone numa página aberta é decisão da Lotus, não do João sozinho. Enquanto não houver canal, a orientação termina num beco. Precisa da Lotus antes de virar código. **Gatilho: decisão da Lotus.** |
 | `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
 | `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
 | `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |
@@ -381,14 +422,6 @@ Executar sem a decisão é escolher no lugar do João.
   escolheu o balde de propósito, mas o rótulo afirma emissão completa onde não houve emissão.
   **O gatilho venceu:** o consumidor que faltava (funil do B2) existe desde 2026-08-17. Decidir:
   sétimo balde, ou rótulo que distinga "sem matrícula a emitir".
-
-- **D-32** · A ordem de foco de `/perfil` diverge da visual abaixo de `xl` — `order-*` reordena a
-  pintura, não a árvore de acessibilidade (WCAG 1.3.2/2.4.3; medições: 390px `scrollTop`
-  0→1862→2230→0; 1024px `y` 1875→2383→323). **A correção existiu e foi revertida por decisão do
-  João (2026-08-18)** — virar as colunas em `xl` tirava a identidade da esquerda no desktop.
-  Inverter só o DOM não serve (muda a viewport da violação); `tabIndex` positivo também não. O que
-  resta é desenho: a D1 abre mão do lado, a D-27 abre mão da precedência abaixo de `xl`, ou o
-  cartão de identidade encolhe o bastante para dispensar a inversão.
 
 - **DS-05** · O avatar de `/perfil` é `scale-200` sobre imagem pequena. Deixado fora do BD-16 por
   decisão explícita; a Task 15 mediu que não recorta. Estética — só vira task após medição

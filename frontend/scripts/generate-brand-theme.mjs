@@ -283,6 +283,27 @@ const escapar = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 // (preenchimento e traço, que não são texto e têm régua própria).
 const CELESTE_PRIMEIRO_PLANO = new RegExp(`(?<![-\\w])color:(\\s*)${CELESTE}\\b`, 'gi')
 
+// ── D-68: a borda de controle do claro mede 3:1 ─────────────────────────────
+// `#cbd5e1` (o slate-300 que sai do gray-300 nos neutros) sobre branco mede
+// 1,48:1 — reprova a WCAG 1.4.11, que pede 3:1 no limite do controle quando ele
+// é o ÚNICO indicador, e no claro é: o input não tem poço de fundo. `#64748b`
+// (slate-500) mede 4,76:1 e já é degrau vivo da rampa — é o texto secundário,
+// 117× no tema. Nenhuma cor nova entra (D-P3, "uma família só"). O slate-400
+// (`#94a3b8`) mede 2,36:1 e também reprovaria.
+//
+// Regra de FORMA, pelo mesmo argumento do `CELESTE_PRIMEIRO_PLANO`: lista de
+// seletores envelheceria no próximo upgrade do primereact. `#cbd5e1` aparece
+// 27× no claro gerado; a forma separa as 21 que são traço de controle das 6 que
+// não são — `--surface-300` e `--gray-300` (a rampa, que não se mexe) e quatro
+// `background`/`background-color` decorativos. Trocar a entrada do MAPA
+// alcançaria as 27; por isso a passada vem depois dele, sobre a saída.
+//
+// Só o claro: no escuro o controle pousa em poço de fundo e o traço não carrega
+// o contraste sozinho. Mesma condição da tinta.
+export const CINZA_BORDA = '#64748b'
+const BORDA_DE_CONTROLE =
+  /(?<![-\w])(border(?:-(?:top|right|bottom|left|color|block|inline)[-\w]*)?)(\s*:\s*[^;{}]*?)#cbd5e1/gi
+
 export function transform(css, map, tinta) {
   const tabela = { ...map, ...COMUM }
   // Uma passada só: substituir em série faria uma saída ser reescaneada pela
@@ -297,8 +318,16 @@ export function transform(css, map, tinta) {
   )
   // Depois do mapa, não antes: é o mapa que transforma o azul do Lara em
   // celeste, e é o celeste que esta passada procura. Só o claro recebe tinta —
-  // no escuro o celeste pousa em superfície escura e mede 6,76:1.
-  return CABECALHO + (tinta ? out.replace(CELESTE_PRIMEIRO_PLANO, `color:$1${tinta}`) : out)
+  // no escuro o celeste pousa em superfície escura e mede 6,76:1. A borda de
+  // controle (D-68) tem a MESMA condição e pelo mesmo motivo: é o claro que não
+  // tem poço de fundo, e é lá que o traço é o único indicador.
+  if (!tinta) return CABECALHO + out
+  return (
+    CABECALHO +
+    out
+      .replace(CELESTE_PRIMEIRO_PLANO, `color:$1${tinta}`)
+      .replace(BORDA_DE_CONTROLE, `$1$2${CINZA_BORDA}`)
+  )
 }
 
 function gerar(nomeStock, map, nomeSaida, tinta) {

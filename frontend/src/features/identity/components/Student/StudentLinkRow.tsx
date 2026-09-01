@@ -11,7 +11,7 @@ export function StudentLinkRow({ link }: { link: StudentClientLogData }) {
 
   return (
     <li
-      className="flex items-center justify-between rounded border p-3 "
+      className="flex items-center justify-between rounded-surface border p-3 "
       style={{ borderColor: "var(--surface-border)" }}
     >
       <span className="text-sm font-medium ">{link.client_name}</span>

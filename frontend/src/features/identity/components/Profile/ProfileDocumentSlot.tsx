@@ -73,7 +73,7 @@ export function ProfileDocumentSlot({
   ) : null
 
   return (
-    <div className="rounded border p-2" style={{ borderColor: 'var(--surface-border)' }}>
+    <div className="rounded-surface border p-2" style={{ borderColor: 'var(--surface-border)' }}>
       <ProfileDocumentSlotHeader tipo={tipo} status={doc.status} validUntil={doc.valid_until} />
 
       <div className="mt-2">

@@ -7,74 +7,33 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(duas: a **P-61** e a **P-63**, fechadas nos dois blocos que fecharam em 2026-08-30. A **P-66**
-saiu no fechamento do `frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao
-do `hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é
-mecanismo em migration, e o rastro dela está no git e na linha de entrega em
-`../historico/progress.md`. A **P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de
-2026-08-29, e a **P-03** e a **P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro
-delas.)*
+*(uma: a **P-67**, fechada em 2026-09-01 pelo `frontend-decisoes-de-ui-pendentes`. A **P-61** e a
+**P-63** saíram neste mesmo fechamento — o primeiro posterior aos dos dois blocos que as encerraram
+em 2026-08-30 —, e o parágrafo adiante é o rastro delas. A **P-66** saiu no fechamento do
+`frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao do
+`hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é mecanismo
+em migration, e o rastro dela está no git e na linha de entrega em `../historico/progress.md`. A
+**P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de 2026-08-29, e a **P-03** e a
+**P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro delas.)*
 
-### P-61 — os `title` do `ProblemDetails` estavam em português num produto es-CL
+### P-67 — a escala de raio estava escrita na rule e 10 sítios ficaram fora dela, sem catraca
 
-**Fechada em 2026-08-30**, no `hardening-i18n-e-erros-api` (Task 2), por mecanismo: os sete `title`
-do `ProblemDetails::fromException` e o `detail` mascarado do 500 saíram do código e passaram a
-`lang/<locale>/problem.php` nos três locales, com o `LocaleParityTest` recusando chave que exista em
-um só. Medido contra a API real no gate de fechamento (2026-08-30), sem tocar em `generated.ts`:
+**Fechada em 2026-09-01**, no `frontend-decisoes-de-ui-pendentes` (item 21, Tasks 1–3), por
+mecanismo. A `D-66`, que a hospedava, decidiu a régua: o raio passa a vir de **token no `@theme`**
+(`--radius-surface` e `--radius-control`, este lendo o var do tema do PrimeReact), `shared/ui` os
+consome e `features/`+`app/` migram atrás. O planejamento remediu o alcance — os sítios eram **15**,
+não os 10 que a ficha contava: cinco já escreviam `rounded-lg`/`rounded-md` e a catraca os
+alcançaria igual, então migraram junto para ela não nascer vermelha.
 
-```
-404  es-CL Recurso no encontrado  | pt-BR Recurso não encontrado | en Resource not found
-403  es-CL Acceso denegado        | pt-BR Acesso negado          | en Access denied
-422  es-CL Error de validación    | pt-BR Erro de validação      | en Validation error
-401  es-CL No autenticado         | pt-BR Não autenticado        | en Not authenticated
-429  es-CL Demasiadas solicitudes | pt-BR Muitas solicitações    | en Too many requests
-```
+A catraca é a `RAIO_LITERAL` (`no-restricted-syntax` em `frontend/eslint.config.js`), sobre as duas
+camadas que a rule exige (`src/features/**` e `src/app/**`), e **nasceu verde** — foi vista reprovar
+por sonda negativa antes de valer, com o arquivo restaurado do scratchpad (nunca por `git stash`).
+A `.claude/rules/frontend-estilizacao.md` passou a descrever a escala que existe, em vez da que a
+rule descrevia e a tela não tinha — que era exatamente por que os 10 sítios escreveram `rounded`.
 
-O `title` do 500 (`Error interno`) e o `detail` mascarado (`Ocurrió un error inesperado. Vuelva a
-intentarlo.`) não puderam ser medidos ao vivo — `APP_DEBUG=true` no container de dev desliga o
-próprio ramo de mascaramento —, e ficam provados pelas chaves nos três arquivos e pelo
-`EnvelopeLocalizadoTest`. A decisão de idioma que a ficha reservava ao João foi tomada por ele no
-brainstorming de 2026-08-29 (**D5** da spec): os defaults do framework são localizados por TIPO de
-exceção.
-
-O que a ficha **não** cobria e ficou aberto é o 419, que nasceu ficha própria — a
-[P-72](./abertas.md).
-
----
-
-### P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
-
-**Fechada em 2026-08-29**, no `frontend-triagem-dos-audits-do-item-18` (Task 12), por mecanismo: a
-legenda do `AppLineChart` passou a ter conteúdo próprio (`shared/ui/AppLineChart/legend.tsx`) —
-`<ul role="list">` com o texto na tinta secundária e o marcador na tinta da série —, porque a
-f2 UI-09 do audit de 2026-08-28 mediu o texto da legenda abaixo de AA no claro e o gatilho desta
-ficha ("bloco que tocar gráfico") disparou. Guarda em `legend.test.tsx`; medida na run 5
-(`audits/2026-08-29-item19-run5.md`): zero `ul` sem `role` no Dashboard.
-
-**Bloco:** — o hospedeiro (item 18) fechou em 2026-08-29 sem pagá-la; rehospedar é do João · **Gatilho:** bloco que
-tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
-elementos, ou pôr `role="list"` no wrapper de terceiro. Revisar em **2026-10-31**.
-
-Medido no fechamento do `frontend-hardening-final` (2026-08-27), Chromium real, Dashboard a
-1440×900: varrendo **todo** `ul` da página, dois ficam sem `role` — as duas legendas do Recharts
-(`ul.recharts-default-legend`, dentro de `.recharts-legend-wrapper`, uma no gráfico de
-`Certificados emitidos` e outra no de `UF aprobada`).
-
-O mini-reset da **P-46** crava `list-style: none` em todo `ul` da aplicação, e no WebKit isso tira a
-semântica de lista junto — foi o que o **Q-6** do review de 2026-08-27 corrigiu, pondo `role="list"`
-nas 16 listas do repositório e uma régua de lint que exige o atributo daqui pra frente. A régua lê
-JSX: lista que nasce dentro de biblioteca não passa por ela, e o reset alcança essas listas do mesmo
-jeito. As 16 nossas estão cobertas; a borda são as de terceiro.
-
-**Alcance pequeno, e por isso ficou aberta:** as duas listas são legendas de gráfico, cada item já
-carrega `aria-label` próprio no `<svg>`, e o conteúdo delas é decorativo em relação ao dado (que é o
-gráfico). Não reabre o DoD 4 do bloco — as quatro famílias que a spec §5 mediu continuam corretas e
-com `role`.
-
-**Nasceu como `P-61` na branch `refactor/frontend-hardening-final` e foi renumerada no merge da
-`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
-do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
-renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
+Rastro: `feat(ui): raio ganha dois tokens no @theme e shared/ui os consome` (`97661217`),
+`feat(ui): os 15 sitios de features e app consomem os tokens de raio` (`9d5af40a`) e
+`feat(lint): RAIO_LITERAL nasce verde e a rule descreve a escala real` (`3c27c4f3`).
 
 ---
 
@@ -124,6 +83,19 @@ metade não paga do gatilho continua declarada onde ela vive: `IdentityCell.test
 sonda negativa).
 
 ## Rastro anterior, já removido
+
+**A P-61 e a P-63 saíram no fechamento do `frontend-decisoes-de-ui-pendentes` (2026-09-01)**, o
+primeiro posterior aos dos dois blocos que as encerraram em 2026-08-30. A **P-61** fechou no
+`hardening-i18n-e-erros-api` por mecanismo — os sete `title` do `ProblemDetails::fromException` e o
+`detail` mascarado do 500 saíram do código para `lang/<locale>/problem.php` nos três locales, com o
+`LocaleParityTest` recusando chave que exista em um só, e a borda que ela não cobria (o 419) vive
+nomeada na [P-72](./abertas.md). A **P-63** fechou no `frontend-triagem-dos-audits-do-item-18`,
+também por mecanismo — a legenda do `AppLineChart` ganhou conteúdo próprio
+(`shared/ui/AppLineChart/legend.tsx`, `<ul role="list">`) e o mini-reset deixou de tirar semântica
+de lista renderizada por biblioteca, medido na run 5 (`audits/2026-08-29-item19-run5.md`): zero `ul`
+sem `role` no Dashboard. O rastro durável das duas está nos commits e nas linhas de entrega em
+[`../historico/progress.md`](../historico/progress.md).
+
 
 **Saíram no fechamento do `hardening-acesso-ownership-e-integridade` (2026-08-23), o primeiro
 posterior ao do BD-15, que é a condição que as seis linhas pediam:** a **P-18** (página de

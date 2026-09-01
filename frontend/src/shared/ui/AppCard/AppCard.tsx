@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { dangerText, infoText, neutralInk, successText, warningText } from '../../styles/tokens'
-import { technicalDataClass } from '../typography'
+import { cardTitleClass, technicalDataClass } from '../typography'
 
 export type AppCardVariant = 'default' | 'stat' | 'sunken'
 export type AppCardTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
@@ -87,7 +87,7 @@ export function AppCard({ variant = 'default', tone = 'neutral', className, chil
   return (
     <div
       className={[
-        'rounded-lg border overflow-hidden',
+        'rounded-surface border overflow-hidden',
         // A margem do `p` já é zerada pelo mini-reset de `index.css` (P-46).
         stat ? 'px-4 py-3.5' : '',
         className,
@@ -145,7 +145,7 @@ export function AppCardHeader({ title, count, subtitle, actions }: AppCardHeader
         * largura toda, e "Cla…" no lugar de "Clases" não qualifica nada. */}
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
         <h3
-          className="text-base font-semibold"
+          className={cardTitleClass}
           style={{ color: 'var(--app-card-tone-text, var(--text-color))' }}
         >
           {title}

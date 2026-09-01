@@ -83,26 +83,36 @@ export function ProfilePage() {
           (D-28), que precisou vir antes — reordenar sem marca visual só troca
           qual metade fica por último.
 
-          **O custo do `order-*` está medido e aceito (decisão do João,
-          2026-08-18).** `order` reordena a PINTURA, não a árvore de
-          acessibilidade: abaixo de `xl` o Tab percorre a coluna de leitura
-          antes da de self-service, e o foco salta `main.scrollTop`
-          0 → 1862 → 2230 → 0 em 390px; em 1024px o `y` do elemento focado vai
-          1875 → 2383 e volta para 323 (UI-01 do review de 2026-08-18, WCAG
-          1.3.2 e 2.4.3). A correção existiu e foi revertida: virar as colunas
-          em `xl` alinharia DOM e pintura nas três larguras, ao preço de tirar
-          a identidade da esquerda no desktop, e o layout venceu. Nada de
-          `tabIndex` positivo aqui — trocaria um defeito de ordem por outro. O
-          débito é o **D-32** do `backlog.md`. */}
+          **O `order-*` mudou de breakpoint em 2026-08-31 (D-32).** Até então o
+          DOM nascia `identidade → self-service` e a pintura abaixo de `xl` era o
+          inverso — `order` reordena a PINTURA, não a árvore de acessibilidade, e
+          o Tab percorria a coluna de leitura antes da de self-service: o foco
+          saltava `main.scrollTop` 0 → 1862 → 2230 → 0 em 390px, e em 1024px o
+          `y` do elemento focado ia 1875 → 2383 e voltava para 323 (UI-01 do
+          review de 2026-08-18, WCAG 1.3.2 e 2.4.3). Agora o DOM nasce na ordem
+          de BAIXO de `xl` e o `order-*` só existe em `xl`: onde a violação foi
+          medida em 3,7 dobras, DOM e pintura concordam. Em `xl` sobra uma
+          divergência menor, porque as duas colunas dividem a mesma dobra.
+
+          Isto NÃO reverte a D1 nem a D-27: a identidade segue à esquerda no
+          desktop e o self-service segue vindo primeiro abaixo de `xl`. Só mudou
+          qual breakpoint paga a diferença entre pintura e árvore.
+
+          Recusadas: virar as colunas em `xl` (é a correção que existiu e que o
+          João reverteu em 2026-08-18, porque tirava a identidade da esquerda no
+          desktop); `tabIndex` positivo (trocaria um defeito de ordem por outro);
+          e a propriedade CSS `reading-flow`, que resolveria o caso na origem mas
+          só existe no Chrome — apoiar acessibilidade num recurso de um motor só
+          é regressão silenciosa nos outros. */}
       <div className="mt-2 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-        <div className="order-2 flex flex-col gap-4 xl:order-1">
-          <ProfileIdentityCard profile={profile} />
-          {profile.redator && <ProfileSummaryCard redator={profile.redator} />}
-        </div>
-        <div className="order-1 flex flex-col gap-4 xl:order-2">
+        <div className="flex flex-col gap-4 xl:order-2">
           <ProfilePersonalSection profile={profile} />
           <ProfileSecuritySection email={profile.email} />
           {profile.redator && <ProfileDocumentsSection documentos={profile.redator.documentos} />}
+        </div>
+        <div className="flex flex-col gap-4 xl:order-1">
+          <ProfileIdentityCard profile={profile} />
+          {profile.redator && <ProfileSummaryCard redator={profile.redator} />}
         </div>
       </div>
     </ModulePage>

@@ -58,39 +58,12 @@ doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória
 que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
 no lugar que o fatal de 128M apareceu aqui.
 
-> **As duas fichas abaixo foram renumeradas no merge de fechamento (2026-08-29).** Nasceram
-> `P-64` e `P-65` na `lane-c` e viraram `P-67` e `P-68`: a `main` já trazia `P-64`, `P-65` e `P-66`
-> da `lane-a`, mescladas antes destas (PR #81). Mesmo movimento que a nota da `lane-a` registra
-> adiante — ID publicado na `main` não se reusa, e quem renumera é a lane que ainda não mesclou.
-
-## P-67 — a escala de raio está escrita na rule e 10 sítios ficaram fora dela, sem catraca
-
-**Bloco:** `D-66` (decisão do João sobre a escala de raio, aberta pelo item 19 em 2026-08-29) ·
-**Gatilho:** a D-66 decidida — os 10 sítios se classificam pela régua escolhida e a catraca nasce
-depois do último. Revisar em **2026-10-31**.
-
-O `frontend-estilizacao-padronizacao-de-componentes` (item 18) escreveu a escala em
-`.claude/rules/frontend-estilizacao.md`: superfície `rounded-lg`, controle e faixa fina
-`rounded-md`, pill `rounded-full`, e `rounded` solto não existe — é raio sem degrau declarado. O
-bloco corrigiu os sítios que tocou e **declarou o resto como débito na própria rule**, o que é
-honesto e insuficiente: régua sem mecanismo é recomendação, e foi assim que os banners de erro
-saíram da escala em primeiro lugar.
-
-**Medido no fechamento de 2026-08-29** — 10 sítios vivos em 9 arquivos de `features/`:
-`ModuleCard.tsx:26`, `ModuleFields.tsx:67`, `BudgetDialog.tsx:49`, `CourseStep.tsx:93`,
-`ProfileDocumentSlot.tsx:76`, `RedatorDocumentSlot.tsx:21`, `StudentLinkRow.tsx:14`,
-`DocumentTypeCard.tsx:50` e `TurmaDocuments.tsx:41,43`.
-
-**Por que ficou aberta:** a catraca nasceria **vermelha**, e catraca que nasce vermelha ou some numa
-lista de `ignores` (a exceção embutida que ninguém vê, porque fica verde) ou trava o bloco seguinte
-por dívida alheia. O degrau certo de cada um dos 10 depende do papel do bloco — o item 19 já tem a
-escala de raio na mesa como decisão do João (fase 3 UI-05), e decidir os dois juntos é mais barato
-que decidir duas vezes.
-
-**DoD:** os 10 sítios com degrau declarado e uma régua de lint sobre `rounded` solto em
-`src/features/**` e `src/app/**` — as duas camadas, como a própria rule exige das catracas novas.
-
----
+> **Duas fichas foram renumeradas no merge de fechamento (2026-08-29).** Nasceram `P-64` e `P-65`
+> na `lane-c` e viraram `P-67` e `P-68`: a `main` já trazia `P-64`, `P-65` e `P-66` da `lane-a`,
+> mescladas antes destas (PR #81). Mesmo movimento que a nota da `lane-a` registra adiante — ID
+> publicado na `main` não se reusa, e quem renumera é a lane que ainda não mesclou. **A `P-67`
+> fechou em 2026-09-01** (item 21) e está em [`encerradas.md`](./encerradas.md); a `P-68` segue
+> aberta adiante.
 
 ## P-69 — o vitest não tem `setupFiles`, então nada desmonta o que um teste monta
 

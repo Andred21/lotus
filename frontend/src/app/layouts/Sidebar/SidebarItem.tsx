@@ -27,7 +27,7 @@ export function SidebarItem({ module, collapsed }: Props) {
       title={collapsed ? label : undefined}
       className={({ isActive }) =>
         [
-          'flex items-center rounded-md font-medium transition-colors no-underline border-l-2',
+          'flex items-center rounded-control font-medium transition-colors no-underline border-l-2',
           isActive
             ? 'border-(--brand) bg-white/5 text-(--brand)'
             : 'border-transparent text-(--shell-ink) hover:bg-white/10',

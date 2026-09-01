@@ -46,7 +46,7 @@ export function AppSelectableCard({
     : { borderColor: 'var(--surface-border)', color: 'var(--text-color)' }
 
   const classes = [
-    'flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors',
+    'flex items-center gap-2 rounded-control border px-3 py-2 transition-colors',
     selected ? '' : '[background:var(--surface-card)]',
     interactive && !selected && !disabled ? 'hover:[background:var(--surface-hover)]' : '',
     className,
