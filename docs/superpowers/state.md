@@ -4,28 +4,28 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-decisoes-de-ui-pendentes
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
 active_plan: docs/superpowers/plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md
 context_packet: null
-blocker: null
+blocker: review do item 21: 4 achados aguardando decisao do Joao -- Q-1 (separador do KPI se descola com `sm:justify-between`), Q-2 (`--radius-control` sem fallback), Q-3 (buraco do `RAIO_LITERAL` em `rounded-t-*`/arbitrario), Q-4 (eco do codigo cortado em 64 char sem sinal de corte)
 lanes:
   lane-a:
     active_feature: null
     active_work_item: frontend-decisoes-de-ui-pendentes
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: main-tree
     branch: refactor/frontend-decisoes-de-ui-pendentes   # criada de main@a73e83e6 em 2026-08-31
     active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
     active_plan: docs/superpowers/plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md
     context_packet: null   # Contexto: nao -- as fontes sao as proprias fichas e os audits locais
-    blocker: null
-    resume_state: null
+    blocker: review do item 21: 4 achados aguardando decisao do Joao -- Q-1 (separador do KPI se descola com `sm:justify-between`), Q-2 (`--radius-control` sem fallback), Q-3 (buraco do `RAIO_LITERAL` em `rounded-t-*`/arbitrario), Q-4 (eco do codigo cortado em 64 char sem sinal de corte)
+    resume_state: reviewing
     last_completed_work_item: hardening-i18n-e-erros-api   # item 7, mesclado em 2026-08-30 (PR #88, a304f317)
   lane-b:
     active_feature: null
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `ready_for_review` |
+| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `blocked` (review feito; 4 achados na mesa do João, `resume_state: reviewing`) |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
