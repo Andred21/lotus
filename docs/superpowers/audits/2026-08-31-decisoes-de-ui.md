@@ -64,3 +64,20 @@ Medido em 2026-09-01, `/validar/<uuid>` de um certificado válido (`LOT-2024-039
 `text-3xl` (30px, mesmo degrau do folio), sem precisar do degrau intermediário `text-2xl`: a folga em
 390px já comportava o texto "Valid certificate" numa linha só, sem overflow. Nenhum desvio a
 registrar.
+
+## Task 6 — D-64: separador visível entre a contagem e a grandeza do KPI
+
+Medido em 2026-09-01, `/` (Dashboard), Firefox via `playwright-cli` (mesma limitação de Chrome/Chromium).
+
+| Viewport | PNG | `linhas` (nas 6 `<p>`) | Altura (uniforme entre os 6 cards) |
+|---|---|---|---|
+| 390 | `.../scratchpad/audit/d64-390.png` | 1 em todas | 30px |
+| 1024 | `.../scratchpad/audit/d64-1024.png` | 1 em todas | 38px |
+| 1440 | `.../scratchpad/audit/d64-1440.png` | 1 em todas | 38px |
+
+(Caminho completo: `/tmp/claude-1000/-home-jvbat-projetos-lotus/8dfdff9c-6008-47d4-8bf3-107f84244f4c/scratchpad/audit/`.)
+
+O card "Pending quotes" (único com `hint`) mostra "1 · 250 UF" na mesma linha do número principal, o
+ponto claramente visível entre os dois algarismos — o defeito da leitura como milhar único
+("1250 UF") não reaparece. Os seis cards seguem na mesma altura da grade; nenhum ganhou terceira
+linha. Nenhum desvio a registrar.

@@ -106,9 +106,24 @@ export function KpiRow({ items }: { items: Kpi[] }) {
                 * Aqui ela é o algarismo com unidade ao lado do algarismo
                 * principal — mono, que é o papel de dado técnico da spec §5. */}
               {kpi.hint && (
-                <span className={`${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
-                  {t(kpi.hint.i18nKey, { value: kpi.hint.value })}
-                </span>
+                <>
+                  {/* Separador VISÍVEL, não vão (D-64). Em es-CL o espaço é
+                    * separador de milhar válido: "1250 UF" com `gap-2` lê como
+                    * um número só, e aumentar o vão não resolve — vão maior
+                    * continua sendo espaço em branco, que é exatamente o que
+                    * pode ser lido como milhar. `aria-hidden` porque o leitor de
+                    * tela já separa os dois nós; o ponto seria ruído lido.
+                    *
+                    * Rótulo antes do valor foi recusado: mudaria a frase em três
+                    * locales e competiria com o título do card, que já diz do
+                    * que se trata. */}
+                  <span aria-hidden="true" style={{ color: 'var(--text-color-secondary)' }}>
+                    ·
+                  </span>
+                  <span className={`${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
+                    {t(kpi.hint.i18nKey, { value: kpi.hint.value })}
+                  </span>
+                </>
               )}
             </p>
           </div>
