@@ -81,3 +81,35 @@ O card "Pending quotes" (único com `hint`) mostra "1 · 250 UF" na mesma linha 
 ponto claramente visível entre os dois algarismos — o defeito da leitura como milhar único
 ("1250 UF") não reaparece. Os seis cards seguem na mesma altura da grade; nenhum ganhou terceira
 linha. Nenhum desvio a registrar.
+
+## Task 7 — D-67: o ramo `notFound` ecoa o código consultado e orienta
+
+Medido em 2026-09-01, `/validar/<código inexistente>`, Firefox via `playwright-cli`.
+
+| Caso | PNG | O que a tela mostrou |
+|---|---|---|
+| Código inexistente, 390px | `.../scratchpad/audit/d67-390.png` | Veredito "Certificate not found", eco "nao-existe-1234" em mono, linha de orientação — sem link, sem dado do certificado |
+| Código inexistente, 1440px | `.../scratchpad/audit/d67-1440.png` | Mesmo conteúdo, card centralizado, sem deformação |
+| Param de 300 caracteres, 390px | `.../scratchpad/audit/d67-teto.png` | Eco cortado em 64 char, `overflow: false` |
+
+(Caminho completo: `/tmp/claude-1000/-home-jvbat-projetos-lotus/8dfdff9c-6008-47d4-8bf3-107f84244f4c/scratchpad/audit/`.)
+
+**Desvio do plano — a medição do teto de 64 caracteres revelou defeito real, não cosmético:** o
+Step 3 do plano pedia `identifierClass` (que carrega `whitespace-nowrap`) **com** `break-all` no
+mesmo `className`. Medido: `white-space: nowrap` ANULA `word-break: break-all` — CSS não tem onde
+quebrar sob `nowrap`, não é conflito de especificidade. Com um uuid real (36 char) o efeito nunca
+aparece (cabe numa linha), mas o param de 300 char (cortado em 64) revelou o resultado: o texto
+vazava 230px além da caixa e o `overflow-hidden` do `AppCard` (`AppCard.tsx:90`) cortava em
+silêncio — `document.documentElement.scrollWidth > innerWidth` continuava `false` (o teste literal
+do plano PASSARIA), mas a página escondia o final do código em vez de quebrar linha, contra a
+própria intenção que o comentário do Step 3 descrevia. Trocado `identifierClass` por
+`technicalDataClass` (mono + tabular, sem `nowrap`) em `NotFoundCard.tsx` — papel mais correto aqui
+de todo modo: este `dd` ecoa um param de rota não confiável, não um identificador bem formado como
+RUT/folio. Medido depois da troca: `scrollWidth === clientWidth` (308 = 308), o texto quebra dentro
+da caixa nas duas linhas do card, sem cortar.
+
+**Segundo desvio, mecânico:** o bloco do Step 3 colado inline em `ValidationPage.tsx` estourava
+`max-lines` (150) — `StatusHeading` e o corpo do card viraram `StatusHeading.tsx` e
+`NotFoundCard.tsx`, sibling files em `Validation/`, mesmo padrão de extração de
+`ContactFields`/`ModuleFields` que `frontend-fsliced.md` já documenta. `ValidCard` ficou onde
+estava (o arquivo caiu para 127 linhas só com os dois componentes extraídos).

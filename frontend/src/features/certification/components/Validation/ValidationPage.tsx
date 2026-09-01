@@ -1,21 +1,11 @@
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppLogo, AppCard, AppSkeleton, AppErrorState, CertificateFolio, fieldLabelClass, validationVerdictClass } from '@shared/ui'
+import { AppLogo, AppCard, AppSkeleton, AppErrorState, CertificateFolio, fieldLabelClass } from '@shared/ui'
 import { formatDate, formatIsoDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useValidationPage } from '../../hooks/useValidationPage'
+import { StatusHeading } from './StatusHeading'
+import { NotFoundCard } from './NotFoundCard'
 import type { PublicCertificateData } from '@shared/types/generated'
-
-type HeadingTone = 'success' | 'danger' | 'warning' | 'neutral'
-
-function StatusHeading({ icon, text, tone = 'neutral' }: { icon: string; text: string; tone?: HeadingTone }) {
-  const color = tone === 'neutral' ? 'var(--text-color)' : 'var(--app-card-tone-text)'
-  return (
-    <div className="flex items-center gap-3 p-6">
-      <i className={`pi ${icon} text-2xl`} style={{ color }} aria-hidden="true" />
-      <h1 className={validationVerdictClass} style={{ color }}>{text}</h1>
-    </div>
-  )
-}
 
 /** Corpo do cartão "válido": só os campos que `PublicCertificateData`
  * carrega (codigo, aluno, curso + carga horária, término da turma, vigência
@@ -111,11 +101,7 @@ export function ValidationPage() {
           </>
         )}
 
-        {state.kind === 'notFound' && (
-          <AppCard>
-            <StatusHeading icon="pi-question-circle" text={t('certificate.validation.notFound')} />
-          </AppCard>
-        )}
+        {state.kind === 'notFound' && <NotFoundCard uuid={uuid ?? ''} />}
 
         {state.kind === 'revoked' && (
           <AppCard tone="danger">

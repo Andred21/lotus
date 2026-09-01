@@ -913,6 +913,8 @@
       "revoked": "Certificado revocado",
       "expired": "Certificado vencido",
       "notFound": "Certificado no encontrado",
+      "searchedCode": "Código consultado",
+      "notFoundHint": "Verifica el código impreso en el documento o contacta a Lotus.",
       "issuedTo": "Emitido a",
       "course": "Curso",
       "hours_one": "{{count}} hora",
