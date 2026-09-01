@@ -300,6 +300,40 @@ const MONO_LITERAL = [
   { selector: 'Property[key.name="className"] Literal[value=/font-mono/]', message: MSG_MONO_LITERAL },
   { selector: 'Property[key.name="className"] TemplateElement[value.raw=/font-mono/]', message: MSG_MONO_LITERAL },
 ]
+// D-66/P-67 (2026-08-31): raio escrito literal no sítio, em vez de vir dos
+// tokens `--radius-surface`/`--radius-control` do `@theme` (`src/index.css`).
+//
+// A rule mandava `rounded-md` (6px) para controle enquanto o tema pintava 4px
+// (`generate-brand-theme.mjs`, `border-radius: 6px` → `4px`, D7 do item 18):
+// todo botão, input e tag do produto desobedecia a rule POR CONSTRUÇÃO, e foi
+// por isso que os 10 sítios da P-67 escreveram `rounded` solto — estavam certos
+// contra o tema e errados contra a rule. A P-67 ficou aberta esperando esta
+// catraca, e a catraca esperava o décimo sítio: regra ligada antes deixaria o
+// lint vermelho durante duas tasks.
+//
+// `rounded-full` fica de FORA: cápsula não escolhe degrau — é a barra de
+// progresso do `TurmaDocuments` e o pill de contagem do `AppCard`.
+//
+// O lookbehind e o lookahead são o que separa a UTILITY do resto: sem eles
+// `p-button-rounded` (classe do PrimeReact, em `QuoteRow:102` e `SlotBody:9`)
+// cairia aqui, e `rounded-surface`/`rounded-control` também. `esquery` 1.7.0
+// aceita os dois — medido antes de escrever.
+//
+// `rounded` também é PROP booleana do `AppButton` em 15 sítios; o seletor casa
+// `className` apenas, e a prop passa ao largo por construção.
+//
+// `shared/ui` fica fora, pelo mesmo critério do `MONO_LITERAL`: é onde a grafia
+// é DEFINIDA.
+const RAIO_UTILITY = '(?<![-\\w])rounded(-(sm|md|lg|xl|2xl|3xl|none))?(?![-\\w])'
+const MSG_RAIO_LITERAL =
+  'Raio literal no sítio: use rounded-surface (card, diálogo, bloco com padding de card) ou rounded-control (controle, item de navegação, faixa de px-3 py-2). ' +
+  'rounded-full segue livre para cápsula. O degrau segue a ESCALA do bloco, não o aninhamento (.claude/rules/frontend-estilizacao.md §Escala de raio).'
+const RAIO_LITERAL = [
+  { selector: `JSXAttribute[name.name="className"] Literal[value=/${RAIO_UTILITY}/]`, message: MSG_RAIO_LITERAL },
+  { selector: `JSXAttribute[name.name="className"] TemplateElement[value.raw=/${RAIO_UTILITY}/]`, message: MSG_RAIO_LITERAL },
+  { selector: `Property[key.name="className"] Literal[value=/${RAIO_UTILITY}/]`, message: MSG_RAIO_LITERAL },
+  { selector: `Property[key.name="className"] TemplateElement[value.raw=/${RAIO_UTILITY}/]`, message: MSG_RAIO_LITERAL },
+]
 // Item 17: toda coluna declara largura, e toda coluna com ação fica presa à
 // direita. As duas nascem DEPOIS de as 15 tabelas cumprirem — regra ligada antes
 // deixa o lint vermelho durante catorze tasks.
@@ -445,7 +479,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
     },
   },
   // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
@@ -458,7 +492,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -479,7 +513,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -683,7 +717,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
     },
   },
 ])

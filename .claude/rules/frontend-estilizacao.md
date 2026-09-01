@@ -73,26 +73,36 @@ Prosa não é dado técnico: o travessão que marca ausência legítima fica em 
 
 ## Escala de raio
 
-O degrau segue a ESCALA do bloco, não o aninhamento: o que tem padding de superfície (`p-4`, `p-6`)
-é superfície mesmo dentro de um diálogo; o que tem padding de controle (`px-3 py-2`) fica no degrau
-do controle, entre os quais ele pousa.
+O degrau segue a ESCALA do bloco, não o aninhamento nem o nome do componente: o que tem padding de
+superfície (`p-3`, `p-4`, `p-6`) é superfície mesmo dentro de um diálogo; o que tem padding de
+controle (`px-3 py-2`) fica no degrau do controle, entre os quais ele pousa. O `AppSelectableCard`
+se chama card e mede `px-3 py-2` — a medição manda, e ele é controle.
 
 | Papel | Raio |
 |---|---|
-| Superfície — card, diálogo, bloco de destaque com padding de card | `rounded-lg` |
-| Controle, item de navegação e faixa fina de aviso (`px-3 py-2`) | `rounded-md` |
-| Pill — tag, badge, contador | `rounded-full` |
+| Superfície — card, diálogo, bloco de destaque com padding de card | `rounded-surface` |
+| Controle, item de navegação e faixa fina de aviso (`px-3 py-2`) | `rounded-control` |
+| Cápsula — pill, tag, contador, barra de progresso | `rounded-full` |
 
-A tabela dizia `rounded-lg` para "faixa de destaque" e os banners de erro do `FormField` saíram em
-`rounded-md` — divergência levantada no review de 2026-08-29 (Q-5) e resolvida a favor do CÓDIGO: a
-faixa de erro mede `px-3 py-2` e vive na pilha de campos, ao lado de inputs em `rounded-md`; subi-la
-um degrau a faria brigar com o próprio diálogo. O bloco do folio no `IssuedDialog` é o contra-caso
-que fecha a régua — também é aninhado, tem `p-6`, e segue em `rounded-lg`.
+Os dois primeiros são tokens do `@theme` em `frontend/src/index.css` (D-66, 2026-08-31), e não
+utilities de fábrica do Tailwind. `--radius-surface` é fixo em `0.5rem`; **`--radius-control`
+REFERENCIA `--border-radius`**, o token que o tema PrimeReact declara em `:root` — hoje 4px, posto
+ali pela D7 do item 18. Mudar o raio da marca é uma linha em `scripts/generate-brand-theme.mjs`, e
+as duas camadas seguem juntas.
 
-`rounded` solto é raio sem degrau declarado. **A escala desta tabela está em decisão (D-66,
-2026-08-29):** medida na tela, o tema pinta botão, input e tag em 4px (= `rounded`), `rounded-md`
-só existe nos banners do `FormField`, e `rounded-full` só no pill de contagem do `AppCard`. Os 10
-sítios da **P-67** esperam a D-66; a catraca nasce depois do último sítio, não antes.
+Até 2026-08-31 esta tabela dizia `rounded-lg`/`rounded-md`, e o `rounded-md` (6px) contradizia o
+tema (4px) em TODO controle do produto. Os 10 sítios da P-67 que escreviam `rounded` solto estavam
+certos contra o tema e errados contra a rule; não havia sítio a consertar, havia régua a corrigir.
+Os banners de erro do `FormField` seguem no degrau do controle — a divergência que o review de
+2026-08-29 (Q-5) resolveu a favor do código continua resolvida a favor do código, agora com o
+degrau nomeado. O bloco do folio no `IssuedDialog` é o contra-caso que fecha a régua: aninhado, com
+`p-6`, e superfície.
+
+`rounded` solto é raio sem degrau declarado. Mecanismo: `RAIO_LITERAL` em
+`frontend/eslint.config.js`, nas quatro camadas de `features/` e `app/**` — a catraca de cor
+(`CATRACA_COR`, três arquivos) leva o array também, porque `CourseStep.tsx` é um dos 15 sítios que
+esta decisão migrou; `shared/ui` fica de fora porque é onde a grafia é definida. `rounded-full`
+fica livre: cápsula não escolhe degrau.
 
 ## Padding por papel
 
