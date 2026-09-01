@@ -23,6 +23,41 @@
 
 ---
 
+## Fechado em 2026-08-31 — `prontidao-pre-nuvem`, item 20 da fila
+
+**O item 20 assumiu a `lane-b` em 2026-08-29** — `prontidao-pre-nuvem`, criado no `backlog.md` e
+promovido explicitamente pelo João nesta sessão, **antes** de planejar o item 10. O pedido dele foi
+literal: entender o CI, arrumar o que aparece vermelho a cada integração, entender o espelho
+`Andred21 → Gatika-CL` e **comprovar que o código de lá funciona** — e só então mexer em nuvem. A
+leitura mediu que o CI não falha (o `audit-dev` pinta vermelho por sete advisories transitivas de
+devDeps, sob `continue-on-error`), que o corporativo está onze PRs atrás e que **ninguém nunca puxou
+o par corporativo do GHCR**; o João decidiu que `audit-dev` passa a reprovar e a segurar a imagem,
+que o par será puxado e executado aqui por script versionado, e **adiou** a decisão sobre o
+repositório pessoal estar público (divergência com a `P-62`, registrada na spec §3.5). O item 10
+fica **estacionado** ao lado do 12 (`parked_work_items`), com o packet `partial` guardado; retoma
+sobre `main` já com o par provado. A branch `chore/prontidao-pre-nuvem` nasce de
+`infra/producao-provisionamento-aws@50f3a1f3` e **mescla `main@37e0e2d4` para dentro** (`5b121aaa`)
+antes do primeiro artefato — 103 commits, único conflito em `state.md`. Acrescentar o item 20 fora
+do main tree segue a **P-55**. Spec aprovada por seções no brainstorming:
+`specs/2026-08-29-prontidao-pre-nuvem-design.md`. **Plano escrito e a lane em `ready_for_execution`
+em 2026-08-29** (`plans/2026-08-29-prontidao-pre-nuvem.md`): oito tasks em duas fatias — a PR 1
+(workflow, lockfile, `scripts/provar-release.sh` com catraca, docs) **mescla no meio do plano**,
+porque o espelho publica a árvore desse merge e a prova do par corporativo só existe depois dele;
+a fatia 2 é ação externa (merge, PAT do João, espelho de onze PRs, CI corporativo, três execuções
+do script) e evidência em `audits/`. A sonda do DoD 1 é a ordem das tasks (workflow antes do bump),
+não um commit de lockfile rebaixado; o script inclui `migrate --force` entre `pull` e `up`, que é o
+fluxo de deploy que o item 10 fixou (D7).
+
+**Executado, revisado e fechado em 2026-08-31.** A fatia 1 (Tasks 1–4) saiu em quatro commits e mesclou pelo **PR #86** (merge `308edc50`); a fatia 2 foi ação externa e evidência. **A sonda do DoD 1 funcionou como desenhada:** a run [`33267477063`](https://github.com/Andred21/lotus/actions/runs/33267477063) da PR reprovou com `audit-dev` `failure` e `image`/`procedencia` **skipped** — o vermelho que o `continue-on-error` escondia, agora decidindo —, e o bump só de lockfile levou ao verde (`33267941728`); a run de `push` do merge (`33338885845`) fechou os sete jobs `success`. **O espelho publicou treze PRs, não os onze do título do plano:** entre a Task 5 e a Task 7 a `main` recebeu o #87 (item 18, `lane-c`) e o #88 (item 7, `lane-a`), e `scripts/espelhar-corporativo.sh` espelha a `main` verde corrente **por desenho** — `origin/main@a304f317` → `upstream/main@d0d8db50`, com `308edc50` provado ancestral de `a304f317`, então o trabalho da PR 1 viajou inteiro. Árvore filtrada `f2894fe5` idêntica à do `upstream/main`, 1298 arquivos contra 1577 na origem, e o CI corporativo verde nos sete jobs ([`33447147016`](https://github.com/Gatika-CL/lotus/actions/runs/33447147016)), com `procedencia` atestando `identical`. **O par corporativo foi puxado e executado aqui pela primeira vez**, com PAT clássico `read:packages` criado pelo João em 2026-08-31 e guardado só no credential store do Docker: três execuções de `scripts/provar-release.sh` (par pessoal público, par corporativo pré-existente de 2026-08-25, espelho novo), todas `exit 0` com `/up` 200 e `lotus-release` vazio depois. Como esta árvore é a de offset +1 e publica exatamente as três portas da sonda, cada execução foi precedida de `docker compose stop` (não `down`) e seguida de `docker compose start`.
+
+**O review levantou cinco achados (Q-1 a Q-5) e a lane passou por `blocked`.** Os quatro abertos foram corrigidos em `4cea61f5`. Dois deles mexeram no **caminho de verificação** do script, não no que ele roda: o Q-3 passou a resolver os `RepoDigests` **antes** do veredito (antes o script podia declarar provado sem ter lido o digest do que subiu) e o Q-4 estendeu a conferência "ID em execução = ID puxado" ao `nginx`, que só era feita no `app`. Isso invalidou as três execuções anteriores como prova do script **do repositório**, então houve uma **quarta execução** (`a8c55efd`) contra o SHA do espelho com o script corrigido: `exit 0`, `/up` 200, `0` containers depois e os **mesmos dois digests** — a correção mudou como se verifica, não o que roda. Cada correção de catraca ganhou teste próprio: o `frontend/tests/provar-release.test.ts` foi de 686 para **688** testes.
+
+**A `P-62` foi emendada, e a emenda é o achado que este bloco não estava procurando.** A ficha registrava a `main` dos **dois** repositórios sem branch protection por o plano free recusar a API; medido em 2026-08-29, o 403 só tinha sido medido em `Gatika-CL/lotus` — `Andred21/lotus` responde `"visibility": "public"`, `ghcr.io/andred21/lotus-app:<sha>` entrega manifesto **sem credencial**, e em repositório público a protection é grátis. O João **adiou** a decisão (tornar privado; manter público e ligar protection; manter como está) e o bloco não mexeu em visibilidade nem em protection. Quando protection for ligada onde couber, os required checks são **cinco**: o `audit-dev` decide desde 2026-08-29.
+
+**Gate de fechamento (2026-08-31).** Backend `1108 passed / 5 skipped`; frontend `122 arquivos / 688 testes`, lint 0, build verde; `pnpm audit` `No known vulnerabilities found` e `pnpm install --frozen-lockfile` passa; nenhum arquivo PHP tocado, então pint e `typescript:transform` não se aplicam. O critério de aceite foi **provado ao vivo no fechamento**, não só relido da evidência: a forma do `ci.yml` conferida no YAML carregado, as três runs relidas pela API do GitHub, a árvore filtrada recalculada e comparada com `upstream/main^{tree}`, e o `provar-release.sh` re-executado contra `d0d8db50…` com `exit 0`, `/up` 200 e os mesmos digests. A branch `chore/prontidao-pre-nuvem` fica para o `finishing-a-development-branch`, que abre a PR 2 do fechamento. **Emenda do merge da `main` (2026-08-31, mesmo dia):** o gate rodou contra um `encerradas.md` anterior aos dois fechamentos de 2026-08-30 e podou a **P-66** por conta própria; a `main` já a tinha removido no fechamento do item 19, então a poda foi descartada na resolução e o arquivo segue a `main`. Ficam **em rastro a P-61 e a P-63**, vencidas neste fechamento: não foram removidas porque são fichas de outras lanes e a descoberta veio depois do gate — saem no próximo `/fechar-sprint`. **O item 10 e o item 12 seguem estacionados** em `parked_work_items`; o 10 retoma sobre `main` já com o par provado. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
+
+---
+
 ## Fechado em 2026-08-30 — `hardening-i18n-e-erros-api`, item 7 da fila
 
 **A `lane-a` fechou o item 6 em 2026-08-29** — `hardening-performance-e-dados`, narrativa integral

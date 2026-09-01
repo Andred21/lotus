@@ -23,14 +23,20 @@
 # como o job `image` escreve). Para provar o par de outro dono:
 #   LOTUS_RELEASE_OWNER=andred21 scripts/provar-release.sh <sha>
 #
+# A porta do nginx da sonda e 8081 por default; LOTUS_RELEASE_PORT muda:
+#   LOTUS_RELEASE_PORT=8091 scripts/provar-release.sh <sha>
+#
 # Credencial: o pacote corporativo e privado. Antes de rodar, `docker login
 # ghcr.io -u <usuario> --password-stdin` com um PAT classico de escopo
 # `read:packages`. O token vive no credential store do Docker, nunca em
 # arquivo do repositorio.
 #
 # Portas: a sonda ocupa 8081 (nginx), 9002 (MinIO) e 8026 (Mailpit) -- as do
-# offset +1 do .env.example. Ocupadas, o Compose falha alto com "port is
-# already allocated" (ADR-13) e o trap limpa o que chegou a subir.
+# offset +1 do .env.example, que e o offset desta arvore: a stack de dev daqui
+# e a sonda nao sobem juntas. Ou se derruba a de dev antes, ou se muda a do
+# nginx por LOTUS_RELEASE_PORT (as do MinIO e do Mailpit sao do overlay).
+# Ocupadas, o Compose falha alto com "port is already allocated" (ADR-13) e o
+# trap limpa o que chegou a subir.
 set -euo pipefail
 
 SHA="${1:-}"
@@ -57,7 +63,7 @@ fi
 APP="ghcr.io/$DONO/lotus-app:$SHA"
 WEB="ghcr.io/$DONO/lotus-web:$SHA"
 PROJETO=lotus-release
-PORTA=8081
+PORTA="${LOTUS_RELEASE_PORT:-8081}"
 
 compose() {
   LOTUS_IMAGE="$APP" LOTUS_WEB_IMAGE="$WEB" LOTUS_ENV_FILE=docker/probe.env LOTUS_HTTP_PORT="$PORTA" \
@@ -125,18 +131,31 @@ if [ "$CODIGO" != "200" ]; then
   exit 1
 fi
 
-# O que esta rodando e o que foi puxado? O ID da imagem do container tem de
-# ser o ID da imagem puxada por tag -- sem isso, um lotus-app antigo poderia
-# estar respondendo o /up.
-ID_APP=$(docker image inspect --format '{{.Id}}' "$APP")
-ID_RODANDO=$(docker inspect --format '{{.Image}}' "$(compose ps -q app)")
-if [ "$ID_APP" != "$ID_RODANDO" ]; then
-  echo "erro: o container app roda $ID_RODANDO, mas a imagem puxada e $ID_APP." >&2
-  exit 1
-fi
+# O que esta rodando e o que foi puxado? O ID da imagem de cada container tem
+# de ser o ID da imagem puxada por tag -- sem isso, uma lotus-app antiga
+# poderia estar respondendo o /up. Os DOIS servicos, porque o que se prova aqui
+# e o PAR: a resposta atravessa o nginx, entao uma imagem web errada serviria
+# HTTP igual e o veredito nao mudaria.
+for PAR in "app:$APP" "nginx:$WEB"; do
+  SERVICO="${PAR%%:*}"
+  ALVO="${PAR#*:}"
+  ID_PUXADO=$(docker image inspect --format '{{.Id}}' "$ALVO")
+  ID_RODANDO=$(docker inspect --format '{{.Image}}' "$(compose ps -q "$SERVICO")")
+  if [ "$ID_PUXADO" != "$ID_RODANDO" ]; then
+    echo "erro: o container $SERVICO roda $ID_RODANDO, mas a imagem puxada e $ID_PUXADO." >&2
+    exit 1
+  fi
+done
+
+# Os digests saem ANTES do veredito, e nao dentro do echo dele: `docker image
+# inspect` estoura sob `set -e` se RepoDigests vier vazio, e "RELEASE PROVADO"
+# impresso primeiro deixaria a tela dizendo o contrario do codigo de saida --
+# num script cuja saida e colada em audits/, isso e o pior modo de falha.
+DIGEST_APP=$(docker image inspect --format '{{index .RepoDigests 0}}' "$APP")
+DIGEST_WEB=$(docker image inspect --format '{{index .RepoDigests 0}}' "$WEB")
 
 echo ""
 echo "==> RELEASE PROVADO: $SHA"
-echo "    app  $(docker image inspect --format '{{index .RepoDigests 0}}' "$APP")"
-echo "    web  $(docker image inspect --format '{{index .RepoDigests 0}}' "$WEB")"
+echo "    app  $DIGEST_APP"
+echo "    web  $DIGEST_WEB"
 echo "    GET http://127.0.0.1:$PORTA/up -> $CODIGO"
