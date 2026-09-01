@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-decisoes-de-ui-pendentes
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
 active_plan: docs/superpowers/plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: frontend-decisoes-de-ui-pendentes
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: refactor/frontend-decisoes-de-ui-pendentes   # criada de main@a73e83e6 em 2026-08-31
     active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
@@ -160,11 +160,11 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-08-31
+## Ocupação corrente — 2026-09-01
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `executing` |
+| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `ready_for_review` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -263,6 +263,28 @@ passou a apontar a `lane-a` — **fronteira durável, feita no main tree**, sem 
 outras mentiras saíram junto: as branches da `lane-a` (PR #88, `a304f317`) e da `lane-c` (PR #87,
 `afe273cf`) estavam anotadas como **sem merge** e as duas já tinham mesclado, e o
 `state_basis_commit` estava dois dias atrás, em `24e0f037`.
+
+**As dez tasks do item 21 executaram em 2026-09-01 e a `lane-a` entra em `ready_for_review`.** Sete
+commits de código e dois de doc, na ordem que a D7 fixou: os dois tokens de raio no `@theme` e
+`shared/ui` (`97661217`), os 15 sítios de `features/`+`app/` (`9d5af40a`), a catraca `RAIO_LITERAL`
+nascendo verde e vista reprovar por sonda (`3c27c4f3`), a borda de controle do claro em slate-500
+por regra de FORMA no gerador (`d8c08e11`), o `cardTitleClass` e o `h1` de `/validar` subindo ao
+degrau do folio (`f4596362`), o separador `·` do KPI (`34793aa7`), o eco do código no `notFound`
+público (`6fae4d67`) e o `order-*` mudando de breakpoint no `/perfil` (`5ddce556`). O backlog pagou
+as seis fichas e a **P-67** (`a3571cc8`), e o audit fechou com a tabela de DoD contra evidência
+(`ab224072`). Gate final: `pnpm lint` **0**, build verde, **125 arquivos / 712 testes**,
+`generated.ts` com diff vazio e a catraca vista reprovar uma segunda vez no estado final.
+
+**Três desvios ficaram registrados no audit, nenhum devolvendo ficha ao João.** (1) O teste da
+`D-68` previa 21 declarações de borda em `#64748b` e a saída tem 24 — três já eram slate-500 antes
+da passada; a invariante central (zero borda sobrando em `#cbd5e1`) bate. (2) A `D-67` mediu que
+`whitespace-nowrap` anula `break-all`, e o eco do código trocou `identifierClass` por
+`technicalDataClass`; `StatusHeading` e `NotFoundCard` saíram para arquivos irmãos por `max-lines`.
+(3) A premissa da spec §6 sobre `xl` foi medida em 1440x900: sobra um retorno de foco de 513px —
+dentro do critério de viewport (< 900px, e é a extensão rolável inteira), 8% fora da régua de "uma
+dobra e meia" (1,63 medida). O salto não é comparável ao de 390px, então o gatilho de devolução não
+disparou. **Três fichas novas nasceram** em vez de calar achado: `D-69`, `D-70` e o **item 23**, que
+hospeda a `D-65` reescrita com os sete valores de reserva medidos.
 
 ## Itens fechados — ponteiro, não narrativa
 
