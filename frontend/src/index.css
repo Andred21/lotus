@@ -26,7 +26,11 @@
  *   PrimeReact declara em `:root` (`themes/lara-light-lotus.css:42`, hoje 4px,
  *   posto ali pela D7 do item 18). Resolve em tempo de execução: mudar o raio
  *   da marca passa a ser uma linha em `scripts/generate-brand-theme.mjs`, e as
- *   duas camadas seguem juntas.
+ *   duas camadas seguem juntas. O fallback `4px` NAO e redundancia: a folha do
+ *   tema entra por `<link>` de runtime (`config/primeTheme.ts`), e `var()` sem
+ *   definicao e sem fallback invalida a declaracao em tempo de valor computado
+ *   — o raio cairia para 0 em TODO controle, em silencio, se o asset falhasse
+ *   (Q-2 do review de 2026-09-01). O valor espelha o `--border-radius` do tema.
  *
  * Até 2026-08-31 a rule mandava `rounded-md` (6px) para controle enquanto o
  * tema pintava 4px — todo botão, input e tag do produto desobedecia a rule por
@@ -38,7 +42,7 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   --radius-surface: 0.5rem;
-  --radius-control: var(--border-radius);
+  --radius-control: var(--border-radius, 4px);
 }
 
 /* Camada fina de marca (tokens --brand/--brand-navy, foco visível). Fora de
