@@ -4,28 +4,28 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-decisoes-de-ui-pendentes
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
 active_plan: docs/superpowers/plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md
 context_packet: null
-blocker: review do item 21: 4 achados aguardando decisao do Joao -- Q-1 (separador do KPI se descola com `sm:justify-between`), Q-2 (`--radius-control` sem fallback), Q-3 (buraco do `RAIO_LITERAL` em `rounded-t-*`/arbitrario), Q-4 (eco do codigo cortado em 64 char sem sinal de corte)
+blocker: null
 lanes:
   lane-a:
     active_feature: null
     active_work_item: frontend-decisoes-de-ui-pendentes
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: main-tree
     branch: refactor/frontend-decisoes-de-ui-pendentes   # criada de main@a73e83e6 em 2026-08-31
     active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
     active_plan: docs/superpowers/plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md
     context_packet: null   # Contexto: nao -- as fontes sao as proprias fichas e os audits locais
-    blocker: review do item 21: 4 achados aguardando decisao do Joao -- Q-1 (separador do KPI se descola com `sm:justify-between`), Q-2 (`--radius-control` sem fallback), Q-3 (buraco do `RAIO_LITERAL` em `rounded-t-*`/arbitrario), Q-4 (eco do codigo cortado em 64 char sem sinal de corte)
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: hardening-i18n-e-erros-api   # item 7, mesclado em 2026-08-30 (PR #88, a304f317)
   lane-b:
     active_feature: null
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `blocked` (review feito; 4 achados na mesa do João, `resume_state: reviewing`) |
+| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `ready_for_closure` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
@@ -274,6 +274,26 @@ público (`6fae4d67`) e o `order-*` mudando de breakpoint no `/perfil` (`5ddce55
 as seis fichas e a **P-67** (`a3571cc8`), e o audit fechou com a tabela de DoD contra evidência
 (`ab224072`). Gate final: `pnpm lint` **0**, build verde, **125 arquivos / 712 testes**,
 `generated.ts` com diff vazio e a catraca vista reprovar uma segunda vez no estado final.
+
+**O review de 2026-09-01 saiu com quatro achados, e o João aprovou os quatro.** Risco classificado
+como BAIXO — frontend visual, nenhum domínio das leis §5, `executor: claude` —, então sem segunda
+lente do Codex. Zero órfão: os 12 `rounded` que sobram em `features/` são prop booleana do
+`AppButton` ou classe do PrimeReact, e as bordas convertidas para slate-500 não caem sob nenhum
+seletor `disabled`/`readonly`. Os achados e o que cada um pagou: **Q-1** (`c480a805`) — de `sm` para
+cima o `<p>` do KPI ocupa a largura inteira e o `sm:justify-between` distribuía TRÊS filhos, então
+o separador da `D-64` ia parar no meio do card, longe dos algarismos que separa; ponto e grandeza
+viraram um filho só. O audit tinha medido contagem de linha e altura em 1024/1440, não a posição x
+do ponto — a prosa dele descrevia os 390px. **Q-2** (`9c167ee6`) — `--radius-control` referenciava
+`--border-radius` sem fallback, e essa folha entra por `<link>` de runtime: `var()` órfã invalida a
+declaração em tempo de valor computado e derrubaria o raio de todo controle para 0, em silêncio.
+**Q-3** (`afd5f3b0`) — a catraca `RAIO_LITERAL` não alcançava `rounded-t-lg`, `rounded-bl-md` nem
+`rounded-[6px]`; zero ocorrências hoje, mas é por essa porta que a P-67 volta. **Q-4** (`ec16ae17`)
+— o eco do código no `notFound` cortava em 64 char sem reticência, e código truncado que parece
+completo é pior que eco nenhum numa página de peso legal. Gate remedido depois das correções:
+`pnpm lint` **0**, build verde, **125 arquivos / 712 testes**, a catraca vista reprovar as três
+formas novas por sonda (`rounded-full`, `rounded-surface`, `rounded-control` e `p-button-rounded`
+seguem limpos) e o bundle com `--radius-control:var(--border-radius,4px)`. Nenhuma ficha nova, nada
+deferido para o backlog.
 
 **Três desvios ficaram registrados no audit, nenhum devolvendo ficha ao João.** (1) O teste da
 `D-68` previa 21 declarações de borda em `#64748b` e a saída tem 24 — três já eram slate-500 antes
