@@ -324,7 +324,22 @@ const MONO_LITERAL = [
 //
 // `shared/ui` fica fora, pelo mesmo critério do `MONO_LITERAL`: é onde a grafia
 // é DEFINIDA.
-const RAIO_UTILITY = '(?<![-\\w])rounded(-(sm|md|lg|xl|2xl|3xl|none))?(?![-\\w])'
+//
+// Duas formas, porque a catraca precisa fechar a porta que ninguém usou ainda
+// (Q-3 do review de 2026-09-01): a primeira é o raio inteiro ou POR CANTO
+// (`rounded-t-lg`, `rounded-l`, `rounded-bl-md`), a segunda é o raio ARBITRÁRIO
+// (`rounded-[6px]`), que escapava por não ter degrau nomeado — justamente o
+// jeito mais fácil de reintroduzir um número solto no sítio. Zero ocorrência
+// hoje nos dois casos, medido antes de escrever; regra que só proíbe o que já
+// não existe não impede recaída, e a P-67 nasceu de raio escrito no sítio.
+//
+// O canto NÃO abre buraco em `rounded-surface`/`rounded-control`: o `-s` casaria
+// o começo de `-surface`, mas aí o lookahead final cai em `u`, que é `\w`, e o
+// backtracking não tem outra saída. Medido nos dois nomes.
+const RAIO_CANTO = '(-(t|r|b|l|tl|tr|bl|br|s|e|ss|se|es|ee))?'
+const RAIO_UTILITY =
+  `(?<![-\\w])rounded${RAIO_CANTO}(-(sm|md|lg|xl|2xl|3xl|none))?(?![-\\w])` +
+  `|(?<![-\\w])rounded${RAIO_CANTO}-\\[`
 const MSG_RAIO_LITERAL =
   'Raio literal no sítio: use rounded-surface (card, diálogo, bloco com padding de card) ou rounded-control (controle, item de navegação, faixa de px-3 py-2). ' +
   'rounded-full segue livre para cápsula. O degrau segue a ESCALA do bloco, não o aninhamento (.claude/rules/frontend-estilizacao.md §Escala de raio).'
