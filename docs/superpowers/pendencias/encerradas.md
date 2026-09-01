@@ -7,13 +7,34 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(duas: a **P-61** e a **P-63**, fechadas nos dois blocos que fecharam em 2026-08-30. A **P-66**
+*(três: a **P-61** e a **P-63**, fechadas nos dois blocos que fecharam em 2026-08-30, e a **P-67**, fechada em 2026-09-01 pelo `frontend-decisoes-de-ui-pendentes`. A **P-66**
 saiu no fechamento do `frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao
 do `hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é
 mecanismo em migration, e o rastro dela está no git e na linha de entrega em
 `../historico/progress.md`. A **P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de
 2026-08-29, e a **P-03** e a **P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro
 delas.)*
+
+### P-67 — a escala de raio estava escrita na rule e 10 sítios ficaram fora dela, sem catraca
+
+**Fechada em 2026-09-01**, no `frontend-decisoes-de-ui-pendentes` (item 21, Tasks 1–3), por
+mecanismo. A `D-66`, que a hospedava, decidiu a régua: o raio passa a vir de **token no `@theme`**
+(`--radius-surface` e `--radius-control`, este lendo o var do tema do PrimeReact), `shared/ui` os
+consome e `features/`+`app/` migram atrás. O planejamento remediu o alcance — os sítios eram **15**,
+não os 10 que a ficha contava: cinco já escreviam `rounded-lg`/`rounded-md` e a catraca os
+alcançaria igual, então migraram junto para ela não nascer vermelha.
+
+A catraca é a `RAIO_LITERAL` (`no-restricted-syntax` em `frontend/eslint.config.js`), sobre as duas
+camadas que a rule exige (`src/features/**` e `src/app/**`), e **nasceu verde** — foi vista reprovar
+por sonda negativa antes de valer, com o arquivo restaurado do scratchpad (nunca por `git stash`).
+A `.claude/rules/frontend-estilizacao.md` passou a descrever a escala que existe, em vez da que a
+rule descrevia e a tela não tinha — que era exatamente por que os 10 sítios escreveram `rounded`.
+
+Rastro: `feat(ui): raio ganha dois tokens no @theme e shared/ui os consome` (`97661217`),
+`feat(ui): os 15 sitios de features e app consomem os tokens de raio` (`9d5af40a`) e
+`feat(lint): RAIO_LITERAL nasce verde e a rule descreve a escala real` (`3c27c4f3`).
+
+---
 
 ### P-61 — os `title` do `ProblemDetails` estavam em português num produto es-CL
 
