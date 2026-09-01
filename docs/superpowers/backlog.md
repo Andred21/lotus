@@ -5,9 +5,9 @@
 > backlog nunca promove trabalho sozinho.
 >
 > **Consolidado em 2026-08-22 contra `main@bda90ce`, com foco em terminar a aplicação.**
-> **Saneado em 2026-08-31 contra `main@a304f317`:** os itens 6, 7, 18 e 19 fecharam e saíram da
-> contagem, a `D-60` saiu **paga** (por bloco que não era o hospedeiro dela) e a `D-61` foi
-> **absorvida pela `D-67`** — eram o mesmo defeito registrado duas vezes.
+> **Saneado em 2026-08-31 contra `main@a304f317`:** os itens 6, 7, 18, 19 e 20 fecharam e
+> saíram da contagem, a `D-60` saiu **paga** (por bloco que não era o hospedeiro dela) e a
+> `D-61` foi **absorvida pela `D-67`** — eram o mesmo defeito registrado duas vezes.
 > Histórico entregue → `historico/progress.md` · fichas `P-*` → `pendencias/abertas.md` ·
 > specs/planos → `specs/archive/` e `plans/archive/`. Não duplicar esses conteúdos aqui.
 > O registro canônico dos débitos `D-*` segue neste arquivo, na seção `# Débitos técnicos` —
@@ -361,6 +361,7 @@ cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não
   `AppCardHeader` (`AppCard.tsx:174`), que já existe; ficou de fora da fatia 2 porque é composição
   de UMA tela e pede remedir o detalhe inteiro nos três viewports. **DoD:** o card abre com o
   alternador na linha do cabeçalho e sem faixa vazia, medido nos três viewports.
+
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
