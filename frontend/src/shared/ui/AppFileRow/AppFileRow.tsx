@@ -71,7 +71,7 @@ export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowP
     // âncora à direita os três voltam a x=248.
     <div className="flex flex-wrap items-center justify-end gap-3">
       <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control"
         style={{ background: `color-mix(in srgb, ${hue} 12%, var(--surface-card))`, color: hue }}
       >
         <i className={icon} aria-hidden="true" />

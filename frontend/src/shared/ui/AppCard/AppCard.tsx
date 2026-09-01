@@ -87,7 +87,7 @@ export function AppCard({ variant = 'default', tone = 'neutral', className, chil
   return (
     <div
       className={[
-        'rounded-lg border overflow-hidden',
+        'rounded-surface border overflow-hidden',
         // A margem do `p` já é zerada pelo mini-reset de `index.css` (P-46).
         stat ? 'px-4 py-3.5' : '',
         className,

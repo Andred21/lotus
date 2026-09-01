@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: frontend-decisoes-de-ui-pendentes
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
 active_plan: docs/superpowers/plans/2026-08-31-frontend-decisoes-de-ui-pendentes.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: frontend-decisoes-de-ui-pendentes
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
     branch: refactor/frontend-decisoes-de-ui-pendentes   # criada de main@a73e83e6 em 2026-08-31
     active_spec: docs/superpowers/specs/2026-08-31-frontend-decisoes-de-ui-pendentes-design.md
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `ready_for_execution` |
+| `lane-a` | `frontend-decisoes-de-ui-pendentes` (item 21) | Frontend | main tree | `refactor/frontend-decisoes-de-ui-pendentes` | `executing` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado em 2026-08-30; **sem merge**) | `idle` |
 
