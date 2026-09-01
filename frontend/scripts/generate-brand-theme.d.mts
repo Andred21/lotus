@@ -10,5 +10,7 @@ export const AZUIS_DARK: readonly string[]
 export const HERDEIROS: readonly string[]
 export const LIGHT_MAP: Record<string, string>
 export const DARK_MAP: Record<string, string>
+/** Borda de controle do claro (D-68): slate-500, 4,76:1 — troca o slate-300 que reprovava 3:1. */
+export const CINZA_BORDA: string
 /** `tinta` só no claro — no escuro o celeste de primeiro plano mede 6,76:1. */
 export function transform(css: string, map: Record<string, string>, tinta?: string): string

@@ -47,3 +47,20 @@ do teste, porém, comparava contra a contagem de SAÍDA (`#64748b` pós-passada)
 pré-existentes e soma 24. Corrigido o teste para medir a invariante real: 24 no total, e — a
 asserção que já existia e continua sendo a prova central — zero borda sobra em `#cbd5e1`. Documentado
 aqui e no próprio teste; nenhuma mudança na régua do gerador foi necessária.
+
+## Task 5 — D-63: `cardTitleClass` nasce, e o `h1` de `/validar` sobe
+
+Medido em 2026-09-01, `/validar/<uuid>` de um certificado válido (`LOT-2024-03913`), Firefox via
+`playwright-cli` (mesma limitação de Chrome/Chromium do Task 4 — Firefox como substituto).
+
+| Momento | Viewport | PNG | `h1` | `folio` | Quebra | Overflow |
+|---|---|---|---|---|---|---|
+| Antes | 390/1024/1440 | `.../scratchpad/audit/d63-antes-{390,1024,1440}.png` | 18px | 30px | 1 linha | — |
+| Depois | 390/1024/1440 | `.../scratchpad/audit/d63-depois-{390,1024,1440}.png` | 30px | — | 1 linha | `false` nas três |
+
+(Caminho completo dos PNGs: `/tmp/claude-1000/-home-jvbat-projetos-lotus/8dfdff9c-6008-47d4-8bf3-107f84244f4c/scratchpad/audit/`.)
+
+**A medição CONFIRMOU a leitura da ficha e o alvo declarado da spec** — o `h1` foi direto para
+`text-3xl` (30px, mesmo degrau do folio), sem precisar do degrau intermediário `text-2xl`: a folga em
+390px já comportava o texto "Valid certificate" numa linha só, sem overflow. Nenhum desvio a
+registrar.

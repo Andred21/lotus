@@ -71,6 +71,12 @@ definida.
 
 Prosa não é dado técnico: o travessão que marca ausência legítima fica em texto normal.
 
+**Faixa de seção e título de card são dois REGISTROS, não dois degraus de uma escala** (D-63,
+2026-08-31). A faixa (`sectionLabelClass`, 12px) codifica profundidade por CAIXA e posição; o
+título (`cardTitleClass`, 16px) por CORPO. Comparar os dois por tamanho e "monotonizar" apagaria o
+registro eyebrow em toda tela que o usa. O próximo audit que estranhar os 12px contra os 16px lê
+esta linha em vez de reabrir a ficha.
+
 ## Escala de raio
 
 O degrau segue a ESCALA do bloco, não o aninhamento nem o nome do componente: o que tem padding de

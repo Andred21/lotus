@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppLogo, AppCard, AppSkeleton, AppErrorState, CertificateFolio, fieldLabelClass } from '@shared/ui'
+import { AppLogo, AppCard, AppSkeleton, AppErrorState, CertificateFolio, fieldLabelClass, validationVerdictClass } from '@shared/ui'
 import { formatDate, formatIsoDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useValidationPage } from '../../hooks/useValidationPage'
 import type { PublicCertificateData } from '@shared/types/generated'
@@ -12,7 +12,7 @@ function StatusHeading({ icon, text, tone = 'neutral' }: { icon: string; text: s
   return (
     <div className="flex items-center gap-3 p-6">
       <i className={`pi ${icon} text-2xl`} style={{ color }} aria-hidden="true" />
-      <h1 className="text-lg font-semibold" style={{ color }}>{text}</h1>
+      <h1 className={validationVerdictClass} style={{ color }}>{text}</h1>
     </div>
   )
 }

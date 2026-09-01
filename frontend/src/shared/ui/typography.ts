@@ -55,6 +55,29 @@ export const statValueClass = (size: 'page' | 'card'): string =>
 export const technicalDataClass = 'font-mono tabular-nums'
 
 /**
+ * Título de CARD. Estava literal em `AppCard.tsx`, e a `D-63` perguntou se ele
+ * e a faixa de seção não seriam dois degraus da mesma escala. Não são: são dois
+ * REGISTROS — a faixa codifica profundidade por CAIXA e posição (12px, caixa
+ * alta, tracking aberto), o título por CORPO (16px, caixa mista). Monotonizar
+ * os dois apagaria o registro eyebrow em toda tela que o usa, e reabriria a
+ * grafia do `SectionLabel`, que o item 18 acabou de unificar a partir de cinco.
+ *
+ * A constante existe para o degrau poder mudar DEPOIS sem varrer sítios — que
+ * é o que faltava quando ele morava literal num `h3`.
+ */
+export const cardTitleClass = 'text-base font-semibold'
+
+/**
+ * Veredito da validação pública — o `h1` de `/validar`. Estava em `text-lg`
+ * (18px) ao lado de um folio de 30px: numa página pública de peso legal o
+ * veredito saía um degrau abaixo do identificador (D-63, 2026-08-31, medido
+ * nas três viewports). Não é `pageTitleClass` — aquele é 24px com
+ * `tracking-tight`, degrau que ainda perderia do folio; este sobe até o MESMO
+ * degrau (`text-3xl`, 30px).
+ */
+export const validationVerdictClass = 'font-display text-3xl font-semibold'
+
+/**
  * Identificador — RUT, folio, código: dado técnico que é TOKEN ÚNICO e não
  * quebra. O hífen do dígito verificador é oportunidade de quebra para o
  * navegador: a fase 1 mediu "76.123.456-" / "0" no cabeçalho do presupuesto a

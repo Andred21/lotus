@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fieldLabelClass, identifierClass, pageTitleClass, sectionLabelClass, statValueClass, technicalDataClass } from './typography'
+import { cardTitleClass, fieldLabelClass, identifierClass, pageTitleClass, sectionLabelClass, statValueClass, technicalDataClass, validationVerdictClass } from './typography'
 
 /**
  * Os dois `h1` do produto tinham vozes diferentes — `font-display … tracking-tight`
@@ -45,5 +45,24 @@ describe('grafias tipográficas por papel', () => {
    * a fase 1 mediu "76.123.456-" / "0" a 1024px. */
   it('identificador é dado técnico que não quebra', () => {
     expect(identifierClass).toBe('font-mono tabular-nums whitespace-nowrap')
+  })
+
+  /** Título de CARD e faixa de seção são dois REGISTROS, não dois degraus de
+   * uma escala (D-63): eyebrow codifica profundidade por caixa e posição, título
+   * por corpo. Monotonizar apagaria o registro eyebrow em toda tela que o usa —
+   * e o `SectionLabel` acabou de ser unificado a partir de 5 grafias. A prova de
+   * que são registros diferentes é esta: um tem caixa alta e o outro não. */
+  it('o título de card é corpo, e não a faixa de caixa alta', () => {
+    expect(cardTitleClass).toBe('text-base font-semibold')
+    expect(cardTitleClass).not.toContain('uppercase')
+    expect(sectionLabelClass).toContain('uppercase')
+  })
+
+  /** O veredito de `/validar` precisa ficar no mesmo degrau do folio (D-63):
+   * `pageTitleClass` é 24px com `tracking-tight` e ainda perderia dos 30px do
+   * folio — por isso é constante própria, não reuso. */
+  it('o veredito da validação pública sobe ao degrau do folio, não ao de pageTitleClass', () => {
+    expect(validationVerdictClass).toBe('font-display text-3xl font-semibold')
+    expect(validationVerdictClass).not.toBe(pageTitleClass)
   })
 })
