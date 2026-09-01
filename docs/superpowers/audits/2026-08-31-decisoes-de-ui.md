@@ -113,3 +113,49 @@ da caixa nas duas linhas do card, sem cortar.
 `NotFoundCard.tsx`, sibling files em `Validation/`, mesmo padrão de extração de
 `ContactFields`/`ModuleFields` que `frontend-fsliced.md` já documenta. `ValidCard` ficou onde
 estava (o arquivo caiu para 127 linhas só com os dois componentes extraídos).
+
+## Task 8 — D-32: o `order-*` muda de breakpoint
+
+Medido em 2026-09-01, `/perfil` com sessão de **redator** (`juan.morales@lotus.cl`, senha de dev
+definida via `artisan tinker` só para a medição — mesma nota do Task 2: é local, não commitada e não
+substitui o convite real), Firefox via `playwright-cli` (Chrome/Chromium segue indisponível nesta
+máquina). O contêiner de rolagem é o `<main>` (`scrollHeight` 2322 / `clientHeight` 764 em 390px);
+séries de 25 passos de `Tab`, uma linha por passo.
+
+| Momento | Viewport | Série | Assinatura de `main.scrollTop` |
+|---|---|---|---|
+| Antes | 390x844 | `.../audit/d32-antes-390.json` | 0 → **1379 → 1558 → 0** → 396 → 817 (RETORNO no passo 9) |
+| Antes | 1024x768 | `.../audit/d32-antes-1024.json` | 0 → **1165 → 1288 → 0** → 406 → 819 (RETORNO no passo 10) |
+| Depois | 390x844 | `.../audit/d32-depois-390.json` | 0 → 396 → 817 → 1379 → 1558 (**monotônico**) |
+| Depois | 1024x768 | `.../audit/d32-depois-1024.json` | 0 → 406 → 819 → 1288 (**monotônico**) |
+| Depois | 1440x900 | `.../audit/d32-depois-1440.json` | 0 → 513 → **0** (retorno de 513px no passo 23) |
+
+| PNG | O que a tela mostrou |
+|---|---|
+| `.../audit/d32-depois-390.png` | Self-service PRIMEIRO (Personal data → Security → Documents); identidade abaixo — D-27 intacta |
+| `.../audit/d32-depois-1024.png` | Mesma ordem de coluna única |
+| `.../audit/d32-depois-1440.png` | Identidade à ESQUERDA, self-service à direita — D1 intacta |
+
+(Caminho completo: `/tmp/claude-1000/-home-jvbat-projetos-lotus/1007b5c1-1211-4fc4-bb31-9e7b083bb14c/scratchpad/audit/`.)
+
+**A medição CONFIRMOU o defeito e a correção.** A assinatura da ficha — o foco desce a página
+inteira e VOLTA ao topo no meio da varredura — aparece nas duas larguras antes da mudança e
+desaparece nas duas depois: `scrollTop` passa a ser monotônico abaixo de `xl`.
+
+**Desvio de magnitude, não de sinal:** os números absolutos não são os do review de 2026-08-18
+(`0 → 1862 → 2230 → 0` em 390px; `y` `1875 → 2383 → 323` em 1024px). Medido hoje: `0 → 1379 → 1558 → 0`
+e `0 → 1165 → 1288 → 0`. A página encolheu desde agosto (os blocos de senha e documentos mudaram de
+altura nos itens 18 e 19); o retorno — que é a violação de WCAG 1.3.2/2.4.3 — está lá igual. O
+comentário do código cita os valores do review porque é dele que a ficha nasceu.
+
+**A premissa da spec §6 sobre `xl` foi medida e passa pelo critério principal, com uma ressalva.**
+Em 1440x900 o `Tab` ainda retorna uma vez (passo 22 → 23, `scrollTop` 513 → 0), quando sai do fim da
+coluna de self-service para o `Select photo` da identidade. O critério do plano tem duas metades:
+(a) `main.scrollTop` não varia mais que a altura da viewport entre passos consecutivos — **cumprido
+com folga: 513px contra 900px**, e 513px é a extensão rolável INTEIRA da página nessa largura
+(`scrollHeight` 1333 − `clientHeight` 820), então o foco nunca sai por mais de uma dobra;
+(b) as duas colunas cabem em "uma dobra e meia" — **1,63 dobras medidas** (1333/820), 8% acima da
+régua escrita. O salto não é comparável ao de 390px (lá o retorno atravessava 3 dobras), então a
+ficha NÃO volta ao João pelo gatilho da spec; a ressalva de (b) fica registrada aqui.
+
+Gate do Task 8: `pnpm lint`, `pnpm build` e `pnpm test` (125 arquivos / 712 testes) verdes.
