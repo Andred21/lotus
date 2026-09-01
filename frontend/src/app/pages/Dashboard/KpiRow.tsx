@@ -117,11 +117,22 @@ export function KpiRow({ items }: { items: Kpi[] }) {
                     * Rótulo antes do valor foi recusado: mudaria a frase em três
                     * locales e competiria com o título do card, que já diz do
                     * que se trata. */}
-                  <span aria-hidden="true" style={{ color: 'var(--text-color-secondary)' }}>
-                    ·
-                  </span>
-                  <span className={`${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
-                    {t(kpi.hint.i18nKey, { value: kpi.hint.value })}
+                  {/* Ponto e grandeza num filho SO. O `sm:justify-between` do
+                    * `<p>` distribui os FILHOS pela largura do card, e de `sm`
+                    * para cima o corpo e `flex-col items-stretch` — o `<p>`
+                    * ocupa a largura inteira. Com tres filhos o ponto ia parar
+                    * no MEIO do card, longe dos dois algarismos que ele separa,
+                    * e quanto mais larga a coluna da grade, maior o afastamento
+                    * (Q-1 do review de 2026-09-01). Agrupados, o
+                    * `justify-between` volta a ter dois filhos e o separador
+                    * anda colado na grandeza. */}
+                  <span className="flex items-baseline gap-1.5">
+                    <span aria-hidden="true" style={{ color: 'var(--text-color-secondary)' }}>
+                      ·
+                    </span>
+                    <span className={`${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
+                      {t(kpi.hint.i18nKey, { value: kpi.hint.value })}
+                    </span>
                   </span>
                 </>
               )}
