@@ -11,6 +11,7 @@ import {
   CELESTE,
   AZUL_POSTE,
   TINTA_CLARA,
+  CINZA_BORDA,
 } from '../scripts/generate-brand-theme.mjs'
 
 const root = resolve(__dirname, '..')
@@ -461,5 +462,46 @@ describe('o tinte da coluna presa acompanha o hover do tema (Q-3)', () => {
 
   it('o tinte do escuro é o hover do lara-dark-lotus', () => {
     expect(tinteDaMarca(true)).toBe(hoverDoTema('lara-dark-lotus'))
+  })
+})
+
+// ── D-68: a borda de controle do claro mede 3:1 ─────────────────────────────
+// `#cbd5e1` sobre branco mede 1,48:1 e reprova a WCAG 1.4.11 (3:1 no limite do
+// controle quando ele é o único indicador). O escuro tem poço de fundo e não
+// depende do traço, por isso a passada é só do claro — mesma condição da tinta.
+//
+// A partição é a razão de a regra ser de FORMA e não troca de entrada no mapa:
+// `#cbd5e1` aparece 27× no claro gerado, e só 21 são borda. As outras 6 —
+// `--surface-300`, `--gray-300` e quatro `background`/`background-color`
+// decorativos (hoje do datepicker, do inputswitch, do carousel e da galleria) —
+// NÃO são traço de controle, e trocá-las mexeria na rampa de neutros.
+//
+// O slate-500 já era cor viva do tema ANTES desta passada — `.p-button-plain` e
+// `.p-button-secondary` herdam o gray-500 do mapa de cor, três declarações de
+// `border`/`border-color` entre elas. Elas não passam por `BORDA_DE_CONTROLE`
+// (nunca foram `#cbd5e1`) mas ficam no MESMO grafema no CSS final. Por isso a
+// contagem no claro GERADO é 24 (21 convertidas + 3 pré-existentes), não 21 —
+// o "21" é o tamanho da partição na FONTE, medido pela segunda asserção: zero
+// borda sobra em `#cbd5e1`.
+const DECLARACOES_COM = (css: string, hex: string) =>
+  [...css.matchAll(new RegExp(`[-\\w]*\\s*:\\s*[^;{}]*${hex}[^;{}]*`, 'gi'))].map((m) => m[0].trim())
+
+describe('D-68 — borda de controle do tema claro', () => {
+  it('as bordas em slate-500 somam 24 (21 convertidas + 3 já vivas), e nenhuma sobra em slate-300', () => {
+    const css = light()
+    const bordas = DECLARACOES_COM(css, CINZA_BORDA).filter((d) => /^border/.test(d))
+    expect(bordas.length).toBe(24)
+    expect(DECLARACOES_COM(css, '#cbd5e1').filter((d) => /^border/.test(d))).toEqual([])
+  })
+
+  it('os 4 preenchimentos decorativos e as 2 declarações de rampa ficam intactos', () => {
+    const sobrou = DECLARACOES_COM(light(), '#cbd5e1')
+    expect(sobrou.length).toBe(6)
+    expect(sobrou.filter((d) => /^--/.test(d)).sort()).toEqual(['--gray-300: #cbd5e1', '--surface-300: #cbd5e1'])
+    expect(sobrou.filter((d) => /^background/.test(d)).length).toBe(4)
+  })
+
+  it('o escuro não recebe a passada — lá o traço não é o único indicador', () => {
+    expect(DECLARACOES_COM(dark(), CINZA_BORDA).filter((d) => /^border/.test(d)).length).toBe(0)
   })
 })

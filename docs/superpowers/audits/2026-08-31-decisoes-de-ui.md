@@ -25,3 +25,25 @@ registrar. Os três sítios migram conforme os Steps 3 e 6 do plano.
 Nenhum redator seed tem senha utilizável (credencial nasce por convite, RF `SendRedatorAccessInvitationAction`);
 a senha de `juan.morales@lotus.cl` foi definida manualmente para esta sessão de medição, é local
 (dev DB), não foi commitada e não substitui o fluxo de convite real.
+
+## Task 4 — D-68: borda de controle do claro em 3:1 (WCAG 1.4.11)
+
+Medido em 2026-09-01, `/perfil` → "Personal data", Firefox via `playwright-cli` (Chrome/Chromium
+indisponível no host — `/opt/google/chrome` não existe e a instalação exige `sudo`; Firefox está
+instalado no cache do Playwright e serviu de substituto equivalente para este screenshot).
+
+| Tema | PNG | O que a tela mostrou |
+|---|---|---|
+| Claro | `/tmp/claude-1000/-home-jvbat-projetos-lotus/8dfdff9c-6008-47d4-8bf3-107f84244f4c/scratchpad/audit/d68-light.png` | Campos "Name" e "Phone" com traço cinza nitidamente visível sobre o card branco — a borda deixou de se confundir com o fundo |
+| Escuro | `/tmp/claude-1000/-home-jvbat-projetos-lotus/8dfdff9c-6008-47d4-8bf3-107f84244f4c/scratchpad/audit/d68-dark.png` | Sem alteração perceptível — os campos seguem apoiados no poço de fundo escuro, como antes da passada |
+
+**Desvio do plano — contagem de bordas no CSS final:** o teste (`brand-theme.test.ts`) previa 21
+declarações `border*: #64748b` no claro gerado. A execução mostrou 24. Investigação: `#64748b`
+(slate-500) já é cor viva do tema ANTES desta passada — `.p-button-plain` e `.p-button-secondary`
+herdam o gray-500 do mapa de cor, três declarações de `border`/`border-color` entre elas, sem nunca
+terem sido `#cbd5e1`. A régua de FONTE do plano — 27 ocorrências de `#cbd5e1` no claro gerado, 21
+delas borda — bateu exata (confirmado isolando a saída ANTES da passada `BORDA_DE_CONTROLE`); o "21"
+do teste, porém, comparava contra a contagem de SAÍDA (`#64748b` pós-passada), que inclui as 3
+pré-existentes e soma 24. Corrigido o teste para medir a invariante real: 24 no total, e — a
+asserção que já existia e continua sendo a prova central — zero borda sobra em `#cbd5e1`. Documentado
+aqui e no próprio teste; nenhuma mudança na régua do gerador foi necessária.
