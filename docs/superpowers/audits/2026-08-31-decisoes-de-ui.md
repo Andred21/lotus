@@ -159,3 +159,28 @@ régua escrita. O salto não é comparável ao de 390px (lá o retorno atravessa
 ficha NÃO volta ao João pelo gatilho da spec; a ressalva de (b) fica registrada aqui.
 
 Gate do Task 8: `pnpm lint`, `pnpm build` e `pnpm test` (125 arquivos / 712 testes) verdes.
+
+## DoD end-to-end — cada item da spec §7 contra a evidência (2026-09-01)
+
+| Item do DoD (spec §7) | Prova | Resultado |
+|---|---|---|
+| As seis fichas com veredito escrito **e** código aplicado | `D-66` `97661217`+`9d5af40a`+`3c27c4f3` · `D-68` `d8c08e11` · `D-63` `f4596362` · `D-64` `34793aa7` · `D-67` `6fae4d67` · `D-32` `5ddce556` | seis commits, nenhuma ficha "decidida e não aplicada" |
+| `P-67` fechada; catraca `RAIO_LITERAL` vista reprovar por sonda ANTES de entrar | Task 3 Step 5 (seção "Task 3" acima) | sonda negativa com o arquivo restaurado do scratchpad, nunca por `git stash` |
+| A catraca vista reprovar de novo, no estado final | `sed -i 's/rounded-control/rounded-md/' src/app/layouts/Sidebar/SidebarItem.tsx` → `pnpm lint` | `SidebarItem.tsx:30:11 error Raio literal no sítio: … no-restricted-syntax`; restaurado, `git diff --stat` vazio, `pnpm lint` **0** |
+| Borda de controle do claro ≥ 3:1, nos dois temas | `d8c08e11` + `brand-theme.test.ts` + PNGs `d68-light.png`/`d68-dark.png` | slate-500 `#64748b` = **4,76:1**; escuro sem alteração perceptível |
+| Os 4 `background` e as 2 declarações de rampa sem diff | `git show d8c08e11 -- .../lara-light-lotus.css` filtrado pelas duas cores | **0** linhas mudadas fora de `#cbd5e1`→`#64748b`; `lara-dark-lotus.css` não aparece no commit |
+| `h1` de `/validar` deixa de ser menor que o folio, nas três viewports | Seção "Task 5" — PNGs `d63-{antes,depois}-{390,1024,1440}.png` | 18px → **30px**, mesmo degrau do folio, `overflow: false` nas três |
+| Foco de `/perfil` abaixo de `xl` sem o salto de 2026-08-18 | Seção "Task 8" — séries `d32-{antes,depois}-{390,1024}.json` | `scrollTop` **monotônico** depois; o retorno (`→ 0` no meio da varredura) desapareceu nas duas larguras |
+| `pnpm lint` 0, `pnpm build` verde, suíte verde | `pnpm lint && pnpm build && pnpm test` no estado final | lint **0**, build verde, **125 arquivos / 712 testes** passados |
+| `generated.ts` com diff vazio | `docker compose exec -T app php artisan typescript:transform` + `git diff --stat -- frontend/src/shared/types/generated.ts` | **vazio** — o bloco não tocou contrato |
+| A rule reflete a escala e os dois registros | `.claude/rules/frontend-estilizacao.md` §"Escala de raio" e o parágrafo dos dois REGISTROS | tabela em `rounded-surface`/`rounded-control`/`rounded-full`, com `--radius-control` referenciando `--border-radius` do tema; nenhuma linha descreve estado que o código não tem |
+| A `D-69` existe no `backlog.md` | `a3571cc8` | ficha aberta com os 4 sítios e DoD mecanizado (`CATRACA_COR` chegar a `[]`) |
+
+**Fichas que a sessão abriu em vez de calar:** `D-69` (4 sítios de utility de paleta não varridos),
+`D-70` (a página pública orienta a "contactar a Lotus" sem canal — decisão da Lotus) e o **item 23**,
+hospedeiro da `D-65` reescrita com os sete valores de reserva medidos.
+
+**Ressalva registrada, que não dispara o gatilho de devolução ao João:** em `xl` (1440x900) o `Tab`
+ainda retorna uma vez, 513px — dentro do critério (a) do plano (< 900px de viewport, e é a extensão
+rolável inteira), 8% fora do critério (b) ("uma dobra e meia": medido 1,63). Detalhe na seção
+"Task 8".
