@@ -90,7 +90,7 @@ export function CourseStep({
           {courses.list.map((c) => (
             <label
               key={c.id}
-              className="flex items-center gap-2 rounded p-2 hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="flex items-center gap-2 rounded-control p-2 transition-colors hover:[background:var(--surface-hover)]"
             >
               <AppRadioButton
                 name="quote-course"

@@ -74,7 +74,7 @@ export function IssuedDialog({
             * escritos no sítio, com o folio em `font-mono text-base` — o mesmo
             * papel que a validação pública desenha, em outra grafia (achado C4).
             * Agora é a mesma peça, um degrau abaixo. */}
-          <div className="rounded-lg border p-6" style={{ borderColor: 'var(--surface-border)' }}>
+          <div className="rounded-surface border p-6" style={{ borderColor: 'var(--surface-border)' }}>
             <p className={`text-center ${fieldLabelClass}`} style={{ color: 'var(--text-color-secondary)' }}>
               {t('certificate.issuedHeading')}
             </p>

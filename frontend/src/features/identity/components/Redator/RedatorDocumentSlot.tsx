@@ -18,7 +18,7 @@ export function RedatorDocumentSlot({ type, mode, doc, ...body }: SlotBodyProps)
   // D7: a borda vem da variável do tema, não de um par Tailwind hardcoded
   // claro/escuro fixando a cor da borda — que era o débito do D18.
   return (
-    <div className="rounded border p-2" style={{ borderColor: 'var(--surface-border)' }}>
+    <div className="rounded-surface border p-2" style={{ borderColor: 'var(--surface-border)' }}>
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium">{t(`documentType.${type}`)}</p>
         {mode !== 'create' && status && (

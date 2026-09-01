@@ -23,7 +23,7 @@ export function ModuleCard({
   const { t } = useTranslation()
 
   return (
-    <div className="space-y-3 rounded border p-3" style={{ borderColor: 'var(--surface-border)' }}>
+    <div className="space-y-3 rounded-surface border p-3" style={{ borderColor: 'var(--surface-border)' }}>
       <div className="flex items-start gap-2">
         <span className="mt-2.5 text-xs font-semibold" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.itemLabel', { n: index + 1 })}</span>
         <NestedField error={fieldErrors?.[`modules.${index}.name`]?.[0]} readOnly={readOnly} value={module.name}>

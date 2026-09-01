@@ -38,9 +38,9 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
             * arbitrário (UI-03 do relatório de 2026-08-23: 1,00:1 contra o cartão).
             * Token escolhido pela FUNÇÃO — superfície que precisa contrastar com o
             * cartão —, não pelo nome, e medido nos dois temas. */}
-          <div className="mt-2 h-2 w-64 rounded" style={{ background: 'var(--surface-300)' }}>
+          <div className="mt-2 h-2 w-64 rounded-full" style={{ background: 'var(--surface-300)' }}>
             <div
-              className="h-2 rounded transition-[width]"
+              className="h-2 rounded-full transition-[width]"
               style={{ width: `${(s.deliveredCount / s.totalTypes) * 100}%`, background: 'var(--green-500)' }}
             />
           </div>
