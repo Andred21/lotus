@@ -16,7 +16,12 @@ import { StatusHeading } from './StatusHeading'
  * quebra nenhuma sob `nowrap`. Medido: com `identifierClass` o texto
  * simplesmente vazava para fora da caixa e o `overflow-hidden` do `AppCard`
  * cortava em silêncio, sem quebrar — o teto de 64 char escondia o defeito
- * porque nenhum uuid real chega lá, mas um param de 300 char revelava. */
+ * porque nenhum uuid real chega lá, mas um param de 300 char revelava.
+ *
+ * O corte LEVA reticência (Q-4 do review de 2026-09-01): o eco existe para
+ * conferência caractere a caractere contra o papel, e código truncado sem
+ * marca parece completo sem ser — numa página de peso legal isso é pior que
+ * não ecoar. */
 export function NotFoundCard({ uuid }: { uuid: string }) {
   const { t } = useTranslation()
   return (
@@ -27,7 +32,7 @@ export function NotFoundCard({ uuid }: { uuid: string }) {
           {t('certificate.validation.searchedCode')}
         </dt>
         <dd className={`${technicalDataClass} text-sm break-all`} style={{ color: 'var(--text-color)' }}>
-          {uuid.slice(0, 64)}
+          {uuid.length > 64 ? `${uuid.slice(0, 64)}…` : uuid}
         </dd>
       </dl>
       <p className="px-6 pb-6 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
