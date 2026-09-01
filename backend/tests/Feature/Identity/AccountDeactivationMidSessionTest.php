@@ -104,6 +104,48 @@ class AccountDeactivationMidSessionTest extends TestCase
             ->assertHeader('Content-Type', 'application/problem+json');
     }
 
+    /**
+     * O 401 da conta desativada diz POR QUE, e nos três locales (Q-1 do review
+     * de 2026-08-30). O middleware lança `__('auth.inactive')` de propósito —
+     * quem foi desligado no meio da sessão precisa ler a razão, não um
+     * "não autenticado" genérico que se confunde com cookie vencido.
+     *
+     * O `hardening-i18n-e-erros-api` quase apagou essa frase: o braço novo
+     * `AuthenticationException => __('problem.detail.unauthenticated')` do
+     * `detailFor()` a trocava pelo genérico. A porta declarada pela D5 da spec
+     * para o caso legítimo é `PublicDetail`, e é ela que este teste guarda.
+     */
+    public function test_o_401_da_conta_desativada_carrega_o_motivo_nos_tres_locales(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->assignRole('admin');
+
+        $detalhes = [];
+
+        foreach (['es-CL', 'pt-BR', 'en'] as $locale) {
+            $this->logar($user);
+            DB::table('users')->where('id', $user->id)->update(['is_active' => false]);
+            $this->app['auth']->forgetGuards();
+
+            $corpo = $this->withHeaders(['Accept-Language' => $locale])
+                ->getJson('/api/me')
+                ->assertStatus(401)
+                ->json();
+
+            app()->setLocale(str_replace('-', '_', $locale));
+            $this->assertSame(__('auth.inactive'), $corpo['detail'], "O 401 perdeu o motivo em {$locale}.");
+            $this->assertNotSame(__('problem.detail.unauthenticated'), $corpo['detail']);
+
+            $detalhes[] = $corpo['detail'];
+
+            DB::table('users')->where('id', $user->id)->update(['is_active' => true]);
+            $this->app['auth']->forgetGuards();
+        }
+
+        $this->assertCount(3, array_unique($detalhes), 'Os três locales devolveram o mesmo detail.');
+    }
+
     public function test_type_fora_de_admin_e_redator_perde_acesso(): void
     {
         $this->seed(RolePermissionSeeder::class);

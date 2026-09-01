@@ -130,7 +130,7 @@ class Redator extends Model implements Auditable
 
         if ($redator->trashed()) {
             throw ValidationException::withMessages([
-                'redator' => 'Este redactor fue archivado y ya no acepta cambios.',
+                'redator' => __('identity.errors.redator_archived'),
             ]);
         }
 

@@ -79,14 +79,14 @@ class RestoreTurmaAction
 
             if ($cotacao->turma()->exists()) {
                 throw ValidationException::withMessages([
-                    'turma' => 'Ya existe una clase activa para esta cotización: archívala antes de restaurar esta.',
+                    'turma' => __('operation.turma.restore_conflict'),
                 ]);
             }
 
             if ($locked->status === TurmaStatus::EmAndamento
                 && $locked->redatores()->whereNotNull('redatores.deleted_at')->exists()) {
                 throw ValidationException::withMessages([
-                    'turma' => 'Un redactor de esta clase está archivado: restáuralo antes de restaurar la clase.',
+                    'turma' => __('operation.turma.restore_redator_archived'),
                 ]);
             }
 

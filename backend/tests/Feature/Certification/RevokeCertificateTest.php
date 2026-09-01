@@ -82,7 +82,7 @@ class RevokeCertificateTest extends TestCase
 
         $this->postJson($this->revokeUrl(), ['reason' => 'Segunda revocación.'])
             ->assertUnprocessable()
-            ->assertJsonPath('errors.certificate.0', 'El certificado ya fue revocado.');
+            ->assertJsonPath('errors.certificate.0', __('certification.certificate.already_revoked'));
     }
 
     public function test_revogacao_sem_motivo_retorna_422_e_nao_revoga(): void

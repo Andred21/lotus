@@ -48,7 +48,7 @@ class ArchiveRedatorAction
 
             if ($locked->turmas()->where('status', TurmaStatus::EmAndamento)->exists()) {
                 throw ValidationException::withMessages([
-                    'redator' => 'El redactor tiene clases en curso: concluye o reasigna antes de archivarlo.',
+                    'redator' => __('identity.errors.redator_has_active_turmas'),
                 ]);
             }
 

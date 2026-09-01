@@ -20,7 +20,7 @@ class CreateRoleAction
     {
         return DB::transaction(function () use ($data) {
             if (Role::where('name', $data->name)->exists()) {
-                throw ValidationException::withMessages(['name' => 'Já existe uma role com esse nome.']);
+                throw ValidationException::withMessages(['name' => __('identity.errors.role_name_taken')]);
             }
 
             PermissionCatalog::assertAssignable($data->permissions);

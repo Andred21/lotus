@@ -125,7 +125,7 @@ class OperationMetricsQuery
                 $pendencias[] = $this->pendingItem(
                     $turma,
                     PendingItemType::TurmaWithoutRedator,
-                    'Clase sin relator designado.',
+                    __('dashboard.pending.turma_without_redator'),
                     $turma->start_date->toDateString(),
                 );
             }
@@ -134,7 +134,12 @@ class OperationMetricsQuery
                 $pendencias[] = $this->pendingItem(
                     $turma,
                     PendingItemType::TurmaDocsIncomplete,
-                    'Documentación obligatoria incompleta: '.implode(', ', array_column($status->missingTypes(), 'value')).'.',
+                    __('dashboard.pending.turma_docs_incomplete', [
+                        'tipos' => implode(', ', array_map(
+                            fn (TurmaDocumentType $tipo): string => __('operation.document_type.'.$tipo->value),
+                            $status->missingTypes(),
+                        )),
+                    ]),
                     $turma->end_date->toDateString(),
                 );
             }
@@ -143,7 +148,7 @@ class OperationMetricsQuery
                 $pendencias[] = $this->pendingItem(
                     $turma,
                     PendingItemType::TurmaAwaitingConclusion,
-                    'Clase habilitada pendiente de confirmación de conclusión.',
+                    __('dashboard.pending.turma_awaiting_conclusion'),
                     $turma->end_date->toDateString(),
                 );
             }

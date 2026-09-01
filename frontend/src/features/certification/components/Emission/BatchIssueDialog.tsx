@@ -22,12 +22,13 @@ export function BatchIssueDialog({ turma, onHide }: Props) {
 
   const footer = batch.report ? (
     <div className="flex justify-end">
-      <AppButton label={t('common.close')} onClick={onHide} />
+      <AppButton label={t('common.close')} text onClick={onHide} />
     </div>
   ) : (
     <div className="flex justify-end gap-2">
-      <AppButton label={t('common.cancel')} outlined disabled={batch.pending} onClick={onHide} />
+      <AppButton label={t('common.cancel')} text disabled={batch.pending} onClick={onHide} />
       <AppButton
+        variant="primary"
         label={t('certificate.confirmEmit')}
         icon="pi pi-check"
         disabled={batch.redatorId == null}

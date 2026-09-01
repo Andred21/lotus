@@ -58,35 +58,6 @@ doc não avisar — quem rodar o §6 numa worktree nova vê um fatal de memória
 que fechou naquele bloco: o offset de portas por árvore não reconstrói imagem, e foi com o offset já
 no lugar que o fatal de 128M apareceu aqui.
 
-## P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
-
-**Bloco:** — o hospedeiro (item 18) fechou em 2026-08-29 sem pagá-la; rehospedar é do João · **Gatilho:** bloco que
-tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
-elementos, ou pôr `role="list"` no wrapper de terceiro. Revisar em **2026-10-31**.
-
-Medido no fechamento do `frontend-hardening-final` (2026-08-27), Chromium real, Dashboard a
-1440×900: varrendo **todo** `ul` da página, dois ficam sem `role` — as duas legendas do Recharts
-(`ul.recharts-default-legend`, dentro de `.recharts-legend-wrapper`, uma no gráfico de
-`Certificados emitidos` e outra no de `UF aprobada`).
-
-O mini-reset da **P-46** crava `list-style: none` em todo `ul` da aplicação, e no WebKit isso tira a
-semântica de lista junto — foi o que o **Q-6** do review de 2026-08-27 corrigiu, pondo `role="list"`
-nas 16 listas do repositório e uma régua de lint que exige o atributo daqui pra frente. A régua lê
-JSX: lista que nasce dentro de biblioteca não passa por ela, e o reset alcança essas listas do mesmo
-jeito. As 16 nossas estão cobertas; a borda são as de terceiro.
-
-**Alcance pequeno, e por isso ficou aberta:** as duas listas são legendas de gráfico, cada item já
-carrega `aria-label` próprio no `<svg>`, e o conteúdo delas é decorativo em relação ao dado (que é o
-gráfico). Não reabre o DoD 4 do bloco — as quatro famílias que a spec §5 mediu continuam corretas e
-com `role`.
-
-**Nasceu como `P-61` na branch `refactor/frontend-hardening-final` e foi renumerada no merge da
-`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
-do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
-renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
-
----
-
 > **As duas fichas abaixo foram renumeradas no merge de fechamento (2026-08-29).** Nasceram
 > `P-64` e `P-65` na `lane-c` e viraram `P-67` e `P-68`: a `main` já trazia `P-64`, `P-65` e `P-66`
 > da `lane-a`, mescladas antes destas (PR #81). Mesmo movimento que a nota da `lane-a` registra
@@ -94,9 +65,9 @@ renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
 
 ## P-67 — a escala de raio está escrita na rule e 10 sítios ficaram fora dela, sem catraca
 
-**Bloco:** frontend-triagem-dos-audits-do-item-18 (item 19) · **Gatilho:** bloco que triar os
-achados de raio das quatro runs, ou que tocar esses 9 arquivos por outro motivo — a catraca só entra
-depois que o último sítio sair. Revisar em **2026-10-31**.
+**Bloco:** `D-66` (decisão do João sobre a escala de raio, aberta pelo item 19 em 2026-08-29) ·
+**Gatilho:** a D-66 decidida — os 10 sítios se classificam pela régua escolhida e a catraca nasce
+depois do último. Revisar em **2026-10-31**.
 
 O `frontend-estilizacao-padronizacao-de-componentes` (item 18) escreveu a escala em
 `.claude/rules/frontend-estilizacao.md`: superfície `rounded-lg`, controle e faixa fina
@@ -177,7 +148,92 @@ está, no mesmo arquivo, doze linhas abaixo.
 
 ---
 
+## P-70 — o `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado
+
+**Bloco:** `hardening-i18n-e-erros-api` (D4 da spec de 2026-08-29) ·
+**Gatilho:** próximo bloco da frente de frontend que tocar política de erro de tela.
+Revisar em **2026-11-30**.
+
+`frontend/src/shared/lib/screenDetail.ts` devolve `undefined` para todo envelope que não seja
+sintetizado pelo próprio front, então erro de CARGA (GET) mostra a dica genérica do i18n em vez do
+que o servidor disse. A razão escrita era que o `ProblemDetails` respondia em português fixo — isso
+acabou: o envelope inteiro sai de `lang/` e responde ao `Accept-Language`.
+
+**Por que não foi virado junto:** o item 7 é da frente Backend. Virar a chave exige garantir que
+nenhuma mensagem de exceção não prevista chegue à tela, o que transforma um bloco de backend em
+backend+frontend. Decisão do João em 2026-08-29.
+
+**DoD de quem pegar:** um GET que falha com 403 e outro com 404 mostram, na tela, a mensagem
+localizada do servidor, nos três locales — e um 500 continua mostrando a dica genérica.
+
+---
+
 # Backend
+
+## P-72 — o 419 devolve `detail` literal em inglês nos três locales
+
+**Bloco:** — · **Gatilho:** bloco que tocar `ProblemDetails::fromException` ou a proteção CSRF por
+outro motivo; o braço ganha `problem.detail.csrf` nos três locales no mesmo commit. Revisar em
+**2026-10-31**.
+
+Medido contra a API real no fechamento do `hardening-i18n-e-erros-api` (2026-08-30), em `PUT
+/api/turmas/3` com `X-XSRF-TOKEN` vencido:
+
+```
+es-CL  419 | Error en la solicitud | CSRF token mismatch.
+pt-BR  419 | Erro na requisição    | CSRF token mismatch.
+en     419 | Request error         | CSRF token mismatch.
+```
+
+O `title` **está** localizado — o 419 é um `HttpExceptionInterface` sem braço próprio, então cai no
+genérico `problem.title.http`, que o bloco traduziu. O `detail` não: o `default` do `detailFor()` é
+`$e->getMessage() ?: __('problem.detail.generic')`, e o `TokenMismatchException` do Laravel traz
+`CSRF token mismatch.` cru. Frase não vazia vence o fallback, e a resposta sai em inglês nos três
+idiomas.
+
+**Por que não foi consertado no bloco:** o 419 não está na spec nem no plano — os sete braços que a
+**D5** enumera são 401, 403, 404, 422, 429, 500 e o genérico. Fechar sprint não implementa (§0 do
+gate mede, não escreve), e o remédio não é de uma linha: ou o `detailFor()` ganha um braço
+`TokenMismatchException`, ou a catraca da Task 9 passa a enxergar `getMessage()` de exceção de
+framework — decisão de desenho do envelope, que é mecanismo da lei §5.4.
+
+A **P-56** vizinha (o `XSRF-TOKEN` não isolado entre árvores) descreve *quando* o 419 aparece em
+dev; esta descreve *o que ele diz* quando aparece.
+
+## P-71 — cinco recusas que o usuário lê continuam literais fora de `lang/`, em três domínios
+
+**Bloco:** — · **Gatilho:** bloco que tocar `Certification/Services` ou `Operation/Exceptions` por
+outro motivo; cada sítio sai da lista `DEBITO_CONHECIDO` da catraca no mesmo commit em que passar a
+ler `lang/`. Revisar em **2026-10-31**.
+
+Medido no review de 2026-08-30 (Q-2), depois que a catraca de exceção literal
+(`tests/Unit/Shared/MensagemLiteralTest::nenhuma_excecao_nova_carrega_texto_literal`) passou a
+enxergar o `throw`, e não só o `withMessages`. O `hardening-i18n-e-erros-api` traduziu 41 sítios e
+mais os quatro de role de sistema que este review pagou; estes cinco ficaram porque o bloco **não
+tocou esses arquivos**:
+
+| Sítio | Idioma de hoje | O que o usuário vê |
+|---|---|---|
+| `CorruptedSnapshotException.php:42` | es_CL | `PublicDetail` — atravessa o mascaramento do 500 e é impresso cru pelo `CertificateViewDialog` em qualquer locale |
+| `RedatorNaoElegivelException.php:16,21` | pt-BR | as duas recusas da RN-09 na designação de redator |
+| `TurmaConfiguracaoException.php:15,20` | pt-BR | cotação não aprovada e turma já existente |
+
+Como não são `ValidationException`, o `ProblemDetails` preserva o `getMessage()` cru: um envelope
+misto, com `title` em es-CL e `detail` em pt-BR, é o resultado observável hoje.
+
+**A catraca já as segura.** Cada uma está em `DEBITO_CONHECIDO` com o motivo escrito ao lado, no
+molde do `ParentLockOnChildWriteTest`, e **silêncio reprova**: exceção nova com texto literal nasce
+vermelha e escolhe entre traduzir e declarar. A lista é inventário, não permissão — ela só encolhe.
+
+**Por que ficou aberta:** traduzir os cinco custa dicionário em três idiomas por domínio, e a
+`CorruptedSnapshotException` é `sprintf` com dois `%s` — vira chave com dois parâmetros, o que muda a
+forma da factory. Fechar isso no review de um bloco de i18n de outro domínio seria o quinto arquivo
+fora da lista do plano. **A mesma doença tem outros portadores que a catraca não alcança** e que
+ficam nomeados aqui para quem pegar: `CertificateEligibility::refuse()` (6 recusas em es_CL, o
+literal chega por variável), `UserProvisioner::DUPLICADO` (RUT/e-mail duplicado em pt-BR, constante
+longe da chamada), as três `ValidationRule` com `$fail('...')` (`ValidRut`, `PrintableGrade`,
+`ScannedForMalware`) e o `AuthController::logout()` (`'Sessão encerrada.'`, resposta de SUCESSO —
+nenhuma catraca de exceção alcança esse caminho).
 
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
@@ -565,6 +621,11 @@ avisado da pendência antes do commit e decidindo por ela. A alternativa ofereci
 bloco da lane aqui e o espelho no main tree — foi recusada por ping-pong entre árvores. A ficha
 segue aberta: quatro precedentes não reescrevem a invariante.
 
+**Quinto caso, 2026-08-29:** a promoção do item 19 (`frontend-triagem-dos-audits-do-item-18`) para a
+`lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, pelo mesmo motivo do
+quarto: `/planejar-bloco` lê os singulares, e a sessão rodou autônoma, sem o João para escolher o
+ping-pong entre árvores. Cinco precedentes, mesma saída pendente.
+
 ## P-56 — o `XSRF-TOKEN` não é isolado entre árvores; a escrita da aba parada dá 419
 
 **Gatilho:** fecha quando o João escolher entre (a) isolar as árvores por HOST em vez de por porta
@@ -928,31 +989,6 @@ devolvia o acesso ao staff desligado sem ninguém pedir.
 Os campos **2 a 6** (`ClientData::$type`, `CourseData::$workload_hours`, `BudgetController::update`,
 `CourseTemplateController::update`) ficaram **fora por escrita explícita** na §2 da spec do bloco:
 nenhum é controle de acesso, e a ficha já os separa por gatilho próprio.
-
-## P-61 — os `title` do `ProblemDetails` estão em português num produto es-CL
-
-**Bloco:** `hardening-api-arquivos-e-abuso` (achado Q-2 do review de 2026-08-25) ·
-**Gatilho:** fecha quando um bloco tocar o `ProblemDetails` ou a camada de mensagens ao usuário por
-outro motivo, e puder traduzir os cinco `title` de uma vez com o João. Revisar em **2026-10-31**.
-
-Medido ao vivo contra a API em 2026-08-25, na 6ª tentativa de `POST /api/login`:
-
-```json
-{"type":"https://lotus.cl/errors/too-many-requests","title":"Demasiadas solicitudes","status":429,"detail":"Too Many Attempts."}
-```
-
-O `detail` em inglês era do framework e **foi corrigido no próprio review** — o 429 é o único status
-que aquele bloco estreou, e a mensagem dele passou a falar es-CL como as de arquivo e de import.
-
-O que ficou é anterior ao bloco e maior que ele: os `title` dos outros braços do
-`ProblemDetails::fromException` estão em **português** (`Erro de validação`, `Não autenticado`,
-`Acesso negado`, `Recurso não encontrado`, `Erro na requisição`, `Erro interno`), e o `detail`
-mascarado do 500 também (`Ocorreu um erro inesperado. Tente novamente.`). O produto é es-CL: o
-usuário é a Lotus, no Chile.
-
-**Por que não foi consertado junto:** traduzir os seis `title` e o mascaramento do 500 muda texto que
-o frontend pode estar casando, e não estava no escopo aprovado do review. É decisão de idioma de
-produto, do João — não efeito colateral de um bloco de hardening.
 
 > **As três fichas abaixo foram renumeradas no merge de fechamento (2026-08-28).** Nasceram
 > `P-62`, `P-63` e `P-64` na `lane-a` e viraram `P-64`, `P-65` e `P-66`: a `main` já trazia uma

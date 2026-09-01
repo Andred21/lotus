@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthPanel } from './AuthPanel'
@@ -40,30 +40,29 @@ afterEach(() => {
 
 describe('AuthPanel', () => {
   it('em /login mostra os campos do login', () => {
-    const { container } = renderPanel('/login')
+    renderPanel('/login')
 
-    expect(container.querySelector('#login-email')).not.toBeNull()
-    expect(container.querySelector('#login-password')).not.toBeNull()
-    expect(container.querySelector('#forgot-email')).toBeNull()
+    expect(screen.getByLabelText('login.email')).toBeTruthy()
+    expect(screen.getByLabelText('login.password')).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'password.forgotTitle' })).toBeNull()
   })
 
   it('o clique em recuperar troca so os campos e leva o e-mail digitado', () => {
     const { container } = renderPanel('/login')
 
-    fireEvent.change(container.querySelector('#login-email') as HTMLInputElement, {
-      target: { value: 'ana@lotus.cl' },
-    })
+    fireEvent.change(screen.getByLabelText('login.email'), { target: { value: 'ana@lotus.cl' } })
     fireEvent.click(container.querySelector('a[href="/recuperar-clave"]') as HTMLAnchorElement)
 
-    const forgot = container.querySelector('#forgot-email') as HTMLInputElement
+    const forgot = screen.getByLabelText('login.email') as HTMLInputElement
     expect(forgot.value).toBe('ana@lotus.cl')
-    expect(container.querySelector('#login-password')).toBeNull()
+    expect(screen.queryByLabelText('login.password')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'password.forgotTitle' })).toBeTruthy()
   })
 
   it('em /recuperar-clave abre no modo recuperacao', () => {
-    const { container } = renderPanel('/recuperar-clave')
+    renderPanel('/recuperar-clave')
 
-    expect(container.querySelector('#forgot-email')).not.toBeNull()
-    expect(container.querySelector('#login-password')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'password.forgotTitle' })).toBeTruthy()
+    expect(screen.queryByLabelText('login.password')).toBeNull()
   })
 })

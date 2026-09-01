@@ -3,7 +3,7 @@ import { useUiStore } from '@shared/stores/uiStore'
 import { usePermissions, useIsCompactViewport } from '@shared/hooks'
 import { NAV_MODULES } from '@shared/config/navigation'
 import { APP_VERSION } from '@shared/config/brand'
-import { AppButton, AppSidebar, AppLogo, sectionLabelClass } from '@shared/ui'
+import { AppButton, AppSidebar, AppLogo, sectionLabelClass, technicalDataClass } from '@shared/ui'
 import { roleSectionLabel } from '@shared/lib'
 import { SidebarItem } from './SidebarItem'
 
@@ -68,7 +68,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {!collapsed && <div className="px-4 py-3 text-sm text-(--shell-ink-muted) text-center">{APP_VERSION}</div>}
+      {!collapsed && <div className={`px-4 py-3 ${technicalDataClass} text-sm text-(--shell-ink-muted) text-center`}>{APP_VERSION}</div>}
     </AppSidebar>
   )
 }

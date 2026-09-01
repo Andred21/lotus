@@ -7,6 +7,7 @@ import {
   FormErrorSummary,
   FormField,
   FormSection,
+  technicalDataClass,
   useToast,
 } from '@shared/ui'
 import type { ProfileData } from '@shared/types/generated'
@@ -28,7 +29,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
 
   return (
     <AppCard className="p-4">
-      <FormSection title={t('profile.personal.title')} />
+      <FormSection title={t('profile.personal.title')} as="h2" />
 
       <form
         onSubmit={(e) => {
@@ -55,11 +56,11 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
         </FormField>
 
         <FormField label={t('profile.personal.phone')} error={fieldErrors?.phone?.[0]}>
-          {/* `font-mono` (D-29): único sítio da decisão que pousa num controle
-              EDITÁVEL, e não num valor de leitura — a auditoria o cita
+          {/* `technicalDataClass` (D-29): único sítio da decisão que pousa num
+              controle EDITÁVEL, e não num valor de leitura — a auditoria o cita
               explicitamente ("vale também para telefone"). */}
           <AppInputText
-            className="w-full font-mono"
+            className={`w-full ${technicalDataClass}`}
             autoComplete="tel"
             value={form.phone}
             disabled={pending}
@@ -69,6 +70,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
 
         <div>
           <AppButton
+            variant="primary"
             type="submit"
             label={t('profile.personal.save')}
             icon="pi pi-check"

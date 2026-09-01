@@ -54,9 +54,170 @@ fluxo de deploy que o item 10 fixou (D7).
 
 **A `P-62` foi emendada, e a emenda é o achado que este bloco não estava procurando.** A ficha registrava a `main` dos **dois** repositórios sem branch protection por o plano free recusar a API; medido em 2026-08-29, o 403 só tinha sido medido em `Gatika-CL/lotus` — `Andred21/lotus` responde `"visibility": "public"`, `ghcr.io/andred21/lotus-app:<sha>` entrega manifesto **sem credencial**, e em repositório público a protection é grátis. O João **adiou** a decisão (tornar privado; manter público e ligar protection; manter como está) e o bloco não mexeu em visibilidade nem em protection. Quando protection for ligada onde couber, os required checks são **cinco**: o `audit-dev` decide desde 2026-08-29.
 
-**Gate de fechamento (2026-08-31).** Backend `1108 passed / 5 skipped`; frontend `122 arquivos / 688 testes`, lint 0, build verde; `pnpm audit` `No known vulnerabilities found` e `pnpm install --frozen-lockfile` passa; nenhum arquivo PHP tocado, então pint e `typescript:transform` não se aplicam. O critério de aceite foi **provado ao vivo no fechamento**, não só relido da evidência: a forma do `ci.yml` conferida no YAML carregado, as três runs relidas pela API do GitHub, a árvore filtrada recalculada e comparada com `upstream/main^{tree}`, e o `provar-release.sh` re-executado contra `d0d8db50…` com `exit 0`, `/up` 200 e os mesmos digests. A branch `chore/prontidao-pre-nuvem` fica para o `finishing-a-development-branch`, que abre a PR 2 do fechamento. **O item 10 e o item 12 seguem estacionados** em `parked_work_items`; o 10 retoma sobre `main` já com o par provado. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
+**Gate de fechamento (2026-08-31).** Backend `1108 passed / 5 skipped`; frontend `122 arquivos / 688 testes`, lint 0, build verde; `pnpm audit` `No known vulnerabilities found` e `pnpm install --frozen-lockfile` passa; nenhum arquivo PHP tocado, então pint e `typescript:transform` não se aplicam. O critério de aceite foi **provado ao vivo no fechamento**, não só relido da evidência: a forma do `ci.yml` conferida no YAML carregado, as três runs relidas pela API do GitHub, a árvore filtrada recalculada e comparada com `upstream/main^{tree}`, e o `provar-release.sh` re-executado contra `d0d8db50…` com `exit 0`, `/up` 200 e os mesmos digests. A branch `chore/prontidao-pre-nuvem` fica para o `finishing-a-development-branch`, que abre a PR 2 do fechamento. **Emenda do merge da `main` (2026-08-31, mesmo dia):** o gate rodou contra um `encerradas.md` anterior aos dois fechamentos de 2026-08-30 e podou a **P-66** por conta própria; a `main` já a tinha removido no fechamento do item 19, então a poda foi descartada na resolução e o arquivo segue a `main`. Ficam **em rastro a P-61 e a P-63**, vencidas neste fechamento: não foram removidas porque são fichas de outras lanes e a descoberta veio depois do gate — saem no próximo `/fechar-sprint`. **O item 10 e o item 12 seguem estacionados** em `parked_work_items`; o 10 retoma sobre `main` já com o par provado. A lane não recebe item novo sozinha: promoção é do João, contra o `backlog.md`.
 
 ---
+
+## Fechado em 2026-08-30 — `hardening-i18n-e-erros-api`, item 7 da fila
+
+**A `lane-a` fechou o item 6 em 2026-08-29** — `hardening-performance-e-dados`, narrativa integral
+em `historico/state-archive.md` e entrega em `historico/progress.md`. A branch
+`feat/hardening-performance-e-dados` nasceu de `main@f584432b`, foi **rebaseada sobre
+`main@b4101da9`** (que traz o item 18 da `lane-c`, PR #82) no fechamento, e **mesclou pelo PR #83**
+(merge `2ae48f31`). A colisão conhecida em `HistorialTable.tsx` foi resolvida nesse rebase, e cobrou uma extração: as
+linhas das duas lanes somadas passaram da régua de 150, então o filtro de estado saiu para
+`HistorialStatusFilter.tsx` — movimento literal, no molde que o `TurmaStatusFilter` registra desde
+2026-08-24. **E cobrou uma correção que não é do rebase, e sim deste bloco:** a reprovação
+intermitente do `pnpm test` que o gate anterior registrou como flake é um `setTimeout` do
+`useServerTable` disparando depois do teardown do jsdom (`window is not defined`), porque o vitest
+não tem `setupFiles` e nada desmonta o que o teste monta — os dois arquivos que vazavam ganharam
+`afterEach(cleanup)` e a suíte foi de 1 reprovação em 4 voltas para 6 verdes de 6; o mecanismo
+global virou a **P-69**. Essa correção **não entrou no PR #83** — ele mesclou em `2c66fbbe`, antes de
+ela existir, e a `main` passou algumas horas reproduzindo a reprovação; ela entrou pelo **PR #84**
+(merge `0a65d1e2`), de branch própria tirada da `main` já mesclada. As duas branches foram apagadas
+local e remotamente em 2026-08-29, com `git diff` vazio contra a `main` nas duas. A árvore é o main
+tree, que não se destrói, e voltou para `main`. A lane não recebe item novo sozinha: promoção é do
+João, contra o `backlog.md`.
+
+**Promoção do item 7 — 2026-08-29, `lane-a`.** Promoção explícita do João com a lane em `idle`,
+contra o `backlog.md`; `/planejar-bloco` recusou-se a promover sozinho e parou pedindo a seleção,
+como manda o gate. O item é marcado **`Contexto: não`**, então a lane nasce direto em
+`ready_for_planning` — não há Context Packet a gerar, e as fontes (`ADR-03`, `ADR-15`, fichas
+`D-07`, `D-18`, `D-36`) vivem todas no repositório. A branch `feat/hardening-i18n-e-erros-api` sai
+de `main@37e0e2d4`, que já é `origin/main` e traz os merges dos PRs #83, #84 e #85. **Árvore:** main
+tree, pelo precedente de todo bloco de backend (gate P-03). **Houve troca de foco:** `focused_lane`
+era `lane-c` e passou a `lane-a` neste mesmo commit, com o espelho do topo redesenhado junto — a
+`lane-c` não foi tocada.
+
+**Brainstorming do item 7 — 2026-08-29, spec escrita, a lane entra em `planning`.** Cinco decisões
+do João sobre uma medição que achou mais do que as fichas registravam: **D1** o backend traduz a
+frase do Dashboard e isso **derruba por escrito a D1 da spec de 2026-08-22** (a razão dela — "o
+`Accept-Language` hoje não existe" — não valia já naquele dia: o `SetLocale` e o header do axios
+existem); **D2** chave por domínio em `lang/<locale>/<dominio>.php`, recusados o `errors.php` único
+e o dicionário JSON com a frase como chave; **D3** o espanhol passa a ser só `es_CL` (o `lang/es/`
+é byte-idêntico ao `es_CL/` nos 8 arquivos e o `es_CL.json` nem existe); **D4** o bloco é só de
+backend — o `screenDetail` do front não vira a chave aqui, vira ficha; **D5** os defaults do
+framework também são localizados, por TIPO de exceção. Dois achados fora de ficha: o `detail` de
+401/403/404 é `getMessage()` cru em inglês, e o `phpunit.xml` não fixa `APP_LOCALE`, então a suíte
+herda o `.env` gitignored e roda em `en` na CI. Spec em
+`specs/2026-08-29-hardening-i18n-e-erros-api-design.md`.
+
+**Plano do item 7 — 2026-08-29, a lane entra em `ready_for_execution`.** Onze tasks em
+`plans/2026-08-29-hardening-i18n-e-erros-api.md`, na ordem da dependência: a fundação de locale e a
+catraca de paridade antes de qualquer chave; o envelope RFC 7807; depois um arquivo de `lang/` por
+domínio (`shared`, `commercial`, `operation`, `identity`, `certification`), com o Dashboard por
+último porque consome os rótulos de tipo de documento que as tasks de `operation` e `identity`
+publicam; a catraca contra literal só depois que todos os sítios estão limpos, senão ela reprovaria
+por causa do trabalho ainda não feito; e o DoD contra a API real no fim. A escrita do plano corrigiu
+uma medição da spec: o Dashboard tem **13 literais em 6 arquivos** mais uma constante, não 6 — e
+**quatro deles interpolam código de enum cru**, a doença da `D-38` num segundo lugar que a ficha não
+registrava. **Handoff: `executor: claude`** — o bloco toca o handler global de erro (lei §5.4),
+traduzir 41 recusas para três idiomas num produto de peso legal é julgamento e não mecânica, e três
+tasks dependem de conferir o código em volta antes de escrever. Execução exige
+`/executar-bloco hardening-i18n-e-erros-api`.
+
+**Execução das onze tasks — 2026-08-30, a lane entra em `ready_for_review`.** Retomada com a Task 3
+já commitada mas sem linha no ledger (sessão anterior cortada antes de logar); revisada contra o
+diff e a suíte antes de seguir. Cada task seguinte fechou o mesmo ciclo: RED, dicionário nos três
+locales, troca do sítio, GREEN, suíte cheia, achados fora da lista do plano (sempre teste
+pré-existente que casava a frase literal, nunca produção) corrigidos no mesmo commit, Pint, commit.
+**Dois desvios de forma reincidentes**, ambos já previstos pelo plano como contingência: `$missing`/
+`missingTypes()` é `array<TurmaDocumentType>` (enum), não array-shaped — `$doc->value`, nunca
+`$doc['value']` — nas Tasks 5 e 8 (esta com mais dois sítios que a ficha da D-38 não contava:
+`IdentityMetricsQuery` e `RedatorScopeQuery` interpolavam o código cru do documento de redator, não
+só o `OperationMetricsQuery` nomeado). **Um desvio de conteúdo, não de forma:** a Task 6 usou o
+literal es_CL REAL do `Redator.php`/`ArchiveRedatorAction.php` ("redactor") em vez do "relator" que
+o Step 3 do plano escreveu — a Global Constraint do plano ("es_CL é o texto de hoje, byte a byte")
+manda o código vencer o draft. A Task 9 fechou a catraca estática (`MensagemLiteralTest`), vista
+reprovando contra uma sonda negativa antes de confirmar verde. A Task 11 mediu o DoD contra a API
+real: os cinco primeiros PASS com evidência colada; o "500 mascarado" do título **não foi medido**
+(`APP_DEBUG=true` no container de dev desliga o próprio ramo que a sonda testaria) e ficou registrado
+como achado de cobertura, não como bloqueio. Gate final: suíte **1138 passed / 5 skipped**,
+`generated.ts` sem diff, `pnpm lint`/`build` verdes, Pint `passed` nos 87 arquivos PHP do bloco.
+**Duas pendências ficam para o `/fechar-sprint` deste bloco, não corrigidas aqui:** a `P-61`
+("`title` do `ProblemDetails` em português") ficou stale desde a Task 2 mas segue aberta em
+`abertas.md`/`README.md` — mover ficha para `encerradas.md` é mecânica de fechamento, não de
+execução; e a `P-70`, aberta pela Task 10 (`screenDetail.ts` ainda cala o `detail` do servidor),
+não entrou no índice `README.md` pelo mesmo motivo. A pendência real da Task 2
+(`ImmutableSystemRoleException`/`RedatorOnlyActionException` em português, fora do alcance da
+catraca da Task 9 porque usam parâmetro default de construtor, não `withMessages`) segue aberta e
+sem ficha própria — decisão de abrir uma cabe a quem fechar o bloco.
+
+
+**Review do item 7 — 2026-08-30, quatro achados levantados e pagos, a lane entra em
+`ready_for_closure`.** Revisão dupla — gabarito do projeto pelo Claude e revisão independente do
+Codex (bloco de alto risco: toca o handler global de erro, lei §5.4). Os dois revisores convergiram
+nos mesmos vazamentos; **o achado que só o Codex viu foi verificado no código antes de entrar**, como
+manda a skill. Oito candidatos brutos viraram **quatro** achados: os demais eram sítios que este
+bloco **não tocou** e viraram a **P-71**, não achado — bloco não responde por arquivo que não abriu.
+
+- **Q-1 (🔴) — o envelope engolia a razão da conta desativada.** O braço novo
+  `AuthenticationException => __('problem.detail.unauthenticated')` do `detailFor()` trocava pelo
+  genérico o `__('auth.inactive')` que o `EnsureAccountIsActive` lança de propósito. **Regressão
+  deste bloco**: antes, o `getMessage()` cru passava. Quem foi desligado no meio da sessão lia
+  "inicie sessão para continuar" — indistinguível de cookie vencido, que é a única coisa que ele NÃO
+  deve tentar. A porta que a própria **D5 da spec** nomeia para o caso legítimo é `PublicDetail`, e a
+  medição dela não alcançou este sítio porque procurou por `abort()`, não por
+  `throw new AuthenticationException`. Nasceu a `InactiveAccountException`, e o teste mede os três
+  locales — o antigo só conferia `assertStatus(401)`, que é por isso que a regressão passou.
+- **Q-2 (🔴) — quatro recusas de role de sistema seguiam literais em português.** Parâmetro default
+  de construtor é expressão constante e não aceita `__()`, então a frase nascia no código; os três
+  `throw` interpolavam o nome da role direto. **A catraca da Task 9 era cega a todos**: ela varre
+  `withMessages`, e nenhum deles passa por lá. Cinco chaves novas nos três locales, e a catraca
+  ganhou um segundo braço — `nenhuma_excecao_nova_carrega_texto_literal`, lista dupla no molde do
+  `ParentLockOnChildWriteTest`, **silêncio reprova**. Ela achou dois sítios que a revisão humana não
+  tinha medido (`PdfRenderException`, `OfficeRenderException`, ambos diagnóstico interno). **Vista
+  reprovar** contra sonda no `SystemRoleGuard`, revertida pelo backup no scratchpad.
+- **Q-3 (🟡) — a rule citava constante que este bloco deletou.** `backend-ddd.md:76` apontava
+  `ClientData::CONTATO_OBRIGATORIO`; a unicidade da frase continua, mas o dono virou `lang/`.
+- **Q-4 (🟢) — o 404 de rota inexistente ignorava o `Accept-Language`.** Middleware de GRUPO só roda
+  em rota que casou, e `NotFoundHttpException` de URL inválida nasce durante o roteamento. O
+  `EnvelopeLocalizadoTest` não pegava porque mede `/api/turmas/999999` — rota que casou, 404 de model
+  binding. `SetLocale` saiu do `api(append:)` e da lista de prioridade (que só ordena middleware de
+  rota) e virou **global**, que roda antes do roteamento e alcança as duas famílias de 404.
+
+Gate: suíte **1149 passed / 5 skipped** (eram 1138; +11 testes), `generated.ts` sem diff, Pint
+`passed` nos 14 arquivos, `pnpm lint`/`build` verdes. **Fica para o `/fechar-sprint`, além do que a
+execução já deixou:** a **P-71** nasceu com a linha do índice, e a **P-70** ganhou a dela no mesmo
+commit — o índice dizia 32 com 34 fichas no arquivo, e escrever a contagem certa exigia as duas.
+
+---
+
+## Fechado em 2026-08-30 — `frontend-triagem-dos-audits-do-item-18`, item 19 da fila
+
+**A `lane-c` fechou a própria divergência e recebeu o item 19 em 2026-08-29.** A nota que o
+fechamento do item 6 deixou aqui dizia, com razão, que a linha da lane estava errada:
+`refactor/frontend-estilizacao-componentes` mesclou pelo **PR #82** e já não existe no repositório —
+conferido nesta árvore (`git branch -a` só lista `main`; a worktree estava em detached em
+`0a65d1e2`, dois commits atrás da `main`). A linha foi corrigida pela própria lane, que é a dona
+dela, no mesmo commit em que o João promoveu explicitamente o **item 19**
+(`frontend-triagem-dos-audits-do-item-18`, argumento do `/planejar-bloco`): a dependência dele (item
+18) fechou em 2026-08-29 e a fonte — as quatro runs `audits/2026-08-28-item18-fase{1,2,3,4}.md`, 49
+achados — não tem nenhum achado aplicado. `Contexto: não por padrão`, então nasce em
+`ready_for_planning`, sem packet. Branch `fix/frontend-triagem-audits-item-18`, aberta de
+`main@37e0e2d4`, árvore em **offset +2** (`:8082`/`:5175`) pelo `.env` da raiz. O espelho singular
+foi escrito da worktree — quinto caso da **P-55**, registrado na ficha.
+
+**A `lane-c` executou as 18 tasks do item 19 e parou no gate, em 2026-08-30.** As 49 linhas do ledger
+(`audits/2026-08-29-item19-triagem.md`) estão fechadas: nenhuma prova `pendente`. A run 5
+(`audits/2026-08-29-item19-run5.md`) mediu sete superfícies nos dois temas com um certificado real
+emitido pela UI (`LOT-2026-1000`) e devolveu três achados novos — dois com raiz já tocada pelo bloco,
+corrigidos com teste visto reprovar (o `CrudDialog` aponta o foco na abertura; o par Rechazar/Aprobar
+em 44px), e um que virou fato na **D-63** (em `/validar`, o folio pesa mais que o veredito). Veredito
+pedido pela spec: o `CertificateFolio` **fica como está**. Gate: `pnpm lint` 0, `build` verde, 699
+testes verdes, backend em 1108 passed / 5 skipped (o mesmo da `main`), escopo sem backend e sem
+`generated.ts`, e as quatro catracas vistas reprovar de novo. Próximo passo é a revisão do bloco —
+`/executar-bloco` não a inicia sozinho.
+
+**A `lane-c` revisou o item 19 em 2026-08-30 e não achou pendência.** Baixo risco (frontend puro,
+sem lei §5 tocada), revisão só Claude — subagente cobriu o diff completo (71 arquivos) contra o
+gabarito, revisão própria confirmou `CrudDialog`/`fieldContext`, o ledger sem prova pendente e as
+seis fichas D-63..D-68 no `backlog.md`; gate rodado de novo nesta sessão: `pnpm lint` 0, `pnpm
+build` verde, `pnpm test` 699/699. Único ruído: uma linha do PLANO (task 8/9) afirma que o grep de
+`font-mono` devolve zero e devolve 4 — todas inertes (docblock + asserção de teste que cita a
+string para conferir o efeito da constante); não é achado de código, registrado em
+`audits/2026-08-30-item19-review.md`. Relatório completo:
+`docs/superpowers/audits/2026-08-30-item19-review.md`. Próximo passo é `/fechar-sprint`.
 
 ## Fechado em 2026-08-29 — `hardening-performance-e-dados`, item 6 da fila
 

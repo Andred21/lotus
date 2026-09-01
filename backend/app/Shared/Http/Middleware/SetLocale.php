@@ -14,8 +14,14 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SetLocale
 {
-    /** Locales suportados — casam com os diretórios em lang/. */
-    private const SUPPORTED = ['en', 'es', 'es_CL', 'pt_BR'];
+    /**
+     * Locales suportados — casam com os diretórios em lang/ e com os TRÊS do
+     * front (`shared/config/i18n.ts`). `es` puro saiu em 2026-08-29: era
+     * byte-idêntico ao `es_CL` e o Laravel não funde arquivo parcialmente, então
+     * manter os dois significava duplicar 100% do conteúdo para sempre. Quem
+     * mandar `Accept-Language: es` cai no fallback, que é es-CL (ADR-15).
+     */
+    private const SUPPORTED = ['en', 'es_CL', 'pt_BR'];
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -32,9 +38,11 @@ class SetLocale
         return $next($request);
     }
 
-    /** "es-cl"/"es-CL" -> "es_CL"; "en" -> "en". */
+    /** "es-cl"/"es-CL" -> "es_CL"; "en" -> "en"; "pt-BR;q=0.9" -> "pt_BR". */
     private function normalize(string $locale): string
     {
+        // Strip quality factor and other parameters
+        $locale = explode(';', $locale)[0];
         $locale = str_replace('-', '_', $locale);
 
         if (! str_contains($locale, '_')) {

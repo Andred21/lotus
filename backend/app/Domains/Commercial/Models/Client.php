@@ -142,7 +142,7 @@ class Client extends Model implements Auditable
 
         if ($client->trashed()) {
             throw ValidationException::withMessages([
-                'client' => 'Este cliente foi arquivado e não aceita mais alterações.',
+                'client' => __('commercial.client.archived'),
             ]);
         }
 

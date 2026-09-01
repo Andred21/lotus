@@ -146,8 +146,8 @@ class RedatorScopeQuery
                         : DashboardSeverity::Medium,
                     entity_id: $document->id,
                     description: $expired
-                        ? "Documento {$document->type} vencido."
-                        : "Documento {$document->type} próximo a vencer.",
+                        ? __('dashboard.alert.document_expired', ['tipo' => __('identity.document_type.'.$document->type)])
+                        : __('dashboard.alert.document_expiring', ['tipo' => __('identity.document_type.'.$document->type)]),
                     date: $document->valid_until->toDateString(),
                     navigation: ['redator_id' => $redator->id],
                 );

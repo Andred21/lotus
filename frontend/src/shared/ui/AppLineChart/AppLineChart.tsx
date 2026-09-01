@@ -2,6 +2,7 @@ import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, X
 import { chartInks } from '../../styles/tokens'
 import { pivot } from './pivot'
 import type { ChartSeries } from './pivot'
+import { ChartLegend } from './legend'
 
 export type AppLineChartProps = {
   series: ChartSeries[]
@@ -79,7 +80,7 @@ export function AppLineChart({
               color: 'var(--text-color)',
             }}
           />
-          <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-color-secondary)' }} />
+          <Legend content={<ChartLegend />} />
           {series.map((serie, i) => {
             const tinta = chartInks[(inkOffset + i) % chartInks.length]
 

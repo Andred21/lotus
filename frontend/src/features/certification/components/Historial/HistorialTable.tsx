@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppColumn, AppTag, AppButton, AppEmptyState, IdentityCell, SearchableTableFrame, stickyActionsColumn } from '@shared/ui'
+import { AppColumn, AppTag, AppButton, AppEmptyState, IdentityCell, SearchableTableFrame, stickyActionsColumn, identifierClass } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { formatDate, CERTIFICATE_STATUS_SEVERITY, certificateStatusLabelKey } from '@shared/lib'
 import { useHistorial } from '../../hooks/useHistorial'
@@ -40,7 +40,7 @@ export function HistorialTable() {
         <AppColumn
           field="codigo" sortable
           header={t('certificate.colCodigo')}
-          body={(c: CertificateData) => <span className="font-mono text-sm">{c.codigo}</span>}
+          body={(c: CertificateData) => <span className={`${identifierClass} text-sm`}>{c.codigo}</span>}
           style={largura.codigo}
         />
         <AppColumn
@@ -63,7 +63,7 @@ export function HistorialTable() {
               description={
                 ausente(c.snapshot.aluno.rut)
                   ? '—'
-                  : <span className="font-mono tabular-nums">{c.snapshot.aluno.rut}</span>
+                  : <span className={identifierClass}>{c.snapshot.aluno.rut}</span>
               }
               image={c.aluno_photo_url}
             />

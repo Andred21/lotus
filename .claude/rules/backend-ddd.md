@@ -72,9 +72,11 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
   **Obrigatoriedade que depende do verbo mora na Action, não em `rules()`** — `rules()` é estático e
   não sabe se é POST ou PUT. `contacts` é `sometimes|array|min:1` no DTO e a exigência do create vive
   em `CreateClientAction`, **antes** da transação: checagem de entrada pura não paga banco nem se
-  esconde atrás de um erro de identidade. O texto da recusa é constante única do DTO
-  (`ClientData::CONTATO_OBRIGATORIO`), citada pelas duas Actions e pelo `messages()` — mesma regra,
-  mesma frase, nas três portas.
+  esconde atrás de um erro de identidade. O texto da recusa é **chave única de `lang/`**
+  (`commercial.client.contact_required`), citada pelas duas Actions e pelo `messages()` — mesma
+  regra, mesma frase, nas três portas. Era a constante `ClientData::CONTATO_OBRIGATORIO` até o
+  `hardening-i18n-e-erros-api` (2026-08-29) mover a frase para `lang/`: a unicidade é a mesma, o
+  dono mudou de DTO para dicionário, e agora ela também fala os três idiomas.
 - **Regra de coleção vale em TODOS os caminhos de escrita**, não só no da tela: o replace-total do
   pai **e** as rotas nested da própria entidade. Ref.: `PrimaryContactService::ensureSingle()`, que
   fecha "no máximo 1 principal" pelas Client Actions **e** pelas `Create/UpdateClientContactAction` —
@@ -181,3 +183,17 @@ N+1 invisível se a carga ficar para trás — medido em 2026-08-08: 4 turmas, 4
 `users`. Guarda de runtime com `Model::preventLazyLoading()` e **duas ou mais** linhas hidratadas
 (`Builder::hydrate()` só liga o flag com `count($items) > 1`); ref.:
 `tests/Feature/Shared/ContratanteEagerLoadTest.php`.
+
+## Mensagem ao usuário sai de `lang/`, nunca do código
+
+Toda string que pode chegar a uma resposta HTTP — `ValidationException::withMessages`,
+`title`/`detail` do `ProblemDetails`, `description` do Dashboard, mensagem de exceção
+`PublicDetail` — vem de `__('<dominio>.<agregado>.<motivo>')`, com o dicionário em
+`backend/lang/<locale>/<dominio>.php` e paridade nos três locales (`en`, `es_CL`, `pt_BR`).
+
+**Catraca:** `tests/Unit/Shared/MensagemLiteralTest.php` (nenhum literal) e
+`tests/Unit/Shared/LocaleParityTest.php` (mesmas chaves nos três, nenhum valor igual à chave).
+
+**Razão:** o produto é para o cliente chileno e a `D-07` chegou a 41 sítios porque cada
+domínio escreveu no idioma de quem estava ali — `Commercial` em português, `Operation` em
+espanhol, e o usuário lendo um ou outro conforme o endpoint.

@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-
 import type { ReactNode } from 'react'
 import { api } from '@shared/api/axios'
 import { useServerTable } from '@shared/hooks'
-import { certificatesPage, certificatesTableOptions } from './certificatesApi'
+import { certificatesPage, certificatesTableOptions, useEmissionPanel } from './certificatesApi'
 
 vi.mock('@shared/api/axios', () => ({
   api: { get: vi.fn() },
@@ -50,5 +50,32 @@ describe('a página do Historial — revalidação do estado derivado', () => {
     await waitFor(() => expect(get).toHaveBeenCalledTimes(2))
 
     focusManager.setFocused(undefined)
+  })
+})
+
+describe('o painel de emissão — segundo observador não refaz o GET', () => {
+  /**
+   * `useHistorial` monta um segundo observador de `useEmissionPanel` na mesma
+   * chave, para o Reemitir; com `staleTime` 0 o observador novo refazia o GET
+   * no instante em que a aba Emisión saía de vista (f3 UI-09, run de
+   * 2026-08-28 — a run não isolou o gatilho; é este, não foco). O payload
+   * cresce com as turmas concluídas. `invalidateQueries` pós-emissão ignora
+   * `staleTime`, então a emissão continua repintando o painel.
+   */
+  it('dois observadores na mesma janela custam um GET', async () => {
+    get.mockClear()
+    get.mockResolvedValue({ data: [] })
+    const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } } })
+    const compartilhado = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    )
+
+    const primeiro = renderHook(() => useEmissionPanel(true), { wrapper: compartilhado })
+    await waitFor(() => expect(primeiro.result.current.isSuccess).toBe(true))
+    primeiro.unmount()
+    const segundo = renderHook(() => useEmissionPanel(true), { wrapper: compartilhado })
+    await waitFor(() => expect(segundo.result.current.isSuccess).toBe(true))
+
+    expect(get).toHaveBeenCalledTimes(1)
   })
 })

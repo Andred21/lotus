@@ -26,6 +26,11 @@ export interface AppSelectableCardProps {
  * — os palette vars do Lara não invertem. O fundo do estado normal fica em
  * classe (não em `style`) para que o `hover:` consiga vencer: estilo inline tem
  * precedência sobre qualquer classe.
+ *
+ * O alvo interno é `text` e sem superfície própria: `AppButton` sem papel caía
+ * no `.p-button` preenchido do Lara e cobria o fundo que este componente
+ * acabava de calcular — selecionado e não selecionado idênticos, medido nos
+ * dois temas (C da fase 4, run de 2026-08-28).
  */
 export function AppSelectableCard({
   selected = false, onToggle, disabled = false, action, className, children,
@@ -54,10 +59,15 @@ export function AppSelectableCard({
       {interactive ? (
         <AppButton
           type="button"
+          text
           aria-pressed={selected}
           disabled={disabled}
           onClick={onToggle}
-          className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-60"
+          /* `text` tira fundo e borda pelo tema; o hover do `.p-button-text` e
+           * a tinta de marca dele saem por classe — quem pinta hover e estado é
+           * o `<div>` externo, que já sabe o `selected`. O padding do `.p-button`
+           * FICA: é a geometria medida do alvo (442px em 468px de card). */
+          className="flex min-w-0 flex-1 items-center gap-3 bg-transparent! text-left text-[var(--text-color)] hover:bg-transparent! hover:text-[var(--text-color)] disabled:opacity-60"
         >
           {children}
         </AppButton>

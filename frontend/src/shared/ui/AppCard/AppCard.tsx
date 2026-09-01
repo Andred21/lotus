@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { dangerText, infoText, neutralInk, successText, warningText } from '../../styles/tokens'
+import { technicalDataClass } from '../typography'
 
 export type AppCardVariant = 'default' | 'stat' | 'sunken'
 export type AppCardTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger'
@@ -151,7 +152,7 @@ export function AppCardHeader({ title, count, subtitle, actions }: AppCardHeader
         </h3>
         {count !== undefined && (
           <span
-            className="rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums"
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${technicalDataClass}`}
             style={{ background: 'var(--surface-section)', color: 'var(--text-color-secondary)' }}
           >
             {count}

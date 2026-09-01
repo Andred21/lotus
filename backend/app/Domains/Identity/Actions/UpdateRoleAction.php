@@ -26,7 +26,7 @@ class UpdateRoleAction
 
             $collision = Role::where('name', $data->name)->where('id', '!=', $role->id)->exists();
             if ($collision) {
-                throw ValidationException::withMessages(['name' => 'Já existe uma role com esse nome.']);
+                throw ValidationException::withMessages(['name' => __('identity.errors.role_name_taken')]);
             }
 
             PermissionCatalog::assertAssignable($data->permissions);

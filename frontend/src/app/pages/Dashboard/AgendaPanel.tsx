@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppEmptyState, sectionLabelClass } from '@shared/ui'
+import { AppCard, AppCardHeader, AppEmptyState, sectionLabelClass, technicalDataClass } from '@shared/ui'
 import { formatIsoDate } from '@shared/lib'
 import { dangerText, infoText, neutralInk, warningText } from '@shared/styles/tokens'
 /**
@@ -65,7 +65,7 @@ function TurmaLinha({ turma }: { turma: AgendaLinha }) {
             </span>
           )}
         </span>
-        <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+        <span className={`shrink-0 ${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
           {t('dashboard.agenda.range', {
             start: formatIsoDate(turma.start_date),
             end: formatIsoDate(turma.end_date),
@@ -94,7 +94,12 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
         // por hover, que não existe em toque (UI-01 do review de 2026-08-17).
         <div className={`grid gap-0 ${preenchidas.length > 1 ? 'sm:grid-cols-2' : ''}`}>
           {preenchidas.map((janela) => (
-            <section key={janela.key}>
+            // `min-w-0`: item de grid nasce com `min-width: auto` e não encolhe
+            // abaixo do próprio conteúdo; a 390px a seção media 287px num card
+            // de 261, o `overflow-hidden` do raio cortava 26px e a reticência
+            // do `truncate` caía FORA da área visível (f2 UI-10, o C da run de
+            // 2026-08-28). Com o item encolhendo, o corte acontece dentro.
+            <section key={janela.key} className="min-w-0">
               <h4
                 className={`flex items-center gap-2 px-4 pt-3 pb-1 ${sectionLabelClass}`}
                 style={{ color: 'var(--text-color-secondary)' }}
@@ -105,7 +110,7 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
                   style={{ background: janela.ink }}
                 />
                 {t(janela.labelKey)}
-                <span className="font-mono font-normal tabular-nums">{agenda[janela.key].length}</span>
+                <span className={`${technicalDataClass} font-normal`}>{agenda[janela.key].length}</span>
               </h4>
               <ul role="list">
                 {agenda[janela.key].map((turma) => (

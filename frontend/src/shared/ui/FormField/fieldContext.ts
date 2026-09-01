@@ -35,10 +35,21 @@ function ariaProps(field: FieldContextValue) {
   }
 }
 
+/**
+ * `invalid` é a única porta para `.p-invalid` no PrimeReact, e é prop do
+ * COMPONENTE — no Calendar ela não viaja pelo `pt.input`, viaja com o
+ * `inputId`. Sem ela a invalidez existia só para o leitor de tela (f4 UI-02,
+ * run de 2026-08-28). `undefined` e não `false` para a prop do chamador
+ * continuar vencendo pelo spread.
+ */
+function invalidProp(field: FieldContextValue) {
+  return { invalid: field.invalid || undefined }
+}
+
 export function useFieldProps(idProp: 'id' | 'inputId') {
   const field = useContext(FieldContext)
   if (!field) return {}
-  return { [idProp]: field.id, ...ariaProps(field) }
+  return { [idProp]: field.id, ...invalidProp(field), ...ariaProps(field) }
 }
 
 /**
@@ -63,5 +74,5 @@ export function useFieldProps(idProp: 'id' | 'inputId') {
 export function useSplitFieldProps(idProp: 'id' | 'inputId') {
   const field = useContext(FieldContext)
   if (!field) return { control: {}, input: {} }
-  return { control: { [idProp]: field.id }, input: ariaProps(field) }
+  return { control: { [idProp]: field.id, ...invalidProp(field) }, input: ariaProps(field) }
 }

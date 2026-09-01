@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { formatFileSize } from '@shared/lib/upload'
 import { formatDate } from '@shared/lib'
+import { technicalDataClass } from '../typography'
 
 /** Ícone e cor por tipo. Decide por mime (spec D7); extensão é fallback quando
  * o mime é null. Cor por palette var do Lara, composta com --surface-card no
@@ -92,7 +93,7 @@ export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowP
       <div className="min-w-0 flex-1 basis-40">
         <p className="truncate text-sm font-medium" title={name}>{name}</p>
         {meta && (
-          <p className="font-mono text-xs" style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>
+          <p className={`${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>{meta}</p>
         )}
       </div>
       {/* O grupo de ações quebra POR DENTRO, e ancora à direita. A quebra da

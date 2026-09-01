@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
@@ -106,6 +106,27 @@ describe('AppDataTable — modo lazy (spec §5)', () => {
     )
 
     expect(document.querySelector('.p-paginator-next')).toBeNull()
+  })
+})
+
+describe('AppDataTable — dataKey (f3 UI-06)', () => {
+  /**
+   * `dataKey="id"` é o default do wrapper, e o DTO das linhas de emissão expõe
+   * `enrollment_id`: cada linha resolvia a chave para `undefined` e o React
+   * acusava `Each child in a list should have a unique "key" prop` no console,
+   * de forma determinística, numa tabela cujas linhas carregam ação de
+   * documento com peso legal (f3 UI-06, run de 2026-08-28). A prop do
+   * chamador vence o default — e este teste é o que garante que continue.
+   */
+  it('a linha sem `id` declara a própria chave e o console fica limpo', () => {
+    const erro = vi.spyOn(console, 'error').mockImplementation(() => {})
+    render(
+      <AppDataTable value={[{ enrollment_id: 7 }, { enrollment_id: 8 }]} dataKey="enrollment_id">
+        <AppColumn field="enrollment_id" header="id" />
+      </AppDataTable>,
+    )
+    expect(erro.mock.calls.flat().join(' ')).not.toContain('unique "key" prop')
+    erro.mockRestore()
   })
 })
 

@@ -29,7 +29,7 @@ use Throwable;
  * RBAC do spatie/laravel-permission (`permission:`/`role:`/`role_or_permission:`,
  * `Spatie\Permission\Exceptions\UnauthorizedException`) ou de um
  * `HttpException(403)` próprio (`ImmutableSystemRoleException`,
- * `abort_unless(..., 403, ...)` em `ProfileDocumentController`) — nenhum deles
+ * `RedatorOnlyActionException` em `ProfileDocumentController`) — nenhum deles
  * estende `AuthorizationException`. Checar só essa classe deixaria
  * `acesso.negado` mudo em todo 403 de verdade da API; o teto por
  * `getStatusCode() === 403` cobre os quatro caminhos sem duplicar a
@@ -44,7 +44,7 @@ use Throwable;
  * responde qualquer 403, de RBAC ou de regra de negócio, não um evento
  * exclusivo do RBAC. `acesso.negado` portanto mistura os dois sinais sob um
  * único teto de propósito. Separar por origem (RBAC vs.
- * `ImmutableSystemRoleException`/`abort_unless`) seria mudar o escopo do
+ * `ImmutableSystemRoleException`/`RedatorOnlyActionException`) seria mudar o escopo do
  * DoD 8, não corrigir este detector — não restrinja para `AuthorizationException`
  * ou para `UnauthorizedException` sem reabrir a spec.
  */

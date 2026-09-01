@@ -1,12 +1,13 @@
 /**
  * O `detail` que pode ir à tela — e só vai o que o FRONT escreveu.
  *
- * O `detail` do servidor não é apresentável hoje, e isso é medido, não suposto:
- * `backend/app/Shared/Exceptions/ProblemDetails.php` devolve `title` e `detail`
- * genéricos LITERAIS em português ("Erro interno", "Ocorreu um erro
- * inesperado."), apesar de o `SetLocale` já traduzir por `Accept-Language`.
- * Num 500 o cliente chileno lia português. Localizar o envelope é débito de
- * backend registrado no `backlog.md`; até lá, o corpo visível é dica do i18n.
+ * **A razão original foi paga e esta política sobreviveu a ela.** O
+ * `ProblemDetails` do backend devolvia `title` e `detail` literais em
+ * português; desde o bloco `hardening-i18n-e-erros-api` (2026-08-29) o
+ * envelope inteiro sai de `lang/` e responde ao `Accept-Language`. O que
+ * ainda não foi decidido é se o `detail` do SERVIDOR deve substituir a dica
+ * do i18n em erro de CARGA — é mudança de política de tela, não de backend, e
+ * está registrada como pendência própria.
  *
  * Os envelopes que o PRÓPRIO front sintetiza (rede caída, corpo não-parseável)
  * seguem indo à tela: eles já são i18n e dizem coisa distinta da dica genérica

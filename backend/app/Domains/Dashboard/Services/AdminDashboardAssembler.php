@@ -144,7 +144,7 @@ class AdminDashboardAssembler
                 type: DashboardAlertType::TurmaOverdue,
                 severity: DashboardSeverity::High,
                 entity_id: $turma->turma_id,
-                description: 'Clase con fecha de término vencida y aún en curso.',
+                description: __('dashboard.pending.turma_overdue'),
                 date: $turma->end_date,
                 navigation: ['turma_id' => $turma->turma_id],
             ),

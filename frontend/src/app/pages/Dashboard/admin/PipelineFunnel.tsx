@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppEmptyState } from '@shared/ui'
+import { AppCard, AppCardHeader, AppEmptyState, technicalDataClass } from '@shared/ui'
 import type { PipelineStageCountData } from '@shared/types/generated'
 
 export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] }) {
@@ -66,7 +66,7 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
                 * a mais que um `3` e os 100% de cada etapa medem trilhos
                 * diferentes. Com a coluna cravada, todas as barras comparam a
                 * mesma régua — que é a premissa do funil. */}
-              <span className="w-8 shrink-0 text-right font-mono text-sm tabular-nums">{etapa.count}</span>
+              <span className={`w-8 shrink-0 text-right ${technicalDataClass} text-sm`}>{etapa.count}</span>
             </li>
           ))}
         </ul>

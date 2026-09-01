@@ -146,7 +146,7 @@ class StudentCrudTest extends TestCase
             'client_id' => 999999,
         ])
             ->assertStatus(422)
-            ->assertJsonPath('errors.client_id.0', 'Cliente não encontrado.');
+            ->assertJsonPath('errors.client_id.0', __('identity.errors.student_client_not_found'));
     }
 
     public function test_atualiza_dados_pessoais(): void

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Operation\Actions;
 
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
@@ -32,7 +33,12 @@ class ConcludeTurmaAction
             $missing = $this->habilitacao->for($turma)->missingTypes();
             if ($missing !== []) {
                 throw ValidationException::withMessages([
-                    'documents' => 'Documentación obligatoria incompleta (RN-16). Falta: '.implode(', ', array_column($missing, 'value')).'.',
+                    'documents' => __('operation.turma.documents_incomplete', [
+                        'tipos' => implode(', ', array_map(
+                            fn (TurmaDocumentType $doc): string => __('operation.document_type.'.$doc->value),
+                            $missing,
+                        )),
+                    ]),
                 ]);
             }
 

@@ -26,7 +26,7 @@ class ScannerUnavailableException extends ServiceUnavailableHttpException implem
     {
         parent::__construct(
             30,
-            'El servicio de antivirus no está disponible. El archivo no fue guardado; intente nuevamente en unos minutos.',
+            __('shared.file.scanner_unavailable'),
             $previous,
         );
     }

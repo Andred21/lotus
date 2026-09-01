@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, AppTag, AppButton, AppEmptyState, IdentityCell, stickyActionsColumn } from '@shared/ui'
+import { AppDataTable, AppColumn, AppTag, AppButton, AppEmptyState, IdentityCell, stickyActionsColumn, identifierClass } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { EmissionPanelEnrollmentData, EnrollmentApprovalStatus } from '@shared/types/generated'
 import { rowCertKind } from '../../lib/certStatus'
@@ -15,6 +15,9 @@ type Props = {
   /** `emission_blocked !== null` da turma selecionada — desabilita `Emitir`
    * mesmo em linha `sin_emitir` (a porta que falta é da turma, não do aluno). */
   blocked: boolean
+  /** `id` da tag que explica o bloqueio; os "Emitir" apagados apontam para ela
+   * por `aria-describedby` (f3 UI-03). */
+  blockedReasonId?: string
   onEmit: (enrollment: EmissionPanelEnrollmentData) => void
   onView: (enrollment: EmissionPanelEnrollmentData) => void
 }
@@ -27,13 +30,17 @@ const STATUS_SEVERITY: Record<EnrollmentApprovalStatus, 'success' | 'danger' | '
 
 /** Molde `EnrollmentTable`: `AppDataTable` sem toolbar própria (a seleção de
  * turma e as ações de lote vivem em `EmissionPanel`, que é quem monta o card). */
-export function EmissionStudentsTable({ enrollments, counts, loading, blocked, onEmit, onView }: Props) {
+export function EmissionStudentsTable({ enrollments, counts, loading, blocked, blockedReasonId, onEmit, onView }: Props) {
   const { t } = useTranslation()
   const largura = emissionWidths()
   const table = useTableFilter(enrollments)
 
   return (
     <AppDataTable
+      /* O DTO desta tabela não tem `id`: a chave é `enrollment_id`. Com o
+       * default do wrapper, cada linha resolvia a chave para `undefined` e o
+       * React acusava no console (f3 UI-06, run de 2026-08-28). */
+      dataKey="enrollment_id"
       value={table.rows}
       loading={loading}
       first={table.first}
@@ -45,7 +52,11 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, o
         header={t('certificate.colName')}
         field="student_name"
         body={(e: EmissionPanelEnrollmentData) => (
-          <IdentityCell title={e.student_name} description={e.student_rut} image={e.student_photo_url} />
+          <IdentityCell
+            title={e.student_name}
+            description={<span className={identifierClass}>{e.student_rut}</span>}
+            image={e.student_photo_url}
+          />
         )}
         style={largura.name}
       />
@@ -82,7 +93,15 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, o
             return <AppButton label={t('certificate.view')} text onClick={() => onView(e)} />
           }
           if (kind === 'sin_emitir') {
-            return <AppButton label={t('certificate.emit')} text disabled={blocked} onClick={() => onEmit(e)} />
+            return (
+              <AppButton
+                label={t('certificate.emit')}
+                text
+                disabled={blocked}
+                aria-describedby={blocked ? blockedReasonId : undefined}
+                onClick={() => onEmit(e)}
+              />
+            )
           }
           return null
         }}

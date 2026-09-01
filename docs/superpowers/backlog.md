@@ -23,14 +23,14 @@
 - A ordem abaixo é recomendada por dependência/risco; **não promove automaticamente**.
 - `Contexto: sim` exige Context Packet atual antes do planejamento.
 - Bloco fechado sai desta fila; o rastro fica em `historico/progress.md`.
-- **P0 não ordena** — quem ordena é a cadeia de dependência: os itens 6, 7 e 9 mais o 16 e o 19
-  fecham o código, 10→12 constroem a infra e o 13 é o gate final de go-live.
+- **P0 não ordena** — quem ordena é a cadeia de dependência: o item 9 mais o 16 fecham o código,
+  10→12 constroem a infra e o 13 é o gate final de go-live.
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
   em 2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
-  2026-08-27, o `5` em 2026-08-28, o `18` e o `6` em 2026-08-29, o `20` em 2026-08-31, e o `10`
-  **encolheu** em vez de sair (o runtime foi entregue; sobrou o provisionamento). A fila começa no `6` e salta os que já fecharam
-  de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios
-  blocos. Renumerar quebraria as citações e pareceria promoção.
+  2026-08-27, o `5` em 2026-08-28, o `18` e o `6` em 2026-08-29, o `19` e o `7` em 2026-08-30, o
+  `20` em 2026-08-31, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
+  provisionamento). A fila começa no `9` e salta os que já fecharam de propósito: o número é
+  identidade estável, citada pelas fichas de `pendencias/` e pelos próprios blocos. Renumerar quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22 e o `17` em
   2026-08-24; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
   desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
@@ -41,24 +41,6 @@
 ---
 
 # Fila priorizada
-
-## 7. `hardening-i18n-e-erros-api`
-
-**Prioridade:** P1 · **Frente:** Backend · **Contexto:** não
-**Fonte:** ADR-03/15; `D-07`, `D-18`, `D-36`.
-
-**Objetivo:** eliminar mistura de idiomas nas mensagens emitidas pela API.
-
-**Escopo:** mover literais de `ValidationException` para `lang/` (**D-07**); localizar
-`title/detail` do RFC 7807 (**D-36**); localizar descrições dinâmicas do Dashboard (**D-18**);
-respeitar `Accept-Language`; manter ES-CL como fallback.
-
-**Nota:** a D-07 não precisa mais aguardar decisão de idioma — o ADR-15 já define mecanismo e
-fallback (es-CL); falta aplicar.
-
-**DoD:** a mesma falha em ES-CL/PT-BR/EN retorna envelope e mensagem coerentes com o locale.
-
----
 
 ## 9. `administracao-roles-permissoes-redesign`
 
@@ -239,75 +221,6 @@ escondida, slot `actions` do `DetailHeader` reposicionado pelo `items-baseline`)
 
 ---
 
-## 19. `frontend-triagem-dos-audits-do-item-18`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não por padrão
-**Dependência satisfeita:** o item 18 fechou em 2026-08-29.
-**Fonte:** `audits/2026-08-28-item18-fase{1,2,3,4}.md` — quatro runs de `/lotus-ui-review` no
-navegador contra `refactor/frontend-estilizacao-componentes @ ddc37f36`, uma por fase do item 18.
-
-**Objetivo:** triar os 49 achados dessas quatro runs — **A:21 · B:26 · C:2** — separando defeito de
-decisão de design e de falso-positivo, e corrigir só o que sobreviver à triagem. **O audit reporta,
-não autoriza:** cada achado entra com veredito próprio, e recusar com razão escrita é resultado
-válido.
-
-**Por que triar antes de executar:** a fase 1 mediu e **contradisse o plano do item 18** — o
-presupuesto detail não tem "Voltar + CTA lado a lado"; "Volver a Comercial" ocupa linha própria
-acima do título. O agente que erra a favor erra contra. Além disso o contrato da skill teto em 10
-achados por run pressiona a encher a lista: parte dos `A` é registro de linha de base, não dívida.
-
-**Duas raízes explicam mais de um terço da lista** — tratá-las é mais barato que 49 correções item
-a item:
-- **`AppButton` sem `variant` cai no `.p-button` preenchido do Lara.** Explica o `C` da fase 4
-  (card de redator selecionado e não selecionado idênticos, `rgb(37,165,228)` sobre 94% do card nos
-  dois estados e nos dois temas), o UI-08 da fase 3 (os seis diálogos de certificação sem
-  `variant="primary"`, incluindo o que confirma emissão) e a ausência de delta do CTA provada na
-  fase 1.
-- **Grafia copiada literal em vez de consumida da peça** — o defeito que a rule já nomeia e que
-  reincidiu: fase 2 UI-04 (`AgendaPanel` e `KpiRow` copiam `sectionLabelClass` para emitir `h4`,
-  porque `SectionLabel` só aceita `h2 | h3`), fase 3 UI-02, fase 4 UI-06.
-
-**Os dois `C`:**
-- **fase 4 UI-01** — cards de redator indistinguíveis. Peso documental: o conjunto de redator
-  habilitado não dá para conferir na tela antes de salvar.
-- **fase 2 UI-10** — a 390x844 o card "Agenda" corta 26px do próprio conteúdo
-  (`clientWidth 261` contra `scrollWidth 287`, `overflow-hidden`, sem barra); o `truncate` funciona
-  mas a reticência cai fora da área visível, e o `title` de recuperação depende de hover.
-
-**Barato de verificar, mecanismo já rastreado até a linha** (leitura de código confirma ou derruba,
-sem navegador): fase 4 UI-02 (`useFieldProps` não devolve `invalid`, então `.p-invalid` nunca é
-alcançado — ~55 campos, e o Login escapa porque passa a prop na mão); fase 4 UI-03 (foco cai no
-`body` após submit recusado, sem live region); fase 3 UI-06 (`AppDataTable` fixa `dataKey="id"`
-contra `enrollment_id`, com erro de `key` determinístico no console); fase 3 UI-08 e fase 4 UI-01,
-acima.
-
-**Decisão do João, não conserto:** o degrau entre faixa de seção e título de card (fase 2 UI-02 e
-UI-03 — o `h3` do card é 33% maior que o `h2` que o encabeça, e o `h3` do Perfil é byte a byte a
-grafia do `h2` do Dashboard); o "1250 UF" do KPI de cotizaciones (fase 2 UI-08 — dois dados
-encostados que leem como um, e em es-CL o espaço é separador de milhar válido); a escala de raio
-com dois degraus em vez de três (fase 3 UI-05).
-
-**Suspeitos de falso-positivo, a derrubar ou confirmar primeiro:** fase 3 UI-09 (duplo fetch de
-`/api/certificates/emission-panel` — o próprio agente não isolou o gatilho; provável `staleTime` ou
-refetch por foco de janela do TanStack Query) e fase 3 UI-04 (opacidade de `disabled` divergindo por
-tema, registrada pelo agente como incoerência e **explicitamente não** como falha WCAG).
-
-**Sem evidência, não é achado — é lacuna a fechar quando houver dado:** `certificates` = 0 e
-`course_certificate_templates` = 0, então a porta 4 de `CertificateEligibility`
-(`assertTemplateDisponivel`) devolve `emission_blocked = 'sin_plantilla'` para toda turma, inclusive
-a turma 3 (`concluida`, 13 matrículas aprovadas, 1 redator designado). Ficaram sem pintar: o ramo
-`valid` de `/validar/<uuid>`, os seis diálogos da jornada, a costura header/body/footer do
-`AppDialog` nos dois temas e o **veredito do `CertificateFolio`** — que só renderiza em
-`ValidationPage.tsx:35` e `IssuedDialog.tsx:85`, e cujo docblock submete os próprios degraus de
-tamanho e tracking ao julgamento de uma run de `/lotus-ui-review`. É a primeira coisa a rever quando
-existir certificado real.
-
-**Fora:** redesenho de tela; as superfícies que o item 16 ainda não cobriu (Cursos, Pessoas,
-Administração têm run própria lá); qualquer correção do item 18 que já esteja no bloco ativo.
-
-**DoD:** todo achado das quatro runs com veredito escrito — corrigido com medida, virou ficha `D-*`,
-ou recusado com razão; nenhum `C` aberto; as correções que nascerem de raiz compartilhada resolvidas
-na raiz, não no sítio.
 
 ---
 
@@ -320,6 +233,12 @@ na raiz, não no sítio.
 | `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
 | `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
 | `D-32` | Ordem de foco de `/perfil` abaixo de `xl` — a correção existiu e foi revertida por decisão de layout (2026-08-18). Escolher entre as três saídas da ficha antes de qualquer bloco. |
+| `D-63` | **Escala de heading** (f2 UI-02/03 do audit de 2026-08-28): a faixa de seção (`h2`, 12px caixa alta) é menor que o título de card (`h3`, 16px), e o `h3` do Perfil é byte a byte o `h2` do Dashboard. São dois REGISTROS — eyebrow e título — codificando profundidade por caixa e posição, não por corpo. Recomendação: **manter**; se o João quiser escala monotônica, o título de card sobe para `typography.ts` (hoje literal em `AppCard.tsx:147`) e o degrau muda numa constante. **Fato acrescentado pela run 5 (2026-08-30):** em `/validar/<uuid>` válido o `h1` do veredito ("Certificado válido") mede 18px/600 enquanto o folio ao lado mede 30px — o identificador é o maior texto da página pública e a resposta que a pessoa foi checar sai um degrau abaixo dele; a run manteve o `CertificateFolio` como está (medido nas três viewports, cabe a 390) e o degrau que ela recomenda mover é o do `h1`, que é desta ficha. Gatilho: decisão do João. |
+| `D-64` | **"1250 UF"** (f2 UI-08): no KPI de cotizaciones a contagem (Archivo 30px) e a grandeza (mono 12px) se encostam e leem como um número; em es-CL o espaço é separador de milhar válido. Recomendação: separador visível na MESMA linha — `·` com `aria-hidden` entre os dois, ou rótulo curto antes do valor —, sem terceira linha (razão em `KpiRow.tsx:104`). Gatilho: decisão do João. |
+| `D-65` | **Reserva da coluna presa em tablet** (f3 UI-01): `stickyActionsColumn('8rem')` fixo contra `tableWidths` em % sobre `min-w-[48rem]` — a 1024px a ação cobre 99px (65%) da última coluna de dado, em todas as 12 tabelas com ação presa. Duas direções: reserva em % do mesmo orçamento (reabre as 12 medições do item 17) ou sinal de rolagem no wrapper + `min-width` menor onde a reserva não cabe. Recomendação: a segunda, medida nas 12. Gatilho: bloco de tabelas. |
+| `D-66` | **Escala de raio** (f3 UI-05 + **P-67**): a rule diz `lg`/`md`/`full`; a tela tem 4px para botão, input e tag (tema), `rounded` = 4px, `rounded-md` (6px) só nos banners do `FormField`, `rounded-full` só no pill de contagem do `AppCard`. Recomendação: superfície `rounded-lg`; controle, faixa fina **e tag** herdam o raio do tema (4px = `rounded`); `rounded-full` só para círculo e cápsula de contagem; banners voltam ao raio do tema; os 10 sítios da P-67 se classificam por essa régua e a catraca nasce depois. Gatilho: decisão do João; hospeda a P-67. |
+| `D-67` | **Corpo do `notFound` público** (f3 UI-07): `/validar/<uuid>` inexistente mostra só o `h1` — zero `a`/`button`, sem eco do identificador. Recomendação: ecoar o identificador consultado em `identifierClass` e uma linha de passo seguinte ("verifica el código impreso o contacta a Lotus"), sem link e sem dado do certificado — texto de página pública de peso legal. Gatilho: decisão do João/Lotus sobre a redação. |
+| `D-68` | **Borda do input no tema claro** (f4 UI-05): `#cbd5e1` sobre `#ffffff` mede 1,48:1; a 1.4.11 pede 3:1 no limite do controle quando ele é o único indicador (o escuro tem poço de fundo e não depende do traço). Nenhum `-400` do Tailwind passa (slate-400 2,36:1); slate-500 `#64748b` mede 4,76:1. Recomendação: slate-500 na borda de repouso, via `scripts/generate-brand-theme.mjs`, medida nos dois temas antes de entrar. Gatilho: decisão do João — muda a cara de todo input do claro. |
 | `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
 | `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
 | `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |
@@ -365,19 +284,15 @@ na raiz, não no sítio.
 > régua e vista reprovar por sonda negativa no `TurmaStatusFilter`. A `D-34` continua sem
 > hospedeiro. A **P-63**, que era agrupada no item 18, ficou aberta: o hospedeiro fechou sem
 > pagá-la e rehospedar é do João.
-
-- **D-07 · Idioma das mensagens de `ValidationException` é inconsistente no repo** →
-  `hardening-i18n-e-erros-api`. Commercial escreve em PT (`DeleteQuoteAction`,
-  `DeleteClientContactAction`), Operation em ES (`Turma`, `ConcludeTurmaAction`) — o usuário
-  chileno lê um ou outro conforme o endpoint. O ADR-15 já define mecanismo e fallback (es-CL);
-  falta aplicar.
-
-- **D-58 · `Turma::concluir()` recusa em espanhol fixo, fora do mecanismo de locale** →
-  `hardening-i18n-e-erros-api`. `backend/app/Domains/Operation/Models/Turma.php:200` monta a
-  mensagem de recusa em espanhol literal, como as demais da família **D-07**. É a metade da UI-01 da
-  run de Operação que ficou fora do fence da fatia 1 do item 16 (frontend puro), e a ficha não foi
-  escrita porque a Task 12 daquele plano foi cortada. Mesmo remédio da D-07/D-36: `__()` com chave
-  nas 4 `lang/`. **DoD:** a mesma recusa em es-CL, pt-BR e en devolve a mensagem no locale pedido.
+>
+> **Fechamento de 2026-08-30:** a `D-07`, a `D-18`, a `D-36`, a `D-38` e a `D-58` **saíram daqui
+> pagas** pelo item 7 (`hardening-i18n-e-erros-api`): toda mensagem que a API emite ao usuário sai
+> de `lang/<locale>/<dominio>.php` e responde ao `Accept-Language`, com `es_CL` de fallback, sob
+> duas catracas — `LocaleParityTest` (paridade das três traduções) e `MensagemLiteralTest` (frase
+> literal em `app/`, no `withMessages` e no `throw`). A `D-38` fechou em três sítios, não no único
+> que a ficha nomeava: `OperationMetricsQuery`, `IdentityMetricsQuery` e `RedatorScopeQuery`. O
+> rastro fica nos commits e em `historico/progress.md`. Cinco recusas que o bloco **não tocou**
+> continuam literais e viraram a **P-71**; o 419 virou a **P-72**.
 
 - **D-59 · O alternador Activos/Archivados do card "Cotizaciones" gasta uma linha própria** →
   `frontend-revisao-ui-por-modulo`. UI-03 da run de Comercial de 2026-08-25
@@ -425,14 +340,6 @@ na raiz, não no sítio.
   vivo virou caso de regressão, e **nada mede permissão órfã hoje**. A próxima nasce igual e ninguém
   vê. Quem absorver isto precisa de uma catraca sobre o catálogo de permissões, não sobre `use`.
 
-- **D-18 · `description` de pendências/alertas do Dashboard é string fixa em espanhol no backend**
-  → `hardening-i18n-e-erros-api`. Quatro produtores montam frase pronta
-  (`CommercialMetricsQuery.php:48`, `OperationMetricsQuery.php:128`,
-  `CertificationMetricsQuery.php:38`, `IdentityMetricsQuery.php:46`); o front não pode traduzir —
-  em `turma_docs_incomplete` a string carrega a lista de documentos faltantes. Mitigado pela D17
-  do B1 (rótulo do tipo traduzido vira a linha principal). Fecha junto da D-07, pelo mesmo
-  mecanismo.
-
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta** →
   **sem bloco hospedeiro desde 2026-08-23.** Estava no item 3 como **condicional** ("só se o
   contrato for tocado"), e a §2 da spec do `hardening-acesso-ownership-e-integridade` o declarou
@@ -449,13 +356,6 @@ na raiz, não no sítio.
   visibilidade vira campo explícito no payload e módulo próprio no backend — toca contrato e
   regenera `generated.ts` (lei §5.3).
 
-- **D-36 · O envelope RFC 7807 não é localizado** → `hardening-i18n-e-erros-api`.
-  `ProblemDetails.php:22-36,68,71` devolve `title`/`detail` literais em português, apesar de
-  `SetLocale` já traduzir por `Accept-Language` e de existirem `lang/{en,es,es_CL,pt_BR}`. Medido
-  2026-08-18 (BD-13) e remedido 2026-08-19 com os dois idiomas no MESMO envelope (`title` PT +
-  `detail` es-CL num 422 de restore). Custo de tela hoje: só o `CertificateViewDialog` imprime
-  `detail` cru. Correção: `__()` com chaves nas 4 `lang/`.
-
 - **D-37 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo** →
   `go-live-confiabilidade-e-recuperacao`. A migration `2026_08_18_000001` entra com `false` em
   todas as linhas: agregado arquivado antes de 2026-08-18 restaura o pai sem os filhos, em
@@ -464,18 +364,6 @@ na raiz, não no sítio.
   alcance é só banco de dev. Gatilho: primeiro deploy — conferir agregados arquivados pré-data e
   decidir caso a caso.
 
-- **D-38 · A descrição da pendência do Dashboard imprime o código do enum** →
-  `frontend-revisao-ui-por-modulo`. A frase chega pronta do backend (D17) como
-  `Documentación obligatoria incompleta: MANUAL, PRUEBAS, EVALUACION_REDATOR.`, e o
-  `CompliancePanel` — que monta a própria coluna — já passou a traduzir pelos mesmos códigos
-  (`operation.documents.type.*`, `ac4eef8a`). O mesmo dado aparece traduzido numa parte da tela e
-  cru na outra.
-  **Decidido em 2026-08-22 (D1 da spec da fatia 1), registrado em 2026-08-25:** o backend manda as
-  PARTES e o cliente compõe. Traduzir a frase no backend exige `Accept-Language`, que é exatamente o
-  que o item 7 (`hardening-i18n-e-erros-api`) instala junto de **D-18** e **D-36** — fazer agora
-  seria construir metade do item 7 fora dele. A execução é do item 7; nenhuma linha de código muda
-  por causa desta ficha até lá. O sítio vivo é `PendingList.tsx:30`, que imprime `item.description`
-  cru vindo de `OperationMetricsQuery.php:137`.
 
 ## Travados em decisão — não entram em bloco
 

@@ -7,20 +7,74 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(nenhuma. O `prontidao-pre-nuvem` (2026-08-31) **não encerrou pendência** — emendou a **P-62**, que
-segue aberta —, e a **P-66** saiu neste mesmo fechamento, o primeiro posterior ao do bloco que a
-encerrou. A **P-02**, a **P-33** e a **P-46** saíram nos fechamentos de 2026-08-29, e a **P-03** e a
-**P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro delas.)*
+*(duas: a **P-61** e a **P-63**, fechadas nos dois blocos que fecharam em 2026-08-30. A **P-66**
+saiu no fechamento do `frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao
+do `hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é
+mecanismo em migration, e o rastro dela está no git e na linha de entrega em
+`../historico/progress.md`. A **P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de
+2026-08-29, e a **P-03** e a **P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro
+delas.)*
+
+### P-61 — os `title` do `ProblemDetails` estavam em português num produto es-CL
+
+**Fechada em 2026-08-30**, no `hardening-i18n-e-erros-api` (Task 2), por mecanismo: os sete `title`
+do `ProblemDetails::fromException` e o `detail` mascarado do 500 saíram do código e passaram a
+`lang/<locale>/problem.php` nos três locales, com o `LocaleParityTest` recusando chave que exista em
+um só. Medido contra a API real no gate de fechamento (2026-08-30), sem tocar em `generated.ts`:
+
+```
+404  es-CL Recurso no encontrado  | pt-BR Recurso não encontrado | en Resource not found
+403  es-CL Acceso denegado        | pt-BR Acesso negado          | en Access denied
+422  es-CL Error de validación    | pt-BR Erro de validação      | en Validation error
+401  es-CL No autenticado         | pt-BR Não autenticado        | en Not authenticated
+429  es-CL Demasiadas solicitudes | pt-BR Muitas solicitações    | en Too many requests
+```
+
+O `title` do 500 (`Error interno`) e o `detail` mascarado (`Ocurrió un error inesperado. Vuelva a
+intentarlo.`) não puderam ser medidos ao vivo — `APP_DEBUG=true` no container de dev desliga o
+próprio ramo de mascaramento —, e ficam provados pelas chaves nos três arquivos e pelo
+`EnvelopeLocalizadoTest`. A decisão de idioma que a ficha reservava ao João foi tomada por ele no
+brainstorming de 2026-08-29 (**D5** da spec): os defaults do framework são localizados por TIPO de
+exceção.
+
+O que a ficha **não** cobria e ficou aberto é o 419, que nasceu ficha própria — a
+[P-72](./abertas.md).
 
 ---
 
-**A P-66 saiu no fechamento do `prontidao-pre-nuvem` (2026-08-31)**, o primeiro posterior ao do
-bloco que a encerrou. Ela fechou em 2026-08-29 no `hardening-performance-e-dados` (Task 12), por
-**mecanismo**: a migration `2026_08_28_000001_add_performance_indexes` cria
-`login_logs_created_at_index`, e o `DELETE FROM login_logs WHERE created_at < ? LIMIT 1000` — a
-forma que o `PodarLogins` realmente executa, em chunks — deixou de ser full scan. Números em
-[`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`](../audits/2026-08-28-hardening-performance-e-dados-medicoes.md);
-a linha da entrega está em [`../historico/progress.md`](../historico/progress.md).
+### P-63 — o `role="list"` do mini-reset não alcança lista renderizada por biblioteca
+
+**Fechada em 2026-08-29**, no `frontend-triagem-dos-audits-do-item-18` (Task 12), por mecanismo: a
+legenda do `AppLineChart` passou a ter conteúdo próprio (`shared/ui/AppLineChart/legend.tsx`) —
+`<ul role="list">` com o texto na tinta secundária e o marcador na tinta da série —, porque a
+f2 UI-09 do audit de 2026-08-28 mediu o texto da legenda abaixo de AA no claro e o gatilho desta
+ficha ("bloco que tocar gráfico") disparou. Guarda em `legend.test.tsx`; medida na run 5
+(`audits/2026-08-29-item19-run5.md`): zero `ul` sem `role` no Dashboard.
+
+**Bloco:** — o hospedeiro (item 18) fechou em 2026-08-29 sem pagá-la; rehospedar é do João · **Gatilho:** bloco que
+tocar gráfico ou o mini-reset e puder decidir o remédio — escopar o `list-style: none` aos nossos
+elementos, ou pôr `role="list"` no wrapper de terceiro. Revisar em **2026-10-31**.
+
+Medido no fechamento do `frontend-hardening-final` (2026-08-27), Chromium real, Dashboard a
+1440×900: varrendo **todo** `ul` da página, dois ficam sem `role` — as duas legendas do Recharts
+(`ul.recharts-default-legend`, dentro de `.recharts-legend-wrapper`, uma no gráfico de
+`Certificados emitidos` e outra no de `UF aprobada`).
+
+O mini-reset da **P-46** crava `list-style: none` em todo `ul` da aplicação, e no WebKit isso tira a
+semântica de lista junto — foi o que o **Q-6** do review de 2026-08-27 corrigiu, pondo `role="list"`
+nas 16 listas do repositório e uma régua de lint que exige o atributo daqui pra frente. A régua lê
+JSX: lista que nasce dentro de biblioteca não passa por ela, e o reset alcança essas listas do mesmo
+jeito. As 16 nossas estão cobertas; a borda são as de terceiro.
+
+**Alcance pequeno, e por isso ficou aberta:** as duas listas são legendas de gráfico, cada item já
+carrega `aria-label` próprio no `<svg>`, e o conteúdo delas é decorativo em relação ao dado (que é o
+gráfico). Não reabre o DoD 4 do bloco — as quatro famílias que a spec §5 mediu continuam corretas e
+com `role`.
+
+**Nasceu como `P-61` na branch `refactor/frontend-hardening-final` e foi renumerada no merge da
+`main`**, que já trazia uma `P-61` (os `title` do `ProblemDetails` em português) e uma `P-62` vindas
+do `hardening-api-arquivos-e-abuso` e do `cicd-ci-governanca-e-artefato` — mesmo precedente que
+renumerou a `P-38` para `P-41` e a `P-61` da `lane-b` para `P-62`.
 
 ---
 

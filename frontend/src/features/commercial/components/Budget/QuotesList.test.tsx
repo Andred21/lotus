@@ -107,3 +107,27 @@ it('mostra o switch de arquivados mesmo sem cotação ativa', () => {
   // chave titula o botão, não o texto em espanhol que só existe em runtime real.
   expect(screen.getByRole('button', { name: /archive\.archived/i })).toBeTruthy()
 })
+
+/** f1 UI-02 remedida na run 5 de 2026-08-30: o par saía 40px (Rechazar,
+ * `size="small"`) contra 44px (Aprobar, `compact`). A ênfase já estava no
+ * sentido certo, mas dois botões da mesma linha em alturas diferentes é degrau
+ * sem papel — o par confirmar/recusar divide a geometria e separa o sentido
+ * pelo `severity`. */
+it('Rechazar e Aprobar dividem a geometria da linha', () => {
+  render(
+    <QuotesList
+      quotes={[COTACAO]}
+      {...PROPS_ARQUIVADOS}
+      onApprove={() => {}}
+      onReject={() => {}}
+    />,
+  )
+
+  const rechazar = screen.getByRole('button', { name: /quote\.reject/i })
+  const aprobar = screen.getByRole('button', { name: /quote\.approve/i })
+
+  expect(rechazar.className).toContain('border-2 px-3 py-2.5 text-sm')
+  expect(aprobar.className).toContain('px-3 py-2.5 text-sm')
+  // `p-button-sm` é a geometria de 40px do Prime: a que criava o degrau.
+  expect(rechazar.classList.contains('p-button-sm')).toBe(false)
+})

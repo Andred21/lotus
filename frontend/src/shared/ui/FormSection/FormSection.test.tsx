@@ -32,4 +32,17 @@ describe('FormSection', () => {
 
     expect(container.firstElementChild?.className).toContain('pt-2')
   })
+
+  /**
+   * `h3` é o nível de seção DENTRO de diálogo, sob o `h1` da página. No Perfil
+   * as três seções dividem a própria página e saíam `h1,h3,h3,h3` — nível
+   * pulado nas três viewports (f2 UI-03, run de 2026-08-28). O nível é do
+   * chamador; a grafia não muda.
+   */
+  it('`as="h2"` sobe o nível sem trocar a grafia', () => {
+    render(<FormSection title="Datos personales" as="h2" />)
+
+    const titulo = screen.getByRole('heading', { name: 'Datos personales', level: 2 })
+    expect(titulo.className).toContain(sectionLabelClass)
+  })
 })
