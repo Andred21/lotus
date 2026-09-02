@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: backend-projecao-de-arquivados
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
 active_plan: docs/superpowers/plans/2026-09-02-backend-projecao-de-arquivados.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: backend-projecao-de-arquivados   # item 24, promovido explicitamente pelo João em 2026-09-02
-    workflow_state: ready_for_review
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: request_code_review
+    next_action: close_active_work_item
     tree: main-tree
     branch: refactor/backend-projecao-de-arquivados   # aberta de main@14b25b6c em 2026-09-02
     active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `backend-projecao-de-arquivados` (item 24) | Backend | main tree | `refactor/backend-projecao-de-arquivados` (de `main@14b25b6c`) | `ready_for_review` |
+| `lane-a` | `backend-projecao-de-arquivados` (item 24) | Backend | main tree | `refactor/backend-projecao-de-arquivados` (de `main@14b25b6c`) | `ready_for_closure` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (item 24 **fechado** em 2026-09-02; **PR #95** aberta, aguardando merge) | `idle` |
 
@@ -194,6 +194,36 @@ esbarrava no texto do próprio plano, e a skill manda perguntar nesse caso, não
 decidir. Suíte fecha em 1161 passed / 5 skipped (main mede 1149; +12 das Tasks 1, 2, 3 e 7).
 `generated.ts`, os 70 testes de endpoint e o frontend inteiro sem diff contra `main`. Lane sobe para
 `ready_for_review`; a review do bloco é a próxima instrução, não automática.
+
+**A review do bloco rodou em 2026-09-02** (`/revisar-sprint`), classificada **alto risco** — toca
+`Shared/Audit` (§5.2), `CertificateController` (peso legal) e 9 controllers —, então acionou a
+segunda lente do Codex read-only além do gabarito do projeto. **O código de produção passou sem
+achado**: os 8 `archived()` e os 8 `restore()` foram conferidos linha a linha contra `main` e
+nenhum filtro, eager load, escopo de posse ou chave de JSON mudou; nenhuma das duas peças é
+Repository (§5.1). Os **5 achados foram todos de qualidade de teste/catraca**, e o João aprovou os
+cinco:
+
+- **Q-1** — `RespostaDeRecursoTest::test_carimba_200...` era cobertura fantasma, **provado** por
+  sonda (apagada a linha do `post()`, o teste seguia verde). Passou a carimbar o braço negativo
+  (`assertSame(201, ...)`) antes da cura.
+- **Q-2** — as catracas casavam grafia literal e escapavam por alias de import, FQN,
+  `JsonResponse::HTTP_OK` e argumento nomeado. Agora casam `::archivedBy(` e
+  `setStatusCode(... HTTP_OK|200 ...)`, contra a decisão §3.3 da spec.
+- **Q-3** — a isenção era da pasta (`Shared/Audit/`, `Shared/Http/`) e passou a ser dos dois
+  arquivos do module, por basename.
+- **Q-4** — a catraca reimplementava `arquivosPhp` e um stripper por `preg_replace` que corrompe
+  `//` dentro de string. Passou a usar o `Tests\Support\ScansPhpSource`, que já existia, usa
+  `token_get_all()` e serve outras cinco catracas.
+- **Q-5** — `lista()` não defendia o contrato que `resolveArquivado()` defende. Registro sem
+  `deleted_at` agora estoura `InvalidArgumentException` nomeada, não `toIso8601String() on null`;
+  filtrar em silêncio ficou fora porque a visão tem peso legal.
+
+As duas catracas corrigidas foram **vistas reprovar** contra as quatro grafias evasivas e **vistas
+não disparar** contra `201`, `2000` e menção em comentário — por arquivo de sonda descartável em
+`app/`, nunca por `git stash`. O `MensagemLiteralTest` reprovou o próprio fix do Q-5 e ganhou uma
+linha em `DEBITO_CONHECIDO` (`ArchivedListing.php:68`), no precedente literal das seis
+`RuntimeException` internas: erro de programador, 500 mascarado, ninguém lê. Suíte fecha em
+**1162 passed / 5 skipped**, Pint `passed`, `generated.ts` e `frontend/` sem diff.
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane

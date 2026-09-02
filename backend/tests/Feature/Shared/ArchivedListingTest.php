@@ -13,6 +13,7 @@ use App\Domains\Operation\Models\Turma;
 use App\Shared\Audit\ArchivedListing;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use InvalidArgumentException;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -93,6 +94,23 @@ class ArchivedListingTest extends TestCase
         );
 
         $this->assertSame([0, 1], array_keys($saida));
+    }
+
+    public function test_registro_nao_arquivado_estoura_em_vez_de_projetar(): void
+    {
+        // Chamador que esquecer o `onlyTrashed()`. Antes disto o erro era
+        // `toIso8601String() on null`, que não diz o que fazer; e filtrar em
+        // silêncio sumiria com registro numa visão de peso legal.
+        $client = $this->makeClientWithUser();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('precisa vir de uma query `onlyTrashed()`');
+
+        ArchivedListing::lista(
+            Client::all(),
+            Client::class,
+            fn (Client $c, string $em, ?string $por) => $c->id,
+        );
     }
 
     public function test_resolve_encontra_o_arquivado_pela_classe(): void

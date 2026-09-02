@@ -3,6 +3,7 @@
 namespace Tests\Unit\Shared;
 
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\ScansPhpSource;
 use Tests\TestCase;
 
 /**
@@ -12,44 +13,54 @@ use Tests\TestCase;
  *
  * `App\Shared\*` não é varrido pelo `DomainDependencyTest`, cuja matriz só
  * enxerga `app/Domains/` — então esta é a única régua estrutural do module.
+ *
+ * A varredura e a remoção de comentário vêm do `ScansPhpSource`, que já
+ * serve outras cinco catracas: o `codigoSemComentarios` de lá usa
+ * `token_get_all()`, e por isso não confunde `//` dentro de string com
+ * comentário — o `preg_replace` que esta classe reimplementava confundia, e
+ * apagava o resto da linha depois de uma URL (Q-4 do review de 2026-09-02).
  */
 class ProjecaoDeArquivadosTest extends TestCase
 {
-    /** @return list<string> */
-    private function arquivosPhp(string $diretorio): array
-    {
-        $saida = [];
-        $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(base_path($diretorio)));
-        foreach ($it as $arquivo) {
-            if ($arquivo->isFile() && $arquivo->getExtension() === 'php') {
-                $saida[] = $arquivo->getPathname();
-            }
-        }
+    use ScansPhpSource;
 
-        return $saida;
+    /**
+     * O module, por ARQUIVO e não por pasta.
+     *
+     * Isentar `Shared/Audit/` e `Shared/Http/` inteiras deixaria uma classe
+     * vizinha reconstruir a duplicação com a régua aplaudindo — e as duas
+     * pastas crescem (`Shared/Http/` já hospeda `Middleware/SetLocale.php`).
+     * A isenção tem o tamanho da peça (Q-3 do mesmo review).
+     */
+    private const MODULE = [
+        'ArchivedListing.php',
+        'RespostaDeRecurso.php',
+    ];
+
+    private function ehDoModule(string $caminho): bool
+    {
+        return in_array(basename($caminho), self::MODULE, strict: true);
     }
 
     /**
-     * Só as linhas de código: docblock e comentário podem citar o método.
-     * Sem isto a régua nasceria vermelha por dois docblocks que apenas o
-     * MENCIONAM (`Shared/Pagination/Paginates.php` e o `TurmaController`).
+     * Qualquer chamada estática ao método, não a uma grafia dele.
+     *
+     * `str_contains('ArchiveTrailQuery::archivedBy')` não via
+     * `use ... as Trail; Trail::archivedBy()`. Casar `::archivedBy(` pega o
+     * alias, o FQN e a variável de classe, e não pega a DECLARAÇÃO em
+     * `ArchiveTrailQuery.php` (que é `function archivedBy(`, sem `::`).
      */
-    private function codigoSemComentario(string $caminho): string
-    {
-        return preg_replace('#/\*.*?\*/|//[^\n]*#s', '', file_get_contents($caminho));
-    }
-
     #[Test]
     public function o_archive_trail_query_so_e_chamado_de_dentro_do_module(): void
     {
         $ofensores = [];
 
-        foreach ($this->arquivosPhp('app') as $caminho) {
-            if (str_contains($caminho, '/app/Shared/Audit/')) {
+        foreach ($this->arquivosPhp(base_path('app')) as $caminho) {
+            if ($this->ehDoModule($caminho)) {
                 continue;
             }
 
-            if (str_contains($this->codigoSemComentario($caminho), 'ArchiveTrailQuery::archivedBy')) {
+            if (preg_match('/::\s*archivedBy\s*\(/', $this->codigoSemComentarios($caminho))) {
                 $ofensores[] = str_replace(base_path().'/', '', $caminho);
             }
         }
@@ -65,9 +76,18 @@ class ProjecaoDeArquivadosTest extends TestCase
     }
 
     /**
-     * As DUAS grafias. Régua que pega uma e não a outra é a porta por onde a
-     * dívida volta — foi a lição que as catracas `GRAFIA_LITERAL` e
-     * `RAIO_LITERAL` do frontend compraram. A lista de exceções é VAZIA: os
+     * O 200, em qualquer grafia.
+     *
+     * A régua anterior casava só `setStatusCode(Response::HTTP_OK)` e
+     * `setStatusCode(200)`, e escapavam quatro formas que o Pint aceita:
+     * `\Illuminate\Http\Response::HTTP_OK` (FQN), `JsonResponse::HTTP_OK`
+     * (mesma constante, outra classe), alias de import e
+     * `setStatusCode(status: 200)` (argumento nomeado). Régua que pega uma
+     * grafia e não a outra é a porta por onde a dívida volta — é a decisão
+     * §3.3 da spec, e a lição que as catracas `GRAFIA_LITERAL` e
+     * `RAIO_LITERAL` do frontend compraram.
+     *
+     * `\b200\b` não casa `2000` nem `201`. A lista de exceções é VAZIA: os
      * catorze sítios migraram, e sítio novo nasce vermelho e escolhe.
      */
     #[Test]
@@ -75,12 +95,12 @@ class ProjecaoDeArquivadosTest extends TestCase
     {
         $ofensores = [];
 
-        foreach ($this->arquivosPhp('app') as $caminho) {
-            if (str_contains($caminho, '/app/Shared/Http/')) {
+        foreach ($this->arquivosPhp(base_path('app')) as $caminho) {
+            if ($this->ehDoModule($caminho)) {
                 continue;
             }
 
-            if (preg_match('/setStatusCode\(\s*(?:Response::HTTP_OK|200)\s*\)/', $this->codigoSemComentario($caminho))) {
+            if (preg_match('/setStatusCode\(\s*[^)]*\b(?:HTTP_OK|200)\b/', $this->codigoSemComentarios($caminho))) {
                 $ofensores[] = str_replace(base_path().'/', '', $caminho);
             }
         }

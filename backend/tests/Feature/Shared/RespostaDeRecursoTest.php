@@ -25,13 +25,20 @@ class RespostaDeRecursoTest extends TestCase
     {
         $this->actingAsAdmin();
         $client = $this->makeClientWithUser([], ['rut' => $this->nextRut()]);
+        $data = ClientData::fromModel($client);
 
-        // `ResponsableData::calculateResponseStatus` devolve 201 em POST.
+        // Torna a request corrente um POST — é a única condição em que
+        // `ResponsableData::calculateResponseStatus` devolve 201.
         $this->post('/api/__sonda-resposta', []);
 
-        $resposta = RespostaDeRecurso::ok(ClientData::fromModel($client));
+        // O DEFEITO, carimbado. Sem esta asserção o teste passa mesmo sem a
+        // linha acima (provado no review de 2026-09-02): fora de POST o
+        // `toResponse()` já devolve 200 sozinho e a peça sob teste não é
+        // exercitada — cobertura fantasma da lição 10.
+        $this->assertSame(201, $data->toResponse(request())->getStatusCode());
 
-        $this->assertSame(200, $resposta->getStatusCode());
+        // A CURA.
+        $this->assertSame(200, RespostaDeRecurso::ok($data)->getStatusCode());
     }
 
     public function test_o_corpo_e_o_mesmo_do_to_response(): void
