@@ -40,7 +40,9 @@
   2026-08-24 e o `21` e o `22` em 2026-08-31 — os dois **abertos pelo João**, recortando por frente
   as onze fichas travadas em decisão que nenhum bloco hospedava; o 21 e o 22 aparecem no topo da
   fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
-  desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
+  desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número. O `24` nasceu em
+  2026-09-02, da revisão de arquitetura registrada em
+  `audits/2026-09-02-arquitetura-deepening.html`.
 - **O 16 e o 17 chegaram aqui pelo merge da `lane-c` em 2026-08-24.** Até ele, a fila canônica dos
   dois morava na branch `refactor/frontend-revisao-ui` (`eaa9e15c`, `bef4feb3`), por decisão do João
   em 2026-08-22 — duplicá-los no main tree garantiria conflito no merge sem ganho.
@@ -268,6 +270,62 @@ efeito muda de tabela para tabela porque **a reserva não é uma constante**.
 Duas direções a medir nas 12 tabelas, a 1024px: (a) sinal de rolagem no wrapper, para que a
 rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor onde a reserva não
 cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
+
+---
+
+## 24. `backend-projecao-de-arquivados`
+
+**Prioridade:** P2 · **Frente:** Backend · **Contexto:** não
+**Fonte:** revisão de arquitetura de 2026-09-02 — `audits/2026-09-02-arquitetura-deepening.html`,
+candidato 1, onde o desenho já está fechado no próprio card (interface, o que fica atrás do seam,
+o que fica de fora, catraca e prova).
+
+**Objetivo:** a montagem da listagem de arquivados deixa de existir oito vezes e passa a existir
+uma. Medido em 2026-09-02 contra `main@8efd85f2`: oito controllers têm `archived()` e `restore()`
+(`Course`, `Client`, `Budget`, `Quote`, `Redator`, `User`, `Turma`, `Enrollment`), e a montagem é
+**idêntica nos oito** — `pluck('id')` → `ArchiveTrailQuery::archivedBy` → `map` →
+`deleted_at->toIso8601String()` → `$autores[$id] ?? null`. O comentário que explica por que o
+`restore` resolve o model à mão está copiado **verbatim em 7 arquivos**, e
+`toResponse(request())->setStatusCode(...)` aparece **17 vezes em 10 controllers**, refazendo a
+mesma briga contra o 201 que o `ResponsableData` força em POST.
+
+**Escopo:**
+- `ArchivedListing` em `app/Shared/Audit/`, ao lado do `ArchiveTrailQuery` — seu único colaborador —
+  com duas entradas: `lista(iterable $registros, string $model, Closure $montar): array`, que não
+  conhece HTTP e absorve a montagem inteira, e
+  `respostaDeRestauracao(Data $projetado): JsonResponse`, que só carimba o 200.
+- Os oito controllers passam a consumir as duas.
+- **Catraca:** arch test que reprova `ArchiveTrailQuery::archivedBy` citado fora do module, no molde
+  do `MensagemLiteralTest`. É a única régua que este module terá — `App\Shared\*` não é varrido pelo
+  `DomainDependencyTest`, cuja matriz só enxerga `app/Domains/`.
+
+**Fora do escopo, por medição:**
+- **As oito `Restore*Action`.** Não são gêmeas: divergem em lock (`Client`, `Redator` e `Turma`
+  travam; cinco não), em gate 422 (`Quote` recusa sob orçamento arquivado; `Turma` tem dois;
+  `Enrollment` aplica a RN-15 **fora** do `if`, então matrícula já ativa em turma concluída também
+  toma 422), em limpar `archived_with_parent` (só `Quote` e `Enrollment`) e no retorno (`Turma`
+  devolve cru, `StaffUser` faz `load` inline).
+- **A query de cada agregado.** `Turma` pagina e filtra por `visibleTo`, `User` não tem builder e
+  filtra `type = 'admin'` (spec D10), `Enrollment` usa `withListingData` + `orderByStudentName`,
+  `Budget` injeta `BudgetSummaryService`, `Quote` é escopado pelo pai. É por isso que a query entra
+  **pronta** na interface, em vez de o module montá-la.
+- **O `abort_unless($model->type === 'admin', 404)` do `UserController`** — vocabulário de Identity,
+  e o mesmo gate já vive em `show`, `update` e `destroy`.
+- **Os oito `Archived*Data`.** Cada um emite um tipo nominal de chave própria (`budget`, `client`,
+  `course`, …) em `generated.ts`, consumido por 16 arquivos do front. Colapsá-los quebraria o
+  contrato (ADR-04).
+
+**DoD:**
+1. Os 70 testes de endpoint de arquivamento passam **sem edição** — são caixa-preta sobre JSON, e
+   passarem intactos é o que prova que o contrato não mudou.
+2. Teste unitário novo do module, sobre registros montados à mão, sem round-trip HTTP: hoje a
+   montagem só é alcançável por HTTP.
+3. A catraca é **vista reprovar** contra o código atual antes de valer (lição 10).
+4. `ListQueryBudgetTest` (1 query por unidade nas oito rotas) e `ParentLockOnChildWriteTest`
+   (allowlist com paths de Action) **não mudam** — se precisarem mudar, o desenho saiu do lugar.
+
+**Restrição de nome:** `PersistenceLawsTest` varre `app/` inteiro e reprova basename terminado em
+`Repository`; a lei não abre exceção para `Shared/`.
 
 ---
 
