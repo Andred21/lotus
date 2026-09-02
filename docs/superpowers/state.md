@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-dividas-de-mecanismo
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-frontend-dividas-de-mecanismo-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-09-02-frontend-dividas-de-mecanismo.md
 context_packet: null
 blocker: null
 lanes:
@@ -47,20 +47,20 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: frontend-dividas-de-mecanismo   # item 25, promovido explicitamente pelo Joao em 2026-09-02
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../fix-frontend
     branch: fix/frontend-dividas-de-mecanismo   # aberta de 3654b6dc (= origin/main@5f6daf8b mais o commit que abre o item 25, em revisao na PR #97); a PR #95 do bloco anterior mesclou em 2e24bba9
     active_spec: docs/superpowers/specs/2026-09-02-frontend-dividas-de-mecanismo-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-09-02-frontend-dividas-de-mecanismo.md
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # sem ficha na fila, fechado em 2026-09-02
 last_completed_work_item: frontend-campo-de-formulario-liga-no-form
-state_basis_commit: 3654b6dc
-updated_at: 2026-09-02T17:13:34-03:00
+state_basis_commit: 292a19c5
+updated_at: 2026-09-02T18:38:51-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-projecao-de-arquivados` (item 24 **fechado** em 2026-09-02, sem merge) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-dividas-de-mecanismo` (item 25) | Frontend | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (aberta de `3654b6dc`; a PR #95 do bloco anterior mesclou em `2e24bba9`) | `planning` |
+| `lane-c` | `frontend-dividas-de-mecanismo` (item 25) | Frontend | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (aberta de `3654b6dc`; a PR #95 do bloco anterior mesclou em `2e24bba9`) | `ready_for_execution` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -186,6 +186,23 @@ das seis fichas foram remedidas contra o código no brainstorming e **contradiss
 a variável de perigo da `D-69` já existe, a superfície da `P-30` é um botão (e reprova contraste a
 2,80:1), e o custo que travava a `P-69` mediu **zero** — 127 arquivos / 734 testes passam com o
 `cleanup()` global ligado.
+
+**O planejamento fechou em 2026-09-02**, com spec e plano commitados e oito tasks desenhadas — uma
+por ficha, mais o desmonte da `P-69` partido em mecanismo e remoção, mais o fechamento que mede o
+DoD. O plano **corrige a spec em quatro pontos que só a medição de escrita revelou**, e por isso ele
+é a fonte da execução: (1) a `P-69` são **31** arquivos, não 28 — a spec contou uma grafia só, e
+`afterEach(() => cleanup())` está viva em dois arquivos de `src/app/`; (2) a sonda negativa que a
+spec desenhou **não reprova** — a suíte inteira passa sem `setupFiles` e sem o `cleanup()` do
+`useServerTable.test.tsx`, então a prova passa a ser a guarda estática mais a catraca
+`CLEANUP_A_MAO`, as duas vistas reprovar; (3) a receita da `P-30` medida na spec regride dois
+estados e o `outlined` (3,30:1, 2,29:1 e 1,92:1 no claro), porque a §3.2 mediu só o estado base — a
+tinta amarela tem de ser escura e os estados sobem a rampa, que é a direção que o Lara já usa no
+tema escuro; (4) a `CLEANUP_A_MAO` não pode ganhar bloco próprio no `eslint.config.js` sob pena de
+apagar por merge raso a catraca de cor nos arquivos de teste, então entra em cinco arrays
+existentes. A decisão **D3 não muda** — o warning alinha ao amarelo da tag; muda a receita. Fica
+registrado um achado que **não** se paga neste bloco e vira ficha na Task 5: no tema claro a família
+inteira de botão de severidade reprova AA no estado base (success 2,28:1, info 2,77:1, warning
+2,80:1, danger 3,76:1, help 3,96:1) — o warning nunca foi caso especial.
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
