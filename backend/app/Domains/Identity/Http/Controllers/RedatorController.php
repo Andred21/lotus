@@ -11,7 +11,7 @@ use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use App\Shared\Files\ContentClass;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -68,17 +68,15 @@ class RedatorController extends Controller implements HasMiddleware
     /** @return array<ArchivedRedatorData> */
     public function archived(): array
     {
-        $redatores = Redator::onlyTrashed()->withArchivedListingData()->get();
-
-        $autores = ArchiveTrailQuery::archivedBy(Redator::class, $redatores->pluck('id')->all());
-
-        return $redatores
-            ->map(fn (Redator $r) => new ArchivedRedatorData(
+        return ArchivedListing::lista(
+            Redator::onlyTrashed()->withArchivedListingData()->get(),
+            Redator::class,
+            fn (Redator $r, string $em, ?string $por) => new ArchivedRedatorData(
                 redator: RedatorData::fromModel($r),
-                archived_at: $r->deleted_at->toIso8601String(),
-                archived_by: $autores[$r->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     public function restore(int $redator, RestoreRedatorAction $action): JsonResponse

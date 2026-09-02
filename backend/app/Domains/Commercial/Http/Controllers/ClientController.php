@@ -10,7 +10,7 @@ use App\Domains\Commercial\Data\ArchivedClientData;
 use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -41,17 +41,15 @@ class ClientController extends Controller implements HasMiddleware
     /** @return array<ArchivedClientData> */
     public function archived(): array
     {
-        $clients = Client::onlyTrashed()->withArchivedListingData()->get();
-
-        $autores = ArchiveTrailQuery::archivedBy(Client::class, $clients->pluck('id')->all());
-
-        return $clients
-            ->map(fn (Client $c) => new ArchivedClientData(
+        return ArchivedListing::lista(
+            Client::onlyTrashed()->withArchivedListingData()->get(),
+            Client::class,
+            fn (Client $c, string $em, ?string $por) => new ArchivedClientData(
                 client: ClientData::fromModel($c),
-                archived_at: $c->deleted_at->toIso8601String(),
-                archived_by: $autores[$c->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     // 200 e não 201: `Data::toResponse()` força 201 em qualquer POST

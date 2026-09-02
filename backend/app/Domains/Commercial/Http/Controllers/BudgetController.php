@@ -10,7 +10,7 @@ use App\Domains\Commercial\Data\BudgetData;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Services\BudgetSummaryService;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -42,17 +42,15 @@ class BudgetController extends Controller implements HasMiddleware
     /** @return array<ArchivedBudgetData> */
     public function archived(BudgetSummaryService $summary): array
     {
-        $budgets = Budget::onlyTrashed()->withArchivedListingData()->get();
-
-        $autores = ArchiveTrailQuery::archivedBy(Budget::class, $budgets->pluck('id')->all());
-
-        return $budgets
-            ->map(fn (Budget $b) => new ArchivedBudgetData(
+        return ArchivedListing::lista(
+            Budget::onlyTrashed()->withArchivedListingData()->get(),
+            Budget::class,
+            fn (Budget $b, string $em, ?string $por) => new ArchivedBudgetData(
                 budget: BudgetData::fromModel($b, $summary),
-                archived_at: $b->deleted_at->toIso8601String(),
-                archived_by: $autores[$b->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     // 200 e não 201: `Data::toResponse()` força 201 em qualquer POST

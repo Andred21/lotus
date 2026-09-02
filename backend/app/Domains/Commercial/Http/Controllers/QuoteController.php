@@ -13,7 +13,7 @@ use App\Domains\Commercial\Data\QuoteData;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -49,17 +49,15 @@ class QuoteController extends Controller implements HasMiddleware
      */
     public function archived(Budget $budget): array
     {
-        $quotes = $budget->quotes()->onlyTrashed()->withArchivedListingData()->get();
-
-        $autores = ArchiveTrailQuery::archivedBy(Quote::class, $quotes->pluck('id')->all());
-
-        return $quotes
-            ->map(fn (Quote $q) => new ArchivedQuoteData(
+        return ArchivedListing::lista(
+            $budget->quotes()->onlyTrashed()->withArchivedListingData()->get(),
+            Quote::class,
+            fn (Quote $q, string $em, ?string $por) => new ArchivedQuoteData(
                 quote: QuoteData::fromModel($q),
-                archived_at: $q->deleted_at->toIso8601String(),
-                archived_by: $autores[$q->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     // 200 e não 201, pelo mesmo motivo de `approve`.

@@ -21,7 +21,7 @@ use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
 use App\Domains\Operation\Services\ManualDocumentService;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use App\Shared\Pagination\PageData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -98,10 +98,10 @@ class TurmaController extends Controller implements HasMiddleware
     }
 
     /**
-     * A mesma página, sobre as arquivadas. `slice()` e não `page()`: o
-     * "arquivado por" é resolvido num lote só sobre os ids DA PÁGINA
-     * (`ArchiveTrailQuery::archivedBy`), e a projeção precisa da coleção antes
-     * de mapear.
+     * A mesma página, sobre as arquivadas. `slice()` e não `page()`: quem
+     * arquivou é resolvido num lote só sobre os ids DA PÁGINA, e o lote
+     * exige a coleção pronta ANTES da projeção — é o que `slice()` devolve
+     * crua para `ArchivedListing::lista()` consumir.
      *
      * @return PageData<ArchivedTurmaData>
      */
@@ -112,17 +112,16 @@ class TurmaController extends Controller implements HasMiddleware
             ->withArchivedListingData()
             ->slice($page, filter: fn (TurmaQueryBuilder $q) => $q->whereDisplayStatus($page->status, asOfArchiving: true));
 
-        $autores = ArchiveTrailQuery::archivedBy(Turma::class, $turmas->pluck('id')->all());
-
         return new PageData(
-            data: $turmas
-                ->map(fn (Turma $t) => new ArchivedTurmaData(
+            data: ArchivedListing::lista(
+                $turmas,
+                Turma::class,
+                fn (Turma $t, string $em, ?string $por) => new ArchivedTurmaData(
                     turma: TurmaData::fromModel($t, $habilitacao),
-                    archived_at: $t->deleted_at->toIso8601String(),
-                    archived_by: $autores[$t->id] ?? null,
-                ))
-                ->values()
-                ->all(),
+                    archived_at: $em,
+                    archived_by: $por,
+                ),
+            ),
             meta: $meta,
         );
     }

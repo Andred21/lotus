@@ -10,7 +10,7 @@ use App\Domains\Catalog\Data\ArchivedCourseData;
 use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Models\Course;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -41,17 +41,15 @@ class CourseController extends Controller implements HasMiddleware
     /** @return array<ArchivedCourseData> */
     public function archived(): array
     {
-        $courses = Course::onlyTrashed()->withArchivedListingData()->get();
-
-        $autores = ArchiveTrailQuery::archivedBy(Course::class, $courses->pluck('id')->all());
-
-        return $courses
-            ->map(fn (Course $c) => new ArchivedCourseData(
+        return ArchivedListing::lista(
+            Course::onlyTrashed()->withArchivedListingData()->get(),
+            Course::class,
+            fn (Course $c, string $em, ?string $por) => new ArchivedCourseData(
                 course: CourseData::fromModel($c),
-                archived_at: $c->deleted_at->toIso8601String(),
-                archived_by: $autores[$c->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     // Ver a nota gêmea em `ClientController::restore`: `onlyTrashed()` à mão,

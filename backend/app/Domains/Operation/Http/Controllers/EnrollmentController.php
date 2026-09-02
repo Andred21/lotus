@@ -15,7 +15,7 @@ use App\Domains\Operation\Data\EnrollPreviewData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use App\Shared\Files\ContentClass;
 use App\Shared\Rules\ValidRut;
 use Illuminate\Http\JsonResponse;
@@ -58,15 +58,15 @@ class EnrollmentController extends Controller implements HasMiddleware
             ->orderByStudentName()
             ->get();
 
-        $autores = ArchiveTrailQuery::archivedBy(Enrollment::class, $enrollments->pluck('id')->all());
-
-        return $enrollments
-            ->map(fn (Enrollment $e) => new ArchivedEnrollmentData(
+        return ArchivedListing::lista(
+            $enrollments,
+            Enrollment::class,
+            fn (Enrollment $e, string $em, ?string $por) => new ArchivedEnrollmentData(
                 enrollment: EnrollmentData::fromModel($e),
-                archived_at: $e->deleted_at->toIso8601String(),
-                archived_by: $autores[$e->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     public function preview(Request $request, Turma $turma, StudentResolver $resolver): EnrollPreviewData

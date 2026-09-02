@@ -10,7 +10,7 @@ use App\Domains\Identity\Data\ArchivedUserData;
 use App\Domains\Identity\Data\UserData;
 use App\Domains\Identity\Models\User;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -86,15 +86,15 @@ class UserController extends Controller implements HasMiddleware
             ->orderBy('name')
             ->get();
 
-        $autores = ArchiveTrailQuery::archivedBy(User::class, $users->pluck('id')->all());
-
-        return $users
-            ->map(fn (User $u) => new ArchivedUserData(
+        return ArchivedListing::lista(
+            $users,
+            User::class,
+            fn (User $u, string $em, ?string $por) => new ArchivedUserData(
                 user: UserData::fromModel($u),
-                archived_at: $u->deleted_at->toIso8601String(),
-                archived_by: $autores[$u->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     public function restore(int $user, RestoreStaffUserAction $action): JsonResponse
