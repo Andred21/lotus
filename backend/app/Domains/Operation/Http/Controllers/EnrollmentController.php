@@ -95,9 +95,7 @@ class EnrollmentController extends Controller implements HasMiddleware
             'file' => ContentClass::Planilha->regras(),
         ]);
 
-        return $action->execute($turma, $validated['file'])
-            ->toResponse(request())
-            ->setStatusCode(200);
+        return RespostaDeRecurso::ok($action->execute($turma, $validated['file']));
     }
 
     public function result(

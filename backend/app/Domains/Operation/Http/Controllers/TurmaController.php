@@ -136,9 +136,7 @@ class TurmaController extends Controller implements HasMiddleware
 
     public function designateRedator(Turma $turma, Redator $redator, DesignateRedatorAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
     {
-        return $this->present($action->execute($turma, $redator), $habilitacao)
-            ->toResponse(request())
-            ->setStatusCode(200);
+        return RespostaDeRecurso::ok($this->present($action->execute($turma, $redator), $habilitacao));
     }
 
     public function removeRedator(Turma $turma, Redator $redator, RemoveRedatorAction $action, TurmaHabilitacaoService $habilitacao): TurmaData
@@ -148,9 +146,7 @@ class TurmaController extends Controller implements HasMiddleware
 
     public function conclude(Turma $turma, ConcludeTurmaAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
     {
-        return $this->present($action->execute($turma), $habilitacao)
-            ->toResponse(request())
-            ->setStatusCode(200);
+        return RespostaDeRecurso::ok($this->present($action->execute($turma), $habilitacao));
     }
 
     public function manual(Turma $turma, ManualDocumentService $manual): Response

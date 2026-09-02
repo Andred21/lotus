@@ -90,20 +90,17 @@ class QuoteController extends Controller implements HasMiddleware
         return response()->noContent();
     }
 
-    // Data::toResponse() força 201 em qualquer POST (ResponsableData::calculateResponseStatus).
-    // Correto para store() (cria recurso), mas approve/reject são decisões sobre um recurso
-    // já existente — força 200 explicitamente.
     public function approve(Quote $quote, ApproveQuoteAction $action): JsonResponse
     {
-        return QuoteData::fromModel($action->execute($quote)->loadListingData())
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(
+            QuoteData::fromModel($action->execute($quote)->loadListingData()),
+        );
     }
 
     public function reject(Quote $quote, RejectQuoteAction $action): JsonResponse
     {
-        return QuoteData::fromModel($action->execute($quote)->loadListingData())
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(
+            QuoteData::fromModel($action->execute($quote)->loadListingData()),
+        );
     }
 }
