@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: backend-projecao-de-arquivados
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
 active_plan: docs/superpowers/plans/2026-09-02-backend-projecao-de-arquivados.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: backend-projecao-de-arquivados   # item 24, promovido explicitamente pelo João em 2026-09-02
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: main-tree
     branch: refactor/backend-projecao-de-arquivados   # aberta de main@14b25b6c em 2026-09-02
     active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `backend-projecao-de-arquivados` (item 24) | Backend | main tree | `refactor/backend-projecao-de-arquivados` (de `main@14b25b6c`) | `ready_for_execution` |
+| `lane-a` | `backend-projecao-de-arquivados` (item 24) | Backend | main tree | `refactor/backend-projecao-de-arquivados` (de `main@14b25b6c`) | `executing` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (item 24 **fechado** em 2026-09-02; **PR #95** aberta, aguardando merge) | `idle` |
 
