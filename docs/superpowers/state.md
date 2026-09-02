@@ -3,13 +3,13 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: frontend-campo-de-formulario-liga-no-form
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md
-active_plan: docs/superpowers/plans/2026-09-02-frontend-campo-de-formulario-liga-no-form.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
@@ -46,21 +46,21 @@ lanes:
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
     active_feature: null
-    active_work_item: frontend-campo-de-formulario-liga-no-form   # item 24, promovido pelo Joao em 2026-09-02
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-campo-de-formulario-liga-no-form   # aberta de main@8efd85f2 em 2026-09-02
-    active_spec: docs/superpowers/specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md
-    active_plan: docs/superpowers/plans/2026-09-02-frontend-campo-de-formulario-liga-no-form.md
+    branch: refactor/frontend-campo-de-formulario-liga-no-form   # item 24 fechado em 2026-09-02; branch SEM merge
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-triagem-dos-audits-do-item-18
-last_completed_work_item: frontend-decisoes-de-ui-pendentes
-state_basis_commit: 8efd85f2
-updated_at: 2026-09-02T00:00:00-03:00
+    last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # item 24, fechado em 2026-09-02
+last_completed_work_item: frontend-campo-de-formulario-liga-no-form
+state_basis_commit: 92774221
+updated_at: 2026-09-02T17:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-campo-de-formulario-liga-no-form` (item 24) | Frontend | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (aberta de `main@8efd85f2`) | `ready_for_closure` (review feito; Q-1 e Q-2 aplicados e reverificados) |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (item 24 **fechado** em 2026-09-02, **sem merge**) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -190,52 +190,6 @@ na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segu
 **O item 12 fica estacionado, nao cancelado.** Ele segue no `backlog.md` (fila nao se mexe durante planejamento), o packet `status: blocked` fica guardado como evidencia e o campo `parked_work_item` da lane-b registra o vinculo. Quando o 10 provisionar o host, o packet do 12 regenera pelo gatilho de staleness que ele mesmo declara: *"um alvo AWS real ser provisionado"*.
 
 
-**A `lane-c` recebeu o item 24 em 2026-09-02** — `frontend-campo-de-formulario-liga-no-form`,
-promovido explicitamente pelo João com a lane em `idle`. `Contexto: não`: as fontes são o §3 do
-review de arquitetura de 2026-09-01 e o próprio código, tudo no repositório. **A spec chegou antes
-da vez do bloco, por decisão registrada na própria spec (Q19/Q20)** — as 23 decisões foram
-aprovadas seção a seção com o João em 2026-09-02 e custam caro de reconstruir; o `CLAUDE.md` §4
-manda planejar just-in-time e é o **plano** que ficou para agora. Nem a spec nem a ficha
-autorizaram execução: quem promoveu foi o João, aqui.
-
-**Duas coisas foram decididas contra o que estava escrito, e ficam registradas:**
-
-1. **A ordem da fila foi invertida com aval explícito.** A ficha do item 24 diz *"depois do bloco
-   do §1 do review"* — o colapso da projeção de arquivamento, no backend, que **ainda não tem ficha
-   no `backlog.md`**. O João optou por rodar as duas frentes **em paralelo**: o 24 nesta árvore
-   (`../fix-frontend`, lane-c) e `backend-projecao-de-arquivados` no main tree (lane-a). A
-   dependência entre os dois é de ordem de leitura do review, não de código: o 24 não toca
-   `backend/` nem `generated.ts`.
-2. **O espelho do topo virou para `lane-c` fora do main tree** — é a **P-55**, e segue o precedente
-   medido de 2026-08-24. **Risco conhecido e aceito:** a lane-a vai promover o bloco de backend no
-   main tree e, se ela também virar o espelho, as duas árvores escrevem o mesmo campo. A integração
-   é serial (invariante acima), então a colisão se resolve no merge; quem rebasar depois **mantém o
-   espelho da própria árvore**. Esta sessão escreveu **só os campos da lane-c** e o espelho — nenhum
-   campo de `lane-a` ou `lane-b` foi tocado.
-
-**O review do item 24 rodou em 2026-09-02 e os dois achados foram aplicados no mesmo dia**, com
-aval explícito do João. **Q-1:** o `ERRO_DE_CAMPO_A_MAO` media só `fieldErrors?.x?.[0]` e passava
-limpo por `f.fieldErrors?.x?.[0]` — a grafia do próprio `TurmaConfigCard` antes da migração; o
-seletor agora casa as duas, e o apelido (`const { fieldErrors: fe } = f`) segue fora do alcance,
-escrito no comentário. **Q-2:** o `useFormField` passou a devolver `{ Field }`, porque a regra
-`react-hooks/static-components` só olha tag com nome de identificador — `<campo.Field>` dispensa os
-26 `eslint-disable` sem desligar a regra em arquivo nenhum, e o `DROPDOWN_SEM_NOME` aprendeu a tag
-em `JSXMemberExpression` junto. `pnpm lint`, `pnpm build` e `pnpm test` (734/734) verdes depois da
-correção; commit `98290b2b`.
-
-**Três divergências documentais aguardam a palavra do João antes de virarem ficha em
-`pendencias/abertas.md`** — não são achado de código e não travam o fechamento: (a) a spec §4.2
-manda `useMemo([])` e o código usa `useRef` + dois `eslint-disable react-hooks/refs`, justificados
-no docblock; (b) a spec §7.1 ainda lista o teste de `parse`, que a Q23 revogou; (c) a spec descreve
-o hook devolvendo o componente cru, e a correção da Q-2 mudou o retorno para `{ Field }`. A prova
-de navegador de 2026-09-02 conta a grafia antiga (`<Field `) porque **antecede** a Q-2 — o caminho
-de render é o mesmo componente sob o mesmo `FieldContext`, e a identidade estável segue medida em
-`useFormField.test.tsx`.
-
-**O item 24 entrou no `backlog.md` pelas mãos do João** (acrescentar item na fila é dele, §
-invariante de dono), no mesmo working tree; o commit de promoção apenas o leva ao Git junto da
-spec que ele referencia.
-
 ## Itens fechados — ponteiro, não narrativa
 
 O que cada bloco **entregou** está em `historico/progress.md`, uma linha com plano, spec, packet e
@@ -244,11 +198,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | Item 24 da fila |
 | 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 | 2026-08-31 | `prontidao-pre-nuvem` (emenda a **P-62**: o pessoal está público e a decisão de visibilidade ficou com o João) | Item 20 da fila |
 | 2026-08-30 | `hardening-i18n-e-erros-api` (paga a **P-61**, `D-07`, `D-18`, `D-36`, `D-38`, `D-58`; abre a **P-70**, a **P-71** e a **P-72**) | Item 7 da fila |
 | 2026-08-30 | `frontend-triagem-dos-audits-do-item-18` (paga a **P-63**; abre a `D-63`..`D-68` e rehospeda a **P-67** na `D-66`) | Item 19 da fila |
-| 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

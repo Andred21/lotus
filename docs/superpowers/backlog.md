@@ -32,8 +32,8 @@
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
   em 2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
   2026-08-27, o `5` em 2026-08-28, o `6` e o `18` em 2026-08-29, o `7` e o `19` em 2026-08-30, o
-  `20` em 2026-08-31, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
-  provisionamento). A fila começa no `9` e salta os que já fecharam
+  `20` em 2026-08-31, o `21` em 2026-09-01, o `24` em 2026-09-02, e o `10` **encolheu** em vez de
+  sair (o runtime foi entregue; sobrou o provisionamento). A fila começa no `9` e salta os que já fecharam
   de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios
   blocos. Renumerar quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22, o `17` em
@@ -273,26 +273,6 @@ Duas direções a medir nas 12 tabelas, a 1024px: (a) sinal de rolagem no wrappe
 rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor onde a reserva não
 cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
 
-## 24. `frontend-campo-de-formulario-liga-no-form`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não
-**Fonte:** §3 do review de arquitetura de 2026-09-01 (`main@8efd85f2`).
-**Desenho FECHADO** em `specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md` —
-22 decisões aprovadas com o João em 2026-09-02. **Só o plano fica para a vez do bloco.**
-
-O `FormField` tem interface larga: quatro props por campo (`label`, `error`, `readOnly`, `value`)
-mais `value`/`onChange` no controle dentro dele — 85 call sites reais e 48 extrações
-`fieldErrors?.x?.[0]`. O `FieldContext` já provou o mecanismo na P-37 (55 campos, zero call site
-tocado) mas publica só acessibilidade. Um `useFormField(bundle)` devolve um `Field` tipado em
-`keyof T` que desce como **uma** prop no lugar das quatro, e os 5 wrappers que já leem o contexto
-passam a pescar valor e setter dele. **45 sítios em 13 arquivos** em escopo; aninhado, login,
-só-leitura e o que não tem bundle de form ficam fora, com motivo medido na spec.
-
-**Ordem na fila:** depois do bloco do **§1 do review** (colapsar a projeção de arquivamento, no
-backend) — que **ainda não tem ficha aqui**, apesar de ter desenho fechado no próprio review.
-
----
-
 ## 24. `backend-projecao-de-arquivados`
 
 **Prioridade:** P2 · **Frente:** Backend · **Contexto:** não
@@ -346,8 +326,6 @@ mesma briga contra o 201 que o `ResponsableData` força em POST.
 
 **Restrição de nome:** `PersistenceLawsTest` varre `app/` inteiro e reprova basename terminado em
 `Repository`; a lei não abre exceção para `Shared/`.
-
----
 
 ---
 

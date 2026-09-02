@@ -36,3 +36,32 @@ working tree ficou igual antes e depois.
 | `fieldErrors?.` em `src/features/**/*.tsx` | 48 | **22**, todas nos 11 arquivos que a spec §2 declarou fora de escopo (campo aninhado, diálogos sem bundle de form, telas de login/senha) mais o banner de `course_id` do `QuoteWizard`, que não é campo |
 | `<Field ` em `src/features` | 0 | **35** |
 | `<FormField ` restantes em `src/features` | — | 31, nos sítios fora de escopo e nos desvios medidos (campo só-leitura sem controle, campo aninhado) |
+
+## Regate pós-Q-2 (fechamento, 2026-09-02)
+
+A passada acima **antecede** a correção Q-2 do review, que mudou o retorno do `useFormField` de
+componente cru para `{ Field }` (call sites em `<campo.Field>`). O gate de fechamento §0 não aceita
+prova de código anterior, então as medições 1, 2 e 3 foram **refeitas contra o código final**
+(`98290b2b`), mesma árvore, mesmo offset (+2), Chromium via `playwright-cli`, `admin@lotus.cl`,
+locale **EN**.
+
+| # | Medição refeita | Resultado |
+|---|---|---|
+| 1 | 3 teclas no RUT sem perder o foco | nó marcado com `data-sonda` antes da 1ª tecla; depois de `7`, `6`, `.` o `document.activeElement` é o MESMO nó (`id` `_r_1_`, marca intacta) e o valor acumula `7` → `76` → `76.` ✅ |
+| 2 | `view` mostra rótulo traduzido | diálogo do `Subestación Norte S.A.` em modo leitura: `Type` → **"Client"**, com RUT e atividade carregados do backend ✅ |
+| 3 | 422 real pinta no campo certo | POST com RUT já cadastrado devolveu 422 e a mensagem "Este RUT já está cadastrado." aparece **sob a label RUT**, com `aria-invalid="true"` no input marcado ✅ |
+| 4 | console sem aviso de controlled/uncontrolled | **0 warnings** na passada inteira; o único erro é o 422 da própria sonda ✅ |
+
+**Nota de percurso:** o primeiro POST voltou 422 por `contacts.0.name` (campo aninhado, **fora do
+escopo** do bloco) — o erro pintou no campo do contato pelo caminho antigo, e só com o contato
+preenchido o backend chegou a validar a unicidade do RUT. Isso confirma os dois caminhos convivendo,
+que é o desenho declarado na spec §2.
+
+**Mutação:** duas tentativas de POST em `/api/clients`, as duas **rejeitadas com 422** — `4` clientes
+antes, `4` depois (contados no MySQL). Nenhuma edição salva; working tree limpo antes e depois.
+
+**Contagem final, relida pós-Q-2:** os **35** sítios continuam 35, agora em duas grafias — **13**
+`<campo.Field ` (onde o `useFormField` é chamado, forma que a Q-2 introduziu) e **22** `<Field `
+(subcomponentes que recebem o `Field` como **prop** tipada `FieldComponent<T>`, onde a regra
+`react-hooks/static-components` não se aplica). `fieldErrors?.` segue em **22** e `<FormField `
+em **31**, iguais à tabela acima.
