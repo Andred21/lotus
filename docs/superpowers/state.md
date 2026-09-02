@@ -3,30 +3,30 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: backend-projecao-de-arquivados
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
-active_plan: docs/superpowers/plans/2026-09-02-backend-projecao-de-arquivados.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: backend-projecao-de-arquivados   # item 24, promovido explicitamente pelo João em 2026-09-02
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: main-tree
-    branch: refactor/backend-projecao-de-arquivados   # aberta de main@14b25b6c em 2026-09-02
-    active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
-    active_plan: docs/superpowers/plans/2026-09-02-backend-projecao-de-arquivados.md
-    context_packet: null   # item `Contexto: não` — a fonte é o audit versionado de 2026-09-02
+    branch: refactor/backend-projecao-de-arquivados   # aberta de main@14b25b6c em 2026-09-02; item 24 fechado em 2026-09-02, sem merge
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-decisoes-de-ui-pendentes   # item 21, fechado em 2026-09-01
+    last_completed_work_item: backend-projecao-de-arquivados   # item 24, fechado em 2026-09-02
   lane-b:
     active_feature: null
     active_work_item: null
@@ -51,13 +51,13 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-campo-de-formulario-liga-no-form   # item 24 fechado em 2026-09-02; rebasada sobre origin/main@4bea7d27 e enviada na PR #95, aguardando merge
+    branch: refactor/frontend-campo-de-formulario-liga-no-form   # bloco sem ficha na fila (rotulo `item 24` tomado por engano; o 24 e o backend-projecao-de-arquivados), fechado em 2026-09-02; rebasada sobre origin/main@4bea7d27 e enviada na PR #95, aguardando merge
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # item 24, fechado em 2026-09-02
+    last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # sem ficha na fila, fechado em 2026-09-02
 last_completed_work_item: frontend-campo-de-formulario-liga-no-form
 state_basis_commit: 92774221
 updated_at: 2026-09-02T17:30:00-03:00
@@ -164,9 +164,9 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `backend-projecao-de-arquivados` (item 24) | Backend | main tree | `refactor/backend-projecao-de-arquivados` (de `main@14b25b6c`) | `ready_for_closure` |
+| `lane-a` | — | — | main tree | `refactor/backend-projecao-de-arquivados` (item 24 **fechado** em 2026-09-02, sem merge) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (item 24 **fechado** em 2026-09-02; **PR #95** aberta, aguardando merge) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (bloco **fechado** em 2026-09-02, **sem ficha na fila**; **PR #95** aberta, aguardando merge) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -175,55 +175,6 @@ disjuntas, colisão mínima de arquivos:
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
-**A `lane-a` recebeu o item 24 em 2026-09-02** — `backend-projecao-de-arquivados`, promovido
-explicitamente pelo João com a lane em `idle`. É `Contexto: não`, então nasce direto em
-`ready_for_planning`, sem rota Codex: a fonte única é a revisão de arquitetura de 2026-09-02
-(`audits/2026-09-02-arquitetura-deepening.html`, candidato 1), **versionada** — a decisão inicial de
-mantê-la só como contexto local foi revertida pelo João no mesmo dia, e o audit entrou em `main` no
-commit `14b25b6c` junto com o próprio item 24. Toca `backend/`, então roda no main tree pela P-03. A
-branch sai de `main@14b25b6c`; os dois commits de doc que a antecedem entram em `origin/main` pela
-**PR #93**, pelo caminho do `CONTRIBUINDO.md` — `git push origin main` é recusado pelo `pre-push` e o
-job `procedencia` reprovaria o commit sem PR associado.
-
-**As 8 tasks do plano fecharam em 2026-09-02**, via `subagent-driven-development` — implementer +
-review por task (spec + qualidade), sonda negativa provada nas duas catracas (Task 7, por `cp` no
-scratchpad, nunca `git stash`) e gate de medição (Task 8) sem exigir correção. Um achado Important
-do review da Task 4 (docblock "spec D5" apagado do `QuoteController::archived()` pelo texto literal
-do plano) foi levado ao João em vez de decidido sozinho — restaurar, per decisão dele — porque
-esbarrava no texto do próprio plano, e a skill manda perguntar nesse caso, não silenciar nem
-decidir. Suíte fecha em 1161 passed / 5 skipped (main mede 1149; +12 das Tasks 1, 2, 3 e 7).
-`generated.ts`, os 70 testes de endpoint e o frontend inteiro sem diff contra `main`. Lane sobe para
-`ready_for_review`; a review do bloco é a próxima instrução, não automática.
-
-**A review do bloco rodou em 2026-09-02** (`/revisar-sprint`), classificada **alto risco** — toca
-`Shared/Audit` (§5.2), `CertificateController` (peso legal) e 9 controllers —, então acionou a
-segunda lente do Codex read-only além do gabarito do projeto. **O código de produção passou sem
-achado**: os 8 `archived()` e os 8 `restore()` foram conferidos linha a linha contra `main` e
-nenhum filtro, eager load, escopo de posse ou chave de JSON mudou; nenhuma das duas peças é
-Repository (§5.1). Os **5 achados foram todos de qualidade de teste/catraca**, e o João aprovou os
-cinco:
-
-- **Q-1** — `RespostaDeRecursoTest::test_carimba_200...` era cobertura fantasma, **provado** por
-  sonda (apagada a linha do `post()`, o teste seguia verde). Passou a carimbar o braço negativo
-  (`assertSame(201, ...)`) antes da cura.
-- **Q-2** — as catracas casavam grafia literal e escapavam por alias de import, FQN,
-  `JsonResponse::HTTP_OK` e argumento nomeado. Agora casam `::archivedBy(` e
-  `setStatusCode(... HTTP_OK|200 ...)`, contra a decisão §3.3 da spec.
-- **Q-3** — a isenção era da pasta (`Shared/Audit/`, `Shared/Http/`) e passou a ser dos dois
-  arquivos do module, por basename.
-- **Q-4** — a catraca reimplementava `arquivosPhp` e um stripper por `preg_replace` que corrompe
-  `//` dentro de string. Passou a usar o `Tests\Support\ScansPhpSource`, que já existia, usa
-  `token_get_all()` e serve outras cinco catracas.
-- **Q-5** — `lista()` não defendia o contrato que `resolveArquivado()` defende. Registro sem
-  `deleted_at` agora estoura `InvalidArgumentException` nomeada, não `toIso8601String() on null`;
-  filtrar em silêncio ficou fora porque a visão tem peso legal.
-
-As duas catracas corrigidas foram **vistas reprovar** contra as quatro grafias evasivas e **vistas
-não disparar** contra `201`, `2000` e menção em comentário — por arquivo de sonda descartável em
-`app/`, nunca por `git stash`. O `MensagemLiteralTest` reprovou o próprio fix do Q-5 e ganhou uma
-linha em `DEBITO_CONHECIDO` (`ArchivedListing.php:68`), no precedente literal das seis
-`RuntimeException` internas: erro de programador, 500 mascarado, ninguém lê. Suíte fecha em
-**1162 passed / 5 skipped**, Pint `passed`, `generated.ts` e `frontend/` sem diff.
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
@@ -248,11 +199,18 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
-| 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | Item 24 da fila |
+| 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
+| 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
 | 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 | 2026-08-31 | `prontidao-pre-nuvem` (emenda a **P-62**: o pessoal está público e a decisão de visibilidade ficou com o João) | Item 20 da fila |
 | 2026-08-30 | `hardening-i18n-e-erros-api` (paga a **P-61**, `D-07`, `D-18`, `D-36`, `D-38`, `D-58`; abre a **P-70**, a **P-71** e a **P-72**) | Item 7 da fila |
-| 2026-08-30 | `frontend-triagem-dos-audits-do-item-18` (paga a **P-63**; abre a `D-63`..`D-68` e rehospeda a **P-67** na `D-66`) | Item 19 da fila |
+
+> **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
+> "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com
+> ficha na fila desde `14b25b6c`; o `frontend-campo-de-formulario-liga-no-form` nunca teve ficha —
+> nasceu do §3 do review de arquitetura de 2026-09-01 e tomou o rótulo por engano. Decisão do João
+> em 2026-09-02, no fechamento da lane-a: **o 24 é o bloco de backend**, e o registro da lane-c passa
+> a dizer "sem ficha na fila". Nenhum número é reusado nem renumerado.
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando
