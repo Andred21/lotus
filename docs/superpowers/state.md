@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-campo-de-formulario-liga-no-form
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md
 active_plan: docs/superpowers/plans/2026-09-02-frontend-campo-de-formulario-liga-no-form.md
 context_packet: null
-blocker: "review do item 24 (2026-09-02): 2 achados aguardando decisao — Q-1 (catraca ERRO_DE_CAMPO_A_MAO cega para `f.fieldErrors?.x?.[0]`, 🟡/P) e Q-2 (26 eslint-disable de react-hooks/static-components nos call sites, 🟢/P). Mais 2 divergencias documentais spec-vs-codigo para pendencias."
+blocker: null
 lanes:
   lane-a:
     active_feature: null
@@ -47,16 +47,16 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: frontend-campo-de-formulario-liga-no-form   # item 24, promovido pelo Joao em 2026-09-02
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: ../fix-frontend
     branch: refactor/frontend-campo-de-formulario-liga-no-form   # aberta de main@8efd85f2 em 2026-09-02
     active_spec: docs/superpowers/specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md
     active_plan: docs/superpowers/plans/2026-09-02-frontend-campo-de-formulario-liga-no-form.md
     context_packet: null
-    blocker: "review do item 24 (2026-09-02): 2 achados aguardando decisao — Q-1 (catraca ERRO_DE_CAMPO_A_MAO cega para `f.fieldErrors?.x?.[0]`, 🟡/P) e Q-2 (26 eslint-disable de react-hooks/static-components nos call sites, 🟢/P). Mais 2 divergencias documentais spec-vs-codigo para pendencias."
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: frontend-triagem-dos-audits-do-item-18
 last_completed_work_item: frontend-decisoes-de-ui-pendentes
 state_basis_commit: 8efd85f2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-campo-de-formulario-liga-no-form` (item 24) | Frontend | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (aberta de `main@8efd85f2`) | `blocked` (review feito; achados aguardam o João) |
+| `lane-c` | `frontend-campo-de-formulario-liga-no-form` (item 24) | Frontend | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (aberta de `main@8efd85f2`) | `ready_for_closure` (review feito; Q-1 e Q-2 aplicados e reverificados) |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -212,6 +212,25 @@ autorizaram execução: quem promoveu foi o João, aqui.
    é serial (invariante acima), então a colisão se resolve no merge; quem rebasar depois **mantém o
    espelho da própria árvore**. Esta sessão escreveu **só os campos da lane-c** e o espelho — nenhum
    campo de `lane-a` ou `lane-b` foi tocado.
+
+**O review do item 24 rodou em 2026-09-02 e os dois achados foram aplicados no mesmo dia**, com
+aval explícito do João. **Q-1:** o `ERRO_DE_CAMPO_A_MAO` media só `fieldErrors?.x?.[0]` e passava
+limpo por `f.fieldErrors?.x?.[0]` — a grafia do próprio `TurmaConfigCard` antes da migração; o
+seletor agora casa as duas, e o apelido (`const { fieldErrors: fe } = f`) segue fora do alcance,
+escrito no comentário. **Q-2:** o `useFormField` passou a devolver `{ Field }`, porque a regra
+`react-hooks/static-components` só olha tag com nome de identificador — `<campo.Field>` dispensa os
+26 `eslint-disable` sem desligar a regra em arquivo nenhum, e o `DROPDOWN_SEM_NOME` aprendeu a tag
+em `JSXMemberExpression` junto. `pnpm lint`, `pnpm build` e `pnpm test` (734/734) verdes depois da
+correção; commit `98290b2b`.
+
+**Três divergências documentais aguardam a palavra do João antes de virarem ficha em
+`pendencias/abertas.md`** — não são achado de código e não travam o fechamento: (a) a spec §4.2
+manda `useMemo([])` e o código usa `useRef` + dois `eslint-disable react-hooks/refs`, justificados
+no docblock; (b) a spec §7.1 ainda lista o teste de `parse`, que a Q23 revogou; (c) a spec descreve
+o hook devolvendo o componente cru, e a correção da Q-2 mudou o retorno para `{ Field }`. A prova
+de navegador de 2026-09-02 conta a grafia antiga (`<Field `) porque **antecede** a Q-2 — o caminho
+de render é o mesmo componente sob o mesmo `FieldContext`, e a identidade estável segue medida em
+`useFormField.test.tsx`.
 
 **O item 24 entrou no `backlog.md` pelas mãos do João** (acrescentar item na fila é dele, §
 invariante de dono), no mesmo working tree; o commit de promoção apenas o leva ao Git junto da
