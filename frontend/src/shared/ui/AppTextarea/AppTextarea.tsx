@@ -10,9 +10,11 @@ export type AppTextareaProps = InputTextareaProps
  * Associa-se sozinho ao rótulo quando está dentro de um `FormField` (P-37). */
 export const AppTextarea = forwardRef<HTMLTextAreaElement, AppTextareaProps>((props, ref) => {
   const fieldProps = useFieldProps('id')
-  // Fora do spread e com `?? ''`: mesma razão do `AppInputText`.
+  // Fora do spread e com `?? ''` SÓ no valor do bind: mesma razão do
+  // `AppInputText` — solto e sem `value` do chamador, o campo precisa
+  // continuar `undefined` (não-controlado, digitável).
   const bind = useFieldBind((e: ChangeEvent<HTMLTextAreaElement>) => e.target.value)
-  const value = (props.value ?? bind.value ?? '') as InputTextareaProps['value']
+  const value = (props.value ?? ('value' in bind ? (bind.value ?? '') : undefined)) as InputTextareaProps['value']
   const onChange = props.onChange ?? bind.onChange
   return <InputTextarea ref={ref} {...fieldProps} {...props} value={value} onChange={onChange} />
 })

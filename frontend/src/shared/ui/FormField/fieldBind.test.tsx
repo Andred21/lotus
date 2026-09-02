@@ -1,11 +1,20 @@
 import { useState } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { registerPrimeLocales } from '@shared/config/primeLocale'
 import { FormField } from './FormField'
 import { useFieldBind } from './fieldContext'
 import { useFormField } from './useFormField'
 import { AppInputText } from '../AppInputText/AppInputText'
+import { AppTextarea } from '../AppTextarea/AppTextarea'
+import { AppPassword } from '../AppPassword/AppPassword'
 import { AppDropdown } from '../AppDropdown/AppDropdown'
+import { AppDatePicker } from '../AppDatePicker/AppDatePicker'
+
+// O `AppDatePicker` resolve `locale="es"` (gramática default do wrapper) por
+// `localeOption`, que só existe depois de `addLocale` — igual a
+// `fieldAssociation.test.tsx` e `EmissionPanel.test.tsx`.
+beforeAll(registerPrimeLocales)
 
 afterEach(() => {
   cleanup()
@@ -69,9 +78,6 @@ describe('bind pelo FieldContext', () => {
   })
 })
 
-/* eslint-disable react-hooks/static-components -- o `Field` é montado no mesmo
- * arquivo em que o hook roda porque é o que o teste prova; nos call sites reais
- * ele desce como prop e a regra passa limpa. */
 describe('os wrappers de shared/ui pescam o bind', () => {
   type Campos = { rut: string; giro: string | null; tipo: string | null }
 
@@ -81,8 +87,13 @@ describe('os wrappers de shared/ui pescam o bind', () => {
     const Field = useFormField({ form, set, fieldErrors: null, readOnly: false })
     return (
       <>
+        {/* eslint-disable-next-line react-hooks/static-components -- `Field` vem
+            do hook e é montado no mesmo arquivo em que ele roda, só para o
+            teste provar o bind; no call site real desce como prop. */}
         <Field name="rut" label="RUT"><AppInputText /></Field>
+        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
         <Field name="giro" label="Giro"><AppInputText /></Field>
+        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
         <Field name="tipo" label="Tipo">
           <AppDropdown options={[{ value: 'client', label: 'Cliente' }, { value: 'other', label: 'Outro' }]} />
         </Field>
@@ -107,8 +118,83 @@ describe('os wrappers de shared/ui pescam o bind', () => {
   it('AppDropdown recebe o valor do form', () => {
     render(<Tela />)
     expect(screen.getByLabelText('Tipo')).toBeTruthy()
-    // Pelo rótulo VISÍVEL do dropdown, e não por `getByText`: o Prime mantém um
-    // `<select>` oculto com as mesmas opções, então o texto casa duas vezes.
-    expect(document.querySelector('.p-dropdown-label')?.textContent).toBe('Cliente')
+    // `{ ignore: 'option' }`, não `document.querySelector`: o Prime mantém um
+    // `<select>` oculto com as mesmas opções, e ignorar `<option>` descarta
+    // esse duplicado sem sair do escopo da `screen`.
+    expect(screen.getByText('Cliente', { ignore: 'option' })).toBeTruthy()
+  })
+})
+
+describe('outros wrappers de shared/ui pescam o bind', () => {
+  type CamposExtra = { bio: string; senha: string; inicio: string | null }
+
+  function TelaExtra() {
+    const [form, setForm] = useState<CamposExtra>({ bio: 'texto inicial', senha: 'segredo', inicio: '2026-01-15' })
+    const set = <K extends keyof CamposExtra>(k: K, v: CamposExtra[K]) => setForm((f) => ({ ...f, [k]: v }))
+    const Field = useFormField({ form, set, fieldErrors: null, readOnly: false })
+    return (
+      <>
+        {/* eslint-disable-next-line react-hooks/static-components -- `Field` vem
+            do hook e é montado no mesmo arquivo em que ele roda, só para o
+            teste provar o bind; no call site real desce como prop. */}
+        <Field name="bio" label="Bio"><AppTextarea /></Field>
+        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
+        <Field name="senha" label="Senha"><AppPassword /></Field>
+        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
+        <Field name="inicio" label="Início"><AppDatePicker /></Field>
+      </>
+    )
+  }
+
+  it('AppTextarea lê o valor do form e escreve de volta', () => {
+    render(<TelaExtra />)
+    const textarea = screen.getByLabelText('Bio') as HTMLTextAreaElement
+    expect(textarea.value).toBe('texto inicial')
+
+    fireEvent.change(textarea, { target: { value: 'texto novo' } })
+    expect((screen.getByLabelText('Bio') as HTMLTextAreaElement).value).toBe('texto novo')
+  })
+
+  it('AppPassword lê o valor do form e escreve de volta', () => {
+    render(<TelaExtra />)
+    const senha = screen.getByLabelText('Senha') as HTMLInputElement
+    expect(senha.value).toBe('segredo')
+
+    fireEvent.change(senha, { target: { value: 'novaSenha' } })
+    expect((screen.getByLabelText('Senha') as HTMLInputElement).value).toBe('novaSenha')
+  })
+
+  it('AppDatePicker recebe o ISO do form e devolve ISO na mudança', () => {
+    render(<TelaExtra />)
+    const data = screen.getByLabelText('Início') as HTMLInputElement
+    // `es-CL` é a gramática default do wrapper fora de troca de idioma.
+    expect(data.value).toBe('15-01-2026')
+
+    // `fireEvent.input`, não `.change`: o Calendar do Prime pesca o digitado
+    // pelo `onInput` nativo (`onUserInput`, `calendar.cjs.js:572`), não pelo
+    // `onChange` sintético dos outros wrappers.
+    fireEvent.input(data, { target: { value: '20-02-2026' } })
+    fireEvent.blur(data)
+    expect((screen.getByLabelText('Início') as HTMLInputElement).value).toBe('20-02-2026')
+  })
+})
+
+describe('wrapper de texto fora de Field/FormField', () => {
+  it('AppInputText solto e sem value continua digitável (não trava em controlado)', () => {
+    render(<AppInputText aria-label="solto" />)
+    const input = screen.getByLabelText('solto') as HTMLInputElement
+
+    fireEvent.change(input, { target: { value: 'abc' } })
+    expect(input.value).toBe('abc')
+  })
+
+  it("value='' do chamador vence o bind — '' não é nulo", () => {
+    render(
+      <FormField label="RUT" bind={{ value: 'do contexto', onChange: vi.fn() }}>
+        <AppInputText value="" onChange={vi.fn()} />
+      </FormField>,
+    )
+    const input = screen.getByLabelText('RUT') as HTMLInputElement
+    expect(input.value).toBe('')
   })
 })

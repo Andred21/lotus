@@ -1,15 +1,15 @@
 import { createContext, useContext } from 'react'
 
-/**
- * O que o `FormField` publica ao ramo que TEM controle. `null` fora dele: um
- * wrapper usado solto — login, filtro de tabela, célula de edição — não recebe
- * nada e continua exatamente como era.
- */
 /** O que o campo ligado a um form publica ao controle: o valor atual e o
  * setter. `unknown` porque a forma do valor é do domínio, não do canal — quem
  * conhece o tipo é o `Field`, que fecha sobre o `keyof T`. */
 export type FieldBind = { value: unknown; onChange: (raw: unknown) => void }
 
+/**
+ * O que o `FormField` publica ao ramo que TEM controle. `null` fora dele: um
+ * wrapper usado solto — login, filtro de tabela, célula de edição — não recebe
+ * nada e continua exatamente como era.
+ */
 export type FieldContextValue = {
   id: string
   invalid: boolean

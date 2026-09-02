@@ -59,9 +59,11 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     // seria o mesmo defeito da P-37 com outra roupa.
     const fieldProps = useFieldProps('inputId')
     // O `bind` é canal SEPARADO do `id`/`aria-*`: o `fieldProps` acima não muda.
-    // Fora do spread e com `?? ''`, como no `AppInputText`.
+    // Fora do spread e com `?? ''` SÓ no valor do bind, como no `AppInputText`
+    // — solto e sem `value` do chamador, o campo precisa continuar
+    // `undefined` (não-controlado, digitável).
     const bind = useFieldBind((e: ChangeEvent<HTMLInputElement>) => e.target.value)
-    const value = (props.value ?? bind.value ?? '') as PasswordProps['value']
+    const value = (props.value ?? ('value' in bind ? (bind.value ?? '') : undefined)) as PasswordProps['value']
     const onChange = props.onChange ?? bind.onChange
     // Nome acessível do olho. O default do Prime é "Show/Hide Password" em
     // inglês (password.cjs.js:605,614) e chega a TODA tela com senha — o

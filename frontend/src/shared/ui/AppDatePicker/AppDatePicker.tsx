@@ -58,7 +58,8 @@ const PADRAO = GRAMATICA['es-CL']
 /** Wrapper do Calendar. String ISO in/out para não passar dinheiro-de-tempo por
  * conversão de fuso perigosa. Cores vêm do tema (ADR-16). Sem forwardRef: o
  * Calendar do Prime é class component (categoria AppDropdown). */
-export function AppDatePicker({ value: valueProp, onChange: onChangeProp, pt, ...rest }: AppDatePickerProps) {
+export function AppDatePicker(props: AppDatePickerProps) {
+  const { value: valueProp, onChange: onChangeProp, pt, ...rest } = props
   // `useTranslation` só pelo `i18n`: o wrapper não tem texto próprio, mas
   // precisa RE-RENDERIZAR na troca de idioma — ler `i18n.language` de um import
   // solto deixaria o calendário no idioma anterior até a próxima mudança de
@@ -78,7 +79,10 @@ export function AppDatePicker({ value: valueProp, onChange: onChangeProp, pt, ..
   // que trafega aqui é `string | null`, que é o que o form guarda. `null` passa
   // direto — é campo vazio, não texto nulo.
   const bind = useFieldBind((v: string | null) => v)
-  const value = valueProp ?? (bind.value as string | null) ?? null
+  // `'value' in props`, não `??`: aqui `null` é o campo vazio, valor legítimo
+  // — um `value={null}` explícito do chamador precisa vencer o bind, e `??`
+  // o deixaria perder para `bind.value`.
+  const value = 'value' in props ? (valueProp ?? null) : ((bind.value as string | null) ?? null)
   const onChange = onChangeProp ?? (bind.onChange as ((v: string | null) => void) | undefined)
   // `input.root`, com o salto do meio: o `input` do Calendar é um COMPONENTE
   // (InputText), então `ptm('input')` vira o `pt` dele e é o `root` de lá que

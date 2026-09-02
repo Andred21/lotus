@@ -1,8 +1,3 @@
-/* eslint-disable react-hooks/static-components -- o `Field` do `useFormField`
- * É criado por hook, e AQUI ele é montado no mesmo arquivo em que o hook roda:
- * é o único jeito de o teste provar o binding. Nos call sites reais o `Field`
- * desce como prop e a regra passa limpa (medido na execução). O caso de
- * remonte que a regra vigia tem teste próprio neste arquivo. */
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
@@ -44,6 +39,11 @@ function Formulario({
   }
   const Field = useFormField({ form, set, fieldErrors, readOnly })
   return (
+    /* `Field` vem do hook e É montado no mesmo arquivo em que ele roda: é o
+     * único jeito de o teste provar o binding. No call site real desce como
+     * prop e a regra passa limpa (medido na execução). O caso de remonte que
+     * a regra vigia tem teste próprio neste arquivo. */
+    // eslint-disable-next-line react-hooks/static-components
     <Field name="rut" label="RUT">
       <ControleFake />
     </Field>
@@ -101,6 +101,7 @@ describe('useFormField — prop do chamador vence', () => {
     const set = <K extends keyof Campos>(k: K, v: Campos[K]) => setForm((f) => ({ ...f, [k]: v }))
     const Field = useFormField({ form, set, fieldErrors: { rut: ['do contexto'] }, readOnly: true })
     return (
+      // eslint-disable-next-line react-hooks/static-components -- idem ao de cima
       <Field name="rut" label="RUT" error="do chamador" readOnly={readOnly} value="apresentado">
         <ControleFake />
       </Field>

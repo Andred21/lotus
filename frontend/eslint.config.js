@@ -225,7 +225,7 @@ const DROPDOWN_SEM_NOME = {
     ':not(JSXElement[openingElement.name.name=/^(FormField|Field)$/] JSXElement[openingElement.name.name="AppDropdown"])' +
     ':not(:has(JSXOpeningElement > JSXAttribute[name.name=/^(inputId|aria-label|aria-labelledby)$/]))',
   message:
-    'AppDropdown sem nome acessível: dentro de FormField o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
+    'AppDropdown sem nome acessível: dentro de FormField/Field o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
 }
 // Item 19 (R1): `AppButton` sem papel cai no `.p-button` preenchido do Lara —
 // celeste com rótulo navy —, que NÃO é papel deste produto: a ação primária é

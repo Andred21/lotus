@@ -69,8 +69,11 @@ export function useFormField<T>(bundle: FormBundle<T>): FieldComponent<T> {
   atual.current = bundle
 
   const componente = useRef<FieldComponent<T> | null>(null)
-  // eslint-disable-next-line react-hooks/refs -- idem
-  if (!componente.current) {
+  // `== null` e não `!componente.current`: é a saída que a própria regra
+  // `react-hooks/refs` documenta — só a comparação explícita com `null`
+  // dispensa o disable neste ponto; os outros dois abaixo continuam
+  // inevitáveis (ver o docblock acima).
+  if (componente.current == null) {
     componente.current = function Field({ name, label, error, readOnly, value, children }: FieldProps<T>) {
       const { form, set, fieldErrors, readOnly: leituraDoForm } = atual.current
       const bruto = form[name as keyof T]

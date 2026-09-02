@@ -37,7 +37,10 @@ export function AppDropdown(props: DropdownProps) {
   // `null` passa direto: no dropdown é "nada selecionado", não campo de texto
   // vazio. Fora do spread pela razão do `AppInputText`.
   const bind = useFieldBind((e: DropdownChangeEvent) => e.value)
-  const value = props.value ?? bind.value
+  // `'value' in props`, não `??`: aqui `null` é valor legítimo ("nada
+  // selecionado"), não ausência — um `value={null}` explícito do chamador
+  // precisa vencer o bind, e `??` o deixaria perder para `bind.value`.
+  const value = 'value' in props ? props.value : bind.value
   const onChange = props.onChange ?? bind.onChange
   return (
     <Dropdown
