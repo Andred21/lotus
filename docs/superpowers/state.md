@@ -1,14 +1,14 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-a
+focused_lane: lane-c
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: frontend-campo-de-formulario-liga-no-form
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -46,21 +46,21 @@ lanes:
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: frontend-campo-de-formulario-liga-no-form   # item 24, promovido pelo Joao em 2026-09-02
+    workflow_state: planning
+    next_owner: claude
+    next_action: continue_active_planning
     tree: ../fix-frontend
-    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4; fechada e mesclada em 2026-08-30 (PR #87, afe273cf)
-    active_spec: null
+    branch: refactor/frontend-campo-de-formulario-liga-no-form   # aberta de main@8efd85f2 em 2026-09-02
+    active_spec: docs/superpowers/specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-triagem-dos-audits-do-item-18
 last_completed_work_item: frontend-decisoes-de-ui-pendentes
-state_basis_commit: 6e6f4a64
-updated_at: 2026-09-01T23:10:00-03:00
+state_basis_commit: 8efd85f2
+updated_at: 2026-09-02T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,13 +160,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-01
+## Ocupação corrente — 2026-09-02
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado e **mesclado** em 2026-08-30, PR #87, `afe273cf`) | `idle` |
+| `lane-c` | `frontend-campo-de-formulario-liga-no-form` (item 24) | Frontend | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (aberta de `main@8efd85f2`) | `planning` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -189,6 +189,33 @@ na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segu
 
 **O item 12 fica estacionado, nao cancelado.** Ele segue no `backlog.md` (fila nao se mexe durante planejamento), o packet `status: blocked` fica guardado como evidencia e o campo `parked_work_item` da lane-b registra o vinculo. Quando o 10 provisionar o host, o packet do 12 regenera pelo gatilho de staleness que ele mesmo declara: *"um alvo AWS real ser provisionado"*.
 
+
+**A `lane-c` recebeu o item 24 em 2026-09-02** — `frontend-campo-de-formulario-liga-no-form`,
+promovido explicitamente pelo João com a lane em `idle`. `Contexto: não`: as fontes são o §3 do
+review de arquitetura de 2026-09-01 e o próprio código, tudo no repositório. **A spec chegou antes
+da vez do bloco, por decisão registrada na própria spec (Q19/Q20)** — as 23 decisões foram
+aprovadas seção a seção com o João em 2026-09-02 e custam caro de reconstruir; o `CLAUDE.md` §4
+manda planejar just-in-time e é o **plano** que ficou para agora. Nem a spec nem a ficha
+autorizaram execução: quem promoveu foi o João, aqui.
+
+**Duas coisas foram decididas contra o que estava escrito, e ficam registradas:**
+
+1. **A ordem da fila foi invertida com aval explícito.** A ficha do item 24 diz *"depois do bloco
+   do §1 do review"* — o colapso da projeção de arquivamento, no backend, que **ainda não tem ficha
+   no `backlog.md`**. O João optou por rodar as duas frentes **em paralelo**: o 24 nesta árvore
+   (`../fix-frontend`, lane-c) e `backend-projecao-de-arquivados` no main tree (lane-a). A
+   dependência entre os dois é de ordem de leitura do review, não de código: o 24 não toca
+   `backend/` nem `generated.ts`.
+2. **O espelho do topo virou para `lane-c` fora do main tree** — é a **P-55**, e segue o precedente
+   medido de 2026-08-24. **Risco conhecido e aceito:** a lane-a vai promover o bloco de backend no
+   main tree e, se ela também virar o espelho, as duas árvores escrevem o mesmo campo. A integração
+   é serial (invariante acima), então a colisão se resolve no merge; quem rebasar depois **mantém o
+   espelho da própria árvore**. Esta sessão escreveu **só os campos da lane-c** e o espelho — nenhum
+   campo de `lane-a` ou `lane-b` foi tocado.
+
+**O item 24 entrou no `backlog.md` pelas mãos do João** (acrescentar item na fila é dele, §
+invariante de dono), no mesmo working tree; o commit de promoção apenas o leva ao Git junto da
+spec que ele referencia.
 
 ## Itens fechados — ponteiro, não narrativa
 

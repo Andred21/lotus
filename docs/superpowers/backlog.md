@@ -39,10 +39,12 @@
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22, o `17` em
   2026-08-24 e o `21` e o `22` em 2026-08-31 — os dois **abertos pelo João**, recortando por frente
   as onze fichas travadas em decisão que nenhum bloco hospedava; o 21 e o 22 aparecem no topo da
-  fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
-  desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número. O `24` nasceu em
-  2026-09-02, da revisão de arquitetura registrada em
-  `audits/2026-09-02-arquitetura-deepening.html`.
+  fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; e o `24` em
+  2026-09-02, do §3 da revisão de arquitetura registrada em
+  `audits/2026-09-02-arquitetura-deepening.html`, **com desenho já fechado em `specs/`** — exceção
+  ao just-in-time que vale para o plano, não para a spec; o `15` fica queimado, porque chegou a
+  nomear o `BD-15` durante uma inserção que foi
+  desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
 - **O 16 e o 17 chegaram aqui pelo merge da `lane-c` em 2026-08-24.** Até ele, a fila canônica dos
   dois morava na branch `refactor/frontend-revisao-ui` (`eaa9e15c`, `bef4feb3`), por decisão do João
   em 2026-08-22 — duplicá-los no main tree garantiria conflito no merge sem ganho.
@@ -270,6 +272,24 @@ efeito muda de tabela para tabela porque **a reserva não é uma constante**.
 Duas direções a medir nas 12 tabelas, a 1024px: (a) sinal de rolagem no wrapper, para que a
 rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor onde a reserva não
 cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
+
+## 24. `frontend-campo-de-formulario-liga-no-form`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não
+**Fonte:** §3 do review de arquitetura de 2026-09-01 (`main@8efd85f2`).
+**Desenho FECHADO** em `specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md` —
+22 decisões aprovadas com o João em 2026-09-02. **Só o plano fica para a vez do bloco.**
+
+O `FormField` tem interface larga: quatro props por campo (`label`, `error`, `readOnly`, `value`)
+mais `value`/`onChange` no controle dentro dele — 85 call sites reais e 48 extrações
+`fieldErrors?.x?.[0]`. O `FieldContext` já provou o mecanismo na P-37 (55 campos, zero call site
+tocado) mas publica só acessibilidade. Um `useFormField(bundle)` devolve um `Field` tipado em
+`keyof T` que desce como **uma** prop no lugar das quatro, e os 5 wrappers que já leem o contexto
+passam a pescar valor e setter dele. **45 sítios em 13 arquivos** em escopo; aninhado, login,
+só-leitura e o que não tem bundle de form ficam fora, com motivo medido na spec.
+
+**Ordem na fila:** depois do bloco do **§1 do review** (colapsar a projeção de arquivamento, no
+backend) — que **ainda não tem ficha aqui**, apesar de ter desenho fechado no próprio review.
 
 ---
 
