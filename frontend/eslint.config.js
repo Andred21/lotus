@@ -219,6 +219,12 @@ const DISABLED_READONLY_ESTATICO = {
 // baixo com o MESMO `FieldContext.Provider`, então o `inputId` chega ao
 // dropdown do mesmo jeito. Sem esta linha, todo call site migrado para o
 // molde do `ClientGeneralFields` reprovaria por forma, não por defeito real.
+//
+// A guarda casa a GRAFIA da tag, não a origem dela: qualquer JSX chamado
+// `Field` conta como pai válido, e `const F = useFormField(f)` escapa da
+// regra. É o mesmo limite que o `FormField` sempre teve — o seletor é
+// sintático — e não um afrouxamento novo; fica escrito para a próxima task
+// não confundir convenção de nome com verificação de tipo.
 const DROPDOWN_SEM_NOME = {
   selector:
     'JSXElement[openingElement.name.name="AppDropdown"]' +
