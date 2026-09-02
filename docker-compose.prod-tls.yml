@@ -1,0 +1,17 @@
+# Overlay de TLS. Entra ao lado do compose de produção QUANDO o certificado
+# existe (deploy.sh detecta /opt/lotus/nginx/tls.conf + /etc/letsencrypt).
+# Só o nginx muda: ganha a 443 e a conf que redireciona a 80. Bind mounts
+# aqui são de CONFIGURAÇÃO do host (cert, conf, webroot do challenge) —
+# nunca de código; a catraca do working tree segue valendo no arquivo base.
+services:
+  nginx:
+    ports:
+      - "${LOTUS_HTTP_PORT:-80}:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /opt/lotus/nginx/tls.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot-webroot:/var/www/certbot:ro
+
+volumes:
+  certbot-webroot:

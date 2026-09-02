@@ -274,3 +274,24 @@ describe('docker-compose.prod-probe.yml', () => {
     expect(blocoDoServico('app', PROBE)).not.toMatch(/^ {4}image:/m)
   })
 })
+
+describe('docker-compose.prod-tls.yml', () => {
+  const TLS = readFileSync(join(RAIZ, 'docker-compose.prod-tls.yml'), 'utf8')
+
+  it('publica 443 e mantém 80 — o redirect vive no tls.conf, não na retirada da porta', () => {
+    const [ports] = regioesDaChave(blocoDoServico('nginx', TLS), 'ports')
+    expect(ports ?? '').toMatch(/443:443/)
+    expect(ports ?? '').toMatch(/80\}?:80/)
+  })
+
+  it('monta certificado e conf como read-only — o container serve TLS, não administra certificado', () => {
+    const [volumes] = regioesDaChave(blocoDoServico('nginx', TLS), 'volumes')
+    expect(volumes ?? '').toMatch(/\/etc\/letsencrypt:\/etc\/letsencrypt:ro/)
+    expect(volumes ?? '').toMatch(/tls\.conf:\/etc\/nginx\/conf\.d\/default\.conf:ro/)
+    expect(volumes ?? '').toMatch(/certbot-webroot/)
+  })
+
+  it('só toca o serviço nginx — app, mysql e o resto não mudam sob TLS', () => {
+    expect(TLS).not.toMatch(/^ {2}(app|mysql|scheduler|gotenberg|clamav):/m)
+  })
+})
