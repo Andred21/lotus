@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: infra-producao-provisionamento-aws
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -30,14 +30,14 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: ../lotus-infra
     branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
-    active_spec: null      # a spec-runbook de 2026-09-01 foi descartada com o reset; vive em archive/infra-producao-provisionamento-aws-v1
-    active_plan: null      # idem o plano de 917 linhas
-    context_packet: null   # o packet de 2026-08-26 ja estava superado; o brainstorming decide se regenera
+    active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md   # spec v2, do brainstorming de 2026-09-02
+    active_plan: null      # o plano v1 de 917 linhas foi descartado; o v2 sai do writing-plans
+    context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
     blocker: null
     resume_state: null
     arquivos_do_descarte:
@@ -62,7 +62,7 @@ lanes:
     last_completed_work_item: frontend-triagem-dos-audits-do-item-18
 last_completed_work_item: frontend-decisoes-de-ui-pendentes
 state_basis_commit: 8efd85f2
-updated_at: 2026-09-02T11:30:00-03:00
+updated_at: 2026-09-02T14:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -167,7 +167,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; o descarte está em `archive/infra-producao-provisionamento-aws-v1` | `ready_for_planning` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; o descarte está em `archive/infra-producao-provisionamento-aws-v1` | `planning` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado e **mesclado** em 2026-08-30, PR #87, `afe273cf`) | `idle` |
 
 
