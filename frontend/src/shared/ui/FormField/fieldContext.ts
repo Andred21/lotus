@@ -5,10 +5,18 @@ import { createContext, useContext } from 'react'
  * wrapper usado solto — login, filtro de tabela, célula de edição — não recebe
  * nada e continua exatamente como era.
  */
+/** O que o campo ligado a um form publica ao controle: o valor atual e o
+ * setter. `unknown` porque a forma do valor é do domínio, não do canal — quem
+ * conhece o tipo é o `Field`, que fecha sobre o `keyof T`. */
+export type FieldBind = { value: unknown; onChange: (raw: unknown) => void }
+
 export type FieldContextValue = {
   id: string
   invalid: boolean
   describedBy?: string
+  /** Ausente fora de um campo ligado a form: o wrapper continua exatamente
+   * como era, controlado pelo call site. */
+  bind?: FieldBind
 }
 
 export const FieldContext = createContext<FieldContextValue | null>(null)
@@ -75,4 +83,25 @@ export function useSplitFieldProps(idProp: 'id' | 'inputId') {
   const field = useContext(FieldContext)
   if (!field) return { control: {}, input: {} }
   return { control: { [idProp]: field.id, ...invalidProp(field) }, input: ariaProps(field) }
+}
+
+/**
+ * Valor e setter para o wrapper pendurar no próprio controle.
+ *
+ * `fromEvent` existe pela mesma razão do `idProp`: a forma do evento é do
+ * componente do Prime, não do canal — `e.target.value` no `InputText`, `e.value`
+ * no `Dropdown`, o valor já normalizado no `AppDatePicker`. Quem sabe disso é o
+ * wrapper.
+ *
+ * **O retorno NÃO se aplica por spread junto das props do chamador.** `value` e
+ * `onChange` entram por merge explícito (`props.value ?? bind.value`), porque um
+ * `value={undefined}` explícito vencendo pelo spread transforma input controlado
+ * em não-controlado — aviso do React e cursor perdido. `''` do chamador continua
+ * vencendo, porque `''` não é nulo.
+ */
+export function useFieldBind<E>(fromEvent: (e: E) => unknown) {
+  const field = useContext(FieldContext)
+  const bind = field?.bind
+  if (!bind) return {}
+  return { value: bind.value, onChange: (e: E) => bind.onChange(fromEvent(e)) }
 }

@@ -1,6 +1,6 @@
 import { useId, type ReactNode } from 'react'
 import { dangerSurface, dangerText } from '../../styles/tokens'
-import { FieldContext, type FieldContextValue } from './fieldContext'
+import { FieldContext, type FieldBind, type FieldContextValue } from './fieldContext'
 
 /** Texto de leitura: quebra linha, seleciona e copia. Usa `--text-color` e não
  * o secundário — leitura não é texto de apoio, e o cinza de desabilitado é
@@ -29,6 +29,9 @@ export type FormFieldProps = {
    * `<AppInputText disabled readOnly>`, que é o próprio débito do §4 (review do
    * BD-3, Q-1). Com `readOnly` e sem `children` o campo é texto e ponto. */
   children?: ReactNode
+  /** Valor e setter do form, quando o campo veio de um `Field` (§4.1 da spec).
+   * Ausente no uso solto — login, filtro de tabela, célula de edição. */
+  bind?: FieldBind
 }
 
 /**
@@ -44,13 +47,14 @@ export type FormFieldProps = {
  * a própria porta (`id` ou `inputId`) — ver `fieldContext.ts`. Prop do chamador
  * vence a do contexto, sempre.
  */
-export function FormField({ label, error, readOnly, value, children }: FormFieldProps) {
+export function FormField({ label, error, readOnly, value, bind, children }: FormFieldProps) {
   const id = useId()
   const errorId = `${id}-error`
   const field: FieldContextValue = {
     id,
     invalid: !!error,
     describedBy: error ? errorId : undefined,
+    bind,
   }
 
   return (
