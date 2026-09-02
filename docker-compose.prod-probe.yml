@@ -1,37 +1,21 @@
 # Overlay de SONDA. Existe só para provar o runtime de produção nesta máquina:
-# acrescenta os três serviços que produção NÃO tem, porque lá eles são RDS, S3 e
-# SES. Arquivo separado e não `profiles:` de propósito (spec D4) — assim o
-# arquivo que vai ao servidor nunca carrega a definição de um MySQL de dev, e o
-# que ele não tem fica visível no diff.
+# acrescenta o que produção NÃO tem — MinIO (lá é S3 real) e Mailpit (lá é
+# `MAIL_MAILER=log` até o bloco de SES). O MySQL SAIU daqui em 2026-09: pela
+# revisão do ADR-09 ele é serviço de produção e mora no arquivo base. Arquivo
+# separado e não `profiles:` de propósito (spec D4) — o que o servidor não
+# recebe fica visível no diff.
 #
 # Uso:
 #   LOTUS_ENV_FILE=./docker/probe.env LOTUS_HTTP_PORT=8081 \
 #     docker compose -f docker-compose.prod.yml -f docker-compose.prod-probe.yml up -d
 services:
   app:
-    # Só o mysql ganha service_healthy: o app abre conexão com ele já no
-    # arranque (SESSION_DRIVER/CACHE_STORE/QUEUE_CONNECTION=database, e o
-    # migrate roda logo em seguida). gotenberg e minio são consumidos sob
-    # demanda, em request, então service_started (o default da forma curta)
-    # já basta para eles.
+    # Só o acréscimo do minio: o mysql já vem do compose de produção com
+    # service_healthy, e o merge de mapas do Compose soma este depends_on ao
+    # de lá. minio é consumido sob demanda, em request, então service_started
+    # basta.
     depends_on:
-      gotenberg: {condition: service_started}
-      minio:     {condition: service_started}
-      mysql:     {condition: service_healthy}
-
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: lotus
-      MYSQL_ROOT_PASSWORD: secret
-    healthcheck:
-      # -h 127.0.0.1 força TCP: sem ele o mysqladmin fala pelo socket Unix, que
-      # a imagem oficial do MySQL 8 abre ANTES do listener TCP. O healthcheck
-      # ficava verde enquanto o `app` ainda tomava Connection refused na porta
-      # 3306 — corrida rara, mas real, medida nesta máquina.
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-psecret"]
-      interval: 10s
-      retries: 5
+      minio: {condition: service_started}
 
   minio:
     image: minio/minio

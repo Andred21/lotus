@@ -1,10 +1,13 @@
 # Runtime de PRODUÇÃO. O compose de dev (docker-compose.yml) continua existindo
 # e não é tocado: são arquivos com públicos diferentes.
 #
-# O que este arquivo NÃO tem é tão deliberado quanto o que ele tem — sem MySQL
-# (RDS), sem MinIO (S3), sem Mailpit (SES), sem volume de código e sem worker de
-# fila. O último foi medido, não suposto: SESSION_DRIVER, CACHE_STORE e
-# QUEUE_CONNECTION são `database`, e nenhuma classe implementa ShouldQueue.
+# O que este arquivo tem e o que ele NÃO tem são igualmente deliberados. TEM
+# MySQL desde a revisão 2026-09 do ADR-09 (spec v2 do item 10, decisão D2): o
+# teto de custo de US$ 30/mês descartou o RDS, e a mitigação é o backup diário
+# provado por restore (deploy/bin/backup-db.sh). NÃO tem MinIO (S3 real), nem
+# Mailpit (`MAIL_MAILER=log` até o bloco de SES), nem volume de código, nem
+# worker de fila. O último foi medido, não suposto: SESSION_DRIVER, CACHE_STORE
+# e QUEUE_CONNECTION são `database`, e nenhuma classe implementa ShouldQueue.
 
 # LOG_CHANNEL=stderr (spec D9) tirou o log do disco da aplicação e o entregou ao
 # Docker — que, com o driver json-file default, grava em disco do MESMO jeito e
@@ -29,7 +32,11 @@ services:
     # caminho de produção; a prova local sobrescreve a variável.
     env_file: ${LOTUS_ENV_FILE:-/opt/lotus/.env}
     restart: unless-stopped
-    depends_on: [gotenberg, clamav]
+    mem_limit: 768m
+    depends_on:
+      gotenberg: {condition: service_started}
+      clamav: {condition: service_started}
+      mysql: {condition: service_healthy}
     logging: *logging
 
   # O runner do agendador (spec §4.4). Antes deste bloco NADA agendava nada no
@@ -60,8 +67,37 @@ services:
     env_file: ${LOTUS_ENV_FILE:-/opt/lotus/.env}
     command: ["php", "artisan", "schedule:work"]
     restart: unless-stopped
-    depends_on: [app]
+    mem_limit: 384m
+    depends_on:
+      app: {condition: service_started}
+      mysql: {condition: service_healthy}
     logging: *logging
+
+  # MySQL em container no host único — revisão 2026-09 do ADR-09 (spec v2 do
+  # item 10, D2): o teto de custo (US$ 30/mês) descartou o RDS. A mitigação
+  # mora em deploy/bin/backup-db.sh (dump diário para o S3, restore provado)
+  # e o gatilho de reversão está escrito na própria revisão do ADR.
+  # 3306 NÃO é publicada: só a rede interna do Compose alcança o banco.
+  # Digest do ÍNDICE multi-arch (amd64 + arm64/v8, medido em 2026-09-02): o host
+  # de produção é t4g/Graviton e um digest de arquitetura única não subiria lá.
+  mysql:
+    image: mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+    env_file: ${LOTUS_ENV_FILE:-/opt/lotus/.env}
+    restart: unless-stopped
+    mem_limit: 512m
+    logging: *logging
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # -h 127.0.0.1 força TCP: a imagem abre o socket Unix ANTES do listener
+      # TCP e o healthcheck ficaria verde com o app ainda tomando Connection
+      # refused (medido em 2026-08-29, no overlay de sonda). A senha vem do
+      # ambiente do container ($$ escapa do interpolador do Compose).
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   nginx:
     image: ${LOTUS_WEB_IMAGE:-lotus-web:local}
@@ -71,6 +107,7 @@ services:
       target: web
     ports: ["${LOTUS_HTTP_PORT:-80}:80"]
     restart: unless-stopped
+    mem_limit: 128m
     depends_on: [app]
     logging: *logging
     # O healthcheck atravessa o fastcgi até o /up do Laravel, então prova a
@@ -92,6 +129,7 @@ services:
   gotenberg:
     image: gotenberg/gotenberg:8
     restart: unless-stopped
+    mem_limit: 768m
     logging: *logging
     # Medido nesta task: a imagem traz curl (`command -v curl` -> /usr/bin/curl).
     healthcheck:
@@ -103,6 +141,7 @@ services:
   clamav:
     image: clamav/clamav:1.4
     restart: unless-stopped
+    mem_limit: 768m
     logging: *logging
     # Script que a própria imagem traz (medido): faz PING/PONG na 3310.
     healthcheck:
@@ -111,3 +150,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+volumes:
+  mysql-data:

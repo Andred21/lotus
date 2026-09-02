@@ -27,7 +27,7 @@ import { join, resolve } from 'node:path'
 const RAIZ = resolve(__dirname, '..', '..')
 const PROD = readFileSync(join(RAIZ, 'docker-compose.prod.yml'), 'utf8')
 
-const SERVICOS_DE_DEV = ['mysql', 'minio', 'createbuckets', 'mailpit']
+const SERVICOS_DE_DEV = ['minio', 'createbuckets', 'mailpit']
 const CHAVES_SENSIVEIS = ['APP_KEY', 'DB_PASSWORD', 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'MAIL_PASSWORD']
 
 /**
@@ -199,6 +199,39 @@ describe('docker-compose.prod.yml', () => {
     const [envFile] = regioesDaChave(bloco, 'env_file')
     expect(envFile ?? '').toMatch(/\$\{LOTUS_ENV_FILE\b/)
   })
+
+  it('declara o mysql com imagem fixada por digest, sem porta publicada e com dado em volume nomeado — a revisão 2026-09 do ADR-09', () => {
+    const bloco = blocoDoServico('mysql')
+    expect(bloco).toMatch(/^ {4}image: mysql:8\.0@sha256:[0-9a-f]{64}$/m)
+    // 3306 NUNCA publicada: porta só na rede interna do Compose.
+    expect(regioesDaChave(bloco, 'ports')).toHaveLength(0)
+    // Dado persistente em volume NOMEADO (bind mount já é proibido acima).
+    const [volumes] = regioesDaChave(bloco, 'volumes')
+    expect(volumes ?? '').toMatch(/mysql-data:\/var\/lib\/mysql/)
+    // Env trocável, como app/scheduler — MYSQL_* vem do env_file do servidor.
+    const [envFile] = regioesDaChave(bloco, 'env_file')
+    expect(envFile ?? '').toMatch(/\$\{LOTUS_ENV_FILE\b/)
+  })
+
+  it('força TCP no healthcheck do mysql e lê a senha do ambiente — socket Unix abre antes do listener e senha literal é segredo em repo', () => {
+    const [health] = regioesDaChave(blocoDoServico('mysql'), 'healthcheck')
+    expect(health ?? '').toMatch(/-h["',\s]+127\.0\.0\.1/)
+    expect(health ?? '').toMatch(/MYSQL_ROOT_PASSWORD/)
+    expect(health ?? '').not.toMatch(/-p['"]?secret/)
+  })
+
+  it('faz app e scheduler esperarem o mysql por service_healthy — a corrida do migrate contra o listener TCP foi medida', () => {
+    for (const servico of ['app', 'scheduler']) {
+      const [dependsOn] = regioesDaChave(blocoDoServico(servico), 'depends_on')
+      expect(dependsOn ?? '').toMatch(/mysql:\s*\{?\s*condition:\s*service_healthy\b/)
+    }
+  })
+
+  it('põe teto de memória em todo serviço — t4g.small tem 2 GiB e OOM sem teto derruba o vizinho, não o culpado', () => {
+    for (const servico of ['app', 'scheduler', 'nginx', 'mysql', 'gotenberg', 'clamav']) {
+      expect(blocoDoServico(servico)).toMatch(/^ {4}mem_limit: /m)
+    }
+  })
 })
 
 describe('docker-compose.prod-probe.yml', () => {
@@ -229,14 +262,8 @@ describe('docker-compose.prod-probe.yml', () => {
     }
   })
 
-  it('espera o mysql por service_healthy, e não pela forma curta — a corrida do migrate contra o listener TCP foi medida', () => {
-    // A forma curta (`depends_on: [mysql]`) normaliza para service_started, e o
-    // healthcheck existiria sem ninguém consumindo: `up -d` seguido de
-    // `migrate --force` sem sleep dava SQLSTATE[HY000] [2002] Connection
-    // refused. A forma longa foi escrita por causa dessa medição; sem esta
-    // asserção, voltar para a curta não reprova nada.
-    const [dependsOnDoApp] = regioesDaChave(blocoDoServico('app', PROBE), 'depends_on')
-    expect(dependsOnDoApp ?? '').toMatch(/mysql:\s*\{?\s*condition:\s*service_healthy\b/)
+  it('não redeclara o mysql — desde a revisão 2026-09 do ADR-09 ele mora no compose de produção', () => {
+    expect(PROBE).not.toMatch(/^\s{2}mysql:/m)
   })
 
   it('não redefine image: no app do overlay', () => {
