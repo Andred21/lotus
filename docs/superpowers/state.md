@@ -3,27 +3,27 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: backend-projecao-de-arquivados
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
 active_plan: null
 context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: backend-projecao-de-arquivados   # item 24, promovido explicitamente pelo João em 2026-09-02
+    workflow_state: planning
+    next_owner: claude
+    next_action: continue_active_planning
     tree: main-tree
-    branch: —   # o item 21 fechou e mesclou em 2026-09-01 (PR #91, merge 6e6f4a64); a branch refactor/frontend-decisoes-de-ui-pendentes foi apagada
-    active_spec: null
+    branch: refactor/backend-projecao-de-arquivados   # aberta de main@14b25b6c em 2026-09-02
+    active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
     active_plan: null
-    context_packet: null
+    context_packet: null   # item `Contexto: não` — a fonte é o audit versionado de 2026-09-02
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-decisoes-de-ui-pendentes   # item 21, fechado em 2026-09-01
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
+| `lane-a` | `backend-projecao-de-arquivados` (item 24) | Backend | main tree | `refactor/backend-projecao-de-arquivados` (de `main@14b25b6c`) | `planning` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (item 24 **fechado** em 2026-09-02; **PR #95** aberta, aguardando merge) | `idle` |
 
@@ -174,6 +174,16 @@ disjuntas, colisão mínima de arquivos:
 > linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
+
+**A `lane-a` recebeu o item 24 em 2026-09-02** — `backend-projecao-de-arquivados`, promovido
+explicitamente pelo João com a lane em `idle`. É `Contexto: não`, então nasce direto em
+`ready_for_planning`, sem rota Codex: a fonte única é a revisão de arquitetura de 2026-09-02
+(`audits/2026-09-02-arquitetura-deepening.html`, candidato 1), **versionada** — a decisão inicial de
+mantê-la só como contexto local foi revertida pelo João no mesmo dia, e o audit entrou em `main` no
+commit `14b25b6c` junto com o próprio item 24. Toca `backend/`, então roda no main tree pela P-03. A
+branch sai de `main@14b25b6c`; os dois commits de doc que a antecedem entram em `origin/main` pela
+**PR #93**, pelo caminho do `CONTRIBUINDO.md` — `git push origin main` é recusado pelo `pre-push` e o
+job `procedencia` reprovaria o commit sem PR associado.
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
