@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: backend-projecao-de-arquivados
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
 active_plan: docs/superpowers/plans/2026-09-02-backend-projecao-de-arquivados.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: backend-projecao-de-arquivados   # item 24, promovido explicitamente pelo João em 2026-09-02
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: refactor/backend-projecao-de-arquivados   # aberta de main@14b25b6c em 2026-09-02
     active_spec: docs/superpowers/specs/2026-09-02-backend-projecao-de-arquivados-design.md
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `backend-projecao-de-arquivados` (item 24) | Backend | main tree | `refactor/backend-projecao-de-arquivados` (de `main@14b25b6c`) | `executing` |
+| `lane-a` | `backend-projecao-de-arquivados` (item 24) | Backend | main tree | `refactor/backend-projecao-de-arquivados` (de `main@14b25b6c`) | `ready_for_review` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (item 24 **fechado** em 2026-09-02; **PR #95** aberta, aguardando merge) | `idle` |
 
@@ -184,6 +184,16 @@ commit `14b25b6c` junto com o próprio item 24. Toca `backend/`, então roda no 
 branch sai de `main@14b25b6c`; os dois commits de doc que a antecedem entram em `origin/main` pela
 **PR #93**, pelo caminho do `CONTRIBUINDO.md` — `git push origin main` é recusado pelo `pre-push` e o
 job `procedencia` reprovaria o commit sem PR associado.
+
+**As 8 tasks do plano fecharam em 2026-09-02**, via `subagent-driven-development` — implementer +
+review por task (spec + qualidade), sonda negativa provada nas duas catracas (Task 7, por `cp` no
+scratchpad, nunca `git stash`) e gate de medição (Task 8) sem exigir correção. Um achado Important
+do review da Task 4 (docblock "spec D5" apagado do `QuoteController::archived()` pelo texto literal
+do plano) foi levado ao João em vez de decidido sozinho — restaurar, per decisão dele — porque
+esbarrava no texto do próprio plano, e a skill manda perguntar nesse caso, não silenciar nem
+decidir. Suíte fecha em 1161 passed / 5 skipped (main mede 1149; +12 das Tasks 1, 2, 3 e 7).
+`generated.ts`, os 70 testes de endpoint e o frontend inteiro sem diff contra `main`. Lane sobe para
+`ready_for_review`; a review do bloco é a próxima instrução, não automática.
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
