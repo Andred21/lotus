@@ -1,12 +1,12 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-a
+focused_lane: lane-b
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: infra-producao-provisionamento-aws
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -29,19 +29,21 @@ lanes:
     last_completed_work_item: frontend-decisoes-de-ui-pendentes   # item 21, fechado em 2026-09-01
   lane-b:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: infra-producao-provisionamento-aws
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../lotus-infra
-    branch: chore/prontidao-pre-nuvem   # criada de infra/producao-provisionamento-aws@50f3a1f3 em 2026-08-29; main@37e0e2d4 mesclada para dentro (5b121aaa); fatia 1 mesclou no PR #86 (308edc50) e a branch segue viva para a PR 2 do fechamento
-    active_spec: null
-    active_plan: null
-    context_packet: null
+    branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
+    active_spec: null      # a spec-runbook de 2026-09-01 foi descartada com o reset; vive em archive/infra-producao-provisionamento-aws-v1
+    active_plan: null      # idem o plano de 917 linhas
+    context_packet: null   # o packet de 2026-08-26 ja estava superado; o brainstorming decide se regenera
     blocker: null
     resume_state: null
+    arquivos_do_descarte:
+      - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
+      - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
     parked_work_items:
-      - infra-producao-provisionamento-aws   # item 10, ready_for_planning em 2026-08-26; retoma apos este bloco; packet partial em context-packets/2026-08-26-infra-producao-provisionamento-aws.md
       - cicd-promocao-deploy-e-rollback      # item 12, blocked desde 2026-08-26 (nao ha host); packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
@@ -59,8 +61,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-triagem-dos-audits-do-item-18
 last_completed_work_item: frontend-decisoes-de-ui-pendentes
-state_basis_commit: 6e6f4a64
-updated_at: 2026-09-01T23:10:00-03:00
+state_basis_commit: 8efd85f2
+updated_at: 2026-09-02T11:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,12 +162,12 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-01
+## Ocupação corrente — 2026-09-02
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
-| `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; o descarte está em `archive/infra-producao-provisionamento-aws-v1` | `ready_for_planning` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado e **mesclado** em 2026-08-30, PR #87, `afe273cf`) | `idle` |
 
 
@@ -188,6 +190,63 @@ na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segu
 **O item 10 assumiu a `lane-b` em 2026-08-26** — `infra-producao-provisionamento-aws`, promovido explicitamente pelo Joao **depois** de o item 12 voltar `blocked` por depender dele. E a saida escolhida entre as tres oferecidas: provisionar antes, em vez de recortar o 12 num workflow que nunca roda. O item 10 tambem e `Contexto: sim`, entao nasce em `context_required`. A branch `infra/producao-provisionamento-aws` sai da propria `cicd/promocao-deploy-e-rollback@10030c65`, e nao da `main`, **de proposito**: o packet do item 12 e o registro do bloqueio viajam junto e chegam a `main` no merge, para que ninguem refaca a medicao. **As quatro decisoes abertas (regiao, tamanho da EC2, DNS/SES + canal de alerta, teto de custo) nao bloqueiam o planejamento** — o proprio item 10 diz isso por escrito; cada uma bloqueia o recurso correspondente, e elas se fecham no brainstorming, com a evidencia de custo e latencia que o packet trouxer.
 
 **O item 12 fica estacionado, nao cancelado.** Ele segue no `backlog.md` (fila nao se mexe durante planejamento), o packet `status: blocked` fica guardado como evidencia e o campo `parked_work_item` da lane-b registra o vinculo. Quando o 10 provisionar o host, o packet do 12 regenera pelo gatilho de staleness que ele mesmo declara: *"um alvo AWS real ser provisionado"*.
+
+## O item 10 foi desfeito e volta ao planejamento — 2026-09-02
+
+**Decisão do João:** descartar tudo que a `lane-b` produziu para o item 10 e **replanejar do zero,
+com brainstorming de verdade**. Não foi correção de defeito — o que estava feito passava nos
+próprios aceites. Foi mudança de premissa.
+
+**O que foi descartado, e onde está.** Nada foi apagado; duas branches de arquivo guardam o estado
+íntegro e citável por SHA:
+
+- **`archive/infra-producao-provisionamento-aws-v1`** (`305b6ca4`) — 11 commits, 13 arquivos,
+  +2057/−45: a spec-runbook (525 linhas), o plano (917), o arquivo de gates (319), a revisão
+  2026-09 do ADR-09, o MySQL no `docker-compose.prod.yml` com a sonda herdando o serviço, o
+  `deploy/bin/backup-db.sh`, os dois confs de nginx e o overlay 443.
+- **`archive/site-contact-form-v1`** (`6b643710`) — a R5, `POST /api/public/contact`, com domínio
+  `Site`, `SiteCors`, throttle, honeypot e sete testes. Estava **provada end-to-end** contra a API
+  real e mesmo assim entrou no descarte, por decisão explícita: a rota nasceu de uma spec que não
+  vale mais, e voltar a ela pelo replanejamento é mais barato que herdar desenho órfão.
+
+A branch de trabalho `infra/producao-provisionamento-aws` foi **resetada para `main@8efd85f2`** e a
+`feat/site-contact-form` foi apagada do main tree, que voltou para `main`.
+
+**Os quatro motivos** — todos declarados pelo João, e é isso que o brainstorming tem de atacar:
+
+1. **O GATE-2 derrubou a premissa da Fase 0.** A conta Gatika **já é conta-membro de outra
+   organização**, e conta-membro não cria organização. O isolamento por AWS Organizations, que era
+   a fundação do desenho, não é executável como estava escrito.
+2. **A arquitetura volta à mesa** — RDS vs MySQL em container, EC2 vs outra coisa, tamanho, custo,
+   e a RNF-DIS-02 (redundância), que segue `unresolved` e que uma EC2 única não satisfaz.
+3. **O escopo era grande demais** — dez fases num bloco só: conta, rede, host, banco, DNS, TLS,
+   e-mail, alarmes e o site institucional. Recortar em blocos que fechem sozinhos.
+4. **A spec veio pronta de fora.** Entrou medida e emendada, mas sem brainstorming — as
+   alternativas nunca estiveram na mesa.
+
+**A medição do mundo sobrevive ao descarte, porque é fato e não desenho.** Vale para qualquer
+arquitetura que o replanejamento escolher, e remedir custa tempo e risco de esquecer:
+
+- **Conta AWS:** a Gatika é conta-membro de outra organização. A pergunta que decide o isolamento
+  virou *de quem é a management account* — mede-se com `aws organizations describe-organization`
+  (o CloudShell já traz o CLI; nesta máquina o AWS CLI **não está instalado**).
+- **DNS de `lotusotec.cl`** (medido de fora, 2026-09-02): NS em `ns1–ns4.stackdns.com`; **MX no
+  Google Workspace**; SPF `v=spf1 include:_spf.google.com include:spf.stackmail.com -all` —
+  **`-all`, hard fail**, então quem enviar em nome do domínio sem estar na lista é **rejeitado**;
+  **sem DMARC**; sem DKIM em `google._domainkey`; apex e `www` em `185.146.167.195`; `mail` →
+  `ghs.googlehosted.com`; `autodiscover` → `autodiscover.stackmail.com`; `ftp` →
+  `ftp.us.stackcp.com`; e **existe curinga `*.lotusotec.cl`**, que faz qualquer nome resolver para
+  o host WordPress — logo, depois de uma migração de zona, "resolve" deixa de ser prova de que a
+  migração ficou completa.
+- **Imagens:** o job `image` roda no espelho corporativo, então o par
+  `ghcr.io/gatika-cl/lotus-{app,web}:<SHA>` existe para o SHA do **espelho**, não o do fork —
+  medido: manifesto existe para `d0d8db50` e não para `de511ad9`.
+- **Backend em worktree não prova nada** (P-03): o compose monta o main tree. Vale para qualquer
+  recorte que o novo plano faça.
+
+**Estado agora:** `ready_for_planning`, `active_spec`/`active_plan`/`context_packet` todos `null`.
+A próxima ação é `/planejar-bloco` para `infra-producao-provisionamento-aws`, e o brainstorming
+começa pelos quatro motivos acima — não pela spec descartada.
 
 
 ## Itens fechados — ponteiro, não narrativa
