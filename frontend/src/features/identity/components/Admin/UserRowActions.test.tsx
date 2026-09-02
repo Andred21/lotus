@@ -16,7 +16,6 @@ vi.mock('react-i18next', async (importOriginal) => {
 })
 
 afterEach(() => {
-  cleanup()
   useSessionStore.setState({ user: null, status: 'unauthenticated' })
 })
 

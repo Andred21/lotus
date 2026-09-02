@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthPanel } from './AuthPanel'
@@ -33,10 +33,6 @@ function renderPanel(entry: string) {
     </QueryClientProvider>,
   )
 }
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('AuthPanel', () => {
   it('em /login mostra os campos do login', () => {

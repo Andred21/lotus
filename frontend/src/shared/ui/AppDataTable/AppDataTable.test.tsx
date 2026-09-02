@@ -1,5 +1,5 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, screen } from '@testing-library/react'
 import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
@@ -37,7 +37,6 @@ function TabelaDeArquivados() {
 beforeEach(async () => {
   await i18n.changeLanguage('es-CL')
 })
-afterEach(cleanup)
 afterAll(async () => {
   await i18n.changeLanguage('es-CL')
 })

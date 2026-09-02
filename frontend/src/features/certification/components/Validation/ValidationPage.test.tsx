@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { ValidationState } from '../../hooks/useValidationPage'
 import { ValidationPage } from './ValidationPage'
@@ -55,10 +55,6 @@ function renderPage() {
 
 beforeEach(() => {
   validation.current = { kind: 'loading' }
-})
-
-afterEach(() => {
-  cleanup()
 })
 
 describe('ValidationPage titula todos os seus estados', () => {

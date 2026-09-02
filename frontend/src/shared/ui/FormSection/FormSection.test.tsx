@@ -1,9 +1,7 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { FormSection } from './FormSection'
 import { sectionLabelClass } from '../typography'
-
-afterEach(cleanup)
 
 /**
  * A P-36 já foi reaberta três vezes, sempre pela mesma via: o título de seção

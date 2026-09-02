@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import type { Page, PageMeta } from '@shared/api/page'
@@ -32,13 +32,16 @@ const linhas: Row[] = [
   { id: 2, name: 'Bruno' },
 ]
 
-/* `cleanup()` antes de devolver os timers reais: o hook fica montado com o
- * `setTimeout` do debounce agendado, e ele dispara DEPOIS que o vitest destrói
- * o jsdom do arquivo — `ReferenceError: window is not defined`, que reprova a
- * rodada inteira sem reprovar teste nenhum. O repositório não tem `setupFiles`,
- * então o cleanup é por arquivo, como em `AppCard.test.tsx`. */
+/* `vi.useRealTimers()` sem `cleanup()`: o desmonte é global desde 2026-09-02
+ * (`src/test-setup.ts`, P-69) e o vitest roda `afterEach` em ordem INVERSA de
+ * registro — este hook primeiro, o do setup depois.
+ *
+ * O comentário anterior afirmava que sem o `cleanup()` daqui o `setTimeout` do
+ * debounce disparava depois da destruição do jsdom e matava a rodada com
+ * `ReferenceError: window is not defined`. Medido em 2026-09-02, no vitest
+ * 4.1.10: não reproduz — a suíte inteira passa sem `setupFiles` E sem este
+ * `cleanup()`. Fica registrado para ninguém remedir. */
 afterEach(() => {
-  cleanup()
   vi.useRealTimers()
 })
 

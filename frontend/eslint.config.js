@@ -252,6 +252,26 @@ const ERRO_DE_CAMPO_A_MAO = {
     'Erro de campo extraído à mão: use <Field name="x"> e o erro vem do form (spec do item 24). A prop `error` fica para a chave que NÃO é o nome do campo.',
 }
 
+// P-69: o desmonte é do `setupFiles`, não de cada arquivo. A grafia manual era
+// o molde que se copiava do vizinho — 31 arquivos a escreviam, 96 não, e quem
+// escrevia teste novo herdava a decisão de quem escreveu o anterior.
+//
+// Descendente, e não `> Identifier`, porque as DUAS grafias vivas precisam
+// cair: `afterEach(cleanup)` (28 arquivos) e `afterEach(() => cleanup())`
+// (SidebarItem, PendenciasList) — na segunda o nome aparece como callee de uma
+// CallExpression dentro da arrow, e um seletor de filho direto a deixaria
+// passar. O que ela NÃO pega, dito para ninguém supor cobertura que não existe:
+// apelido (`const desmontar = cleanup; afterEach(desmontar)`). Casa grafia, não
+// origem — mesmo limite do `DROPDOWN_SEM_NOME` e do `ERRO_DE_CAMPO_A_MAO`.
+//
+// O par que a sustenta é `tests/desmonte-global.test.ts`: sem ele, apagar o
+// `setupFiles` deixaria esta proibição de pé sobre nada.
+const CLEANUP_A_MAO = {
+  selector: 'CallExpression[callee.name="afterEach"] Identifier[name="cleanup"]',
+  message:
+    'Desmonte à mão: o `afterEach(cleanup)` é global (src/test-setup.ts, P-69). Apague a linha e o import — repeti-la aqui não muda comportamento e faz o próximo copiar o molde.',
+}
+
 // Os arquivos que o item 24 deixou fora POR MEDIÇÃO (spec §2), e que por isso
 // seguem extraindo o erro à mão. Não é dívida esquecida: é o escopo escrito.
 // Particiona o mesmo glob do bloco de componente, exatamente como `CATRACA_COR`
@@ -559,7 +579,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: [...FORA_DO_CAMPO_LIGADO],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO],
     },
   },
   // Gêmeo do bloco acima para os arquivos fora do item 24: MESMO array, menos
@@ -570,7 +590,7 @@ export default defineConfig([
   {
     files: FORA_DO_CAMPO_LIGADO,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -591,7 +611,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -761,7 +781,7 @@ export default defineConfig([
   {
     files: ['src/shared/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, CLEANUP_A_MAO],
     },
   },
   // A catraca de cor entra em `src/app/**` (D11 de
@@ -795,7 +815,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
     },
   },
 ])

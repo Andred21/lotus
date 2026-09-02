@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
 import { CertificateViewDialog } from './CertificateViewDialog'
@@ -45,10 +45,6 @@ function renderizarComErro(error: ProblemDetails) {
     </QueryClientProvider>,
   )
 }
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('CertificateViewDialog é a exceção da D-05', () => {
   it('a excecao D8: o dialogo do suporte IMPRIME os campos que faltam', () => {

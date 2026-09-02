@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider, type UseQueryResult } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { StudentDetailData } from '@shared/types/generated'
@@ -45,10 +45,6 @@ function detail(over: Partial<UseQueryResult<StudentDetailData, ProblemDetails>>
     ...over,
   } as unknown as UseQueryResult<StudentDetailData, ProblemDetails>
 }
-
-afterEach(() => {
-  cleanup()
-})
 
 /** A célula de certificado (coluna nova da tabela de turmas) chama
  * `useMutation` por baixo — precisa de um `QueryClientProvider` no ar, mesmo

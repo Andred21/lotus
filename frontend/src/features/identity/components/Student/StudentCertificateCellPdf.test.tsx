@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { StudentTurmaData } from '@shared/types/generated'
 import { StudentCertificateCell } from './StudentCertificateCell'
@@ -48,7 +48,6 @@ function montar() {
 }
 
 afterEach(() => {
-  cleanup()
   open.mockClear()
   opener = { ...OPENER_LIMPO }
 })

@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { AppColumn } from '../AppDataTable'
 import { SearchableTableFrame, type SearchableTableState } from './SearchableTableFrame'
 
@@ -14,8 +14,6 @@ vi.mock('react-i18next', async (importOriginal) => {
     useTranslation: mockUseTranslation(),
   }
 })
-
-afterEach(cleanup)
 
 interface Row {
   id: number

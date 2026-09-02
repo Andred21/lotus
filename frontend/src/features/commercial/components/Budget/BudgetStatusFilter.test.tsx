@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { BudgetStatusFilter } from './BudgetStatusFilter'
 
 /**
@@ -18,8 +18,6 @@ vi.mock('react-i18next', async (importOriginal) => {
     useTranslation: mockUseTranslation(),
   }
 })
-
-afterEach(cleanup)
 
 describe('BudgetStatusFilter — o filtro de estado tem nome acessível (UI-02)', () => {
   it('o dropdown se acha pelo rótulo, não só pelo valor corrente', () => {

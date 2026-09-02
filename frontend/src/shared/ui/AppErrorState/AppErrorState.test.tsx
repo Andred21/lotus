@@ -1,10 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { AppErrorState } from './AppErrorState'
-
-afterEach(() => {
-  cleanup()
-})
 
 /** Uma promise que só resolve quando o teste mandar — é o que permite observar o
  * botão DURANTE o voo do GET, e não depois. Mesmo molde do

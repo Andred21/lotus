@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { StudentTurmaData } from '@shared/types/generated'
 import { StudentCertificateCell } from './StudentCertificateCell'
@@ -57,8 +57,6 @@ const montar = (t: StudentTurmaData) => {
     </QueryClientProvider>,
   )
 }
-
-afterEach(cleanup)
 
 describe('StudentCertificateCell', () => {
   /** Ramo 1, o caso comum: vigência indeterminada mostra o rótulo SEM data. */

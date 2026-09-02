@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { NavModule } from '@shared/config/navigation'
 
@@ -15,8 +15,6 @@ vi.mock('react-i18next', async (importOriginal) => {
 })
 
 import { SidebarItem } from './SidebarItem'
-
-afterEach(() => cleanup())
 
 const modulo: NavModule = {
   key: 'comercial',

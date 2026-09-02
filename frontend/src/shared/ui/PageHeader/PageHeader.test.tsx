@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render } from '@testing-library/react'
 import { PageHeader } from './PageHeader'
 import { DetailHeader } from '../DetailHeader'
 import { pageTitleClass } from '../typography'
@@ -13,10 +13,6 @@ import { pageTitleClass } from '../typography'
  * As asserções são sobre o NÍVEL do cabeçalho, não sobre o texto: o texto já
  * aparecia certo com `h2`, e é por isso que a jornada visual não viu nada.
  */
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('dono do título de página', () => {
   it('PageHeader renderiza o título como h1, e é o único cabeçalho', () => {

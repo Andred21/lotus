@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { render } from '@testing-library/react'
 import type { TurmaData } from '@shared/types/generated'
 import type { useTurmaDetail } from '../../hooks/useTurmaDetail'
 import { TURMA_TABS } from '../../lib/turmaTabs'
@@ -46,10 +46,6 @@ const vezesNaTela = (texto: string, trecho: string) => texto.split(trecho).lengt
 
 beforeEach(() => {
   detail.current = { goBack: () => {}, reload: () => Promise.resolve(), tab: 0, setTab: () => {} }
-})
-
-afterEach(() => {
-  cleanup()
 })
 
 describe('TurmaDetailPage titula todos os seus estados', () => {

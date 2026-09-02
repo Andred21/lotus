@@ -1,8 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { AppFileUpload } from './AppFileUpload'
-
-afterEach(cleanup)
 
 /** Conta ativacoes no `<input type="file">`, que e onde TODO caminho de
  * ativacao do modo basico desemboca -- o `choose()` do Prime e o `onClick` do

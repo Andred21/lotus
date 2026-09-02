@@ -1,5 +1,5 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { act, render, screen } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { Clock } from './Clock'
 
@@ -35,10 +35,6 @@ beforeAll(() => {
 afterAll(async () => {
   vi.useRealTimers()
   await i18n.changeLanguage(idiomaOriginal)
-})
-
-afterEach(() => {
-  cleanup()
 })
 
 async function trocarIdioma(codigo: keyof typeof DATA_POR_IDIOMA) {

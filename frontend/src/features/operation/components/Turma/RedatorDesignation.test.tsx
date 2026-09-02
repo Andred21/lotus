@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import type { TurmaData } from '@shared/types/generated'
 import type { useRedatorPicker } from '../../hooks/useRedatorPicker'
@@ -57,10 +57,6 @@ beforeEach(() => {
     reloadList: () => Promise.resolve(), designate: () => {}, remove: () => {},
     pending: false, error: undefined,
   }
-})
-
-afterEach(() => {
-  cleanup()
 })
 
 describe('RedatorDesignation numa turma concluída (UI-01)', () => {

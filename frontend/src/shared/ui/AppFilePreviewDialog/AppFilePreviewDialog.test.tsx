@@ -1,13 +1,11 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { act, cleanup, render } from '@testing-library/react'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { act, render } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { AppFilePreviewDialog } from './AppFilePreviewDialog'
 
 beforeAll(async () => {
   await i18n.changeLanguage('es-CL')
 })
-
-afterEach(cleanup)
 
 const pdf = {
   original_name: 'reuf-juan-morales.pdf',

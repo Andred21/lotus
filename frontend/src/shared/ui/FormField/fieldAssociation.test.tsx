@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { registerPrimeLocales } from '@shared/config/primeLocale'
 import { FormField } from './FormField'
 import { AppInputText } from '../AppInputText'
@@ -15,8 +15,6 @@ import { AppPassword } from '../AppPassword'
 // mapa. No app não estoura porque `addLocale` faz spread sobre `locales.en` e
 // herda a chave; aqui o que faltava era rodar o boot.
 beforeAll(registerPrimeLocales)
-
-afterEach(cleanup)
 
 /**
  * O nome acessível do controle tem de ser SÓ o rótulo, em todo wrapper — e a
