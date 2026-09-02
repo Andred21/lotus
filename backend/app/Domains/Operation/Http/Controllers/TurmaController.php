@@ -22,6 +22,7 @@ use App\Domains\Operation\Services\ManualDocumentService;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
+use App\Shared\Http\RespostaDeRecurso;
 use App\Shared\Pagination\PageData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -128,15 +129,9 @@ class TurmaController extends Controller implements HasMiddleware
 
     public function restore(int $turma, RestoreTurmaAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
     {
-        // Resolvido à mão, não por binding: o binding padrão aplica o global
-        // scope de SoftDeletes e nunca acharia uma arquivada. `onlyTrashed()`
-        // também dá o 404 de graça sobre registro ATIVO (molde D5).
-        $model = Turma::onlyTrashed()->whereKey($turma)->firstOrFail();
+        $model = ArchivedListing::resolveArquivado(Turma::query(), $turma);
 
-        // 200, não 201: restaurar devolve um registro que já existia.
-        return $this->present($action->execute($model), $habilitacao)
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok($this->present($action->execute($model), $habilitacao));
     }
 
     public function designateRedator(Turma $turma, Redator $redator, DesignateRedatorAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse

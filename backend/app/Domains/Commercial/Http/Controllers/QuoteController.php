@@ -14,6 +14,7 @@ use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
+use App\Shared\Http\RespostaDeRecurso;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -60,16 +61,11 @@ class QuoteController extends Controller implements HasMiddleware
         );
     }
 
-    // 200 e não 201, pelo mesmo motivo de `approve`.
     public function restore(int $quote, RestoreQuoteAction $action): JsonResponse
     {
-        // Resolvido à mão: o binding padrão aplica o global scope de
-        // `SoftDeletes` e nunca acharia uma arquivada.
-        $model = Quote::onlyTrashed()->whereKey($quote)->firstOrFail();
+        $model = ArchivedListing::resolveArquivado(Quote::query(), $quote);
 
-        return QuoteData::fromModel($action->execute($model))
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(QuoteData::fromModel($action->execute($model)));
     }
 
     public function store(QuoteData $data, Budget $budget, CreateQuoteAction $action): QuoteData

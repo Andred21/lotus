@@ -11,6 +11,7 @@ use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Models\Course;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
+use App\Shared\Http\RespostaDeRecurso;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -52,16 +53,11 @@ class CourseController extends Controller implements HasMiddleware
         );
     }
 
-    // Ver a nota gêmea em `ClientController::restore`: `onlyTrashed()` à mão,
-    // porque o binding padrão nunca acha um arquivado — e dá o 404 sobre ativo.
-    // O 200 explícito tem a mesma razão de lá.
     public function restore(int $course, RestoreCourseAction $action): JsonResponse
     {
-        $model = Course::onlyTrashed()->whereKey($course)->firstOrFail();
+        $model = ArchivedListing::resolveArquivado(Course::query(), $course);
 
-        return CourseData::fromModel($action->execute($model))
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(CourseData::fromModel($action->execute($model)));
     }
 
     public function store(CourseData $data, CreateCourseAction $action): CourseData

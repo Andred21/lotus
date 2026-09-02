@@ -11,6 +11,7 @@ use App\Domains\Commercial\Data\ClientData;
 use App\Domains\Commercial\Models\Client;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
+use App\Shared\Http\RespostaDeRecurso;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -52,20 +53,11 @@ class ClientController extends Controller implements HasMiddleware
         );
     }
 
-    // 200 e não 201: `Data::toResponse()` força 201 em qualquer POST
-    // (`ResponsableData::calculateResponseStatus`), e restaurar não cria
-    // recurso. Mesmo precedente de `QuoteController::approve`.
     public function restore(int $client, RestoreClientAction $action): JsonResponse
     {
-        // Resolvido à mão, não por binding: o binding padrão aplica o global
-        // scope de SoftDeletes e nunca acharia um arquivado. `onlyTrashed()`
-        // também dá o 404 de graça sobre registro ATIVO, que é o comportamento
-        // da spec D5.
-        $model = Client::onlyTrashed()->whereKey($client)->firstOrFail();
+        $model = ArchivedListing::resolveArquivado(Client::query(), $client);
 
-        return ClientData::fromModel($action->execute($model))
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(ClientData::fromModel($action->execute($model)));
     }
 
     public function store(ClientData $data, CreateClientAction $action): ClientData

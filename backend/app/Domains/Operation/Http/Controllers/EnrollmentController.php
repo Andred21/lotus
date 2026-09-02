@@ -17,6 +17,7 @@ use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
 use App\Shared\Files\ContentClass;
+use App\Shared\Http\RespostaDeRecurso;
 use App\Shared\Rules\ValidRut;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -119,17 +120,10 @@ class EnrollmentController extends Controller implements HasMiddleware
 
     public function restore(Turma $turma, int $enrollment, RestoreEnrollmentAction $action): JsonResponse
     {
-        // Resolvido à mão, e o motivo dobra no aninhado: `->scopeBindings()`
-        // resolveria `{enrollment}` por `$turma->enrollments()`, que é escopada
-        // por `deleted_at IS NULL` — uma matrícula arquivada daria 404 ANTES de
-        // chegar à Action. `onlyTrashed()` sobre a MESMA relação mantém a posse
-        // declarada (matrícula de outra turma continua 404) e ainda dá o 404 de
-        // graça sobre registro ativo (spec D5).
-        $model = $turma->enrollments()->onlyTrashed()->whereKey($enrollment)->firstOrFail();
+        // A origem é a relação, não a classe: resolver sobre `$turma->enrollments()`
+        // mantém a posse declarada — matrícula de outra turma continua 404.
+        $model = ArchivedListing::resolveArquivado($turma->enrollments(), $enrollment);
 
-        // 200, não 201: restaurar devolve um registro que já existia.
-        return EnrollmentData::fromModel($action->execute($model))
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(EnrollmentData::fromModel($action->execute($model)));
     }
 }
