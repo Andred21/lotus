@@ -3,8 +3,10 @@
 namespace App\Shared\Audit;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
  * A projeção da visão de Arquivados, uma vez em vez de oito.
@@ -41,5 +43,24 @@ class ArchivedListing
             ))
             ->values()
             ->all();
+    }
+
+    /**
+     * O registro ARQUIVADO, ou 404.
+     *
+     * Resolvido à mão, não por route binding: o binding padrão aplica o global
+     * scope de `SoftDeletes` e nunca acharia um arquivado. `onlyTrashed()`
+     * também dá o 404 de graça sobre registro ATIVO, que é o comportamento da
+     * spec D5. Este docblock existia copiado VERBATIM em 7 dos 8 controllers.
+     *
+     * A origem entra pronta, e por isso o parâmetro aceita `Relation`: o caso
+     * aninhado passa `$turma->enrollments()`, e resolver sobre a MESMA relação
+     * é o que mantém a posse declarada — matrícula de outra turma segue 404.
+     *
+     * @param  Builder<covariant Model>|Relation<Model, Model, mixed>  $origem
+     */
+    public static function resolveArquivado(Builder|Relation $origem, int $id): Model
+    {
+        return $origem->onlyTrashed()->whereKey($id)->firstOrFail();
     }
 }
