@@ -57,8 +57,11 @@ abstract class RecusaDeDominio extends RuntimeException implements PublicDetail
 ```
 
 As quatro exceções passam a estender `RecusaDeDominio`, declaram o tipo e param de citar status.
-`ProblemDetails` ganha um braço `RecusaDeDominio` **antes** do braço `HttpExceptionInterface`, no
-`match` de status/título **e** no `detailFor()`.
+`ProblemDetails` ganha um braço `RecusaDeDominio` **antes** do braço `HttpExceptionInterface` no
+`match` de status/título. **O `detailFor()` não ganha braço** — medido no planejamento: a base
+implementa `PublicDetail`, e o `if ($e instanceof PublicDetail || $e instanceof ValidationException)`
+de `ProblemDetails.php:78` já devolve `getMessage()`. É o mesmo `detail` que as quatro exceções
+produzem hoje; braço novo ali seria código morto.
 
 **`isForbidden()` não morre.** O 403 real nasce do spatie (`UnauthorizedException extends
 HttpException`), não do domínio — o próprio candidato 6 registra isso. O que encolhe é o que ele
@@ -114,6 +117,12 @@ o dono novo da frase.
 
 Braço próprio no `detailFor()` e `problem.detail.csrf` nos três locales. O `title` já está
 localizado (cai no genérico `problem.title.http`) e continua assim.
+
+**A exceção que o handler entrega não é a `TokenMismatchException`** — medido no vendor durante o
+planejamento: `Illuminate\Foundation\Exceptions\Handler::prepareException()` (`:774`) a embrulha
+num `HttpException(419, ..., $e)` e roda na `:716`, **antes** de `renderViaCallbacks()` na `:718`.
+É o que explica o `title` já localizado que a `P-72` mediu. O braço casa pela **causa**
+(`$e->getPrevious() instanceof TokenMismatchException`), não pelo texto (D5).
 
 ## 6. Catracas
 
