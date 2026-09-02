@@ -22,6 +22,7 @@ use App\Domains\Certification\Services\EmissionPanelQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
 use App\Http\Controllers\Controller;
+use App\Shared\Http\RespostaDeRecurso;
 use App\Shared\Pagination\PageData;
 use App\Shared\Pagination\PageMetaData;
 use Illuminate\Http\JsonResponse;
@@ -115,9 +116,9 @@ class CertificateController extends Controller implements HasMiddleware
         Certificate $certificate,
         RevokeCertificateAction $action,
     ): JsonResponse {
-        return CertificateData::fromModel($action->execute($certificate, $data->reason)->loadListingData())
-            ->toResponse(request())
-            ->setStatusCode(200);
+        return RespostaDeRecurso::ok(
+            CertificateData::fromModel($action->execute($certificate, $data->reason)->loadListingData()),
+        );
     }
 
     /** @return array<BatchIssueItemResultData> */

@@ -20,13 +20,13 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: —   # o item 21 fechou e mesclou em 2026-09-01 (PR #91, merge 6e6f4a64); a branch refactor/frontend-decisoes-de-ui-pendentes foi apagada
+    branch: refactor/backend-projecao-de-arquivados   # aberta de main@14b25b6c em 2026-09-02; item 24 fechado em 2026-09-02, sem merge
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-decisoes-de-ui-pendentes   # item 21, fechado em 2026-09-01
+    last_completed_work_item: backend-projecao-de-arquivados   # item 24, fechado em 2026-09-02
   lane-b:
     active_feature: null
     active_work_item: null
@@ -51,13 +51,13 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-campo-de-formulario-liga-no-form   # item 24 fechado em 2026-09-02; rebasada sobre origin/main@4bea7d27 e enviada na PR #95, aguardando merge
+    branch: refactor/frontend-campo-de-formulario-liga-no-form   # bloco sem ficha na fila (rotulo `item 24` tomado por engano; o 24 e o backend-projecao-de-arquivados), fechado em 2026-09-02; rebasada sobre origin/main@4bea7d27 e enviada na PR #95, aguardando merge
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # item 24, fechado em 2026-09-02
+    last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # sem ficha na fila, fechado em 2026-09-02
 last_completed_work_item: frontend-campo-de-formulario-liga-no-form
 state_basis_commit: 92774221
 updated_at: 2026-09-02T17:30:00-03:00
@@ -164,9 +164,9 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
+| `lane-a` | — | — | main tree | `refactor/backend-projecao-de-arquivados` (item 24 **fechado** em 2026-09-02, sem merge) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (item 24 **fechado** em 2026-09-02; **PR #95** aberta, aguardando merge) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (bloco **fechado** em 2026-09-02, **sem ficha na fila**; **PR #95** aberta, aguardando merge) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -174,6 +174,7 @@ disjuntas, colisão mínima de arquivos:
 > linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
+
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
@@ -198,11 +199,18 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
-| 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | Item 24 da fila |
+| 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
+| 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
 | 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 | 2026-08-31 | `prontidao-pre-nuvem` (emenda a **P-62**: o pessoal está público e a decisão de visibilidade ficou com o João) | Item 20 da fila |
 | 2026-08-30 | `hardening-i18n-e-erros-api` (paga a **P-61**, `D-07`, `D-18`, `D-36`, `D-38`, `D-58`; abre a **P-70**, a **P-71** e a **P-72**) | Item 7 da fila |
-| 2026-08-30 | `frontend-triagem-dos-audits-do-item-18` (paga a **P-63**; abre a `D-63`..`D-68` e rehospeda a **P-67** na `D-66`) | Item 19 da fila |
+
+> **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
+> "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com
+> ficha na fila desde `14b25b6c`; o `frontend-campo-de-formulario-liga-no-form` nunca teve ficha —
+> nasceu do §3 do review de arquitetura de 2026-09-01 e tomou o rótulo por engano. Decisão do João
+> em 2026-09-02, no fechamento da lane-a: **o 24 é o bloco de backend**, e o registro da lane-c passa
+> a dizer "sem ficha na fila". Nenhum número é reusado nem renumerado.
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

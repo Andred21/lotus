@@ -159,6 +159,7 @@ class MensagemLiteralTest extends TestCase
         'PdfRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',
         'OfficeRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',
         'OfficeRenderException.php:26' => 'RuntimeException interna; 500 mascarado.',
+        'ArchivedListing.php:68' => 'InvalidArgumentException: chamador esqueceu `onlyTrashed()`; 500 mascarado.',
 
         // Estas TRÊS chegam ao usuário e são dívida de verdade, medida no
         // review de 2026-08-30. Ficaram fora porque o item 7 não tocou esses
