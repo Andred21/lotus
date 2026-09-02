@@ -27,8 +27,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-71 | Cinco recusas que o usuário lê continuam literais fora de `lang/` (`CorruptedSnapshotException`, `RedatorNaoElegivelException`, `TurmaConfiguracaoException`) — a catraca as segura em lista declarada, não as traduz | — | bloco que tocar `Certification/Services` ou `Operation/Exceptions`; revisar 2026-10-31 |
-| P-72 | O 419 devolve `detail` literal em inglês nos três locales (`CSRF token mismatch.`) — o `title` foi traduzido, o `detail` do `TokenMismatchException` vence o fallback | — | bloco que tocar `ProblemDetails::fromException` ou a proteção CSRF; revisar 2026-10-31 |
+| P-71 | Cinco recusas que o usuário lê continuam literais fora de `lang/` (`CorruptedSnapshotException`, `RedatorNaoElegivelException`, `TurmaConfiguracaoException`) — a catraca as segura em lista declarada, não as traduz | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | o item 26 toca `Operation/Exceptions` pelo candidato 6 e `CorruptedSnapshotException` pela `P-60`, que são os dois gatilhos escritos na ficha; revisar 2026-10-31 |
+| P-72 | O 419 devolve `detail` literal em inglês nos três locales (`CSRF token mismatch.`) — o `title` foi traduzido, o `detail` do `TokenMismatchException` vence o fallback | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | o item 26 reescreve o `detailFor()` do `ProblemDetails`, que é o gatilho escrito na ficha; revisar 2026-10-31 |
+| P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | **só a metade de comportamento**: o item 26 decide entre degradar e continuar estourando. A metade do dado de dev segue com a `P-44`, no item 13; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -41,6 +42,15 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > `P-69`, `P-70`, `P-30` e `P-42` estão em [`encerradas.md`](./encerradas.md), e o débito `D-69`
 > saiu do `backlog.md` no mesmo fechamento. Cada uma fechou por mecanismo verde ou por decisão
 > escrita, nenhuma por remoção na fé. O bloco abriu a **P-74**, que está na tabela abaixo.
+>
+> `backend-envelope-de-erro-e-recusa-de-dominio` = item 26 da fila, aberto em 2026-09-02: juntou as
+> três fichas acima com o **candidato 6** do review de arquitetura do mesmo dia
+> (`audits/2026-09-02-arquitetura-deepening.html`), que declara por escrito só valer dentro de um
+> bloco que já toque `Shared/Exceptions` — e a `P-71` e a `P-72` são os dois motivos independentes
+> para tocar ali. As três foram remedidas contra `main@4a0080ce` antes de o item ser escrito e
+> seguem vivas no código. A `P-60` entra **pela metade**: a de comportamento, porque
+> `CorruptedSnapshotException` é o arquivo que ela compartilha com a `P-71`; a do dado de dev segue
+> com a `P-44`, no item 13.
 
 ### Travadas em decisão — não entram em bloco
 
@@ -63,7 +73,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-55 | A invariante proíbe a lane de escrever os campos singulares do `state.md`, mas cada lane precisa do espelho apontando para si na própria árvore — e três lanes já fizeram isso | João | João escolher entre reescrever a invariante ou dar ao espelho um mecanismo próprio; revisar 2026-10-31 |
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
-| P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |

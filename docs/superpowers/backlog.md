@@ -43,7 +43,9 @@
   2026-09-02, do candidato 1 da revisão de arquitetura registrada em
   `audits/2026-09-02-arquitetura-deepening.html` — o `backend-projecao-de-arquivados`, fechado em
   2026-09-02; e o `25` em 2026-09-02, aberto pelo João para juntar as dívidas de frontend que se
-  provam por mecanismo e que nenhum bloco hospedava (`P-68`, `P-69`, `P-70`, `P-30`, `P-42`, `D-69`) — **fechado em 2026-09-03**. **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na
+  provam por mecanismo e que nenhum bloco hospedava (`P-68`, `P-69`, `P-70`, `P-30`, `P-42`, `D-69`) — **fechado em 2026-09-03**. O `26` nasceu em 2026-09-02, também
+  aberto pelo João, juntando o **candidato 6** do mesmo review de arquitetura com as três fichas de
+  backend que nenhum bloco hospedava (`P-71`, `P-72` e a metade de comportamento da `P-60`). **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na
   `lane-c` sem nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão
   do João, e **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a
   nomear o `BD-15` durante uma inserção que foi
@@ -277,6 +279,130 @@ rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor o
 cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
 
 ---
+
+## 26. `backend-envelope-de-erro-e-recusa-de-dominio`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Backend · **Contexto:** não
+**Fonte:** as fichas `P-71`, `P-72` e `P-60` de `pendencias/abertas.md` e o **candidato 6** do
+review de arquitetura de 2026-09-02 (`audits/2026-09-02-arquitetura-deepening.html`) — os quatro
+sem hospedeiro, e os quatro no mesmo par de diretórios.
+
+**Objetivo:** dar um dono só ao envelope de erro. Hoje a decisão está repartida: a exceção de
+domínio fixa o status HTTP, o `ProblemDetails` fareja esse status de volta para escolher o título, e
+a frase que o usuário lê nasce ora de `lang/`, ora literal dentro da exceção. Depois deste bloco a
+exceção **declara a recusa**, e o `ProblemDetails` — que já é o dono do envelope — traduz recusa em
+status e em frase localizada.
+
+**Por que junto:** o próprio candidato 6 escreve o critério de agrupamento — *"só vale dentro de um
+bloco que já vá tocar `Shared/Exceptions`"* — e a `P-71` e a `P-72` são exatamente os dois motivos
+independentes para tocar ali. A `P-60` entra pelo arquivo: `CorruptedSnapshotException` é o sítio
+que ela compartilha com a `P-71`, e decidir a frase dela sem decidir se ela deve estourar seria
+decidir metade.
+
+**Medido em 2026-09-02, contra `main@4a0080ce`**, antes de escrever o item — nada foi pago de
+passagem pelos blocos de 2026-09-01/02:
+- quatro exceções de domínio estendem `HttpException` e fixam o status na própria factory:
+  `Operation/Exceptions/TurmaConfiguracaoException.php:11`,
+  `Operation/Exceptions/RedatorNaoElegivelException.php:12`,
+  `Identity/Exceptions/ImmutableSystemRoleException.php:22`,
+  `Identity/Exceptions/RedatorOnlyActionException.php:20`;
+- `Shared/Exceptions/ProblemDetails.php:108-111` identifica 403 por `getStatusCode() === 403`, com
+  o comentário de 14 linhas em `:104` explicando por que precisa farejar;
+- `ProblemDetails::detailFor()` termina em `default => $e->getMessage() ?: __('problem.detail.generic')`
+  e **não tem braço para `TokenMismatchException`** — é a `P-72`;
+- as cinco recusas literais seguem vivas: `RedatorNaoElegivelException:16,21` e
+  `TurmaConfiguracaoException:15,20` em pt-BR, e `CorruptedSnapshotException:42-43` em es_CL, esta
+  um `sprintf` com dois `%s` — é a `P-71`, e é a forma dela que muda a factory da chave;
+- `tests/Unit/Shared/MensagemLiteralTest.php:154` tem a lista `DEBITO_CONHECIDO`, que é o inventário
+  desses sítios e o que faz o silêncio reprovar.
+
+**Escopo:**
+- **Candidato 6** — a exceção de domínio para de estender `HttpException` e passa a carregar o
+  **tipo da recusa**; o mapa tipo→status vive no `ProblemDetails`. O `isForbidden` **não morre** —
+  o 403 real nasce do spatie, não do domínio, e a própria ficha do candidato registra isso; o que
+  encolhe é o que ele precisa cobrir. Prova: os testes de endpoint que hoje afirmam 422/403
+  continuam verdes sem edição — passarem intactos é o que prova que o contrato não mudou.
+- **P-71** — os cinco sítios passam a ler `lang/<locale>/<dominio>.php` nos três locales e **saem
+  da `DEBITO_CONHECIDO` no mesmo commit**. A `CorruptedSnapshotException` é a cara: dois `%s` viram
+  chave com dois parâmetros. Prova: `LocaleParityTest` e `MensagemLiteralTest` verdes com a lista
+  encolhida.
+- **P-72** — o 419 ganha `problem.detail.csrf` nos três locales. O desenho é a decisão que a ficha
+  já nomeia: braço próprio para `TokenMismatchException` no `detailFor()`, **ou** a catraca passa a
+  enxergar `getMessage()` de exceção de framework. Prova: os três locales medidos contra a API real,
+  como a ficha mediu o defeito.
+- **P-60, metade de comportamento** — decidir entre **degradar** (apresentar o que o snapshot tem)
+  e **continuar estourando** numa rota **pública**, que é a que o QR do certificado impresso
+  alcança. É decisão do João e cabe no brainstorming; o veredito vira código e teste.
+
+**Fora:**
+- **`P-60`, metade do dado de dev** — reseedar ou corrigir o `LOT-2026-1001` é o mesmo candidato da
+  **`P-44`**, hospedada no item 13. Linha alheia de bloco fechado se menciona, não se apaga.
+- **`P-51`** — os cinco campos com default literal em DTO de entrada mudam contrato e regeneram
+  `generated.ts`, e pedem decisão por campo (`Optional` × `present`, que **contradiz a D1 do
+  BD-14**). Frente de DTO, não de envelope.
+- **`D-17`** — a catraca que falta é sobre o **catálogo de permissões**, não sobre exceção; família
+  de RBAC.
+- **`P-49`, `P-54`, `P-59`, `P-52`** — os quatro foram remedidos contra `main@4a0080ce` e seguem
+  vivos e sem hospedeiro, mas cada um está em outro eixo: lock dos dois lados em
+  `RestoreQuoteAction`/`DeleteBudgetAction`, as duas assertivas da migration de permissão,
+  `config/app.php:75` sem `env()`, e a ficha de colunas de `invitation_tokens`. Entram aqui **só se
+  o João os puxar no brainstorming**; nenhum deles compartilha superfície de prova com o envelope.
+- **`D-09`/`D-10`/`D-11`/`D-16`** — são o **item 22**, que já existe nesta fila.
+- **`D-34`** — atravessa o seam para o SPA e continua sem hospedeiro; escolher é do João.
+- **candidato 2 do mesmo review (fatia Site)** — `app/Domains/Site` **não existe em `main`**: a
+  fatia vive em `archive/site-contact-form-v1`. Não é dívida desta árvore.
+
+**DoD:** as três fichas fechadas — cada uma **por mecanismo verde ou por decisão escrita**, nunca
+por remoção na fé —, com `DEBITO_CONHECIDO` encolhida nos cinco sítios, `LocaleParityTest` e
+`MensagemLiteralTest` verdes, o 419 devolvendo `detail` localizado nos três locales medido contra a
+API real, a `P-60` com veredito escrito e o código que o veredito pedir, `php artisan test` inteiro
+verde sem edição nos testes de endpoint existentes, e a linha de cada ficha removida do índice de
+`pendencias/` no `/fechar-sprint`.
+
+---
+
+---
+
+# Decisões não promovíveis isoladamente
+
+| ID | Decisão / gatilho |
+|---|---|
+| `D-09` | UI e backend divergem sobre zero contatos principais — decidir qual camada cede. |
+| `D-10` | Admin comum pode ou não enumerar permissões do superadmin via `GET /api/roles`. |
+| `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
+| `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
+| `D-65` | **Reserva da coluna presa em tablet** (f3 UI-01): a reserva de `stickyActionsColumn` é em `rem` e as colunas são em %, sobre `min-w-[48rem]`: em 1024px a soma estoura e a coluna presa come largura alheia. **A ficha dizia `8rem` fixo nas 12 tabelas; remedido em 2026-08-31, são SETE valores**, vários condicionais ao ramo `archived` — `6rem` (`RolesTable`, `StudentsTable`, `BudgetsTable` ativo), `8rem` (`EmissionStudentsTable`, o único), `9rem` (`EnrollmentTable` + os ramos ativos de `TurmasTable`, `CoursesTable`, `UsersTable`, `ClientsTable`), `10rem` (`ArchivedEnrollmentsList` + os ramos `archived` de seis tabelas), `12rem` (`RedatoresTable` ativo), `16rem` (`HistorialTable`). Não se corrige numa constante: são 12 decisões. **Hospedeiro: item 23.** |
+| `D-70` | **`/validar` diz "contacta a Lotus" sem canal** — o item 21 (`D-67`) pôs a linha de orientação no ramo `notFound` dos três locales, **sem canal**: publicar endereço ou telefone numa página aberta é decisão da Lotus, não do João sozinho. Enquanto não houver canal, a orientação termina num beco. Precisa da Lotus antes de virar código. **Gatilho: decisão da Lotus.** |
+| `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
+| `P-08` | Lotus decide se Manual varia por curso. |
+| `P-09` | Lotus confirma/descopa o quarto tipo de documento de turma. |
+| `P-10` | Lotus decide se tabela de alunos exibe Cliente. |
+| `P-13` | Lotus decide se Turma terá código próprio. |
+| `P-16` | Lotus decide a aba inicial de Turma. |
+| `DS-05` | Avatar do Perfil só vira task após medição justificar. |
+| `DS-07` | Mural de credenciais é redesign próprio, com brainstorming. |
+
+---
+
+# Futuros
+
+- **FUT-1 · Templates genéricos de documentos de turma** — além do Manual já existente, somente
+  após desenho com a Lotus. O manual PDF/DOCX pré-preenchido já cobre a fatia "baixa, preenche à
+  mão, sobe" do tipo `MANUAL`; futuro é o mecanismo genérico (`PRUEBAS`, `EVALUACION_REDATOR`) e o
+  preenchimento online.
+- **FUT-2 · Ancoragem cross-módulo** — padronizar deep-link/seleção quando houver recorrência
+  real; o caso turma→orçamento já existe.
+- **FUT-3 · Central de notificações** — notificações persistidas na aplicação alimentadas por
+  eventos/condições dos domínios; badge/central/leitura primeiro; e-mail apenas como canal futuro
+  para eventos críticos. Exige levantamento funcional próprio.
+
+
+# Débitos técnicos — registro canônico
+
+> Ficha de cada débito vivo. A cobertura por bloco está mapeada na fila; **entrar num bloco não
+> move nem apaga a linha daqui** — a remoção acontece só depois do bloco aplicado e do
+> `/fechar-sprint` correspondente. Fichas completas anteriores: histórico do arquivo no Git
+> (`git log -- docs/superpowers/backlog.md`).
 
 ## Agrupados em bloco
 

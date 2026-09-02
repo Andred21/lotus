@@ -1,12 +1,12 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-c
+focused_lane: lane-a
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: backend-envelope-de-erro-e-recusa-de-dominio
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -15,12 +15,12 @@ blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: backend-envelope-de-erro-e-recusa-de-dominio   # item 26, promovido pelo Joao em 2026-09-02
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
-    branch: refactor/backend-projecao-de-arquivados   # aberta de main@14b25b6c em 2026-09-02; item 24 fechado em 2026-09-02, sem merge
+    branch: refactor/backend-envelope-de-erro-e-recusa-de-dominio   # aberta de main@4a0080ce em 2026-09-02; a do item 24 foi apagada apos o merge da PR #96
     active_spec: null
     active_plan: null
     context_packet: null
@@ -59,8 +59,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
 last_completed_work_item: frontend-dividas-de-mecanismo
-state_basis_commit: 2148b882
-updated_at: 2026-09-03T18:55:00-03:00
+state_basis_commit: 4a0080ce
+updated_at: 2026-09-02T19:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,10 +164,25 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `refactor/backend-projecao-de-arquivados` (item 24 **fechado** em 2026-09-02, sem merge) | `idle` |
+| `lane-a` | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | Backend | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (aberta de `main@4a0080ce`) | `ready_for_planning` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (item 25 **fechado** em 2026-09-03, sem merge) | `idle` |
 
+
+**A `lane-a` recebeu o item 26 em 2026-09-02** — `backend-envelope-de-erro-e-recusa-de-dominio`,
+promovido explicitamente pelo João com a lane em `idle`, logo depois de a PR #96 mesclar o item 24 e
+a branch dele ser apagada nos dois lados. `Contexto: não`: as fontes são as fichas de
+`pendencias/abertas.md`, o review de arquitetura de 2026-09-02 e o próprio código — tudo no
+repositório, nada em Drive, Notion ou Figma. A branch sai de `main@4a0080ce`, o tip da `origin/main`.
+
+**O item foi escrito depois de remedir cada candidato contra `main@4a0080ce`**, e a medição está na
+própria ficha: o que entrou entrou por estar vivo no código, não por constar de ficha antiga. Três
+candidatos de backend foram descartados com motivo escrito — a fatia Site do candidato 2 (não existe
+em `main`; vive em `archive/site-contact-form-v1`), a `P-05`/`P-44`/`D-37` (já hospedadas no item 13)
+e a `D-34` (atravessa para o SPA e o hospedeiro é escolha do João). Cinco fichas de backend e um
+débito seguem vivos e **sem hospedeiro** — `P-49`, `P-51`, `P-52`, `P-54`, `P-59` e a `D-17` —, fora deste
+bloco por não compartilharem superfície de prova com o envelope de erro; a ficha do item 26 as nomeia
+uma a uma para quem pegar.
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
 > em `ready_for_execution` enquanto o frontmatter andava até `ready_for_review` — as outras duas
