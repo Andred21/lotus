@@ -225,6 +225,43 @@ const DISABLED_READONLY_ESTATICO = {
 // regra. É o mesmo limite que o `FormField` sempre teve — o seletor é
 // sintático — e não um afrouxamento novo; fica escrito para a próxima task
 // não confundir convenção de nome com verificação de tipo.
+// O campo ligado ao form (item 24) tem UMA porta para o erro do backend: o
+// `name`. A extração à mão era a grafia de 48 sítios em 24 arquivos, e cada
+// campo novo que a esquecesse ficava com o 422 invisível — botão de salvar
+// aparentemente inerte. `error` continua existindo como escape declarada (a
+// chave que não é o nome do campo), e é por isso que a régua mede a EXTRAÇÃO,
+// não a prop.
+const ERRO_DE_CAMPO_A_MAO = {
+  selector:
+    'MemberExpression[computed=true][object.object.name="fieldErrors"][property.value=0]',
+  message:
+    'Erro de campo extraído à mão: use <Field name="x"> e o erro vem do form (spec do item 24). A prop `error` fica para a chave que NÃO é o nome do campo.',
+}
+
+// Os arquivos que o item 24 deixou fora POR MEDIÇÃO (spec §2), e que por isso
+// seguem extraindo o erro à mão. Não é dívida esquecida: é o escopo escrito.
+// Particiona o mesmo glob do bloco de componente, exatamente como `CATRACA_COR`
+// faz — ver o bloco gêmeo abaixo.
+const FORA_DO_CAMPO_LIGADO = [
+  // Sem bundle de form a que ligar o campo: setter por campo, estado solto, ou
+  // chave de erro que não é o nome do campo (`grades.final`).
+  'src/features/operation/components/Enrollment/EnrollStudentForm.tsx',
+  'src/features/operation/components/Enrollment/RegisterResultDialog.tsx',
+  'src/features/certification/components/Emission/ConfirmIssueDialog.tsx',
+  'src/features/certification/components/Emission/BatchIssueDialog.tsx',
+  'src/features/certification/components/Historial/RevokeDialog.tsx',
+  // Campo aninhado: chave posicional `contacts.<i>.<campo>` e setter de patch.
+  // A porta futura é um `FormScope prefix=`, não esta régua.
+  'src/features/commercial/components/Client/ContactCard.tsx',
+  'src/features/commercial/components/Client/ContactFields.tsx',
+  'src/features/catalog/components/Course/ModuleCard.tsx',
+  'src/features/catalog/components/Course/ModuleFields.tsx',
+  // Não são formulário de entidade: sem entidade, sem dialog, sem modo.
+  'src/features/identity/components/Login/LoginForm.tsx',
+  'src/features/identity/components/Login/ForgotForm.tsx',
+  'src/features/identity/components/Password/SetPasswordPage.tsx',
+]
+
 const DROPDOWN_SEM_NOME = {
   selector:
     'JSXElement[openingElement.name.name="AppDropdown"]' +
@@ -504,7 +541,18 @@ export default defineConfig([
   // menos `COR_HARDCODED`, particionando o mesmo glob sem sobreposição.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    ignores: CATRACA_COR,
+    ignores: [...CATRACA_COR, ...FORA_DO_CAMPO_LIGADO],
+    rules: {
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
+    },
+  },
+  // Gêmeo do bloco acima para os arquivos fora do item 24: MESMO array, menos
+  // `ERRO_DE_CAMPO_A_MAO`. Sem ele, o `ignores` de cima não significaria "esta
+  // régua não vale aqui" e sim "NENHUMA régua vale aqui" — os 3 bans de query,
+  // o de cor e os de acessibilidade sumiriam desses 12 arquivos em silêncio. É
+  // o mesmo molde da partição `CATRACA_COR`.
+  {
+    files: FORA_DO_CAMPO_LIGADO,
     rules: {
       'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
     },
@@ -519,7 +567,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -540,7 +588,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
