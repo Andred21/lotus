@@ -7,12 +7,60 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(nenhuma. A **P-67** saiu de vez no fechamento do `frontend-campo-de-formulario-liga-no-form`
-(2026-09-02), o primeiro posterior ao do bloco que a encerrou — o rastro durável dela está nos
-commits `97661217`, `9d5af40a` e `3c27c4f3` e na linha de entrega do item 21 em
-[`../historico/progress.md`](../historico/progress.md). A **P-61**, a **P-63**, a **P-66**, a
-**P-02**, a **P-33**, a **P-46**, a **P-03** e a **P-15** já haviam saído antes; os parágrafos
-adiante são o rastro delas.)*
+*(duas: a **P-73**, fechada em 2026-09-02 pelo bump de lockfile da PR #93, e a **P-67**, fechada em
+2026-09-01 pelo `frontend-decisoes-de-ui-pendentes`. A **P-61** e a
+**P-63** saíram neste mesmo fechamento — o primeiro posterior aos dos dois blocos que as encerraram
+em 2026-08-30 —, e o parágrafo adiante é o rastro delas. A **P-66** saiu no fechamento do
+`frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao do
+`hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é mecanismo
+em migration, e o rastro dela está no git e na linha de entrega em `../historico/progress.md`. A
+**P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de 2026-08-29, e a **P-03** e a
+**P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro delas.)*
+
+### P-73 — advisory transitiva nova reprova o `audit-dev` e segura a imagem da `main`
+
+**Fechada em 2026-09-02**, na PR #93, pelo critério que a própria ficha escreveu: `pnpm audit` volta
+a **0** em `frontend/` com o `package.json` **intacto**. O remédio é o que o item 20 fixou como
+molde e a spec dele já tinha recusado a alternativa — bump só de lockfile, sem `pnpm.overrides`:
+
+```
+pnpm update browserslist --depth Infinity
+```
+
+`browserslist` **4.28.4 → 4.28.8** (patched era `>=4.28.7`), e `update-browserslist-db` acompanhou
+de `1.2.3` para `1.3.2`. Diff de **um arquivo só**, `frontend/pnpm-lock.yaml` (25 inserções, 25
+remoções); `git diff --stat frontend/package.json` **vazio**. As duas GHSA que reprovavam
+([GHSA-c83g-rgw3-j3cx](https://github.com/advisories/GHSA-c83g-rgw3-j3cx) e
+[GHSA-73wf-gq98-2v4g](https://github.com/advisories/GHSA-73wf-gq98-2v4g)) saíram junto.
+
+Provado local com os quatro passos do job antes de empurrar: `pnpm audit` → `No known
+vulnerabilities found`, `pnpm install --frozen-lockfile` → `Already up to date`, `pnpm lint` → 0,
+`pnpm test` → **125 arquivos / 714 testes**, `pnpm build` verde.
+
+**O que a ficha previa e continua valendo:** o caso reincide — advisory transitiva nova em devDep
+trava o release sem que bloco nenhum a tenha causado. O que fecha aqui é esta ocorrência, não a
+classe; a próxima chega pelo mesmo caminho e o remédio já está medido.
+
+---
+
+### P-67 — a escala de raio estava escrita na rule e 10 sítios ficaram fora dela, sem catraca
+
+**Fechada em 2026-09-01**, no `frontend-decisoes-de-ui-pendentes` (item 21, Tasks 1–3), por
+mecanismo. A `D-66`, que a hospedava, decidiu a régua: o raio passa a vir de **token no `@theme`**
+(`--radius-surface` e `--radius-control`, este lendo o var do tema do PrimeReact), `shared/ui` os
+consome e `features/`+`app/` migram atrás. O planejamento remediu o alcance — os sítios eram **15**,
+não os 10 que a ficha contava: cinco já escreviam `rounded-lg`/`rounded-md` e a catraca os
+alcançaria igual, então migraram junto para ela não nascer vermelha.
+
+A catraca é a `RAIO_LITERAL` (`no-restricted-syntax` em `frontend/eslint.config.js`), sobre as duas
+camadas que a rule exige (`src/features/**` e `src/app/**`), e **nasceu verde** — foi vista reprovar
+por sonda negativa antes de valer, com o arquivo restaurado do scratchpad (nunca por `git stash`).
+A `.claude/rules/frontend-estilizacao.md` passou a descrever a escala que existe, em vez da que a
+rule descrevia e a tela não tinha — que era exatamente por que os 10 sítios escreveram `rounded`.
+
+Rastro: `feat(ui): raio ganha dois tokens no @theme e shared/ui os consome` (`97661217`),
+`feat(ui): os 15 sitios de features e app consomem os tokens de raio` (`9d5af40a`) e
+`feat(lint): RAIO_LITERAL nasce verde e a rule descreve a escala real` (`3c27c4f3`).
 
 ---
 
