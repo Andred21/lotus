@@ -5,6 +5,7 @@ import {
   FormErrorSummary,
   FormErrorBanner,
   FormPhotoRow,
+  useFormField,
 } from "@shared/ui";
 import type { ClientData } from "@shared/types/generated";
 import {
@@ -29,9 +30,9 @@ export function ClientDialog({
   onEdit?: () => void;
 }) {
   const { t } = useTranslation();
+  const f = useClientForm(client, mode, onHide);
   const {
     form,
-    set,
     readOnly,
     submit,
     pending,
@@ -46,7 +47,8 @@ export function ClientDialog({
     setPrimaryContact,
     addContact,
     removeContact,
-  } = useClientForm(client, mode, onHide);
+  } = f;
+  const Field = useFormField(f);
 
   return (
     <CrudDialog
@@ -70,12 +72,7 @@ export function ClientDialog({
         <FormSection title={t("client.sectionGeneral")} />
 
         <FormPhotoRow name={form.legal_name} photo={photo} readOnly={readOnly}>
-          <ClientGeneralFields
-            form={form}
-            readOnly={readOnly}
-            fieldErrors={fieldErrors}
-            onChange={set}
-          />
+          <ClientGeneralFields Field={Field} form={f.form} />
         </FormPhotoRow>
 
         <FormSection title={t("client.sectionAddress")} spaced />

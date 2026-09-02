@@ -213,10 +213,16 @@ const DISABLED_READONLY_ESTATICO = {
 // `NestedField` NÃO conta como pai válido, de propósito: ele não monta
 // `FieldContext`, então um dropdown dentro dele fica sem nome do mesmo jeito.
 // Hoje não há nenhum; quando houver, reprova.
+//
+// `Field` (maiúscula, sem prefixo) TAMBÉM conta como pai válido: é o
+// componente que `useFormField` devolve (item 24) — ele monta `FormField` por
+// baixo com o MESMO `FieldContext.Provider`, então o `inputId` chega ao
+// dropdown do mesmo jeito. Sem esta linha, todo call site migrado para o
+// molde do `ClientGeneralFields` reprovaria por forma, não por defeito real.
 const DROPDOWN_SEM_NOME = {
   selector:
     'JSXElement[openingElement.name.name="AppDropdown"]' +
-    ':not(JSXElement[openingElement.name.name="FormField"] JSXElement[openingElement.name.name="AppDropdown"])' +
+    ':not(JSXElement[openingElement.name.name=/^(FormField|Field)$/] JSXElement[openingElement.name.name="AppDropdown"])' +
     ':not(:has(JSXOpeningElement > JSXAttribute[name.name=/^(inputId|aria-label|aria-labelledby)$/]))',
   message:
     'AppDropdown sem nome acessível: dentro de FormField o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',

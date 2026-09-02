@@ -112,8 +112,18 @@ export function useClientForm(
       }
     })
 
+  /** `name` é derivado de `legal_name` no submit, então o 422 pode voltar com a
+   * chave do derivado. O campo na tela é `legal_name` e é ele que gerou o erro —
+   * mapear aqui é o que permite o campo ler o próprio erro pelo `name`, em vez de
+   * a tela somar duas chaves à mão (item 24, spec §5). */
+  const fieldErrors =
+    crud.fieldErrors?.name && !crud.fieldErrors.legal_name
+      ? { ...crud.fieldErrors, legal_name: crud.fieldErrors.name }
+      : crud.fieldErrors
+
   return {
     ...crud,
+    fieldErrors,
     // Cliente criado fora da UI (seed/API) pode não ter endereço — cai para o
     // vazio em vez de quebrar ao ler `addr.region`. Resolvido aqui porque a
     // constante que define "endereço vazio" já mora neste arquivo; tê-la também
