@@ -1,14 +1,20 @@
 import { useTranslation } from 'react-i18next'
-import { AppInputText, AppDatePicker, FormField, FormSection } from '@shared/ui'
+import { AppInputText, AppDatePicker, FormSection, type FieldComponent } from '@shared/ui'
 import type { QuoteFormFields } from '../../hooks/useQuoteForm'
 import { parseUfInput } from '@shared/lib'
 
-/** Passo 2 do wizard: alunos, valor UF, ordem de compra e datas previstas. */
+/** Passo 2 do wizard: alunos, valor UF, ordem de compra e datas previstas.
+ *
+ * `form` e `onChange` continuam entrando ALÉM do `Field`: três dos cinco
+ * campos convertem valor nos dois sentidos (contagem em string de dígitos,
+ * UF com vírgula, ordem de compra que troca `''` por `null`) e o `Field`
+ * sozinho não resolve conversão — só passa o valor cru do form (item 24,
+ * spec §5). O que sai é `fieldErrors`: as 5 extrações `?.[0]` viram `Field`. */
 export function DataStep({
-  form, fieldErrors, onChange,
+  Field, form, onChange,
 }: {
+  Field: FieldComponent<QuoteFormFields>
   form: QuoteFormFields
-  fieldErrors?: Record<string, string[]> | null
   onChange: <K extends keyof QuoteFormFields>(k: K, v: QuoteFormFields[K]) => void
 }) {
   const { t } = useTranslation()
@@ -18,13 +24,13 @@ export function DataStep({
       <FormSection title={t('quote.stepData')} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={t('quote.students')} error={fieldErrors?.student_count?.[0]}>
+        <Field name="student_count" label={t('quote.students')}>
           <AppInputText
             value={String(form.student_count)}
             onChange={(e) => onChange('student_count', Number(e.target.value.replace(/\D/g, '')) || 0)}
             className="w-full"
           />
-        </FormField>
+        </Field>
 
         {/* value_uf NUNCA vira Number: aceita vírgula OU ponto na digitação
             e normaliza para ponto — troca de caractere, não aritmética.
@@ -33,36 +39,29 @@ export function DataStep({
             1,25?) e nenhuma heurística resolve isso sem errar outro caso.
             Mostrando de volta "1,250", o usuário VÊ que o valor virou
             decimal — o caso ambíguo falha à vista, não em silêncio. */}
-        <FormField label={t('quote.valueUf')} error={fieldErrors?.value_uf?.[0]}>
+        <Field name="value_uf" label={t('quote.valueUf')}>
           <AppInputText
             value={form.value_uf.replace('.', ',')}
             onChange={(e) => onChange('value_uf', parseUfInput(e.target.value))}
             className="w-full"
           />
-        </FormField>
+        </Field>
       </div>
 
-      <FormField label={t('quote.purchaseOrder')} error={fieldErrors?.purchase_order?.[0]}>
+      <Field name="purchase_order" label={t('quote.purchaseOrder')}>
         <AppInputText
-          value={form.purchase_order ?? ''}
           onChange={(e) => onChange('purchase_order', e.target.value || null)}
           className="w-full"
         />
-      </FormField>
+      </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label={t('quote.plannedStart')} error={fieldErrors?.planned_start_date?.[0]}>
-          <AppDatePicker
-            value={form.planned_start_date ?? null}
-            onChange={(v) => onChange('planned_start_date', v)}
-          />
-        </FormField>
-        <FormField label={t('quote.plannedEnd')} error={fieldErrors?.planned_end_date?.[0]}>
-          <AppDatePicker
-            value={form.planned_end_date ?? null}
-            onChange={(v) => onChange('planned_end_date', v)}
-          />
-        </FormField>
+        <Field name="planned_start_date" label={t('quote.plannedStart')}>
+          <AppDatePicker />
+        </Field>
+        <Field name="planned_end_date" label={t('quote.plannedEnd')}>
+          <AppDatePicker />
+        </Field>
       </div>
     </section>
   )

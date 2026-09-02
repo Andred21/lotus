@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { AppDialog, AppButton, FormErrorSummary, FormErrorBanner, useFormField } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
 import { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
@@ -15,8 +15,9 @@ export function QuoteWizard({
   onHide: () => void
 }) {
   const { t } = useTranslation()
-  const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError } =
-    useQuoteForm(budgetId, quote, onHide)
+  const f = useQuoteForm(budgetId, quote, onHide)
+  const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError } = f
+  const Field = useFormField(f)
   const courses = useQuoteCourseSearch()
 
   const footer =
@@ -71,7 +72,7 @@ export function QuoteWizard({
           onSelect={(id) => set('course_id', id)}
         />
       ) : (
-        <DataStep form={form} fieldErrors={fieldErrors} onChange={set} />
+        <DataStep Field={Field} form={form} onChange={set} />
       )}
     </AppDialog>
   )
