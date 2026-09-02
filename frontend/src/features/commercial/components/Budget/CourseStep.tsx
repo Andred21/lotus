@@ -99,7 +99,7 @@ export function CourseStep({
               />
               <span className="text-sm">
                 {c.name}
-                <span className="ml-2 text-slate-500">{c.workload_hours}h</span>
+                <span className="ml-2" style={{ color: 'var(--text-color-secondary)' }}>{c.workload_hours}h</span>
               </span>
             </label>
           ))}

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, FormErrorSummary, FormErrorBanner, useFormField } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
+import { dangerText } from '@shared/styles/tokens'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
 import { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
 import { CourseStep } from './CourseStep'
@@ -45,7 +46,7 @@ export function QuoteWizard({
       header={
         <div className="flex items-center justify-between gap-4">
           <span>{quote ? t('quote.edit') : t('quote.new')}</span>
-          <span className="text-xs font-normal text-slate-500">{t('quote.step', { current: step, total: 2 })}</span>
+          <span className="text-xs font-normal" style={{ color: 'var(--text-color-secondary)' }}>{t('quote.step', { current: step, total: 2 })}</span>
         </div>
       }
       visible={visible}
@@ -69,7 +70,7 @@ export function QuoteWizard({
       {/* eslint-disable-next-line no-restricted-syntax */}
       {fieldErrors?.course_id?.[0] && (
         // eslint-disable-next-line no-restricted-syntax
-        <p className="mb-4 text-sm text-red-600">{fieldErrors.course_id[0]}</p>
+        <p className="mb-4 text-sm" style={{ color: dangerText }}>{fieldErrors.course_id[0]}</p>
       )}
 
       {step === 1 ? (

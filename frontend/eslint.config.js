@@ -511,11 +511,12 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
 // A Validação SAIU em 2026-08-28: o `bg-slate-50 dark:bg-slate-950` virou
 // `--surface-ground` (achado C2 do audit de 2026-08-26) e o arquivo não tem
 // mais cor crua nenhuma.
-const CATRACA_COR = [
-  'src/features/commercial/components/Budget/CourseStep.tsx',
-  'src/features/commercial/components/Budget/QuoteWizard.tsx',
-  'src/features/operation/components/Document/ManualButton.tsx',
-]
+// Os TRÊS ÚLTIMOS saíram em 2026-09-02 (D-69, item 25): `--text-color-secondary`
+// nos dois sítios de texto e `dangerText` nos dois de erro. A lista chegou a
+// zero e a PARTIÇÃO morreu junto — o bloco `files: CATRACA_COR` que existia
+// logo abaixo foi removido nesta data. Reabri-la exige recriar os dois lados,
+// não só empurrar um nome para dentro do array.
+const CATRACA_COR = []
 
 export default defineConfig([
   // generated.ts é gerado pelo typescript-transformer (ADR-04) e nunca editado
@@ -549,14 +550,14 @@ export default defineConfig([
   // primeiro — dois blocos `src/features/**/*.tsx` novos apagando ESTE bloco
   // em silêncio para todo componente, achado do review desta task.
   //
-  // `ignores: CATRACA_COR` porque a catraca de cor (D7, dois blocos abaixo)
-  // precisa das MESMAS 4 proibições de componente — só não a de cor hardcoded
-  // — e um array de `no-restricted-syntax` não aceita `ignores` por seletor
-  // individual dentro de si. A catraca ganha bloco próprio com o mesmo array
-  // menos `COR_HARDCODED`, particionando o mesmo glob sem sobreposição.
+  // O `ignores` guarda só `FORA_DO_CAMPO_LIGADO` desde 2026-09-02: a partição
+  // por `CATRACA_COR` existia porque a catraca de cor precisava das MESMAS
+  // proibições de componente menos `COR_HARDCODED`, e um array de
+  // `no-restricted-syntax` não aceita `ignores` por seletor individual. Com a
+  // lista em zero (D-69, item 25) o segundo lado da partição foi removido.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    ignores: [...CATRACA_COR, ...FORA_DO_CAMPO_LIGADO],
+    ignores: [...FORA_DO_CAMPO_LIGADO],
     rules: {
       'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
     },
@@ -570,19 +571,6 @@ export default defineConfig([
     files: FORA_DO_CAMPO_LIGADO,
     rules: {
       'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
-    },
-  },
-  // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
-  // é o único ponto onde a cor segue hardcoded de propósito. `files: CATRACA_COR`
-  // aqui e `ignores: CATRACA_COR` acima particionam o mesmo glob; nenhum
-  // arquivo casa os dois blocos.
-  // A régua de VALOR entra aqui também, e sem exceção: o que estes 4 arquivos
-  // carregam é a exceção da classe Tailwind, não a de cor em `style` — e eles
-  // não têm nenhuma (medido em 2026-08-17).
-  {
-    files: CATRACA_COR,
-    rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
