@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { FormPhotoRow, FormSection } from "@shared/ui";
+import { FormPhotoRow, FormSection, type FieldComponent } from "@shared/ui";
 import type { useEntityPhoto } from "@shared/hooks";
 import type { RedatorFormFields } from "../../hooks/useRedatorForm";
 import { RedatorIdentityFields } from "./RedatorIdentityFields";
@@ -7,18 +7,17 @@ import { RedatorIdentityFields } from "./RedatorIdentityFields";
 /** Seção de usuário do `RedatorDialog`: foto e campos de identificação.
  * `useEntityPhoto` fica no pai — `photo.pending` alimenta `disabled` e
  * `closeBlocked` do `CrudDialog` — e este componente recebe o objeto `photo`
- * inteiro por prop (D4). */
+ * inteiro por prop (D4). `readOnly` continua explícito: é o `FormPhotoRow`
+ * quem o consome, não o `Field` — o `Field` já chega ligado ao form. */
 export function RedatorUserSection({
   form,
-  set,
+  Field,
   readOnly,
-  fieldErrors,
   photo,
 }: {
   form: RedatorFormFields;
-  set: <K extends keyof RedatorFormFields>(key: K, value: RedatorFormFields[K]) => void;
+  Field: FieldComponent<RedatorFormFields>;
   readOnly: boolean;
-  fieldErrors?: Record<string, string[]> | null;
   photo: ReturnType<typeof useEntityPhoto>;
 }) {
   const { t } = useTranslation();
@@ -28,12 +27,7 @@ export function RedatorUserSection({
       <FormSection title={t("redator.sectionUser")} />
 
       <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
-        <RedatorIdentityFields
-          form={form}
-          set={set}
-          readOnly={readOnly}
-          fieldErrors={fieldErrors}
-        />
+        <RedatorIdentityFields Field={Field} form={form} />
       </FormPhotoRow>
     </>
   );
