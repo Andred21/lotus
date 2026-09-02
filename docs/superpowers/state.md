@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: infra-producao-provisionamento-aws
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
 active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
@@ -30,9 +30,9 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
-    workflow_state: ready_for_execution
+    workflow_state: executing
     next_owner: claude
-    next_action: execute_active_plan
+    next_action: continue_active_plan
     tree: ../lotus-infra
     branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
     active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md   # spec v2, do brainstorming de 2026-09-02
@@ -62,7 +62,7 @@ lanes:
     last_completed_work_item: frontend-triagem-dos-audits-do-item-18
 last_completed_work_item: frontend-decisoes-de-ui-pendentes
 state_basis_commit: 8efd85f2
-updated_at: 2026-09-02T15:00:00-03:00
+updated_at: 2026-09-02T18:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -167,7 +167,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; o descarte está em `archive/infra-producao-provisionamento-aws-v1` | `ready_for_execution` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; o descarte está em `archive/infra-producao-provisionamento-aws-v1` | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado e **mesclado** em 2026-08-30, PR #87, `afe273cf`) | `idle` |
 
 
@@ -244,9 +244,11 @@ arquitetura que o replanejamento escolher, e remedir custa tempo e risco de esqu
 - **Backend em worktree não prova nada** (P-03): o compose monta o main tree. Vale para qualquer
   recorte que o novo plano faça.
 
-**Estado agora:** `ready_for_planning`, `active_spec`/`active_plan`/`context_packet` todos `null`.
-A próxima ação é `/planejar-bloco` para `infra-producao-provisionamento-aws`, e o brainstorming
-começa pelos quatro motivos acima — não pela spec descartada.
+**Estado depois do replanejamento (2026-09-02):** o brainstorming rodou pelos quatro motivos acima
+e fechou nove decisões (D1–D9); a spec v2 (`b4a5f45d`) e o plano v2 de 20 tasks (`b928ff7b`) estão
+nos ponteiros do frontmatter, `context_packet` segue `null` por decisão D9. A execução da Fase A
+começou nesta data — o parágrafo anterior, que ainda dizia `ready_for_planning`, era narrativa do
+descarte e não estado corrente.
 
 
 ## Itens fechados — ponteiro, não narrativa
