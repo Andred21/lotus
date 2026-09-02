@@ -213,13 +213,77 @@ const DISABLED_READONLY_ESTATICO = {
 // `NestedField` NÃO conta como pai válido, de propósito: ele não monta
 // `FieldContext`, então um dropdown dentro dele fica sem nome do mesmo jeito.
 // Hoje não há nenhum; quando houver, reprova.
+//
+// `Field` (maiúscula, sem prefixo) TAMBÉM conta como pai válido: é o
+// componente que `useFormField` devolve (item 24) — ele monta `FormField` por
+// baixo com o MESMO `FieldContext.Provider`, então o `inputId` chega ao
+// dropdown do mesmo jeito. Sem esta linha, todo call site migrado para o
+// molde do `ClientGeneralFields` reprovaria por forma, não por defeito real.
+// Vale nas DUAS grafias da tag: `<Field>` (a prop que desce ao subcomponente)
+// e `<campo.Field>` (o dono do hook, `JSXMemberExpression` — onde `name.name`
+// não existe e o predicado antigo não casava nada).
+//
+// A guarda casa a GRAFIA da tag, não a origem dela: qualquer JSX chamado
+// `Field` conta como pai válido, e `const F = useFormField(f)` escapa da
+// regra. É o mesmo limite que o `FormField` sempre teve — o seletor é
+// sintático — e não um afrouxamento novo; fica escrito para a próxima task
+// não confundir convenção de nome com verificação de tipo.
+// O campo ligado ao form (item 24) tem UMA porta para o erro do backend: o
+// `name`. A extração à mão era a grafia de 48 sítios em 24 arquivos, e cada
+// campo novo que a esquecesse ficava com o 422 invisível — botão de salvar
+// aparentemente inerte. `error` continua existindo como escape declarada (a
+// chave que não é o nome do campo), e é por isso que a régua mede a EXTRAÇÃO,
+// não a prop.
+//
+// Mede as DUAS grafias do mesmo acesso, e não só a que os 48 sítios usavam:
+// `fieldErrors?.x?.[0]` (identificador solto, desestruturado do bundle) e
+// `f.fieldErrors?.x?.[0]` (pescado do bundle na hora) — esta segunda era
+// exatamente a grafia do `TurmaConfigCard` antes da migração, e passava limpa
+// pelo seletor de um predicado só (Q-1 do review de 2026-09-02, medido com
+// sonda). O que ela NÃO pega, dito para ninguém supor cobertura que não
+// existe: apelido (`const { fieldErrors: fe } = f; fe?.x?.[0]`), porque aí não
+// sobra o nome `fieldErrors` em lugar nenhum da expressão. É o mesmo limite
+// sintático do `DROPDOWN_SEM_NOME`: casa grafia, não origem.
+const ERRO_DE_CAMPO_A_MAO = {
+  selector:
+    'MemberExpression[computed=true][property.value=0]' +
+    ':matches([object.object.name="fieldErrors"], [object.object.property.name="fieldErrors"])',
+  message:
+    'Erro de campo extraído à mão: use <Field name="x"> e o erro vem do form (spec do item 24). A prop `error` fica para a chave que NÃO é o nome do campo.',
+}
+
+// Os arquivos que o item 24 deixou fora POR MEDIÇÃO (spec §2), e que por isso
+// seguem extraindo o erro à mão. Não é dívida esquecida: é o escopo escrito.
+// Particiona o mesmo glob do bloco de componente, exatamente como `CATRACA_COR`
+// faz — ver o bloco gêmeo abaixo.
+const FORA_DO_CAMPO_LIGADO = [
+  // Sem bundle de form a que ligar o campo: setter por campo, estado solto, ou
+  // chave de erro que não é o nome do campo (`grades.final`).
+  'src/features/operation/components/Enrollment/EnrollStudentForm.tsx',
+  'src/features/operation/components/Enrollment/RegisterResultDialog.tsx',
+  'src/features/certification/components/Emission/ConfirmIssueDialog.tsx',
+  'src/features/certification/components/Emission/BatchIssueDialog.tsx',
+  'src/features/certification/components/Historial/RevokeDialog.tsx',
+  // Campo aninhado: chave posicional `contacts.<i>.<campo>` e setter de patch.
+  // A porta futura é um `FormScope prefix=`, não esta régua.
+  'src/features/commercial/components/Client/ContactCard.tsx',
+  'src/features/commercial/components/Client/ContactFields.tsx',
+  'src/features/catalog/components/Course/ModuleCard.tsx',
+  'src/features/catalog/components/Course/ModuleFields.tsx',
+  // Não são formulário de entidade: sem entidade, sem dialog, sem modo.
+  'src/features/identity/components/Login/LoginForm.tsx',
+  'src/features/identity/components/Login/ForgotForm.tsx',
+  'src/features/identity/components/Password/SetPasswordPage.tsx',
+]
+
 const DROPDOWN_SEM_NOME = {
   selector:
     'JSXElement[openingElement.name.name="AppDropdown"]' +
-    ':not(JSXElement[openingElement.name.name="FormField"] JSXElement[openingElement.name.name="AppDropdown"])' +
+    ':not(JSXElement:matches([openingElement.name.name=/^(FormField|Field)$/], ' +
+    '[openingElement.name.property.name="Field"]) JSXElement[openingElement.name.name="AppDropdown"])' +
     ':not(:has(JSXOpeningElement > JSXAttribute[name.name=/^(inputId|aria-label|aria-labelledby)$/]))',
   message:
-    'AppDropdown sem nome acessível: dentro de FormField o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
+    'AppDropdown sem nome acessível: dentro de FormField/Field o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
 }
 // Item 19 (R1): `AppButton` sem papel cai no `.p-button` preenchido do Lara —
 // celeste com rótulo navy —, que NÃO é papel deste produto: a ação primária é
@@ -492,7 +556,18 @@ export default defineConfig([
   // menos `COR_HARDCODED`, particionando o mesmo glob sem sobreposição.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    ignores: CATRACA_COR,
+    ignores: [...CATRACA_COR, ...FORA_DO_CAMPO_LIGADO],
+    rules: {
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
+    },
+  },
+  // Gêmeo do bloco acima para os arquivos fora do item 24: MESMO array, menos
+  // `ERRO_DE_CAMPO_A_MAO`. Sem ele, o `ignores` de cima não significaria "esta
+  // régua não vale aqui" e sim "NENHUMA régua vale aqui" — os 3 bans de query,
+  // o de cor e os de acessibilidade sumiriam desses 12 arquivos em silêncio. É
+  // o mesmo molde da partição `CATRACA_COR`.
+  {
+    files: FORA_DO_CAMPO_LIGADO,
     rules: {
       'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
     },
@@ -507,7 +582,7 @@ export default defineConfig([
   {
     files: CATRACA_COR,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -528,7 +603,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se

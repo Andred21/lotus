@@ -2,12 +2,12 @@ import { forwardRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Password } from 'primereact/password'
 
-import type { KeyboardEvent, MouseEvent } from 'react'
+import type { ChangeEvent, KeyboardEvent, MouseEvent } from 'react'
 import type { PasswordProps } from 'primereact/password'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { mergePt } from '../mergePt'
-import { useFieldProps } from '../FormField/fieldContext'
+import { useFieldBind, useFieldProps } from '../FormField/fieldContext'
 
 export interface AppPasswordProps extends PasswordProps {
   /** Classe de ícone primeicons à esquerda, ex.: "pi pi-lock". */
@@ -58,6 +58,13 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     // alcança o input (`password.cjs.js:704` vs `:713`). Associar a label à span
     // seria o mesmo defeito da P-37 com outra roupa.
     const fieldProps = useFieldProps('inputId')
+    // O `bind` é canal SEPARADO do `id`/`aria-*`: o `fieldProps` acima não muda.
+    // Fora do spread e com `?? ''` SÓ no valor do bind, como no `AppInputText`
+    // — solto e sem `value` do chamador, o campo precisa continuar
+    // `undefined` (não-controlado, digitável).
+    const bind = useFieldBind((e: ChangeEvent<HTMLInputElement>) => e.target.value)
+    const value = (props.value ?? ('value' in bind ? (bind.value ?? '') : undefined)) as PasswordProps['value']
+    const onChange = props.onChange ?? bind.onChange
     // Nome acessível do olho. O default do Prime é "Show/Hide Password" em
     // inglês (password.cjs.js:605,614) e chega a TODA tela com senha — o
     // wrapper é a única porta (UI-08). Não vai pela locale global do Prime:
@@ -178,6 +185,8 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           feedback={false}
           {...fieldProps}
           {...props}
+          value={value}
+          onChange={onChange}
           className={`w-full ${props.className ?? ''}`}
           inputClassName={`w-full ${props.inputClassName ?? ''}`}
           pt={passwordPt}
@@ -197,6 +206,8 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
           feedback={false}
           {...fieldProps}
           {...props}
+          value={value}
+          onChange={onChange}
           className={`w-full ${props.className ?? ''}`}
           inputClassName={`w-full pl-10 ${props.inputClassName ?? ''}`}
           pt={passwordPt}

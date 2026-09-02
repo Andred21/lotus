@@ -32,17 +32,19 @@
 - **A numeração não se renumera quando um item fecha.** O `1` e o `14` saíram em 2026-08-22, o `3`
   em 2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
   2026-08-27, o `5` em 2026-08-28, o `6` e o `18` em 2026-08-29, o `7` e o `19` em 2026-08-30, o
-  `20` em 2026-08-31, e o `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o
-  provisionamento). A fila começa no `9` e salta os que já fecharam
+  `20` em 2026-08-31, o `21` em 2026-09-01, o `24` em 2026-09-02, e o `10` **encolheu** em vez de
+  sair (o runtime foi entregue; sobrou o provisionamento). A fila começa no `9` e salta os que já fecharam
   de propósito: o número é identidade estável, citada pelas fichas de `pendencias/` e pelos próprios
   blocos. Renumerar quebraria as citações e pareceria promoção.
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22, o `17` em
   2026-08-24 e o `21` e o `22` em 2026-08-31 — os dois **abertos pelo João**, recortando por frente
   as onze fichas travadas em decisão que nenhum bloco hospedava; o 21 e o 22 aparecem no topo da
-  fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; o `15` fica queimado, porque chegou a nomear o `BD-15` durante uma inserção que foi
-  desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número. O `24` nasceu em
-  2026-09-02, da revisão de arquitetura registrada em
-  `audits/2026-09-02-arquitetura-deepening.html`.
+  fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; e o `24` em
+  2026-09-02, do §3 da revisão de arquitetura registrada em
+  `audits/2026-09-02-arquitetura-deepening.html`, **com desenho já fechado em `specs/`** — exceção
+  ao just-in-time que vale para o plano, não para a spec; o `15` fica queimado, porque chegou a
+  nomear o `BD-15` durante uma inserção que foi
+  desfeita, e reusá-lo apontaria duas coisas diferentes com o mesmo número.
 - **O 16 e o 17 chegaram aqui pelo merge da `lane-c` em 2026-08-24.** Até ele, a fila canônica dos
   dois morava na branch `refactor/frontend-revisao-ui` (`eaa9e15c`, `bef4feb3`), por decisão do João
   em 2026-08-22 — duplicá-los no main tree garantiria conflito no merge sem ganho.
@@ -271,8 +273,6 @@ Duas direções a medir nas 12 tabelas, a 1024px: (a) sinal de rolagem no wrappe
 rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor onde a reserva não
 cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
 
----
-
 ## 24. `backend-projecao-de-arquivados`
 
 **Prioridade:** P2 · **Frente:** Backend · **Contexto:** não
@@ -326,8 +326,6 @@ mesma briga contra o 201 que o `ResponsableData` força em POST.
 
 **Restrição de nome:** `PersistenceLawsTest` varre `app/` inteiro e reprova basename terminado em
 `Repository`; a lei não abre exceção para `Shared/`.
-
----
 
 ---
 

@@ -23,6 +23,58 @@
 
 ---
 
+## Fechado em 2026-09-02 — `frontend-campo-de-formulario-liga-no-form` (item 24)
+
+**A `lane-c` recebeu o item 24 em 2026-09-02** — `frontend-campo-de-formulario-liga-no-form`,
+promovido explicitamente pelo João com a lane em `idle`. `Contexto: não`: as fontes são o §3 do
+review de arquitetura de 2026-09-01 e o próprio código, tudo no repositório. **A spec chegou antes
+da vez do bloco, por decisão registrada na própria spec (Q19/Q20)** — as 23 decisões foram
+aprovadas seção a seção com o João em 2026-09-02 e custam caro de reconstruir; o `CLAUDE.md` §4
+manda planejar just-in-time e é o **plano** que ficou para agora. Nem a spec nem a ficha
+autorizaram execução: quem promoveu foi o João, aqui.
+
+**Duas coisas foram decididas contra o que estava escrito, e ficam registradas:**
+
+1. **A ordem da fila foi invertida com aval explícito.** A ficha do item 24 diz *"depois do bloco
+   do §1 do review"* — o colapso da projeção de arquivamento, no backend, que **ainda não tem ficha
+   no `backlog.md`**. O João optou por rodar as duas frentes **em paralelo**: o 24 nesta árvore
+   (`../fix-frontend`, lane-c) e `backend-projecao-de-arquivados` no main tree (lane-a). A
+   dependência entre os dois é de ordem de leitura do review, não de código: o 24 não toca
+   `backend/` nem `generated.ts`.
+2. **O espelho do topo virou para `lane-c` fora do main tree** — é a **P-55**, e segue o precedente
+   medido de 2026-08-24. **Risco conhecido e aceito:** a lane-a vai promover o bloco de backend no
+   main tree e, se ela também virar o espelho, as duas árvores escrevem o mesmo campo. A integração
+   é serial (invariante acima), então a colisão se resolve no merge; quem rebasar depois **mantém o
+   espelho da própria árvore**. Esta sessão escreveu **só os campos da lane-c** e o espelho — nenhum
+   campo de `lane-a` ou `lane-b` foi tocado.
+
+**O review do item 24 rodou em 2026-09-02 e os dois achados foram aplicados no mesmo dia**, com
+aval explícito do João. **Q-1:** o `ERRO_DE_CAMPO_A_MAO` media só `fieldErrors?.x?.[0]` e passava
+limpo por `f.fieldErrors?.x?.[0]` — a grafia do próprio `TurmaConfigCard` antes da migração; o
+seletor agora casa as duas, e o apelido (`const { fieldErrors: fe } = f`) segue fora do alcance,
+escrito no comentário. **Q-2:** o `useFormField` passou a devolver `{ Field }`, porque a regra
+`react-hooks/static-components` só olha tag com nome de identificador — `<campo.Field>` dispensa os
+26 `eslint-disable` sem desligar a regra em arquivo nenhum, e o `DROPDOWN_SEM_NOME` aprendeu a tag
+em `JSXMemberExpression` junto. `pnpm lint`, `pnpm build` e `pnpm test` (734/734) verdes depois da
+correção; commit `98290b2b`.
+
+**Três divergências documentais aguardam a palavra do João antes de virarem ficha em
+`pendencias/abertas.md`** — não são achado de código e não travam o fechamento: (a) a spec §4.2
+manda `useMemo([])` e o código usa `useRef` + dois `eslint-disable react-hooks/refs`, justificados
+no docblock; (b) a spec §7.1 ainda lista o teste de `parse`, que a Q23 revogou; (c) a spec descreve
+o hook devolvendo o componente cru, e a correção da Q-2 mudou o retorno para `{ Field }`. A prova
+de navegador de 2026-09-02 conta a grafia antiga (`<Field `) porque **antecede** a Q-2 — o caminho
+de render é o mesmo componente sob o mesmo `FieldContext`, e a identidade estável segue medida em
+`useFormField.test.tsx`.
+
+**O item 24 entrou no `backlog.md` pelas mãos do João** (acrescentar item na fila é dele, §
+invariante de dono), no mesmo working tree; o commit de promoção apenas o leva ao Git junto da
+spec que ele referencia.
+
+**Fechado em 2026-09-02.** Gate: prova de navegador refeita pós-Q-2 contra a API real (`audits/2026-09-02-item24-prova-de-navegador.md`), backend **1149 passed / 5 skipped**, frontend **127 arquivos / 734 testes**, lint 0, build verde; `pint` e `typescript:transform` N/A por escopo, provados por diff vazio em `backend/` e `generated.ts`. Plano e spec arquivados; item 24 removido do `backlog.md`; a **P-67** saiu de vez do rastro de `pendencias/encerradas.md`. **As três divergências documentais** entre spec e código (o `useRef` no lugar do `useMemo([])` da §4.2, o teste de `parse` da §7.1 que a Q23 revogou, e o retorno `{ Field }` que a Q-2 introduziu) seguem **aguardando a palavra do João** antes de virarem ficha em `pendencias/abertas.md`. **Branch sem merge.**
+
+---
+
 ## Fechado em 2026-09-01 — `frontend-decisoes-de-ui-pendentes` (item 21)
 
 **O item 21 assumiu a `lane-a` em 2026-08-31** — `frontend-decisoes-de-ui-pendentes`, criado no

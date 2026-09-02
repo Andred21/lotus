@@ -5,6 +5,7 @@ import {
   FormSection,
   FormErrorBanner,
   FormErrorSummary,
+  useFormField,
 } from "@shared/ui";
 import type { RedatorData } from "@shared/types/generated";
 import { redatoresApi } from "@shared/api/redatoresApi";
@@ -41,9 +42,11 @@ export function RedatorDialog({
     invalidateKey: redatoresApi.keys.all,
   });
 
+  const f = useRedatorForm(redator, mode, onHide, (created) =>
+    photo.flush(created.id as number),
+  );
   const {
     form,
-    set,
     toggleCourse,
     readOnly,
     submit,
@@ -53,9 +56,8 @@ export function RedatorDialog({
     unstageDoc,
     fieldErrors,
     generalError,
-  } = useRedatorForm(redator, mode, onHide, (created) =>
-    photo.flush(created.id as number),
-  );
+  } = f;
+  const campo = useFormField(f);
   const courseIds = form.course_ids;
 
   return (
@@ -99,9 +101,8 @@ export function RedatorDialog({
       <section className="space-y-4">
         <RedatorUserSection
           form={form}
-          set={set}
+          Field={campo.Field}
           readOnly={readOnly}
-          fieldErrors={fieldErrors}
           photo={photo}
         />
 

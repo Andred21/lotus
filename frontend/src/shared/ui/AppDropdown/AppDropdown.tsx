@@ -1,7 +1,7 @@
 import { Dropdown } from 'primereact/dropdown'
-import type { DropdownProps } from 'primereact/dropdown'
+import type { DropdownChangeEvent, DropdownProps } from 'primereact/dropdown'
 import { useTranslation } from 'react-i18next'
-import { useFieldProps } from '../FormField/fieldContext'
+import { useFieldBind, useFieldProps } from '../FormField/fieldContext'
 
 export type { DropdownProps as AppDropdownProps } from 'primereact/dropdown'
 
@@ -34,7 +34,23 @@ export type { DropdownProps as AppDropdownProps } from 'primereact/dropdown'
 export function AppDropdown(props: DropdownProps) {
   const { t, i18n } = useTranslation()
   const fieldProps = useFieldProps('inputId')
+  // `null` passa direto: no dropdown é "nada selecionado", não campo de texto
+  // vazio. Fora do spread pela razão do `AppInputText`.
+  const bind = useFieldBind((e: DropdownChangeEvent) => e.value)
+  // `'value' in props`, não `??`: aqui `null` é valor legítimo ("nada
+  // selecionado"), não ausência — um `value={null}` explícito do chamador
+  // precisa vencer o bind, e `??` o deixaria perder para `bind.value`.
+  const value = 'value' in props ? props.value : bind.value
+  const onChange = props.onChange ?? bind.onChange
   return (
-    <Dropdown key={i18n.language} className="w-full" emptyMessage={t('common.noOptions')} {...fieldProps} {...props} />
+    <Dropdown
+      key={i18n.language}
+      className="w-full"
+      emptyMessage={t('common.noOptions')}
+      {...fieldProps}
+      {...props}
+      value={value}
+      onChange={onChange}
+    />
   )
 }

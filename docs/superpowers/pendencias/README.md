@@ -67,12 +67,13 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (0)
 
-**A P-67 fechou no `frontend-decisoes-de-ui-pendentes` (2026-09-01) e está em rastro** — a escala de
-raio virou dois tokens no `@theme` (`--radius-surface`, `--radius-control`), `shared/ui` e os 15
-sítios de `features/`+`app/` passaram a consumi-los e a catraca `RAIO_LITERAL` nasceu verde, vista
-reprovar por sonda. Sai no próximo `/fechar-sprint` posterior a este.
+**Nenhuma em rastro.** A **P-67** saiu de vez no fechamento do
+`frontend-campo-de-formulario-liga-no-form` (2026-09-02), o primeiro posterior ao do bloco que a
+encerrou — a escala de raio virou dois tokens no `@theme` e a catraca `RAIO_LITERAL` nasceu verde; o
+rastro durável está nos commits e na linha de entrega do item 21 em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-61 e a P-63 saíram neste fechamento** (`frontend-decisoes-de-ui-pendentes`, 2026-09-01), o
 primeiro posterior aos dos dois blocos que as encerraram em 2026-08-30 — os `title` do

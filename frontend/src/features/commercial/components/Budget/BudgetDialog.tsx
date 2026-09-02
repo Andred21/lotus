@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppDropdown, FormField, FormErrorSummary, FormErrorBanner, InlineLoadState } from '@shared/ui'
+import { CrudDialog, AppInputText, AppDropdown, FormErrorSummary, FormErrorBanner, InlineLoadState, useFormField } from '@shared/ui'
 import { loadMessage } from '@shared/lib'
 import type { BudgetData } from '@shared/types/generated'
 import { useBudgetForm, type BudgetDialogMode } from '../../hooks/useBudgetForm'
@@ -17,9 +17,9 @@ export function BudgetDialog({
   onCreated?: (created: BudgetData) => void
 }) {
   const { t } = useTranslation()
-  const { form, set, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = useBudgetForm(
-    budget, mode, onHide, onCreated,
-  )
+  const f = useBudgetForm(budget, mode, onHide, onCreated)
+  const { form, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = f
+  const campo = useFormField(f)
   const clients = useCommercialClients()
 
   const isCreate = mode === 'create'
@@ -58,9 +58,15 @@ export function BudgetDialog({
             desabilitado cortava a razão social, que é o valor mais longo do
             diálogo (review do BD-3, Q-1). O `value` mostra o RÓTULO, nunca o
             id. */}
-        <FormField
+        {/* client_id colapsa no dropdown (emite `number`, `set` aceita), mas o
+            `Field` sozinho não decide O QUE mostrar em leitura nem QUANDO ler:
+            imutável fora do `create` é regra desta tela, não do form, e o
+            rótulo em leitura precisa do vocabulário de domínio (a opção cujo
+            `value` casa com `form.client_id`) — por isso `readOnly` e `value`
+            continuam explícitos aqui (item 24, spec §5). */}
+        <campo.Field
+          name="client_id"
           label={t('budget.client')}
-          error={fieldErrors?.client_id?.[0]}
           readOnly={readOnly || !isCreate}
           value={clients.clientOptions.find((o) => o.value === form.client_id)?.label ?? ''}
         >
@@ -69,12 +75,10 @@ export function BudgetDialog({
            * mudo nesse estado (não há erro nem lista vazia ainda), e o passo 1 do
            * wizard, no mesmo bloco, já mostra esqueleto (review do BD-6, Q-3). */}
           <AppDropdown
-            value={form.client_id}
             options={clients.clientOptions}
             disabled={clients.unusable}
             loading={clients.isLoading}
             aria-busy={clients.isLoading}
-            onChange={(e) => set('client_id', e.value as number)}
           />
           {/* Dropdown vazio sem explicação é o disfarce do BD-6: quem não
            * consegue listar clientes precisa LER o motivo e poder reintentar,
@@ -85,20 +89,11 @@ export function BudgetDialog({
             retryLabel={t('common.retry')}
             onRetry={clients.refetch}
           />
-        </FormField>
+        </campo.Field>
 
-        <FormField
-          label={t('budget.paymentTerms')}
-          error={fieldErrors?.payment_terms?.[0]}
-          readOnly={readOnly}
-          value={form.payment_terms ?? ''}
-        >
-          <AppInputText
-            value={form.payment_terms ?? ''}
-            onChange={(e) => set('payment_terms', e.target.value)}
-            className="w-full"
-          />
-        </FormField>
+        <campo.Field name="payment_terms" label={t('budget.paymentTerms')}>
+          <AppInputText className="w-full" />
+        </campo.Field>
       </section>
     </CrudDialog>
   )
