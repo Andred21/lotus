@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary, SectionLabel } from '@shared/ui'
+import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary, SectionLabel, useFormField } from '@shared/ui'
 import { formatDate, type DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { usePermissions } from '@shared/hooks'
@@ -21,6 +21,7 @@ const MAPPED = ['modalidade', 'local_aplicacao', 'start_date', 'end_date']
 export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel }: Props) {
   const { t } = useTranslation()
   const f = useTurmaConfigForm({ mode, turma, quoteId, onSaved })
+  const Field = useFormField(f)
   const { can } = usePermissions()
   // Derivado AQUI, não no call-site: quem monta este cartão não precisa saber
   // da RN-15 para nascer correto. Em `create` ainda não há turma — nada a
@@ -62,53 +63,35 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField
+        {/* eslint-disable-next-line react-hooks/static-components -- Field é montado no mesmo arquivo em que useFormField roda (item 24) */}
+        <Field
+          name="modalidade"
           label={t('operation.config.modality')}
-          error={f.fieldErrors?.modalidade?.[0]}
-          readOnly={f.readOnly}
           value={modalityOptions.find((o) => o.value === f.form.modalidade)?.label ?? f.form.modalidade}
         >
-          <AppDropdown
-            value={f.form.modalidade}
-            options={modalityOptions}
-            onChange={(e) => f.set('modalidade', e.value)}
-          />
-        </FormField>
+          <AppDropdown options={modalityOptions} />
+        </Field>
 
-        <FormField
-          label={t('operation.config.local')}
-          error={f.fieldErrors?.local_aplicacao?.[0]}
-          readOnly={f.readOnly}
-          value={f.form.local_aplicacao ?? ''}
-        >
+        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
+        <Field name="local_aplicacao" label={t('operation.config.local')}>
           {/* O `disabled` que sobra NÃO é modo leitura: turma online não tem
               local a preencher, e isso vale em EDIÇÃO. Modo leitura sai pelo
-              `readOnly` acima. */}
+              `readOnly` do Field. */}
           <AppInputText
-            value={f.form.local_aplicacao ?? ''}
             placeholder={t('operation.config.localPlaceholder')}
             disabled={f.form.modalidade === 'online'}
-            onChange={(e) => f.set('local_aplicacao', e.target.value)}
           />
-        </FormField>
+        </Field>
 
-        <FormField
-          label={t('operation.config.startDate')}
-          error={f.fieldErrors?.start_date?.[0]}
-          readOnly={f.readOnly}
-          value={readDate(f.form.start_date)}
-        >
+        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
+        <Field name="start_date" label={t('operation.config.startDate')} value={readDate(f.form.start_date)}>
           <AppDatePicker value={f.form.start_date || null} onChange={(v) => f.set('start_date', v ?? '')} />
-        </FormField>
+        </Field>
 
-        <FormField
-          label={t('operation.config.endDate')}
-          error={f.fieldErrors?.end_date?.[0]}
-          readOnly={f.readOnly}
-          value={readDate(f.form.end_date)}
-        >
+        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
+        <Field name="end_date" label={t('operation.config.endDate')} value={readDate(f.form.end_date)}>
           <AppDatePicker value={f.form.end_date || null} onChange={(v) => f.set('end_date', v ?? '')} />
-        </FormField>
+        </Field>
 
         {mode !== 'create' && (
           /* Carga horária é derivada do curso: nasce só-leitura em qualquer
