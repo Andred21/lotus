@@ -1,7 +1,11 @@
+import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { FormField } from './FormField'
 import { useFieldBind } from './fieldContext'
+import { useFormField } from './useFormField'
+import { AppInputText } from '../AppInputText/AppInputText'
+import { AppDropdown } from '../AppDropdown/AppDropdown'
 
 afterEach(() => {
   cleanup()
@@ -62,5 +66,49 @@ describe('bind pelo FieldContext', () => {
     )
     expect(screen.queryByTestId('controle')).toBeNull()
     expect(screen.getByText('76.123.456-7')).toBeTruthy()
+  })
+})
+
+/* eslint-disable react-hooks/static-components -- o `Field` é montado no mesmo
+ * arquivo em que o hook roda porque é o que o teste prova; nos call sites reais
+ * ele desce como prop e a regra passa limpa. */
+describe('os wrappers de shared/ui pescam o bind', () => {
+  type Campos = { rut: string; giro: string | null; tipo: string | null }
+
+  function Tela() {
+    const [form, setForm] = useState<Campos>({ rut: '76.123.456-7', giro: null, tipo: 'client' })
+    const set = <K extends keyof Campos>(k: K, v: Campos[K]) => setForm((f) => ({ ...f, [k]: v }))
+    const Field = useFormField({ form, set, fieldErrors: null, readOnly: false })
+    return (
+      <>
+        <Field name="rut" label="RUT"><AppInputText /></Field>
+        <Field name="giro" label="Giro"><AppInputText /></Field>
+        <Field name="tipo" label="Tipo">
+          <AppDropdown options={[{ value: 'client', label: 'Cliente' }, { value: 'other', label: 'Outro' }]} />
+        </Field>
+      </>
+    )
+  }
+
+  it('AppInputText mostra o valor do form e escreve de volta', () => {
+    render(<Tela />)
+    const input = screen.getByLabelText('RUT') as HTMLInputElement
+    expect(input.value).toBe('76.123.456-7')
+
+    fireEvent.change(input, { target: { value: '77.000.000-0' } })
+    expect((screen.getByLabelText('RUT') as HTMLInputElement).value).toBe('77.000.000-0')
+  })
+
+  it('AppInputText mostra vazio, não "null", quando o campo é nulo', () => {
+    render(<Tela />)
+    expect((screen.getByLabelText('Giro') as HTMLInputElement).value).toBe('')
+  })
+
+  it('AppDropdown recebe o valor do form', () => {
+    render(<Tela />)
+    expect(screen.getByLabelText('Tipo')).toBeTruthy()
+    // Pelo rótulo VISÍVEL do dropdown, e não por `getByText`: o Prime mantém um
+    // `<select>` oculto com as mesmas opções, então o texto casa duas vezes.
+    expect(document.querySelector('.p-dropdown-label')?.textContent).toBe('Cliente')
   })
 })

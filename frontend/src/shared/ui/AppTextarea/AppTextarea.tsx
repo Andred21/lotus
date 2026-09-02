@@ -1,7 +1,7 @@
-import { forwardRef } from 'react'
+import { forwardRef, type ChangeEvent } from 'react'
 import { InputTextarea } from 'primereact/inputtextarea'
 import type { InputTextareaProps } from 'primereact/inputtextarea'
-import { useFieldProps } from '../FormField/fieldContext'
+import { useFieldBind, useFieldProps } from '../FormField/fieldContext'
 
 export type AppTextareaProps = InputTextareaProps
 
@@ -10,6 +10,10 @@ export type AppTextareaProps = InputTextareaProps
  * Associa-se sozinho ao rótulo quando está dentro de um `FormField` (P-37). */
 export const AppTextarea = forwardRef<HTMLTextAreaElement, AppTextareaProps>((props, ref) => {
   const fieldProps = useFieldProps('id')
-  return <InputTextarea ref={ref} {...fieldProps} {...props} />
+  // Fora do spread e com `?? ''`: mesma razão do `AppInputText`.
+  const bind = useFieldBind((e: ChangeEvent<HTMLTextAreaElement>) => e.target.value)
+  const value = (props.value ?? bind.value ?? '') as InputTextareaProps['value']
+  const onChange = props.onChange ?? bind.onChange
+  return <InputTextarea ref={ref} {...fieldProps} {...props} value={value} onChange={onChange} />
 })
 AppTextarea.displayName = 'AppTextarea'
