@@ -48,8 +48,15 @@ export default defineConfig(({ command, mode }) => {
     // Sem `globals`: cada teste importa describe/it/expect de 'vitest'. Assim os
     // arquivos de teste continuam type-checados pelo `tsc -b` do pnpm build, em
     // vez de virarem zona sem tipo.
+    //
+    // COM `setupFiles`, desde 2026-09-02 (P-69): o `afterEach(cleanup)` do
+    // Testing Library era grafia manual em 31 dos 127 arquivos, e o desmonte
+    // dependia de quem copiava o molde de quem. O par que sustenta a decisão é
+    // a catraca `CLEANUP_A_MAO` (eslint.config.js) mais a guarda estática
+    // `tests/desmonte-global.test.ts`, que confere que ESTA linha existe.
     test: {
       environment: "jsdom",
+      setupFiles: ["./src/test-setup.ts"],
       // `tests/` fica fora de `src/` porque o que ele confere é o REPOSITÓRIO,
       // não a app: o container `app` monta só `./backend` e `./frontend`, então
       // o vitest é o único runner do projeto com acesso à raiz.
