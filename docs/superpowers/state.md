@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-campo-de-formulario-liga-no-form
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md
 active_plan: docs/superpowers/plans/2026-09-02-frontend-campo-de-formulario-liga-no-form.md
 context_packet: null
-blocker: null
+blocker: "review do item 24 (2026-09-02): 2 achados aguardando decisao — Q-1 (catraca ERRO_DE_CAMPO_A_MAO cega para `f.fieldErrors?.x?.[0]`, 🟡/P) e Q-2 (26 eslint-disable de react-hooks/static-components nos call sites, 🟢/P). Mais 2 divergencias documentais spec-vs-codigo para pendencias."
 lanes:
   lane-a:
     active_feature: null
@@ -47,16 +47,16 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: frontend-campo-de-formulario-liga-no-form   # item 24, promovido pelo Joao em 2026-09-02
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: ../fix-frontend
     branch: refactor/frontend-campo-de-formulario-liga-no-form   # aberta de main@8efd85f2 em 2026-09-02
     active_spec: docs/superpowers/specs/2026-09-02-frontend-campo-de-formulario-liga-no-form-design.md
     active_plan: docs/superpowers/plans/2026-09-02-frontend-campo-de-formulario-liga-no-form.md
     context_packet: null
-    blocker: null
-    resume_state: null
+    blocker: "review do item 24 (2026-09-02): 2 achados aguardando decisao — Q-1 (catraca ERRO_DE_CAMPO_A_MAO cega para `f.fieldErrors?.x?.[0]`, 🟡/P) e Q-2 (26 eslint-disable de react-hooks/static-components nos call sites, 🟢/P). Mais 2 divergencias documentais spec-vs-codigo para pendencias."
+    resume_state: reviewing
     last_completed_work_item: frontend-triagem-dos-audits-do-item-18
 last_completed_work_item: frontend-decisoes-de-ui-pendentes
 state_basis_commit: 8efd85f2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-campo-de-formulario-liga-no-form` (item 24) | Frontend | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (aberta de `main@8efd85f2`) | `ready_for_review` |
+| `lane-c` | `frontend-campo-de-formulario-liga-no-form` (item 24) | Frontend | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (aberta de `main@8efd85f2`) | `blocked` (review feito; achados aguardam o João) |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
