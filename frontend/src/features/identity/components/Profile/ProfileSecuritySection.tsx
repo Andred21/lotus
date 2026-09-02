@@ -5,8 +5,8 @@ import {
   AppPassword,
   FormErrorBanner,
   FormErrorSummary,
-  FormField,
   FormSection,
+  useFormField,
   useToast,
 } from '@shared/ui'
 import { useProfilePassword } from '../../hooks/useProfilePassword'
@@ -29,9 +29,9 @@ const MAPEADOS = ['current_password', 'password', 'password_confirmation']
 export function ProfileSecuritySection({ email }: { email: string }) {
   const { t } = useTranslation()
   const toast = useToast()
-  const { form, set, submit, pending, fieldErrors, generalError } = useProfilePassword(() =>
-    toast.success(t('profile.security.saved')),
-  )
+  const f = useProfilePassword(() => toast.success(t('profile.security.saved')))
+  const { submit, pending, fieldErrors, generalError } = f
+  const Field = useFormField(f)
 
   return (
     <AppCard className="p-4">
@@ -70,38 +70,20 @@ export function ProfileSecuritySection({ email }: { email: string }) {
             fosse digitado no meio do voo era APAGADO sem aviso — e o que se
             digita neste formulário é senha, que não se recupera relendo a
             tela. */}
-        <FormField
-          label={t('profile.security.currentPassword')}
-          error={fieldErrors?.current_password?.[0]}
-        >
-          <AppPassword
-            autoComplete="current-password"
-            value={form.current_password}
-            disabled={pending}
-            onChange={(e) => set('current_password', e.target.value)}
-          />
-        </FormField>
+        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
+        <Field name="current_password" label={t('profile.security.currentPassword')}>
+          <AppPassword autoComplete="current-password" disabled={pending} />
+        </Field>
 
-        <FormField label={t('profile.security.newPassword')} error={fieldErrors?.password?.[0]}>
-          <AppPassword
-            autoComplete="new-password"
-            value={form.password}
-            disabled={pending}
-            onChange={(e) => set('password', e.target.value)}
-          />
-        </FormField>
+        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
+        <Field name="password" label={t('profile.security.newPassword')}>
+          <AppPassword autoComplete="new-password" disabled={pending} />
+        </Field>
 
-        <FormField
-          label={t('profile.security.confirmPassword')}
-          error={fieldErrors?.password_confirmation?.[0]}
-        >
-          <AppPassword
-            autoComplete="new-password"
-            value={form.password_confirmation}
-            disabled={pending}
-            onChange={(e) => set('password_confirmation', e.target.value)}
-          />
-        </FormField>
+        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
+        <Field name="password_confirmation" label={t('profile.security.confirmPassword')}>
+          <AppPassword autoComplete="new-password" disabled={pending} />
+        </Field>
 
         <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
           {t('profile.security.warning')}
