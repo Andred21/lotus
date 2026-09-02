@@ -27,9 +27,13 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-70 | O `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado — erro de GET mostra a dica genérica em vez do que o servidor disse | `hardening-i18n-e-erros-api` (D4) | próximo bloco da frente de frontend que tocar política de erro de tela; revisar 2026-11-30 |
 | P-71 | Cinco recusas que o usuário lê continuam literais fora de `lang/` (`CorruptedSnapshotException`, `RedatorNaoElegivelException`, `TurmaConfiguracaoException`) — a catraca as segura em lista declarada, não as traduz | — | bloco que tocar `Certification/Services` ou `Operation/Exceptions`; revisar 2026-10-31 |
 | P-72 | O 419 devolve `detail` literal em inglês nos três locales (`CSRF token mismatch.`) — o `title` foi traduzido, o `detail` do `TokenMismatchException` vence o fallback | — | bloco que tocar `ProblemDetails::fromException` ou a proteção CSRF; revisar 2026-10-31 |
+| P-70 | O `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado — erro de GET mostra a dica genérica em vez do que o servidor disse | `frontend-dividas-de-mecanismo` (item 25) | o item 25 é o bloco de política de erro de tela que a ficha pedia; revisar 2026-11-30 |
+| P-69 | O vitest não tem `setupFiles`, então o `cleanup()` do Testing Library nunca roda — teste que monta hook com timer derruba a rodada inteira com `window is not defined`, sem reprovar asserção | `frontend-dividas-de-mecanismo` (item 25) | o item 25 toca `frontend/vite.config.ts`, que é o gatilho escrito na ficha; revisar 2026-10-31 |
+| P-68 | O `max-lines` mede arquivo de teste em `features/*/components` e não mede em `app/**`, e só a isenção tem razão escrita | `frontend-dividas-de-mecanismo` (item 25) | João alinha as duas camadas ou escreve a razão da assimetria no brainstorming do item 25; revisar 2026-10-31 |
+| P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | `frontend-dividas-de-mecanismo` (item 25) | a sessão de tema que a `D-69` abre no item 25 é onde a decisão cabe; revisar 2026-10-31 |
+| P-42 | Grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco | `frontend-dividas-de-mecanismo` (item 25) | João escolhe entre reescrever o D1 com a grafia construída e devolver o código ao D1, no brainstorming do item 25; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -37,6 +41,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
+>
+> `frontend-dividas-de-mecanismo` = item 25 da fila, aberto em 2026-09-02: juntou as **cinco**
+> fichas acima, que estavam em *Travadas em decisão* sem hospedeiro, com o débito `D-69`. As três
+> mecanizáveis (`P-70`, `P-69`, `D-69`) foram remedidas contra `main@5f6daf8b` antes de o item ser
+> escrito e seguem vivas no código; as duas restantes (`P-68`, `P-30`) e a `P-42` fecham por
+> decisão escrita do João no brainstorming, que é o gatilho que elas já declaravam.
 
 ### Travadas em decisão — não entram em bloco
 
@@ -44,9 +54,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-58 | `compose-dev.test.ts` afasta os `.env*` da raiz mas não o `frontend/.env`: árvore com `VITE_API_URL` legado reprova 3 casos | João | o teste isolar também o `frontend/.env`; revisar 2026-10-31 |
-| P-68 | O `max-lines` mede arquivo de teste em `features/*/components` e não mede em `app/**`, e só a isenção tem razão escrita | João | João alinhar as duas camadas ou escrever a razão da assimetria; revisar 2026-10-31 |
-| P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | João | João decidir que `warning` quer âmbar próprio; revisar 2026-10-31 |
-| P-42 | Grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco | João | D1 reescrito com a grafia construída, ou código de volta ao D1; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
 | P-08 | RF-CUR-04 promete Manual por curso; implementado é Blade única | Lotus | contratante pedir manual personalizado por curso |
 | P-09 | Figma mostra 4 tipos de documento de turma; implementados são 3 | Lotus | Lotus confirmar que quer os 4 |
@@ -63,7 +70,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
 | P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
-| P-69 | O vitest não tem `setupFiles`, então o `cleanup()` do Testing Library nunca roda — teste que monta hook com timer derruba a rodada inteira com `window is not defined`, sem reprovar asserção | João | João decidir se o `cleanup()` vira mecanismo global, ou bloco que toque `frontend/vite.config.ts`; revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 

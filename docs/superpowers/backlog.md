@@ -39,10 +39,11 @@
 - **Item novo entra pelo fim, com número novo.** O `16` nasceu assim em 2026-08-22, o `17` em
   2026-08-24 e o `21` e o `22` em 2026-08-31 — os dois **abertos pelo João**, recortando por frente
   as onze fichas travadas em decisão que nenhum bloco hospedava; o 21 e o 22 aparecem no topo da
-  fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; e o `24` em
+  fila porque o 21 precede a fatia 3 do item 16, não porque a numeração ordene; o `24` em
   2026-09-02, do candidato 1 da revisão de arquitetura registrada em
   `audits/2026-09-02-arquitetura-deepening.html` — o `backend-projecao-de-arquivados`, fechado em
-  2026-09-02. **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na
+  2026-09-02; e o `25` em 2026-09-02, aberto pelo João para juntar as dívidas de frontend que se
+  provam por mecanismo e que nenhum bloco hospedava (`P-68`, `P-69`, `P-70`, `P-30`, `P-42`, `D-69`). **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na
   `lane-c` sem nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão
   do João, e **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a
   nomear o `BD-15` durante uma inserção que foi
@@ -277,6 +278,59 @@ cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não
 
 ---
 
+## 25. `frontend-dividas-de-mecanismo`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não
+**Fonte:** as fichas `P-68`, `P-69`, `P-70`, `P-30` e `P-42` de `pendencias/abertas.md` e o débito
+`D-69`, todos abertos por blocos de frontend já fechados e nenhum com hospedeiro até 2026-09-02.
+
+**Objetivo:** pagar de uma vez as dívidas de frontend que **se provam por mecanismo** — catraca de
+lint, teste ou token de tema — juntando a elas as três decisões baratas do João que travavam ficha
+sem exigir medição. **Nenhuma tarefa deste bloco abre navegador**: é esse corte que o separa do
+item 16 (fatia 3) e do item 23, cujas fichas só fecham com medição em viewport.
+
+**Medido em 2026-09-02, contra `main@5f6daf8b`**, antes de escrever o item — as três fichas
+mecanizáveis seguem vivas no código, nenhuma foi paga de passagem:
+- `frontend/vite.config.ts:51` tem bloco `test:` **sem `setupFiles`** (P-69);
+- `frontend/eslint.config.js:514` tem `CATRACA_COR` com **três arquivos** de isenção (D-69);
+- `frontend/src/shared/lib/screenDetail.ts:57` **documenta o próprio silêncio** (P-70).
+
+**Escopo:**
+- **P-69** — `setupFiles` no `vite.config.ts` com `cleanup()` global da Testing Library. Hoje teste
+  que monta hook com timer derruba a rodada inteira com `window is not defined` **sem reprovar
+  asserção**, o que é falha que não acusa. Prova: a sonda que hoje mata a rodada passa a reprovar
+  asserção, e `pnpm test` termina.
+- **D-69** — os quatro sítios de utility de paleta em `features/`. Dois são **tinta de erro**, e é
+  isso que trava a ficha: decidir qual variável de perigo o tema expõe é desenho, não conserto de
+  passagem — resolve-se no brainstorming deste bloco. **DoD mecanizado:** `CATRACA_COR` chega a
+  `[]`.
+- **P-70** — o `screenDetail` cala o `detail` do servidor desde antes de ele ser localizado; o item
+  7 localizou o `detail` e a política de silêncio ficou. Erro de GET mostra a dica genérica em vez
+  do que o servidor disse. Prova: caso novo em `screenDetail.test.ts`.
+- **P-30** — decidir se `warning` ganha âmbar próprio da marca ou fica com o laranja de stock do
+  Lara. Sai barato na mesma sessão de tema que a `D-69` abre; **se o João decidir "fica o de
+  stock", a ficha fecha por decisão, sem código.**
+- **P-68** — alinhar as duas camadas de `max-lines` (mede arquivo de teste em
+  `features/*/components`, não mede em `app/**`) **ou** escrever a razão da assimetria ao lado da
+  isenção. Hoje só a isenção tem razão escrita.
+- **P-42** — a grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco: ou o D1
+  é reescrito com a grafia construída, ou o código volta ao D1.
+
+**Fora:**
+- **`D-65` (item 23) e a fatia 3 do item 16** — as duas reabrem medição em navegador (12 tabelas a
+  1024px; três superfícies em dois viewports). São o oposto do critério deste bloco.
+- **`D-59`** — segue no item 16; pede remedir uma tela inteira nos três viewports.
+- **`D-34`** — atravessa o seam e toca contrato + `generated.ts`; é backend, e o hospedeiro
+  continua sendo escolha do João (candidato natural: item 9).
+- **`D-70`** — precisa de canal publicável, e isso é decisão da Lotus.
+- **`P-58`** — é do compose, frente de infra (lane-b).
+
+**DoD:** as seis fichas fechadas — cada uma **por mecanismo verde ou por decisão escrita**, nunca
+por remoção na fé —, com `CATRACA_COR` em `[]`, `pnpm test` e `pnpm lint` passando, e a linha de
+cada ficha removida do índice de `pendencias/` no `/fechar-sprint`.
+
+---
+
 ---
 
 # Decisões não promovíveis isoladamente
@@ -288,11 +342,8 @@ cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não
 | `D-11` | RBAC do lookup de clientes usado no cadastro de aluno. |
 | `D-16` | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro:** o consumidor que faltava (funil do B2) existe desde 2026-08-17 — decidir sétimo balde ou rótulo distinto. |
 | `D-65` | **Reserva da coluna presa em tablet** (f3 UI-01): a reserva de `stickyActionsColumn` é em `rem` e as colunas são em %, sobre `min-w-[48rem]`: em 1024px a soma estoura e a coluna presa come largura alheia. **A ficha dizia `8rem` fixo nas 12 tabelas; remedido em 2026-08-31, são SETE valores**, vários condicionais ao ramo `archived` — `6rem` (`RolesTable`, `StudentsTable`, `BudgetsTable` ativo), `8rem` (`EmissionStudentsTable`, o único), `9rem` (`EnrollmentTable` + os ramos ativos de `TurmasTable`, `CoursesTable`, `UsersTable`, `ClientsTable`), `10rem` (`ArchivedEnrollmentsList` + os ramos `archived` de seis tabelas), `12rem` (`RedatoresTable` ativo), `16rem` (`HistorialTable`). Não se corrige numa constante: são 12 decisões. **Hospedeiro: item 23.** |
-| `D-69` | **Utility de paleta Tailwind em 4 sítios de `features/`** — a rule é explícita: *"Cor vem de variável do tema, escrita por `style`. Utility de paleta Tailwind (`bg-slate-50`, `text-red-600`) é o defeito, nos dois temas."* Medido em 2026-08-31 (self-review da spec do item 21): 5 sítios em 3 arquivos. O item 21 pagou **só** `CourseStep.tsx:93`, porque a D1 já reescrevia aquela linha. Sobram: `CourseStep.tsx:102` (`text-slate-500`), `QuoteWizard.tsx:47` (`text-slate-500`), `QuoteWizard.tsx:64` (`text-red-600`), `ManualButton.tsx:28` (`text-red-600`). **Dois são tinta de ERRO** — decidir qual variável de perigo o tema expõe é desenho, não conserto de passagem, e é o que trava a ficha. **DoD mecanizado:** `CATRACA_COR` em `frontend/eslint.config.js:401` chega a `[]` — a lista de isenção de `COR_HARDCODED` tem exatamente estes três arquivos, e zerá-la é a prova de que os quatro sítios morreram. **Sem hospedeiro.** |
 | `D-70` | **`/validar` diz "contacta a Lotus" sem canal** — o item 21 (`D-67`) pôs a linha de orientação no ramo `notFound` dos três locales, **sem canal**: publicar endereço ou telefone numa página aberta é decisão da Lotus, não do João sozinho. Enquanto não houver canal, a orientação termina num beco. Precisa da Lotus antes de virar código. **Gatilho: decisão da Lotus.** |
 | `P-28` | Lotus/João aprovam ou corrigem o fundo final do certificado. |
-| `P-30` | Decidir se `warning` recebe âmbar próprio da marca. |
-| `P-42` | Spec do `IdentityCell` muda ou código volta à grafia original. |
 | `P-08` | Lotus decide se Manual varia por curso. |
 | `P-09` | Lotus confirma/descopa o quarto tipo de documento de turma. |
 | `P-10` | Lotus decide se tabela de alunos exibe Cliente. |
@@ -356,6 +407,22 @@ cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não
 > 19 abriu em 2026-08-30 para o MESMO defeito (`/validar/<uuid>` inexistente responde só com o
 > `h1`). Duas fichas para um defeito é duas decisões do João sobre a mesma frase; a `D-67` fica,
 > com o DoD da `D-61` herdado, e a `D-61` sai como ID queimado.
+
+- **D-69 · Utility de paleta Tailwind em 4 sítios de `features/`** →
+  `frontend-dividas-de-mecanismo` (item 25), hospedeiro dado em 2026-09-02; a ficha viveu **sem
+  hospedeiro** desde que o item 21 a abriu em 2026-08-31. A rule é explícita: *"Cor vem de variável
+  do tema, escrita por `style`. Utility de paleta Tailwind (`bg-slate-50`, `text-red-600`) é o
+  defeito, nos dois temas."* O item 21 pagou **só** `CourseStep.tsx:93`, porque a D1 já reescrevia
+  aquela linha. **Remedido em 2026-09-02 contra `main@5f6daf8b`** — os quatro sítios seguem vivos, e
+  **duas das linhas andaram** desde a medição de 2026-08-31: `CourseStep.tsx:102`
+  (`text-slate-500`), `QuoteWizard.tsx:48` (`text-slate-500`, era `:47`), `QuoteWizard.tsx:72`
+  (`text-red-600`, era `:64`), `ManualButton.tsx:28` (`text-red-600`). **Dois são tinta de ERRO** —
+  decidir qual variável de perigo o tema expõe é desenho, não conserto de passagem, e é o que
+  travava a ficha; o brainstorming do item 25 é onde essa decisão cabe. **DoD mecanizado:**
+  `CATRACA_COR` em `frontend/eslint.config.js:514` chega a `[]` — a lista de isenção de
+  `COR_HARDCODED` tem exatamente estes três arquivos, e zerá-la é a prova de que os quatro sítios
+  morreram. **A linha do arquivo também foi remedida: a ficha dizia `:401`, e `CATRACA_COR` está
+  em `:514`.**
 
 - **D-59 · O alternador Activos/Archivados do card "Cotizaciones" gasta uma linha própria** →
   `frontend-revisao-ui-por-modulo`. UI-03 da run de Comercial de 2026-08-25
