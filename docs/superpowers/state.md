@@ -3,12 +3,12 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: frontend-dividas-de-mecanismo
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-02-frontend-dividas-de-mecanismo-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -46,21 +46,21 @@ lanes:
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: frontend-dividas-de-mecanismo   # item 25, promovido explicitamente pelo Joao em 2026-09-02
+    workflow_state: planning
+    next_owner: claude
+    next_action: continue_active_planning
     tree: ../fix-frontend
-    branch: refactor/frontend-campo-de-formulario-liga-no-form   # bloco sem ficha na fila (rotulo `item 24` tomado por engano; o 24 e o backend-projecao-de-arquivados), fechado em 2026-09-02; rebasada sobre origin/main@4bea7d27 e enviada na PR #95, aguardando merge
-    active_spec: null
+    branch: fix/frontend-dividas-de-mecanismo   # aberta de 3654b6dc (= origin/main@5f6daf8b mais o commit que abre o item 25, em revisao na PR #97); a PR #95 do bloco anterior mesclou em 2e24bba9
+    active_spec: docs/superpowers/specs/2026-09-02-frontend-dividas-de-mecanismo-design.md
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # sem ficha na fila, fechado em 2026-09-02
 last_completed_work_item: frontend-campo-de-formulario-liga-no-form
-state_basis_commit: 92774221
-updated_at: 2026-09-02T17:30:00-03:00
+state_basis_commit: 3654b6dc
+updated_at: 2026-09-02T17:13:34-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-projecao-de-arquivados` (item 24 **fechado** em 2026-09-02, sem merge) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (bloco **fechado** em 2026-09-02, **sem ficha na fila**; **PR #95** aberta, aguardando merge) | `idle` |
+| `lane-c` | `frontend-dividas-de-mecanismo` (item 25) | Frontend | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (aberta de `3654b6dc`; a PR #95 do bloco anterior mesclou em `2e24bba9`) | `planning` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -175,6 +175,17 @@ disjuntas, colisão mínima de arquivos:
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
+
+**A `lane-c` recebeu o item 25 em 2026-09-02** — `frontend-dividas-de-mecanismo`, promovido
+explicitamente pelo João com a lane em `idle`; o comando não promove, e não promoveu. `Contexto: não`
+na fila, então o bloco nasce direto em planejamento, sem Context Packet: as seis fontes (`P-68`,
+`P-69`, `P-70`, `P-30`, `P-42` e `D-69`) são fichas do próprio repositório. A branch
+`fix/frontend-dividas-de-mecanismo` sai de `3654b6dc` — `origin/main@5f6daf8b`, que já traz as PRs
+#95 e #96 mescladas, mais o commit que abre o item 25 no `backlog.md`, em revisão na **PR #97**. Três
+das seis fichas foram remedidas contra o código no brainstorming e **contradisseram o próprio texto**:
+a variável de perigo da `D-69` já existe, a superfície da `P-30` é um botão (e reprova contraste a
+2,80:1), e o custo que travava a `P-69` mediu **zero** — 127 arquivos / 734 testes passam com o
+`cleanup()` global ligado.
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
