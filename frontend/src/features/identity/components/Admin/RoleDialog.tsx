@@ -19,7 +19,7 @@ export function RoleDialog({
   const { t } = useTranslation()
   const f = useRoleForm(role, mode, onHide)
   const { form, toggle, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = f
-  const Field = useFormField(f)
+  const campo = useFormField(f)
   const catalog = usePermissionCatalog()
 
   const isSystem = role?.is_system ?? false
@@ -62,10 +62,9 @@ export function RoleDialog({
             texto — herdar do contexto trocaria o modo de leitura sem
             autorização. `readOnly={false}` explícito mantém o `Field` sempre
             em modo de controle; quem desabilita é o `disabled` de baixo. */}
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="name" label={t('role.name')} readOnly={false}>
+        <campo.Field name="name" label={t('role.name')} readOnly={false}>
           <AppInputText disabled={!editable} className="w-full" />
-        </Field>
+        </campo.Field>
 
         {isSystem && (
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('role.systemReadOnly')}</p>

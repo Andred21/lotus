@@ -21,7 +21,7 @@ export function CourseDialog({
           errorSummary, addModule, removeModule, patchModule, moveModule,
           modulesTotal, hoursMismatch } = f
   const redatores = useCourseRedatores(form.redator_ids, onHide)
-  const Field = useFormField(f)
+  const campo = useFormField(f)
 
   const isCreate = mode === 'create'
 
@@ -43,25 +43,22 @@ export function CourseDialog({
       <section className="space-y-4">
         <FormSection title={t('course.sectionGeneral')} />
 
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="name" label={t('course.name')}>
+        <campo.Field name="name" label={t('course.name')}>
           <AppInputText placeholder={t('course.namePlaceholder')} className="w-full" />
-        </Field>
+        </campo.Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           {/* technical_name chega null do backend: quem cuida é o `?? ''` do
               wrapper (Task 3), não a tela. */}
-          {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-          <Field name="technical_name" label={t('course.technicalName')}>
+          <campo.Field name="technical_name" label={t('course.technicalName')}>
             <AppInputText placeholder={t('course.technicalNamePlaceholder')} className="w-full" />
-          </Field>
+          </campo.Field>
           {/* workload_hours converte nos dois sentidos (string de dígitos <->
               number): o Field sozinho só passaria o valor cru do form, então
               value/onChange ficam manuais no AppInputText — e o `value` de
               apresentação do Field também fica, porque em leitura o número
               cru renderizaria sem o String (task-8 brief). */}
-          {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-          <Field
+          <campo.Field
             name="workload_hours"
             label={t('course.workloadHours')}
             value={String(form.workload_hours)}
@@ -71,14 +68,13 @@ export function CourseDialog({
               onChange={(e) => f.set('workload_hours', Number(e.target.value.replace(/\D/g, '')) || 0)}
               className="w-full"
             />
-          </Field>
+          </campo.Field>
         </div>
 
         {/* description chega null do backend: mesma razão do technical_name. */}
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="description" label={t('course.description')}>
+        <campo.Field name="description" label={t('course.description')}>
           <AppTextarea rows={3} className="w-full" />
-        </Field>
+        </campo.Field>
 
         <FormSection title={t('courseModule.section')} spaced />
 

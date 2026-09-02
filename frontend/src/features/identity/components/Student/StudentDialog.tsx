@@ -42,7 +42,7 @@ export function StudentDialog({
     generalError,
     errorSummary,
   } = f;
-  const Field = useFormField(f);
+  const campo = useFormField(f);
   const clients = useStudentClients(mode);
   const clientsUnusable = clients.unusable;
   const detail = useStudentDetail(mode === "create" ? null : student?.id);
@@ -70,12 +70,12 @@ export function StudentDialog({
         <FormSection title={t("student.sectionPersonal")} />
 
         <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
-          <StudentIdentityFields Field={Field} />
+          <StudentIdentityFields Field={campo.Field} />
         </FormPhotoRow>
 
         <StudentClientField
           mode={mode}
-          Field={Field}
+          Field={campo.Field}
           readOnlyLabel={student?.current_client_name ?? t("student.noClient")}
           options={clients.options}
           isLoading={clients.isLoading}

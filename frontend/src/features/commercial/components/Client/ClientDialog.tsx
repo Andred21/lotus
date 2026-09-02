@@ -48,7 +48,7 @@ export function ClientDialog({
     addContact,
     removeContact,
   } = f;
-  const Field = useFormField(f);
+  const campo = useFormField(f);
 
   return (
     <CrudDialog
@@ -72,7 +72,7 @@ export function ClientDialog({
         <FormSection title={t("client.sectionGeneral")} />
 
         <FormPhotoRow name={form.legal_name} photo={photo} readOnly={readOnly}>
-          <ClientGeneralFields Field={Field} form={f.form} />
+          <ClientGeneralFields Field={campo.Field} form={f.form} />
         </FormPhotoRow>
 
         <FormSection title={t("client.sectionAddress")} spaced />

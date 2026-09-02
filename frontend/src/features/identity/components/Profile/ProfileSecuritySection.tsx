@@ -31,7 +31,7 @@ export function ProfileSecuritySection({ email }: { email: string }) {
   const toast = useToast()
   const f = useProfilePassword(() => toast.success(t('profile.security.saved')))
   const { submit, pending, fieldErrors, generalError } = f
-  const Field = useFormField(f)
+  const campo = useFormField(f)
 
   return (
     <AppCard className="p-4">
@@ -70,20 +70,17 @@ export function ProfileSecuritySection({ email }: { email: string }) {
             fosse digitado no meio do voo era APAGADO sem aviso — e o que se
             digita neste formulário é senha, que não se recupera relendo a
             tela. */}
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="current_password" label={t('profile.security.currentPassword')}>
+        <campo.Field name="current_password" label={t('profile.security.currentPassword')}>
           <AppPassword autoComplete="current-password" disabled={pending} />
-        </Field>
+        </campo.Field>
 
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="password" label={t('profile.security.newPassword')}>
+        <campo.Field name="password" label={t('profile.security.newPassword')}>
           <AppPassword autoComplete="new-password" disabled={pending} />
-        </Field>
+        </campo.Field>
 
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="password_confirmation" label={t('profile.security.confirmPassword')}>
+        <campo.Field name="password_confirmation" label={t('profile.security.confirmPassword')}>
           <AppPassword autoComplete="new-password" disabled={pending} />
-        </Field>
+        </campo.Field>
 
         <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
           {t('profile.security.warning')}

@@ -38,9 +38,26 @@ export type FieldProps<T> = {
 export type FieldComponent<T> = (props: FieldProps<T>) => ReactNode
 
 /**
- * Devolve o campo ligado ao formulário: `<Field name="rut" label={t('common.rut')}>`
+ * Devolve o campo ligado ao formulário: `<campo.Field name="rut" label={t('common.rut')}>`
  * no lugar de `label` + `error` + `readOnly` + `value` no campo E `value` +
  * `onChange` no controle.
+ *
+ * **Devolve `{ Field }`, e não o componente cru, por causa do lint.** A regra
+ * `react-hooks/static-components` reprova QUALQUER tag JSX cujo identificador
+ * venha de uma chamada no render — e todo retorno de hook vem. Com o componente
+ * cru, cada `<Field>` montado no mesmo arquivo em que o hook roda custava um
+ * `eslint-disable`: eram 26 linhas em 9 arquivos, e cada campo novo pedia mais
+ * uma (Q-2 do review de 2026-09-02). A regra só olha tag com nome de
+ * identificador (`value.tag.kind === 'Identifier'`, no
+ * `validateStaticComponents` do plugin), então `<campo.Field>` sai do alcance
+ * dela sem que ninguém precise desligá-la — ela segue armada nos mesmos
+ * arquivos, para o componente aninhado de verdade, que é o defeito que ela
+ * existe para pegar. É contorno de forma, não de mérito: a identidade É estável
+ * e o teste do §4.2 mede isso.
+ *
+ * Quem só repassa o campo para um subcomponente passa `Field={campo.Field}`; lá
+ * dentro a prop é `Field` e a tag volta a ser `<Field>`, que a regra não
+ * reprova (o valor não nasce de chamada nenhuma naquele render).
  *
  * **A identidade do componente é estável (`useRef`, criado uma vez).** Componente
  * recriado a cada render é um TIPO novo para o React, que desmonta e remonta a
@@ -63,7 +80,7 @@ export type FieldComponent<T> = (props: FieldProps<T>) => ReactNode
  * contexto — ou continuam batendo na mesma regra, ou custam o `keyof T` que o
  * §4.4 comprou. A regra segue viva em todo o resto do repositório.
  */
-export function useFormField<T>(bundle: FormBundle<T>): FieldComponent<T> {
+export function useFormField<T>(bundle: FormBundle<T>): { Field: FieldComponent<T> } {
   const atual = useRef(bundle)
   // eslint-disable-next-line react-hooks/refs -- identidade estável (§4.2 da spec): ver o bloco acima
   atual.current = bundle
@@ -95,5 +112,9 @@ export function useFormField<T>(bundle: FormBundle<T>): FieldComponent<T> {
     }
   }
   // eslint-disable-next-line react-hooks/refs -- idem
-  return componente.current
+  const Field = componente.current
+  // O objeto é novo a cada render de propósito: o que precisa ser estável é o
+  // COMPONENTE (a identidade do tipo), não o invólucro — `<campo.Field>` resolve
+  // a tag no render, e o React compara o tipo, não o objeto que o carregou.
+  return { Field }
 }

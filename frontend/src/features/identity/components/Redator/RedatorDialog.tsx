@@ -57,7 +57,7 @@ export function RedatorDialog({
     fieldErrors,
     generalError,
   } = f;
-  const Field = useFormField(f);
+  const campo = useFormField(f);
   const courseIds = form.course_ids;
 
   return (
@@ -101,7 +101,7 @@ export function RedatorDialog({
       <section className="space-y-4">
         <RedatorUserSection
           form={form}
-          Field={Field}
+          Field={campo.Field}
           readOnly={readOnly}
           photo={photo}
         />

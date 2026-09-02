@@ -37,16 +37,11 @@ function Formulario({
     onSet?.(k, v)
     setForm((f) => ({ ...f, [k]: v }))
   }
-  const Field = useFormField({ form, set, fieldErrors, readOnly })
+  const campo = useFormField({ form, set, fieldErrors, readOnly })
   return (
-    /* `Field` vem do hook e É montado no mesmo arquivo em que ele roda: é o
-     * único jeito de o teste provar o binding. No call site real desce como
-     * prop e a regra passa limpa (medido na execução). O caso de remonte que
-     * a regra vigia tem teste próprio neste arquivo. */
-    // eslint-disable-next-line react-hooks/static-components
-    <Field name="rut" label="RUT">
+    <campo.Field name="rut" label="RUT">
       <ControleFake />
-    </Field>
+    </campo.Field>
   )
 }
 
@@ -99,12 +94,11 @@ describe('useFormField — prop do chamador vence', () => {
   function ComEscapes({ readOnly }: { readOnly: boolean }) {
     const [form, setForm] = useState<Campos>({ rut: 'cru', nome: '' })
     const set = <K extends keyof Campos>(k: K, v: Campos[K]) => setForm((f) => ({ ...f, [k]: v }))
-    const Field = useFormField({ form, set, fieldErrors: { rut: ['do contexto'] }, readOnly: true })
+    const campo = useFormField({ form, set, fieldErrors: { rut: ['do contexto'] }, readOnly: true })
     return (
-      // eslint-disable-next-line react-hooks/static-components -- idem ao de cima
-      <Field name="rut" label="RUT" error="do chamador" readOnly={readOnly} value="apresentado">
+      <campo.Field name="rut" label="RUT" error="do chamador" readOnly={readOnly} value="apresentado">
         <ControleFake />
-      </Field>
+      </campo.Field>
     )
   }
 

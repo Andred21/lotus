@@ -219,6 +219,9 @@ const DISABLED_READONLY_ESTATICO = {
 // baixo com o MESMO `FieldContext.Provider`, então o `inputId` chega ao
 // dropdown do mesmo jeito. Sem esta linha, todo call site migrado para o
 // molde do `ClientGeneralFields` reprovaria por forma, não por defeito real.
+// Vale nas DUAS grafias da tag: `<Field>` (a prop que desce ao subcomponente)
+// e `<campo.Field>` (o dono do hook, `JSXMemberExpression` — onde `name.name`
+// não existe e o predicado antigo não casava nada).
 //
 // A guarda casa a GRAFIA da tag, não a origem dela: qualquer JSX chamado
 // `Field` conta como pai válido, e `const F = useFormField(f)` escapa da
@@ -231,9 +234,20 @@ const DISABLED_READONLY_ESTATICO = {
 // aparentemente inerte. `error` continua existindo como escape declarada (a
 // chave que não é o nome do campo), e é por isso que a régua mede a EXTRAÇÃO,
 // não a prop.
+//
+// Mede as DUAS grafias do mesmo acesso, e não só a que os 48 sítios usavam:
+// `fieldErrors?.x?.[0]` (identificador solto, desestruturado do bundle) e
+// `f.fieldErrors?.x?.[0]` (pescado do bundle na hora) — esta segunda era
+// exatamente a grafia do `TurmaConfigCard` antes da migração, e passava limpa
+// pelo seletor de um predicado só (Q-1 do review de 2026-09-02, medido com
+// sonda). O que ela NÃO pega, dito para ninguém supor cobertura que não
+// existe: apelido (`const { fieldErrors: fe } = f; fe?.x?.[0]`), porque aí não
+// sobra o nome `fieldErrors` em lugar nenhum da expressão. É o mesmo limite
+// sintático do `DROPDOWN_SEM_NOME`: casa grafia, não origem.
 const ERRO_DE_CAMPO_A_MAO = {
   selector:
-    'MemberExpression[computed=true][object.object.name="fieldErrors"][property.value=0]',
+    'MemberExpression[computed=true][property.value=0]' +
+    ':matches([object.object.name="fieldErrors"], [object.object.property.name="fieldErrors"])',
   message:
     'Erro de campo extraído à mão: use <Field name="x"> e o erro vem do form (spec do item 24). A prop `error` fica para a chave que NÃO é o nome do campo.',
 }
@@ -265,7 +279,8 @@ const FORA_DO_CAMPO_LIGADO = [
 const DROPDOWN_SEM_NOME = {
   selector:
     'JSXElement[openingElement.name.name="AppDropdown"]' +
-    ':not(JSXElement[openingElement.name.name=/^(FormField|Field)$/] JSXElement[openingElement.name.name="AppDropdown"])' +
+    ':not(JSXElement:matches([openingElement.name.name=/^(FormField|Field)$/], ' +
+    '[openingElement.name.property.name="Field"]) JSXElement[openingElement.name.name="AppDropdown"])' +
     ':not(:has(JSXOpeningElement > JSXAttribute[name.name=/^(inputId|aria-label|aria-labelledby)$/]))',
   message:
     'AppDropdown sem nome acessível: dentro de FormField/Field o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',

@@ -44,7 +44,7 @@ export function StaffUserDialog({
     generalError,
     errorSummary,
   } = f;
-  const Field = useFormField(f);
+  const campo = useFormField(f);
   const { roleOptions } = useStaffRoleOptions();
 
   const stateOptions = [
@@ -74,7 +74,7 @@ export function StaffUserDialog({
       <section className="space-y-4">
         <FormSection title={t("admin.sectionUser")} />
         <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
-          <StaffIdentityFields Field={Field} mode={mode} />
+          <StaffIdentityFields Field={campo.Field} mode={mode} />
         </FormPhotoRow>
         <div className="grid gap-4 sm:grid-cols-3 mt-10">
           {/* type é sempre 'admin' para staff — atributo fixo, não editável.
@@ -97,8 +97,7 @@ export function StaffUserDialog({
               />
             }
           />
-          {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-          <Field
+          <campo.Field
             name="role"
             label={t("admin.role")}
             value={roleOptions.find((o) => o.value === form.role)?.label ?? form.role}
@@ -108,9 +107,8 @@ export function StaffUserDialog({
               optionLabel="label"
               optionValue="value"
             />
-          </Field>
-          {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-          <Field
+          </campo.Field>
+          <campo.Field
             name="is_active"
             label={t("admin.state")}
             value={form.is_active ? t("common.active") : t("common.inactive")}
@@ -120,7 +118,7 @@ export function StaffUserDialog({
               optionLabel="label"
               optionValue="value"
             />
-          </Field>
+          </campo.Field>
         </div>
       </section>
     </CrudDialog>

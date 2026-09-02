@@ -21,7 +21,7 @@ const MAPPED = ['modalidade', 'local_aplicacao', 'start_date', 'end_date']
 export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel }: Props) {
   const { t } = useTranslation()
   const f = useTurmaConfigForm({ mode, turma, quoteId, onSaved })
-  const Field = useFormField(f)
+  const campo = useFormField(f)
   const { can } = usePermissions()
   // Derivado AQUI, não no call-site: quem monta este cartão não precisa saber
   // da RN-15 para nascer correto. Em `create` ainda não há turma — nada a
@@ -63,17 +63,15 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é montado no mesmo arquivo em que useFormField roda (item 24) */}
-        <Field
+        <campo.Field
           name="modalidade"
           label={t('operation.config.modality')}
           value={modalityOptions.find((o) => o.value === f.form.modalidade)?.label ?? f.form.modalidade}
         >
           <AppDropdown options={modalityOptions} />
-        </Field>
+        </campo.Field>
 
-        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
-        <Field name="local_aplicacao" label={t('operation.config.local')}>
+        <campo.Field name="local_aplicacao" label={t('operation.config.local')}>
           {/* O `disabled` que sobra NÃO é modo leitura: turma online não tem
               local a preencher, e isso vale em EDIÇÃO. Modo leitura sai pelo
               `readOnly` do Field. */}
@@ -81,17 +79,15 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
             placeholder={t('operation.config.localPlaceholder')}
             disabled={f.form.modalidade === 'online'}
           />
-        </Field>
+        </campo.Field>
 
-        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
-        <Field name="start_date" label={t('operation.config.startDate')} value={readDate(f.form.start_date)}>
+        <campo.Field name="start_date" label={t('operation.config.startDate')} value={readDate(f.form.start_date)}>
           <AppDatePicker value={f.form.start_date || null} onChange={(v) => f.set('start_date', v ?? '')} />
-        </Field>
+        </campo.Field>
 
-        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
-        <Field name="end_date" label={t('operation.config.endDate')} value={readDate(f.form.end_date)}>
+        <campo.Field name="end_date" label={t('operation.config.endDate')} value={readDate(f.form.end_date)}>
           <AppDatePicker value={f.form.end_date || null} onChange={(v) => f.set('end_date', v ?? '')} />
-        </Field>
+        </campo.Field>
 
         {mode !== 'create' && (
           /* Carga horária é derivada do curso: nasce só-leitura em qualquer

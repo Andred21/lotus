@@ -84,19 +84,14 @@ describe('os wrappers de shared/ui pescam o bind', () => {
   function Tela() {
     const [form, setForm] = useState<Campos>({ rut: '76.123.456-7', giro: null, tipo: 'client' })
     const set = <K extends keyof Campos>(k: K, v: Campos[K]) => setForm((f) => ({ ...f, [k]: v }))
-    const Field = useFormField({ form, set, fieldErrors: null, readOnly: false })
+    const campo = useFormField({ form, set, fieldErrors: null, readOnly: false })
     return (
       <>
-        {/* eslint-disable-next-line react-hooks/static-components -- `Field` vem
-            do hook e é montado no mesmo arquivo em que ele roda, só para o
-            teste provar o bind; no call site real desce como prop. */}
-        <Field name="rut" label="RUT"><AppInputText /></Field>
-        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
-        <Field name="giro" label="Giro"><AppInputText /></Field>
-        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
-        <Field name="tipo" label="Tipo">
+        <campo.Field name="rut" label="RUT"><AppInputText /></campo.Field>
+        <campo.Field name="giro" label="Giro"><AppInputText /></campo.Field>
+        <campo.Field name="tipo" label="Tipo">
           <AppDropdown options={[{ value: 'client', label: 'Cliente' }, { value: 'other', label: 'Outro' }]} />
-        </Field>
+        </campo.Field>
       </>
     )
   }
@@ -131,17 +126,12 @@ describe('outros wrappers de shared/ui pescam o bind', () => {
   function TelaExtra() {
     const [form, setForm] = useState<CamposExtra>({ bio: 'texto inicial', senha: 'segredo', inicio: '2026-01-15' })
     const set = <K extends keyof CamposExtra>(k: K, v: CamposExtra[K]) => setForm((f) => ({ ...f, [k]: v }))
-    const Field = useFormField({ form, set, fieldErrors: null, readOnly: false })
+    const campo = useFormField({ form, set, fieldErrors: null, readOnly: false })
     return (
       <>
-        {/* eslint-disable-next-line react-hooks/static-components -- `Field` vem
-            do hook e é montado no mesmo arquivo em que ele roda, só para o
-            teste provar o bind; no call site real desce como prop. */}
-        <Field name="bio" label="Bio"><AppTextarea /></Field>
-        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
-        <Field name="senha" label="Senha"><AppPassword /></Field>
-        {/* eslint-disable-next-line react-hooks/static-components -- idem */}
-        <Field name="inicio" label="Início"><AppDatePicker /></Field>
+        <campo.Field name="bio" label="Bio"><AppTextarea /></campo.Field>
+        <campo.Field name="senha" label="Senha"><AppPassword /></campo.Field>
+        <campo.Field name="inicio" label="Início"><AppDatePicker /></campo.Field>
       </>
     )
   }

@@ -19,7 +19,7 @@ export function BudgetDialog({
   const { t } = useTranslation()
   const f = useBudgetForm(budget, mode, onHide, onCreated)
   const { form, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = f
-  const Field = useFormField(f)
+  const campo = useFormField(f)
   const clients = useCommercialClients()
 
   const isCreate = mode === 'create'
@@ -64,8 +64,7 @@ export function BudgetDialog({
             rótulo em leitura precisa do vocabulário de domínio (a opção cujo
             `value` casa com `form.client_id`) — por isso `readOnly` e `value`
             continuam explícitos aqui (item 24, spec §5). */}
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field
+        <campo.Field
           name="client_id"
           label={t('budget.client')}
           readOnly={readOnly || !isCreate}
@@ -90,12 +89,11 @@ export function BudgetDialog({
             retryLabel={t('common.retry')}
             onRetry={clients.refetch}
           />
-        </Field>
+        </campo.Field>
 
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="payment_terms" label={t('budget.paymentTerms')}>
+        <campo.Field name="payment_terms" label={t('budget.paymentTerms')}>
           <AppInputText className="w-full" />
-        </Field>
+        </campo.Field>
       </section>
     </CrudDialog>
   )

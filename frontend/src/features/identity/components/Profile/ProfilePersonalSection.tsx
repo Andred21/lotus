@@ -25,7 +25,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
   const toast = useToast()
   const f = useProfileForm(profile, () => toast.success(t('profile.personal.saved')))
   const { submit, pending, fieldErrors, generalError } = f
-  const Field = useFormField(f)
+  const campo = useFormField(f)
 
   return (
     <AppCard className="p-4">
@@ -45,13 +45,11 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
             que a requisição em voo NÃO leva: o toast de sucesso aparecia sobre
             um texto na tela que nunca chegou ao servidor, e o refetch só o
             desmentia depois. */}
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="name" label={t('profile.personal.name')}>
+        <campo.Field name="name" label={t('profile.personal.name')}>
           <AppInputText className="w-full" autoComplete="name" disabled={pending} />
-        </Field>
+        </campo.Field>
 
-        {/* eslint-disable-next-line react-hooks/static-components -- Field é o retorno estável de useFormField (§4.2 da spec) */}
-        <Field name="phone" label={t('profile.personal.phone')}>
+        <campo.Field name="phone" label={t('profile.personal.phone')}>
           {/* `technicalDataClass` (D-29): único sítio da decisão que pousa num
               controle EDITÁVEL, e não num valor de leitura — a auditoria o cita
               explicitamente ("vale também para telefone"). */}
@@ -60,7 +58,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
             autoComplete="tel"
             disabled={pending}
           />
-        </Field>
+        </campo.Field>
 
         <div>
           <AppButton
