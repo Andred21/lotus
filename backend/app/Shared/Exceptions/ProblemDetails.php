@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -75,6 +76,12 @@ class ProblemDetails
      * `throw`) e quem implementa `PublicDetail` — sem ela o operador em
      * produção recebe "erro inesperado" onde o desenho prometeu o certificado
      * e o campo que falta.
+     *
+     * O 419 é o terceiro caso com `detail` próprio, e casa pela CAUSA: o
+     * handler do Laravel embrulha a `TokenMismatchException` num
+     * `HttpException(419)` antes de qualquer callback, então o tipo que
+     * interessa está em `getPrevious()`. Sem este braço, o `default` devolve
+     * o `CSRF token mismatch.` do framework nos três locales (P-72).
      */
     private static function detailFor(Throwable $e, int $status): string
     {
@@ -87,6 +94,7 @@ class ProblemDetails
         }
 
         return match (true) {
+            $e->getPrevious() instanceof TokenMismatchException => __('problem.detail.csrf'),
             $e instanceof ThrottleRequestsException => __('problem.detail.too_many_requests'),
             $e instanceof AuthenticationException => __('problem.detail.unauthenticated'),
             self::isForbidden($e) => __('problem.detail.forbidden'),
