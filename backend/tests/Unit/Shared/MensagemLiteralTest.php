@@ -166,10 +166,6 @@ class MensagemLiteralTest extends TestCase
         // arquivos e catraca que nasce vermelha por dívida alheia trava o
         // bloco seguinte (o mesmo motivo escrito na P-67).
         'CorruptedSnapshotException.php:42' => 'PublicDetail em es_CL; frente Certification.',
-        'RedatorNaoElegivelException.php:16' => 'HttpException(422) em pt-BR; frente Operation.',
-        'RedatorNaoElegivelException.php:21' => 'HttpException(422) em pt-BR; frente Operation.',
-        'TurmaConfiguracaoException.php:15' => 'HttpException(422) em pt-BR; frente Operation.',
-        'TurmaConfiguracaoException.php:20' => 'HttpException(422) em pt-BR; frente Operation.',
     ];
 
     #[Test]
