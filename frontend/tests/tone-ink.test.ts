@@ -176,3 +176,61 @@ describe('tinta do botão `danger` text/outlined (UI-02)', () => {
     expect(contraste('#ef4444', '#f1f5f9')).toBeLessThan(4.5)
   })
 })
+
+/**
+ * P-30. O único `AppButton severity="warning"` do produto
+ * (`MoveConfirmDialog.tsx:36`) confirma uma ação irreversível de matrícula, e no
+ * tema claro o Lara o pintava com `#ffffff` sobre `#f97316`: **2,80:1**, abaixo
+ * do 4,5:1 de texto e abaixo até do 3:1 de elemento gráfico.
+ *
+ * A ficha pedia coerência de família (o `AppTag` warning já pintava com
+ * `--yellow-*`), e a coerência resolveu o contraste junto. Mede os TRÊS estados
+ * porque a regra base do Lara é (0,3,0) e `:hover`/`:active` chegam a (0,5,0)
+ * repetindo a cor: sem uma asserção por estado, passar o mouse devolveria a
+ * reprovação sem a captura de tela acusar — o mesmo defeito da UI-02.
+ */
+describe('botão `warning` filled e outlined (P-30)', () => {
+  /** O corpo da regra cujo seletor começa por `prefixo`. */
+  const regra = (css: string, prefixo: string) =>
+    css.match(new RegExp(`${prefixo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^{}]*\\{([^{}]*)\\}`))?.[1] ?? ''
+
+  const corDe = (corpo: string) => corpo.match(/(?<![-\w])color:\s*(#[0-9a-f]{6})/i)?.[1] ?? ''
+  const fundoDe = (corpo: string) => corpo.match(/background(?:-color)?:\s*(#[0-9a-f]{6})/i)?.[1] ?? ''
+
+  describe.each([
+    { tema: 'claro', folha: temaClaro, ground: '#ffffff' },
+    { tema: 'escuro', folha: temaEscuro, ground: '' },
+  ])('tema $tema', ({ folha, ground }) => {
+    it.each([
+      { estado: 'base', prefixo: '.p-button.p-button-warning,' },
+      { estado: 'hover', prefixo: '.p-button.p-button-warning:not(:disabled):hover,' },
+      { estado: 'active', prefixo: '.p-button.p-button-warning:not(:disabled):active,' },
+    ])('o filled no estado $estado passa AA (4,5:1)', ({ prefixo }) => {
+      const corpo = regra(folha, prefixo)
+      const [tinta, fundo] = [corDe(corpo), fundoDe(corpo)]
+
+      expect(fundo).toMatch(/^#[0-9a-f]{6}$/)
+      expect(contraste(tinta, fundo)).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it('a tinta do filled é o degrau 900 do amarelo nos dois temas', () => {
+      expect(corDe(regra(folha, '.p-button.p-button-warning,'))).toBe(hex(folha, '--yellow-900'))
+    })
+
+    it('o outlined/text é primeiro plano e passa AA sobre a superfície onde vive', () => {
+      const cor = corDe(regra(folha, '.p-button.p-button-warning.p-button-outlined,'))
+      const fundo = ground || hex(folha, '--surface-card')
+
+      expect(contraste(cor, fundo)).toBeGreaterThanOrEqual(4.5)
+    })
+  })
+
+  /** Os dois controles que fazem o teste discriminar (lição 10). O primeiro é o
+   * defeito que a ficha fecha; o segundo é a "correção" ingênua — trocar cada
+   * degrau de laranja pelo degrau de amarelo na MESMA posição —, que reprova o
+   * active do claro por 2,29:1 e que este arquivo tem de recusar. */
+  it('o laranja de stock do Lara reprova, e a troca degrau a degrau reprova pior', () => {
+    expect(contraste('#ffffff', '#f97316')).toBeLessThan(3)
+    expect(contraste('#5e4803', '#a47d06')).toBeLessThan(3)
+  })
+})

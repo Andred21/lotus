@@ -304,6 +304,74 @@ export const CINZA_BORDA = '#64748b'
 const BORDA_DE_CONTROLE =
   /(?<![-\w])(border(?:-(?:top|right|bottom|left|color|block|inline)[-\w]*)?)(\s*:\s*[^;{}]*?)#cbd5e1/gi
 
+// ── P-30: o warning volta para a família amarela ────────────────────────────
+// O `AppTag` warning já pintava com `--yellow-500`/`--yellow-400` e
+// `--tone-warning-ink` (style próprio, `AppTag.tsx`), enquanto o BOTÃO seguia no
+// laranja compilado do Lara. Uma severidade, duas famílias — e o único
+// `severity="warning"` do produto é a confirmação de uma ação irreversível.
+//
+// Regra de FORMA, pelo mesmo argumento do `CELESTE_PRIMEIRO_PLANO`: o gate é o
+// SELETOR conter `warning`. Trocar a entrada no mapa de hex alcançaria também o
+// `:root`, que publica a rampa `--orange-50..900` — enumerado em 2026-09-02: dos
+// 19 blocos com laranja no claro (20 no escuro), o `:root` é o ÚNICO fora do
+// seletor de warning.
+//
+// Os estados SOBEM a rampa no claro em vez de descer, e isso é medido, não
+// estético: amarelo é matiz claro, a tinta tem de ser escura, e com
+// `--yellow-900` fixo os degraus 600/700 (que seriam o hover/active "na mesma
+// posição" do laranja) medem 3,30:1 e 2,29:1 — pior que o defeito que a ficha
+// fecha. Subindo, medem 5,12:1 e 5,82:1. É a direção que o Lara já usa no tema
+// ESCURO, onde hover e active clareiam.
+//
+// O `color:` de outlined/text é primeiro plano sobre superfície clara, não
+// fundo: vai para o degrau que o tema já publica como `--tone-warning-ink`
+// (`--yellow-800` no claro, `--yellow-400` no escuro). Mesmo remédio da UI-02
+// para o `danger`.
+const WARNING_CLARO = {
+  laranjaBase: '#f97316',
+  tintaLara: '#ffffff',
+  tinta: '#5e4803', //         --yellow-900, 4,55:1 sobre o degrau 500
+  primeiroPlano: '#816204', // --yellow-800 = --tone-warning-ink do claro, 5,70:1 sobre branco
+  fundo: {
+    '#f97316': '#eab308', //           orange-500 → --yellow-500 (base)
+    '#ea580c': '#eec137', //           orange-600 → --yellow-400 (hover, CLAREIA)
+    '#c2410c': '#f2d066', //           orange-700 → --yellow-300 (active, CLAREIA)
+    'rgba(249, 115, 22': 'rgba(234, 179, 8', // veladura de outlined/text
+  },
+}
+const WARNING_ESCURO = {
+  laranjaBase: '#fb923c',
+  tintaLara: '#431407',
+  tinta: '#5e4803', //         --yellow-900, 5,12:1 sobre o degrau 400
+  primeiroPlano: '#eec137', // --yellow-400 = --tone-warning-ink do escuro, 8,58:1 sobre o card
+  fundo: {
+    '#fb923c': '#eec137', //           orange-400 → --yellow-400 (base)
+    '#fdba74': '#f2d066', //           orange-300 → --yellow-300 (hover)
+    '#fed7aa': '#f6de95', //           orange-200 → --yellow-200 (active)
+    'rgba(251, 146, 60': 'rgba(238, 193, 55',
+  },
+}
+
+function warningAmarelo(css, receita) {
+  const chaves = Object.keys(receita.fundo).sort((a, b) => b.length - a.length)
+  const busca = new RegExp(chaves.map(escapar).join('|'), 'gi')
+  const indice = new Map(Object.entries(receita.fundo).map(([k, v]) => [k.toLowerCase(), v]))
+
+  return css.replace(/([^{}]+)\{([^{}]*)\}/g, (bloco, seletor, corpo) => {
+    if (!/warning/i.test(seletor)) return bloco
+    // O `color:` PRIMEIRO, e com lookbehind para não pegar `border-color` nem
+    // `background-color`: depois desta passada não sobra laranja em declaração
+    // de texto, e o mapa de fundo abaixo não o alcança por engano. Bloco que
+    // pinta traz `color: <tintaLara>`; bloco de outlined/text traz
+    // `color: <laranjaBase>` — nenhum traz os dois.
+    const novo = corpo
+      .replace(new RegExp(`(?<![-\\w])color:(\\s*)${receita.tintaLara}\\b`, 'gi'), `color:$1${receita.tinta}`)
+      .replace(new RegExp(`(?<![-\\w])color:(\\s*)${receita.laranjaBase}\\b`, 'gi'), `color:$1${receita.primeiroPlano}`)
+      .replace(busca, (achado) => indice.get(achado.toLowerCase()) ?? achado)
+    return `${seletor}{${novo}}`
+  })
+}
+
 export function transform(css, map, tinta) {
   const tabela = { ...map, ...COMUM }
   // Uma passada só: substituir em série faria uma saída ser reescaneada pela
@@ -312,10 +380,10 @@ export function transform(css, map, tinta) {
   const busca = new RegExp(chaves.map(escapar).join('|'), 'gi')
   const indice = new Map(Object.entries(tabela).map(([k, v]) => [k.toLowerCase(), v]))
 
-  const out = textoSobrePrimaria(semFontFace(css)).replace(
-    busca,
-    (achado) => indice.get(achado.toLowerCase()) ?? achado,
-  )
+  const out = warningAmarelo(
+    textoSobrePrimaria(semFontFace(css)),
+    tinta ? WARNING_CLARO : WARNING_ESCURO,
+  ).replace(busca, (achado) => indice.get(achado.toLowerCase()) ?? achado)
   // Depois do mapa, não antes: é o mapa que transforma o azul do Lara em
   // celeste, e é o celeste que esta passada procura. Só o claro recebe tinta —
   // no escuro o celeste pousa em superfície escura e mede 6,76:1. A borda de

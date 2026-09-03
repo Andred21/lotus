@@ -12,6 +12,40 @@
 
 # Frontend
 
+## P-73 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
+
+**Bloco:** — · **Gatilho:** fecha quando uma régua por estado, no molde do `describe` da P-30
+(`frontend/tests/tone-ink.test.ts`), cobrir as cinco severidades e todas passarem 4,5:1 nos três
+estados. Revisar em **2026-10-31**.
+
+Medido em 2026-09-02, ao fechar a P-30 (item 25, Task 5): a tinta branca do Lara sobre o fundo
+compilado de cada severidade reprova AA no `p-button` **filled**, estado base, no tema **claro** —
+
+| Severidade | Contraste (base, claro) |
+|---|---|
+| success  | **2,28:1** |
+| info     | **2,77:1** |
+| warning  | **2,80:1** (era o defeito que a P-30 fechou) |
+| danger   | **3,76:1** |
+| help     | **3,96:1** |
+| secondary | 4,76:1 — passa |
+
+O `warning` não era caso especial: é a quarta pior das cinco que reprovam, e a P-30 resolveu a dele
+trocando de família (laranja → amarelo) porque a coerência com o `AppTag` já pedia a troca. As
+outras quatro não têm essa saída de graça — success/info/danger/help continuam na própria família,
+e cada uma precisaria da mesma medição de três estados (base/hover/active) mais outlined/text antes
+de mexer, porque a lição da P-30 é que trocar degrau a degrau na mesma posição pode reprovar pior
+que o defeito original (o `active` do amarelo degrau-a-degrau media 2,29:1, pior que os 2,80:1 que
+saíram).
+
+O `danger` já tem remédio **parcial**: `frontend/src/shared/styles/brand-theme.css` (achado UI-02 do
+review de 2026-08-18, no `Eliminar foto` do `AppPhotoField`) troca a tinta do `text`/`outlined` para
+`var(--tone-danger-ink)` e mede 5,83:1 no claro / 4,98:1 no escuro — mas o **filled** do `danger`
+(fundo vermelho, texto branco) não foi tocado e é o 3,76:1 medido acima.
+
+Consertar os outros quatro é campanha de tema — mexe em botão, tag, mensagem e badge de cada
+severidade nos dois temas, decisão de design que ninguém tomou ainda — e não é escopo do item 25.
+
 ## P-58 — a catraca do vite isola o `.env` da RAIZ e não o `frontend/.env`
 
 **Bloco:** — · **Gatilho:** fecha quando `tests/compose-dev.test.ts` afastar também o
