@@ -327,6 +327,19 @@ const BORDA_DE_CONTROLE =
 // fundo: vai para o degrau que o tema já publica como `--tone-warning-ink`
 // (`--yellow-800` no claro, `--yellow-400` no escuro). Mesmo remédio da UI-02
 // para o `danger`.
+//
+// O ANEL DE FOCO é o quarto estado, e não vinha no mapa de fundo (Q-5 do review
+// de 2026-09-03). São DUAS regras, e a segunda é quem pinta: o Lara declara
+// `:not(:disabled):focus` com `0 0 0 0.2rem <anel>` e, mais abaixo no arquivo,
+// `:enabled:focus` com `2px <separador>, 4px <anel>` — mesma especificidade
+// (0,4,0), e a de baixo vence. As duas ficaram no laranja de stock enquanto o
+// botão virava amarelo: no claro o `#fde68a` media 1,54:1 contra o novo
+// preenchimento `#eab308` (era 2,25:1 contra o laranja — o anel PIOROU com a
+// correção do preenchimento). Vão para `--yellow-900` no claro, o mesmo degrau
+// da tinta: 9,70:1 sobre a página branca e 4,55:1 sobre o preenchimento, os
+// dois vizinhos que o anel precisa separar (WCAG 1.4.11). No escuro o anel
+// pousa no poço de fundo e o que faltava era família, não contraste — vai para
+// `--yellow-300`, 11,89:1 sobre o ground.
 const WARNING_CLARO = {
   laranjaBase: '#f97316',
   tintaLara: '#ffffff',
@@ -337,6 +350,10 @@ const WARNING_CLARO = {
     '#ea580c': '#eec137', //           orange-600 → --yellow-400 (hover, CLAREIA)
     '#c2410c': '#f2d066', //           orange-700 → --yellow-300 (active, CLAREIA)
     'rgba(249, 115, 22': 'rgba(234, 179, 8', // veladura de outlined/text
+  },
+  anel: {
+    '#fde68a': '#5e4803', // amber-200 → --yellow-900 (`:not(:disabled):focus`)
+    '#fcb98b': '#5e4803', // laranja claro → --yellow-900 (`:enabled:focus`)
   },
 }
 const WARNING_ESCURO = {
@@ -350,12 +367,20 @@ const WARNING_ESCURO = {
     '#fed7aa': '#f6de95', //           orange-200 → --yellow-200 (active)
     'rgba(251, 146, 60': 'rgba(238, 193, 55',
   },
+  anel: {
+    '#fcb377': '#f2d066', // laranja claro → --yellow-300 (`:not(:disabled):focus`)
+    // O `:enabled:focus` do escuro já sai da família: seu anel é a veladura
+    // `rgba(251, 146, 60, 0.7)`, que o mapa de fundo acima converte.
+  },
 }
 
 function warningAmarelo(css, receita) {
-  const chaves = Object.keys(receita.fundo).sort((a, b) => b.length - a.length)
+  // Fundo e anel na MESMA passada, pelo mesmo motivo que o `transform` faz uma
+  // passada só: em série, a saída de um mapa seria reescaneada pelo outro.
+  const mapa = { ...receita.fundo, ...receita.anel }
+  const chaves = Object.keys(mapa).sort((a, b) => b.length - a.length)
   const busca = new RegExp(chaves.map(escapar).join('|'), 'gi')
-  const indice = new Map(Object.entries(receita.fundo).map(([k, v]) => [k.toLowerCase(), v]))
+  const indice = new Map(Object.entries(mapa).map(([k, v]) => [k.toLowerCase(), v]))
 
   return css.replace(/([^{}]+)\{([^{}]*)\}/g, (bloco, seletor, corpo) => {
     if (!/warning/i.test(seletor)) return bloco

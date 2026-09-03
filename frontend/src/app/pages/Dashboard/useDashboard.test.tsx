@@ -145,9 +145,10 @@ describe('useDashboard', () => {
 
     await waitFor(() => {
       if (result.current.kind !== 'ready-admin') throw new Error('a tela não pode virar erro com cache em mão')
-      // D-05: `detail` de servidor não é localizado, então não sai do hook. O
-      // aviso continua existindo — quem o dispara é `staleErrored`, e a dica
-      // genérica é escolhida por quem imprime (`DashboardPage.avisoStale`).
+      // O `problem()` daqui é 500, fora da allowlist da P-70, então o `detail`
+      // de servidor não sai do hook. O aviso continua existindo — quem o
+      // dispara é `staleErrored`, e a dica genérica é escolhida por quem
+      // imprime (`DashboardPage.avisoStale`).
       expect(result.current.staleErrored).toBe(true)
       expect(result.current.staleError).toBeNull()
     })

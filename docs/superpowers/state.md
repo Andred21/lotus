@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-dividas-de-mecanismo
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-frontend-dividas-de-mecanismo-design.md
 active_plan: docs/superpowers/plans/2026-09-02-frontend-dividas-de-mecanismo.md
@@ -47,9 +47,9 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: frontend-dividas-de-mecanismo   # item 25, promovido explicitamente pelo Joao em 2026-09-02
-    workflow_state: ready_for_review
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: request_code_review
+    next_action: close_active_work_item
     tree: ../fix-frontend
     branch: fix/frontend-dividas-de-mecanismo   # aberta de 3654b6dc (= origin/main@5f6daf8b mais o commit que abre o item 25, em revisao na PR #97); a PR #95 do bloco anterior mesclou em 2e24bba9
     active_spec: docs/superpowers/specs/2026-09-02-frontend-dividas-de-mecanismo-design.md
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-projecao-de-arquivados` (item 24 **fechado** em 2026-09-02, sem merge) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-dividas-de-mecanismo` (item 25) | Frontend | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (aberta de `3654b6dc`; a PR #95 do bloco anterior mesclou em `2e24bba9`) | `ready_for_review` |
+| `lane-c` | `frontend-dividas-de-mecanismo` (item 25) | Frontend | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (aberta de `3654b6dc`; a PR #95 do bloco anterior mesclou em `2e24bba9`) | `ready_for_closure` (review de 2026-09-03: 7 achados, todos aprovados e corrigidos) |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou

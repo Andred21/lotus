@@ -21,10 +21,10 @@ export function useResourceState<T>(query: UseQueryResult<T, ProblemDetails>) {
     data: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
-    /** O `detail` que pode ir à TELA, não o do envelope. O do servidor não é
-     * localizado (`ProblemDetails.php` devolve português literal), então
-     * `screenDetail` o silencia e o `?? t('common.loadErrorHint')` que os
-     * consumidores já escrevem assume. Quem precisa do envelope inteiro usa
+    /** O `detail` que pode ir à TELA, não o do envelope. Desde a P-70 o do
+     * SERVIDOR também vai, nos status em que o `ProblemDetails.php` prova que
+     * saiu de `lang/` (403, 404, 429); fora deles `screenDetail` silencia e o
+     * `?? t(errorHint)` assume. Quem precisa do envelope inteiro usa
      * `loadError` — a política é de quem IMPRIME. */
     errorDetail: screenDetail(query.error),
     /** A dica que acompanha a falha, escolhida pelo STATUS — mesmo motivo do

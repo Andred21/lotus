@@ -50,7 +50,7 @@ export default defineConfig(({ command, mode }) => {
     // vez de virarem zona sem tipo.
     //
     // COM `setupFiles`, desde 2026-09-02 (P-69): o `afterEach(cleanup)` do
-    // Testing Library era grafia manual em 31 dos 127 arquivos, e o desmonte
+    // Testing Library era grafia manual em 62 dos 127 arquivos, e o desmonte
     // dependia de quem copiava o molde de quem. O par que sustenta a decisão é
     // a catraca `CLEANUP_A_MAO` (eslint.config.js) mais a guarda estática
     // `tests/desmonte-global.test.ts`, que confere que ESTA linha existe.

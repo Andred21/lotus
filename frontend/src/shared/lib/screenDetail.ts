@@ -10,11 +10,24 @@
  * (P-70): substitui, nos status em que o backend PROVA que o texto é localizado.
  *
  * **Por que status, e não tipo de envelope:** o `ProblemDetails.php` escolhe o
- * `detail` por TIPO de exceção, e só três caminhos passam por chave de `lang/` —
- * forbidden (403), not found (404) e `ThrottleRequests` (429). O ramo `default`
- * devolve `getMessage()` CRU, e é por ele que sai o `CSRF token mismatch.` em
- * inglês do 419 (P-72, que segue aberta). A allowlist é fechada por desenho:
- * status novo não entra sozinho, atravessando sem ninguém decidir.
+ * `detail` por TIPO de exceção, e são DOIS mecanismos distintos que garantem
+ * `lang/` nestes três status — não um só:
+ *
+ * 1. o `match` de `detailFor()` mapeia forbidden (403), not found (404) e
+ *    `ThrottleRequests` (429) para chave de `lang/`;
+ * 2. antes dele, um curto-circuito (`ProblemDetails.php:80`) devolve
+ *    `getMessage()` CRU para quem implementa `PublicDetail` ou para
+ *    `ValidationException` — e há `PublicDetail` que é 403
+ *    (`ImmutableSystemRoleException`, `RedatorOnlyActionException`). Nesses o
+ *    `match` NÃO é o caminho, e quem sustenta a allowlist é
+ *    `tests/Unit/Shared/MensagemLiteralTest.php`, que reprova mensagem literal
+ *    fora de `lang/` nas exceções do domínio.
+ *
+ * Quem acrescentar uma `PublicDetail` de 403/404/429 tem de conferir a catraca
+ * do item 2, não o `match` do item 1. O ramo `default` devolve `getMessage()`
+ * CRU, e é por ele que sai o `CSRF token mismatch.` em inglês do 419 (P-72, que
+ * segue aberta). A allowlist é fechada por desenho: status novo não entra
+ * sozinho, atravessando sem ninguém decidir.
  *
  * **Quem fica de fora, e por quê:** 401 não vira estado de carga — o
  * interceptor do `shared/api/axios.ts` redireciona para o login antes. 422 não
@@ -72,11 +85,13 @@ export type LoadErrorHintKey =
 /**
  * A dica que acompanha a falha, escolhida pelo STATUS.
  *
- * `screenDetail` cala o `detail` do servidor porque ele não é localizado — mas
- * o envelope distingue mais que língua: distingue CAUSA. Com uma dica única,
- * um 403, um 404 e um 422 saíam todos como "revise sua conexão", que é
- * instrução errada e deixa quem lê sem ação. O default segue sendo a dica de
- * conexão: é a certa para rede caída, 500 e para tudo que não se sabe nomear.
+ * A dica não virou supérflua quando a P-70 abriu o `detail` do servidor: ela é
+ * o que a tela imprime quando `screenDetail` cala — status fora da allowlist,
+ * `detail` vazio, envelope que o interceptor não populou — e o envelope
+ * distingue mais que língua, distingue CAUSA. Com uma dica única, um 403, um
+ * 404 e um 422 saíam todos como "revise sua conexão", que é instrução errada e
+ * deixa quem lê sem ação. O default segue sendo a dica de conexão: é a certa
+ * para rede caída, 500 e para tudo que não se sabe nomear.
  *
  * 401 não entra: sessão expirada não chega a virar estado de carga — o
  * interceptor do `shared/api/axios.ts` redireciona para o login.

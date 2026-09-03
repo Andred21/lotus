@@ -76,9 +76,9 @@ describe('StudentDetailSections — falha COM cache não apaga as seções', () 
       <StudentDetailSections
         detail={detail({
           isError: true,
-          // `localDetail: true` porque `screenDetail` cala o detalhe do
-          // servidor, que não é localizado — sem a marca, quem imprime é o
-          // `?? t(errorHint)`.
+          // `localDetail: true` porque este envelope não tem `status`, e a
+          // allowlist da P-70 é por status — sem a marca, `screenDetail` cala e
+          // quem imprime é o `?? t(errorHint)`.
           error: { detail: 'Sin conexión', localDetail: true } as ProblemDetails,
         })}
       />,

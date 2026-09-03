@@ -102,9 +102,9 @@ const REGRAS_COMPONENTE_FEATURE = [
 // ~75 arquivos de componente.
 //
 // Por isso `COR_HARDCODED` e `DISABLED_READONLY` NÃO ganham bloco próprio:
-// entram nos arrays dos blocos que JÁ casam cada glob — `components/**` (com
-// a catraca de cor particionada por `ignores`/`files: CATRACA_COR`, dois
-// blocos abaixo) e o resto de `src/features/**` — e só `shared/**` ganha
+// entram nos arrays dos blocos que JÁ casam cada glob — `components/**` (que
+// até 2026-09-02 vinha particionado por `ignores`/`files: CATRACA_COR`, hoje
+// zerado) e o resto de `src/features/**` — e só `shared/**` ganha
 // bloco novo, porque nenhum bloco existente casa aquele glob com
 // `no-restricted-syntax`.
 const COR_HARDCODED = {
@@ -253,14 +253,22 @@ const ERRO_DE_CAMPO_A_MAO = {
 }
 
 // P-69: o desmonte é do `setupFiles`, não de cada arquivo. A grafia manual era
-// o molde que se copiava do vizinho — 31 arquivos a escreviam, 96 não, e quem
-// escrevia teste novo herdava a decisão de quem escreveu o anterior.
+// o molde que se copiava do vizinho — 62 dos 127 arquivos a escreviam, 65 não,
+// e quem escrevia teste novo herdava a decisão de quem escreveu o anterior.
 //
-// Descendente, e não `> Identifier`, porque as DUAS grafias vivas precisam
-// cair: `afterEach(cleanup)` (28 arquivos) e `afterEach(() => cleanup())`
-// (SidebarItem, PendenciasList) — na segunda o nome aparece como callee de uma
-// CallExpression dentro da arrow, e um seletor de filho direto a deixaria
-// passar. O que ela NÃO pega, dito para ninguém supor cobertura que não existe:
+// Descendente, e não `> Identifier`, porque as TRÊS grafias vivas precisam
+// cair: `afterEach(cleanup)` (28 arquivos), `afterEach(() => cleanup())`
+// (SidebarItem, PendenciasList) e `afterEach(() => { …; cleanup() })` (32) —
+// nas duas últimas o nome aparece como callee de uma CallExpression dentro da
+// arrow, e um seletor de filho direto as deixaria passar.
+//
+// O plano previa 31 arquivos, de um grep por `afterEach(cleanup)`; o seletor
+// achou 62, porque a terceira grafia esconde o `cleanup()` no CORPO da arrow,
+// ao lado de um `vi.clearAllMocks()`. É o parágrafo "catraca nova mede a
+// própria população com o seletor dela" do `frontend-fsliced.md`, medido de
+// novo — corrigido no review de 2026-09-03 (Q-2).
+//
+// O que ela NÃO pega, dito para ninguém supor cobertura que não existe:
 // apelido (`const desmontar = cleanup; afterEach(desmontar)`). Casa grafia, não
 // origem — mesmo limite do `DROPDOWN_SEM_NOME` e do `ERRO_DE_CAMPO_A_MAO`.
 //
@@ -274,8 +282,9 @@ const CLEANUP_A_MAO = {
 
 // Os arquivos que o item 24 deixou fora POR MEDIÇÃO (spec §2), e que por isso
 // seguem extraindo o erro à mão. Não é dívida esquecida: é o escopo escrito.
-// Particiona o mesmo glob do bloco de componente, exatamente como `CATRACA_COR`
-// faz — ver o bloco gêmeo abaixo.
+// Particiona o mesmo glob do bloco de componente — ver o bloco gêmeo abaixo. É
+// o molde que a `CATRACA_COR` usava até zerar em 2026-09-02, e hoje o único
+// vivo no arquivo.
 const FORA_DO_CAMPO_LIGADO = [
   // Sem bundle de form a que ligar o campo: setter por campo, estado solto, ou
   // chave de erro que não é o nome do campo (`grades.final`).
@@ -523,7 +532,7 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
   message:
     'Lista sem role="list": o mini-reset da P-46 zera o marcador e o WebKit tira a semântica de lista junto (Q-6, 2026-08-27).',
 }))
-// Catraca da regra de cor: lista que só ENCOLHE. O Login
+// Catraca da regra de cor (`CATRACA_COR`): lista que só ENCOLHE. O Login
 // SAIU em 2026-08-13: o desenho novo que esta linha previa é o bloco
 // `login-fora-do-adr16`, e a tela passou a ler token de superfície e de texto
 // em vez de utility fixa. Não reintroduza arquivo aqui para calar o lint —
@@ -534,9 +543,12 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
 // Os TRÊS ÚLTIMOS saíram em 2026-09-02 (D-69, item 25): `--text-color-secondary`
 // nos dois sítios de texto e `dangerText` nos dois de erro. A lista chegou a
 // zero e a PARTIÇÃO morreu junto — o bloco `files: CATRACA_COR` que existia
-// logo abaixo foi removido nesta data. Reabri-la exige recriar os dois lados,
-// não só empurrar um nome para dentro do array.
-const CATRACA_COR = []
+// logo abaixo foi removido nesta data, e o array em si saiu no review de
+// 2026-09-03 (Q-4): um `const CATRACA_COR = []` que ninguém lê é o mesmo ruído
+// que o bloco `files: []` — o próximo leitor o toma por catraca viva, e o
+// `no-unused-vars` não alcança este arquivo para acusar. Reabri-la exige
+// recriar os dois lados, não empurrar um nome para dentro de um array que já
+// não existe.
 
 export default defineConfig([
   // generated.ts é gerado pelo typescript-transformer (ADR-04) e nunca editado
@@ -586,7 +598,7 @@ export default defineConfig([
   // `ERRO_DE_CAMPO_A_MAO`. Sem ele, o `ignores` de cima não significaria "esta
   // régua não vale aqui" e sim "NENHUMA régua vale aqui" — os 3 bans de query,
   // o de cor e os de acessibilidade sumiriam desses 12 arquivos em silêncio. É
-  // o mesmo molde da partição `CATRACA_COR`.
+  // o mesmo molde que a partição `CATRACA_COR` usava até zerar em 2026-09-02.
   {
     files: FORA_DO_CAMPO_LIGADO,
     rules: {
