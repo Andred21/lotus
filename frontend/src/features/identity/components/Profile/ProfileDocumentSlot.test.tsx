@@ -1,5 +1,5 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
 import type { RedatorProfileDocumentData } from '@shared/types/generated'
@@ -22,7 +22,6 @@ vi.mock('react-i18next', async (importOriginal) => {
 beforeAll(async () => {
   await i18n.changeLanguage('es-CL')
 })
-afterEach(cleanup)
 
 function doc(over: Partial<RedatorProfileDocumentData> = {}): RedatorProfileDocumentData {
   return {

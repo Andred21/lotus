@@ -1,11 +1,7 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { FormField, FormErrorSummary, NestedField } from './FormField'
 import { useFieldProps } from './fieldContext'
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('FormField em modo leitura', () => {
   it('mostra o valor como texto e NÃO monta o controle', () => {

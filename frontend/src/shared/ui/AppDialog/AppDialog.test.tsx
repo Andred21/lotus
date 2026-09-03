@@ -1,5 +1,5 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { AppDialog } from './AppDialog'
 
@@ -9,8 +9,6 @@ import { AppDialog } from './AppDialog'
 beforeAll(async () => {
   await i18n.changeLanguage('es-CL')
 })
-
-afterEach(cleanup)
 
 describe('AppDialog', () => {
   it('os DOIS botoes do cabecalho se anunciam no idioma da interface', () => {

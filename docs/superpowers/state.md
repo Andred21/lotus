@@ -51,16 +51,16 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-campo-de-formulario-liga-no-form   # bloco sem ficha na fila (rotulo `item 24` tomado por engano; o 24 e o backend-projecao-de-arquivados), fechado em 2026-09-02; rebasada sobre origin/main@4bea7d27 e enviada na PR #95, aguardando merge
+    branch: fix/frontend-dividas-de-mecanismo   # rebasada sobre origin/main@4a0080ce (PR #97 mesclada) em 2026-09-03; item 25 fechado, aguardando merge da PR
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # sem ficha na fila, fechado em 2026-09-02
-last_completed_work_item: frontend-campo-de-formulario-liga-no-form
-state_basis_commit: 92774221
-updated_at: 2026-09-02T17:30:00-03:00
+    last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
+last_completed_work_item: frontend-dividas-de-mecanismo
+state_basis_commit: 2148b882
+updated_at: 2026-09-03T18:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,13 +160,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-02
+## Ocupação corrente — 2026-09-03
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-projecao-de-arquivados` (item 24 **fechado** em 2026-09-02, sem merge) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-campo-de-formulario-liga-no-form` (bloco **fechado** em 2026-09-02, **sem ficha na fila**; **PR #95** aberta, aguardando merge) | `idle` |
+| `lane-c` | — | — | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (item 25 **fechado** em 2026-09-03, sem merge) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -199,11 +199,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
 | 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
 | 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
 | 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 | 2026-08-31 | `prontidao-pre-nuvem` (emenda a **P-62**: o pessoal está público e a decisão de visibilidade ficou com o João) | Item 20 da fila |
-| 2026-08-30 | `hardening-i18n-e-erros-api` (paga a **P-61**, `D-07`, `D-18`, `D-36`, `D-38`, `D-58`; abre a **P-70**, a **P-71** e a **P-72**) | Item 7 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com

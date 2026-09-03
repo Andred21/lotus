@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { CertificateData } from '@shared/types/generated'
@@ -83,8 +83,6 @@ const montar = (c: CertificateData) => {
     </QueryClientProvider>,
   )
 }
-
-afterEach(cleanup)
 
 describe('HistorialTable — a linha do snapshot corrompido', () => {
   it('nome vazio: a célula DIZ que o campo falta, em vez de ficar em branco', () => {

@@ -1,9 +1,7 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { SectionLabel } from './SectionLabel'
 import { sectionLabelClass } from '../typography'
-
-afterEach(cleanup)
 
 /**
  * "Encabeçar um grupo" saía em 5 grafias — `text-sm font-bold tracking-wide

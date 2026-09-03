@@ -48,12 +48,12 @@ describe('useLoadState — o detail que pode ir à tela', () => {
     expect(result.current.errorDetail).toBe('Revisa tu conexión.')
   })
 
-  it('a dica acompanha o STATUS, já que o detail não vai', () => {
+  it('403: o detail do servidor vai, e a dica acompanha o STATUS (P-70)', () => {
     const proibido = { status: 403, detail: 'This action is unauthorized.' } as ProblemDetails
 
     const { result } = renderHook(() => useLoadState(query({ isError: true, error: proibido })))
 
-    expect(result.current.errorDetail).toBeUndefined()
+    expect(result.current.errorDetail).toBe('This action is unauthorized.')
     expect(result.current.errorHint).toBe('common.forbiddenHint')
   })
 

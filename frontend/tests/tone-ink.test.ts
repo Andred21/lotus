@@ -176,3 +176,141 @@ describe('tinta do botão `danger` text/outlined (UI-02)', () => {
     expect(contraste('#ef4444', '#f1f5f9')).toBeLessThan(4.5)
   })
 })
+
+/**
+ * P-30. O único `AppButton severity="warning"` do produto
+ * (`MoveConfirmDialog.tsx:36`) confirma uma ação irreversível de matrícula, e no
+ * tema claro o Lara o pintava com `#ffffff` sobre `#f97316`: **2,80:1**, abaixo
+ * do 4,5:1 de texto e abaixo até do 3:1 de elemento gráfico.
+ *
+ * A ficha pedia coerência de família (o `AppTag` warning já pintava com
+ * `--yellow-*`), e a coerência resolveu o contraste junto. Mede os QUATRO
+ * estados porque a regra base do Lara é (0,3,0) e `:hover`/`:active`/`:focus`
+ * chegam a (0,5,0) repetindo a cor: sem uma asserção por estado, passar o mouse
+ * devolveria a reprovação sem a captura de tela acusar — o mesmo defeito da
+ * UI-02. O `:focus` entrou no review de 2026-09-03 (Q-5), que mediu o buraco: a
+ * ficha corrigiu o preenchimento e deixou o anel de foco no laranja de stock,
+ * onde ele PIOROU de 2,25:1 para 1,54:1 contra o fundo novo.
+ *
+ * Mede também a AMARRAÇÃO, não só a razão (Q-6): a razão sozinha fica verde se
+ * alguém mover `--tone-warning-ink` um degrau e o botão ficar para trás — a
+ * `AppTag` andaria, o botão não, e a ficha reabriria em silêncio, que é
+ * exatamente a "uma severidade, duas famílias" que a P-30 fechou.
+ */
+describe('botão `warning` filled e outlined (P-30)', () => {
+  /** O corpo da regra cujo seletor começa por `prefixo`. */
+  const regra = (css: string, prefixo: string) =>
+    css.match(new RegExp(`${prefixo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^{}]*\\{([^{}]*)\\}`))?.[1] ?? ''
+
+  const corDe = (corpo: string) => corpo.match(/(?<![-\w])color:\s*(#[0-9a-f]{6})/i)?.[1] ?? ''
+  const fundoDe = (corpo: string) => corpo.match(/background(?:-color)?:\s*(#[0-9a-f]{6})/i)?.[1] ?? ''
+
+  /** A cor do anel de foco. São duas formas de `box-shadow`: o
+   * `:not(:disabled):focus` traz uma camada só, e o `:enabled:focus` traz um
+   * separador antes — ali o anel é a camada de 4px, nunca a primeira. */
+  const anelDe = (corpo: string) =>
+    (corpo.match(/0 0 0 4px\s+(#[0-9a-f]{6}|rgba?\([^)]*\))/i) ??
+      corpo.match(/box-shadow:\s*0 0 0 [\d.]+(?:rem|px)\s+(#[0-9a-f]{6}|rgba?\([^)]*\))/i))?.[1] ?? ''
+
+  /** O hue declarado, sem o alfa — é ele que responde "de que família é". */
+  const nucleo = (cor: string) => {
+    const m = cor.match(/^rgba?\(\s*(\d+)\D+(\d+)\D+(\d+)/i)
+    return m
+      ? '#' + [1, 2, 3].map((i) => Number(m[i]).toString(16).padStart(2, '0')).join('')
+      : cor.toLowerCase()
+  }
+
+  /** A cor como o olho a vê: veladura composta sobre onde pousa. Comparar a cor
+   * DECLARADA ignoraria o alfa, e o anel do escuro é veladura. */
+  const solido = (cor: string, sobre: string) => {
+    const m = cor.match(/^rgba\(\s*\d+\D+\d+\D+\d+\D+([\d.]+)/i)
+    const alfa = m ? Number(m[1]) : 1
+    return (
+      '#' +
+      rgb(nucleo(cor))
+        .map((v, i) => Math.round(v * alfa + rgb(sobre)[i] * (1 - alfa)))
+        .map((v) => v.toString(16).padStart(2, '0'))
+        .join('')
+    )
+  }
+
+  const rampaAmarela = (folha: string) =>
+    [...folha.matchAll(/--yellow-\d00:\s*(#[0-9a-f]{6})/gi)].map((m) => m[1].toLowerCase())
+
+  describe.each([
+    { tema: 'claro', folha: temaClaro, bloco: blocoClaro, ground: '#ffffff', degrauFundo: '--yellow-500' },
+    { tema: 'escuro', folha: temaEscuro, bloco: blocoRaiz, ground: '', degrauFundo: '--yellow-400' },
+  ])('tema $tema', ({ folha, bloco, ground, degrauFundo }) => {
+    it.each([
+      { estado: 'base', prefixo: '.p-button.p-button-warning,' },
+      { estado: 'hover', prefixo: '.p-button.p-button-warning:not(:disabled):hover,' },
+      { estado: 'active', prefixo: '.p-button.p-button-warning:not(:disabled):active,' },
+    ])('o filled no estado $estado passa AA (4,5:1)', ({ prefixo }) => {
+      const corpo = regra(folha, prefixo)
+      const [tinta, fundo] = [corDe(corpo), fundoDe(corpo)]
+
+      expect(fundo).toMatch(/^#[0-9a-f]{6}$/)
+      expect(contraste(tinta, fundo)).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it('a tinta do filled é o degrau 900 do amarelo nos dois temas', () => {
+      expect(corDe(regra(folha, '.p-button.p-button-warning,'))).toBe(hex(folha, '--yellow-900'))
+    })
+
+    it('o outlined/text é primeiro plano e passa AA sobre a superfície onde vive', () => {
+      const cor = corDe(regra(folha, '.p-button.p-button-warning.p-button-outlined,'))
+      const fundo = ground || hex(folha, '--surface-card')
+
+      expect(contraste(cor, fundo)).toBeGreaterThanOrEqual(4.5)
+    })
+
+    /** A amarração da Q-6, e o motivo de ela ser separada da razão acima: o
+     * `AppTag` warning lê `--tone-warning-ink` (`tokens.ts` → `AppTag.tsx`) e o
+     * botão lê o hex compilado. Sem esta linha os dois podem divergir com as
+     * quatro asserções de contraste verdes. */
+    it('o outlined/text pinta com o MESMO degrau que a camada de marca publica em `--tone-warning-ink`', () => {
+      const degrau = bloco.match(/--tone-warning-ink:\s*var\((--[a-z]+-\d+)\)/)?.[1] ?? ''
+
+      expect(degrau).toMatch(/^--yellow-\d00$/)
+      expect(corDe(regra(folha, '.p-button.p-button-warning.p-button-outlined,'))).toBe(
+        hex(folha, `\\${degrau}`),
+      )
+    })
+
+    it(`o preenchimento do filled é ${degrauFundo}, o degrau que a rampa publica`, () => {
+      expect(fundoDe(regra(folha, '.p-button.p-button-warning,'))).toBe(hex(folha, degrauFundo))
+    })
+
+    /** O quarto estado (Q-5). Duas regras de `:focus` coexistem com a MESMA
+     * especificidade (0,4,0) e a de baixo é quem pinta — as duas entram, porque
+     * corrigir só a que vence deixa a outra pronta para voltar a valer se o
+     * Lara reordenar o arquivo. */
+    it.each([
+      { qual: '`:not(:disabled):focus`', prefixo: '.p-button.p-button-warning:not(:disabled):focus,' },
+      { qual: '`:enabled:focus`', prefixo: '.p-button.p-button-warning:enabled:focus' },
+    ])('o anel de foco em $qual é da família amarela e separa 3:1 da superfície', ({ prefixo }) => {
+      const superficie = ground || hex(folha, '--surface-card')
+      const anel = anelDe(regra(folha, prefixo))
+
+      expect(anel).not.toBe('')
+      expect(rampaAmarela(folha)).toContain(nucleo(anel))
+      expect(contraste(solido(anel, superficie), superficie)).toBeGreaterThanOrEqual(3)
+    })
+  })
+
+  /** O controle da Q-5: os dois anéis de stock reprovam, cada um contra o
+   * vizinho que ele precisa separar. Reverter qualquer um cai aqui. */
+  it('o anel de foco de stock do Lara reprova contra o preenchimento novo e contra a página', () => {
+    expect(contraste('#fde68a', '#eab308')).toBeLessThan(3)
+    expect(contraste('#fcb98b', '#ffffff')).toBeLessThan(3)
+  })
+
+  /** Os dois controles que fazem o teste discriminar (lição 10). O primeiro é o
+   * defeito que a ficha fecha; o segundo é a "correção" ingênua — trocar cada
+   * degrau de laranja pelo degrau de amarelo na MESMA posição —, que reprova o
+   * active do claro por 2,29:1 e que este arquivo tem de recusar. */
+  it('o laranja de stock do Lara reprova, e a troca degrau a degrau reprova pior', () => {
+    expect(contraste('#ffffff', '#f97316')).toBeLessThan(3)
+    expect(contraste('#5e4803', '#a47d06')).toBeLessThan(3)
+  })
+})

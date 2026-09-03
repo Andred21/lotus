@@ -1,10 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { AppFileActions } from './AppFileActions'
-
-afterEach(() => {
-  cleanup()
-})
 
 const arquivo = {
   original_name: 'reuf-juan.pdf',

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppButton } from '@shared/ui'
+import { dangerText } from '@shared/styles/tokens'
 import { useTurmaManualOpener } from '../../hooks/useTurmaManualOpener'
 
 export function ManualButton({ turmaId }: { turmaId: number }) {
@@ -25,7 +26,7 @@ export function ManualButton({ turmaId }: { turmaId: number }) {
         />
       </div>
       {(manual.popupBlocked || manual.pdfError || manual.docxError) && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm" style={{ color: dangerText }}>
           {manual.popupBlocked
             ? t('operation.documents.popupBlocked')
             : (manual.pdfError ?? manual.docxError)}

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { Link, MemoryRouter, Route, Routes } from 'react-router-dom'
 import { useAuthPanel } from './useAuthPanel'
@@ -36,10 +36,6 @@ function renderHarness(entry: string) {
     </MemoryRouter>,
   )
 }
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('useAuthPanel', () => {
   it('deriva o modo do pathname', () => {

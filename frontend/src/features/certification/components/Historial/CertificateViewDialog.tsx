@@ -56,8 +56,9 @@ export function CertificateViewDialog({ certificateId, certificate, loading, err
            `CorruptedSnapshotException` implementa `PublicDetail` justamente
            para o suporte descobrir aqui QUAIS campos do snapshot faltam (D8 da
            spec de certificação). Todas as outras passam por `screenDetail`
-           (shared/lib) porque o envelope do backend não é localizado; esta não
-           passa, e trocá-la por `screenDetail` desfaz a D8. A rota pública do
+           (shared/lib), que só deixa passar o `detail` de servidor nos status
+           da allowlist da P-70 — e o desta exceção é 500, fora dela. Trocá-la
+           por `screenDetail` desfaz a D8. A rota pública do
            QR (`ValidationPage`) NÃO é exceção: lá quem lê não é o suporte. */
         <AppErrorState
           title={t('common.loadError')}

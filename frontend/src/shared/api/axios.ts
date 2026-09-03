@@ -10,8 +10,9 @@ export interface ProblemDetails {
     instance: string
     errors?: Record<string, string[]>
     /** Envelope montado pelo FRONT, não pelo servidor: o `detail` dele já é
-     * i18n e pode ir à tela. Sem a marca, `screenDetail` (shared/lib) o
-     * silencia junto com os do backend, que não são localizados. */
+     * i18n e pode ir à tela. A marca é o que o distingue, porque a allowlist do
+     * `screenDetail` (shared/lib) é por STATUS — e rede caída ou corpo
+     * não-parseável não têm status de servidor para casar com ela. */
     localDetail?: true
 }
 

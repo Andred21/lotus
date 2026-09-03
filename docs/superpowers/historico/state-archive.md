@@ -23,6 +23,36 @@
 
 ---
 
+## Fechado em 2026-09-03 — `frontend-dividas-de-mecanismo` (item 25)
+
+**A `lane-c` recebeu o item 25 em 2026-09-02** — `frontend-dividas-de-mecanismo`, promovido
+explicitamente pelo João com a lane em `idle`; o comando não promove, e não promoveu. `Contexto: não`
+na fila, então o bloco nasce direto em planejamento, sem Context Packet: as seis fontes (`P-68`,
+`P-69`, `P-70`, `P-30`, `P-42` e `D-69`) são fichas do próprio repositório. A branch
+`fix/frontend-dividas-de-mecanismo` sai de `3654b6dc` — `origin/main@5f6daf8b`, que já traz as PRs
+#95 e #96 mescladas, mais o commit que abre o item 25 no `backlog.md`, em revisão na **PR #97**. Três
+das seis fichas foram remedidas contra o código no brainstorming e **contradisseram o próprio texto**:
+a variável de perigo da `D-69` já existe, a superfície da `P-30` é um botão (e reprova contraste a
+2,80:1), e o custo que travava a `P-69` mediu **zero** — 127 arquivos / 734 testes passam com o
+`cleanup()` global ligado.
+
+**O planejamento fechou em 2026-09-02**, com spec e plano commitados e oito tasks desenhadas — uma
+por ficha, mais o desmonte da `P-69` partido em mecanismo e remoção, mais o fechamento que mede o
+DoD. O plano **corrige a spec em quatro pontos que só a medição de escrita revelou**, e por isso ele
+é a fonte da execução: (1) a `P-69` são **31** arquivos, não 28 — a spec contou uma grafia só, e
+`afterEach(() => cleanup())` está viva em dois arquivos de `src/app/`; (2) a sonda negativa que a
+spec desenhou **não reprova** — a suíte inteira passa sem `setupFiles` e sem o `cleanup()` do
+`useServerTable.test.tsx`, então a prova passa a ser a guarda estática mais a catraca
+`CLEANUP_A_MAO`, as duas vistas reprovar; (3) a receita da `P-30` medida na spec regride dois
+estados e o `outlined` (3,30:1, 2,29:1 e 1,92:1 no claro), porque a §3.2 mediu só o estado base — a
+tinta amarela tem de ser escura e os estados sobem a rampa, que é a direção que o Lara já usa no
+tema escuro; (4) a `CLEANUP_A_MAO` não pode ganhar bloco próprio no `eslint.config.js` sob pena de
+apagar por merge raso a catraca de cor nos arquivos de teste, então entra em cinco arrays
+existentes. A decisão **D3 não muda** — o warning alinha ao amarelo da tag; muda a receita. Fica
+registrado um achado que **não** se paga neste bloco e vira ficha na Task 5: no tema claro a família
+inteira de botão de severidade reprova AA no estado base (success 2,28:1, info 2,77:1, warning
+2,80:1, danger 3,76:1, help 3,96:1) — o warning nunca foi caso especial.
+
 ## Fechado em 2026-09-02 — `backend-projecao-de-arquivados` (item 24)
 
 **A `lane-a` recebeu o item 24 em 2026-09-02** — `backend-projecao-de-arquivados`, promovido

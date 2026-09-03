@@ -12,6 +12,40 @@
 
 # Frontend
 
+## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
+
+**Bloco:** — · **Gatilho:** fecha quando uma régua por estado, no molde do `describe` da P-30
+(`frontend/tests/tone-ink.test.ts`), cobrir as cinco severidades e todas passarem 4,5:1 nos três
+estados. Revisar em **2026-10-31**.
+
+Medido em 2026-09-02, ao fechar a P-30 (item 25, Task 5): a tinta branca do Lara sobre o fundo
+compilado de cada severidade reprova AA no `p-button` **filled**, estado base, no tema **claro** —
+
+| Severidade | Contraste (base, claro) |
+|---|---|
+| success  | **2,28:1** |
+| info     | **2,77:1** |
+| warning  | **2,80:1** (era o defeito que a P-30 fechou) |
+| danger   | **3,76:1** |
+| help     | **3,96:1** |
+| secondary | 4,76:1 — passa |
+
+O `warning` não era caso especial: é a quarta pior das cinco que reprovam, e a P-30 resolveu a dele
+trocando de família (laranja → amarelo) porque a coerência com o `AppTag` já pedia a troca. As
+outras quatro não têm essa saída de graça — success/info/danger/help continuam na própria família,
+e cada uma precisaria da mesma medição de três estados (base/hover/active) mais outlined/text antes
+de mexer, porque a lição da P-30 é que trocar degrau a degrau na mesma posição pode reprovar pior
+que o defeito original (o `active` do amarelo degrau-a-degrau media 2,29:1, pior que os 2,80:1 que
+saíram).
+
+O `danger` já tem remédio **parcial**: `frontend/src/shared/styles/brand-theme.css` (achado UI-02 do
+review de 2026-08-18, no `Eliminar foto` do `AppPhotoField`) troca a tinta do `text`/`outlined` para
+`var(--tone-danger-ink)` e mede 5,83:1 no claro / 4,98:1 no escuro — mas o **filled** do `danger`
+(fundo vermelho, texto branco) não foi tocado e é o 3,76:1 medido acima.
+
+Consertar os outros quatro é campanha de tema — mexe em botão, tag, mensagem e badge de cada
+severidade nos dois temas, decisão de design que ninguém tomou ainda — e não é escopo do item 25.
+
 ## P-58 — a catraca do vite isola o `.env` da RAIZ e não o `frontend/.env`
 
 **Bloco:** — · **Gatilho:** fecha quando `tests/compose-dev.test.ts` afastar também o
@@ -62,84 +96,8 @@ no lugar que o fatal de 128M apareceu aqui.
 > na `lane-c` e viraram `P-67` e `P-68`: a `main` já trazia `P-64`, `P-65` e `P-66` da `lane-a`,
 > mescladas antes destas (PR #81). Mesmo movimento que a nota da `lane-a` registra adiante — ID
 > publicado na `main` não se reusa, e quem renumera é a lane que ainda não mesclou. **A `P-67`
-> fechou em 2026-09-01** (item 21) e está em [`encerradas.md`](./encerradas.md); a `P-68` segue
-> aberta adiante.
-
-## P-69 — o vitest não tem `setupFiles`, então nada desmonta o que um teste monta
-
-**Quem decide:** João · **Gatilho:** João decidir se o `cleanup()` vira mecanismo global; ou bloco
-que toque `frontend/vite.config.ts` por outro motivo e possa medir o alcance. Revisar em
-**2026-10-31**.
-
-Medido no fechamento do `hardening-performance-e-dados` (2026-08-29). `frontend/vite.config.ts` não
-declara `setupFiles` nem `globals: true`, e sem um dos dois o `cleanup()` automático do Testing
-Library **nunca roda**: o que um teste monta segue montado até o vitest destruir o jsdom do arquivo.
-
-Na maior parte dos casos isso é inócuo — o componente parado não faz nada. Deixa de ser inócuo
-assim que o componente agenda trabalho: o `useServerTable` marca um `setTimeout` de debounce no
-mount, e ele dispara **depois** do teardown, sobre um `window` que já não existe. O sintoma é
-`ReferenceError: window is not defined` em `Unhandled Errors`, que **reprova a rodada sem reprovar
-asserção nenhuma** — some do relatório de testes e parece flake. Foi exatamente o que aconteceu
-duas vezes neste bloco, e a primeira leitura registrou como oscilação; a segunda mediu e achou a
-causa (`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`).
-
-**Pago onde doía, não onde resolve de vez.** Os dois arquivos que vazavam ganharam
-`afterEach(cleanup)` — a grafia que `AppCard.test.tsx`, `PageHeader.test.tsx` e
-`SectionLabel.test.tsx` já usam —, e a suíte foi de 1 reprovação em 4 voltas para **6 verdes de 6**.
-O que continua aberto é o mecanismo: nada impede o próximo teste de montar um hook com timer sem
-`cleanup`, e ele nasce verde até a rodada em que não nascer. O remédio conhecido é um `setupFiles`
-com `afterEach(cleanup)` valendo para todos os arquivos (lição 14 — mecanismo vence instrução). Não
-entrou aqui porque mudar a configuração do runner do repositório inteiro no gate de fechamento é
-escopo próprio: o custo real é descobrir quantos arquivos hoje dependem, sem saber, de o componente
-**não** desmontar entre testes.
-
-## P-68 — o `max-lines` mede arquivo de teste em `features/` e não mede em `app/`, e nada declara por quê
-
-**Quem decide:** João · **Gatilho:** João escolher entre alinhar as duas camadas (isentando teste
-também em `features/`) ou escrever no config a razão de a régua valer para teste ali; ou bloco que
-toque `frontend/eslint.config.js` por outro motivo. Revisar em **2026-10-31**.
-
-Medido no fechamento do item 18 (2026-08-29), quando o gate abriu vermelho: `ValidationPage.test.tsx`
-passou de 147 para 170 linhas nas correções do review e reprovou o `max-lines` de 150 da camada
-`src/features/*/components/**`. O bloco irmão do mesmo arquivo, `src/app/**/*.tsx`, tem
-`ignores: ['**/*.test.tsx']` **com a razão escrita** — *"quebrar um arquivo de teste coeso é pagar
-preço pela regra, não pelo defeito"*. O de `features/` não tem a isenção nem uma linha dizendo que a
-ausência é deliberada.
-
-**A divergência não é acadêmica:** ela decide se um teste que cresce se quebra ou não, e as duas
-camadas respondem diferente para o mesmo caso.
-
-**Estado atual da população, medido:** 24 arquivos `*.test.tsx` em `src/features/*/components/**`;
-**um** passava de 150 (o do fechamento, quebrado em `e76747a6`) e **dois** estão exatamente em 150 —
-`EnrollmentSection.test.tsx` e `ProfileDocumentSlot.test.tsx`, que é a assinatura de quem já aparou
-para caber.
-
-**Por que ficou aberta:** o João decidiu o caso concreto — quebrar o arquivo, não afrouxar a régua —
-e essa decisão está paga. O que sobra é a política, que vale para os próximos 24: isentar alinha as
-camadas e solta uma régua viva; manter exige que a razão esteja escrita, porque a razão oposta já
-está, no mesmo arquivo, doze linhas abaixo.
-
----
-
-## P-70 — o `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado
-
-**Bloco:** `hardening-i18n-e-erros-api` (D4 da spec de 2026-08-29) ·
-**Gatilho:** próximo bloco da frente de frontend que tocar política de erro de tela.
-Revisar em **2026-11-30**.
-
-`frontend/src/shared/lib/screenDetail.ts` devolve `undefined` para todo envelope que não seja
-sintetizado pelo próprio front, então erro de CARGA (GET) mostra a dica genérica do i18n em vez do
-que o servidor disse. A razão escrita era que o `ProblemDetails` respondia em português fixo — isso
-acabou: o envelope inteiro sai de `lang/` e responde ao `Accept-Language`.
-
-**Por que não foi virado junto:** o item 7 é da frente Backend. Virar a chave exige garantir que
-nenhuma mensagem de exceção não prevista chegue à tela, o que transforma um bloco de backend em
-backend+frontend. Decisão do João em 2026-08-29.
-
-**DoD de quem pegar:** um GET que falha com 403 e outro com 404 mostram, na tela, a mensagem
-localizada do servidor, nos três locales — e um 500 continua mostrando a dica genérica.
-
----
+> fechou em 2026-09-01** (item 21) e a **`P-68` fechou em 2026-09-03** (item 25); as duas estão em
+> [`encerradas.md`](./encerradas.md).
 
 # Backend
 
@@ -678,32 +636,6 @@ manter como está) e o bloco não mudou visibilidade nem protection. Quando prot
 couber, os required checks são **cinco**: `audit-dev` decide desde 2026-08-29 (D1 da spec do item
 20) — o `image` já depende dele.
 
-## P-30 — o `warning` segue com o laranja de stock do Lara
-
-**Gatilho:** fecha quando o João decidir que o `warning` quer âmbar próprio (aí vira task de tema,
-com medição de contraste nas quatro superfícies e guarda de drift no molde da D5'), ou quando um
-bloco de design tocar as paletas de severidade por outro motivo e puder absorvê-lo. Revisar em
-**2026-10-31**.
-
-A §4 da spec de `estilizacao-adr16-shell-tipografia` prometia `ámbar-aviso` (`#D97706`) como sexto
-token da paleta; o construído tem **cinco** donos de cor de marca.
-
-**A divergência de doc já está resolvida** (achado Q-7 do review, 2026-08-12): `#D97706` não aparece
-em `frontend/src/`, a §4 foi corrigida para descrever o construído e a decisão virou a emenda
-**D-P16** do plano. O que fica aberto é **design**, não doc.
-
-As paletas de severidade (info/sky, success, warning, danger, secondary/slate) ficam intactas de
-propósito — a camada de marca transforma só a família da primária, como o comentário de
-`frontend/scripts/generate-brand-theme.mjs` declara, e o script não tem nenhum hex laranja ou âmbar
-em mapa algum. A regra é por **família**, não por severidade: onde o Lara pintou severidade com o
-azul, a camada varreu junto (a mensagem `info` do claro tem borda celeste e texto no degrau 700,
-achado da D-P14) — `warning` sobrevive porque é laranja, não porque foi poupado por ser severidade.
-
-Trocar o laranja do Lara (`#f97316` em botão, tag e badge e `#cc8925` na mensagem `warn` no claro;
-`#fb923c` e `#eab308` no escuro) por um âmbar de marca exige régua de contraste própria em botão,
-tag, mensagem e badge nos dois temas — decisão que ninguém tomou, e que não cabia num bloco cuja
-emenda ao ADR-16 é "camada de marca **sobre** o Lara".
-
 ## P-28 — o fundo do certificado não reproduz as cunhas nem separa a página 2
 
 **Gatilho:** fecha quando o fundo passar a distinguir página 1 das seguintes **e** as cunhas
@@ -725,26 +657,6 @@ repete a faixa junto.
 correto e com o conteúdo de peso legal íntegro; o que falta é ornamento. Corrigir reabre as Tasks 1 e
 3 (recompor o fundo, ou reproduzir as cunhas em CSS, e separar o fundo da primeira página do das
 seguintes).
-
-## P-42 — a grafia construída do `IdentityCell` diverge da D1 da própria spec
-
-**Gatilho:** fecha quando o D1 for reescrito com a grafia construída e o motivo (ou quando o código
-voltar ao D1). Candidato natural: o próximo bloco que tocar tipografia de tabela. Revisar em
-**2026-10-31**.
-
-`IdentityCell.tsx` usa `font-semibold` no título (D1: `font-medium`), `text-sm font-medium` na
-descrição (D1: `text-xs`) e um `gap-2` entre as duas linhas que o D1 não previa.
-
-Achado **Q-3** do `/revisar-sprint` de 2026-08-14, **rejeitado pelo João** ("eu que mudei, deixei
-como está"). O D1 foi decidido no brainstorming como "grafia vencedora — a dos três de `identity`" e
-a decisão nova é dele, tomada com a tela na frente; o que fica aberto é só o **registro**: a spec
-`specs/archive/2026-08-14-celula-de-identidade-design.md` segue descrevendo a grafia planejada, e o
-`state.md` do bloco registrava apenas o `<p>`→`<span>` da edição à mão.
-
-O `gap-2` × N linhas muda a altura de toda tabela que usa a célula, então não é detalhe cosmético
-invisível.
-
-**Nasceu como `P-39` e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-41](#p-41).**
 
 ---
 

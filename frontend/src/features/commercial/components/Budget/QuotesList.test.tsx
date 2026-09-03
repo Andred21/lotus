@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import type { QuoteData } from '@shared/types/generated'
 import { QuotesList } from './QuotesList'
 
@@ -57,7 +57,6 @@ const PROPS_ARQUIVADOS = {
 }
 
 afterEach(() => {
-  cleanup()
   cursos.current = { isError: false, errorDetail: undefined, resolved: true }
 })
 

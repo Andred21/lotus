@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render } from '@testing-library/react'
 import { AppTabView, AppTabPanel } from './AppTabView'
 
 // O wrapper lê `t` para o piso de nome dos botões prev/next: sem o kit, o teste
@@ -11,8 +11,6 @@ vi.mock('react-i18next', async (importOriginal) => {
     useTranslation: mockUseTranslation(),
   }
 })
-
-afterEach(cleanup)
 
 // jsdom não faz layout (`clientWidth`/`scrollWidth` ficam 0), então o TabView
 // do PrimeReact desabilita os dois lados e os botões prev/next nunca aparecem

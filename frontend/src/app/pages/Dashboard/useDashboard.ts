@@ -51,13 +51,15 @@ export type DashboardState =
   | {
       kind: 'ready-admin'
       data: AdminDashboardData
-      /** Houve falha com dado em mão. Separado de `staleError` porque a D-05
-       * cala o `detail` de servidor: sem este sinal, um 500 fazia o aviso
-       * inteiro sumir — o `InlineLoadState` desiste no `!error`, e a tela
-       * voltava a falhar em silêncio. Quem imprime escolhe a dica. */
+      /** Houve falha com dado em mão. Separado de `staleError` porque
+       * `screenDetail` cala o `detail` de servidor fora da allowlist da P-70 —
+       * e o 500 está fora: sem este sinal, um 500 fazia o aviso inteiro sumir
+       * — o `InlineLoadState` desiste no `!error`, e a tela voltava a falhar em
+       * silêncio. Quem imprime escolhe a dica. */
       staleErrored: boolean
-      /** Só o `detail` que o FRONT escreveu (`screenDetail`); `null` para o do
-       * servidor, que não é localizado. */
+      /** O `detail` que sobreviveu ao `screenDetail`: o que o FRONT escreveu, e
+       * o do SERVIDOR nos status em que ele é localizado (403, 404, 429 — P-70).
+       * `null` nos demais, e aí quem imprime cai no `staleHint`. */
       staleError: string | null
       /** A dica a imprimir quando `staleError` é `null`, escolhida pelo STATUS:
        * o 422 de janela invertida não é problema de conexão. */

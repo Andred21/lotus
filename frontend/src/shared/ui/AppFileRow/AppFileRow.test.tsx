@@ -1,5 +1,5 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
 import { AppFileRow } from './AppFileRow'
@@ -10,8 +10,6 @@ import { AppFileRow } from './AppFileRow'
 beforeAll(async () => {
   await i18n.changeLanguage('es-CL')
 })
-
-afterEach(cleanup)
 
 describe('AppFileRow', () => {
   it('expoe o nome inteiro em title, porque a linha trunca', () => {

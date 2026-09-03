@@ -1,5 +1,5 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { registerPrimeLocales } from '@shared/config/primeLocale'
 import type { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
@@ -52,8 +52,6 @@ function montar() {
 // boot (`main.tsx`), o botão do ícone estoura em `localeOption('chooseDate',
 // 'es')`. A mesma nota de `fieldAssociation.test.tsx`.
 beforeAll(registerPrimeLocales)
-
-afterEach(cleanup)
 
 describe('EmissionPanel — o seletor de turma', () => {
   it('tem rótulo visível associado ao dropdown, e não só o placeholder', () => {

@@ -1,12 +1,8 @@
 import { useState } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { useFormField } from './useFormField'
 import { useFieldBind } from './fieldContext'
-
-afterEach(() => {
-  cleanup()
-})
 
 type Campos = { rut: string; nome: string }
 

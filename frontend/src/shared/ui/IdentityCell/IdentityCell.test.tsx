@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { IdentityCell } from './IdentityCell'
 
 /**
@@ -9,10 +9,6 @@ import { IdentityCell } from './IdentityCell'
  * abriria uma segunda linha vazia e a altura da linha da tabela oscilaria
  * entre os alunos com e sem e-mail.
  */
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('IdentityCell', () => {
   it('na forma padrão empilha título e descrição em duas linhas truncadas', () => {

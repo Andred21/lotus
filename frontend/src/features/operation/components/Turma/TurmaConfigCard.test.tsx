@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import type { TurmaData } from '@shared/types/generated'
 import type { useTurmaConfigForm } from '../../hooks/useTurmaConfigForm'
@@ -66,10 +66,6 @@ beforeEach(() => {
     generalError: undefined,
     workloadHours: 40,
   }
-})
-
-afterEach(() => {
-  cleanup()
 })
 
 describe('TurmaConfigCard numa turma concluída (UI-01)', () => {

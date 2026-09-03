@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { registerPrimeLocales } from '@shared/config/primeLocale'
 import { FormField } from './FormField'
 import { useFieldBind } from './fieldContext'
@@ -15,10 +15,6 @@ import { AppDatePicker } from '../AppDatePicker/AppDatePicker'
 // `localeOption`, que só existe depois de `addLocale` — igual a
 // `fieldAssociation.test.tsx` e `EmissionPanel.test.tsx`.
 beforeAll(registerPrimeLocales)
-
-afterEach(() => {
-  cleanup()
-})
 
 /** Controle de teste: o mesmo contrato dos wrappers de `shared/ui` — pesca o
  * bind do contexto e diz qual é a forma do próprio evento. */

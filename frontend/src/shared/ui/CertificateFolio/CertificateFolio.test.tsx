@@ -1,9 +1,7 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { CertificateFolio } from './CertificateFolio'
 import { fieldLabelClass } from '../typography'
-
-afterEach(cleanup)
 
 /**
  * A assinatura que o ADR-16 elegeu — o folio tratado como artefato — nunca foi

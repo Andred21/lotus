@@ -89,12 +89,12 @@ describe('useResourceState', () => {
     expect(result.current.errorDetail).toBe('Revisa tu conexión.')
   })
 
-  it('a dica acompanha o STATUS, já que o detail não vai', () => {
+  it('404: o detail do servidor vai, e a dica acompanha o STATUS (P-70)', () => {
     const NAO_ENCONTRADO = { status: 404, detail: 'No query results for model [Turma] 5' } as ProblemDetails
 
     const { result } = renderHook(() => useResourceState(query({ isError: true, error: NAO_ENCONTRADO })))
 
-    expect(result.current.errorDetail).toBeUndefined()
+    expect(result.current.errorDetail).toBe('No query results for model [Turma] 5')
     expect(result.current.errorHint).toBe('common.notFoundHint')
   })
 

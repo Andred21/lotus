@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider, type UseQueryResult } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { StudentDetailData } from '@shared/types/generated'
@@ -46,10 +46,6 @@ function detail(over: Partial<UseQueryResult<StudentDetailData, ProblemDetails>>
   } as unknown as UseQueryResult<StudentDetailData, ProblemDetails>
 }
 
-afterEach(() => {
-  cleanup()
-})
-
 /** A célula de certificado (coluna nova da tabela de turmas) chama
  * `useMutation` por baixo — precisa de um `QueryClientProvider` no ar, mesmo
  * quando o teste não fala de certificado. */
@@ -80,9 +76,9 @@ describe('StudentDetailSections — falha COM cache não apaga as seções', () 
       <StudentDetailSections
         detail={detail({
           isError: true,
-          // `localDetail: true` porque `screenDetail` cala o detalhe do
-          // servidor, que não é localizado — sem a marca, quem imprime é o
-          // `?? t(errorHint)`.
+          // `localDetail: true` porque este envelope não tem `status`, e a
+          // allowlist da P-70 é por status — sem a marca, `screenDetail` cala e
+          // quem imprime é o `?? t(errorHint)`.
           error: { detail: 'Sin conexión', localDetail: true } as ProblemDetails,
         })}
       />,

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import type { CourseData } from '@shared/types/generated'
 import type { useRedatorCourses } from '../../hooks/useRedatorCourses'
 import { RedatorCourseSelector } from './RedatorCourseSelector'
@@ -46,7 +46,6 @@ const renderSelector = (over: Partial<Courses>, readOnly = false) => {
 }
 
 afterEach(() => {
-  cleanup()
   atual = base
 })
 

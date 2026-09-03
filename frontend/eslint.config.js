@@ -102,9 +102,9 @@ const REGRAS_COMPONENTE_FEATURE = [
 // ~75 arquivos de componente.
 //
 // Por isso `COR_HARDCODED` e `DISABLED_READONLY` NÃO ganham bloco próprio:
-// entram nos arrays dos blocos que JÁ casam cada glob — `components/**` (com
-// a catraca de cor particionada por `ignores`/`files: CATRACA_COR`, dois
-// blocos abaixo) e o resto de `src/features/**` — e só `shared/**` ganha
+// entram nos arrays dos blocos que JÁ casam cada glob — `components/**` (que
+// até 2026-09-02 vinha particionado por `ignores`/`files: CATRACA_COR`, hoje
+// zerado) e o resto de `src/features/**` — e só `shared/**` ganha
 // bloco novo, porque nenhum bloco existente casa aquele glob com
 // `no-restricted-syntax`.
 const COR_HARDCODED = {
@@ -252,10 +252,39 @@ const ERRO_DE_CAMPO_A_MAO = {
     'Erro de campo extraído à mão: use <Field name="x"> e o erro vem do form (spec do item 24). A prop `error` fica para a chave que NÃO é o nome do campo.',
 }
 
+// P-69: o desmonte é do `setupFiles`, não de cada arquivo. A grafia manual era
+// o molde que se copiava do vizinho — 62 dos 127 arquivos a escreviam, 65 não,
+// e quem escrevia teste novo herdava a decisão de quem escreveu o anterior.
+//
+// Descendente, e não `> Identifier`, porque as TRÊS grafias vivas precisam
+// cair: `afterEach(cleanup)` (28 arquivos), `afterEach(() => cleanup())`
+// (SidebarItem, PendenciasList) e `afterEach(() => { …; cleanup() })` (32) —
+// nas duas últimas o nome aparece como callee de uma CallExpression dentro da
+// arrow, e um seletor de filho direto as deixaria passar.
+//
+// O plano previa 31 arquivos, de um grep por `afterEach(cleanup)`; o seletor
+// achou 62, porque a terceira grafia esconde o `cleanup()` no CORPO da arrow,
+// ao lado de um `vi.clearAllMocks()`. É o parágrafo "catraca nova mede a
+// própria população com o seletor dela" do `frontend-fsliced.md`, medido de
+// novo — corrigido no review de 2026-09-03 (Q-2).
+//
+// O que ela NÃO pega, dito para ninguém supor cobertura que não existe:
+// apelido (`const desmontar = cleanup; afterEach(desmontar)`). Casa grafia, não
+// origem — mesmo limite do `DROPDOWN_SEM_NOME` e do `ERRO_DE_CAMPO_A_MAO`.
+//
+// O par que a sustenta é `tests/desmonte-global.test.ts`: sem ele, apagar o
+// `setupFiles` deixaria esta proibição de pé sobre nada.
+const CLEANUP_A_MAO = {
+  selector: 'CallExpression[callee.name="afterEach"] Identifier[name="cleanup"]',
+  message:
+    'Desmonte à mão: o `afterEach(cleanup)` é global (src/test-setup.ts, P-69). Apague a linha e o import — repeti-la aqui não muda comportamento e faz o próximo copiar o molde.',
+}
+
 // Os arquivos que o item 24 deixou fora POR MEDIÇÃO (spec §2), e que por isso
 // seguem extraindo o erro à mão. Não é dívida esquecida: é o escopo escrito.
-// Particiona o mesmo glob do bloco de componente, exatamente como `CATRACA_COR`
-// faz — ver o bloco gêmeo abaixo.
+// Particiona o mesmo glob do bloco de componente — ver o bloco gêmeo abaixo. É
+// o molde que a `CATRACA_COR` usava até zerar em 2026-09-02, e hoje o único
+// vivo no arquivo.
 const FORA_DO_CAMPO_LIGADO = [
   // Sem bundle de form a que ligar o campo: setter por campo, estado solto, ou
   // chave de erro que não é o nome do campo (`grades.final`).
@@ -503,7 +532,7 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
   message:
     'Lista sem role="list": o mini-reset da P-46 zera o marcador e o WebKit tira a semântica de lista junto (Q-6, 2026-08-27).',
 }))
-// Catraca da regra de cor: lista que só ENCOLHE. O Login
+// Catraca da regra de cor (`CATRACA_COR`): lista que só ENCOLHE. O Login
 // SAIU em 2026-08-13: o desenho novo que esta linha previa é o bloco
 // `login-fora-do-adr16`, e a tela passou a ler token de superfície e de texto
 // em vez de utility fixa. Não reintroduza arquivo aqui para calar o lint —
@@ -511,11 +540,15 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
 // A Validação SAIU em 2026-08-28: o `bg-slate-50 dark:bg-slate-950` virou
 // `--surface-ground` (achado C2 do audit de 2026-08-26) e o arquivo não tem
 // mais cor crua nenhuma.
-const CATRACA_COR = [
-  'src/features/commercial/components/Budget/CourseStep.tsx',
-  'src/features/commercial/components/Budget/QuoteWizard.tsx',
-  'src/features/operation/components/Document/ManualButton.tsx',
-]
+// Os TRÊS ÚLTIMOS saíram em 2026-09-02 (D-69, item 25): `--text-color-secondary`
+// nos dois sítios de texto e `dangerText` nos dois de erro. A lista chegou a
+// zero e a PARTIÇÃO morreu junto — o bloco `files: CATRACA_COR` que existia
+// logo abaixo foi removido nesta data, e o array em si saiu no review de
+// 2026-09-03 (Q-4): um `const CATRACA_COR = []` que ninguém lê é o mesmo ruído
+// que o bloco `files: []` — o próximo leitor o toma por catraca viva, e o
+// `no-unused-vars` não alcança este arquivo para acusar. Reabri-la exige
+// recriar os dois lados, não empurrar um nome para dentro de um array que já
+// não existe.
 
 export default defineConfig([
   // generated.ts é gerado pelo typescript-transformer (ADR-04) e nunca editado
@@ -549,40 +582,27 @@ export default defineConfig([
   // primeiro — dois blocos `src/features/**/*.tsx` novos apagando ESTE bloco
   // em silêncio para todo componente, achado do review desta task.
   //
-  // `ignores: CATRACA_COR` porque a catraca de cor (D7, dois blocos abaixo)
-  // precisa das MESMAS 4 proibições de componente — só não a de cor hardcoded
-  // — e um array de `no-restricted-syntax` não aceita `ignores` por seletor
-  // individual dentro de si. A catraca ganha bloco próprio com o mesmo array
-  // menos `COR_HARDCODED`, particionando o mesmo glob sem sobreposição.
+  // O `ignores` guarda só `FORA_DO_CAMPO_LIGADO` desde 2026-09-02: a partição
+  // por `CATRACA_COR` existia porque a catraca de cor precisava das MESMAS
+  // proibições de componente menos `COR_HARDCODED`, e um array de
+  // `no-restricted-syntax` não aceita `ignores` por seletor individual. Com a
+  // lista em zero (D-69, item 25) o segundo lado da partição foi removido.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    ignores: [...CATRACA_COR, ...FORA_DO_CAMPO_LIGADO],
+    ignores: [...FORA_DO_CAMPO_LIGADO],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO],
     },
   },
   // Gêmeo do bloco acima para os arquivos fora do item 24: MESMO array, menos
   // `ERRO_DE_CAMPO_A_MAO`. Sem ele, o `ignores` de cima não significaria "esta
   // régua não vale aqui" e sim "NENHUMA régua vale aqui" — os 3 bans de query,
   // o de cor e os de acessibilidade sumiriam desses 12 arquivos em silêncio. É
-  // o mesmo molde da partição `CATRACA_COR`.
+  // o mesmo molde que a partição `CATRACA_COR` usava até zerar em 2026-09-02.
   {
     files: FORA_DO_CAMPO_LIGADO,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
-    },
-  },
-  // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
-  // é o único ponto onde a cor segue hardcoded de propósito. `files: CATRACA_COR`
-  // aqui e `ignores: CATRACA_COR` acima particionam o mesmo glob; nenhum
-  // arquivo casa os dois blocos.
-  // A régua de VALOR entra aqui também, e sem exceção: o que estes 4 arquivos
-  // carregam é a exceção da classe Tailwind, não a de cor em `style` — e eles
-  // não têm nenhuma (medido em 2026-08-17).
-  {
-    files: CATRACA_COR,
-    rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -603,7 +623,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -624,6 +644,21 @@ export default defineConfig([
   // reabriria em silêncio a catraca de query-em-componente (zerada em
   // 2026-08-03). Esta catraca também zerou — o `ignores` não existe mais —,
   // mas o bloco segue separado: nada ganha em fundir agora.
+  //
+  // Teste de feature NÃO é isento, ao contrário do gêmeo de `src/app/**` doze
+  // linhas abaixo, e a assimetria é escolha (P-68, escrita em 2026-09-02).
+  //
+  // O precedente é o item 18: o único teste de componente de feature que passou
+  // de 150 foi QUEBRADO (`e76747a6`), não isentado. A razão é que o teste de
+  // componente de feature cresce pelo mesmo motivo que o componente cresce —
+  // muitos casos porque há muita responsabilidade —, então o limite mede o
+  // mesmo defeito dos dois lados. Em `src/app/**` não vale: lá o que passa de
+  // 150 é teste de PÁGINA, coeso por natureza, e quebrá-lo paga preço pela
+  // regra e não pelo defeito.
+  //
+  // Medido em 2026-09-02: dos 24 arquivos `*.test.tsx` sob este glob, nenhum
+  // passa de 150 e DOIS estão exatamente em 150 (`EnrollmentSection.test.tsx`,
+  // `ProfileDocumentSlot.test.tsx`) — a régua está mordendo, não decorando.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     rules: {
@@ -773,7 +808,7 @@ export default defineConfig([
   {
     files: ['src/shared/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, CLEANUP_A_MAO],
     },
   },
   // A catraca de cor entra em `src/app/**` (D11 de
@@ -807,7 +842,7 @@ export default defineConfig([
   {
     files: ['src/app/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
     },
   },
 ])

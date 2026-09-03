@@ -1,5 +1,5 @@
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, screen } from '@testing-library/react'
 import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
@@ -37,7 +37,6 @@ function TabelaDeArquivados() {
 beforeEach(async () => {
   await i18n.changeLanguage('es-CL')
 })
-afterEach(cleanup)
 afterAll(async () => {
   await i18n.changeLanguage('es-CL')
 })
@@ -150,5 +149,33 @@ describe('stickyActionsColumn', () => {
     expect(style.boxShadow).toBe(
       '-1rem 0 1rem -1rem color-mix(in srgb, var(--text-color) 22%, transparent)',
     )
+  })
+})
+
+/**
+ * P-70 atravessando a árvore de render, e não parando na função: o par
+ * `screenDetail(error) ?? t(loadErrorHint(error))` decide QUAL frase o
+ * `AppErrorState` imprime, e é a frase na tela que a ficha cobra.
+ */
+describe('detalhe do servidor no estado de erro (P-70)', () => {
+  it('403: a frase que o servidor escreveu aparece na tela', () => {
+    render(
+      <AppDataTable value={[]} error={{ detail: 'La cotización no tiene cliente', status: 403 }}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    expect(screen.getByText('La cotización no tiene cliente')).toBeTruthy()
+  })
+
+  it('500: a dica do i18n assume, porque o `detail` daquele status não é localizado', () => {
+    render(
+      <AppDataTable value={[]} error={{ detail: 'Ocorreu um erro inesperado.', status: 500 }}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    expect(screen.queryByText('Ocorreu um erro inesperado.')).toBeNull()
+    expect(screen.getByText(i18n.t('common.loadErrorHint'))).toBeTruthy()
   })
 })
