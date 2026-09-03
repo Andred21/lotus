@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (33)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -29,11 +29,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-71 | Cinco recusas que o usuário lê continuam literais fora de `lang/` (`CorruptedSnapshotException`, `RedatorNaoElegivelException`, `TurmaConfiguracaoException`) — a catraca as segura em lista declarada, não as traduz | — | bloco que tocar `Certification/Services` ou `Operation/Exceptions`; revisar 2026-10-31 |
 | P-72 | O 419 devolve `detail` literal em inglês nos três locales (`CSRF token mismatch.`) — o `title` foi traduzido, o `detail` do `TokenMismatchException` vence o fallback | — | bloco que tocar `ProblemDetails::fromException` ou a proteção CSRF; revisar 2026-10-31 |
-| P-70 | O `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado — erro de GET mostra a dica genérica em vez do que o servidor disse | `frontend-dividas-de-mecanismo` (item 25) | o item 25 é o bloco de política de erro de tela que a ficha pedia; revisar 2026-11-30 |
-| P-69 | O vitest não tem `setupFiles`, então o `cleanup()` do Testing Library nunca roda — teste que monta hook com timer derruba a rodada inteira com `window is not defined`, sem reprovar asserção | `frontend-dividas-de-mecanismo` (item 25) | o item 25 toca `frontend/vite.config.ts`, que é o gatilho escrito na ficha; revisar 2026-10-31 |
-| P-68 | O `max-lines` mede arquivo de teste em `features/*/components` e não mede em `app/**`, e só a isenção tem razão escrita | `frontend-dividas-de-mecanismo` (item 25) | João alinha as duas camadas ou escreve a razão da assimetria no brainstorming do item 25; revisar 2026-10-31 |
-| P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | `frontend-dividas-de-mecanismo` (item 25) | a sessão de tema que a `D-69` abre no item 25 é onde a decisão cabe; revisar 2026-10-31 |
-| P-42 | Grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco | `frontend-dividas-de-mecanismo` (item 25) | João escolhe entre reescrever o D1 com a grafia construída e devolver o código ao D1, no brainstorming do item 25; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -42,16 +37,16 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
-> `frontend-dividas-de-mecanismo` = item 25 da fila, aberto em 2026-09-02: juntou as **cinco**
-> fichas acima, que estavam em *Travadas em decisão* sem hospedeiro, com o débito `D-69`. As três
-> mecanizáveis (`P-70`, `P-69`, `D-69`) foram remedidas contra `main@5f6daf8b` antes de o item ser
-> escrito e seguem vivas no código; as duas restantes (`P-68`, `P-30`) e a `P-42` fecham por
-> decisão escrita do João no brainstorming, que é o gatilho que elas já declaravam.
+> **As seis fichas do `frontend-dividas-de-mecanismo` (item 25) fecharam em 2026-09-03** — `P-68`,
+> `P-69`, `P-70`, `P-30` e `P-42` estão em [`encerradas.md`](./encerradas.md), e o débito `D-69`
+> saiu do `backlog.md` no mesmo fechamento. Cada uma fechou por mecanismo verde ou por decisão
+> escrita, nenhuma por remoção na fé. O bloco abriu a **P-74**, que está na tabela abaixo.
 
 ### Travadas em decisão — não entram em bloco
 
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
+| P-74 | O botão de severidade reprova AA no estado base do tema claro em quatro das cinco famílias (success 2,28:1, info 2,77:1, danger 3,76:1, help 3,96:1) — o `warning`, que a P-30 fechou, era a quarta pior | João | uma régua por estado, no molde do `describe` da P-30 em `frontend/tests/tone-ink.test.ts`, cobrir as cinco severidades nos três estados e todas passarem 4,5:1; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-58 | `compose-dev.test.ts` afasta os `.env*` da raiz mas não o `frontend/.env`: árvore com `VITE_API_URL` legado reprova 3 casos | João | o teste isolar também o `frontend/.env`; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
@@ -73,13 +68,22 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (0)
+## Encerradas (5)
 
-**Nenhuma em rastro.** A **P-67** saiu de vez no fechamento do
-`frontend-campo-de-formulario-liga-no-form` (2026-09-02), o primeiro posterior ao do bloco que a
-encerrou — a escala de raio virou dois tokens no `@theme` e a catraca `RAIO_LITERAL` nasceu verde; o
-rastro durável está nos commits e na linha de entrega do item 21 em
-[`../historico/progress.md`](../historico/progress.md).
+**Em rastro, todas fechadas em 2026-09-03 pelo `frontend-dividas-de-mecanismo` (item 25):** a
+**P-69** (o `setupFiles` com `cleanup()` global mais as catracas `CLEANUP_A_MAO` e a guarda estática
+do `desmonte-global.test.ts`), a **P-70** (a allowlist `DETALHE_LOCALIZADO` de 403/404/429 no
+`screenDetail`), a **P-30** (o `warning` alinhado ao amarelo do `AppTag`, com régua de contraste
+própria), a **P-68** (a razão da assimetria de `max-lines` escrita ao lado da régua, sem mudança de
+comportamento) e a **P-42** (a emenda datada ao D1 da spec arquivada, código intocado). Saem no
+próximo `/fechar-sprint`. As fichas estão em [`encerradas.md`](./encerradas.md).
+
+**A P-73 e a P-67 saíram neste fechamento** (2026-09-03), o primeiro posterior aos dos blocos que as
+encerraram — a P-73 em 2026-09-02 (PR #93, `pnpm audit` de volta a 0 por bump só de lockfile) e a
+P-67 em 2026-09-01 (a escala de raio virou dois tokens no `@theme`, com a catraca `RAIO_LITERAL`).
+**O ID `P-73` está queimado:** a ficha aberta pelo item 25 nasceu com ele por engano e foi
+renumerada para `P-74` no próprio fechamento. O rastro durável está nos commits e nas linhas de
+entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-61 e a P-63 saíram neste fechamento** (`frontend-decisoes-de-ui-pendentes`, 2026-09-01), o
 primeiro posterior aos dos dois blocos que as encerraram em 2026-08-30 — os `title` do

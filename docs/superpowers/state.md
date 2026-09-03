@@ -3,13 +3,13 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: frontend-dividas-de-mecanismo
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-02-frontend-dividas-de-mecanismo-design.md
-active_plan: docs/superpowers/plans/2026-09-02-frontend-dividas-de-mecanismo.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
@@ -46,21 +46,21 @@ lanes:
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
     active_feature: null
-    active_work_item: frontend-dividas-de-mecanismo   # item 25, promovido explicitamente pelo Joao em 2026-09-02
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: fix/frontend-dividas-de-mecanismo   # aberta de 3654b6dc (= origin/main@5f6daf8b mais o commit que abre o item 25, em revisao na PR #97); a PR #95 do bloco anterior mesclou em 2e24bba9
-    active_spec: docs/superpowers/specs/2026-09-02-frontend-dividas-de-mecanismo-design.md
-    active_plan: docs/superpowers/plans/2026-09-02-frontend-dividas-de-mecanismo.md
+    branch: fix/frontend-dividas-de-mecanismo   # rebasada sobre origin/main@4a0080ce (PR #97 mesclada) em 2026-09-03; item 25 fechado, aguardando merge da PR
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-campo-de-formulario-liga-no-form   # sem ficha na fila, fechado em 2026-09-02
-last_completed_work_item: frontend-campo-de-formulario-liga-no-form
-state_basis_commit: ebc26449
-updated_at: 2026-09-02T18:38:51-03:00
+    last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
+last_completed_work_item: frontend-dividas-de-mecanismo
+state_basis_commit: 2148b882
+updated_at: 2026-09-03T18:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,13 +160,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-02
+## Ocupação corrente — 2026-09-03
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-projecao-de-arquivados` (item 24 **fechado** em 2026-09-02, sem merge) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-dividas-de-mecanismo` (item 25) | Frontend | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (aberta de `3654b6dc`; a PR #95 do bloco anterior mesclou em `2e24bba9`) | `ready_for_closure` (review de 2026-09-03: 7 achados, todos aprovados e corrigidos) |
+| `lane-c` | — | — | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (item 25 **fechado** em 2026-09-03, sem merge) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -175,34 +175,6 @@ disjuntas, colisão mínima de arquivos:
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
-
-**A `lane-c` recebeu o item 25 em 2026-09-02** — `frontend-dividas-de-mecanismo`, promovido
-explicitamente pelo João com a lane em `idle`; o comando não promove, e não promoveu. `Contexto: não`
-na fila, então o bloco nasce direto em planejamento, sem Context Packet: as seis fontes (`P-68`,
-`P-69`, `P-70`, `P-30`, `P-42` e `D-69`) são fichas do próprio repositório. A branch
-`fix/frontend-dividas-de-mecanismo` sai de `3654b6dc` — `origin/main@5f6daf8b`, que já traz as PRs
-#95 e #96 mescladas, mais o commit que abre o item 25 no `backlog.md`, em revisão na **PR #97**. Três
-das seis fichas foram remedidas contra o código no brainstorming e **contradisseram o próprio texto**:
-a variável de perigo da `D-69` já existe, a superfície da `P-30` é um botão (e reprova contraste a
-2,80:1), e o custo que travava a `P-69` mediu **zero** — 127 arquivos / 734 testes passam com o
-`cleanup()` global ligado.
-
-**O planejamento fechou em 2026-09-02**, com spec e plano commitados e oito tasks desenhadas — uma
-por ficha, mais o desmonte da `P-69` partido em mecanismo e remoção, mais o fechamento que mede o
-DoD. O plano **corrige a spec em quatro pontos que só a medição de escrita revelou**, e por isso ele
-é a fonte da execução: (1) a `P-69` são **31** arquivos, não 28 — a spec contou uma grafia só, e
-`afterEach(() => cleanup())` está viva em dois arquivos de `src/app/`; (2) a sonda negativa que a
-spec desenhou **não reprova** — a suíte inteira passa sem `setupFiles` e sem o `cleanup()` do
-`useServerTable.test.tsx`, então a prova passa a ser a guarda estática mais a catraca
-`CLEANUP_A_MAO`, as duas vistas reprovar; (3) a receita da `P-30` medida na spec regride dois
-estados e o `outlined` (3,30:1, 2,29:1 e 1,92:1 no claro), porque a §3.2 mediu só o estado base — a
-tinta amarela tem de ser escura e os estados sobem a rampa, que é a direção que o Lara já usa no
-tema escuro; (4) a `CLEANUP_A_MAO` não pode ganhar bloco próprio no `eslint.config.js` sob pena de
-apagar por merge raso a catraca de cor nos arquivos de teste, então entra em cinco arrays
-existentes. A decisão **D3 não muda** — o warning alinha ao amarelo da tag; muda a receita. Fica
-registrado um achado que **não** se paga neste bloco e vira ficha na Task 5: no tema claro a família
-inteira de botão de severidade reprova AA no estado base (success 2,28:1, info 2,77:1, warning
-2,80:1, danger 3,76:1, help 3,96:1) — o warning nunca foi caso especial.
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
@@ -227,11 +199,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
 | 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
 | 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
 | 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 | 2026-08-31 | `prontidao-pre-nuvem` (emenda a **P-62**: o pessoal está público e a decisão de visibilidade ficou com o João) | Item 20 da fila |
-| 2026-08-30 | `hardening-i18n-e-erros-api` (paga a **P-61**, `D-07`, `D-18`, `D-36`, `D-38`, `D-58`; abre a **P-70**, a **P-71** e a **P-72**) | Item 7 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com

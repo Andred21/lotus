@@ -7,109 +7,95 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(duas: a **P-73**, fechada em 2026-09-02 pelo bump de lockfile da PR #93, e a **P-67**, fechada em
-2026-09-01 pelo `frontend-decisoes-de-ui-pendentes`. A **P-61** e a
-**P-63** saíram neste mesmo fechamento — o primeiro posterior aos dos dois blocos que as encerraram
-em 2026-08-30 —, e o parágrafo adiante é o rastro delas. A **P-66** saiu no fechamento do
-`frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao do
-`hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é mecanismo
-em migration, e o rastro dela está no git e na linha de entrega em `../historico/progress.md`. A
-**P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de 2026-08-29, e a **P-03** e a
-**P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro delas.)*
+*(cinco, todas fechadas em **2026-09-03** pelo `frontend-dividas-de-mecanismo` (item 25). A **P-73**
+e a **P-67** saíram neste mesmo fechamento — o primeiro posterior aos dos blocos que as encerraram
+em 2026-09-02 e 2026-09-01 —, e o parágrafo adiante é o rastro delas.)*
 
-### P-73 — advisory transitiva nova reprova o `audit-dev` e segura a imagem da `main`
+### P-69 — o vitest não tem `setupFiles`, então nada desmonta o que um teste monta
 
-**Fechada em 2026-09-02**, na PR #93, pelo critério que a própria ficha escreveu: `pnpm audit` volta
-a **0** em `frontend/` com o `package.json` **intacto**. O remédio é o que o item 20 fixou como
-molde e a spec dele já tinha recusado a alternativa — bump só de lockfile, sem `pnpm.overrides`:
+**Fechada em 2026-09-03**, por mecanismo, no item 25 (Tasks 2 e 3). `frontend/vite.config.ts` passou
+a declarar `setupFiles: ["./src/test-setup.ts"]`, e o arquivo carrega o `afterEach(cleanup)` global
+da Testing Library. Duas catracas guardam o mecanismo, as duas **vistas reprovar por sonda** antes
+de valer:
 
-```
-pnpm update browserslist --depth Infinity
-```
+- guarda estática do `setupFiles` (`frontend/tests/desmonte-global.test.ts`): 2 asserções reprovadas com
+  o mecanismo ainda inexistente;
+- `CLEANUP_A_MAO` no `eslint.config.js` (seletor
+  `CallExpression[callee.name="afterEach"] Identifier[name="cleanup"]`): **31 erros** antes da
+  remoção, 0 depois. Ela entra em **cinco arrays existentes**, e não em bloco próprio: bloco próprio
+  apagaria por merge raso a catraca de cor nos arquivos de teste.
 
-`browserslist` **4.28.4 → 4.28.8** (patched era `>=4.28.7`), e `update-browserslist-db` acompanhou
-de `1.2.3` para `1.3.2`. Diff de **um arquivo só**, `frontend/pnpm-lock.yaml` (25 inserções, 25
-remoções); `git diff --stat frontend/package.json` **vazio**. As duas GHSA que reprovavam
-([GHSA-c83g-rgw3-j3cx](https://github.com/advisories/GHSA-c83g-rgw3-j3cx) e
-[GHSA-73wf-gq98-2v4g](https://github.com/advisories/GHSA-73wf-gq98-2v4g)) saíram junto.
+Os 31 desmontes à mão saíram (a spec contava 28 — contou uma grafia só; `afterEach(() => cleanup())`
+estava viva também em `src/app/`). A rodada **termina**: 128 arquivos / 759 testes.
 
-Provado local com os quatro passos do job antes de empurrar: `pnpm audit` → `No known
-vulnerabilities found`, `pnpm install --frozen-lockfile` → `Already up to date`, `pnpm lint` → 0,
-`pnpm test` → **125 arquivos / 714 testes**, `pnpm build` verde.
+**Medição que contradisse a própria ficha:** o `ReferenceError: window is not defined` que a ficha
+descreve **não reproduz** no vitest 4.1.10 — a suíte inteira passava sem `setupFiles` e sem o
+`cleanup()` do `useServerTable.test.tsx`. Por isso a prova é a guarda estática mais a catraca, e não
+a sonda negativa que a spec havia desenhado.
 
-**O que a ficha previa e continua valendo:** o caso reincide — advisory transitiva nova em devDep
-trava o release sem que bloco nenhum a tenha causado. O que fecha aqui é esta ocorrência, não a
-classe; a próxima chega pelo mesmo caminho e o remédio já está medido.
+### P-68 — o `max-lines` mede arquivo de teste em `features/` e não mede em `app/`, e nada declara por quê
 
----
+**Fechada em 2026-09-03**, por **decisão escrita**, no item 25 (Task 6), na direção que o precedente
+do item 18 já apontava: a régua de 150 **continua** valendo para arquivo de teste em
+`src/features/*/components/**`, e agora o `eslint.config.js` diz por quê, ao lado da régua e em
+contraponto explícito à isenção de `src/app/**` doze linhas abaixo. **Zero mudança de
+comportamento** — a assimetria deixou de ser acidente e virou escolha registrada.
 
-### P-67 — a escala de raio estava escrita na rule e 10 sítios ficaram fora dela, sem catraca
+### P-70 — o `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado
 
-**Fechada em 2026-09-01**, no `frontend-decisoes-de-ui-pendentes` (item 21, Tasks 1–3), por
-mecanismo. A `D-66`, que a hospedava, decidiu a régua: o raio passa a vir de **token no `@theme`**
-(`--radius-surface` e `--radius-control`, este lendo o var do tema do PrimeReact), `shared/ui` os
-consome e `features/`+`app/` migram atrás. O planejamento remediu o alcance — os sítios eram **15**,
-não os 10 que a ficha contava: cinco já escreviam `rounded-lg`/`rounded-md` e a catraca os
-alcançaria igual, então migraram junto para ela não nascer vermelha.
+**Fechada em 2026-09-03**, por mecanismo, no item 25 (Task 4). `screenDetail` passou a devolver o
+`detail` do servidor quando o envelope não é do front **e** o status está na allowlist fechada
+`DETALHE_LOCALIZADO = new Set([403, 404, 429])` (`frontend/src/shared/lib/screenDetail.ts:65`). Todo
+o resto segue calado — `500`, `419`, `405`, `503` e qualquer status novo: status que ninguém decidiu
+não entra sozinho. O docblock foi reescrito, porque a frase vigente ("só vai o que o FRONT
+escreveu") deixou de ser verdade.
 
-A catraca é a `RAIO_LITERAL` (`no-restricted-syntax` em `frontend/eslint.config.js`), sobre as duas
-camadas que a rule exige (`src/features/**` e `src/app/**`), e **nasceu verde** — foi vista reprovar
-por sonda negativa antes de valer, com o arquivo restaurado do scratchpad (nunca por `git stash`).
-A `.claude/rules/frontend-estilizacao.md` passou a descrever a escala que existe, em vez da que a
-rule descrevia e a tela não tinha — que era exatamente por que os 10 sítios escreveram `rounded`.
+Prova em duas camadas: casos de unidade em `screenDetail.test.ts` (403/404/429 devolvem o `detail`;
+500 e 419 devolvem `undefined`; `''` e `null` viram `undefined` nos três status novos) e um teste em
+jsdom que afirma o **texto na tela** — a frase do servidor no 403, a dica do i18n no 500 —, que é o
+"na tela" que o DoD da ficha cobrava. A allowlist foi vista reprovar com 2 casos antes da política
+existir.
 
-Rastro: `feat(ui): raio ganha dois tokens no @theme e shared/ui os consome` (`97661217`),
-`feat(ui): os 15 sitios de features e app consomem os tokens de raio` (`9d5af40a`) e
-`feat(lint): RAIO_LITERAL nasce verde e a rule descreve a escala real` (`3c27c4f3`).
+### P-30 — o `warning` segue com o laranja de stock do Lara
 
----
+**Fechada em 2026-09-03**, por mecanismo, no item 25 (Task 5). A decisão do João no brainstorming
+(D3) foi **alinhar o warning ao amarelo que o `AppTag` já usava**, e não construir um âmbar novo: a
+troca é transformação de **forma** no `frontend/scripts/generate-brand-theme.mjs`, no molde do
+`textoSobrePrimaria` (D-P8), então alcança toda superfície que o Lara pinta de laranja nas duas
+folhas — não só o botão que existe hoje. Régua de contraste nova em `frontend/tests/tone-ink.test.ts`
+com o par de HOJE incluído, medido reprovando (**2,80:1** no filled do claro) para a régua registrar
+o defeito que fecha.
 
-**A P-02 e a P-33 saíram no fechamento do `hardening-performance-e-dados` (2026-08-29)**, o
-primeiro posterior ao do bloco que as encerrou. As duas fecharam em 2026-08-26 no
-`hardening-auditoria-privacidade-e-observabilidade`, por **mecanismo** e não por promessa: a
-`RetentionPolicy` (`backend/app/Shared/Retention/RetentionPolicy.php`), os comandos
-`lotus:podar-auditoria` e `lotus:podar-logins`, o índice `audits_created_at_index` e o agendamento
-em `routes/console.php`/`scheduler` do `docker-compose.prod.yml`. A **P-46** saiu no fechamento do
-`frontend-estilizacao-padronizacao-de-componentes`, no mesmo dia e pelo mesmo critério. As três
-estão no git e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
+**A receita da spec foi corrigida pela medição:** trocar degrau a degrau na mesma posição regredia
+hover (3,30:1), active (2,29:1) e o `outlined` (1,92:1) no tema claro — pior que o defeito original.
+A receita construída escurece a tinta e sobe a rampa nos estados (direção que o Lara já usa no tema
+escuro) e mede 4,55 / 5,12 / 5,82 / 5,70.
 
----
+**Achado que não se pagou aqui e virou ficha:** no tema claro a família inteira de botão de
+severidade reprova AA no estado base (success 2,28:1, info 2,77:1, danger 3,76:1, help 3,96:1) — o
+`warning` nunca foi caso especial. É a [P-74](./abertas.md), aberta neste mesmo fechamento.
 
-**A P-03 e a P-15 saíram nos dois fechamentos de 2026-08-25** — a fatia 2 do
-`frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros posteriores
-aos dos blocos que as encerraram. As duas foram **remedidas antes de sair**, não removidas na fé, e
-cada fechamento mediu de um lado:
+### P-42 — a grafia construída do `IdentityCell` diverge da D1 da própria spec
 
-- **P-03, na worktree:** o container `app` de `../fix-frontend` recebe do compose
-  `APP_URL=http://localhost:8082`, `FRONTEND_URL=http://localhost:5175`,
-  `SANCTUM_STATEFUL_DOMAINS=localhost:5175,localhost:8082` e `SESSION_COOKIE=lotus_session_8082` —
-  medido com `docker compose exec -T app printenv` —, com o `backend/.env` da árvore ainda no offset
-  antigo: a injeção vence, que é o mecanismo que a ficha declarou pago, e o login pelo navegador em
-  `:5175` contra a API em `:8082` funciona com o arquivo como está.
-- **P-03, no main tree:** o offset vive em `.env.example` e nas seis variáveis `LOTUS_DEV_*` do
-  `docker-compose.yml`; a stack do fechamento do item 4 subiu no offset zero (`:8080`/`:3307`).
-- **P-15:** o certificado do aluno está exposto no detalhe por `StudentTurmaData::$certificate`
-  (`backend/app/Domains/Identity/Data/StudentTurmaData.php:36`), e o ramo recusado por escrito
-  (coluna `CERTIFICADOS` na listagem de alunos) continua declarado na §9 da spec do
-  `certificacao-historico-do-aluno` — que é o que impede a pendência de reabrir por silêncio.
-
-**Saíram no fechamento do `frontend-revisao-ui-por-modulo` (2026-08-24), o primeiro posterior aos
-dos blocos que as encerraram:** a **P-47** (os 7 redatores do seed sem a role `redator`, fechada em
-2026-08-23 pela migration de backfill `2026_08_22_000003_backfill_redator_role` e **remedida aqui**
-contra o MySQL de dev: os 7 do seed e os 2 usuários de gate e2e carregam a role) e a **P-50** (a
-suíte unida acima do `memory_limit` de 128M, fechada em 2026-08-22 e também remedida aqui — o
-`docker compose exec -T app php artisan test` do `CLAUDE.md` §6 terminou, 906 passed / 5 skipped).
-
-**A P-41 saiu neste fechamento (`tabelas-coluna-de-acoes-e-largura`, 2026-08-24), o primeiro
-posterior ao do bloco que a encerrou** — e foi **remedida antes de sair**, não removida na fé: o
-`min-w-0` do bloco de texto está em `frontend/src/shared/ui/IdentityCell/IdentityCell.tsx:74`. A
-metade não paga do gatilho continua declarada onde ela vive: `IdentityCell.test.tsx` conta
-`span.truncate` e não mede `scrollWidth > clientWidth` — trabalho do `frontend-hardening-final`,
-**pago em 2026-08-27**: o teste guarda o par `truncate` + `min-w-0` (`e560df27`) e a medida real de
-`scrollWidth > clientWidth`, que jsdom não faz, ficou no navegador (DoD 5 do audit do bloco, com
-sonda negativa).
+**Fechada em 2026-09-03**, por **decisão escrita**, no item 25 (Task 7), na direção que o João já
+tinha tomado em 2026-08-14 com a tela na frente: **o registro se alinha ao código**, o código não
+volta ao D1. `specs/archive/2026-08-14-celula-de-identidade-design.md` ganhou a *Emenda de 2026-09-02
+ao D1 (P-42)* — a grafia construída (`font-semibold` no título, `text-sm font-medium` na descrição,
+`gap-2` entre as linhas), o motivo (achado Q-3 do `/revisar-sprint`, rejeitado pelo João) e a
+consequência medida (o `gap-2` × N linhas muda a altura de toda tabela que usa a célula). O snapshot
+**não foi reescrito em silêncio**: ganhou linha nova datada, no molde da emenda de 2026-08-24 ao
+ADR-13, e o docblock do `IdentityCell.tsx` aponta para ela. **Código intocado.**
 
 ## Rastro anterior, já removido
+
+**A P-73 e a P-67 saíram no fechamento do `frontend-dividas-de-mecanismo` (2026-09-03)**, o primeiro
+posterior aos dos blocos que as encerraram. A **P-73** fechou em 2026-09-02 na PR #93, por bump só
+de lockfile (`browserslist` 4.28.4 → 4.28.8), com `pnpm audit` de volta a **0** e o `package.json`
+intacto. A **P-67** fechou em 2026-09-01 no `frontend-decisoes-de-ui-pendentes`, por mecanismo — a
+escala de raio saiu da rule para catraca. **O ID `P-73` está queimado:** a ficha que este bloco abriu
+nasceu numerada `P-73` por engano e foi renumerada para `P-74` no próprio fechamento, pelo mesmo
+precedente de sempre — ID publicado não se reusa. O rastro durável das duas está nos commits e nas
+linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-61 e a P-63 saíram no fechamento do `frontend-decisoes-de-ui-pendentes` (2026-09-01)**, o
 primeiro posterior aos dos dois blocos que as encerraram em 2026-08-30. A **P-61** fechou no
