@@ -427,3 +427,26 @@ lookup); qualquer regra de domínio dentro do componente.
 | D11 | Um componente com prop `inline`, não dois componentes nem variante por string |
 | D12 | Execução **dividida**: `codex` em `backend/**`, `claude` em `frontend/**`; `generated.ts` fica fora dos `paths_autorizados` do Codex (§7.2) |
 | D13 | `DemoPhotosSeeder` opt-in semeia fotos de `randomuser.me` via `UserPhotoService::store()`, em **parte** dos redatores e alunos, para que a revisão visual prove os dois ramos (§7.1) |
+
+### Emenda de 2026-09-02 ao D1 (P-42)
+
+O D1 acima é o desenho; a grafia **construída** diverge dele em três pontos, e a
+divergência é decisão do João de 2026-08-14, tomada com a tela na frente no
+achado Q-3 do `/revisar-sprint` do próprio bloco:
+
+| Ponto | D1 (desenho) | Construído (`IdentityCell.tsx`) |
+|---|---|---|
+| título | `font-medium` | `font-semibold` |
+| descrição | `text-xs` | `text-sm font-medium` |
+| espaço entre as linhas | `gap-3` | `gap-2` |
+
+O `--text-color-secondary` da descrição e o `size="large"` do avatar seguem como
+o D1 os escreveu.
+
+**Não é detalhe cosmético invisível:** o `gap-2` multiplica por N linhas e muda a
+ALTURA de toda tabela que usa a célula — `TurmasTable`, `HistorialTable`,
+`EmissionStudentsTable` e as outras onze. Ler o D1 sozinho e "corrigir" o
+componente para `gap-3` mexeria em catorze telas de uma vez.
+
+O código **não volta** ao D1. Esta emenda é o fechamento da `P-42`, que existia
+porque o snapshot afirmava uma grafia que a tela não tinha.

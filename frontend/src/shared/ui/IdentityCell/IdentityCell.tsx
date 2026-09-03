@@ -27,6 +27,15 @@ export interface IdentityCellProps {
  * consumidores a entregam dentro do `subtitle` do DetailHeader, que já pinta
  * tudo de `--text-color-secondary` — sem isso o título sumiria na cor da
  * descrição.
+ *
+ * **A grafia diverge do D1 da spec de propósito** — `font-semibold` no título,
+ * `text-sm font-medium` na descrição e `gap-2` entre as linhas, contra o
+ * `font-medium`/`text-xs`/`gap-3` que o D1 escreveu. Decisão do João em
+ * 2026-08-14 com a tela na frente (Q-3 do `/revisar-sprint`), registrada na
+ * emenda de 2026-09-02 daquela spec
+ * (`docs/superpowers/specs/archive/2026-08-14-celula-de-identidade-design.md`).
+ * Não "corrija" para o D1: o `gap` multiplica por linha e muda a altura das
+ * catorze tabelas que usam esta célula.
  */
 export function IdentityCell({
   title, description, image, inline = false, size = 'large',
