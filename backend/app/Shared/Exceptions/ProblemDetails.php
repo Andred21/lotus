@@ -97,18 +97,17 @@ class ProblemDetails
     }
 
     /**
-     * Nenhum controller deste repositório chama `$this->authorize()`/`Gate::authorize()`
-     * — o `AuthorizationException` do Illuminate não é o caminho real de 403.
-     * Todo 403 de verdade nasce do RBAC do spatie/laravel-permission
-     * (`Spatie\Permission\Exceptions\UnauthorizedException`, que estende
-     * `HttpException` e não `AuthorizationException`) ou de um
-     * `HttpException(403)` próprio (`ImmutableSystemRoleException`,
-     * `abort_unless(..., 403, ...)`). Checar só `AuthorizationException`
-     * deixaria esses 403 reais caindo no braço genérico de `HttpExceptionInterface`
-     * — título errado (`problem.title.http`) e `detail` cru do pacote, em inglês.
-     * Mesmo teto por `getStatusCode() === 403` já usado em
-     * `RegistraEventoDeErro` para o mesmo motivo — por STATUS/TIPO, nunca por
-     * inspeção do texto (D5).
+     * O 403 que sobra depois do braço `RecusaDeDominio`: o do RBAC do
+     * spatie/laravel-permission (`UnauthorizedException`, que estende
+     * `HttpException` e não `AuthorizationException`) e o de um
+     * `abort_unless(..., 403, ...)` solto. Sem este teto, esses 403 reais
+     * cairiam no braço genérico de `HttpExceptionInterface` — título errado
+     * (`problem.title.http`) e `detail` cru do pacote, em inglês.
+     *
+     * As quatro recusas de domínio saíram daqui: elas declaram
+     * `TipoDeRecusa::AcaoProibida` e o braço da base as atende antes. O sniff
+     * por STATUS continua vivo porque o 403 do pacote de terceiro não tem
+     * outro sinal — nunca por inspeção do TEXTO (D5).
      */
     private static function isForbidden(Throwable $e): bool
     {
