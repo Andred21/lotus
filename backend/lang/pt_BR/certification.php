@@ -9,4 +9,7 @@ return [
     'enrollment' => [
         'not_found' => 'A matrícula não existe.',
     ],
+    'snapshot' => [
+        'not_presentable' => 'O certificado :codigo não pode ser apresentado: seu documento congelado não tem os campos :campos.',
+    ],
 ];

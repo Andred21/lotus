@@ -10,7 +10,11 @@ class MensagemDeCertificadoLocalizadaTest extends TestCase
     #[Test]
     public function as_duas_recusas_tem_tres_traducoes_distintas(): void
     {
-        foreach (['certification.certificate.already_revoked', 'certification.enrollment.not_found'] as $chave) {
+        foreach ([
+            'certification.certificate.already_revoked',
+            'certification.enrollment.not_found',
+            'certification.snapshot.not_presentable',
+        ] as $chave) {
             $valores = [];
             foreach (['es_CL', 'pt_BR', 'en'] as $locale) {
                 app()->setLocale($locale);

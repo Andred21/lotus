@@ -146,10 +146,12 @@ class MensagemLiteralTest extends TestCase
 
     /**
      * O que ficou literal, com o motivo. Cada linha aqui é dívida declarada, e
-     * some quando o sítio passar a ler `lang/`. As três `RuntimeException` são
+     * some quando o sítio passar a ler `lang/`. As entradas restantes são
      * diagnóstico interno: viram 500 mascarado em produção (`ProblemDetails`
      * §detailFor) e nunca chegam ao usuário, então traduzir seria trabalho para
-     * ninguém ler.
+     * ninguém ler. As cinco que CHEGAVAM ao usuário saíram no bloco
+     * `backend-envelope-de-erro-e-recusa-de-dominio` (2026-09-02); a lista é
+     * inventário, não permissão, e ela só encolhe.
      */
     private const DEBITO_CONHECIDO = [
         // Diagnóstico interno: 500 mascarado em produção, ninguém lê.
@@ -160,12 +162,7 @@ class MensagemLiteralTest extends TestCase
         'OfficeRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',
         'OfficeRenderException.php:26' => 'RuntimeException interna; 500 mascarado.',
         'ArchivedListing.php:68' => 'InvalidArgumentException: chamador esqueceu `onlyTrashed()`; 500 mascarado.',
-
-        // Estas TRÊS chegam ao usuário e são dívida de verdade, medida no
-        // review de 2026-08-30. Ficaram fora porque o item 7 não tocou esses
-        // arquivos e catraca que nasce vermelha por dívida alheia trava o
-        // bloco seguinte (o mesmo motivo escrito na P-67).
-        'CorruptedSnapshotException.php:42' => 'PublicDetail em es_CL; frente Certification.',
+        'CorruptedSnapshotException.php:48' => 'Separador em implode(); parâmetro de interpolação, não mensagem.',
     ];
 
     #[Test]

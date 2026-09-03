@@ -9,4 +9,7 @@ return [
     'enrollment' => [
         'not_found' => 'The enrollment does not exist.',
     ],
+    'snapshot' => [
+        'not_presentable' => 'Certificate :codigo cannot be presented: its frozen document is missing the fields :campos.',
+    ],
 ];
