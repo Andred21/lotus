@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: backend-envelope-de-erro-e-recusa-de-dominio
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-backend-envelope-de-erro-e-recusa-de-dominio-design.md
 active_plan: docs/superpowers/plans/2026-09-02-backend-envelope-de-erro-e-recusa-de-dominio.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: backend-envelope-de-erro-e-recusa-de-dominio   # item 26, promovido pelo Joao em 2026-09-02
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: refactor/backend-envelope-de-erro-e-recusa-de-dominio   # aberta de main@4a0080ce em 2026-09-02; a do item 24 foi apagada apos o merge da PR #96
     active_spec: docs/superpowers/specs/2026-09-02-backend-envelope-de-erro-e-recusa-de-dominio-design.md
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
 last_completed_work_item: frontend-dividas-de-mecanismo
 state_basis_commit: 4a0080ce
-updated_at: 2026-09-03T17:06:30-03:00
+updated_at: 2026-09-03T18:50:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | Backend | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (aberta de `main@4a0080ce`) | `executing` |
+| `lane-a` | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | Backend | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (aberta de `main@4a0080ce`) | `ready_for_review` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
 | `lane-c` | — | — | `../fix-frontend` | `fix/frontend-dividas-de-mecanismo` (item 25 **fechado** em 2026-09-03, sem merge) | `idle` |
 
