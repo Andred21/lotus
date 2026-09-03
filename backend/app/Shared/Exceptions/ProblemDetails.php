@@ -23,6 +23,11 @@ class ProblemDetails
         [$status, $title, $type] = match (true) {
             $e instanceof ValidationException => [422, __('problem.title.validation'), 'https://lotus.cl/errors/validation'],
             $e instanceof AuthenticationException => [401, __('problem.title.unauthenticated'), 'https://lotus.cl/errors/unauthenticated'],
+            $e instanceof RecusaDeDominio => [
+                $e->tipo()->status(),
+                __($e->tipo()->tituloChave()),
+                $e->tipo()->tipoUri(),
+            ],
             self::isForbidden($e) => [403, __('problem.title.forbidden'), 'https://lotus.cl/errors/forbidden'],
             $e instanceof ModelNotFoundException,
             $e instanceof NotFoundHttpException => [404, __('problem.title.not_found'), 'https://lotus.cl/errors/not-found'],
