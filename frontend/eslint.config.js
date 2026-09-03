@@ -632,6 +632,21 @@ export default defineConfig([
   // reabriria em silêncio a catraca de query-em-componente (zerada em
   // 2026-08-03). Esta catraca também zerou — o `ignores` não existe mais —,
   // mas o bloco segue separado: nada ganha em fundir agora.
+  //
+  // Teste de feature NÃO é isento, ao contrário do gêmeo de `src/app/**` doze
+  // linhas abaixo, e a assimetria é escolha (P-68, escrita em 2026-09-02).
+  //
+  // O precedente é o item 18: o único teste de componente de feature que passou
+  // de 150 foi QUEBRADO (`e76747a6`), não isentado. A razão é que o teste de
+  // componente de feature cresce pelo mesmo motivo que o componente cresce —
+  // muitos casos porque há muita responsabilidade —, então o limite mede o
+  // mesmo defeito dos dois lados. Em `src/app/**` não vale: lá o que passa de
+  // 150 é teste de PÁGINA, coeso por natureza, e quebrá-lo paga preço pela
+  // regra e não pelo defeito.
+  //
+  // Medido em 2026-09-02: dos 24 arquivos `*.test.tsx` sob este glob, nenhum
+  // passa de 150 e DOIS estão exatamente em 150 (`EnrollmentSection.test.tsx`,
+  // `ProfileDocumentSlot.test.tsx`) — a régua está mordendo, não decorando.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     rules: {
