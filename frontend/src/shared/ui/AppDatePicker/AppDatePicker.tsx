@@ -2,12 +2,16 @@ import { Calendar } from 'primereact/calendar'
 import type { CalendarProps } from 'primereact/calendar'
 import { useTranslation } from 'react-i18next'
 import { mergePt } from '../mergePt'
-import { useSplitFieldProps } from '../FormField/fieldContext'
+import { useFieldBind, useSplitFieldProps } from '../FormField/fieldContext'
 
 export type AppDatePickerProps = Omit<CalendarProps, 'value' | 'onChange' | 'ref'> & {
-  /** Data em ISO `YYYY-MM-DD` (o formato que o backend espera). `null` = vazio. */
-  value: string | null
-  onChange: (value: string | null) => void
+  /** Data em ISO `YYYY-MM-DD` (o formato que o backend espera). `null` = vazio.
+   * Opcionais desde o item 24: dentro de um `Field` o valor e o setter vêm do
+   * form pelo `FieldContext`, e o call site não repete nenhum dos dois. Fora
+   * dele continuam obrigatórios na prática — sem os dois o campo fica vazio e
+   * inerte, que é o mesmo que o wrapper solto sempre fez. */
+  value?: string | null
+  onChange?: (value: string | null) => void
 }
 
 // `YYYY-MM-DD` → Date à meia-noite LOCAL. Nunca `new Date('YYYY-MM-DD')`, que
@@ -54,7 +58,8 @@ const PADRAO = GRAMATICA['es-CL']
 /** Wrapper do Calendar. String ISO in/out para não passar dinheiro-de-tempo por
  * conversão de fuso perigosa. Cores vêm do tema (ADR-16). Sem forwardRef: o
  * Calendar do Prime é class component (categoria AppDropdown). */
-export function AppDatePicker({ value, onChange, pt, ...rest }: AppDatePickerProps) {
+export function AppDatePicker(props: AppDatePickerProps) {
+  const { value: valueProp, onChange: onChangeProp, pt, ...rest } = props
   // `useTranslation` só pelo `i18n`: o wrapper não tem texto próprio, mas
   // precisa RE-RENDERIZAR na troca de idioma — ler `i18n.language` de um import
   // solto deixaria o calendário no idioma anterior até a próxima mudança de
@@ -70,6 +75,15 @@ export function AppDatePicker({ value, onChange, pt, ...rest }: AppDatePickerPro
   // e `aria-describedby` pousavam na casca e não chegavam ao `combobox` que o
   // leitor de tela anuncia. Ver `useSplitFieldProps`.
   const field = useSplitFieldProps('inputId')
+  // O bind entra na FRONTEIRA do wrapper, antes da conversão ISO ↔ `Date`: o
+  // que trafega aqui é `string | null`, que é o que o form guarda. `null` passa
+  // direto — é campo vazio, não texto nulo.
+  const bind = useFieldBind((v: string | null) => v)
+  // `'value' in props`, não `??`: aqui `null` é o campo vazio, valor legítimo
+  // — um `value={null}` explícito do chamador precisa vencer o bind, e `??`
+  // o deixaria perder para `bind.value`.
+  const value = 'value' in props ? (valueProp ?? null) : ((bind.value as string | null) ?? null)
+  const onChange = onChangeProp ?? (bind.onChange as ((v: string | null) => void) | undefined)
   // `input.root`, com o salto do meio: o `input` do Calendar é um COMPONENTE
   // (InputText), então `ptm('input')` vira o `pt` dele e é o `root` de lá que
   // chega ao `<input>` — mesma forma do `iconField.root` do `AppPassword`. Sem
@@ -82,7 +96,7 @@ export function AppDatePicker({ value, onChange, pt, ...rest }: AppDatePickerPro
   return (
     <Calendar
       value={isoToDate(value)}
-      onChange={(e) => onChange(dateToIso(e.value as Date | null))}
+      onChange={(e) => onChange?.(dateToIso(e.value as Date | null))}
       dateFormat={gramatica.dateFormat}
       locale={gramatica.locale}
       showIcon

@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { ValidationState } from '../../hooks/useValidationPage'
 import { ValidationPage } from './ValidationPage'
@@ -56,10 +56,6 @@ function renderPage() {
 
 beforeEach(() => {
   validation.current = { kind: 'valid', cert: CERT }
-})
-
-afterEach(() => {
-  cleanup()
 })
 
 /**

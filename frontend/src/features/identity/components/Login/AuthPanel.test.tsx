@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, screen } from '@testing-library/react'
+import { Route, Routes } from 'react-router-dom'
+import { renderWithProviders } from '@shared/testing/providers'
 import { AuthPanel } from './AuthPanel'
 
 /** `t` devolve a própria chave; o texto traduzido é assunto do `parity.test.ts`. */
@@ -20,23 +20,14 @@ vi.mock('react-i18next', async (importOriginal) => {
  * deixaria de atravessar o clique.
  */
 function renderPanel(entry: string) {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-
-  return render(
-    <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[entry]}>
-        <Routes>
-          <Route path="/login" element={<AuthPanel />} />
-          <Route path="/recuperar-clave" element={<AuthPanel />} />
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>,
+  return renderWithProviders(
+    <Routes>
+      <Route path="/login" element={<AuthPanel />} />
+      <Route path="/recuperar-clave" element={<AuthPanel />} />
+    </Routes>,
+    { route: entry },
   )
 }
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('AuthPanel', () => {
   it('em /login mostra os campos do login', () => {

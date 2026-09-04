@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { useBudgetDetail } from '../../hooks/useBudgetDetail'
 import { BudgetDetailPage } from './BudgetDetailPage'
@@ -66,10 +66,6 @@ function renderPage() {
 
 beforeEach(() => {
   detail.current = { goBack: () => {}, reload: () => Promise.resolve() }
-})
-
-afterEach(() => {
-  cleanup()
 })
 
 describe('BudgetDetailPage titula todos os seus estados', () => {

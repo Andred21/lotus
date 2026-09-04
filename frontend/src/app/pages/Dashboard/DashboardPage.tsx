@@ -37,8 +37,9 @@ export function DashboardPage() {
   /** O texto do aviso lateral, resolvido num lugar só e descido pronto para o
    * `AdminView`/`PeriodFilter`.
    *
-   * `staleError` carrega só o `detail` que o FRONT escreveu (D-05): o do
-   * servidor não é localizado e é calado no `useDashboard`. Mas ali `staleError`
+   * `staleError` carrega o `detail` que sobreviveu ao `screenDetail`: o que o
+   * FRONT escreveu e o do servidor nos status localizados da P-70 (403, 404,
+   * 429). Nos demais — 500 inclusive — ele vem `null`. Mas ali `staleError`
    * é mensagem E gatilho — o `InlineLoadState` desiste no `!error` —, então
    * imprimir o campo cru fazia o aviso inteiro sumir num 500, inclusive no 422
    * de janela invertida que a D6 existe para mostrar. `staleErrored` é o

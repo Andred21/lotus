@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import type { ProfileData } from '@shared/types/generated'
 import { useProfileForm } from './useProfileForm'
 
@@ -15,12 +14,7 @@ vi.mock('../api/useProfile', () => ({
   }),
 }))
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 function perfil(over: Partial<ProfileData> = {}): ProfileData {
   return {

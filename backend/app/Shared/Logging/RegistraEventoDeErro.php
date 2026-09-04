@@ -3,6 +3,8 @@
 namespace App\Shared\Logging;
 
 use App\Shared\Alerts\DetectorDeAcessoSuspeito;
+use App\Shared\Exceptions\RecusaDeDominio;
+use App\Shared\Exceptions\TipoDeRecusa;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
@@ -27,13 +29,16 @@ use Throwable;
  * controller deste repositório chama `$this->authorize()`/`Gate::authorize()`
  * — zero ocorrência (conferido em 2026-08-26). Todo 403 real hoje nasce do
  * RBAC do spatie/laravel-permission (`permission:`/`role:`/`role_or_permission:`,
- * `Spatie\Permission\Exceptions\UnauthorizedException`) ou de um
- * `HttpException(403)` próprio (`ImmutableSystemRoleException`,
- * `RedatorOnlyActionException` em `ProfileDocumentController`) — nenhum deles
- * estende `AuthorizationException`. Checar só essa classe deixaria
- * `acesso.negado` mudo em todo 403 de verdade da API; o teto por
- * `getStatusCode() === 403` cobre os quatro caminhos sem duplicar a
- * classificação do `ProblemDetails` (`AuthenticationException` e
+ * `Spatie\Permission\Exceptions\UnauthorizedException`) ou de um `RecusaDeDominio`
+ * com `tipo() === TipoDeRecusa::AcaoProibida` (`ImmutableSystemRoleException`,
+ * `RedatorOnlyActionException` em `ProfileDocumentController`, antes
+ * `HttpException(403)` — agora domínio). Checar só `AuthorizationException`
+ * deixaria ambos mudos. Os dois `RecusaDeDominio` são capturados na primeira
+ * via de `isAcessoNegado()` por `instanceof RecusaDeDominio` + tipo
+ * (linhas 110-112), porque não estendem `HttpException`. O RBAC segue
+ * `Spatie\Permission\Exceptions\UnauthorizedException` como `HttpException(403)`,
+ * apanhado pelo teto de `getStatusCode() === 403` na quarta via (linha 114),
+ * sem duplicar a classificação do `ProblemDetails` (`AuthenticationException` e
  * `ValidationException` não implementam `HttpExceptionInterface`, então não
  * colidem aqui, e 404/422/401 ficam de fora do teto por não serem 403).
  *
@@ -98,6 +103,15 @@ class RegistraEventoDeErro
     {
         if ($e instanceof AuthorizationException) {
             return true;
+        }
+
+        // A recusa de domínio não estende `HttpException`: quem sabe que ela é
+        // 403 é o `TipoDeRecusa`, o MESMO mapa que o `ProblemDetails` consulta
+        // para montar o envelope. Sem este braço, `ImmutableSystemRoleException`
+        // e `RedatorOnlyActionException` sairiam 403 para o cliente e mudas
+        // para o canal de segurança.
+        if ($e instanceof RecusaDeDominio) {
+            return $e->tipo() === TipoDeRecusa::AcaoProibida;
         }
 
         return $e instanceof HttpExceptionInterface && $e->getStatusCode() === 403;

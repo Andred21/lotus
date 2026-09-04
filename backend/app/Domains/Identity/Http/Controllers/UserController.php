@@ -10,7 +10,8 @@ use App\Domains\Identity\Data\ArchivedUserData;
 use App\Domains\Identity\Data\UserData;
 use App\Domains\Identity\Models\User;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
+use App\Shared\Http\RespostaDeRecurso;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -86,31 +87,25 @@ class UserController extends Controller implements HasMiddleware
             ->orderBy('name')
             ->get();
 
-        $autores = ArchiveTrailQuery::archivedBy(User::class, $users->pluck('id')->all());
-
-        return $users
-            ->map(fn (User $u) => new ArchivedUserData(
+        return ArchivedListing::lista(
+            $users,
+            User::class,
+            fn (User $u, string $em, ?string $por) => new ArchivedUserData(
                 user: UserData::fromModel($u),
-                archived_at: $u->deleted_at->toIso8601String(),
-                archived_by: $autores[$u->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     public function restore(int $user, RestoreStaffUserAction $action): JsonResponse
     {
-        // Resolvido à mão, não por binding: o binding padrão aplica o global
-        // scope de SoftDeletes e nunca acharia um arquivado. `onlyTrashed()`
-        // também dá o 404 de graça sobre registro ATIVO (molde D5).
-        $model = User::onlyTrashed()->whereKey($user)->firstOrFail();
+        $model = ArchivedListing::resolveArquivado(User::query(), $user);
 
         // O mesmo `abort_unless` de show/update/destroy: user de cliente/redator/
         // aluno arquivado por cascata não é restaurável por esta rota.
         abort_unless($model->type === 'admin', 404);
 
-        // 200, não 201: restaurar devolve um registro que já existia.
-        return UserData::fromModel($action->execute($model))
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(UserData::fromModel($action->execute($model)));
     }
 }

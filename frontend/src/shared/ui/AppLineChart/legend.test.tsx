@@ -1,8 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { ChartLegend } from './legend'
-
-afterEach(cleanup)
 
 /**
  * f2 UI-09 (run de 2026-08-28): o Recharts pinta o TEXTO da legenda com a tinta

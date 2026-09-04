@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { describe, expect, it, vi } from 'vitest'
+import { screen } from '@testing-library/react'
+import { renderWithProviders } from '@shared/testing/providers'
 import type { StudentTurmaData } from '@shared/types/generated'
 import { StudentCertificateCell } from './StudentCertificateCell'
 
@@ -49,16 +49,7 @@ function certificado(over: Partial<NonNullable<StudentTurmaData['certificate']>>
   }
 }
 
-const montar = (t: StudentTurmaData) => {
-  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return render(
-    <QueryClientProvider client={qc}>
-      <StudentCertificateCell turma={t} />
-    </QueryClientProvider>,
-  )
-}
-
-afterEach(cleanup)
+const montar = (t: StudentTurmaData) => renderWithProviders(<StudentCertificateCell turma={t} />)
 
 describe('StudentCertificateCell', () => {
   /** Ramo 1, o caso comum: vigência indeterminada mostra o rótulo SEM data. */

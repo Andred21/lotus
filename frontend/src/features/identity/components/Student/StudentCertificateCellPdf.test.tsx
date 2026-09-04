@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, screen } from '@testing-library/react'
+import { renderWithProviders } from '@shared/testing/providers'
 import type { StudentTurmaData } from '@shared/types/generated'
 import { StudentCertificateCell } from './StudentCertificateCell'
 
@@ -39,16 +39,10 @@ function turma(): StudentTurmaData {
 }
 
 function montar() {
-  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return render(
-    <QueryClientProvider client={qc}>
-      <StudentCertificateCell turma={turma()} />
-    </QueryClientProvider>,
-  )
+  return renderWithProviders(<StudentCertificateCell turma={turma()} />)
 }
 
 afterEach(() => {
-  cleanup()
   open.mockClear()
   opener = { ...OPENER_LIMPO }
 })

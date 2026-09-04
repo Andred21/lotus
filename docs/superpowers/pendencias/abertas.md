@@ -12,26 +12,39 @@
 
 # Frontend
 
-## P-58 — a catraca do vite isola o `.env` da RAIZ e não o `frontend/.env`
+## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
 
-**Bloco:** — · **Gatilho:** fecha quando `tests/compose-dev.test.ts` afastar também o
-`frontend/.env` durante a fábrica (mesmo tratamento que ele já dá aos `.env*` da raiz), ou quando o
-João decidir que toda árvore deve comentar a chave à mão. Revisar em **2026-10-31**.
+**Bloco:** — · **Gatilho:** fecha quando uma régua por estado, no molde do `describe` da P-30
+(`frontend/tests/tone-ink.test.ts`), cobrir as cinco severidades e todas passarem 4,5:1 nos três
+estados. Revisar em **2026-10-31**.
 
-Medido em 2026-08-24, no merge da `main` (PR #70) dentro da `refactor/tabelas-coluna-de-acoes`: com
-o `frontend/.env` desta árvore trazendo `VITE_API_URL=http://localhost:8080` — a grafia que era o
-padrão antes do bloco `compose-por-worktree` —, três casos de `tests/compose-dev.test.ts` falham:
+Medido em 2026-09-02, ao fechar a P-30 (item 25, Task 5): a tinta branca do Lara sobre o fundo
+compilado de cada severidade reprova AA no `p-button` **filled**, estado base, no tema **claro** —
 
-    expected undefined to be '"http://localhost:8080"'
+| Severidade | Contraste (base, claro) |
+|---|---|
+| success  | **2,28:1** |
+| info     | **2,77:1** |
+| warning  | **2,80:1** (era o defeito que a P-30 fechou) |
+| danger   | **3,76:1** |
+| help     | **3,96:1** |
+| secondary | 4,76:1 — passa |
 
-O `vite.config.ts` está correto: ele lê `loadEnv(mode, __dirname, 'VITE_')` e, achando
-`VITE_API_URL` explícito, **não emite** o define derivado — que é exatamente a precedência que o
-bloco desenhou. Quem não isola é o teste: o `beforeEach` afasta os `.env*` da **raiz** (`CAMINHOS_ENV`)
-e não o `frontend/.env`, então o gate depende do disco de quem roda. Comentar a chave (como o
-`frontend/.env.example` agora manda) devolve **102 arquivos / 573 testes**.
+O `warning` não era caso especial: é a quarta pior das cinco que reprovam, e a P-30 resolveu a dele
+trocando de família (laranja → amarelo) porque a coerência com o `AppTag` já pedia a troca. As
+outras quatro não têm essa saída de graça — success/info/danger/help continuam na própria família,
+e cada uma precisaria da mesma medição de três estados (base/hover/active) mais outlined/text antes
+de mexer, porque a lição da P-30 é que trocar degrau a degrau na mesma posição pode reprovar pior
+que o defeito original (o `active` do amarelo degrau-a-degrau media 2,29:1, pior que os 2,80:1 que
+saíram).
 
-O conserto é de uma linha no teste e mora na frente de infra, não neste bloco; por isso a árvore só
-comentou a própria chave e nada foi commitado em `frontend/.env` (gitignored).
+O `danger` já tem remédio **parcial**: `frontend/src/shared/styles/brand-theme.css` (achado UI-02 do
+review de 2026-08-18, no `Eliminar foto` do `AppPhotoField`) troca a tinta do `text`/`outlined` para
+`var(--tone-danger-ink)` e mede 5,83:1 no claro / 4,98:1 no escuro — mas o **filled** do `danger`
+(fundo vermelho, texto branco) não foi tocado e é o 3,76:1 medido acima.
+
+Consertar os outros quatro é campanha de tema — mexe em botão, tag, mensagem e badge de cada
+severidade nos dois temas, decisão de design que ninguém tomou ainda — e não é escopo do item 25.
 
 ## P-57 — o `artisan test` do `CLAUDE.md` §6 fatala em worktree com imagem velha
 
@@ -62,151 +75,78 @@ no lugar que o fatal de 128M apareceu aqui.
 > na `lane-c` e viraram `P-67` e `P-68`: a `main` já trazia `P-64`, `P-65` e `P-66` da `lane-a`,
 > mescladas antes destas (PR #81). Mesmo movimento que a nota da `lane-a` registra adiante — ID
 > publicado na `main` não se reusa, e quem renumera é a lane que ainda não mesclou. **A `P-67`
-> fechou em 2026-09-01** (item 21) e está em [`encerradas.md`](./encerradas.md); a `P-68` segue
-> aberta adiante.
-
-## P-69 — o vitest não tem `setupFiles`, então nada desmonta o que um teste monta
-
-**Quem decide:** João · **Gatilho:** João decidir se o `cleanup()` vira mecanismo global; ou bloco
-que toque `frontend/vite.config.ts` por outro motivo e possa medir o alcance. Revisar em
-**2026-10-31**.
-
-Medido no fechamento do `hardening-performance-e-dados` (2026-08-29). `frontend/vite.config.ts` não
-declara `setupFiles` nem `globals: true`, e sem um dos dois o `cleanup()` automático do Testing
-Library **nunca roda**: o que um teste monta segue montado até o vitest destruir o jsdom do arquivo.
-
-Na maior parte dos casos isso é inócuo — o componente parado não faz nada. Deixa de ser inócuo
-assim que o componente agenda trabalho: o `useServerTable` marca um `setTimeout` de debounce no
-mount, e ele dispara **depois** do teardown, sobre um `window` que já não existe. O sintoma é
-`ReferenceError: window is not defined` em `Unhandled Errors`, que **reprova a rodada sem reprovar
-asserção nenhuma** — some do relatório de testes e parece flake. Foi exatamente o que aconteceu
-duas vezes neste bloco, e a primeira leitura registrou como oscilação; a segunda mediu e achou a
-causa (`audits/2026-08-28-hardening-performance-e-dados-medicoes.md`).
-
-**Pago onde doía, não onde resolve de vez.** Os dois arquivos que vazavam ganharam
-`afterEach(cleanup)` — a grafia que `AppCard.test.tsx`, `PageHeader.test.tsx` e
-`SectionLabel.test.tsx` já usam —, e a suíte foi de 1 reprovação em 4 voltas para **6 verdes de 6**.
-O que continua aberto é o mecanismo: nada impede o próximo teste de montar um hook com timer sem
-`cleanup`, e ele nasce verde até a rodada em que não nascer. O remédio conhecido é um `setupFiles`
-com `afterEach(cleanup)` valendo para todos os arquivos (lição 14 — mecanismo vence instrução). Não
-entrou aqui porque mudar a configuração do runner do repositório inteiro no gate de fechamento é
-escopo próprio: o custo real é descobrir quantos arquivos hoje dependem, sem saber, de o componente
-**não** desmontar entre testes.
-
-## P-68 — o `max-lines` mede arquivo de teste em `features/` e não mede em `app/`, e nada declara por quê
-
-**Quem decide:** João · **Gatilho:** João escolher entre alinhar as duas camadas (isentando teste
-também em `features/`) ou escrever no config a razão de a régua valer para teste ali; ou bloco que
-toque `frontend/eslint.config.js` por outro motivo. Revisar em **2026-10-31**.
-
-Medido no fechamento do item 18 (2026-08-29), quando o gate abriu vermelho: `ValidationPage.test.tsx`
-passou de 147 para 170 linhas nas correções do review e reprovou o `max-lines` de 150 da camada
-`src/features/*/components/**`. O bloco irmão do mesmo arquivo, `src/app/**/*.tsx`, tem
-`ignores: ['**/*.test.tsx']` **com a razão escrita** — *"quebrar um arquivo de teste coeso é pagar
-preço pela regra, não pelo defeito"*. O de `features/` não tem a isenção nem uma linha dizendo que a
-ausência é deliberada.
-
-**A divergência não é acadêmica:** ela decide se um teste que cresce se quebra ou não, e as duas
-camadas respondem diferente para o mesmo caso.
-
-**Estado atual da população, medido:** 24 arquivos `*.test.tsx` em `src/features/*/components/**`;
-**um** passava de 150 (o do fechamento, quebrado em `e76747a6`) e **dois** estão exatamente em 150 —
-`EnrollmentSection.test.tsx` e `ProfileDocumentSlot.test.tsx`, que é a assinatura de quem já aparou
-para caber.
-
-**Por que ficou aberta:** o João decidiu o caso concreto — quebrar o arquivo, não afrouxar a régua —
-e essa decisão está paga. O que sobra é a política, que vale para os próximos 24: isentar alinha as
-camadas e solta uma régua viva; manter exige que a razão esteja escrita, porque a razão oposta já
-está, no mesmo arquivo, doze linhas abaixo.
-
----
-
-## P-70 — o `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado
-
-**Bloco:** `hardening-i18n-e-erros-api` (D4 da spec de 2026-08-29) ·
-**Gatilho:** próximo bloco da frente de frontend que tocar política de erro de tela.
-Revisar em **2026-11-30**.
-
-`frontend/src/shared/lib/screenDetail.ts` devolve `undefined` para todo envelope que não seja
-sintetizado pelo próprio front, então erro de CARGA (GET) mostra a dica genérica do i18n em vez do
-que o servidor disse. A razão escrita era que o `ProblemDetails` respondia em português fixo — isso
-acabou: o envelope inteiro sai de `lang/` e responde ao `Accept-Language`.
-
-**Por que não foi virado junto:** o item 7 é da frente Backend. Virar a chave exige garantir que
-nenhuma mensagem de exceção não prevista chegue à tela, o que transforma um bloco de backend em
-backend+frontend. Decisão do João em 2026-08-29.
-
-**DoD de quem pegar:** um GET que falha com 403 e outro com 404 mostram, na tela, a mensagem
-localizada do servidor, nos três locales — e um 500 continua mostrando a dica genérica.
-
----
+> fechou em 2026-09-01** (item 21) e a **`P-68` fechou em 2026-09-03** (item 25); as duas estão em
+> [`encerradas.md`](./encerradas.md).
 
 # Backend
 
-## P-72 — o 419 devolve `detail` literal em inglês nos três locales
+## P-75 — o `SANCTUM_STATEFUL_DOMAINS` do `.env` não chega ao runtime, e o CSRF a partir do Vite devolve 401 em vez de 419
 
-**Bloco:** — · **Gatilho:** bloco que tocar `ProblemDetails::fromException` ou a proteção CSRF por
-outro motivo; o braço ganha `problem.detail.csrf` nos três locales no mesmo commit. Revisar em
+**Bloco:** — · **Gatilho:** bloco que tocar `backend/config/sanctum.php`, o `.env` da árvore ou a
+proteção CSRF, e puder provar `config('sanctum.stateful')` seguindo o `.env` com um teste. Revisar
+em **2026-10-31**.
+
+Medido em 2026-09-02, na sonda do 419 do bloco `backend-envelope-de-erro-e-recusa-de-dominio`
+(`audits/2026-09-02-item26-medicoes.md` §5), e promovido a ficha no review de 2026-09-03 (Q-4):
+`backend/.env` declara
+
+    SANCTUM_STATEFUL_DOMAINS=localhost:5173,localhost:5174,localhost:8080
+
+mas `config('sanctum.stateful')` resolve no runtime para `['localhost:5174', 'localhost:8080']` —
+**sem `localhost:5173`**, que é a porta padrão do Vite dev server no `CLAUDE.md` §6. Confirmado por
+`Str::is()` contra a lista real via tinker.
+
+**O sintoma:** uma escrita vinda do `:5173` sem token CSRF não é reconhecida como requisição de
+frontend por `EnsureFrontendRequestsAreStateful::fromFrontend()`, então ela nunca entra na sessão e
+cai no braço de `auth:sanctum` — **401**, e não o **419** que a proteção CSRF devolveria. A mesma
+sonda, repetida com `Referer: http://localhost:8080/` (presente na lista), devolveu o 419 esperado.
+
+Isso desloca o diagnóstico de quem for testar CSRF a partir do dev server real: o erro que aparece
+é "não autenticado", e a causa é "origem não é stateful". Não é defeito do bloco do envelope — a
+medição não toca `config/sanctum.php` nem `.env` —, mas é divergência de ambiente entre o que o
+`.env` diz e o que o framework lê, e ficha é o único lugar que a `auditar-docs` e o próximo bloco
+releem. Nota de audit datado ninguém relê (é a razão escrita deste Q-4).
+
+**Não confundir com a `P-56`**, que é outro eixo: lá o `XSRF-TOKEN` não é isolado ENTRE árvores e a
+aba parada volta 419. Aqui a origem legítima nem chega ao 419.
+
+---
+
+## P-76 — seis frases ao usuário seguem literais em `app/`, por três caminhos que nenhuma catraca alcança
+
+**Bloco:** — · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
+`Shared/Files/Rules` ou `AuthController::logout()` por outro motivo; cada sítio passa a ler `lang/`
+nos três locales no mesmo commit, **ou** a catraca ganha o caminho que faltava. Revisar em
 **2026-10-31**.
 
-Medido contra a API real no fechamento do `hardening-i18n-e-erros-api` (2026-08-30), em `PUT
-/api/turmas/3` com `X-XSRF-TOKEN` vencido:
+Herdada da **`P-71`**, que fechou em 2026-09-03 no `backend-envelope-de-erro-e-recusa-de-dominio`.
+A `P-71` pagou os cinco sítios que ela contava **e mais os seis** de
+`CertificateEligibility::refuse()`, que o Q-7 do review do mesmo dia descobriu — o encaminhador de
+`withMessages` virou a terceira porta coberta por `MensagemLiteralTest`. Estes seis **não** foram
+pagos, e estavam nomeados no corpo da `P-71`: ficha que fecha leva o resto junto se ninguém o
+reabrir, e foi por isso que esta nasceu.
 
-```
-es-CL  419 | Error en la solicitud | CSRF token mismatch.
-pt-BR  419 | Erro na requisição    | CSRF token mismatch.
-en     419 | Request error         | CSRF token mismatch.
-```
+Remedido contra a árvore em 2026-09-03, os três caminhos seguem vivos:
 
-O `title` **está** localizado — o 419 é um `HttpExceptionInterface` sem braço próprio, então cai no
-genérico `problem.title.http`, que o bloco traduziu. O `detail` não: o `default` do `detailFor()` é
-`$e->getMessage() ?: __('problem.detail.generic')`, e o `TokenMismatchException` do Laravel traz
-`CSRF token mismatch.` cru. Frase não vazia vence o fallback, e a resposta sai em inglês nos três
-idiomas.
-
-**Por que não foi consertado no bloco:** o 419 não está na spec nem no plano — os sete braços que a
-**D5** enumera são 401, 403, 404, 422, 429, 500 e o genérico. Fechar sprint não implementa (§0 do
-gate mede, não escreve), e o remédio não é de uma linha: ou o `detailFor()` ganha um braço
-`TokenMismatchException`, ou a catraca da Task 9 passa a enxergar `getMessage()` de exceção de
-framework — decisão de desenho do envelope, que é mecanismo da lei §5.4.
-
-A **P-56** vizinha (o `XSRF-TOKEN` não isolado entre árvores) descreve *quando* o 419 aparece em
-dev; esta descreve *o que ele diz* quando aparece.
-
-## P-71 — cinco recusas que o usuário lê continuam literais fora de `lang/`, em três domínios
-
-**Bloco:** — · **Gatilho:** bloco que tocar `Certification/Services` ou `Operation/Exceptions` por
-outro motivo; cada sítio sai da lista `DEBITO_CONHECIDO` da catraca no mesmo commit em que passar a
-ler `lang/`. Revisar em **2026-10-31**.
-
-Medido no review de 2026-08-30 (Q-2), depois que a catraca de exceção literal
-(`tests/Unit/Shared/MensagemLiteralTest::nenhuma_excecao_nova_carrega_texto_literal`) passou a
-enxergar o `throw`, e não só o `withMessages`. O `hardening-i18n-e-erros-api` traduziu 41 sítios e
-mais os quatro de role de sistema que este review pagou; estes cinco ficaram porque o bloco **não
-tocou esses arquivos**:
-
-| Sítio | Idioma de hoje | O que o usuário vê |
+| Sítio | Idioma de hoje | Por que a catraca não alcança |
 |---|---|---|
-| `CorruptedSnapshotException.php:42` | es_CL | `PublicDetail` — atravessa o mascaramento do 500 e é impresso cru pelo `CertificateViewDialog` em qualquer locale |
-| `RedatorNaoElegivelException.php:16,21` | pt-BR | as duas recusas da RN-09 na designação de redator |
-| `TurmaConfiguracaoException.php:15,20` | pt-BR | cotação não aprovada e turma já existente |
+| `Identity/Services/UserProvisioner.php:27-28` (RUT e e-mail duplicados) | pt-BR | a frase mora numa **constante de classe** (`DUPLICADO`), longe da chamada a `withMessages`; o detector lê janela, não constante |
+| `Shared/Rules/ValidRut.php:19` | **pt-BR** | `$fail('...')` é o contrato de `ValidationRule`, não `throw` nem `withMessages` — nenhuma das três portas cobertas |
+| `Shared/Rules/PrintableGrade.php:27` | es-CL | idem |
+| `Shared/Files/Rules/ScannedForMalware.php:34` | es-CL | idem |
+| `Identity/Http/Controllers/AuthController.php:107` (`'Sessão encerrada.'`) | pt-BR | é resposta de **sucesso** (`200`), não recusa; catraca de exceção não passa perto |
 
-Como não são `ValidationException`, o `ProblemDetails` preserva o `getMessage()` cru: um envelope
-misto, com `title` em es-CL e `detail` em pt-BR, é o resultado observável hoje.
+**Dois defeitos, não um.** O primeiro é o de sempre — frase fora de `lang/` não se traduz. O
+segundo é que **três sítios estão em pt-BR num produto es-CL**: o `ValidRut` e o `UserProvisioner`
+respondem em português a um operador chileno, e o `logout` também. Isso é observável hoje, sem
+mudar locale nenhum.
 
-**A catraca já as segura.** Cada uma está em `DEBITO_CONHECIDO` com o motivo escrito ao lado, no
-molde do `ParentLockOnChildWriteTest`, e **silêncio reprova**: exceção nova com texto literal nasce
-vermelha e escolhe entre traduzir e declarar. A lista é inventário, não permissão — ela só encolhe.
+**Por que fica aberta:** fechar pede a quarta porta da catraca (`$fail` de `ValidationRule`) e uma
+quinta para resposta de sucesso — não é dicionário, é mecanismo, e o mecanismo é o que a
+`.claude/rules/backend-lang.md` manda estender junto. O bloco do envelope fechou a lista de quatro
+mudanças que a spec dele declarou; abrir a quarta porta ali seria a quinta.
 
-**Por que ficou aberta:** traduzir os cinco custa dicionário em três idiomas por domínio, e a
-`CorruptedSnapshotException` é `sprintf` com dois `%s` — vira chave com dois parâmetros, o que muda a
-forma da factory. Fechar isso no review de um bloco de i18n de outro domínio seria o quinto arquivo
-fora da lista do plano. **A mesma doença tem outros portadores que a catraca não alcança** e que
-ficam nomeados aqui para quem pegar: `CertificateEligibility::refuse()` (6 recusas em es_CL, o
-literal chega por variável), `UserProvisioner::DUPLICADO` (RUT/e-mail duplicado em pt-BR, constante
-longe da chamada), as três `ValidationRule` com `$fail('...')` (`ValidRut`, `PrintableGrade`,
-`ScannedForMalware`) e o `AuthController::logout()` (`'Sessão encerrada.'`, resposta de SUCESSO —
-nenhuma catraca de exceção alcança esse caminho).
+---
 
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
@@ -526,38 +466,6 @@ coluna de certificado.
 > 2026-08-22: a decisão que as trava passa a se resolver no brainstorming do bloco indicado.
 > Agrupar segue não promovendo nada.
 
-## P-60 — um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação pública dele devolve 500
-
-**Nasceu como `P-56` na mesma branch e foi renumerada pelo mesmo motivo** — a `main` já usava
-`P-56` para o `XSRF-TOKEN` entre árvores.
-
-**Bloco:** — · **Gatilho:** fecha quando um bloco puder reseedar ou corrigir o banco de dev (o mesmo
-candidato da [P-44](#p-44)), ou quando alguém decidir se o gate de snapshot apresentável deve
-degradar em vez de estourar. Revisar em **2026-10-31**.
-
-Medido no `/fechar-sprint` de 2026-08-24, contra a API real:
-`GET /api/publico/certificados/b47938cf-80fd-46de-8a76-f9cf611fec20` (`LOT-2026-1001`) devolve **500**
-em Problem Details, com `detail` = *"El certificado LOT-2026-1001 no puede presentarse: su documento
-congelado no tiene los campos aluno.name."*. O outro revogado do banco (`LOT-2026-1002`, mesmo
-fluxo) devolve **200** com `status: revocado` e `display_status: revocado`.
-
-**Não é regressão deste bloco.** O `LOT-2026-1001` foi criado em **2026-08-10 17:31**, antes do gate
-de snapshot apresentável (`82999214`, "politica de snapshot apresentavel num gate unico"), e é o
-único dos oito certificados do dev cujo snapshot cru não tem `aluno.name` — os outros sete têm. O
-`certificacao-historico-do-aluno` não escreve snapshot: ele lê `snapshot_ok` e o projeta na coluna.
-
-**As duas metades que o gatilho separa:**
-
-- **Dado de dev**: uma linha de snapshot velho sobreviveu à mudança de forma. Linha alheia de bloco
-  fechado se menciona, não se apaga — a decisão de reseedar o dev é do João, exatamente como na
-  P-44.
-- **Comportamento**: o gate hoje converte snapshot incompleto em **500** numa rota **pública**, a que
-  o QR do certificado impresso aponta. Se um documento antigo com a forma antiga existir em
-  produção, quem escaneia vê erro de servidor em vez de uma página que diz o que dá para dizer.
-  Decidir entre degradar (mostrar o que o snapshot tem) e continuar estourando é decisão do João, e
-  cabe no `hardening-i18n-e-erros-api` (item 7) ou em qualquer bloco que toque
-  `PublicCertificateData`.
-
 ## P-05 — migrations "adicionais" não consolidadas
 
 **Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção.
@@ -678,32 +586,6 @@ manter como está) e o bloco não mudou visibilidade nem protection. Quando prot
 couber, os required checks são **cinco**: `audit-dev` decide desde 2026-08-29 (D1 da spec do item
 20) — o `image` já depende dele.
 
-## P-30 — o `warning` segue com o laranja de stock do Lara
-
-**Gatilho:** fecha quando o João decidir que o `warning` quer âmbar próprio (aí vira task de tema,
-com medição de contraste nas quatro superfícies e guarda de drift no molde da D5'), ou quando um
-bloco de design tocar as paletas de severidade por outro motivo e puder absorvê-lo. Revisar em
-**2026-10-31**.
-
-A §4 da spec de `estilizacao-adr16-shell-tipografia` prometia `ámbar-aviso` (`#D97706`) como sexto
-token da paleta; o construído tem **cinco** donos de cor de marca.
-
-**A divergência de doc já está resolvida** (achado Q-7 do review, 2026-08-12): `#D97706` não aparece
-em `frontend/src/`, a §4 foi corrigida para descrever o construído e a decisão virou a emenda
-**D-P16** do plano. O que fica aberto é **design**, não doc.
-
-As paletas de severidade (info/sky, success, warning, danger, secondary/slate) ficam intactas de
-propósito — a camada de marca transforma só a família da primária, como o comentário de
-`frontend/scripts/generate-brand-theme.mjs` declara, e o script não tem nenhum hex laranja ou âmbar
-em mapa algum. A regra é por **família**, não por severidade: onde o Lara pintou severidade com o
-azul, a camada varreu junto (a mensagem `info` do claro tem borda celeste e texto no degrau 700,
-achado da D-P14) — `warning` sobrevive porque é laranja, não porque foi poupado por ser severidade.
-
-Trocar o laranja do Lara (`#f97316` em botão, tag e badge e `#cc8925` na mensagem `warn` no claro;
-`#fb923c` e `#eab308` no escuro) por um âmbar de marca exige régua de contraste própria em botão,
-tag, mensagem e badge nos dois temas — decisão que ninguém tomou, e que não cabia num bloco cuja
-emenda ao ADR-16 é "camada de marca **sobre** o Lara".
-
 ## P-28 — o fundo do certificado não reproduz as cunhas nem separa a página 2
 
 **Gatilho:** fecha quando o fundo passar a distinguir página 1 das seguintes **e** as cunhas
@@ -725,26 +607,6 @@ repete a faixa junto.
 correto e com o conteúdo de peso legal íntegro; o que falta é ornamento. Corrigir reabre as Tasks 1 e
 3 (recompor o fundo, ou reproduzir as cunhas em CSS, e separar o fundo da primeira página do das
 seguintes).
-
-## P-42 — a grafia construída do `IdentityCell` diverge da D1 da própria spec
-
-**Gatilho:** fecha quando o D1 for reescrito com a grafia construída e o motivo (ou quando o código
-voltar ao D1). Candidato natural: o próximo bloco que tocar tipografia de tabela. Revisar em
-**2026-10-31**.
-
-`IdentityCell.tsx` usa `font-semibold` no título (D1: `font-medium`), `text-sm font-medium` na
-descrição (D1: `text-xs`) e um `gap-2` entre as duas linhas que o D1 não previa.
-
-Achado **Q-3** do `/revisar-sprint` de 2026-08-14, **rejeitado pelo João** ("eu que mudei, deixei
-como está"). O D1 foi decidido no brainstorming como "grafia vencedora — a dos três de `identity`" e
-a decisão nova é dele, tomada com a tela na frente; o que fica aberto é só o **registro**: a spec
-`specs/archive/2026-08-14-celula-de-identidade-design.md` segue descrevendo a grafia planejada, e o
-`state.md` do bloco registrava apenas o `<p>`→`<span>` da edição à mão.
-
-O `gap-2` × N linhas muda a altura de toda tabela que usa a célula, então não é detalhe cosmético
-invisível.
-
-**Nasceu como `P-39` e foi renumerada pelo mesmo motivo e no mesmo precedente da [P-41](#p-41).**
 
 ---
 

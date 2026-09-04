@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { focusManager } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
+import { createWrapper } from '@shared/testing/providers'
 import { useStudentDetail } from './useStudentDetail'
 
 vi.mock('@shared/api/axios', () => ({
@@ -11,14 +11,9 @@ vi.mock('@shared/api/axios', () => ({
 
 const get = vi.mocked(api.get)
 
-/** Mesmo default do `AppProviders` (`refetchOnWindowFocus: false`) — a catraca
- * só vale se a query tiver de vencê-lo. */
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({
-    defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
-  })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+/** A prova só vale contra `refetchOnWindowFocus: false`, que vem do `PADRAO` de
+ * `@shared/testing/providers` e é guardado por `providers.test.tsx`. */
+const { wrapper } = createWrapper()
 
 describe('useStudentDetail — revalidação do estado derivado', () => {
   /**

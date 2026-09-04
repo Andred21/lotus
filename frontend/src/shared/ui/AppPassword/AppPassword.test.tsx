@@ -1,10 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { AppPassword } from './AppPassword'
-
-afterEach(() => {
-  cleanup()
-})
 
 /**
  * A largura deste componente já custou QUATRO achados — C-2 (2026-08-12), UI-01

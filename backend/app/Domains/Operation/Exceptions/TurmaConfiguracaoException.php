@@ -2,21 +2,27 @@
 
 namespace App\Domains\Operation\Exceptions;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use App\Shared\Exceptions\RecusaDeDominio;
+use App\Shared\Exceptions\TipoDeRecusa;
 
 /**
  * Configuração de turma inválida (cotação não aprovada ou turma já existente).
- * HttpException(422) → handler global RFC 7807.
+ * Recusa de regra de negócio: o `ProblemDetails` a traduz em 422.
  */
-class TurmaConfiguracaoException extends HttpException
+class TurmaConfiguracaoException extends RecusaDeDominio
 {
+    public function tipo(): TipoDeRecusa
+    {
+        return TipoDeRecusa::RegraDeNegocio;
+    }
+
     public static function cotacaoNaoAprovada(): self
     {
-        return new self(422, 'A cotação precisa estar aprovada para configurar a turma.');
+        return new self(__('operation.turma.quote_not_approved'));
     }
 
     public static function turmaJaExiste(): self
     {
-        return new self(422, 'Esta cotação já tem uma turma configurada.');
+        return new self(__('operation.turma.already_exists'));
     }
 }

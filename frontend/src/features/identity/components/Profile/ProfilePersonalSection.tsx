@@ -5,9 +5,9 @@ import {
   AppInputText,
   FormErrorBanner,
   FormErrorSummary,
-  FormField,
   FormSection,
   technicalDataClass,
+  useFormField,
   useToast,
 } from '@shared/ui'
 import type { ProfileData } from '@shared/types/generated'
@@ -23,9 +23,9 @@ import { useProfileForm } from '../../hooks/useProfileForm'
 export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
   const { t } = useTranslation()
   const toast = useToast()
-  const { form, set, submit, pending, fieldErrors, generalError } = useProfileForm(profile, () =>
-    toast.success(t('profile.personal.saved')),
-  )
+  const f = useProfileForm(profile, () => toast.success(t('profile.personal.saved')))
+  const { submit, pending, fieldErrors, generalError } = f
+  const campo = useFormField(f)
 
   return (
     <AppCard className="p-4">
@@ -45,28 +45,20 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
             que a requisição em voo NÃO leva: o toast de sucesso aparecia sobre
             um texto na tela que nunca chegou ao servidor, e o refetch só o
             desmentia depois. */}
-        <FormField label={t('profile.personal.name')} error={fieldErrors?.name?.[0]}>
-          <AppInputText
-            className="w-full"
-            autoComplete="name"
-            value={form.name}
-            disabled={pending}
-            onChange={(e) => set('name', e.target.value)}
-          />
-        </FormField>
+        <campo.Field name="name" label={t('profile.personal.name')}>
+          <AppInputText className="w-full" autoComplete="name" disabled={pending} />
+        </campo.Field>
 
-        <FormField label={t('profile.personal.phone')} error={fieldErrors?.phone?.[0]}>
+        <campo.Field name="phone" label={t('profile.personal.phone')}>
           {/* `technicalDataClass` (D-29): único sítio da decisão que pousa num
               controle EDITÁVEL, e não num valor de leitura — a auditoria o cita
               explicitamente ("vale também para telefone"). */}
           <AppInputText
             className={`w-full ${technicalDataClass}`}
             autoComplete="tel"
-            value={form.phone}
             disabled={pending}
-            onChange={(e) => set('phone', e.target.value)}
           />
-        </FormField>
+        </campo.Field>
 
         <div>
           <AppButton

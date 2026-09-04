@@ -1,6 +1,6 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { screen } from '@testing-library/react'
+import { renderWithProviders } from '@shared/testing/providers'
 import { registerPrimeLocales } from '@shared/config/primeLocale'
 import type { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
 import { EmissionPanel } from './EmissionPanel'
@@ -39,21 +39,13 @@ function montar() {
 
   // O painel monta os diálogos junto (`ConfirmIssueDialog` e `BatchIssueDialog`
   // usam mutations), então o provider é obrigatório mesmo sem query viva.
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-
-  return render(
-    <QueryClientProvider client={qc}>
-      <EmissionPanel />
-    </QueryClientProvider>,
-  )
+  return renderWithProviders(<EmissionPanel />)
 }
 
 // O `AppDatePicker` da janela passa `locale="es"` ao Calendar do Prime; sem o
 // boot (`main.tsx`), o botão do ícone estoura em `localeOption('chooseDate',
 // 'es')`. A mesma nota de `fieldAssociation.test.tsx`.
 beforeAll(registerPrimeLocales)
-
-afterEach(cleanup)
 
 describe('EmissionPanel — o seletor de turma', () => {
   it('tem rótulo visível associado ao dropdown, e não só o placeholder', () => {

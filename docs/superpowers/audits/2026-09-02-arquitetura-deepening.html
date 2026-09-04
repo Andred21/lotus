@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Architecture review — Lotus</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { curve: "basis" } });
+</script>
+<style>
+  .seam { stroke-dasharray: 5 4; }
+  .lbl { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+  .deep { background: linear-gradient(135deg,#0f172a,#1e293b); }
+  .mermaid { font-size: 13px; }
+  article { scroll-margin-top: 1.5rem; }
+</style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans antialiased">
+<main class="max-w-5xl mx-auto px-6 py-12 space-y-12">
+
+<header class="border-b border-slate-300 pb-8">
+  <div class="flex items-baseline justify-between flex-wrap gap-3">
+    <h1 class="font-serif text-4xl tracking-tight">Architecture review — Lotus</h1>
+    <span class="font-mono text-xs text-slate-500">2026-09-01 · main@8efd85f2 · feat/site-contact-form</span>
+  </div>
+  <p class="mt-4 text-sm text-slate-600 max-w-3xl">
+    Backend 18.624 LOC PHP · frontend 420 módulos TS/TSX. Varredura pesada nos hot spots dos últimos
+    80 commits: <span class="font-mono text-xs">shared/ui</span>, <span class="font-mono text-xs">features/*</span>,
+    <span class="font-mono text-xs">Shared/Exceptions</span>, e a fatia <span class="font-mono text-xs">Domains/Site</span>
+    que está no índice agora, sem commit.
+  </p>
+  <p class="mt-3 text-sm text-slate-600 max-w-3xl">
+    Nenhum achado abaixo é desleixo: cada duplicação tem justificativa escrita no próprio arquivo.
+    O que mudou é a massa — o padrão que valia para dois agregados agora se repete em oito.
+  </p>
+  <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-600">
+    <span class="flex items-center gap-2"><span class="inline-block w-6 h-4 border border-slate-500 bg-white"></span> module</span>
+    <span class="flex items-center gap-2"><svg width="26" height="10"><line x1="0" y1="5" x2="26" y2="5" stroke="#475569" stroke-width="2" class="seam"/></svg> seam</span>
+    <span class="flex items-center gap-2"><svg width="26" height="10"><line x1="0" y1="5" x2="22" y2="5" stroke="#dc2626" stroke-width="2"/><path d="M22 1 L26 5 L22 9 Z" fill="#dc2626"/></svg> leakage</span>
+    <span class="flex items-center gap-2"><span class="inline-block w-6 h-4 deep"></span> deep module</span>
+  </div>
+</header>
+
+<!-- ============ C1 ============ -->
+<section id="candidates" class="space-y-14">
+
+<article id="c1" class="space-y-5">
+  <div class="flex items-baseline gap-3 flex-wrap">
+    <h2 class="font-serif text-2xl">1 · Colapsar a projeção de arquivamento</h2>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 text-xs font-medium">Strong</span>
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">in-process</span>
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">backend · 6 domínios</span>
+  </div>
+
+  <div class="font-mono text-xs text-slate-600 leading-relaxed">
+    Domains/{Catalog,Commercial,Identity,Operation}/Http/Controllers/*Controller.php <span class="text-slate-400">— 8× archived() + 8× restore()</span><br/>
+    Domains/*/Data/Archived*Data.php <span class="text-slate-400">— 8 arquivos, 166 linhas</span><br/>
+    Domains/*/Actions/Restore*Action.php <span class="text-slate-400">— 8 arquivos, 4 eixos de divergência: lock, gate 422, unmark, retorno</span><br/>
+    Shared/Audit/ArchiveTrailQuery.php <span class="text-slate-400">— o seam que já existe</span>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Antes — 8 montagens</p>
+      <pre class="mermaid">
+flowchart TB
+  A[CourseController] --> P1[onlyTrashed<br/>+ withArchivedListingData]
+  B[ClientController] --> P2[onlyTrashed<br/>+ withArchivedListingData]
+  C[RedatorController] --> P3[onlyTrashed<br/>+ withArchivedListingData]
+  D[+5 controllers] --> P4[...]
+  P1 --> T[ArchiveTrailQuery::archivedBy]
+  P2 --> T
+  P3 --> T
+  P4 --> T
+  P1 --> M1[map -> ArchivedCourseData]
+  P2 --> M2[map -> ArchivedClientData]
+  P3 --> M3[map -> ArchivedRedatorData]
+  classDef dup fill:#fee2e2,stroke:#dc2626;
+  class P1,P2,P3,P4,M1,M2,M3 dup
+      </pre>
+      <p class="mt-3 text-xs text-slate-500">Vermelho = as mesmas seis linhas, oito vezes.</p>
+    </div>
+
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Depois — um module</p>
+      <div class="space-y-2">
+        <div class="grid grid-cols-4 gap-1.5">
+          <div class="border border-slate-400 bg-white text-center text-[10px] py-2 rounded-sm">Course</div>
+          <div class="border border-slate-400 bg-white text-center text-[10px] py-2 rounded-sm">Client</div>
+          <div class="border border-slate-400 bg-white text-center text-[10px] py-2 rounded-sm">Redator</div>
+          <div class="border border-slate-400 bg-white text-center text-[10px] py-2 rounded-sm">+5</div>
+        </div>
+        <svg width="100%" height="26" viewBox="0 0 300 26" preserveAspectRatio="none">
+          <line x1="150" y1="0" x2="150" y2="18" stroke="#475569" stroke-width="2"/>
+          <path d="M146 18 L150 24 L154 18 Z" fill="#475569"/>
+          <line x1="20" y1="12" x2="280" y2="12" stroke="#475569" stroke-width="1.5" class="seam"/>
+        </svg>
+        <div class="deep rounded text-white px-4 py-3">
+          <p class="lbl text-slate-300">interface</p>
+          <p class="font-mono text-[11px] mt-1 text-emerald-300">ArchivedListing::of($model, $data)</p>
+          <p class="font-mono text-[11px] text-emerald-300">ArchivedListing::restore($model, $id, $action)</p>
+          <div class="mt-3 pt-3 border-t border-slate-600 space-y-1 text-[10px] text-slate-400 font-mono leading-snug">
+            <p>onlyTrashed + withArchivedListingData</p>
+            <p>ArchiveTrailQuery::archivedBy</p>
+            <p>deleted_at-&gt;toIso8601String()</p>
+            <p>firstOrFail 404 sobre registro ativo</p>
+            <p>toResponse()-&gt;setStatusCode(200)</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-4 gap-1.5 opacity-60">
+          <div class="border border-dashed border-slate-300 bg-slate-50 text-center text-[9px] py-1.5 rounded-sm">ArchivedCourseData</div>
+          <div class="border border-dashed border-slate-300 bg-slate-50 text-center text-[9px] py-1.5 rounded-sm">ArchivedClientData</div>
+          <div class="border border-dashed border-slate-300 bg-slate-50 text-center text-[9px] py-1.5 rounded-sm">ArchivedRedatorData</div>
+          <div class="border border-dashed border-slate-300 bg-slate-50 text-center text-[9px] py-1.5 rounded-sm">+5</div>
+        </div>
+        <p class="text-[10px] text-slate-500">Os 8 DTOs ficam — são o contrato TS (ADR-04). O que sai é a montagem.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+    <div>
+      <p class="lbl text-slate-500 mb-1">Problema</p>
+      <p>A regra de listar-arquivados não mora em lugar nenhum: mora oito vezes, e o comentário
+      que a explica foi copiado verbatim em 7 controllers.</p>
+    </div>
+    <div>
+      <p class="lbl text-slate-500 mb-1">Solução</p>
+      <p>Um module em <span class="font-mono text-xs">Shared/Audit</span> com duas entradas; o controller
+      passa o model e o DTO e recebe a lista pronta.</p>
+    </div>
+  </div>
+
+  <div>
+    <p class="lbl text-slate-500 mb-2">Ganhos</p>
+    <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside marker:text-emerald-600">
+      <li>leverage: uma implementation, 16 call sites</li>
+      <li>locality: o 404-sobre-ativo tem um dono</li>
+      <li>o 200-em-vez-de-201 para de ser refeito (17×)</li>
+      <li>testável sem round-trip HTTP</li>
+      <li>o restore() do controller vira um</li>
+      <li>agregado novo herda o comportamento</li>
+    </ul>
+  </div>
+
+  <div class="border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm">
+    <span class="font-medium">Limite do ADR-04:</span> os 8 <span class="font-mono text-xs">Archived*Data</span>
+    não colapsam — cada um emite um tipo em <span class="font-mono text-xs">generated.ts</span>. Colapsa só a montagem.
+    Não é Repository (ADR-02): não intermedeia o Eloquent, projeta o resultado dele.
+  </div>
+
+  <div class="rounded-lg border-2 border-slate-900 bg-white p-6 space-y-4">
+    <div class="flex items-baseline gap-3">
+      <p class="lbl text-slate-500">Desenho fechado</p>
+      <span class="font-mono text-[11px] text-slate-500">2026-09-02</span>
+    </div>
+
+    <div>
+      <p class="lbl text-slate-500 mb-1">Interface</p>
+      <pre class="font-mono text-[11px] bg-slate-900 text-slate-200 rounded p-3 overflow-x-auto leading-relaxed">ArchivedListing::lista(iterable $registros, string $model, Closure $montar): array
+    <span class="text-slate-500">// absorve pluck(id) · archivedBy · map · toIso8601String · ?? null</span>
+    <span class="text-slate-500">// NÃO conhece HTTP — testável sozinha</span>
+
+ArchivedListing::respostaDeRestauracao(Data $projetado): JsonResponse
+    <span class="text-slate-500">// só o 200 contra o 201 do ResponsableData — 17 repetições em 10 controllers</span></pre>
+      <p class="text-[11px] text-slate-500 mt-2">Endereço: <span class="font-mono">app/Shared/Audit/</span>, ao lado do <span class="font-mono">ArchiveTrailQuery</span> — seu único colaborador. Nome não pode terminar em <span class="font-mono">Repository</span>: o <span class="font-mono">PersistenceLawsTest</span> varre <span class="font-mono">app/</span> inteiro.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+      <div>
+        <p class="lbl text-slate-500 mb-1">Atrás do seam</p>
+        <ul class="list-disc list-inside marker:text-slate-400 space-y-0.5 text-[13px]">
+          <li>a montagem, idêntica nos 8</li>
+          <li>o <span class="font-mono text-xs">firstOrFail</span> sobre <span class="font-mono text-xs">onlyTrashed</span> (404 sobre ativo)</li>
+          <li>o 200 do restore</li>
+        </ul>
+      </div>
+      <div>
+        <p class="lbl text-slate-500 mb-1">Fora, de propósito</p>
+        <ul class="list-disc list-inside marker:text-slate-400 space-y-0.5 text-[13px]">
+          <li>as 8 <span class="font-mono text-xs">Restore*Action</span> — divergem em lock, gate, unmark e retorno</li>
+          <li>a query de cada agregado — <span class="font-mono text-xs">Turma</span> pagina e filtra por <span class="font-mono text-xs">visibleTo</span>, <span class="font-mono text-xs">User</span> não tem builder</li>
+          <li>o <span class="font-mono text-xs">abort_unless(type === 'admin')</span> do <span class="font-mono text-xs">UserController</span> — vocabulário de Identity</li>
+          <li>os 8 <span class="font-mono text-xs">Archived*Data</span> — contrato TS, ADR-04</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-sm border-t border-slate-200 pt-4">
+      <div>
+        <p class="lbl text-slate-500 mb-1">Catraca</p>
+        <p class="text-[13px]">Arch test: <span class="font-mono text-xs">ArchiveTrailQuery::archivedBy</span> citado fora do module reprova — molde do <span class="font-mono text-xs">MensagemLiteralTest</span>. É a única régua que o module terá: <span class="font-mono text-xs">App\Shared\*</span> não é varrido pelo <span class="font-mono text-xs">DomainDependencyTest</span>.</p>
+      </div>
+      <div>
+        <p class="lbl text-slate-500 mb-1">Prova</p>
+        <p class="text-[13px]">Teste unitário novo do module, mais os 70 testes de endpoint <em>intactos</em> — passarem sem edição é o que prova que o contrato não mudou. <span class="font-mono text-xs">ListQueryBudgetTest</span> (1 query por unidade) e <span class="font-mono text-xs">ParentLockOnChildWriteTest</span> não devem precisar mudar; se precisarem, o desenho saiu do lugar.</p>
+      </div>
+    </div>
+
+    <p class="text-[13px] text-slate-600 border-t border-slate-200 pt-4">
+      <span class="font-medium">Execução:</span> bloco próprio na fila do <span class="font-mono text-xs">backlog.md</span>, planejado quando chegar a vez. Não cabe na branch do Site.
+    </p>
+  </div>
+</article>
+
+<!-- ============ C2 ============ -->
+<article id="c2" class="space-y-5 pt-6 border-t border-slate-200">
+  <h2 class="font-serif text-2xl">2 · Fechar a fatia Site num module só</h2>
+  <div class="flex flex-wrap gap-2">
+    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 text-xs font-medium">Strong</span>
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">in-process</span>
+    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 text-xs font-medium">no índice, sem commit</span>
+  </div>
+
+  <div class="font-mono text-xs text-slate-600 leading-relaxed">
+    Domains/Site/routes.php:18 · Http/Middleware/SiteCors.php:38 · Http/Controllers/ContactController.php:17<br/>
+    Http/Requests/ContactRequest.php:32 · bootstrap/app.php:61
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Antes — a URI e o honeypot em duas metades</p>
+      <div class="relative space-y-3">
+        <div class="flex gap-3">
+          <div class="flex-1 border border-slate-400 rounded p-2">
+            <p class="lbl text-slate-400">routes.php</p>
+            <p class="font-mono text-[11px] mt-1">Route::post(<span class="text-red-600">'public/contact'</span>)</p>
+          </div>
+          <div class="flex-1 border border-slate-400 rounded p-2">
+            <p class="lbl text-slate-400">SiteCors</p>
+            <p class="font-mono text-[11px] mt-1">PATH = <span class="text-red-600">'api/public/contact'</span></p>
+          </div>
+        </div>
+        <svg width="100%" height="30" viewBox="0 0 300 30" preserveAspectRatio="none">
+          <line x1="70" y1="2" x2="70" y2="26" stroke="#dc2626" stroke-width="1.5" class="seam"/>
+          <line x1="230" y1="2" x2="230" y2="26" stroke="#dc2626" stroke-width="1.5" class="seam"/>
+          <line x1="70" y1="26" x2="230" y2="26" stroke="#dc2626" stroke-width="1.5"/>
+        </svg>
+        <div class="border border-red-300 bg-red-50 rounded p-2 text-center">
+          <p class="font-mono text-[11px] text-red-800">ContactFormTest</p>
+          <p class="text-[10px] text-red-700 mt-0.5">a única coisa que casa as duas strings</p>
+        </div>
+        <div class="flex gap-3 pt-1">
+          <div class="flex-1 border border-slate-400 rounded p-2">
+            <p class="lbl text-slate-400">ContactRequest:32</p>
+            <p class="font-mono text-[11px] mt-1">'website' =&gt; nullable</p>
+          </div>
+          <div class="flex-1 border border-slate-400 rounded p-2">
+            <p class="lbl text-slate-400">ContactController:17</p>
+            <p class="font-mono text-[11px] mt-1">if (filled('website'))</p>
+          </div>
+        </div>
+        <p class="text-[10px] text-slate-500">Honeypot: nenhum dos dois arquivos está completo sozinho.</p>
+      </div>
+    </div>
+
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Depois — a rota é a fonte</p>
+      <div class="space-y-2">
+        <div class="deep rounded text-white px-4 py-3">
+          <p class="lbl text-slate-300">interface</p>
+          <p class="font-mono text-[11px] mt-1 text-emerald-300">ContactForm::PATH</p>
+          <p class="font-mono text-[11px] text-emerald-300">ContactForm::isBot(array $input)</p>
+          <div class="mt-3 pt-3 border-t border-slate-600 space-y-1 text-[10px] text-slate-400 font-mono">
+            <p>rules() incl. honeypot</p>
+            <p>a decisão de descarte</p>
+            <p>a URI, escrita uma vez</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5 pt-1">
+          <div class="border border-slate-300 bg-slate-50 text-center text-[10px] py-2 rounded-sm">routes.php</div>
+          <div class="border border-slate-300 bg-slate-50 text-center text-[10px] py-2 rounded-sm">SiteCors</div>
+          <div class="border border-slate-300 bg-slate-50 text-center text-[10px] py-2 rounded-sm">Controller</div>
+        </div>
+        <svg width="100%" height="20" viewBox="0 0 300 20" preserveAspectRatio="none">
+          <line x1="50" y1="18" x2="50" y2="4" stroke="#475569" stroke-width="1.5"/>
+          <line x1="150" y1="18" x2="150" y2="4" stroke="#475569" stroke-width="1.5"/>
+          <line x1="250" y1="18" x2="250" y2="4" stroke="#475569" stroke-width="1.5"/>
+        </svg>
+        <p class="text-[10px] text-slate-500">Três leitores, uma verdade. O teste volta a provar comportamento, não a costurar strings.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+    <div>
+      <p class="lbl text-slate-500 mb-1">Problema</p>
+      <p>A fatia é boa e está bem testada, mas nasce com três decisões espalhadas: a URI em duas
+      strings, o honeypot em dois arquivos, e um terceiro idioma de validação
+      (<span class="font-mono text-xs">FormRequest</span> — o único do repositório, ao lado de
+      <span class="font-mono text-xs">Data::rules()</span> e <span class="font-mono text-xs">$request-&gt;validate()</span>).</p>
+    </div>
+    <div>
+      <p class="lbl text-slate-500 mb-1">Solução</p>
+      <p>Uma constante de rota que o <span class="font-mono text-xs">routes.php</span> e o
+      <span class="font-mono text-xs">SiteCors</span> leem, e a decisão do honeypot ao lado da regra que
+      o declara. Se o <span class="font-mono text-xs">FormRequest</span> fica, a razão vai escrita — hoje
+      não está.</p>
+    </div>
+  </div>
+
+  <div>
+    <p class="lbl text-slate-500 mb-2">Ganhos</p>
+    <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside marker:text-emerald-600">
+      <li>locality: honeypot num arquivo só</li>
+      <li>a URI não pode divergir</li>
+      <li>o teste para de ser a costura</li>
+      <li>barato agora: 5 arquivos, sem commit</li>
+    </ul>
+  </div>
+</article>
+
+<!-- ============ C3 ============ -->
+<article id="c3" class="space-y-5 pt-6 border-t border-slate-200">
+  <h2 class="font-serif text-2xl">3 · O campo de formulário liga-se ao form pelo seam que já existe</h2>
+  <div class="flex flex-wrap gap-2">
+    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 text-xs font-medium">Strong</span>
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">in-process</span>
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">frontend · 106 sítios</span>
+  </div>
+
+  <div class="font-mono text-xs text-slate-600 leading-relaxed">
+    shared/ui/FormField/FormField.tsx <span class="text-slate-400">190 L · 106 instâncias em 26 arquivos</span><br/>
+    shared/ui/FormField/fieldContext.ts <span class="text-slate-400">78 L · hoje carrega id, invalid, describedBy</span><br/>
+    shared/hooks/useEntityForm.ts:53 <span class="text-slate-400">useMutationErrors</span> ·
+    48 ocorrências de <span class="text-slate-400">fieldErrors?.x?.[0]</span> em 24 arquivos
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Antes — interface larga, implementation funda</p>
+      <div class="flex gap-6 items-end justify-center" style="height:250px">
+        <div class="w-28 flex flex-col justify-end">
+          <div class="border-2 border-red-400 bg-red-50 rounded-t px-2 py-2" style="height:105px">
+            <p class="lbl text-red-700">interface</p>
+            <p class="font-mono text-[10px] mt-1 text-red-800 leading-snug">label<br/>error<br/>value<br/>readOnly<br/>children</p>
+          </div>
+          <div class="border-2 border-t-0 border-slate-400 bg-white rounded-b px-2 py-2" style="height:125px">
+            <p class="lbl text-slate-500">implementation</p>
+            <p class="text-[10px] mt-1 text-slate-600 leading-snug">useId · label irmã · FieldContext · ReadOnlyValue · aria-describedby</p>
+          </div>
+          <p class="text-center text-[10px] text-slate-500 mt-1">FormField</p>
+        </div>
+        <div class="flex-1 max-w-[220px]">
+          <p class="lbl text-slate-500 mb-1">o que cada call site repete</p>
+          <pre class="font-mono text-[10px] bg-slate-900 text-slate-200 rounded p-2 overflow-x-auto leading-snug">&lt;FormField
+  label={t('x')}
+  <span class="text-red-400">error={fieldErrors?.x?.[0]}</span>
+  readOnly={readOnly}
+  <span class="text-red-400">value={form.x}</span>&gt;
+  &lt;AppInputText
+    <span class="text-red-400">value={form.x}</span>
+    <span class="text-red-400">onChange={e =&gt; set('x', …)}</span> /&gt;
+&lt;/FormField&gt;</pre>
+          <p class="text-[10px] text-slate-500 mt-1.5">× 106, em 3 features, byte a byte igual.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Depois — interface curta, implementation absorve</p>
+      <div class="flex gap-6 items-end justify-center" style="height:250px">
+        <div class="w-28 flex flex-col justify-end">
+          <div class="border-2 border-emerald-500 bg-emerald-50 rounded-t px-2 py-2" style="height:44px">
+            <p class="lbl text-emerald-700">interface</p>
+            <p class="font-mono text-[10px] mt-0.5 text-emerald-800">name</p>
+          </div>
+          <div class="deep border-2 border-t-0 border-slate-800 rounded-b px-2 py-2 text-white" style="height:186px">
+            <p class="lbl text-slate-300">implementation</p>
+            <p class="text-[10px] mt-1 text-slate-300 leading-snug">useId · label irmã · FieldContext · ReadOnlyValue · aria-describedby · <span class="text-emerald-300">value + onChange + error, lidos do form</span></p>
+          </div>
+          <p class="text-center text-[10px] text-slate-500 mt-1">FormField</p>
+        </div>
+        <div class="flex-1 max-w-[220px]">
+          <p class="lbl text-slate-500 mb-1">o call site inteiro</p>
+          <pre class="font-mono text-[10px] bg-slate-900 text-slate-200 rounded p-2 overflow-x-auto leading-snug">&lt;FormField
+  <span class="text-emerald-300">name="x"</span>
+  label={t('x')}&gt;
+  &lt;AppInputText /&gt;
+&lt;/FormField&gt;</pre>
+          <p class="text-[10px] text-slate-500 mt-1.5">O <span class="font-mono">FormContext</span> é o mesmo mecanismo do <span class="font-mono">FieldContext</span>, uma camada acima.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+    <div>
+      <p class="lbl text-slate-500 mb-1">Problema</p>
+      <p>O <span class="font-mono text-xs">FieldContext</span> provou que o padrão funciona — resolveu a
+      P-37 em 55 campos sem tocar em nenhum call site. Só que ele publica acessibilidade e para aí:
+      valor, setter e erro continuam sendo passados à mão, quatro props por campo.</p>
+    </div>
+    <div>
+      <p class="lbl text-slate-500 mb-1">Solução</p>
+      <p>O form publica <span class="font-mono text-xs">form/set/fieldErrors</span> por contexto; o campo
+      recebe <span class="font-mono text-xs">name</span> e busca o resto. Prop do chamador continua vencendo
+      a do contexto, como já é a regra do <span class="font-mono text-xs">fieldContext</span>.</p>
+    </div>
+  </div>
+
+  <div>
+    <p class="lbl text-slate-500 mb-2">Ganhos</p>
+    <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside marker:text-emerald-600">
+      <li>leverage: 106 sítios, uma interface</li>
+      <li>48 extrações <span class="font-mono text-xs">?.[0]</span> somem</li>
+      <li>locality: erro de campo tem um dono</li>
+      <li>campo novo não pode esquecer o erro</li>
+      <li>o teste do binding fica no module</li>
+      <li>o <span class="font-mono text-xs">max-lines: 150</span> dos dialogs respira</li>
+    </ul>
+  </div>
+</article>
+
+<!-- ============ C4 ============ -->
+<article id="c4" class="space-y-5 pt-6 border-t border-slate-200">
+  <h2 class="font-serif text-2xl">4 · Uma fábrica para o sub-recurso, como já existe para o recurso</h2>
+  <div class="flex flex-wrap gap-2">
+    <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-xs font-medium">Worth exploring</span>
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">in-process</span>
+  </div>
+
+  <div class="font-mono text-xs text-slate-600 leading-relaxed">
+    features/operation/api/useTurmas.ts:52 · features/commercial/api/useQuotes.ts:39 ·
+    features/identity/api/useRedatorDocuments.ts:8<br/>
+    features/commercial/api/useCommercialFiles.ts:10 · features/identity/api/useProfile.ts:27 ·
+    shared/api/createCrudResource.ts <span class="text-slate-400">92 L, 7 recursos flat</span>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Antes — ~49 mutations à mão, 5 cópias do invalidate</p>
+      <pre class="mermaid">
+flowchart LR
+  F1[operation/api] --> I1[useInvalidate]
+  F2[commercial/api] --> I2[useInvalidate]
+  F3[identity/api] --> I3[useInvalidate]
+  F4[commercial/files] --> I4[useInvalidate]
+  F5[identity/profile] --> I5[useInvalidate]
+  I1 --> Q[(TanStack cache)]
+  I2 --> Q
+  I3 --> Q
+  I4 --> Q
+  I5 --> Q
+  CR[createCrudResource] --> Q
+  classDef dup fill:#fee2e2,stroke:#dc2626;
+  classDef ok fill:#d1fae5,stroke:#059669;
+  class I1,I2,I3,I4,I5 dup
+  class CR ok
+      </pre>
+      <p class="mt-3 text-xs text-slate-500">Verde: o recurso flat já tem module. Vermelho: o nested não.</p>
+    </div>
+
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Depois — a política de invalidação num lugar</p>
+      <pre class="mermaid">
+flowchart LR
+  F1[operation/api] --> N[createNestedResource]
+  F2[commercial/api] --> N
+  F3[identity/api] --> N
+  F4[commercial/files] --> N
+  F5[identity/profile] --> N
+  N --> Q[(TanStack cache)]
+  CR[createCrudResource] --> Q
+  classDef deep fill:#0f172a,stroke:#0f172a,color:#fff;
+  classDef ok fill:#d1fae5,stroke:#059669;
+  class N deep
+  class CR ok
+      </pre>
+      <p class="mt-3 text-xs text-slate-500">A mutation continua da feature; só a invalidação e o transporte mudam de casa — o precedente é o <span class="font-mono">postMultipart</span>.</p>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+    <div>
+      <p class="lbl text-slate-500 mb-1">Problema</p>
+      <p>Cada sub-recurso (cotação sob orçamento, matrícula e documento sob turma, documento sob redator)
+      redecide sozinho qual key invalidar. Errar essa decisão é cache velho na tela, e nada avisa.</p>
+    </div>
+    <div>
+      <p class="lbl text-slate-500 mb-1">Solução</p>
+      <p>Uma fábrica que recebe a key do pai e a rota nested e devolve as mutations com a invalidação
+      já ligada — o mesmo formato de <span class="font-mono text-xs">createCrudResource</span>.</p>
+    </div>
+  </div>
+
+  <div>
+    <p class="lbl text-slate-500 mb-2">Ganhos</p>
+    <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside marker:text-emerald-600">
+      <li>locality: invalidação com um dono</li>
+      <li>~49 hooks à mão encolhem</li>
+      <li>sub-recurso novo herda a política</li>
+      <li>testável contra o axios fake</li>
+    </ul>
+  </div>
+
+  <div class="border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm">
+    <span class="font-medium">Contradiz o ADR-18 pela metade — e vale reabrir.</span> O ADR manda o hook de
+    sub-recurso ficar na feature, e ele continua ficando: quem muda de casa é a fábrica que ele chama,
+    não a mutation. É a mesma distinção que o ADR-18 já faz entre <em>glue burro</em> e <em>regra</em>, e
+    que a rule do frontend já aplicou ao <span class="font-mono text-xs">postMultipart</span>.
+  </div>
+</article>
+
+<!-- ============ C5 ============ -->
+<article id="c5" class="space-y-5 pt-6 border-t border-slate-200">
+  <h2 class="font-serif text-2xl">5 · Parar de mockar o hook que é a própria interface</h2>
+  <div class="flex flex-wrap gap-2">
+    <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 text-xs font-medium">Strong</span>
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">local-substitutable</span>
+  </div>
+
+  <div class="font-mono text-xs text-slate-600 leading-relaxed">
+    features/commercial/hooks/useBudgetDetail.ts <span class="text-slate-400">123 L, 11 hooks, 0 testes</span> ·
+    features/operation/hooks/useEnrollStudentFlow.ts <span class="text-slate-400">118 L</span><br/>
+    features/identity/hooks/useRedatorForm.ts <span class="text-slate-400">103 L — o único FormData à mão, isento no eslint</span><br/>
+    features/commercial/hooks/useQuoteForm.ts <span class="text-slate-400">85 L — canonicalização de UF (dinheiro)</span>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Antes — o teste atravessa a interface</p>
+      <div class="relative" style="height:250px">
+        <div class="absolute inset-x-0 top-0 border border-slate-400 bg-white rounded p-2 text-center">
+          <p class="lbl text-slate-500">test</p>
+          <p class="font-mono text-[11px]">BudgetDetailPage.test.tsx</p>
+        </div>
+        <div class="absolute inset-x-0 top-[86px] border-2 border-dashed border-red-400 bg-red-50 rounded p-2 text-center opacity-70">
+          <p class="lbl text-red-600">module — mockado para fora</p>
+          <p class="font-mono text-[11px] text-red-800">useBudgetDetail · 123 L · 11 hooks</p>
+          <p class="text-[10px] text-red-700 mt-0.5">5 diálogos, 6 mutations, 3 escopos de erro</p>
+        </div>
+        <div class="absolute inset-x-0 bottom-0 border border-slate-400 bg-white rounded p-2 text-center">
+          <p class="lbl text-slate-500">transport</p>
+          <p class="font-mono text-[11px]">@shared/api/axios</p>
+        </div>
+        <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 300 250" preserveAspectRatio="none">
+          <path d="M150 56 C 200 100, 200 150, 150 194" stroke="#dc2626" stroke-width="2" fill="none"/>
+          <path d="M154 190 L149 197 L158 197 Z" fill="#dc2626"/>
+        </svg>
+        <p class="absolute right-1 top-[125px] text-[10px] text-red-700 w-20 leading-tight">o teste passa por fora do que devia provar</p>
+      </div>
+    </div>
+
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Depois — o teste cruza o mesmo seam que o caller</p>
+      <div class="relative" style="height:250px">
+        <div class="absolute inset-x-0 top-0 border border-slate-400 bg-white rounded p-2 text-center">
+          <p class="lbl text-slate-500">test</p>
+          <p class="font-mono text-[11px]">useBudgetDetail.test.tsx</p>
+        </div>
+        <div class="absolute inset-x-0 top-[86px] deep rounded p-2 text-center text-white">
+          <p class="lbl text-slate-300">module — exercitado de verdade</p>
+          <p class="font-mono text-[11px] text-emerald-300">useBudgetDetail</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">a máquina de estado roda</p>
+        </div>
+        <div class="absolute inset-x-0 bottom-0 border border-slate-400 bg-white rounded p-2 text-center">
+          <p class="lbl text-slate-500">adapter de teste</p>
+          <p class="font-mono text-[11px]">vi.mock('@shared/api/axios')</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">o padrão que 11 testes já usam</p>
+        </div>
+        <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 300 250" preserveAspectRatio="none">
+          <line x1="150" y1="58" x2="150" y2="82" stroke="#475569" stroke-width="2"/>
+          <line x1="150" y1="140" x2="150" y2="188" stroke="#475569" stroke-width="2"/>
+          <line x1="30" y1="192" x2="270" y2="192" stroke="#475569" stroke-width="1.5" class="seam"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+    <div>
+      <p class="lbl text-slate-500 mb-1">Problema</p>
+      <p>44 dos 62 hooks de feature não têm teste, e 12 testes de componente mockam exatamente esses
+      hooks. O gradiente está invertido: <span class="font-mono text-xs">shared/</span> — o código estável —
+      é bem testado; as máquinas de estado do domínio, que mudam toda sprint, não são.</p>
+    </div>
+    <div>
+      <p class="lbl text-slate-500 mb-1">Solução</p>
+      <p>Testar o hook contra o adapter de transporte que já existe, e deixar o teste de componente
+      provar só o que é do componente. Nenhum mecanismo novo: 11 testes já fazem assim.</p>
+    </div>
+  </div>
+
+  <div>
+    <p class="lbl text-slate-500 mb-2">Ganhos</p>
+    <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside marker:text-emerald-600">
+      <li>a interface vira a superfície de teste</li>
+      <li>UF em vírgula/ponto ganha catraca</li>
+      <li>o FormData isento deixa de ser cego</li>
+      <li>locality: a regressão aponta o module</li>
+    </ul>
+  </div>
+
+  <div class="border-l-4 border-slate-400 bg-slate-100 px-4 py-3 text-sm">
+    <span class="font-medium">Lição 10 do projeto se aplica:</span> teste que nunca viu o bug é cobertura
+    fantasma. Cada um destes nasce visto reprovar contra o código atual, ou não conta.
+  </div>
+</article>
+
+<!-- ============ C6 ============ -->
+<article id="c6" class="space-y-5 pt-6 border-t border-slate-200">
+  <h2 class="font-serif text-2xl">6 · Tirar o status HTTP de dentro do domínio</h2>
+  <div class="flex flex-wrap gap-2">
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-medium">Speculative</span>
+    <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs font-mono">in-process</span>
+  </div>
+
+  <div class="font-mono text-xs text-slate-600 leading-relaxed">
+    Operation/Exceptions/TurmaConfiguracaoException.php:15,20 · RedatorNaoElegivelException.php:16,21<br/>
+    Identity/Exceptions/ImmutableSystemRoleException.php:26 · RedatorOnlyActionException.php:24 ·
+    Shared/Exceptions/ProblemDetails.php:94
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Antes — quatro camadas, o HTTP na de baixo</p>
+      <div class="space-y-1.5">
+        <div class="h-11 border-l-4 border-slate-400 bg-white flex items-center px-3 text-xs">Http · controller</div>
+        <div class="h-11 border-l-4 border-slate-400 bg-white flex items-center px-3 text-xs">Action / Service <span class="ml-2 text-emerald-700 text-[10px]">— limpo, medido: 0 <span class="font-mono">abort()</span>, 0 <span class="font-mono">auth()</span></span></div>
+        <div class="h-11 border-l-4 border-red-500 bg-red-50 flex items-center px-3 text-xs">Exception do domínio <span class="ml-2 font-mono text-[10px] text-red-700">new self(422, …)</span></div>
+        <div class="h-16 border-l-4 border-red-500 bg-red-50 flex items-center px-3 text-xs">
+          <span>ProblemDetails <span class="font-mono text-[10px] text-red-700">isForbidden(): getStatusCode() === 403</span>
+          <br/><span class="text-[10px] text-red-700">14 linhas de comentário explicando por que precisa farejar</span></span>
+        </div>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">O domínio decide o status; o envelope tem que adivinhar de volta.</p>
+    </div>
+
+    <div class="rounded-lg border border-slate-200 bg-white p-4">
+      <p class="lbl text-slate-500 mb-3">Depois — o domínio recusa, o envelope traduz</p>
+      <div class="space-y-1.5">
+        <div class="h-11 border-l-4 border-slate-400 bg-white flex items-center px-3 text-xs">Http · controller</div>
+        <div class="h-11 border-l-4 border-slate-400 bg-white flex items-center px-3 text-xs">Action / Service</div>
+        <div class="h-11 border-l-4 border-slate-600 bg-white flex items-center px-3 text-xs">Exception do domínio <span class="ml-2 font-mono text-[10px] text-slate-600">Recusa::configuracaoInvalida()</span></div>
+        <svg width="100%" height="16" viewBox="0 0 300 16" preserveAspectRatio="none"><line x1="10" y1="8" x2="290" y2="8" stroke="#475569" stroke-width="1.5" class="seam"/></svg>
+        <div class="deep rounded px-3 py-3 text-white">
+          <p class="lbl text-slate-300">o único que conhece HTTP</p>
+          <p class="font-mono text-[11px] mt-1 text-emerald-300">ProblemDetails: recusa → 403 | 422</p>
+        </div>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">Um mapa explícito no lugar de quatro decisões espalhadas e um sniff.</p>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+    <div>
+      <p class="lbl text-slate-500 mb-1">Problema</p>
+      <p>Quatro exceções de domínio estendem <span class="font-mono text-xs">HttpException</span> e fixam
+      422/403. Como consequência direta, o <span class="font-mono text-xs">ProblemDetails</span> tem que
+      identificar 403 por status — e documenta isso em 14 linhas.</p>
+    </div>
+    <div>
+      <p class="lbl text-slate-500 mb-1">Solução</p>
+      <p>A exceção carrega o tipo da recusa; o mapa tipo→status vive no
+      <span class="font-mono text-xs">ProblemDetails</span>, que já é o dono do envelope.</p>
+    </div>
+  </div>
+
+  <div>
+    <p class="lbl text-slate-500 mb-2">Ganhos</p>
+    <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-1 text-sm list-disc list-inside marker:text-emerald-600">
+      <li>o transporte para de vazar para o domínio</li>
+      <li>locality: status num mapa só</li>
+      <li>abre caminho para a P-71 (frases literais)</li>
+    </ul>
+  </div>
+
+  <div class="border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm">
+    <span class="font-medium">Speculative de propósito.</span> O <span class="font-mono text-xs">isForbidden</span>
+    existe porque o 403 real vem do spatie, não do domínio — trocar o lado do domínio não apaga o sniff, só
+    reduz o que ele precisa cobrir. E o arquivo é vizinho da P-72 (419 em inglês). Só vale dentro de um
+    bloco que já vá tocar <span class="font-mono text-xs">Shared/Exceptions</span>.
+  </div>
+</article>
+</section>
+
+<!-- ============ TOP ============ -->
+<section id="top-recommendation" class="pt-4">
+  <div class="rounded-xl border-2 border-slate-900 bg-white p-8">
+    <p class="lbl text-slate-500">Top recommendation</p>
+    <h2 class="font-serif text-3xl mt-2">
+      <a href="#c3" class="underline decoration-emerald-500 decoration-2 underline-offset-4">3 · O campo de formulário liga-se ao form pelo seam que já existe</a>
+    </h2>
+    <p class="mt-4 text-slate-700">
+      Maior leverage medida do repositório — 106 instâncias, 48 extrações de erro, três features — e o
+      mecanismo já foi provado no mesmo arquivo: o <span class="font-mono text-sm">FieldContext</span>
+      consertou 55 campos sem tocar em call site nenhum. É estender um seam existente, não abrir um novo.
+      Formulários são também o que mais mudou nos últimos blocos.
+    </p>
+    <p class="mt-4 text-sm text-slate-600">
+      Segundo na fila por outro motivo: o <a href="#c2" class="underline decoration-slate-400 underline-offset-2">candidato 2</a>
+      custa cinco arquivos enquanto a fatia Site ainda está no índice, sem commit. Depois do commit fica mais caro do que vale.
+    </p>
+  </div>
+
+  <div class="mt-8 text-sm text-slate-600 space-y-2">
+    <p class="lbl text-slate-500">Fora do relatório de propósito</p>
+    <p>A <span class="font-mono text-xs">D-34</span> (o gate RBAC do Dashboard atravessa o seam como
+    <span class="font-mono text-xs">null</span> e o cliente o remonta) é o mesmo tipo de achado e já está
+    registrada no backlog desde 2026-08-23, sem bloco hospedeiro — não é novidade desta varredura.</p>
+    <p>Sem achado de layering no frontend: zero import feature→feature, zero
+    <span class="font-mono text-xs">primereact</span> fora de <span class="font-mono text-xs">shared/ui</span>,
+    zero <span class="font-mono text-xs">shared</span>→<span class="font-mono text-xs">features</span>. O
+    <span class="font-mono text-xs">eslint.config.js</span> segura isso mecanicamente, e segura de verdade.</p>
+    <p>Backend igualmente limpo no sentido Http→domínio: nenhum <span class="font-mono text-xs">abort()</span>,
+    <span class="font-mono text-xs">auth()</span> ou <span class="font-mono text-xs">request()</span> dentro de
+    Action ou Service, em 99 arquivos.</p>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

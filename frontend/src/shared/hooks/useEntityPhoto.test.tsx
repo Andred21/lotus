@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useEntityPhoto } from './useEntityPhoto'
 
 const upload = vi.fn<(id: number, file: File) => Promise<void>>()
@@ -13,10 +12,10 @@ vi.mock('@shared/api/photoResource', () => ({
   photoResource: () => ({ upload, remove }),
 }))
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+/** Client POR TESTE, não por arquivo: o hook tem duas `useQuery`, e um client de
+ * módulo faria os 6 casos herdarem cache um do outro — foi o que quebrou 5 de 7
+ * em `useValidationPage.test.tsx` (Q-1 do review de 2026-09-04). */
+let wrapper: ReturnType<typeof createWrapper>['wrapper']
 
 const arquivo = () => new File(['x'], 'foto.png', { type: 'image/png' })
 
@@ -28,6 +27,7 @@ function montar(id: number | null, mode: 'create' | 'edit' | 'view' = 'create') 
 }
 
 beforeEach(() => {
+  ;({ wrapper } = createWrapper())
   upload.mockReset()
   remove.mockReset()
   upload.mockResolvedValue(undefined)

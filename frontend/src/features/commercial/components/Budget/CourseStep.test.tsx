@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import type { CourseData } from '@shared/types/generated'
 import type { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
 import { CourseStep } from './CourseStep'
@@ -38,10 +38,6 @@ const base: Courses = {
 
 const renderStep = (courses: Partial<Courses>) =>
   render(<CourseStep courses={{ ...base, ...courses }} selectedId={0} onSelect={() => {}} />)
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('CourseStep — os cinco estados', () => {
   it('carregando: esqueleto com aria-busy e SEM campo de busca', () => {

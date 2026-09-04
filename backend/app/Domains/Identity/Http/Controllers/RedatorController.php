@@ -11,8 +11,9 @@ use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
 use App\Shared\Files\ContentClass;
+use App\Shared\Http\RespostaDeRecurso;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -68,30 +69,22 @@ class RedatorController extends Controller implements HasMiddleware
     /** @return array<ArchivedRedatorData> */
     public function archived(): array
     {
-        $redatores = Redator::onlyTrashed()->withArchivedListingData()->get();
-
-        $autores = ArchiveTrailQuery::archivedBy(Redator::class, $redatores->pluck('id')->all());
-
-        return $redatores
-            ->map(fn (Redator $r) => new ArchivedRedatorData(
+        return ArchivedListing::lista(
+            Redator::onlyTrashed()->withArchivedListingData()->get(),
+            Redator::class,
+            fn (Redator $r, string $em, ?string $por) => new ArchivedRedatorData(
                 redator: RedatorData::fromModel($r),
-                archived_at: $r->deleted_at->toIso8601String(),
-                archived_by: $autores[$r->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
     public function restore(int $redator, RestoreRedatorAction $action): JsonResponse
     {
-        // Resolvido à mão, não por binding: o binding padrão aplica o global
-        // scope de SoftDeletes e nunca acharia um arquivado. `onlyTrashed()`
-        // também dá o 404 de graça sobre registro ATIVO (molde D5).
-        $model = Redator::onlyTrashed()->whereKey($redator)->firstOrFail();
+        $model = ArchivedListing::resolveArquivado(Redator::query(), $redator);
 
-        // 200, não 201: restaurar devolve um registro que já existia.
-        return RedatorData::fromModel($action->execute($model))
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(RedatorData::fromModel($action->execute($model)));
     }
 
     /**

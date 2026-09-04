@@ -13,7 +13,8 @@ use App\Domains\Commercial\Data\QuoteData;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
+use App\Shared\Http\RespostaDeRecurso;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -49,29 +50,22 @@ class QuoteController extends Controller implements HasMiddleware
      */
     public function archived(Budget $budget): array
     {
-        $quotes = $budget->quotes()->onlyTrashed()->withArchivedListingData()->get();
-
-        $autores = ArchiveTrailQuery::archivedBy(Quote::class, $quotes->pluck('id')->all());
-
-        return $quotes
-            ->map(fn (Quote $q) => new ArchivedQuoteData(
+        return ArchivedListing::lista(
+            $budget->quotes()->onlyTrashed()->withArchivedListingData()->get(),
+            Quote::class,
+            fn (Quote $q, string $em, ?string $por) => new ArchivedQuoteData(
                 quote: QuoteData::fromModel($q),
-                archived_at: $q->deleted_at->toIso8601String(),
-                archived_by: $autores[$q->id] ?? null,
-            ))
-            ->all();
+                archived_at: $em,
+                archived_by: $por,
+            ),
+        );
     }
 
-    // 200 e não 201, pelo mesmo motivo de `approve`.
     public function restore(int $quote, RestoreQuoteAction $action): JsonResponse
     {
-        // Resolvido à mão: o binding padrão aplica o global scope de
-        // `SoftDeletes` e nunca acharia uma arquivada.
-        $model = Quote::onlyTrashed()->whereKey($quote)->firstOrFail();
+        $model = ArchivedListing::resolveArquivado(Quote::query(), $quote);
 
-        return QuoteData::fromModel($action->execute($model))
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(QuoteData::fromModel($action->execute($model)));
     }
 
     public function store(QuoteData $data, Budget $budget, CreateQuoteAction $action): QuoteData
@@ -96,20 +90,17 @@ class QuoteController extends Controller implements HasMiddleware
         return response()->noContent();
     }
 
-    // Data::toResponse() força 201 em qualquer POST (ResponsableData::calculateResponseStatus).
-    // Correto para store() (cria recurso), mas approve/reject são decisões sobre um recurso
-    // já existente — força 200 explicitamente.
     public function approve(Quote $quote, ApproveQuoteAction $action): JsonResponse
     {
-        return QuoteData::fromModel($action->execute($quote)->loadListingData())
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(
+            QuoteData::fromModel($action->execute($quote)->loadListingData()),
+        );
     }
 
     public function reject(Quote $quote, RejectQuoteAction $action): JsonResponse
     {
-        return QuoteData::fromModel($action->execute($quote)->loadListingData())
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok(
+            QuoteData::fromModel($action->execute($quote)->loadListingData()),
+        );
     }
 }

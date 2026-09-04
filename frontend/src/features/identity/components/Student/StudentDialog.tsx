@@ -5,6 +5,7 @@ import {
   FormErrorBanner,
   FormErrorSummary,
   FormPhotoRow,
+  useFormField,
 } from "@shared/ui";
 import type { StudentData } from "@shared/types/generated";
 import type { DialogMode } from "@shared/lib";
@@ -29,9 +30,9 @@ export function StudentDialog({
   onEdit?: () => void;
 }) {
   const { t } = useTranslation();
+  const f = useStudentForm(student, mode, onHide);
   const {
     form,
-    set,
     readOnly,
     submit,
     pending,
@@ -40,7 +41,8 @@ export function StudentDialog({
     fieldErrors,
     generalError,
     errorSummary,
-  } = useStudentForm(student, mode, onHide);
+  } = f;
+  const campo = useFormField(f);
   const clients = useStudentClients(mode);
   const clientsUnusable = clients.unusable;
   const detail = useStudentDetail(mode === "create" ? null : student?.id);
@@ -68,19 +70,13 @@ export function StudentDialog({
         <FormSection title={t("student.sectionPersonal")} />
 
         <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
-          <StudentIdentityFields
-            form={form}
-            set={set}
-            readOnly={readOnly}
-            fieldErrors={fieldErrors}
-          />
+          <StudentIdentityFields Field={campo.Field} />
         </FormPhotoRow>
 
         <StudentClientField
           mode={mode}
-          value={form.client_id}
+          Field={campo.Field}
           readOnlyLabel={student?.current_client_name ?? t("student.noClient")}
-          error={fieldErrors?.client_id?.[0]}
           options={clients.options}
           isLoading={clients.isLoading}
           isError={clients.isError}
@@ -89,7 +85,6 @@ export function StudentDialog({
           isEmpty={clients.isEmpty}
           unusable={clientsUnusable}
           refetch={clients.refetch}
-          onChange={(id) => set("client_id", id)}
         />
 
         {mode === "view" && <StudentDetailSections detail={detail} />}

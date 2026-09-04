@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { describe, expect, it, vi } from 'vitest'
+import { screen } from '@testing-library/react'
+import { renderWithProviders } from '@shared/testing/providers'
 import type { ProblemDetails } from '@shared/api/axios'
 import { CertificateViewDialog } from './CertificateViewDialog'
 
@@ -31,24 +31,17 @@ const CORROMPIDO: ProblemDetails = {
 }
 
 function renderizarComErro(error: ProblemDetails) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
-    <QueryClientProvider client={client}>
-      <CertificateViewDialog
-        certificateId={1}
-        certificate={null}
-        loading={false}
-        error={error}
-        onRetry={() => {}}
-        onHide={() => {}}
-      />
-    </QueryClientProvider>,
+  return renderWithProviders(
+    <CertificateViewDialog
+      certificateId={1}
+      certificate={null}
+      loading={false}
+      error={error}
+      onRetry={() => {}}
+      onHide={() => {}}
+    />,
   )
 }
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('CertificateViewDialog é a exceção da D-05', () => {
   it('a excecao D8: o dialogo do suporte IMPRIME os campos que faltam', () => {

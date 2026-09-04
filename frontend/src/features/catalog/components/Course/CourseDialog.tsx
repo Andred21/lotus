@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppTextarea, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppTextarea, useFormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import type { CourseData } from '@shared/types/generated'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
 import { useCourseRedatores } from '../../hooks/useCourseRedatores'
@@ -16,10 +16,12 @@ export function CourseDialog({
   onEdit?: () => void
 }) {
   const { t } = useTranslation()
-  const { form, set, toggleRedator, readOnly, submit, pending, fieldErrors, generalError,
+  const f = useCourseForm(course, mode, onHide)
+  const { form, toggleRedator, readOnly, submit, pending, fieldErrors, generalError,
           errorSummary, addModule, removeModule, patchModule, moveModule,
-          modulesTotal, hoursMismatch } = useCourseForm(course, mode, onHide)
+          modulesTotal, hoursMismatch } = f
   const redatores = useCourseRedatores(form.redator_ids, onHide)
+  const campo = useFormField(f)
 
   const isCreate = mode === 'create'
 
@@ -41,41 +43,38 @@ export function CourseDialog({
       <section className="space-y-4">
         <FormSection title={t('course.sectionGeneral')} />
 
-        <FormField label={t('course.name')} error={fieldErrors?.name?.[0]} readOnly={readOnly} value={form.name}>
-          <AppInputText value={form.name} placeholder={t('course.namePlaceholder')} onChange={(e) => set('name', e.target.value)} className="w-full" />
-        </FormField>
+        <campo.Field name="name" label={t('course.name')}>
+          <AppInputText placeholder={t('course.namePlaceholder')} className="w-full" />
+        </campo.Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
-            label={t('course.technicalName')}
-            error={fieldErrors?.technical_name?.[0]}
-            readOnly={readOnly}
-            value={form.technical_name ?? ''}
-          >
-            <AppInputText value={form.technical_name ?? ''} placeholder={t('course.technicalNamePlaceholder')} onChange={(e) => set('technical_name', e.target.value)} className="w-full" />
-          </FormField>
-          <FormField
+          {/* technical_name chega null do backend: quem cuida é o `?? ''` do
+              wrapper (Task 3), não a tela. */}
+          <campo.Field name="technical_name" label={t('course.technicalName')}>
+            <AppInputText placeholder={t('course.technicalNamePlaceholder')} className="w-full" />
+          </campo.Field>
+          {/* workload_hours converte nos dois sentidos (string de dígitos <->
+              number): o Field sozinho só passaria o valor cru do form, então
+              value/onChange ficam manuais no AppInputText — e o `value` de
+              apresentação do Field também fica, porque em leitura o número
+              cru renderizaria sem o String (task-8 brief). */}
+          <campo.Field
+            name="workload_hours"
             label={t('course.workloadHours')}
-            error={fieldErrors?.workload_hours?.[0]}
-            readOnly={readOnly}
             value={String(form.workload_hours)}
           >
             <AppInputText
               value={String(form.workload_hours)}
-              onChange={(e) => set('workload_hours', Number(e.target.value.replace(/\D/g, '')) || 0)}
+              onChange={(e) => f.set('workload_hours', Number(e.target.value.replace(/\D/g, '')) || 0)}
               className="w-full"
             />
-          </FormField>
+          </campo.Field>
         </div>
 
-        <FormField
-          label={t('course.description')}
-          error={fieldErrors?.description?.[0]}
-          readOnly={readOnly}
-          value={form.description ?? ''}
-        >
-          <AppTextarea value={form.description ?? ''} rows={3} onChange={(e) => set('description', e.target.value)} className="w-full" />
-        </FormField>
+        {/* description chega null do backend: mesma razão do technical_name. */}
+        <campo.Field name="description" label={t('course.description')}>
+          <AppTextarea rows={3} className="w-full" />
+        </campo.Field>
 
         <FormSection title={t('courseModule.section')} spaced />
 

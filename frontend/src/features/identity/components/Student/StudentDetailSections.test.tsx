@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider, type UseQueryResult } from '@tanstack/react-query'
+import { describe, expect, it, vi } from 'vitest'
+import { screen } from '@testing-library/react'
+import type { UseQueryResult } from '@tanstack/react-query'
+import { renderWithProviders } from '@shared/testing/providers'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { StudentDetailData } from '@shared/types/generated'
 import { StudentDetailSections } from './StudentDetailSections'
@@ -46,17 +47,10 @@ function detail(over: Partial<UseQueryResult<StudentDetailData, ProblemDetails>>
   } as unknown as UseQueryResult<StudentDetailData, ProblemDetails>
 }
 
-afterEach(() => {
-  cleanup()
-})
-
 /** A célula de certificado (coluna nova da tabela de turmas) chama
  * `useMutation` por baixo — precisa de um `QueryClientProvider` no ar, mesmo
  * quando o teste não fala de certificado. */
-const montar = (ui: Parameters<typeof render>[0]) => {
-  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
-}
+const montar = (ui: Parameters<typeof renderWithProviders>[0]) => renderWithProviders(ui)
 
 describe('StudentDetailSections — falha COM cache não apaga as seções', () => {
   it('falha SEM cache: o erro substitui as DUAS seções', () => {
@@ -80,9 +74,9 @@ describe('StudentDetailSections — falha COM cache não apaga as seções', () 
       <StudentDetailSections
         detail={detail({
           isError: true,
-          // `localDetail: true` porque `screenDetail` cala o detalhe do
-          // servidor, que não é localizado — sem a marca, quem imprime é o
-          // `?? t(errorHint)`.
+          // `localDetail: true` porque este envelope não tem `status`, e a
+          // allowlist da P-70 é por status — sem a marca, `screenDetail` cala e
+          // quem imprime é o `?? t(errorHint)`.
           error: { detail: 'Sin conexión', localDetail: true } as ProblemDetails,
         })}
       />,

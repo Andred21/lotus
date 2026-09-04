@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -23,6 +24,11 @@ class ProblemDetails
         [$status, $title, $type] = match (true) {
             $e instanceof ValidationException => [422, __('problem.title.validation'), 'https://lotus.cl/errors/validation'],
             $e instanceof AuthenticationException => [401, __('problem.title.unauthenticated'), 'https://lotus.cl/errors/unauthenticated'],
+            $e instanceof RecusaDeDominio => [
+                $e->tipo()->status(),
+                __($e->tipo()->tituloChave()),
+                $e->tipo()->tipoUri(),
+            ],
             self::isForbidden($e) => [403, __('problem.title.forbidden'), 'https://lotus.cl/errors/forbidden'],
             $e instanceof ModelNotFoundException,
             $e instanceof NotFoundHttpException => [404, __('problem.title.not_found'), 'https://lotus.cl/errors/not-found'],
@@ -70,6 +76,12 @@ class ProblemDetails
      * `throw`) e quem implementa `PublicDetail` — sem ela o operador em
      * produção recebe "erro inesperado" onde o desenho prometeu o certificado
      * e o campo que falta.
+     *
+     * O 419 é o terceiro caso com `detail` próprio, e casa pela CAUSA: o
+     * handler do Laravel embrulha a `TokenMismatchException` num
+     * `HttpException(419)` antes de qualquer callback, então o tipo que
+     * interessa está em `getPrevious()`. Sem este braço, o `default` devolve
+     * o `CSRF token mismatch.` do framework nos três locales (P-72).
      */
     private static function detailFor(Throwable $e, int $status): string
     {
@@ -82,6 +94,7 @@ class ProblemDetails
         }
 
         return match (true) {
+            $e->getPrevious() instanceof TokenMismatchException => __('problem.detail.csrf'),
             $e instanceof ThrottleRequestsException => __('problem.detail.too_many_requests'),
             $e instanceof AuthenticationException => __('problem.detail.unauthenticated'),
             self::isForbidden($e) => __('problem.detail.forbidden'),
@@ -92,18 +105,17 @@ class ProblemDetails
     }
 
     /**
-     * Nenhum controller deste repositório chama `$this->authorize()`/`Gate::authorize()`
-     * — o `AuthorizationException` do Illuminate não é o caminho real de 403.
-     * Todo 403 de verdade nasce do RBAC do spatie/laravel-permission
-     * (`Spatie\Permission\Exceptions\UnauthorizedException`, que estende
-     * `HttpException` e não `AuthorizationException`) ou de um
-     * `HttpException(403)` próprio (`ImmutableSystemRoleException`,
-     * `abort_unless(..., 403, ...)`). Checar só `AuthorizationException`
-     * deixaria esses 403 reais caindo no braço genérico de `HttpExceptionInterface`
-     * — título errado (`problem.title.http`) e `detail` cru do pacote, em inglês.
-     * Mesmo teto por `getStatusCode() === 403` já usado em
-     * `RegistraEventoDeErro` para o mesmo motivo — por STATUS/TIPO, nunca por
-     * inspeção do texto (D5).
+     * O 403 que sobra depois do braço `RecusaDeDominio`: o do RBAC do
+     * spatie/laravel-permission (`UnauthorizedException`, que estende
+     * `HttpException` e não `AuthorizationException`) e o de um
+     * `abort_unless(..., 403, ...)` solto. Sem este teto, esses 403 reais
+     * cairiam no braço genérico de `HttpExceptionInterface` — título errado
+     * (`problem.title.http`) e `detail` cru do pacote, em inglês.
+     *
+     * As quatro recusas de domínio saíram daqui: elas declaram
+     * `TipoDeRecusa::AcaoProibida` e o braço da base as atende antes. O sniff
+     * por STATUS continua vivo porque o 403 do pacote de terceiro não tem
+     * outro sinal — nunca por inspeção do TEXTO (D5).
      */
     private static function isForbidden(Throwable $e): bool
     {

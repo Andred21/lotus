@@ -8,6 +8,7 @@ import {
   FormErrorBanner,
   FormPhotoRow,
   AppTag,
+  useFormField,
 } from "@shared/ui";
 import type { UserData } from "@shared/types/generated";
 import type { DialogMode } from "@shared/lib";
@@ -31,9 +32,9 @@ export function StaffUserDialog({
   onEdit?: () => void;
 }) {
   const { t } = useTranslation();
+  const f = useStaffUserForm(user, mode, onHide);
   const {
     form,
-    set,
     readOnly,
     submit,
     pending,
@@ -42,7 +43,8 @@ export function StaffUserDialog({
     fieldErrors,
     generalError,
     errorSummary,
-  } = useStaffUserForm(user, mode, onHide);
+  } = f;
+  const campo = useFormField(f);
   const { roleOptions } = useStaffRoleOptions();
 
   const stateOptions = [
@@ -72,13 +74,7 @@ export function StaffUserDialog({
       <section className="space-y-4">
         <FormSection title={t("admin.sectionUser")} />
         <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
-          <StaffIdentityFields
-            form={form}
-            set={set}
-            readOnly={readOnly}
-            fieldErrors={fieldErrors}
-            mode={mode}
-          />
+          <StaffIdentityFields Field={campo.Field} mode={mode} />
         </FormPhotoRow>
         <div className="grid gap-4 sm:grid-cols-3 mt-10">
           {/* type é sempre 'admin' para staff — atributo fixo, não editável.
@@ -101,33 +97,28 @@ export function StaffUserDialog({
               />
             }
           />
-          <FormField
+          <campo.Field
+            name="role"
             label={t("admin.role")}
-            error={fieldErrors?.role?.[0]}
-            readOnly={readOnly}
             value={roleOptions.find((o) => o.value === form.role)?.label ?? form.role}
           >
             <AppDropdown
-              value={form.role}
               options={roleOptions}
               optionLabel="label"
               optionValue="value"
-              onChange={(e) => set("role", e.value)}
             />
-          </FormField>
-          <FormField
+          </campo.Field>
+          <campo.Field
+            name="is_active"
             label={t("admin.state")}
-            readOnly={readOnly}
             value={form.is_active ? t("common.active") : t("common.inactive")}
           >
             <AppDropdown
-              value={form.is_active}
               options={stateOptions}
               optionLabel="label"
               optionValue="value"
-              onChange={(e) => set("is_active", e.value)}
             />
-          </FormField>
+          </campo.Field>
         </div>
       </section>
     </CrudDialog>

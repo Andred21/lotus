@@ -23,6 +23,193 @@
 
 ---
 
+## Fechado em 2026-09-04 — `frontend-arrumacao-de-testes` (item 27)
+
+**O item 27 assumiu a `lane-c` em 2026-09-03** — `frontend-arrumacao-de-testes`, promovido
+explicitamente pelo João com a lane em `idle`, e é o **primeiro da ordem de execução** decidida em
+2026-09-03. `Contexto: não` na ficha, então **nasce em `ready_for_planning`**: não há packet a gerar,
+as fontes (o levantamento medido contra `main@24bf770c`, a ficha `P-58` candidata a hospedeiro e o
+próprio código) vivem no repositório. O escopo é mecanismo de teste — `test.projects` separando
+`node` para `tests/**` de `jsdom` para `src/**`, um `renderWithProviders` em `src/shared/testing/`
+para os 33 arquivos que remontam o `QueryClient` à mão, e dois pares de arquivo sem sujeito próprio
+juntados — **sem tocar em asserção de comportamento**. A branch `refactor/frontend-arrumacao-de-testes`
+já existia desde `3833810c`, carregando só a reorganização do backlog; a promoção é agora.
+
+**O brainstorming remediu a ficha e derrubou um dos quatro achados.** Três confirmaram (os 11
+arquivos de `tests/` não tocam DOM; 33 sítios de `new QueryClient`; `shared/testing/` com só o
+`i18n.ts`), mas o quarto — juntar dois pares de arquivo de teste "partidos por acidente de autoria"
+— **não é acidente**: os dois docblocks declaram que a partição saiu da régua `max-lines` de 150, e
+a **`P-68` a ratificou por decisão escrita em 2026-09-03**. Juntos dão 224 linhas cada par. O João
+**recusou o achado** com veredito escrito, entre três saídas medidas. A ficha também erra em dois
+números — são **760** testes nesta árvore, não 759, e sete grafias de `QueryClient`, não uma.
+
+**O espelho do topo virou para a `lane-c` nesta árvore**, fora do main tree: é o mesmo caso da
+**P-55**, e segue o precedente medido de 2026-08-26 (lane-b) e o de 2026-08-24, quando as três lanes
+fizeram o mesmo. A `lane-a` e a `lane-b` estão `idle`, então o espelho não desloca bloco ativo de
+ninguém.
+
+## Fechado em 2026-09-03 — `backend-envelope-de-erro-e-recusa-de-dominio` (item 26)
+
+**A `lane-a` recebeu o item 26 em 2026-09-02** — `backend-envelope-de-erro-e-recusa-de-dominio`,
+promovido explicitamente pelo João com a lane em `idle`, logo depois de a PR #96 mesclar o item 24 e
+a branch dele ser apagada nos dois lados. `Contexto: não`: as fontes são as fichas de
+`pendencias/abertas.md`, o review de arquitetura de 2026-09-02 e o próprio código — tudo no
+repositório, nada em Drive, Notion ou Figma. A branch sai de `main@4a0080ce`, o tip da `origin/main`.
+
+**O item foi escrito depois de remedir cada candidato contra `main@4a0080ce`**, e a medição está na
+própria ficha: o que entrou entrou por estar vivo no código, não por constar de ficha antiga. Três
+candidatos de backend foram descartados com motivo escrito — a fatia Site do candidato 2 (não existe
+em `main`; vive em `archive/site-contact-form-v1`), a `P-05`/`P-44`/`D-37` (já hospedadas no item 13)
+e a `D-34` (atravessa para o SPA e o hospedeiro é escolha do João). Cinco fichas de backend e um
+débito seguem vivos e **sem hospedeiro** — `P-49`, `P-51`, `P-52`, `P-54`, `P-59` e a `D-17` —, fora deste
+bloco por não compartilharem superfície de prova com o envelope de erro; a ficha do item 26 as nomeia
+uma a uma para quem pegar.
+
+---
+
+## Fechado em 2026-09-03 — `frontend-dividas-de-mecanismo` (item 25)
+
+**A `lane-c` recebeu o item 25 em 2026-09-02** — `frontend-dividas-de-mecanismo`, promovido
+explicitamente pelo João com a lane em `idle`; o comando não promove, e não promoveu. `Contexto: não`
+na fila, então o bloco nasce direto em planejamento, sem Context Packet: as seis fontes (`P-68`,
+`P-69`, `P-70`, `P-30`, `P-42` e `D-69`) são fichas do próprio repositório. A branch
+`fix/frontend-dividas-de-mecanismo` sai de `3654b6dc` — `origin/main@5f6daf8b`, que já traz as PRs
+#95 e #96 mescladas, mais o commit que abre o item 25 no `backlog.md`, em revisão na **PR #97**. Três
+das seis fichas foram remedidas contra o código no brainstorming e **contradisseram o próprio texto**:
+a variável de perigo da `D-69` já existe, a superfície da `P-30` é um botão (e reprova contraste a
+2,80:1), e o custo que travava a `P-69` mediu **zero** — 127 arquivos / 734 testes passam com o
+`cleanup()` global ligado.
+
+**O planejamento fechou em 2026-09-02**, com spec e plano commitados e oito tasks desenhadas — uma
+por ficha, mais o desmonte da `P-69` partido em mecanismo e remoção, mais o fechamento que mede o
+DoD. O plano **corrige a spec em quatro pontos que só a medição de escrita revelou**, e por isso ele
+é a fonte da execução: (1) a `P-69` são **31** arquivos, não 28 — a spec contou uma grafia só, e
+`afterEach(() => cleanup())` está viva em dois arquivos de `src/app/`; (2) a sonda negativa que a
+spec desenhou **não reprova** — a suíte inteira passa sem `setupFiles` e sem o `cleanup()` do
+`useServerTable.test.tsx`, então a prova passa a ser a guarda estática mais a catraca
+`CLEANUP_A_MAO`, as duas vistas reprovar; (3) a receita da `P-30` medida na spec regride dois
+estados e o `outlined` (3,30:1, 2,29:1 e 1,92:1 no claro), porque a §3.2 mediu só o estado base — a
+tinta amarela tem de ser escura e os estados sobem a rampa, que é a direção que o Lara já usa no
+tema escuro; (4) a `CLEANUP_A_MAO` não pode ganhar bloco próprio no `eslint.config.js` sob pena de
+apagar por merge raso a catraca de cor nos arquivos de teste, então entra em cinco arrays
+existentes. A decisão **D3 não muda** — o warning alinha ao amarelo da tag; muda a receita. Fica
+registrado um achado que **não** se paga neste bloco e vira ficha na Task 5: no tema claro a família
+inteira de botão de severidade reprova AA no estado base (success 2,28:1, info 2,77:1, warning
+2,80:1, danger 3,76:1, help 3,96:1) — o warning nunca foi caso especial.
+
+---
+
+## Fechado em 2026-09-02 — `backend-projecao-de-arquivados` (item 24)
+
+**A `lane-a` recebeu o item 24 em 2026-09-02** — `backend-projecao-de-arquivados`, promovido
+explicitamente pelo João com a lane em `idle`. É `Contexto: não`, então nasce direto em
+`ready_for_planning`, sem rota Codex: a fonte única é a revisão de arquitetura de 2026-09-02
+(`audits/2026-09-02-arquitetura-deepening.html`, candidato 1), **versionada** — a decisão inicial de
+mantê-la só como contexto local foi revertida pelo João no mesmo dia, e o audit entrou em `main` no
+commit `14b25b6c` junto com o próprio item 24. Toca `backend/`, então roda no main tree pela P-03. A
+branch sai de `main@14b25b6c`; os dois commits de doc que a antecedem entram em `origin/main` pela
+**PR #93**, pelo caminho do `CONTRIBUINDO.md` — `git push origin main` é recusado pelo `pre-push` e o
+job `procedencia` reprovaria o commit sem PR associado.
+
+**As 8 tasks do plano fecharam em 2026-09-02**, via `subagent-driven-development` — implementer +
+review por task (spec + qualidade), sonda negativa provada nas duas catracas (Task 7, por `cp` no
+scratchpad, nunca `git stash`) e gate de medição (Task 8) sem exigir correção. Um achado Important
+do review da Task 4 (docblock "spec D5" apagado do `QuoteController::archived()` pelo texto literal
+do plano) foi levado ao João em vez de decidido sozinho — restaurar, per decisão dele — porque
+esbarrava no texto do próprio plano, e a skill manda perguntar nesse caso, não silenciar nem
+decidir. Suíte fecha em 1161 passed / 5 skipped (main mede 1149; +12 das Tasks 1, 2, 3 e 7).
+`generated.ts`, os 70 testes de endpoint e o frontend inteiro sem diff contra `main`. Lane sobe para
+`ready_for_review`; a review do bloco é a próxima instrução, não automática.
+
+**A review do bloco rodou em 2026-09-02** (`/revisar-sprint`), classificada **alto risco** — toca
+`Shared/Audit` (§5.2), `CertificateController` (peso legal) e 9 controllers —, então acionou a
+segunda lente do Codex read-only além do gabarito do projeto. **O código de produção passou sem
+achado**: os 8 `archived()` e os 8 `restore()` foram conferidos linha a linha contra `main` e
+nenhum filtro, eager load, escopo de posse ou chave de JSON mudou; nenhuma das duas peças é
+Repository (§5.1). Os **5 achados foram todos de qualidade de teste/catraca**, e o João aprovou os
+cinco:
+
+- **Q-1** — `RespostaDeRecursoTest::test_carimba_200...` era cobertura fantasma, **provado** por
+  sonda (apagada a linha do `post()`, o teste seguia verde). Passou a carimbar o braço negativo
+  (`assertSame(201, ...)`) antes da cura.
+- **Q-2** — as catracas casavam grafia literal e escapavam por alias de import, FQN,
+  `JsonResponse::HTTP_OK` e argumento nomeado. Agora casam `::archivedBy(` e
+  `setStatusCode(... HTTP_OK|200 ...)`, contra a decisão §3.3 da spec.
+- **Q-3** — a isenção era da pasta (`Shared/Audit/`, `Shared/Http/`) e passou a ser dos dois
+  arquivos do module, por basename.
+- **Q-4** — a catraca reimplementava `arquivosPhp` e um stripper por `preg_replace` que corrompe
+  `//` dentro de string. Passou a usar o `Tests\Support\ScansPhpSource`, que já existia, usa
+  `token_get_all()` e serve outras cinco catracas.
+- **Q-5** — `lista()` não defendia o contrato que `resolveArquivado()` defende. Registro sem
+  `deleted_at` agora estoura `InvalidArgumentException` nomeada, não `toIso8601String() on null`;
+  filtrar em silêncio ficou fora porque a visão tem peso legal.
+
+As duas catracas corrigidas foram **vistas reprovar** contra as quatro grafias evasivas e **vistas
+não disparar** contra `201`, `2000` e menção em comentário — por arquivo de sonda descartável em
+`app/`, nunca por `git stash`. O `MensagemLiteralTest` reprovou o próprio fix do Q-5 e ganhou uma
+linha em `DEBITO_CONHECIDO` (`ArchivedListing.php:68`), no precedente literal das seis
+`RuntimeException` internas: erro de programador, 500 mascarado, ninguém lê. Suíte fecha em
+**1162 passed / 5 skipped**, Pint `passed`, `generated.ts` e `frontend/` sem diff.
+
+**Fechado em 2026-09-02.** Gate: suíte **1162 passed / 5 skipped**, `pnpm lint` 0 e `pnpm build` verde, Pint `passed` nos 15 arquivos do bloco, `typescript:transform` re-rodado com `frontend/` sem diff, e os dois `grep` de fechamento do DoD 8 zerados em código (a única ocorrência de `ArchiveTrailQuery::archivedBy` fora de `Shared/Audit/` é comentário, em `Shared/Pagination/Paginates.php:60`). Critério de aceite provado **contra a API real** (`Origin: http://localhost:5174`, sessão de `admin@lotus.cl`): `DELETE /api/clients/200` → 204, `GET /api/clients/archived` devolvendo `archived_at` ISO 8601 e `archived_by` `"Admin Lotus"` pela projeção do module, e `POST /api/clients/200/restore` → **200** pelo `RespostaDeRecurso` (não o 201 do `ResponsableData`), com o banco de dev devolvido ao estado anterior. Nenhuma pendência nasceu nem fechou. Plano e spec arquivados.
+## Fechado em 2026-09-02 — `frontend-campo-de-formulario-liga-no-form` (sem ficha na fila)
+
+> **Rótulo corrigido em 2026-09-02**, no fechamento da lane-a e por decisão do João: este bloco foi
+> registrado como "item 24" em toda a narrativa abaixo, mas o `24` do `backlog.md` é o
+> `backend-projecao-de-arquivados` (ficha na fila desde `14b25b6c`, arquivada acima). Este bloco
+> nasceu do §3 do review de arquitetura de 2026-09-01 e **nunca teve ficha própria**. O texto abaixo
+> fica verbatim, como escrito no fechamento dele; "item 24" ali se lê como este bloco.
+
+**A `lane-c` recebeu o item 24 em 2026-09-02** — `frontend-campo-de-formulario-liga-no-form`,
+promovido explicitamente pelo João com a lane em `idle`. `Contexto: não`: as fontes são o §3 do
+review de arquitetura de 2026-09-01 e o próprio código, tudo no repositório. **A spec chegou antes
+da vez do bloco, por decisão registrada na própria spec (Q19/Q20)** — as 23 decisões foram
+aprovadas seção a seção com o João em 2026-09-02 e custam caro de reconstruir; o `CLAUDE.md` §4
+manda planejar just-in-time e é o **plano** que ficou para agora. Nem a spec nem a ficha
+autorizaram execução: quem promoveu foi o João, aqui.
+
+**Duas coisas foram decididas contra o que estava escrito, e ficam registradas:**
+
+1. **A ordem da fila foi invertida com aval explícito.** A ficha do item 24 diz *"depois do bloco
+   do §1 do review"* — o colapso da projeção de arquivamento, no backend, que **ainda não tem ficha
+   no `backlog.md`**. O João optou por rodar as duas frentes **em paralelo**: o 24 nesta árvore
+   (`../fix-frontend`, lane-c) e `backend-projecao-de-arquivados` no main tree (lane-a). A
+   dependência entre os dois é de ordem de leitura do review, não de código: o 24 não toca
+   `backend/` nem `generated.ts`.
+2. **O espelho do topo virou para `lane-c` fora do main tree** — é a **P-55**, e segue o precedente
+   medido de 2026-08-24. **Risco conhecido e aceito:** a lane-a vai promover o bloco de backend no
+   main tree e, se ela também virar o espelho, as duas árvores escrevem o mesmo campo. A integração
+   é serial (invariante acima), então a colisão se resolve no merge; quem rebasar depois **mantém o
+   espelho da própria árvore**. Esta sessão escreveu **só os campos da lane-c** e o espelho — nenhum
+   campo de `lane-a` ou `lane-b` foi tocado.
+
+**O review do item 24 rodou em 2026-09-02 e os dois achados foram aplicados no mesmo dia**, com
+aval explícito do João. **Q-1:** o `ERRO_DE_CAMPO_A_MAO` media só `fieldErrors?.x?.[0]` e passava
+limpo por `f.fieldErrors?.x?.[0]` — a grafia do próprio `TurmaConfigCard` antes da migração; o
+seletor agora casa as duas, e o apelido (`const { fieldErrors: fe } = f`) segue fora do alcance,
+escrito no comentário. **Q-2:** o `useFormField` passou a devolver `{ Field }`, porque a regra
+`react-hooks/static-components` só olha tag com nome de identificador — `<campo.Field>` dispensa os
+26 `eslint-disable` sem desligar a regra em arquivo nenhum, e o `DROPDOWN_SEM_NOME` aprendeu a tag
+em `JSXMemberExpression` junto. `pnpm lint`, `pnpm build` e `pnpm test` (734/734) verdes depois da
+correção; commit `98290b2b`.
+
+**Três divergências documentais aguardam a palavra do João antes de virarem ficha em
+`pendencias/abertas.md`** — não são achado de código e não travam o fechamento: (a) a spec §4.2
+manda `useMemo([])` e o código usa `useRef` + dois `eslint-disable react-hooks/refs`, justificados
+no docblock; (b) a spec §7.1 ainda lista o teste de `parse`, que a Q23 revogou; (c) a spec descreve
+o hook devolvendo o componente cru, e a correção da Q-2 mudou o retorno para `{ Field }`. A prova
+de navegador de 2026-09-02 conta a grafia antiga (`<Field `) porque **antecede** a Q-2 — o caminho
+de render é o mesmo componente sob o mesmo `FieldContext`, e a identidade estável segue medida em
+`useFormField.test.tsx`.
+
+**O item 24 entrou no `backlog.md` pelas mãos do João** (acrescentar item na fila é dele, §
+invariante de dono), no mesmo working tree; o commit de promoção apenas o leva ao Git junto da
+spec que ele referencia.
+
+**Fechado em 2026-09-02.** Gate: prova de navegador refeita pós-Q-2 contra a API real (`audits/2026-09-02-item24-prova-de-navegador.md`), backend **1149 passed / 5 skipped**, frontend **127 arquivos / 734 testes**, lint 0, build verde; `pint` e `typescript:transform` N/A por escopo, provados por diff vazio em `backend/` e `generated.ts`. Plano e spec arquivados; item 24 removido do `backlog.md`; a **P-67** saiu de vez do rastro de `pendencias/encerradas.md`. **As três divergências documentais** entre spec e código (o `useRef` no lugar do `useMemo([])` da §4.2, o teste de `parse` da §7.1 que a Q23 revogou, e o retorno `{ Field }` que a Q-2 introduziu) seguem **aguardando a palavra do João** antes de virarem ficha em `pendencias/abertas.md`. **Branch sem merge.**
+
+---
+
 ## Fechado em 2026-09-01 — `frontend-decisoes-de-ui-pendentes` (item 21)
 
 **O item 21 assumiu a `lane-a` em 2026-08-31** — `frontend-decisoes-de-ui-pendentes`, criado no

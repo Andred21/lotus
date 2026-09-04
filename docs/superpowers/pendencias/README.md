@@ -21,15 +21,14 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (32)
+## Abertas (26)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-70 | O `screenDetail` continua calando o `detail` do servidor depois que ele passou a ser localizado — erro de GET mostra a dica genérica em vez do que o servidor disse | `hardening-i18n-e-erros-api` (D4) | próximo bloco da frente de frontend que tocar política de erro de tela; revisar 2026-11-30 |
-| P-71 | Cinco recusas que o usuário lê continuam literais fora de `lang/` (`CorruptedSnapshotException`, `RedatorNaoElegivelException`, `TurmaConfiguracaoException`) — a catraca as segura em lista declarada, não as traduz | — | bloco que tocar `Certification/Services` ou `Operation/Exceptions`; revisar 2026-10-31 |
-| P-72 | O 419 devolve `detail` literal em inglês nos três locales (`CSRF token mismatch.`) — o `title` foi traduzido, o `detail` do `TokenMismatchException` vence o fallback | — | bloco que tocar `ProblemDetails::fromException` ou a proteção CSRF; revisar 2026-10-31 |
+| P-75 | O `.env` declara `localhost:5173` em `SANCTUM_STATEFUL_DOMAINS` mas `config('sanctum.stateful')` não o traz — escrita vinda do Vite dev server cai em 401 (origem não-stateful) em vez do 419 do CSRF | — | bloco que tocar `config/sanctum.php`, o `.env` da árvore ou a proteção CSRF; revisar 2026-10-31 |
+| P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -37,16 +36,30 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
+>
+> **A `P-58` fechou em 2026-09-04, no `frontend-arrumacao-de-testes` (item 27)**, por mecanismo: o
+> `compose-dev.test.ts` passou a afastar os `.env*` das **duas** raízes que o `vite.config.ts` lê, e
+> o gate deixou de depender do disco de quem roda — provado com `frontend/.env` posto e retirado. A
+> ficha está em [`encerradas.md`](./encerradas.md). **O bloco não abriu pendência nova.**
+>
+> **As cinco fichas do `frontend-dividas-de-mecanismo` (item 25), fechadas em 2026-09-03, saíram
+> neste fechamento** — `P-68`, `P-69`, `P-70`, `P-30` e `P-42` completaram a sprint de rastro; o
+> parágrafo delas ficou em [`encerradas.md`](./encerradas.md), sob *Rastro anterior*. O débito `D-69`
+> tinha saído do `backlog.md` no fechamento daquele bloco. A **P-74**, que ele abriu, segue na
+> tabela abaixo.
+>
+> O **item 26** (`backend-envelope-de-erro-e-recusa-de-dominio`) **fechou em 2026-09-03** e saiu da
+> fila. Ele hospedava a `P-71`, a `P-72` e a metade de comportamento da `P-60`, e as três estão em
+> [`encerradas.md`](./encerradas.md). Duas fichas nasceram do fechamento e continuam na tabela
+> acima: a `P-75` (divergência de ambiente destapada pela sonda do 419) e a `P-76` (o que a `P-71`
+> nomeava e não pagou). A metade do **dado de dev** da `P-60` segue com a `P-44`, no item 13.
 
 ### Travadas em decisão — não entram em bloco
 
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
+| P-74 | O botão de severidade reprova AA no estado base do tema claro em quatro das cinco famílias (success 2,28:1, info 2,77:1, danger 3,76:1, help 3,96:1) — o `warning`, que a P-30 fechou, era a quarta pior | João | uma régua por estado, no molde do `describe` da P-30 em `frontend/tests/tone-ink.test.ts`, cobrir as cinco severidades nos três estados e todas passarem 4,5:1; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
-| P-58 | `compose-dev.test.ts` afasta os `.env*` da raiz mas não o `frontend/.env`: árvore com `VITE_API_URL` legado reprova 3 casos | João | o teste isolar também o `frontend/.env`; revisar 2026-10-31 |
-| P-68 | O `max-lines` mede arquivo de teste em `features/*/components` e não mede em `app/**`, e só a isenção tem razão escrita | João | João alinhar as duas camadas ou escrever a razão da assimetria; revisar 2026-10-31 |
-| P-30 | O `warning` segue com o laranja de stock do Lara; o âmbar de marca nunca foi construído | João | João decidir que `warning` quer âmbar próprio; revisar 2026-10-31 |
-| P-42 | Grafia construída do `IdentityCell` diverge da D1 da spec do próprio bloco | João | D1 reescrito com a grafia construída, ou código de volta ao D1; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
 | P-08 | RF-CUR-04 promete Manual por curso; implementado é Blade única | Lotus | contratante pedir manual personalizado por curso |
 | P-09 | Figma mostra 4 tipos de documento de turma; implementados são 3 | Lotus | Lotus confirmar que quer os 4 |
@@ -61,18 +74,30 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-55 | A invariante proíbe a lane de escrever os campos singulares do `state.md`, mas cada lane precisa do espelho apontando para si na própria árvore — e três lanes já fizeram isso | João | João escolher entre reescrever a invariante ou dar ao espelho um mecanismo próprio; revisar 2026-10-31 |
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
 | P-59 | `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()` — o `APP_TIMEZONE` do `.env.example` é ignorado e toda data derivada no servidor roda em UTC | João | bloco que tocar `config/app.php` ou derivação de data no servidor; revisar 2026-10-31 |
-| P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | João | bloco que puder reseedar/corrigir o dev, ou decisão sobre degradar em vez de estourar; revisar 2026-10-31 |
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
-| P-69 | O vitest não tem `setupFiles`, então o `cleanup()` do Testing Library nunca roda — teste que monta hook com timer derruba a rodada inteira com `window is not defined`, sem reprovar asserção | João | João decidir se o `cleanup()` vira mecanismo global, ou bloco que toque `frontend/vite.config.ts`; revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (4)
 
-**A P-67 fechou no `frontend-decisoes-de-ui-pendentes` (2026-09-01) e está em rastro** — a escala de
-raio virou dois tokens no `@theme` (`--radius-surface`, `--radius-control`), `shared/ui` e os 15
-sítios de `features/`+`app/` passaram a consumi-los e a catraca `RAIO_LITERAL` nasceu verde, vista
-reprovar por sonda. Sai no próximo `/fechar-sprint` posterior a este.
+**Em rastro:** a **P-58**, fechada em **2026-09-04** pelo `frontend-arrumacao-de-testes` (item 27),
+e as três que o `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) fechou em **2026-09-03** —
+a **P-71**, a **P-72** e a metade de comportamento da **P-60**. As três do item 26 são da `lane-a`,
+que não fechou bloco desde então: a sprint de rastro delas se conta pelo fechamento dela, não por
+este. As fichas estão em [`encerradas.md`](./encerradas.md).
+
+**As cinco do `frontend-dividas-de-mecanismo` (item 25) saíram neste fechamento** (2026-09-04), o
+primeiro posterior ao do bloco que as encerrou — `P-69`, `P-70`, `P-30`, `P-68` e `P-42`, cada uma
+fechada por mecanismo verde ou por decisão escrita, nenhuma por remoção na fé. O rastro delas está
+no parágrafo *Rastro anterior* de [`encerradas.md`](./encerradas.md), nos commits e nas linhas de
+entrega em [`../historico/progress.md`](../historico/progress.md).
+
+**A P-73 e a P-67 saíram neste fechamento** (2026-09-03), o primeiro posterior aos dos blocos que as
+encerraram — a P-73 em 2026-09-02 (PR #93, `pnpm audit` de volta a 0 por bump só de lockfile) e a
+P-67 em 2026-09-01 (a escala de raio virou dois tokens no `@theme`, com a catraca `RAIO_LITERAL`).
+**O ID `P-73` está queimado:** a ficha aberta pelo item 25 nasceu com ele por engano e foi
+renumerada para `P-74` no próprio fechamento. O rastro durável está nos commits e nas linhas de
+entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-61 e a P-63 saíram neste fechamento** (`frontend-decisoes-de-ui-pendentes`, 2026-09-01), o
 primeiro posterior aos dos dois blocos que as encerraram em 2026-08-30 — os `title` do

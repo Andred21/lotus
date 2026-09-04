@@ -1,15 +1,12 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider, useMutation } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import type { UseMutationResult } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import type { ProblemDetails } from '@shared/api/axios'
 import { useBlobTabOpener } from './useBlobTabOpener'
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 const criar = vi.fn(() => 'blob:fake-url')
 const revogar = vi.fn()

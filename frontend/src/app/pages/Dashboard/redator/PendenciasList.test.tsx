@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
 import { PendenciasList } from './PendenciasList'
@@ -17,8 +17,6 @@ vi.mock('react-i18next', async (importOriginal) => {
     }),
   }
 })
-
-afterEach(() => cleanup())
 
 // Dois `turma_id` diferentes: um teste que passasse com um `to` fixo não
 // provaria nada — a UI-01 era exatamente uma ação com destino único (`/perfil`)

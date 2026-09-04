@@ -1,8 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { StatValue } from './StatValue'
-
-afterEach(cleanup)
 
 /**
  * O número de estatística saía em três tratamentos (achado A3): o KPI já era o

@@ -105,10 +105,11 @@ degrau nomeado. O bloco do folio no `IssuedDialog` é o contra-caso que fecha a 
 `p-6`, e superfície.
 
 `rounded` solto é raio sem degrau declarado. Mecanismo: `RAIO_LITERAL` em
-`frontend/eslint.config.js`, nas quatro camadas de `features/` e `app/**` — a catraca de cor
-(`CATRACA_COR`, três arquivos) leva o array também, porque `CourseStep.tsx` é um dos 15 sítios que
-esta decisão migrou; `shared/ui` fica de fora porque é onde a grafia é definida. `rounded-full`
-fica livre: cápsula não escolhe degrau.
+`frontend/eslint.config.js`, nas quatro camadas de `features/` e `app/**`; `shared/ui` fica de fora
+porque é onde a grafia é definida. `rounded-full` fica livre: cápsula não escolhe degrau.
+Até 2026-09-02 havia uma quinta camada — a partição `files: CATRACA_COR`, os três arquivos que o
+lint de cor ainda tolerava — e ela levava este array junto, porque `CourseStep.tsx` era um dos 15
+sítios que esta decisão migrou. A lista chegou a zero e o bloco saiu; não procure por ele.
 
 ## Padding por papel
 
@@ -129,8 +130,10 @@ Superfície escura FIXA do shell — sidebar navy, painel de marca do login — 
 O wordmark segue com a marca — ele **é** a marca.
 
 Mecanismo: `COR_HARDCODED` e `COR_LITERAL_EM_STYLE` em `frontend/eslint.config.js`, que medem
-`className` e `style`. A lista de exceções `CATRACA_COR` só **encolhe** — nunca reintroduza
-arquivo nela para calar o lint.
+`className` e `style`, **sem exceção nenhuma**. A catraca `CATRACA_COR` — a lista de arquivos que
+o lint de cor tolerava — **chegou a zero em 2026-09-02** (D-69, item 25), e com ela saíram o bloco
+`files: CATRACA_COR` e o próprio array. Não reintroduza o par para calar um arquivo: quem precisa
+de cor pede token ao tema.
 
 ## Nome acessível de controle sem label visível
 

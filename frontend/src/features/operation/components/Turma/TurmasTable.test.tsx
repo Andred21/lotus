@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { ServerTable } from '@shared/hooks'
 import { TurmasTable, type TurmaRow } from './TurmasTable'
@@ -70,8 +70,6 @@ function montar() {
     </MemoryRouter>,
   )
 }
-
-afterEach(cleanup)
 
 describe('TurmasTable — o filtro de estado tem nome acessível (UI-07)', () => {
   it('o dropdown de estado se acha pelo rótulo, não só pelo valor corrente', () => {

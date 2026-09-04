@@ -20,13 +20,13 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: —   # o item 21 fechou e mesclou em 2026-09-01 (PR #91, merge 6e6f4a64); a branch refactor/frontend-decisoes-de-ui-pendentes foi apagada
+    branch: refactor/backend-envelope-de-erro-e-recusa-de-dominio   # aberta de main@4a0080ce em 2026-09-02; bloco fechado em 2026-09-03, PR por abrir
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-decisoes-de-ui-pendentes   # item 21, fechado em 2026-09-01
+    last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio   # item 26, fechado em 2026-09-03
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
@@ -53,16 +53,16 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: fix/frontend-triagem-audits-item-18   # aberta de main@37e0e2d4; fechada e mesclada em 2026-08-30 (PR #87, afe273cf)
+    branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-triagem-dos-audits-do-item-18
-last_completed_work_item: frontend-decisoes-de-ui-pendentes
-state_basis_commit: 8efd85f2
-updated_at: 2026-09-02T18:00:00-03:00
+    last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
+last_completed_work_item: frontend-arrumacao-de-testes
+state_basis_commit: 9c038cca
+updated_at: 2026-09-04T15:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,13 +162,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-02
+## Ocupação corrente — 2026-09-04
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | — (item 21 fechado e **mesclado** em 2026-09-01, PR #91, merge `6e6f4a64`; branch apagada) | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; o descarte está em `archive/infra-producao-provisionamento-aws-v1` | `executing` |
-| `lane-c` | — | — | `../fix-frontend` | `fix/frontend-triagem-audits-item-18` (item 19 fechado e **mesclado** em 2026-08-30, PR #87, `afe273cf`) | `idle` |
+| `lane-a` | — | — | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (bloco **fechado** em 2026-09-03; PR por abrir) | `idle` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (bloco **fechado** em 2026-09-04; PR por abrir) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -176,6 +176,7 @@ disjuntas, colisão mínima de arquivos:
 > linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
+
 
 **A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
@@ -191,65 +192,6 @@ na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segu
 
 **O item 12 fica estacionado, nao cancelado.** Ele segue no `backlog.md` (fila nao se mexe durante planejamento), o packet `status: blocked` fica guardado como evidencia e o campo `parked_work_item` da lane-b registra o vinculo. Quando o 10 provisionar o host, o packet do 12 regenera pelo gatilho de staleness que ele mesmo declara: *"um alvo AWS real ser provisionado"*.
 
-## O item 10 foi desfeito e volta ao planejamento — 2026-09-02
-
-**Decisão do João:** descartar tudo que a `lane-b` produziu para o item 10 e **replanejar do zero,
-com brainstorming de verdade**. Não foi correção de defeito — o que estava feito passava nos
-próprios aceites. Foi mudança de premissa.
-
-**O que foi descartado, e onde está.** Nada foi apagado; duas branches de arquivo guardam o estado
-íntegro e citável por SHA:
-
-- **`archive/infra-producao-provisionamento-aws-v1`** (`305b6ca4`) — 11 commits, 13 arquivos,
-  +2057/−45: a spec-runbook (525 linhas), o plano (917), o arquivo de gates (319), a revisão
-  2026-09 do ADR-09, o MySQL no `docker-compose.prod.yml` com a sonda herdando o serviço, o
-  `deploy/bin/backup-db.sh`, os dois confs de nginx e o overlay 443.
-- **`archive/site-contact-form-v1`** (`6b643710`) — a R5, `POST /api/public/contact`, com domínio
-  `Site`, `SiteCors`, throttle, honeypot e sete testes. Estava **provada end-to-end** contra a API
-  real e mesmo assim entrou no descarte, por decisão explícita: a rota nasceu de uma spec que não
-  vale mais, e voltar a ela pelo replanejamento é mais barato que herdar desenho órfão.
-
-A branch de trabalho `infra/producao-provisionamento-aws` foi **resetada para `main@8efd85f2`** e a
-`feat/site-contact-form` foi apagada do main tree, que voltou para `main`.
-
-**Os quatro motivos** — todos declarados pelo João, e é isso que o brainstorming tem de atacar:
-
-1. **O GATE-2 derrubou a premissa da Fase 0.** A conta Gatika **já é conta-membro de outra
-   organização**, e conta-membro não cria organização. O isolamento por AWS Organizations, que era
-   a fundação do desenho, não é executável como estava escrito.
-2. **A arquitetura volta à mesa** — RDS vs MySQL em container, EC2 vs outra coisa, tamanho, custo,
-   e a RNF-DIS-02 (redundância), que segue `unresolved` e que uma EC2 única não satisfaz.
-3. **O escopo era grande demais** — dez fases num bloco só: conta, rede, host, banco, DNS, TLS,
-   e-mail, alarmes e o site institucional. Recortar em blocos que fechem sozinhos.
-4. **A spec veio pronta de fora.** Entrou medida e emendada, mas sem brainstorming — as
-   alternativas nunca estiveram na mesa.
-
-**A medição do mundo sobrevive ao descarte, porque é fato e não desenho.** Vale para qualquer
-arquitetura que o replanejamento escolher, e remedir custa tempo e risco de esquecer:
-
-- **Conta AWS:** a Gatika é conta-membro de outra organização. A pergunta que decide o isolamento
-  virou *de quem é a management account* — mede-se com `aws organizations describe-organization`
-  (o CloudShell já traz o CLI; nesta máquina o AWS CLI **não está instalado**).
-- **DNS de `lotusotec.cl`** (medido de fora, 2026-09-02): NS em `ns1–ns4.stackdns.com`; **MX no
-  Google Workspace**; SPF `v=spf1 include:_spf.google.com include:spf.stackmail.com -all` —
-  **`-all`, hard fail**, então quem enviar em nome do domínio sem estar na lista é **rejeitado**;
-  **sem DMARC**; sem DKIM em `google._domainkey`; apex e `www` em `185.146.167.195`; `mail` →
-  `ghs.googlehosted.com`; `autodiscover` → `autodiscover.stackmail.com`; `ftp` →
-  `ftp.us.stackcp.com`; e **existe curinga `*.lotusotec.cl`**, que faz qualquer nome resolver para
-  o host WordPress — logo, depois de uma migração de zona, "resolve" deixa de ser prova de que a
-  migração ficou completa.
-- **Imagens:** o job `image` roda no espelho corporativo, então o par
-  `ghcr.io/gatika-cl/lotus-{app,web}:<SHA>` existe para o SHA do **espelho**, não o do fork —
-  medido: manifesto existe para `d0d8db50` e não para `de511ad9`.
-- **Backend em worktree não prova nada** (P-03): o compose monta o main tree. Vale para qualquer
-  recorte que o novo plano faça.
-
-**Estado depois do replanejamento (2026-09-02):** o brainstorming rodou pelos quatro motivos acima
-e fechou nove decisões (D1–D9); a spec v2 (`b4a5f45d`) e o plano v2 de 20 tasks (`b928ff7b`) estão
-nos ponteiros do frontmatter, `context_packet` segue `null` por decisão D9. A execução da Fase A
-começou nesta data — o parágrafo anterior, que ainda dizia `ready_for_planning`, era narrativa do
-descarte e não estado corrente.
-
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -259,11 +201,18 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
-| 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
-| 2026-08-31 | `prontidao-pre-nuvem` (emenda a **P-62**: o pessoal está público e a decisão de visibilidade ficou com o João) | Item 20 da fila |
-| 2026-08-30 | `hardening-i18n-e-erros-api` (paga a **P-61**, `D-07`, `D-18`, `D-36`, `D-38`, `D-58`; abre a **P-70**, a **P-71** e a **P-72**) | Item 7 da fila |
-| 2026-08-30 | `frontend-triagem-dos-audits-do-item-18` (paga a **P-63**; abre a `D-63`..`D-68` e rehospeda a **P-67** na `D-66`) | Item 19 da fila |
-| 2026-08-29 | `frontend-estilizacao-padronizacao-de-componentes` (paga a `D-62`; abre a **P-67** e a **P-68**) | Item 18 da fila |
+| 2026-09-04 | `frontend-arrumacao-de-testes` (fecha a **P-58**; nenhuma pendência nasce; nascem `test.projects` no `vite.config.ts`, `src/shared/testing/providers.tsx` e a catraca `QUERY_CLIENT_A_MAO`) | Item 27 da fila |
+| 2026-09-03 | `backend-envelope-de-erro-e-recusa-de-dominio` (paga a **P-71**, a **P-72** e a metade de comportamento da **P-60**; abre a **P-75** e a **P-76**; nascem `TipoDeRecusa` e `RecusaDeDominio` em `app/Shared/Exceptions/` e a rule `.claude/rules/backend-lang.md`) | Item 26 da fila |
+| 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
+| 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
+| 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
+
+> **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
+> "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com
+> ficha na fila desde `14b25b6c`; o `frontend-campo-de-formulario-liga-no-form` nunca teve ficha —
+> nasceu do §3 do review de arquitetura de 2026-09-01 e tomou o rótulo por engano. Decisão do João
+> em 2026-09-02, no fechamento da lane-a: **o 24 é o bloco de backend**, e o registro da lane-c passa
+> a dizer "sem ficha na fila". Nenhum número é reusado nem renumerado.
 
 **Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
 **inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando

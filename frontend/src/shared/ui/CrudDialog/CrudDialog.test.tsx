@@ -1,12 +1,11 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { CrudDialog } from './CrudDialog'
 
 beforeAll(async () => {
   await i18n.changeLanguage('es-CL')
 })
-afterEach(cleanup)
 
 function Harness({ pending, invalido }: { pending: boolean; invalido: boolean }) {
   return (

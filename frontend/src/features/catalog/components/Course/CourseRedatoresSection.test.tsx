@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import type { RedatorData } from '@shared/types/generated'
 import type { useCourseRedatores } from '../../hooks/useCourseRedatores'
 import { CourseRedatoresSection } from './CourseRedatoresSection'
@@ -42,10 +42,6 @@ const renderSection = (over: Partial<Redatores>, isCreate = false) =>
       onToggle={() => {}}
     />,
   )
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('CourseRedatoresSection — falha COM cache não apaga a lista', () => {
   it('falha SEM cache: o erro substitui a seção', () => {

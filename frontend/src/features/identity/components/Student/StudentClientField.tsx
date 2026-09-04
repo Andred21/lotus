@@ -1,17 +1,24 @@
 import { useTranslation } from "react-i18next";
-import { AppDropdown, FormField, InlineLoadState } from "@shared/ui";
+import { AppDropdown, InlineLoadState, type FieldComponent } from "@shared/ui";
 import { loadMessage } from "@shared/lib";
 import type { DialogMode } from "@shared/lib";
+import type { StudentFormFields } from "../../hooks/useStudentForm";
 
 /** Cliente é imutável depois do cadastro: fora do `create` o campo é texto, não
  * input desabilitado — `<AppInputText disabled>` cortava o nome do cliente, que
  * é o débito do BD-3 §4 numa quarta grafia que nenhuma das duas catracas
- * enxerga. Mesmo molde do `BudgetDialog`. */
+ * enxerga. Mesmo molde do `BudgetDialog`.
+ *
+ * `readOnly` e `value` continuam explícitos no `Field`: o modo de leitura
+ * deste campo não é o do formulário (`mode !== 'create'`, não o `readOnly` do
+ * bundle) e o rótulo em leitura vem da entidade, não da lista de opções —
+ * fora do `create` ela nem é buscada (item 24, spec §5). São os dois escapes
+ * do `Field`; `value`/`onChange` do `AppDropdown` e `error` do campo somem,
+ * o resto (estado de carga) não tem nada a ver com este bloco. */
 export function StudentClientField({
   mode,
-  value,
+  Field,
   readOnlyLabel,
-  error,
   options,
   isLoading,
   isError,
@@ -20,14 +27,12 @@ export function StudentClientField({
   isEmpty,
   unusable,
   refetch,
-  onChange,
 }: {
   mode: DialogMode;
-  value: number | null;
+  Field: FieldComponent<StudentFormFields>;
   /** O rótulo do modo leitura vem do pai, não do `options`: fora do `create` a
    * lista de clientes nem é buscada, e o nome vigente mora na entidade. */
   readOnlyLabel: string;
-  error?: string;
   options: { label: string; value: number }[];
   isLoading: boolean;
   isError: boolean;
@@ -41,15 +46,14 @@ export function StudentClientField({
   /** Aceita a promise do `useLoadState`: é ela que mantém o botão em carga
    * (Q-14). Molde: `QuotesList.tsx:26`. */
   refetch: () => void | Promise<unknown>;
-  onChange: (id: number) => void;
 }) {
   const { t } = useTranslation();
 
   return (
     <div>
-      <FormField
+      <Field
+        name="client_id"
         label={t("student.client")}
-        error={error}
         readOnly={mode !== "create"}
         value={readOnlyLabel}
       >
@@ -57,12 +61,10 @@ export function StudentClientField({
          * ele vira controle morto sem explicação — o disfarce que o BD-6
          * existe para matar, na escala de um campo (review do BD-6, Q-3). */}
         <AppDropdown
-          value={value}
           disabled={unusable}
           loading={isLoading}
           aria-busy={isLoading}
           options={options}
-          onChange={(e) => onChange(e.value as number)}
           className="w-full"
         />
         <InlineLoadState
@@ -71,7 +73,7 @@ export function StudentClientField({
           retryLabel={t("common.retry")}
           onRetry={refetch}
         />
-      </FormField>
+      </Field>
       {mode === "edit" && (
         <p
           className="mt-1 text-xs"

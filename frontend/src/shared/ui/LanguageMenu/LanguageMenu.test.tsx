@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { LanguageMenu } from './LanguageMenu'
 
 // Fábrica única (rule frontend-fsliced.md, seção shared/testing/): mock parcial
@@ -12,8 +12,6 @@ vi.mock('react-i18next', async (importOriginal) => {
     useTranslation: mockUseTranslation({ language: 'en' }),
   }
 })
-
-afterEach(cleanup)
 
 // O menu é popup: só existe no DOM depois de abrir. Sob o mock, `t` devolve a
 // CHAVE — o aria-label do botão sai como `common.language`, não como texto

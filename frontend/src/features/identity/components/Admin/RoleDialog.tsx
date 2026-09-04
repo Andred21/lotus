@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CrudDialog, AppInputText, AppCheckbox, FormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { CrudDialog, AppInputText, AppCheckbox, FormSection, FormErrorSummary, FormErrorBanner, useFormField } from '@shared/ui'
 import type { RoleData, PermissionData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 import { usePermissionCatalog } from '../../api/usePermissionCatalog'
@@ -17,7 +17,9 @@ export function RoleDialog({
   onEdit?: () => void
 }) {
   const { t } = useTranslation()
-  const { form, set, toggle, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = useRoleForm(role, mode, onHide)
+  const f = useRoleForm(role, mode, onHide)
+  const { form, toggle, readOnly, submit, pending, fieldErrors, generalError, errorSummary } = f
+  const campo = useFormField(f)
   const catalog = usePermissionCatalog()
 
   const isSystem = role?.is_system ?? false
@@ -56,9 +58,13 @@ export function RoleDialog({
       <FormErrorSummary errors={fieldErrors} {...errorSummary} />
 
       <section className="space-y-4">
-        <FormField label={t('role.name')} error={fieldErrors?.name?.[0]}>
-          <AppInputText value={form.name} disabled={!editable} onChange={(e) => set('name', e.target.value)} className="w-full" />
-        </FormField>
+        {/* O bundle TEM `readOnly`, mas o campo aqui é input desabilitado, não
+            texto — herdar do contexto trocaria o modo de leitura sem
+            autorização. `readOnly={false}` explícito mantém o `Field` sempre
+            em modo de controle; quem desabilita é o `disabled` de baixo. */}
+        <campo.Field name="name" label={t('role.name')} readOnly={false}>
+          <AppInputText disabled={!editable} className="w-full" />
+        </campo.Field>
 
         {isSystem && (
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('role.systemReadOnly')}</p>

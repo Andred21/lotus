@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { AppDialog, AppButton, FormErrorSummary, FormErrorBanner, useFormField } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
+import { dangerText } from '@shared/styles/tokens'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
 import { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
 import { CourseStep } from './CourseStep'
@@ -15,8 +16,9 @@ export function QuoteWizard({
   onHide: () => void
 }) {
   const { t } = useTranslation()
-  const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError } =
-    useQuoteForm(budgetId, quote, onHide)
+  const f = useQuoteForm(budgetId, quote, onHide)
+  const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError } = f
+  const campo = useFormField(f)
   const courses = useQuoteCourseSearch()
 
   const footer =
@@ -44,7 +46,7 @@ export function QuoteWizard({
       header={
         <div className="flex items-center justify-between gap-4">
           <span>{quote ? t('quote.edit') : t('quote.new')}</span>
-          <span className="text-xs font-normal text-slate-500">{t('quote.step', { current: step, total: 2 })}</span>
+          <span className="text-xs font-normal" style={{ color: 'var(--text-color-secondary)' }}>{t('quote.step', { current: step, total: 2 })}</span>
         </div>
       }
       visible={visible}
@@ -60,8 +62,15 @@ export function QuoteWizard({
       {/* Fora do passo: o campo do curso só existe no passo 1, mas o 422 de
           course_id (curso removido entre a escolha e o submit) chega com o
           wizard no passo 2 — dentro do passo 1 ele ficaria invisível. */}
+      {/* A catraca do item 24 mede a extração à mão porque o campo ligado ao
+          form já traz o erro pelo `name` — mas aqui não há campo: o `course_id`
+          vive no passo 1 e esta mensagem precisa aparecer no passo 2, fora de
+          qualquer `Field`. Suprimido nas duas linhas, e não no arquivo, para a
+          régua seguir valendo nos campos de verdade. */}
+      {/* eslint-disable-next-line no-restricted-syntax */}
       {fieldErrors?.course_id?.[0] && (
-        <p className="mb-4 text-sm text-red-600">{fieldErrors.course_id[0]}</p>
+        // eslint-disable-next-line no-restricted-syntax
+        <p className="mb-4 text-sm" style={{ color: dangerText }}>{fieldErrors.course_id[0]}</p>
       )}
 
       {step === 1 ? (
@@ -71,7 +80,7 @@ export function QuoteWizard({
           onSelect={(id) => set('course_id', id)}
         />
       ) : (
-        <DataStep form={form} fieldErrors={fieldErrors} onChange={set} />
+        <DataStep Field={campo.Field} form={form} onChange={set} />
       )}
     </AppDialog>
   )

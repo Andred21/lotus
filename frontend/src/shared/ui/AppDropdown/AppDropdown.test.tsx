@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { AppDropdown } from './AppDropdown'
@@ -9,8 +9,6 @@ import { AppDropdown } from './AppDropdown'
 beforeAll(async () => {
   await i18n.changeLanguage('es-CL')
 })
-
-afterEach(cleanup)
 
 // O painel do Prime monta em portal, fora do container do render; a mensagem de
 // vazio se le nele, e nao no controle fechado -- que carrega o MESMO texto por

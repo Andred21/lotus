@@ -228,4 +228,32 @@ class EventosDeAcessoTest extends TestCase
 
         $this->assertCount(1, $this->eventos('taxa.excedida'));
     }
+
+    /**
+     * O 403 que nasce de RECUSA DE DOMÍNIO também é acesso negado.
+     *
+     * `RedatorOnlyActionException` deixou de estender `HttpException` no bloco
+     * do envelope; o teto por `getStatusCode() === 403` do
+     * `RegistraEventoDeErro` não a alcança mais, e sem o braço do
+     * `TipoDeRecusa` este evento sumiria sem nenhum teste reprovar. É a razão
+     * de este teste existir.
+     */
+    public function test_recusa_de_dominio_403_registra_evento(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $admin = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $admin->assignRole('admin');
+        $this->actingAs($admin, 'web');
+
+        // Admin não tem perfil de redator: a ação self-service recusa com
+        // `RedatorOnlyActionException`.
+        $this->postJson('/api/profile/documents')->assertStatus(403);
+
+        $eventos = $this->eventos('acesso.negado');
+
+        $this->assertCount(1, $eventos);
+        $this->assertSame($admin->id, $eventos[0]['usuario_id']);
+        $this->assertSame('api/profile/documents', $eventos[0]['rota']);
+    }
 }

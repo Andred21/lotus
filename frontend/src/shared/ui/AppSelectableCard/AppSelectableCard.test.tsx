@@ -1,8 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { AppSelectableCard } from './AppSelectableCard'
-
-afterEach(cleanup)
 
 /**
  * O C da fase 4 (run de 2026-08-28): o `<div>` externo calcula o fundo do

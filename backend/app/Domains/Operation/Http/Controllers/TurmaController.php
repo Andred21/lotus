@@ -21,7 +21,8 @@ use App\Domains\Operation\QueryBuilders\TurmaQueryBuilder;
 use App\Domains\Operation\Services\ManualDocumentService;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Http\Controllers\Controller;
-use App\Shared\Audit\ArchiveTrailQuery;
+use App\Shared\Audit\ArchivedListing;
+use App\Shared\Http\RespostaDeRecurso;
 use App\Shared\Pagination\PageData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -98,10 +99,10 @@ class TurmaController extends Controller implements HasMiddleware
     }
 
     /**
-     * A mesma página, sobre as arquivadas. `slice()` e não `page()`: o
-     * "arquivado por" é resolvido num lote só sobre os ids DA PÁGINA
-     * (`ArchiveTrailQuery::archivedBy`), e a projeção precisa da coleção antes
-     * de mapear.
+     * A mesma página, sobre as arquivadas. `slice()` e não `page()`: quem
+     * arquivou é resolvido num lote só sobre os ids DA PÁGINA, e o lote
+     * exige a coleção pronta ANTES da projeção — é o que `slice()` devolve
+     * crua para `ArchivedListing::lista()` consumir.
      *
      * @return PageData<ArchivedTurmaData>
      */
@@ -112,39 +113,30 @@ class TurmaController extends Controller implements HasMiddleware
             ->withArchivedListingData()
             ->slice($page, filter: fn (TurmaQueryBuilder $q) => $q->whereDisplayStatus($page->status, asOfArchiving: true));
 
-        $autores = ArchiveTrailQuery::archivedBy(Turma::class, $turmas->pluck('id')->all());
-
         return new PageData(
-            data: $turmas
-                ->map(fn (Turma $t) => new ArchivedTurmaData(
+            data: ArchivedListing::lista(
+                $turmas,
+                Turma::class,
+                fn (Turma $t, string $em, ?string $por) => new ArchivedTurmaData(
                     turma: TurmaData::fromModel($t, $habilitacao),
-                    archived_at: $t->deleted_at->toIso8601String(),
-                    archived_by: $autores[$t->id] ?? null,
-                ))
-                ->values()
-                ->all(),
+                    archived_at: $em,
+                    archived_by: $por,
+                ),
+            ),
             meta: $meta,
         );
     }
 
     public function restore(int $turma, RestoreTurmaAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
     {
-        // Resolvido à mão, não por binding: o binding padrão aplica o global
-        // scope de SoftDeletes e nunca acharia uma arquivada. `onlyTrashed()`
-        // também dá o 404 de graça sobre registro ATIVO (molde D5).
-        $model = Turma::onlyTrashed()->whereKey($turma)->firstOrFail();
+        $model = ArchivedListing::resolveArquivado(Turma::query(), $turma);
 
-        // 200, não 201: restaurar devolve um registro que já existia.
-        return $this->present($action->execute($model), $habilitacao)
-            ->toResponse(request())
-            ->setStatusCode(Response::HTTP_OK);
+        return RespostaDeRecurso::ok($this->present($action->execute($model), $habilitacao));
     }
 
     public function designateRedator(Turma $turma, Redator $redator, DesignateRedatorAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
     {
-        return $this->present($action->execute($turma, $redator), $habilitacao)
-            ->toResponse(request())
-            ->setStatusCode(200);
+        return RespostaDeRecurso::ok($this->present($action->execute($turma, $redator), $habilitacao));
     }
 
     public function removeRedator(Turma $turma, Redator $redator, RemoveRedatorAction $action, TurmaHabilitacaoService $habilitacao): TurmaData
@@ -154,9 +146,7 @@ class TurmaController extends Controller implements HasMiddleware
 
     public function conclude(Turma $turma, ConcludeTurmaAction $action, TurmaHabilitacaoService $habilitacao): JsonResponse
     {
-        return $this->present($action->execute($turma), $habilitacao)
-            ->toResponse(request())
-            ->setStatusCode(200);
+        return RespostaDeRecurso::ok($this->present($action->execute($turma), $habilitacao));
     }
 
     public function manual(Turma $turma, ManualDocumentService $manual): Response

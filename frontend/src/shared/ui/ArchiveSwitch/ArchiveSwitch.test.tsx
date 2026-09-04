@@ -1,10 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { ArchiveSwitch } from './ArchiveSwitch'
 
 // Sem `globals` no vitest, a limpeza do RTL não é automática — sem ela o
 // segundo `render` acha os botões do primeiro.
-afterEach(cleanup)
 
 describe('ArchiveSwitch', () => {
   it('marca o modo corrente e avisa a troca', () => {

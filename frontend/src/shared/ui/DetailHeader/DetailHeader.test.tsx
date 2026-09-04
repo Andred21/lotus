@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { DetailHeader } from './DetailHeader'
 
 /**
@@ -11,10 +11,6 @@ import { DetailHeader } from './DetailHeader'
  * As asserções são sobre EXISTIR um `h1` e ser um só; o texto entra só onde ele
  * é o que muda entre visível e escondido.
  */
-
-afterEach(() => {
-  cleanup()
-})
 
 describe('DetailHeader sempre tem um nível 1', () => {
   it('emite exatamente um h1 com o título visível', () => {

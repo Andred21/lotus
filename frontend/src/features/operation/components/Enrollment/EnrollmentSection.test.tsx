@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { screen } from '@testing-library/react'
+import { renderWithProviders } from '@shared/testing/providers'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import type { EnrollmentData, TurmaData } from '@shared/types/generated'
 import type { useEnrollmentSection } from '../../hooks/useEnrollmentSection'
@@ -60,13 +60,7 @@ function comPermissoes(permissions: string[]) {
 /** A `EnrollmentTable` monta o `RegisterResultDialog`, que abre mutation própria — o
  * provider entra para a árvore montar, não porque a prova dependa de rede. */
 function montar(turma: TurmaData = TURMA) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-
-  return render(
-    <QueryClientProvider client={qc}>
-      <EnrollmentSection turma={turma} />
-    </QueryClientProvider>,
-  )
+  return renderWithProviders(<EnrollmentSection turma={turma} />)
 }
 
 beforeEach(() => {
@@ -81,7 +75,6 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  cleanup()
   useSessionStore.setState({ user: null, status: 'unauthenticated' })
 })
 

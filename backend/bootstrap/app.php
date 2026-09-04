@@ -1,6 +1,7 @@
 <?php
 
 use App\Shared\Exceptions\ProblemDetails;
+use App\Shared\Exceptions\RecusaDeDominio;
 use App\Shared\Http\Middleware\EnsureAccountIsActive;
 use App\Shared\Http\Middleware\SetLocale;
 use App\Shared\Logging\RegistraEventoDeErro;
@@ -126,6 +127,26 @@ return Application::configure(basePath: dirname(__DIR__))
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Recusa de domínio é resposta ESPERADA, não defeito: não vai ao log.
+        //
+        // Enquanto as quatro recusas estendiam `HttpException` elas viajavam
+        // de graça no `$internalDontReport` do `Handler` do Laravel
+        // (`Illuminate\Foundation\Exceptions\Handler:170`, que lista
+        // `HttpException` e não `RuntimeException`). O bloco do envelope as
+        // moveu para `RecusaDeDominio extends RuntimeException` e essa carona
+        // acabou EM SILÊNCIO: medido em 2026-09-03, `shouldntReport()` virou
+        // `false` e um `POST /api/quotes/2/turma` com cotação não aprovada
+        // passou a gravar `error` + stack trace. No 403 o sinal ainda
+        // duplicava, porque o `RegistraEventoDeErro` já registra
+        // `acesso.negado` (Q-1 do review de 2026-09-03).
+        //
+        // `CorruptedSnapshotException` fica DE FORA de propósito: ela é 500 e
+        // significa documento de peso legal que não pode ser apresentado —
+        // exatamente o que tem de acordar alguém. Por isso a supressão é pela
+        // base `RecusaDeDominio`, e não por `PublicDetail`, que as duas
+        // compartilham.
+        $exceptions->dontReport(RecusaDeDominio::class);
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );

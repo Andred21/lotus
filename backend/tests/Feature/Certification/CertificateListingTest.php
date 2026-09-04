@@ -188,7 +188,10 @@ class CertificateListingTest extends TestCase
             // `codigo` ao gate — fica verde.
             ->assertJsonPath(
                 'detail',
-                'El certificado LOT-2026-1002 no puede presentarse: su documento congelado no tiene los campos aluno.name.',
+                __('certification.snapshot.not_presentable', [
+                    'codigo' => 'LOT-2026-1002',
+                    'campos' => 'aluno.name',
+                ]),
             );
     }
 
@@ -217,7 +220,10 @@ class CertificateListingTest extends TestCase
             ->assertStatus(500)
             ->assertJsonPath(
                 'detail',
-                'El certificado LOT-2026-1003 no puede presentarse: su documento congelado no tiene los campos aluno.name, curso.name.',
+                __('certification.snapshot.not_presentable', [
+                    'codigo' => 'LOT-2026-1003',
+                    'campos' => 'aluno.name, curso.name',
+                ]),
             );
     }
 

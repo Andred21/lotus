@@ -102,9 +102,9 @@ const REGRAS_COMPONENTE_FEATURE = [
 // ~75 arquivos de componente.
 //
 // Por isso `COR_HARDCODED` e `DISABLED_READONLY` NÃO ganham bloco próprio:
-// entram nos arrays dos blocos que JÁ casam cada glob — `components/**` (com
-// a catraca de cor particionada por `ignores`/`files: CATRACA_COR`, dois
-// blocos abaixo) e o resto de `src/features/**` — e só `shared/**` ganha
+// entram nos arrays dos blocos que JÁ casam cada glob — `components/**` (que
+// até 2026-09-02 vinha particionado por `ignores`/`files: CATRACA_COR`, hoje
+// zerado) e o resto de `src/features/**` — e só `shared/**` ganha
 // bloco novo, porque nenhum bloco existente casa aquele glob com
 // `no-restricted-syntax`.
 const COR_HARDCODED = {
@@ -213,13 +213,141 @@ const DISABLED_READONLY_ESTATICO = {
 // `NestedField` NÃO conta como pai válido, de propósito: ele não monta
 // `FieldContext`, então um dropdown dentro dele fica sem nome do mesmo jeito.
 // Hoje não há nenhum; quando houver, reprova.
+//
+// `Field` (maiúscula, sem prefixo) TAMBÉM conta como pai válido: é o
+// componente que `useFormField` devolve (item 24) — ele monta `FormField` por
+// baixo com o MESMO `FieldContext.Provider`, então o `inputId` chega ao
+// dropdown do mesmo jeito. Sem esta linha, todo call site migrado para o
+// molde do `ClientGeneralFields` reprovaria por forma, não por defeito real.
+// Vale nas DUAS grafias da tag: `<Field>` (a prop que desce ao subcomponente)
+// e `<campo.Field>` (o dono do hook, `JSXMemberExpression` — onde `name.name`
+// não existe e o predicado antigo não casava nada).
+//
+// A guarda casa a GRAFIA da tag, não a origem dela: qualquer JSX chamado
+// `Field` conta como pai válido, e `const F = useFormField(f)` escapa da
+// regra. É o mesmo limite que o `FormField` sempre teve — o seletor é
+// sintático — e não um afrouxamento novo; fica escrito para a próxima task
+// não confundir convenção de nome com verificação de tipo.
+// O campo ligado ao form (item 24) tem UMA porta para o erro do backend: o
+// `name`. A extração à mão era a grafia de 48 sítios em 24 arquivos, e cada
+// campo novo que a esquecesse ficava com o 422 invisível — botão de salvar
+// aparentemente inerte. `error` continua existindo como escape declarada (a
+// chave que não é o nome do campo), e é por isso que a régua mede a EXTRAÇÃO,
+// não a prop.
+//
+// Mede as DUAS grafias do mesmo acesso, e não só a que os 48 sítios usavam:
+// `fieldErrors?.x?.[0]` (identificador solto, desestruturado do bundle) e
+// `f.fieldErrors?.x?.[0]` (pescado do bundle na hora) — esta segunda era
+// exatamente a grafia do `TurmaConfigCard` antes da migração, e passava limpa
+// pelo seletor de um predicado só (Q-1 do review de 2026-09-02, medido com
+// sonda). O que ela NÃO pega, dito para ninguém supor cobertura que não
+// existe: apelido (`const { fieldErrors: fe } = f; fe?.x?.[0]`), porque aí não
+// sobra o nome `fieldErrors` em lugar nenhum da expressão. É o mesmo limite
+// sintático do `DROPDOWN_SEM_NOME`: casa grafia, não origem.
+const ERRO_DE_CAMPO_A_MAO = {
+  selector:
+    'MemberExpression[computed=true][property.value=0]' +
+    ':matches([object.object.name="fieldErrors"], [object.object.property.name="fieldErrors"])',
+  message:
+    'Erro de campo extraído à mão: use <Field name="x"> e o erro vem do form (spec do item 24). A prop `error` fica para a chave que NÃO é o nome do campo.',
+}
+
+// P-69: o desmonte é do `setupFiles`, não de cada arquivo. A grafia manual era
+// o molde que se copiava do vizinho — 62 dos 127 arquivos a escreviam, 65 não,
+// e quem escrevia teste novo herdava a decisão de quem escreveu o anterior.
+//
+// Descendente, e não `> Identifier`, porque as TRÊS grafias vivas precisam
+// cair: `afterEach(cleanup)` (28 arquivos), `afterEach(() => cleanup())`
+// (SidebarItem, PendenciasList) e `afterEach(() => { …; cleanup() })` (32) —
+// nas duas últimas o nome aparece como callee de uma CallExpression dentro da
+// arrow, e um seletor de filho direto as deixaria passar.
+//
+// O plano previa 31 arquivos, de um grep por `afterEach(cleanup)`; o seletor
+// achou 62, porque a terceira grafia esconde o `cleanup()` no CORPO da arrow,
+// ao lado de um `vi.clearAllMocks()`. É o parágrafo "catraca nova mede a
+// própria população com o seletor dela" do `frontend-fsliced.md`, medido de
+// novo — corrigido no review de 2026-09-03 (Q-2).
+//
+// O que ela NÃO pega, dito para ninguém supor cobertura que não existe:
+// apelido (`const desmontar = cleanup; afterEach(desmontar)`). Casa grafia, não
+// origem — mesmo limite do `DROPDOWN_SEM_NOME` e do `ERRO_DE_CAMPO_A_MAO`.
+//
+// O par que a sustenta é `tests/desmonte-global.test.ts`: sem ele, apagar o
+// `setupFiles` deixaria esta proibição de pé sobre nada.
+const CLEANUP_A_MAO = {
+  selector: 'CallExpression[callee.name="afterEach"] Identifier[name="cleanup"]',
+  message:
+    'Desmonte à mão: o `afterEach(cleanup)` é global (src/test-setup.ts, P-69). Apague a linha e o import — repeti-la aqui não muda comportamento e faz o próximo copiar o molde.',
+}
+
+// Item 27: a montagem de provedor em teste tem UMA casa
+// (`src/shared/testing/providers.tsx`). Eram 33 arquivos e SETE grafias, e 20
+// dos 24 wrappers locais construíam o client dentro do componente — cache
+// morto a cada re-render.
+//
+// Nas TRÊS camadas, e não nas duas que a ficha do item pedia: `shared/` tinha
+// 4 dos 33 sítios, e camada descoberta é por onde o defeito volta. Foi assim
+// que a P-67 voltou, por grafia que a catraca não alcançava.
+//
+// Perímetro: `.ts` e `.tsx` nas três camadas — `features/` pelos blocos de
+// feature, `shared/` e `app/` pelos blocos `.tsx` mais o bloco de `.ts` logo
+// depois deles. Isento: `src/shared/testing/**` e `AppProviders.tsx`.
+//
+// O que ela NÃO pega, dito para ninguém supor cobertura que não existe:
+// apelido (`const C = QueryClient; new C()`). Casa grafia, não origem — mesmo
+// limite do `CLEANUP_A_MAO` e do `DROPDOWN_SEM_NOME`.
+const QUERY_CLIENT_A_MAO = {
+  selector: 'NewExpression[callee.name="QueryClient"]',
+  message:
+    'Client à mão: use `createWrapper()` ou `renderWithProviders()` de `@shared/testing/providers` (item 27). Precisa de opção diferente? Passe `queryClientOptions` — o desvio fica visível no sítio.',
+}
+
+// Onde `QueryClient` se constrói legitimamente: a aplicação e a home de teste.
+// Particionam os globs de `shared/` e `app/` pelo mesmo molde do
+// `FORA_DO_CAMPO_LIGADO` — sem o bloco gêmeo abaixo, o `ignores` diria "NENHUMA
+// régua vale aqui" em vez de "esta régua não vale aqui".
+//
+// `src/shared/testing/**`, e não o arquivo `providers.tsx`: a spec §4.4 isentou
+// o DIRETÓRIO, e a isenção por arquivo faria o próximo mecanismo de teste nascer
+// reprovando — convite a `eslint-disable` (Q-3 do review de 2026-09-04).
+const CONSTROEM_QUERY_CLIENT = [
+  'src/app/providers/AppProviders.tsx',
+  'src/shared/testing/**/*.{ts,tsx}',
+]
+
+// Os arquivos que o item 24 deixou fora POR MEDIÇÃO (spec §2), e que por isso
+// seguem extraindo o erro à mão. Não é dívida esquecida: é o escopo escrito.
+// Particiona o mesmo glob do bloco de componente — ver o bloco gêmeo abaixo. É
+// o molde que a `CATRACA_COR` usava até zerar em 2026-09-02, e hoje o único
+// vivo no arquivo.
+const FORA_DO_CAMPO_LIGADO = [
+  // Sem bundle de form a que ligar o campo: setter por campo, estado solto, ou
+  // chave de erro que não é o nome do campo (`grades.final`).
+  'src/features/operation/components/Enrollment/EnrollStudentForm.tsx',
+  'src/features/operation/components/Enrollment/RegisterResultDialog.tsx',
+  'src/features/certification/components/Emission/ConfirmIssueDialog.tsx',
+  'src/features/certification/components/Emission/BatchIssueDialog.tsx',
+  'src/features/certification/components/Historial/RevokeDialog.tsx',
+  // Campo aninhado: chave posicional `contacts.<i>.<campo>` e setter de patch.
+  // A porta futura é um `FormScope prefix=`, não esta régua.
+  'src/features/commercial/components/Client/ContactCard.tsx',
+  'src/features/commercial/components/Client/ContactFields.tsx',
+  'src/features/catalog/components/Course/ModuleCard.tsx',
+  'src/features/catalog/components/Course/ModuleFields.tsx',
+  // Não são formulário de entidade: sem entidade, sem dialog, sem modo.
+  'src/features/identity/components/Login/LoginForm.tsx',
+  'src/features/identity/components/Login/ForgotForm.tsx',
+  'src/features/identity/components/Password/SetPasswordPage.tsx',
+]
+
 const DROPDOWN_SEM_NOME = {
   selector:
     'JSXElement[openingElement.name.name="AppDropdown"]' +
-    ':not(JSXElement[openingElement.name.name="FormField"] JSXElement[openingElement.name.name="AppDropdown"])' +
+    ':not(JSXElement:matches([openingElement.name.name=/^(FormField|Field)$/], ' +
+    '[openingElement.name.property.name="Field"]) JSXElement[openingElement.name.name="AppDropdown"])' +
     ':not(:has(JSXOpeningElement > JSXAttribute[name.name=/^(inputId|aria-label|aria-labelledby)$/]))',
   message:
-    'AppDropdown sem nome acessível: dentro de FormField o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
+    'AppDropdown sem nome acessível: dentro de FormField/Field o id vem por contexto; fora dele passe inputId (ligado a uma label) ou aria-label. O `id` do Dropdown cai no nó raiz e não alcança o input focável (D-62).',
 }
 // Item 19 (R1): `AppButton` sem papel cai no `.p-button` preenchido do Lara —
 // celeste com rótulo navy —, que NÃO é papel deste produto: a ação primária é
@@ -439,7 +567,7 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
   message:
     'Lista sem role="list": o mini-reset da P-46 zera o marcador e o WebKit tira a semântica de lista junto (Q-6, 2026-08-27).',
 }))
-// Catraca da regra de cor: lista que só ENCOLHE. O Login
+// Catraca da regra de cor (`CATRACA_COR`): lista que só ENCOLHE. O Login
 // SAIU em 2026-08-13: o desenho novo que esta linha previa é o bloco
 // `login-fora-do-adr16`, e a tela passou a ler token de superfície e de texto
 // em vez de utility fixa. Não reintroduza arquivo aqui para calar o lint —
@@ -447,11 +575,15 @@ const LISTA_SEM_SEMANTICA = ['ul', 'ol'].map((tag) => ({
 // A Validação SAIU em 2026-08-28: o `bg-slate-50 dark:bg-slate-950` virou
 // `--surface-ground` (achado C2 do audit de 2026-08-26) e o arquivo não tem
 // mais cor crua nenhuma.
-const CATRACA_COR = [
-  'src/features/commercial/components/Budget/CourseStep.tsx',
-  'src/features/commercial/components/Budget/QuoteWizard.tsx',
-  'src/features/operation/components/Document/ManualButton.tsx',
-]
+// Os TRÊS ÚLTIMOS saíram em 2026-09-02 (D-69, item 25): `--text-color-secondary`
+// nos dois sítios de texto e `dangerText` nos dois de erro. A lista chegou a
+// zero e a PARTIÇÃO morreu junto — o bloco `files: CATRACA_COR` que existia
+// logo abaixo foi removido nesta data, e o array em si saiu no review de
+// 2026-09-03 (Q-4): um `const CATRACA_COR = []` que ninguém lê é o mesmo ruído
+// que o bloco `files: []` — o próximo leitor o toma por catraca viva, e o
+// `no-unused-vars` não alcança este arquivo para acusar. Reabri-la exige
+// recriar os dois lados, não empurrar um nome para dentro de um array que já
+// não existe.
 
 export default defineConfig([
   // generated.ts é gerado pelo typescript-transformer (ADR-04) e nunca editado
@@ -485,29 +617,27 @@ export default defineConfig([
   // primeiro — dois blocos `src/features/**/*.tsx` novos apagando ESTE bloco
   // em silêncio para todo componente, achado do review desta task.
   //
-  // `ignores: CATRACA_COR` porque a catraca de cor (D7, dois blocos abaixo)
-  // precisa das MESMAS 4 proibições de componente — só não a de cor hardcoded
-  // — e um array de `no-restricted-syntax` não aceita `ignores` por seletor
-  // individual dentro de si. A catraca ganha bloco próprio com o mesmo array
-  // menos `COR_HARDCODED`, particionando o mesmo glob sem sobreposição.
+  // O `ignores` guarda só `FORA_DO_CAMPO_LIGADO` desde 2026-09-02: a partição
+  // por `CATRACA_COR` existia porque a catraca de cor precisava das MESMAS
+  // proibições de componente menos `COR_HARDCODED`, e um array de
+  // `no-restricted-syntax` não aceita `ignores` por seletor individual. Com a
+  // lista em zero (D-69, item 25) o segundo lado da partição foi removido.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
-    ignores: CATRACA_COR,
+    ignores: [...FORA_DO_CAMPO_LIGADO],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
-  // A catraca de cor (D7): mesmo array do bloco acima, sem `COR_HARDCODED` —
-  // é o único ponto onde a cor segue hardcoded de propósito. `files: CATRACA_COR`
-  // aqui e `ignores: CATRACA_COR` acima particionam o mesmo glob; nenhum
-  // arquivo casa os dois blocos.
-  // A régua de VALOR entra aqui também, e sem exceção: o que estes 4 arquivos
-  // carregam é a exceção da classe Tailwind, não a de cor em `style` — e eles
-  // não têm nenhuma (medido em 2026-08-17).
+  // Gêmeo do bloco acima para os arquivos fora do item 24: MESMO array, menos
+  // `ERRO_DE_CAMPO_A_MAO`. Sem ele, o `ignores` de cima não significaria "esta
+  // régua não vale aqui" e sim "NENHUMA régua vale aqui" — os 3 bans de query,
+  // o de cor e os de acessibilidade sumiriam desses 12 arquivos em silêncio. É
+  // o mesmo molde que a partição `CATRACA_COR` usava até zerar em 2026-09-02.
   {
-    files: CATRACA_COR,
+    files: FORA_DO_CAMPO_LIGADO,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -528,7 +658,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -549,6 +679,21 @@ export default defineConfig([
   // reabriria em silêncio a catraca de query-em-componente (zerada em
   // 2026-08-03). Esta catraca também zerou — o `ignores` não existe mais —,
   // mas o bloco segue separado: nada ganha em fundir agora.
+  //
+  // Teste de feature NÃO é isento, ao contrário do gêmeo de `src/app/**` doze
+  // linhas abaixo, e a assimetria é escolha (P-68, escrita em 2026-09-02).
+  //
+  // O precedente é o item 18: o único teste de componente de feature que passou
+  // de 150 foi QUEBRADO (`e76747a6`), não isentado. A razão é que o teste de
+  // componente de feature cresce pelo mesmo motivo que o componente cresce —
+  // muitos casos porque há muita responsabilidade —, então o limite mede o
+  // mesmo defeito dos dois lados. Em `src/app/**` não vale: lá o que passa de
+  // 150 é teste de PÁGINA, coeso por natureza, e quebrá-lo paga preço pela
+  // regra e não pelo defeito.
+  //
+  // Medido em 2026-09-02: dos 24 arquivos `*.test.tsx` sob este glob, nenhum
+  // passa de 150 e DOIS estão exatamente em 150 (`EnrollmentSection.test.tsx`,
+  // `ProfileDocumentSlot.test.tsx`) — a régua está mordendo, não decorando.
   {
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     rules: {
@@ -697,8 +842,18 @@ export default defineConfig([
   // os 3 sítios foram convertidos para `--shell-ink`/`--shell-ink-muted`.
   {
     files: ['src/shared/**/*.tsx'],
+    ignores: [...CONSTROEM_QUERY_CLIENT],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
+    },
+  },
+  // Gêmeo do bloco acima para os dois arquivos que constroem `QueryClient` de
+  // verdade: MESMO array, menos `QUERY_CLIENT_A_MAO`. Mesmo molde do gêmeo de
+  // `FORA_DO_CAMPO_LIGADO`.
+  {
+    files: ['src/shared/testing/**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, CLEANUP_A_MAO],
     },
   },
   // A catraca de cor entra em `src/app/**` (D11 de
@@ -731,8 +886,34 @@ export default defineConfig([
   // deste arquivo casa `no-restricted-syntax` em `src/app/**`.
   {
     files: ['src/app/**/*.tsx'],
+    ignores: [...CONSTROEM_QUERY_CLIENT],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
+    },
+  },
+  // O `.ts` de `shared/` e `app/`, que NENHUM bloco de `no-restricted-syntax`
+  // alcançava: os dois blocos acima são `*.tsx`, e a sonda provou o buraco no
+  // review de 2026-09-04 (Q-3) — `sonda.ts` com `new QueryClient` passava em
+  // `shared/` e `app/` e reprovava em `features/`, que já mede `{ts,tsx}`.
+  //
+  // Só a catraca de client, e não o array inteiro dos blocos `.tsx`: as outras
+  // réguas de lá são de JSX (cor, `disabled`/`readOnly`, âncora, dropdown) e
+  // nasceriam sem população num arquivo sem markup. Bloco próprio de `*.ts`,
+  // sem sobreposição com os `.tsx` — nenhum merge raso a temer.
+  {
+    files: ['src/shared/**/*.ts', 'src/app/**/*.ts'],
+    ignores: ['src/shared/testing/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', QUERY_CLIENT_A_MAO],
+    },
+  },
+  // Gêmeo do bloco acima para os dois arquivos que constroem `QueryClient` de
+  // verdade: MESMO array, menos `QUERY_CLIENT_A_MAO`. Mesmo molde do gêmeo de
+  // `FORA_DO_CAMPO_LIGADO`.
+  {
+    files: ['src/app/providers/AppProviders.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
     },
   },
 ])

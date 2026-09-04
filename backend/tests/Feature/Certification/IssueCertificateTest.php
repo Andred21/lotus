@@ -166,7 +166,7 @@ class IssueCertificateTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonPath(
                 'errors.redator_id.0',
-                'El redactor no está designado en esta clase.',
+                'El relator no está designado en esta clase.',
             );
     }
 

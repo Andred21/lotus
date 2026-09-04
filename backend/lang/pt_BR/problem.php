@@ -19,5 +19,6 @@ return [
         'forbidden' => 'Você não tem permissão para esta ação.',
         'not_found' => 'O recurso solicitado não existe.',
         'generic' => 'Não foi possível processar a requisição.',
+        'csrf' => 'Sua sessão expirou ou o formulário perdeu validade. Recarregue a página e tente de novo.',
     ],
 ];

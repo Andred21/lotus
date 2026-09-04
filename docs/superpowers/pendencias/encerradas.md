@@ -7,60 +7,104 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(duas: a **P-73**, fechada em 2026-09-04 pelo `infra-producao-provisionamento-aws`, e a
-**P-67**, fechada em 2026-09-01 pelo `frontend-decisoes-de-ui-pendentes`. A **P-61** e a
-**P-63** saíram neste mesmo fechamento — o primeiro posterior aos dos dois blocos que as encerraram
-em 2026-08-30 —, e o parágrafo adiante é o rastro delas. A **P-66** saiu no fechamento do
-`frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao do
-`hardening-performance-e-dados` que a encerrou — o índice `login_logs_created_at_index` é mecanismo
-em migration, e o rastro dela está no git e na linha de entrega em `../historico/progress.md`. A
-**P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de 2026-08-29, e a **P-03** e a
-**P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro delas.)*
+*(quatro: a **`P-58`**, fechada em **2026-09-04** pelo `frontend-arrumacao-de-testes` (item 27), e
+as três que o `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) fechou em **2026-09-03** —
+`P-71`, `P-72` e a metade de comportamento da `P-60`. As cinco do `frontend-dividas-de-mecanismo`
+(item 25) — `P-69`, `P-68`, `P-70`, `P-30` e `P-42` — **saíram neste fechamento**, o primeiro
+posterior ao do bloco que as encerrou; o parágrafo adiante é o rastro delas. As três do item 26
+ficam: elas são da `lane-a`, que não fechou bloco desde então, e o rastro de 1 sprint delas se conta
+pelo fechamento dela.)*
 
-### P-73 — advisory transitiva nova reprovava o `audit-dev` e segurava a imagem da `main`
+> **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
+> `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
+> por engano; as duas foram renumeradas no mesmo dia — a do item 25 para **`P-74`** e as do item 26
+> para **`P-75`** e **`P-76`**, nesta ordem de integração. Número de pendência não se reusa nem se
+> renumera para trás: é a mesma regra que o `state.md` escreveu para o rótulo de bloco na colisão
+> de 2026-09-02.
 
-**Fechada em 2026-09-04**, no `infra-producao-provisionamento-aws` (item 10 v2), pelo remédio que a
-própria ficha nomeava: **bump de lockfile, `package.json` intacto**. A alternativa recusada por
-escrito na spec do item 20 (`pnpm.overrides`) continuou fora — não foi usada.
+### P-58 — a catraca do vite isola o `.env` da RAIZ e não o `frontend/.env`
 
-`pnpm update browserslist --depth Infinity` em `frontend/`. Antes e depois, medidos:
+**Fechada em 2026-09-04**, por mecanismo, no item 27 (Task 7). `tests/compose-dev.test.ts` passou a
+afastar os quatro `.env*` das **duas** raízes que o `vite.config.ts` lê — a do repositório
+(`loadEnv(mode, RAIZ, 'LOTUS_')`, o offset de portas) e a de `frontend/`
+(`loadEnv(mode, __dirname, 'VITE_')`, que decide se `VITE_API_URL` já está definido). O `NOMES_ENV`
+antigo virou o produto `DIRETORIOS_ENV × NOMES_ENV`, com a chave do caminho relativa para que
+`.env` da raiz e `frontend/.env` não colidam nos mapas de plantados e backups pendentes.
+
+**Provado com o arquivo posto e retirado**, duas vezes: na execução, a versão pré-Task-7
+(`git show 32b05097:...`) com `frontend/.env` real no disco deu as **3 falhas** que a ficha
+descreve (`expected undefined to be '"http://localhost:8080"'`) e a versão nova, mesmo arquivo no
+disco, deu **12/12**; no fechamento, com `VITE_API_URL=http://localhost:8080` plantado de novo,
+`pnpm test --project=repo tests/compose-dev.test.ts` deu **12/12** e o arquivo saiu, deixando a
+árvore limpa. O gate deixou de depender do disco de quem roda.
+
+### P-71 — cinco recusas que o usuário lê continuam literais fora de `lang/`, em três domínios
+
+**Fechada em 2026-09-03**, no `backend-envelope-de-erro-e-recusa-de-dominio` (item 26), por
+mecanismo. Os cinco sítios que a ficha contava passaram a ler `lang/` nos três locales e saíram da
+`DEBITO_CONHECIDO` no mesmo commit: `RedatorNaoElegivelException:16,21` e
+`TurmaConfiguracaoException:15,20` (pt-BR), e a `CorruptedSnapshotException`, cujo `sprintf` de dois
+`%s` virou `certification.snapshot.not_presentable` com os parâmetros `:codigo` e `:campos`.
+
+**Ela pagou seis a mais do que contava.** O Q-7 do review de 2026-09-03 achou o que a própria ficha
+tinha nomeado sem hospedar: `CertificateEligibility::refuse()` recusava com seis frases literais em
+es-CL, e nenhuma catraca as via — o `withMessages` do helper recebe `[$field => $message]` em
+**variáveis**, e a frase mora no chamador, seis linhas acima. As seis saíram para
+`certification.eligibility.*` nos três locales, e `MensagemDeCertificadoLocalizadaTest` prova que
+são três traduções distintas, não a mesma frase copiada.
+
+**O mecanismo é o que fecha, não a tradução.** `MensagemLiteralTest` ganhou a **terceira porta**:
+`nenhum_encaminhador_de_with_messages_carrega_texto_literal` **descobre** o encaminhador pelo corpo
+do método (quem repassa para `withMessages`), não pelo nome, e cobra a frase literal no chamador
+dele. Helper novo com outro nome já nasce coberto. No mesmo passo, o Q-6 tirou
+`CorruptedSnapshotException.php:48` da `DEBITO_CONHECIDO` ensinando o detector a ignorar o
+separador de `implode(', ', ...)` — a lista é inventário e só encolhe, ela não hospeda falso
+positivo.
+
+**O que NÃO foi pago virou ficha:** a **`P-76`** recolhe os seis sítios restantes que a `P-71`
+nomeava e a catraca não alcança — `UserProvisioner::DUPLICADO`, os três `$fail()` de
+`ValidationRule` e o `'Sessão encerrada.'` do `logout`. Ficha que fecha não leva o resto junto.
+
+---
+
+### P-72 — o 419 devolve `detail` literal em inglês nos três locales
+
+**Fechada em 2026-09-03**, no mesmo bloco, por mecanismo e **medida contra a API real**, que é como
+o defeito foi medido. O `detailFor()` do `ProblemDetails` ganhou o braço próprio para
+`TokenMismatchException` e a chave `problem.detail.csrf` nasceu nos três locales. `PUT
+/api/turmas/3` com `X-XSRF-TOKEN: invalido`, remedido no fechamento:
 
 ```
-2 vulnerabilities found          →   No known vulnerabilities found
-Severity: 2 high                     (exit 0)
+es-CL  419 | Error en la solicitud | Tu sesión expiró o el formulario perdió validez. Recarga la página e inténtalo de nuevo.
+pt-BR  419 | Erro na requisição    | Sua sessão expirou ou o formulário perdeu validade. Recarregue a página e tente de novo.
+en     419 | Request error         | Your session expired or the form is no longer valid. Reload the page and try again.
 ```
 
-`browserslist` **4.28.4 → 4.28.8** (as advisories pediam `>=4.28.7`). O diff é **só**
-`pnpm-lock.yaml`, 25 linhas de cada lado, e move apenas o `browserslist` e os pacotes de dados
-dele: `baseline-browser-mapping`, `caniuse-lite`, `electron-to-chromium`, `node-releases`,
-`update-browserslist-db`. `git diff --quiet frontend/package.json` limpo — a condição de
-fechamento da ficha.
+Três frases distintas, nenhuma `CSRF token mismatch.`. O `title` já era localizado antes e
+continua.
 
-Gate depois do bump: `pnpm lint` 0, `pnpm build` verde, `pnpm test` **719 passed (719)**.
+A sonda dessa medição destapou uma divergência de ambiente que **não é deste bloco** e virou a
+**`P-75`**: `config('sanctum.stateful')` não traz o `localhost:5173` que o `.env` declara, então o
+CSRF disparado do Vite dev server real cai em 401 e não no 419.
 
-Pagou-se aqui porque o `audit-dev` está no `needs` do `image` (`ci.yml:338`) e a Task 15 do item 10
-implanta imagem do GHCR — sem verde não nasce par multi-arch e o bloco não fecha. O caso reincide
-por natureza (advisory nova em devDep de terceiro trava o release sem culpa de bloco nenhum); o
-rastro de como se paga fica aqui.
+---
 
-### P-67 — a escala de raio estava escrita na rule e 10 sítios ficaram fora dela, sem catraca
+### P-60 — um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação pública dele devolve 500
 
-**Fechada em 2026-09-01**, no `frontend-decisoes-de-ui-pendentes` (item 21, Tasks 1–3), por
-mecanismo. A `D-66`, que a hospedava, decidiu a régua: o raio passa a vir de **token no `@theme`**
-(`--radius-surface` e `--radius-control`, este lendo o var do tema do PrimeReact), `shared/ui` os
-consome e `features/`+`app/` migram atrás. O planejamento remediu o alcance — os sítios eram **15**,
-não os 10 que a ficha contava: cinco já escreviam `rounded-lg`/`rounded-md` e a catraca os
-alcançaria igual, então migraram junto para ela não nascer vermelha.
+**A metade de COMPORTAMENTO fechou em 2026-09-03**, no mesmo bloco, **por decisão escrita** — a
+**D4** da spec: o gate `assertPresentable()` **não muda** e a rota pública continua estourando.
+`show`, PDF e QR seguem recusando juntos; só o idioma da frase mudou, junto com a `P-71`.
 
-A catraca é a `RAIO_LITERAL` (`no-restricted-syntax` em `frontend/eslint.config.js`), sobre as duas
-camadas que a rule exige (`src/features/**` e `src/app/**`), e **nasceu verde** — foi vista reprovar
-por sonda negativa antes de valer, com o arquivo restaurado do scratchpad (nunca por `git stash`).
-A `.claude/rules/frontend-estilizacao.md` passou a descrever a escala que existe, em vez da que a
-rule descrevia e a tela não tinha — que era exatamente por que os 10 sítios escreveram `rounded`.
+A razão está no docblock da `CorruptedSnapshotException` e não só na spec: documento de peso legal
+não atesta o que não sabe. *Degradar* obrigaria `PublicCertificateData` a aceitar nome vazio;
+*recusa nomeada em 422* tiraria o caso do teto de 500 sem que o SPA tenha estado próprio para ele —
+contrato novo sem consumidor. A mesma decisão é o que mantém a exceção **fora** de
+`RecusaDeDominio` (D5): herdar da base a arrastaria para o mapa 422/403, e `RecusaNaoVaiAoLogTest`
+guarda a contra-prova — recusa de domínio não vai ao log, snapshot corrompido continua indo.
 
-Rastro: `feat(ui): raio ganha dois tokens no @theme e shared/ui os consome` (`97661217`),
-`feat(ui): os 15 sitios de features e app consomem os tokens de raio` (`9d5af40a`) e
-`feat(lint): RAIO_LITERAL nasce verde e a rule descreve a escala real` (`3c27c4f3`).
+**A metade do DADO DE DEV continua aberta** e não se fecha aqui: corrigir ou reseedar o
+`LOT-2026-1001` é o candidato da **`P-44`**, hospedada no item 13. Linha alheia de bloco fechado se
+menciona, não se apaga.
 
 ---
 
@@ -110,6 +154,26 @@ metade não paga do gatilho continua declarada onde ela vive: `IdentityCell.test
 sonda negativa).
 
 ## Rastro anterior, já removido
+
+**A P-69, a P-68, a P-70, a P-30 e a P-42 saíram no fechamento do `frontend-arrumacao-de-testes`
+(2026-09-04)**, o primeiro posterior ao do `frontend-dividas-de-mecanismo` (item 25), que as
+encerrou em 2026-09-03 — e nenhuma saiu na fé: a **P-69** fechou no `setupFiles` com `cleanup()`
+global mais as catracas `CLEANUP_A_MAO` e a guarda estática do `desmonte-global.test.ts`; a
+**P-70**, na allowlist `DETALHE_LOCALIZADO` de 403/404/429 do `screenDetail`; a **P-30**, no
+`warning` alinhado ao amarelo do `AppTag`, com régua de contraste própria (a borda que ela abriu
+vive na **P-74**); a **P-68** e a **P-42**, por decisão escrita — a razão da assimetria de
+`max-lines` ao lado da régua e a emenda datada ao D1 da spec arquivada da célula de identidade, as
+duas sem tocar código. O rastro durável está nos commits e nas linhas de entrega em
+[`../historico/progress.md`](../historico/progress.md).
+
+**A P-73 e a P-67 saíram no fechamento do `frontend-dividas-de-mecanismo` (2026-09-03)**, o primeiro
+posterior aos dos blocos que as encerraram. A **P-73** fechou em 2026-09-02 na PR #93, por bump só
+de lockfile (`browserslist` 4.28.4 → 4.28.8), com `pnpm audit` de volta a **0** e o `package.json`
+intacto. A **P-67** fechou em 2026-09-01 no `frontend-decisoes-de-ui-pendentes`, por mecanismo — a
+escala de raio saiu da rule para catraca. **O ID `P-73` está queimado:** a ficha que este bloco abriu
+nasceu numerada `P-73` por engano e foi renumerada para `P-74` no próprio fechamento, pelo mesmo
+precedente de sempre — ID publicado não se reusa. O rastro durável das duas está nos commits e nas
+linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-61 e a P-63 saíram no fechamento do `frontend-decisoes-de-ui-pendentes` (2026-09-01)**, o
 primeiro posterior aos dos dois blocos que as encerraram em 2026-08-30. A **P-61** fechou no

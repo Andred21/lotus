@@ -19,5 +19,6 @@ return [
         'forbidden' => 'You do not have permission for this action.',
         'not_found' => 'The requested resource does not exist.',
         'generic' => 'The request could not be processed.',
+        'csrf' => 'Your session expired or the form is no longer valid. Reload the page and try again.',
     ],
 ];
