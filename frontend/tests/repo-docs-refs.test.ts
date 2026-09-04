@@ -22,6 +22,7 @@ const DOCS = [
   'CLAUDE.md',
   'INSTRUÇÕES-DO-PROJETO.md',
   '.claude/rules/backend-ddd.md',
+  '.claude/rules/backend-lang.md',
   '.claude/rules/frontend-estilizacao.md',
   '.claude/rules/frontend-fsliced.md',
   '.claude/rules/generated-types.md',
