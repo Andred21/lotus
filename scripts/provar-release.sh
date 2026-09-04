@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Prova que o par de imagens publicado no GHCR para um SHA SOBE e responde,
+# Prova que o conjunto de imagens publicado no GHCR para um SHA SOBE e responde,
 # pela mesma sequencia que o servidor de producao fara:
 #
 #   login -> pull -> migrate -> up -> /up
 #
-# Por que existe: o job `image` verde diz que o par EXISTE no registry, nao que
+# Por que existe: o job `image` verde diz que o conjunto EXISTE no registry, nao que
 # ele roda. Ate 2026-08-29 ninguem tinha puxado o par corporativo -- as provas
 # do runtime (item 10) usaram imagem construida localmente. Este script e a
 # especificacao executavel do que o host fara no deploy (item 12), e roda aqui,
@@ -62,11 +62,16 @@ fi
 
 APP="ghcr.io/$DONO/lotus-app:$SHA"
 WEB="ghcr.io/$DONO/lotus-web:$SHA"
+# Desde 2026-09-04 o antivirus tambem e imagem nossa (clamav/clamav nao publica
+# arm64), promovida pelo mesmo SHA. Sem esta variavel o `up --pull never` do
+# projeto de sonda procuraria lotus-clamav:local e falharia aqui, longe da causa.
+CLAM="ghcr.io/$DONO/lotus-clamav:$SHA"
 PROJETO=lotus-release
 PORTA="${LOTUS_RELEASE_PORT:-8081}"
 
 compose() {
-  LOTUS_IMAGE="$APP" LOTUS_WEB_IMAGE="$WEB" LOTUS_ENV_FILE=docker/probe.env LOTUS_HTTP_PORT="$PORTA" \
+  LOTUS_IMAGE="$APP" LOTUS_WEB_IMAGE="$WEB" LOTUS_CLAMAV_IMAGE="$CLAM" \
+    LOTUS_ENV_FILE=docker/probe.env LOTUS_HTTP_PORT="$PORTA" \
     docker compose -p "$PROJETO" -f docker-compose.prod.yml -f docker-compose.prod-probe.yml "$@"
 }
 
@@ -76,18 +81,18 @@ limpar() {
 }
 trap limpar EXIT
 
-# ── pre-condicao: os dois manifestos, antes de tocar o Docker local ──────────
+# ── pre-condicao: os tres manifestos, antes de tocar o Docker local ──────────
 echo "==> conferindo os manifestos de $SHA em ghcr.io/$DONO"
-for alvo in "$APP" "$WEB"; do
+for alvo in "$APP" "$WEB" "$CLAM"; do
   if ! docker manifest inspect "$alvo" >/dev/null 2>&1; then
     echo "erro: nao foi possivel ler $alvo." >&2
-    echo "      ou o par nao existe para este SHA (o job image nao terminou verde para ele)," >&2
+    echo "      ou o conjunto nao existe para este SHA (o job image nao terminou verde para ele)," >&2
     echo "      ou falta credencial de leitura: PAT classico com escopo read:packages e" >&2
     echo "        docker login ghcr.io -u <usuario> --password-stdin" >&2
     exit 1
   fi
 done
-echo "    app e web existem."
+echo "    app, web e clamav existem."
 
 # ── a sequencia do host ──────────────────────────────────────────────────────
 echo "==> pull"
@@ -133,10 +138,11 @@ fi
 
 # O que esta rodando e o que foi puxado? O ID da imagem de cada container tem
 # de ser o ID da imagem puxada por tag -- sem isso, uma lotus-app antiga
-# poderia estar respondendo o /up. Os DOIS servicos, porque o que se prova aqui
-# e o PAR: a resposta atravessa o nginx, entao uma imagem web errada serviria
-# HTTP igual e o veredito nao mudaria.
-for PAR in "app:$APP" "nginx:$WEB"; do
+# poderia estar respondendo o /up. Os TRES servicos de imagem propria, porque o
+# que se prova aqui e o CONJUNTO: a resposta atravessa o nginx, entao uma imagem
+# web errada serviria HTTP igual e o veredito nao mudaria; e um clamav errado so
+# apareceria no primeiro upload, que este script nao faz.
+for PAR in "app:$APP" "nginx:$WEB" "clamav:$CLAM"; do
   SERVICO="${PAR%%:*}"
   ALVO="${PAR#*:}"
   ID_PUXADO=$(docker image inspect --format '{{.Id}}' "$ALVO")
@@ -153,9 +159,11 @@ done
 # num script cuja saida e colada em audits/, isso e o pior modo de falha.
 DIGEST_APP=$(docker image inspect --format '{{index .RepoDigests 0}}' "$APP")
 DIGEST_WEB=$(docker image inspect --format '{{index .RepoDigests 0}}' "$WEB")
+DIGEST_CLAM=$(docker image inspect --format '{{index .RepoDigests 0}}' "$CLAM")
 
 echo ""
 echo "==> RELEASE PROVADO: $SHA"
 echo "    app  $DIGEST_APP"
 echo "    web  $DIGEST_WEB"
+echo "    av   $DIGEST_CLAM"
 echo "    GET http://127.0.0.1:$PORTA/up -> $CODIGO"

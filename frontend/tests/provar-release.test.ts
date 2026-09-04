@@ -44,7 +44,7 @@ describe('scripts/provar-release.sh', () => {
     expect(semComentarios).toContain('LOTUS_HTTP_PORT="$PORTA"')
   })
 
-  it('exige os dois manifestos antes de tocar o Docker local', () => {
+  it('exige os três manifestos antes de tocar o Docker local', () => {
     expect(semComentarios).toContain('docker manifest inspect')
   })
 
@@ -57,22 +57,27 @@ describe('scripts/provar-release.sh', () => {
     expect(up).toBeGreaterThan(migrate)
   })
 
-  it('julga por GET /up 200 e imprime os dois RepoDigests', () => {
+  it('julga por GET /up 200 e imprime os RepoDigests', () => {
     expect(semComentarios).toContain('/up')
     expect(semComentarios).toContain('RepoDigests')
   })
 
-  it('confere o ID em execução contra o ID puxado nos DOIS serviços', () => {
-    expect(semComentarios).toContain('for PAR in "app:$APP" "nginx:$WEB"')
+  it('confere o ID em execução contra o ID puxado nos TRÊS serviços de imagem própria', () => {
+    // O clamav entrou no conjunto em 2026-09-04 (clamav/clamav não publica
+    // arm64). Sem ele aqui, a sonda subiria uma imagem de antivírus que não é a
+    // do SHA e ninguém notaria: este script não faz upload.
+    expect(semComentarios).toContain('for PAR in "app:$APP" "nginx:$WEB" "clamav:$CLAM"')
   })
 
-  it('só imprime o veredito depois de resolver os dois digests', () => {
+  it('só imprime o veredito depois de resolver todos os digests', () => {
     const app = semComentarios.indexOf('DIGEST_APP=')
     const web = semComentarios.indexOf('DIGEST_WEB=')
+    const clam = semComentarios.indexOf('DIGEST_CLAM=')
     const veredito = semComentarios.indexOf('RELEASE PROVADO')
     expect(app).toBeGreaterThan(-1)
     expect(web).toBeGreaterThan(app)
-    expect(veredito).toBeGreaterThan(web)
+    expect(clam).toBeGreaterThan(web)
+    expect(veredito).toBeGreaterThan(clam)
   })
 
   it('derruba o projeto com down -v em trap, com sucesso ou sem', () => {

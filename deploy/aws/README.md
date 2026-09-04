@@ -168,7 +168,18 @@ docker run --rm --entrypoint php ghcr.io/gatika-cl/lotus-app:<sha> artisan key:g
 ```
 
 PAT clássico de escopo `read:packages` em `/opt/lotus/ghcr.token` (`sudo chmod 600`), sem quebra
-de linha extra — o `deploy.sh` alimenta o `docker login` com o arquivo inteiro.
+de linha extra — o `deploy.sh` alimenta o `docker login` com o arquivo inteiro. Para conferir o
+arquivo, o redirecionamento tem de acontecer DENTRO do root, senão o `<` é aberto pelo shell do
+`ubuntu` e devolve `Permission denied` num arquivo que está correto:
+
+```bash
+sudo sh -c 'docker login ghcr.io -u gatika-cl --password-stdin < /opt/lotus/ghcr.token'
+```
+
+**São TRÊS imagens por SHA**, não duas: `lotus-app`, `lotus-web` e `lotus-clamav`. O antivírus
+passou a ser imagem nossa em 2026-09-04 — `clamav/clamav` publica só `linux/amd64` e este host é
+Graviton, então o `compose pull` morria em `no matching manifest for linux/arm64/v8 in the
+manifest list entries`. O `deploy.sh` já exige os três manifestos antes de puxar qualquer coisa.
 
 ## 8. Deploy e admin inicial
 
@@ -185,10 +196,14 @@ desenvolvimento foi ignorado — a conta `admin@lotus.cl` de senha pública **nu
 produção. Então:
 
 ```bash
-cd /opt/lotus && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$(cat CURRENT_SHA) \
+cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA \
+  LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA \
   LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml \
   run --rm app php artisan db:seed --force
 ```
+
+`LOTUS_CLAMAV_IMAGE` não é decoração: `run --rm app` sobe as dependências do serviço, o antivírus
+é uma delas, e sem a variável o Compose procuraria `lotus-clamav:local` — que não existe no host.
 
 O primeiro admin de verdade se cria por tinker, com senha escolhida na hora (nunca em arquivo):
 
