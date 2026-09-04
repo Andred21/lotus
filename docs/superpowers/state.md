@@ -5,9 +5,23 @@ focused_lane: lane-b
 active_feature: null
 active_work_item: infra-producao-provisionamento-aws
 workflow_state: executing
-next_owner: claude
+next_owner: joao
 next_action: continue_active_plan
-resume_state: null
+resume_state: |
+  PAUSA POR VIAGEM (2026-09-04). Tasks 11 a 16-Step-1 FEITAS e provadas; a stack de producao
+  esta implantada e responde em http://18.230.53.197 (SHA corporativo
+  a5fc92bb7728ea0da6dc16a62958e02556df999b). Retomar por aqui, nesta ordem:
+    1. Task 16 Steps 2-4: upload real (DoD 3), PDF de certificado (DoD 4) e a medicao de
+       memoria sob carga. Exige a instancia i-0789e30d781790dd4 ligada.
+    2. Task 17: backup + restore provado (DoD 5).
+    3. Task 18: alarme de billing (DoD 6) — ATENCAO: a conta e MEMBRO da org o-fdepe5skxg, e
+       a metrica AWS/Billing EstimatedCharges so e publicada na conta pagadora. Se nao houver
+       dado, o remedio previsto e AWS Budgets na propria conta, registrado como desvio.
+    4. Task 19: ramo FICHA — medido em 2026-09-04, app.lotusotec.cl -> 185.146.167.195
+       (hospedagem antiga), diferente do EIP 18.230.53.197. Sem TLS neste bloco.
+    5. Task 20: audit + gate + ready_for_review.
+  Pendencias de seguranca abertas: chave vazada AKIA3B7BDINPIEP2W4WK (conferir CloudTrail e
+  apagar) e a access key do usuario lotus-infra (apagar no fim do bloco).
 active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
 active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
 context_packet: null
@@ -30,8 +44,8 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
-    workflow_state: executing
-    next_owner: claude
+    workflow_state: executing   # pausado por viagem em 2026-09-04; ponto de retomada no resume_state do cabecalho
+    next_owner: joao
     next_action: continue_active_plan
     tree: ../lotus-infra
     branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
