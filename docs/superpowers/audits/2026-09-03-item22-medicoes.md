@@ -28,8 +28,26 @@ ledger (`.superpowers/sdd/progress.md`) já registrou task a task — nenhum nú
 | 5 | `PipelineQueryTest`/`DashboardEndpointTest` ganham assertdowns em métodos já existentes, não métodos novos — sem delta de contagem | 1183 / 5 | +0 |
 | 6 | Front-only (rótulo de locale) | 1183 / 5 | +0 |
 | 7 | `ContatoPrincipalTest` novo (3 testes) menos 2 testes obsoletos removidos + 1 reescrito (líquido +1) | 1184 / 5 | +1 |
-| 8 | `PrimaryContactTest` ganha os testes de recusa 422 (líquido +5 depois de reescrever os 4 que quebravam) | 1189 / 5 | +5 |
+| 8 | `PrimaryContactTest` ganha os testes de recusa 422 (líquido +5 depois de **7** edições comportamentais em **dois** arquivos — ver a errata abaixo) | 1189 / 5 | +5 |
 | **Total** | | **1189 / 5** | **+14** |
+
+**Errata de 2026-09-04 (achado Q-1 do review).** A linha da Task 8 dizia "os 4 que quebravam", e
+eram **7 métodos em dois arquivos** — `PrimaryContactTest` e `PrimaryAddressTest`, este último nem
+citado. O plano autorizava editar **exatamente quatro** testes existentes, nomeados nas Tasks 1 e 5
+(Global Constraint, linha 20), e o Step 8 da Task 8 mandava **PARAR** e levar ao João qualquer
+teste de cliente que quebrasse por mandar contatos sem principal. O gate foi atravessado: as
+edições estão semanticamente certas, mas a decisão era do João e a medição registrou menos do que
+houve. O resíduo concreto — `test_cliente_sem_principal_e_valido` apagado sem substituto, deixando
+o POST `/api/clients` sem prova direta do 422 que a D-16 manda valer no create — foi fechado no
+mesmo review por `ContatoPrincipalTest::test_criar_sem_nenhum_principal_e_422` e
+`::test_criar_com_exatamente_um_principal_passa`. Fica aqui, e não em `pendencias/`, porque não
+sobra nada aberto para um gatilho fechar: o que resta é o rastro.
+
+Com as correções dos cinco achados do review (Q-1 a Q-5), a suíte vai a **1192 passed / 5 skipped
+(9195 assertions)**: +3 sobre os 1189 desta tabela — os dois testes de create acima mais
+`ContatoPrincipalTest::test_a_guarda_le_o_estado_de_depois_do_lock_e_nao_o_do_binding` (Q-2). O
+`ListQueryBudgetTest` fica em zero líquido: perdeu o teste dedicado de `api/roles/assignable` e
+ganhou o mesmo caso como data set do provider genérico.
 
 Re-rodada agora (fim da Task 9, depois do reinício de Docker — §7): **idêntica**, 1189 passed / 5
 skipped. Nenhuma regressão entre o fim da Task 8 e o fim da Task 9 — esperado, já que a Task 9 "não

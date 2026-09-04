@@ -2,10 +2,14 @@
 
 namespace Tests\Feature\Commercial;
 
+use App\Domains\Commercial\Actions\UpdateClientContactAction;
+use App\Domains\Commercial\Data\ClientContactData;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientContact;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
+use Spatie\LaravelData\Optional;
 use Tests\TestCase;
 
 /**
@@ -96,6 +100,42 @@ class ContatoPrincipalTest extends TestCase
         ];
     }
 
+    /**
+     * O create pela MESMA porta do update. A D-09 não distingue verbo — a
+     * regra mora no `ClientData`, que os dois atravessam —, mas prova que só
+     * cobre o PUT deixa o POST livre para regredir sozinho (o `sometimes` da
+     * coleção é justamente o ponto onde os dois verbos poderiam divergir).
+     * RUT e e-mail próprios de propósito: com os do cliente do `setUp` o 422
+     * viria da unicidade, e o teste passaria pela porta errada.
+     */
+    public function test_criar_sem_nenhum_principal_e_422(): void
+    {
+        $this->postJson('/api/clients', [
+            ...$this->payload([
+                ['name' => 'Ana', 'is_primary' => false],
+                ['name' => 'Bruno', 'is_primary' => false],
+            ]),
+            'name' => 'Nueva SpA',
+            'legal_name' => 'Nueva SpA',
+            'rut' => '77.222.000-6',
+            'email' => 'nueva@example.test',
+        ])->assertStatus(422)->assertJsonPath('errors.contacts.0', 'El cliente necesita exactamente un contacto principal.');
+    }
+
+    public function test_criar_com_exatamente_um_principal_passa(): void
+    {
+        $this->postJson('/api/clients', [
+            ...$this->payload([
+                ['name' => 'Ana', 'is_primary' => true],
+                ['name' => 'Bruno', 'is_primary' => false],
+            ]),
+            'name' => 'Nueva SpA',
+            'legal_name' => 'Nueva SpA',
+            'rut' => '77.222.000-6',
+            'email' => 'nueva@example.test',
+        ])->assertCreated();
+    }
+
     public function test_atualizar_sem_nenhum_principal_e_422(): void
     {
         $this->contato('Ana', true);
@@ -138,6 +178,36 @@ class ContatoPrincipalTest extends TestCase
         ])->assertStatus(422);
 
         $this->assertTrue($principal->fresh()->is_primary, 'O principal não podia ter sido desmarcado.');
+    }
+
+    /**
+     * O `$contact` chega do route binding, resolvido ANTES do `lockForWrite`.
+     * Aqui a instância é deliberadamente velha — Bruno foi promovido no banco
+     * depois de carregada —, que é o que uma exclusão concorrente do principal
+     * produz. Sem o `refresh()` dentro da transação a guarda lê `is_primary`
+     * false, não dispara o 422, grava o desmarque e o `ensureExactlyOne`
+     * re-promove: 200 dizendo que aceitou o que não aceitou.
+     */
+    public function test_a_guarda_le_o_estado_de_depois_do_lock_e_nao_o_do_binding(): void
+    {
+        $ana = $this->contato('Ana', true);
+        $bruno = $this->contato('Bruno', false);
+
+        $brunoVelho = ClientContact::findOrFail($bruno->id);
+        $ana->delete();
+        $this->client->contacts()->whereKey($bruno->id)->update(['is_primary' => true]);
+        $this->assertFalse($brunoVelho->is_primary, 'A instância precisa estar velha para o teste valer.');
+
+        $this->expectException(ValidationException::class);
+
+        app(UpdateClientContactAction::class)->execute($brunoVelho, new ClientContactData(
+            id: $bruno->id,
+            name: 'Bruno',
+            email: new Optional,
+            phone: new Optional,
+            job_title: new Optional,
+            is_primary: false,
+        ));
     }
 
     public function test_promover_outro_pela_rota_nested_passa(): void

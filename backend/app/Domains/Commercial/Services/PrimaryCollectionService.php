@@ -20,6 +20,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * aqui; entrada EXPLÍCITA sem principal é recusada na validação, que é assunto
  * do DTO e da Action, não deste serviço.
  *
+ * **A recusa vale só para CONTATO (D20).** `contacts` é obrigatório (`min:1`,
+ * mensagem própria) e ganhou `UmContatoPrincipal` no `ClientData` mais a guarda
+ * da `UpdateClientContactAction`; endereço não é obrigatório e não ganhou
+ * nenhuma das duas. Consequência deliberada: `PUT /api/addresses/{id}` com
+ * `is_primary: false` no único principal CHEGA aqui e é re-promovido em
+ * silêncio, em vez de 422 (`PrimaryAddressTest::test_rota_nested_update_desmarcando_o_unico_principal_e_repromovido`).
+ * A assimetria é a própria D20, não um esquecimento.
+ *
  * Contato e endereço tinham a MESMA regra escrita duas vezes, byte a byte
  * (review de 2026-08-11, Q-4): o par divergia calado, e a correção de
  * concorrência de 2026-08-11 precisou ser aplicada nos dois arquivos. A única

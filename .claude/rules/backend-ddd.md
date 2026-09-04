@@ -78,9 +78,14 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
   `hardening-i18n-e-erros-api` (2026-08-29) mover a frase para `lang/`: a unicidade é a mesma, o
   dono mudou de DTO para dicionário, e agora ela também fala os três idiomas.
 - **Regra de coleção vale em TODOS os caminhos de escrita**, não só no da tela: o replace-total do
-  pai **e** as rotas nested da própria entidade. Ref.: `PrimaryContactService::ensureSingle()`, que
-  fecha "no máximo 1 principal" pelas Client Actions **e** pelas `Create/UpdateClientContactAction` —
-  não voltar a escrever contato direto no Eloquent.
+  pai **e** as rotas nested da própria entidade. Ref.: `PrimaryContactService::ensureExactlyOne()`, que
+  fecha "exatamente 1 principal" pelas Client Actions **e** pelas `Create/UpdateClientContactAction`
+  — não voltar a escrever contato direto no Eloquent. Era `ensureSingle()` e "no máximo 1" até a
+  **D-09** (2026-09-03) mandar o backend ceder para a tela: zero principal por efeito colateral
+  agora PROMOVE o mais antigo, e entrada explícita sem principal é recusada com 422 (`contacts`
+  pela regra `UmContatoPrincipal` no `ClientData`, a rota nested pela `UpdateClientContactAction`).
+  Endereço herda a promoção e **não** a recusa (D20) — a assimetria está escrita no docblock do
+  `PrimaryCollectionService`.
 - **`belongsTo` que a projeção de leitura atravessa vai `->withTrashed()`.** Soft delete é
   **arquivamento, não desaparecimento**: o registro que aponta para o arquivado continua existindo e
   continua sendo lido. Sem isso o `belongsTo` devolve `null`, o `fromModel` estoura

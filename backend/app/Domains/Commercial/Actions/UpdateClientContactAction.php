@@ -26,6 +26,13 @@ class UpdateClientContactAction
     {
         return DB::transaction(function () use ($contact, $data) {
             Client::lockForWrite($contact->client_id);
+            // Releitura DEPOIS do mutex: o `$contact` chegou do route binding,
+            // resolvido antes do lock. Uma exclusão concorrente do principal
+            // promove ESTE contato no intervalo, e a guarda abaixo decidiria
+            // sobre um `is_primary` velho — devolvendo 200 para um desmarque
+            // que o `ensureExactlyOne` desfaz logo em seguida. Metade da
+            // leitura já estava sob lock (`$outros`); esta é a outra metade.
+            $contact->refresh();
 
             $desmarcandoPrincipal = $data->is_primary === false && $contact->is_primary;
 

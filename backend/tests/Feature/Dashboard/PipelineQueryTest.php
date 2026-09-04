@@ -187,12 +187,30 @@ class PipelineQueryTest extends TestCase
     {
         $commercial = app(CommercialMetricsQuery::class);
 
-        return app(PipelineQuery::class)->stages(
+        $stages = app(PipelineQuery::class)->stages(
             turmaKpis: app(OperationMetricsQuery::class)->kpis(),
             certificationPendencias: app(CertificationMetricsQuery::class)->pendencias(),
             quoteKpis: $includeQuoteStages ? $commercial->quoteKpis() : null,
             commercialPendencias: $includeQuoteStages ? $commercial->pendencias() : [],
         );
+
+        // Nenhum balde pode ser NEGATIVO, e a régua vive aqui para valer em
+        // todo cenário que passe pelo helper. `fully_issued` é o único balde
+        // por SUBTRAÇÃO (`concluidas - emissaoPendente - semNadaAEmitir`), e
+        // dois dos três termos nascem de critérios escritos em lugares
+        // diferentes — `CertificationMetricsQuery::pendingEnrollmentQuery()` e
+        // o `whereDoesntHave` do próprio `PipelineQuery`. Se um ganhar um
+        // filtro que o outro não ganha, a subtração fura por baixo. A soma não
+        // pega isso sozinha: um balde negativo compensado por outro inflado
+        // ainda soma o total certo.
+        foreach ($stages as $row) {
+            $this->assertGreaterThanOrEqual(0, $row->count, sprintf(
+                'O balde `%s` veio NEGATIVO (%d): os critérios que se subtraem divergiram.',
+                $row->stage->value, $row->count,
+            ));
+        }
+
+        return $stages;
     }
 
     private function createQuote(string $status): Quote

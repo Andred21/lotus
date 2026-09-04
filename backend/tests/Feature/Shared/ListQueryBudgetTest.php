@@ -108,6 +108,20 @@ class ListQueryBudgetTest extends TestCase
     ];
 
     /**
+     * Rotas de lista com ATOR próprio: o data provider genérico sempre entra
+     * como admin, então quem exige outro papel — ou um número fixo, e não só
+     * constante — ganha teste dedicado. Registro declarado, e não condição
+     * solta dentro da asserção de cobertura: rota nova sem cenário, sem motivo
+     * de isenção e sem linha aqui continua sendo vermelho.
+     *
+     * @var array<string, string>
+     */
+    private const CENARIOS_ATOR_PROPRIO = [
+        'api/dashboard/metricas' => 'contagem FIXA por papel — dois testes dedicados, um por papel, com o número medido na constante DASHBOARD',
+        'api/roles' => 'o índice rico com `permissions` é superadmin-only desde a D-10, e o provider genérico autentica como admin',
+    ];
+
+    /**
      * Contagem fixa por papel de `dashboard/metricas`, MEDIDA (não estimada):
      * o admin monta as sete seções do painel inteiro, o relator só as turmas
      * dele. Número diferente aqui é mudança de propósito do endpoint —
@@ -141,7 +155,9 @@ class ListQueryBudgetTest extends TestCase
             $comParametro = str_contains($uri, '{');
             $coberta = $comParametro
                 ? array_key_exists($uri, self::COM_PAI) || array_key_exists($uri, self::COM_PAI_ISENTAS)
-                : array_key_exists($uri, $this->cenarios()) || array_key_exists($uri, self::ISENTAS) || in_array($uri, ['api/dashboard/metricas', 'api/roles', 'api/roles/assignable'], true);
+                : array_key_exists($uri, $this->cenarios())
+                    || array_key_exists($uri, self::ISENTAS)
+                    || array_key_exists($uri, self::CENARIOS_ATOR_PROPRIO);
 
             if (! $coberta) {
                 $semCobertura[] = $uri;
@@ -160,7 +176,7 @@ class ListQueryBudgetTest extends TestCase
     {
         $existentes = $this->rotasGet();
 
-        foreach ([self::ISENTAS, self::COM_PAI, self::COM_PAI_ISENTAS] as $lista) {
+        foreach ([self::ISENTAS, self::COM_PAI, self::COM_PAI_ISENTAS, self::CENARIOS_ATOR_PROPRIO] as $lista) {
             foreach ($lista as $uri => $motivo) {
                 $this->assertContains($uri, $existentes, "Declarada e inexistente no roteador: {$uri}.");
                 $this->assertGreaterThan(30, strlen(trim($motivo)), "Motivo curto demais para {$uri}.");
@@ -180,8 +196,33 @@ class ListQueryBudgetTest extends TestCase
     public function test_a_contagem_de_queries_nao_cresce_com_n(string $uri): void
     {
         $this->actingAsAdmin();
-        $semear = $this->cenarios()[$uri];
 
+        $this->assertNaoCresceComN($uri, $this->cenarios()[$uri]);
+    }
+
+    /**
+     * `api/roles` sai de `CENARIOS_URIS` desde a D-10: o índice rico é
+     * superadmin-only e o data provider genérico sempre entra como admin
+     * (mesmo padrão de `api/dashboard/metricas`, que também tem ator
+     * próprio). Teste dedicado — mesmo corpo de medição, ator diferente —
+     * para não perder a rede de N+1 do `with('permissions')` de
+     * `RoleController::index`.
+     */
+    public function test_a_contagem_de_queries_de_roles_nao_cresce_com_n(): void
+    {
+        $this->actingAsSuperadmin();
+
+        $this->assertNaoCresceComN('api/roles', $this->papeis());
+    }
+
+    /**
+     * A medição de N+1, uma vez só: semeia N=2, mede, semeia até N=20, mede de
+     * novo, e as duas contagens têm de bater. Ator e cenário são de quem chama.
+     *
+     * @param  Closure(int): void  $semear  semeia MAIS `$n` exemplares
+     */
+    private function assertNaoCresceComN(string $uri, Closure $semear): void
+    {
         $semear(self::N_PEQUENO);
         $this->getJson('/'.$uri)->assertOk();          // aquecimento: cache de permissão, sessão
         $comDois = $this->contar($uri);
@@ -197,58 +238,6 @@ class ListQueryBudgetTest extends TestCase
         $this->assertSame($comDois, $comVinte, sprintf(
             "%s custa %d queries com N=%d e %d com N=%d — há consulta por linha.\nÚltimas queries:\n%s",
             $uri, $comDois, self::N_PEQUENO, $comVinte, self::N_GRANDE, implode("\n", $this->ultimas),
-        ));
-    }
-
-    /**
-     * `api/roles` sai de `CENARIOS_URIS` desde a D-10: o índice rico é
-     * superadmin-only e o data provider genérico sempre entra como admin
-     * (mesmo padrão de `api/dashboard/metricas`, que também tem ator
-     * próprio). Teste dedicado para não perder a rede de N+1 do
-     * `with('permissions')` de `RoleController::index`.
-     */
-    public function test_a_contagem_de_queries_de_roles_nao_cresce_com_n(): void
-    {
-        $this->actingAsSuperadmin();
-
-        $semear = fn (int $n) => $this->repetir($n, fn () => Role::create(['name' => 'papel-'.(++$this->seq), 'guard_name' => 'web']));
-
-        $semear(self::N_PEQUENO);
-        $this->getJson('/api/roles')->assertOk();
-        $comDois = $this->contar('api/roles');
-
-        $semear(self::N_GRANDE - self::N_PEQUENO);
-        $this->getJson('/api/roles')->assertOk();
-        $comVinte = $this->contar('api/roles');
-
-        $this->assertSame($comDois, $comVinte, sprintf(
-            "api/roles custa %d queries com N=%d e %d com N=%d — há consulta por linha.\nÚltimas queries:\n%s",
-            $comDois, self::N_PEQUENO, $comVinte, self::N_GRANDE, implode("\n", $this->ultimas),
-        ));
-    }
-
-    /**
-     * `api/roles/assignable` (D-10): lookup enxuto sob `identity.user.view`,
-     * ator admin — mas fora de `CENARIOS_URIS` porque nasceu depois da
-     * varredura original e ganha teste próprio, não o genérico.
-     */
-    public function test_a_contagem_de_queries_de_roles_assignable_nao_cresce_com_n(): void
-    {
-        $this->actingAsAdmin();
-
-        $semear = fn (int $n) => $this->repetir($n, fn () => Role::create(['name' => 'papel-'.(++$this->seq), 'guard_name' => 'web']));
-
-        $semear(self::N_PEQUENO);
-        $this->getJson('/api/roles/assignable')->assertOk();
-        $comDois = $this->contar('api/roles/assignable');
-
-        $semear(self::N_GRANDE - self::N_PEQUENO);
-        $this->getJson('/api/roles/assignable')->assertOk();
-        $comVinte = $this->contar('api/roles/assignable');
-
-        $this->assertSame($comDois, $comVinte, sprintf(
-            "api/roles/assignable custa %d queries com N=%d e %d com N=%d — há consulta por linha.\nÚltimas queries:\n%s",
-            $comDois, self::N_PEQUENO, $comVinte, self::N_GRANDE, implode("\n", $this->ultimas),
         ));
     }
 
@@ -321,6 +310,7 @@ class ListQueryBudgetTest extends TestCase
     /** Só as chaves, para o data provider (estático) — o corpo está em `cenarios()`. */
     private const CENARIOS_URIS = [
         'api/students' => 1, 'api/students/client-options' => 1,
+        'api/roles/assignable' => 1,
         'api/certificates' => 1, 'api/certificates/emission-panel' => 1,
         'api/turmas' => 1, 'api/turmas/archived' => 1, 'api/turmas/pendientes-configuracion' => 1,
         'api/courses' => 1, 'api/courses/archived' => 1,
@@ -374,6 +364,10 @@ class ListQueryBudgetTest extends TestCase
             'api/courses' => fn (int $n) => $this->repetir($n, fn () => $this->curso()),
             'api/courses/archived' => fn (int $n) => $this->repetir($n, fn () => $this->curso()->delete()),
             'api/students/client-options' => fn (int $n) => $this->repetir($n, fn () => $this->cliente()),
+            // Lookup enxuto da D-10, sob `identity.user.view` e medido como
+            // admin — o mesmo ator do provider genérico, então ele entra aqui e
+            // não em CENARIOS_ATOR_PROPRIO.
+            'api/roles/assignable' => $this->papeis(),
             'api/clients' => fn (int $n) => $this->repetir($n, fn () => $this->cliente()),
             'api/clients/archived' => fn (int $n) => $this->repetir($n, fn () => $this->cliente()->delete()),
             'api/budgets' => fn (int $n) => $this->repetir($n, fn () => $this->orcamento()),
@@ -543,6 +537,12 @@ class ListQueryBudgetTest extends TestCase
         $this->actingAs($user, 'web');
 
         return Redator::create(['user_id' => $user->id]);
+    }
+
+    /** @return Closure(int): void */
+    private function papeis(): Closure
+    {
+        return fn (int $n) => $this->repetir($n, fn () => Role::create(['name' => 'papel-'.(++$this->seq), 'guard_name' => 'web']));
     }
 
     private function repetir(int $n, Closure $fn): void
