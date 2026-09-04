@@ -26,7 +26,7 @@ class ContatoPrincipalTest extends TestCase
 
         $user = User::create([
             'name' => 'Contacto SpA',
-            'rut' => '76.111.000-1',
+            'rut' => '76.111.000-4',
             'email' => 'contacto@example.test',
             'password' => 'secret',
             'type' => 'cliente',
@@ -81,5 +81,75 @@ class ContatoPrincipalTest extends TestCase
             ->assertNoContent();
 
         $this->assertTrue($segundo->fresh()->is_primary);
+    }
+
+    /** O payload de replace-total que o cadastro manda, com os contatos dados. */
+    private function payload(array $contacts): array
+    {
+        return [
+            'name' => 'Contacto SpA',
+            'legal_name' => 'Contacto SpA',
+            'rut' => '76.111.000-4',
+            'email' => 'contacto@example.test',
+            'type' => 'client',
+            'contacts' => $contacts,
+        ];
+    }
+
+    public function test_atualizar_sem_nenhum_principal_e_422(): void
+    {
+        $this->contato('Ana', true);
+
+        $this->putJson("/api/clients/{$this->client->id}", $this->payload([
+            ['name' => 'Ana', 'is_primary' => false],
+            ['name' => 'Bruno', 'is_primary' => false],
+        ]))->assertStatus(422)->assertJsonPath('errors.contacts.0', 'El cliente necesita exactamente un contacto principal.');
+    }
+
+    public function test_atualizar_com_dois_principais_e_422(): void
+    {
+        $this->contato('Ana', true);
+
+        $this->putJson("/api/clients/{$this->client->id}", $this->payload([
+            ['name' => 'Ana', 'is_primary' => true],
+            ['name' => 'Bruno', 'is_primary' => true],
+        ]))->assertStatus(422);
+    }
+
+    public function test_atualizar_com_exatamente_um_principal_passa(): void
+    {
+        $this->contato('Ana', true);
+
+        $this->putJson("/api/clients/{$this->client->id}", $this->payload([
+            ['name' => 'Ana', 'is_primary' => true],
+            ['name' => 'Bruno', 'is_primary' => false],
+        ]))->assertOk();
+
+        $this->assertSame(1, $this->client->contacts()->where('is_primary', true)->count());
+    }
+
+    public function test_desmarcar_o_unico_principal_pela_rota_nested_e_422(): void
+    {
+        $principal = $this->contato('Ana', true);
+        $this->contato('Bruno', false);
+
+        $this->putJson("/api/contacts/{$principal->id}", [
+            'name' => 'Ana', 'is_primary' => false,
+        ])->assertStatus(422);
+
+        $this->assertTrue($principal->fresh()->is_primary, 'O principal não podia ter sido desmarcado.');
+    }
+
+    public function test_promover_outro_pela_rota_nested_passa(): void
+    {
+        $principal = $this->contato('Ana', true);
+        $segundo = $this->contato('Bruno', false);
+
+        $this->putJson("/api/contacts/{$segundo->id}", [
+            'name' => 'Bruno', 'is_primary' => true,
+        ])->assertOk();
+
+        $this->assertTrue($segundo->fresh()->is_primary);
+        $this->assertFalse($principal->fresh()->is_primary);
     }
 }
