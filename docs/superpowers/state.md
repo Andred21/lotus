@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: dominio-decisoes-de-rbac-e-semantica
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md
 active_plan: docs/superpowers/plans/2026-09-03-dominio-decisoes-de-rbac-e-semantica.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, promovido explicitamente pelo Joao em 2026-09-03
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: main-tree
     branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; a anterior (refactor/backend-envelope-de-erro-e-recusa-de-dominio, item 26) mesclou na PR #99 (182be2ab)
     active_spec: docs/superpowers/specs/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md
@@ -59,8 +59,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
 last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio
-state_basis_commit: 6d716fa9
-updated_at: 2026-09-04T00:40:00-03:00
+state_basis_commit: 54f2b2c6
+updated_at: 2026-09-04T14:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `dominio-decisoes-de-rbac-e-semantica` (item 22) | Backend | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` (de `main@182be2ab`; a do item 26 mesclou na PR #99) | `executing` |
+| `lane-a` | `dominio-decisoes-de-rbac-e-semantica` (item 22) | Backend | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` (de `main@182be2ab`; a do item 26 mesclou na PR #99) | `ready_for_review` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` **não existe mais** — a árvore está em `infra/producao-provisionamento-aws`; a lane corrige a própria linha quando voltar | `idle` |
 | `lane-c` | registro vivo **fora do main tree** | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` | ver o `state.md` da branch da lane |
 
