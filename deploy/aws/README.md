@@ -42,11 +42,26 @@ Console S3, região `sa-east-1`, bucket `lotus-prod-<ACCOUNT_ID>`:
 - **Block Public Access**: tudo marcado;
 - **Bucket Versioning**: `Enabled` (documento tem peso legal);
 - **Lifecycle rule** `expira-backups`: prefixo `backups/`, expiração em **30 dias** (o requisito
-  de retenção mínima é 7 — a folga é deliberada);
+  de retenção mínima é 7 — a folga é deliberada). **Com versioning ligado, `Expiration` sozinha
+  não apaga nada**: ela só põe delete marker e a versão antiga fica ocupando (e custando) para
+  sempre. Medido em 2026-09-04 — a regra tem de ter as três cláusulas:
+
+  ```json
+  {"Rules": [{"ID": "expira-backups", "Status": "Enabled",
+    "Filter": {"Prefix": "backups/"},
+    "Expiration": {"Days": 30},
+    "NoncurrentVersionExpiration": {"NoncurrentDays": 7},
+    "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 7}}]}
+  ```
+
+  O `Filter` limita ao prefixo `backups/`: documento de aluno, que tem peso legal, não é tocado.
 - **CORS**: nenhum. Upload passa pela API e download é URL pré-assinada por GET simples; só uma
   medição que prove necessidade justifica acrescentar.
 
-Prova: aba Properties mostra versioning `Enabled`; aba Management mostra a lifecycle rule.
+Prova: `get-bucket-versioning` → `Enabled`; `get-public-access-block` → os quatro `true`;
+`get-bucket-lifecycle-configuration` → a regra acima; `get-bucket-location` → `sa-east-1`.
+Pela CLI, `create-bucket` em `sa-east-1` **exige** `--create-bucket-configuration
+LocationConstraint=sa-east-1`; sem isso o bucket nasce em `us-east-1`.
 
 ## 4. IAM — role da EC2 (least-privilege)
 
@@ -62,6 +77,16 @@ Role `lotus-ec2`, trust policy de `ec2.amazonaws.com`, com política inline (sub
 ```
 
 É esta role que dispensa access key de longa duração no `.env` (§7).
+
+**Pela CLI, a role não basta.** O console cria o *instance profile* junto, escondido; a CLI trata
+os dois como objetos separados e o launch da §6 não acha o profile se ele não existir:
+
+```bash
+aws iam create-instance-profile --instance-profile-name lotus-ec2
+aws iam add-role-to-instance-profile --instance-profile-name lotus-ec2 --role-name lotus-ec2
+aws iam get-instance-profile --instance-profile-name lotus-ec2 \
+  --query 'InstanceProfile.Roles[].RoleName' --output text   # tem de imprimir: lotus-ec2
+```
 
 ## 5. Security Group
 
