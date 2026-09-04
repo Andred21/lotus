@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { focusManager } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import { useServerTable } from '@shared/hooks'
+import { createWrapper } from '@shared/testing/providers'
 import { certificatesPage, certificatesTableOptions, useEmissionPanel } from './certificatesApi'
 
 vi.mock('@shared/api/axios', () => ({
@@ -17,12 +17,7 @@ const get = vi.mocked(api.get)
  * (`refetchOnWindowFocus: false`): sem ele, a query passaria neste teste pelo
  * default do TanStack e a catraca não provaria nada.
  */
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({
-    defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
-  })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 describe('a página do Historial — revalidação do estado derivado', () => {
   /**
@@ -65,10 +60,7 @@ describe('o painel de emissão — segundo observador não refaz o GET', () => {
   it('dois observadores na mesma janela custam um GET', async () => {
     get.mockClear()
     get.mockResolvedValue({ data: [] })
-    const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } } })
-    const compartilhado = ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-    )
+    const { wrapper: compartilhado } = createWrapper()
 
     const primeiro = renderHook(() => useEmissionPanel(true), { wrapper: compartilhado })
     await waitFor(() => expect(primeiro.result.current.isSuccess).toBe(true))

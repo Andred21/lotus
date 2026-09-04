@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import type { ClientData } from '@shared/types/generated'
 import { useClientForm } from './useClientForm'
 
@@ -9,10 +8,7 @@ import { useClientForm } from './useClientForm'
  * para o CI exercitar a config REAL do hook — sem ele, a guarda só dispararia
  * quando alguém abrisse o diálogo em dev. Mora na feature porque teste em
  * `shared/` importando `features/` quebraria a lei §5.6. */
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 // Mesmo shape do `EMPTY` privado em `useClientForm.ts` — reconstruído aqui
 // porque o hook não o exporta.

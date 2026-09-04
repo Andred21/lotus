@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useBatchIssue } from './useBatchIssue'
 import { api } from '@shared/api/axios'
 import type { EmissionPanelEnrollmentData, EmissionPanelTurmaData } from '@shared/types/generated'
@@ -16,10 +15,7 @@ const post = vi.mocked(api.post)
  * (é o painel que o diálogo cobre) — a invalidação do `onSuccess` do
  * `useIssueBatch` a refaz em background, e o `turma` que `BatchIssueDialog`
  * passa para este hook é essa MESMA prop viva, não uma cópia. */
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 const enrollment1: EmissionPanelEnrollmentData = {
   enrollment_id: 1,

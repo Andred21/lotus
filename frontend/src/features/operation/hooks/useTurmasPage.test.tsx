@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
 import { api } from '@shared/api/axios'
 import type { ArchiveMode } from '@shared/hooks'
+import { createWrapper } from '@shared/testing/providers'
 import { useTurmasPage } from './useTurmasPage'
 
 vi.mock('@shared/api/axios', () => ({
@@ -16,12 +15,7 @@ const get = vi.mocked(api.get)
  * Se o cliente morasse no corpo da wrapper, cada render remontaria um novo e orfanaria a
  * rejeição da query — vitest reprova com `Unknown Error: undefined` e a test torna timeout. */
 function comCliente() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } })
-  const Wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-  )
-
-  return { qc, Wrapper }
+  return createWrapper()
 }
 
 const meta = { page: 1, per_page: 10, total: 1, last_page: 1, total_unfiltered: 1 }
@@ -34,8 +28,8 @@ describe('useTurmasPage', () => {
   it('modo ativo: pede /api/turmas com page/per_page e o status como filtro nomeado', async () => {
     get.mockResolvedValue({ data: { data: [{ id: 7, course_name: 'T-7' }], meta } })
 
-    const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage('active', 'habilitada'), { wrapper: Wrapper })
+    const { wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage('active', 'habilitada'), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(get).toHaveBeenCalledWith('/api/turmas', { params: { page: 1, per_page: 10, status: 'habilitada' } })
@@ -55,8 +49,8 @@ describe('useTurmasPage', () => {
       },
     })
 
-    const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage('archived', null), { wrapper: Wrapper })
+    const { wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage('archived', null), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(get).toHaveBeenCalledWith('/api/turmas/archived', { params: { page: 1, per_page: 10 } })
@@ -68,10 +62,10 @@ describe('useTurmasPage', () => {
   it('trocar de modo na pagina 3 pede a PRIMEIRA pagina do endpoint novo (Q-3)', async () => {
     get.mockResolvedValue({ data: { data: [], meta: { ...meta, total: 30, last_page: 3, total_unfiltered: 30 } } })
 
-    const { Wrapper } = comCliente()
+    const { wrapper } = comCliente()
     const { result, rerender } = renderHook(
       ({ mode }: { mode: ArchiveMode }) => useTurmasPage(mode, null),
-      { wrapper: Wrapper, initialProps: { mode: 'active' as ArchiveMode } },
+      { wrapper, initialProps: { mode: 'active' as ArchiveMode } },
     )
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -92,8 +86,8 @@ describe('useTurmasPage', () => {
   it('devolve rows vazio, e nao undefined, antes de a query voltar', () => {
     get.mockReturnValue(new Promise(() => {}))
 
-    const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper: Wrapper })
+    const { wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper })
 
     expect(result.current.rows).toEqual([])
     expect(result.current.loading).toBe(true)
@@ -102,8 +96,8 @@ describe('useTurmasPage', () => {
   it('devolve o envelope da falha, e `{}` quando o interceptor nao populou o corpo', async () => {
     get.mockRejectedValue(undefined)
 
-    const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper: Wrapper })
+    const { wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper })
 
     await waitFor(() => expect(result.current.error).not.toBeNull())
     expect(result.current.error).toEqual({})
@@ -112,8 +106,8 @@ describe('useTurmasPage', () => {
   it('DEVOLVE a promise do refetch (Q-14)', async () => {
     get.mockResolvedValue({ data: { data: [], meta: { ...meta, total: 0, total_unfiltered: 0 } } })
 
-    const { Wrapper } = comCliente()
-    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper: Wrapper })
+    const { wrapper } = comCliente()
+    const { result } = renderHook(() => useTurmasPage('active', null), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
     await expect(result.current.refetch()).resolves.toBeDefined()
