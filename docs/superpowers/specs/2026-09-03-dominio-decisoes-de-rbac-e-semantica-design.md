@@ -47,9 +47,13 @@ inclusive superadmin —, e o gate dele sobe. Quem só precisa dos nomes ganha r
   mudaria comportamento que a ficha não pede, e "assignable" descreve o gate, não a curadoria.
 - **D4.** `useStaffRoleOptions` passa a consumir `rolesApi.assignable`. `rolesApi.useList()` continua
   servindo a tabela de Roles, que já vive sob `canManage`.
-- **D5.** `AdministracionPage` passa a montar a página de roles com `enabled: canManage`. **Sem
-  isto, este bloco quebra a tela**: hoje o `useRolesPage()` roda para todo mundo e, com o gate
-  subindo, admin comum abriria `/administracion` com um 403 na aba de usuários.
+- **D5.** A aba de roles sai para um componente próprio, `RolesTab`, montado só sob `canManage` —
+  tabela e diálogo juntos. **Sem isto, este bloco quebra a tela**: hoje o `useRolesPage()` roda para
+  todo mundo e, com o gate subindo, admin comum abriria `/administracion` com um 403 em voo.
+  O caminho óbvio — passar `enabled: canManage` ao `useCrudPage` — está **fechado por decisão
+  escrita**: `CrudPageQueryOptions` só aceita `staleTime`, e o docblock dela diz que quem precisa de
+  `enabled` está usando o recurso direto, não a página. Extrair o componente respeita essa fronteira
+  em vez de alargá-la, e resolve o problema na raiz: sem montagem, não há hook.
 
 **Não muda:** `RoleData` (a tabela e o diálogo seguem recebendo `permissions`), `PermissionCatalog`,
 `SEGREGATED`, o `SystemRoleGuard`.
@@ -127,6 +131,14 @@ documento.
   compartilhado, então D18/D19 alcançam `ClientAddress`; D16/D17 ficam só em contatos, porque
   `contacts` é obrigatório (`min:1`, com mensagem própria) e endereço não é. A assimetria é
   deliberada e fica escrita.
+
+  **Medido em 2026-09-03, e o remédio mudou por causa disso:** a herança **não** era automática no
+  caminho que mais importa. `ClientAddressController::destroy` apaga o endereço direto, sem Action e
+  sem passar pelo serviço — apagar o endereço principal deixava o cliente sem principal em silêncio,
+  que é exatamente o defeito da `D-09` na entidade vizinha. Nasce então
+  `DeleteClientAddressAction`, simétrica à de contato: `Client::lockForWrite` + delete +
+  `ensureExactlyOne`, **sem** a regra de mínimo, porque endereço não é obrigatório. O controller
+  passa a delegar, como já faz para contato.
 - **D21.** A UI **não muda**. Ela já produz exatamente um principal; este bloco só faz o contrato
   dizer o mesmo.
 
