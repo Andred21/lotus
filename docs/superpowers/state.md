@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: dominio-decisoes-de-rbac-e-semantica
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -16,12 +16,12 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, promovido explicitamente pelo Joao em 2026-09-03
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: main-tree
     branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; a anterior (refactor/backend-envelope-de-erro-e-recusa-de-dominio, item 26) mesclou na PR #99 (182be2ab)
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md
     active_plan: null
     context_packet: null
     blocker: null
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
 last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio
 state_basis_commit: 182be2ab
-updated_at: 2026-09-03T23:20:00-03:00
+updated_at: 2026-09-03T23:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `dominio-decisoes-de-rbac-e-semantica` (item 22) | Backend | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` (de `main@182be2ab`; a do item 26 mesclou na PR #99) | `ready_for_planning` |
+| `lane-a` | `dominio-decisoes-de-rbac-e-semantica` (item 22) | Backend | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` (de `main@182be2ab`; a do item 26 mesclou na PR #99) | `planning` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` **não existe mais** — a árvore está em `infra/producao-provisionamento-aws`; a lane corrige a própria linha quando voltar | `idle` |
 | `lane-c` | registro vivo **fora do main tree** | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` | ver o `state.md` da branch da lane |
 
