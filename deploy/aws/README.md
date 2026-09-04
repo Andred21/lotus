@@ -157,8 +157,10 @@ sudo mv /tmp/tls.conf /opt/lotus/nginx/
 
 `.env`: copie `deploy/aws/env.prod.example` para `/opt/lotus/.env`, preencha os `<...>` e
 proteja (`sudo chmod 600 /opt/lotus/.env`, dono root). **Sem o registro A ainda**, os quatro
-campos de host vão para o EIP e o `SESSION_DOMAIN` fica **comentado** — o molde explica por quê,
-e a consequência de errar isso é login em 401/419 com a API saudável, não erro de deploy. A `APP_KEY` se gera com o entrypoint
+campos de host vão para o EIP e o `SESSION_DOMAIN` recebe o literal **`null`** — nem o domínio
+(cookie não volta: 401/419 com a API saudável), nem o IP (`Domain=` com IP não faz domain-match e
+o navegador descarta o cookie), nem comentada (o gate do entrypoint exige a variável e o container
+sai 1). O molde explica a mecânica das três. A `APP_KEY` se gera com o entrypoint
 trocado — sem `--entrypoint php` o comando cai no entrypoint da imagem e falha:
 
 ```bash
