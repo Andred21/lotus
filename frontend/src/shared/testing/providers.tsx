@@ -43,6 +43,16 @@ const PADRAO: QueryClientConfig = {
  * Nasce sem consumidor, e é intencional: a catraca fecha `new QueryClient` em
  * todo teste das três camadas, então um caso futuro que precise de outra
  * opção precisa de uma porta — sem ela, a saída seria furar a catraca.
+ *
+ * **Chame por teste, não por arquivo.** Uma única chamada no escopo do
+ * módulo entrega um client COMPARTILHADO por todos os `it()` daquele
+ * arquivo — sobrevive entre eles, não só entre re-renders de um mount. Isso
+ * é inofensivo quando o hook sob teste não usa `useQuery`/`useMutation` de
+ * verdade, mas quebrou 5 de 7 casos em `useValidationPage.test.tsx` (item
+ * 27, Task 3): testes diferentes reusavam a mesma query key e herdavam
+ * cache um do outro. Onde houver query real, chame `createWrapper()` dentro
+ * de um `beforeEach` (ou dentro de cada `it()`), não uma vez no topo do
+ * arquivo.
  */
 export function createWrapper(opts: ProviderOptions = {}): {
   wrapper: ({ children }: { children: ReactNode }) => ReactElement
