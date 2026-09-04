@@ -1,26 +1,26 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-a
 active_feature: null
-active_work_item: infra-producao-provisionamento-aws
-workflow_state: executing
+active_work_item: dominio-decisoes-de-rbac-e-semantica
+workflow_state: ready_for_planning
 next_owner: claude
-next_action: continue_active_plan
+next_action: plan_active_work_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
-active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, promovido explicitamente pelo Joao em 2026-09-03
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: main-tree
-    branch: refactor/backend-envelope-de-erro-e-recusa-de-dominio   # aberta de main@4a0080ce em 2026-09-02; bloco fechado em 2026-09-03, PR por abrir
+    branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; a anterior (refactor/backend-envelope-de-erro-e-recusa-de-dominio, item 26) mesclou na PR #99 (182be2ab)
     active_spec: null
     active_plan: null
     context_packet: null
@@ -29,21 +29,19 @@ lanes:
     last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio   # item 26, fechado em 2026-09-03
   lane-b:
     active_feature: null
-    active_work_item: infra-producao-provisionamento-aws
-    workflow_state: executing
-    next_owner: claude
-    next_action: continue_active_plan
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../lotus-infra
-    branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
-    active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md   # spec v2, do brainstorming de 2026-09-02
-    active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md          # plano v2, 20 tasks (Fase A repo, Fase B AWS)
-    context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
+    branch: chore/prontidao-pre-nuvem   # criada de infra/producao-provisionamento-aws@50f3a1f3 em 2026-08-29; main@37e0e2d4 mesclada para dentro (5b121aaa); fatia 1 mesclou no PR #86 (308edc50) e a branch segue viva para a PR 2 do fechamento
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
-    arquivos_do_descarte:
-      - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
-      - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
     parked_work_items:
+      - infra-producao-provisionamento-aws   # item 10, ready_for_planning em 2026-08-26; retoma apos este bloco; packet partial em context-packets/2026-08-26-infra-producao-provisionamento-aws.md
       - cicd-promocao-deploy-e-rollback      # item 12, blocked desde 2026-08-26 (nao ha host); packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
@@ -53,16 +51,16 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
+    branch: fix/frontend-dividas-de-mecanismo   # rebasada sobre origin/main@4a0080ce (PR #97 mesclada) em 2026-09-03; item 25 fechado, aguardando merge da PR
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: frontend-arrumacao-de-testes
-state_basis_commit: 9c038cca
-updated_at: 2026-09-04T15:00:00-03:00
+    last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
+last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio
+state_basis_commit: 182be2ab
+updated_at: 2026-09-03T23:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,14 +160,30 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-04
+## Ocupação corrente — 2026-09-03
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (bloco **fechado** em 2026-09-03; PR por abrir) | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (bloco **fechado** em 2026-09-04; PR por abrir) | `idle` |
+| `lane-a` | `dominio-decisoes-de-rbac-e-semantica` (item 22) | Backend | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` (de `main@182be2ab`; a do item 26 mesclou na PR #99) | `ready_for_planning` |
+| `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` **não existe mais** — a árvore está em `infra/producao-provisionamento-aws`; a lane corrige a própria linha quando voltar | `idle` |
+| `lane-c` | registro vivo **fora do main tree** | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` | ver o `state.md` da branch da lane |
 
+
+**O item 22 assumiu a `lane-a` em 2026-09-03** — `dominio-decisoes-de-rbac-e-semantica`, promovido
+explicitamente pelo João com a lane em `idle`. `Contexto: não` na fila, então **nasce direto em
+`ready_for_planning`**, sem Context Packet. É Backend, logo main tree (P-03), e a branch sai de
+`main@182be2ab` — o tip da `origin/main`, que já contém o item 26 mesclado (PR #99). Fonte: as
+quatro fichas travadas em decisão `D-09`, `D-10`, `D-11` e `D-16`; a `D-34` fica de fora por
+escrito, e escolher hospedeiro para ela segue sendo do João.
+
+**Há dois espelhos vivos, e é de propósito (precedente P-55).** O `state.md` da branch
+`refactor/frontend-arrumacao-de-testes` (árvore `../fix-frontend`, `updated_at` 2026-09-04T00:20)
+tem `focused_lane: lane-c` e o item 27 em `ready_for_planning`; este aqui volta o espelho para
+`lane-a`. As duas cópias **concordam sobre a `lane-a`** — ela estava `idle` nas duas —, então não há
+divergência de fase a bloquear: há duas lanes escrevendo o espelho em árvores diferentes, que é o
+que a integração serial resolve no merge. **A linha da `lane-c` nesta tabela é ponteiro, não
+estado** — escrever o estado de outra lane é justamente o que a invariante de dono proíbe.
+**O planejamento é serial:** o João decidiu que o 22 planeja primeiro; o item 27 espera.
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
 > em `ready_for_execution` enquanto o frontmatter andava até `ready_for_review` — as outras duas
@@ -201,11 +215,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
-| 2026-09-04 | `frontend-arrumacao-de-testes` (fecha a **P-58**; nenhuma pendência nasce; nascem `test.projects` no `vite.config.ts`, `src/shared/testing/providers.tsx` e a catraca `QUERY_CLIENT_A_MAO`) | Item 27 da fila |
 | 2026-09-03 | `backend-envelope-de-erro-e-recusa-de-dominio` (paga a **P-71**, a **P-72** e a metade de comportamento da **P-60**; abre a **P-75** e a **P-76**; nascem `TipoDeRecusa` e `RecusaDeDominio` em `app/Shared/Exceptions/` e a rule `.claude/rules/backend-lang.md`) | Item 26 da fila |
 | 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
 | 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
 | 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
+| 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com
