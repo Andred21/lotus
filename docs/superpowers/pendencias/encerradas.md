@@ -7,7 +7,8 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(uma: a **P-67**, fechada em 2026-09-01 pelo `frontend-decisoes-de-ui-pendentes`. A **P-61** e a
+*(duas: a **P-73**, fechada em 2026-09-04 pelo `infra-producao-provisionamento-aws`, e a
+**P-67**, fechada em 2026-09-01 pelo `frontend-decisoes-de-ui-pendentes`. A **P-61** e a
 **P-63** saíram neste mesmo fechamento — o primeiro posterior aos dos dois blocos que as encerraram
 em 2026-08-30 —, e o parágrafo adiante é o rastro delas. A **P-66** saiu no fechamento do
 `frontend-triagem-dos-audits-do-item-18` (2026-08-30), o primeiro posterior ao do
@@ -15,6 +16,32 @@ em 2026-08-30 —, e o parágrafo adiante é o rastro delas. A **P-66** saiu no 
 em migration, e o rastro dela está no git e na linha de entrega em `../historico/progress.md`. A
 **P-02**, a **P-33** e a **P-46** saíram nos dois fechamentos de 2026-08-29, e a **P-03** e a
 **P-15** nos dois de 2026-08-25; os parágrafos adiante são o rastro delas.)*
+
+### P-73 — advisory transitiva nova reprovava o `audit-dev` e segurava a imagem da `main`
+
+**Fechada em 2026-09-04**, no `infra-producao-provisionamento-aws` (item 10 v2), pelo remédio que a
+própria ficha nomeava: **bump de lockfile, `package.json` intacto**. A alternativa recusada por
+escrito na spec do item 20 (`pnpm.overrides`) continuou fora — não foi usada.
+
+`pnpm update browserslist --depth Infinity` em `frontend/`. Antes e depois, medidos:
+
+```
+2 vulnerabilities found          →   No known vulnerabilities found
+Severity: 2 high                     (exit 0)
+```
+
+`browserslist` **4.28.4 → 4.28.8** (as advisories pediam `>=4.28.7`). O diff é **só**
+`pnpm-lock.yaml`, 25 linhas de cada lado, e move apenas o `browserslist` e os pacotes de dados
+dele: `baseline-browser-mapping`, `caniuse-lite`, `electron-to-chromium`, `node-releases`,
+`update-browserslist-db`. `git diff --quiet frontend/package.json` limpo — a condição de
+fechamento da ficha.
+
+Gate depois do bump: `pnpm lint` 0, `pnpm build` verde, `pnpm test` **719 passed (719)**.
+
+Pagou-se aqui porque o `audit-dev` está no `needs` do `image` (`ci.yml:338`) e a Task 15 do item 10
+implanta imagem do GHCR — sem verde não nasce par multi-arch e o bloco não fecha. O caso reincide
+por natureza (advisory nova em devDep de terceiro trava o release sem culpa de bloco nenhum); o
+rastro de como se paga fica aqui.
 
 ### P-67 — a escala de raio estava escrita na rule e 10 sítios ficaram fora dela, sem catraca
 
