@@ -1,12 +1,12 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-c
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: frontend-revisao-ui-por-modulo
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -46,21 +46,21 @@ lanes:
     last_completed_work_item: cicd-host-alinhado-ao-sha   # item 31, fechado em 2026-09-26; mesclado ate af1526eb (PR #112, fe6077df), o resto nao
   lane-c:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: frontend-revisao-ui-por-modulo
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../fix-frontend
-    branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
+    branch: refactor/frontend-revisao-ui-f3   # aberta de origin/main@9c038cca em 2026-09-04, ja com o item 27 mesclado pela PR #100; a fatia 2 saiu na refactor/frontend-revisao-ui-f2
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: cicd-host-alinhado-ao-sha
-state_basis_commit: 12d82315
-updated_at: 2026-09-26T17:30:00-03:00
+    last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04, mesclado pela PR #100 (9c038cca)
+last_completed_work_item: frontend-arrumacao-de-testes
+state_basis_commit: 9c038cca
+updated_at: 2026-09-04T15:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
 | `lane-b` | — (item 31 `cicd-host-alinhado-ao-sha` **fechado em 2026-09-26**) | — | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`; até `af1526eb` mesclada na PR #112, `fe6077df`; o resto **não mesclado** — integração é passo próprio, com o João) | `idle` |
-| `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
+| `lane-c` | `frontend-revisao-ui-por-modulo` (item 16, **fatia 3**) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`) | `ready_for_planning` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -175,6 +175,21 @@ disjuntas, colisão mínima de arquivos:
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
+
+**A `lane-c` recebeu o item 16 em 2026-09-04** — `frontend-revisao-ui-por-modulo`, promovido
+explicitamente pelo João com a lane em `idle`, logo depois de a PR #100 mesclar o item 27. É a
+**fatia 3**, a última: as fatias 1 (2026-08-24, Dashboard `ready-redator` e Operação) e 2
+(2026-08-25, Comercial e Certificados) já fecharam, e a narrativa das duas vive em
+`historico/state-archive.md`. O item é `Contexto: não por padrão`, então **nasce direto em
+`ready_for_planning`** — não há Context Packet a gerar, as fontes são os três audits que a ficha
+nomeia e o próprio código.
+
+**O João escolheu o 16 INTEIRO, com a run de Administração dentro, e o risco é explícito.** A ficha
+manda rodar Cursos e Pessoas primeiro porque a run de Administração colide com o item 9
+(`administracao-roles-permissoes-redesign`), que pode redesenhar a mesma tela e invalidar a medição.
+Oferecidas as duas saídas — recortar a fatia ou levá-la inteira —, a decisão foi **inteira**,
+aceitando que a run de Administração possa medir uma tela que o item 9 refaça depois. A ordem
+interna continua valendo dentro do bloco: **Cursos e Pessoas primeiro**, Administração por último.
 
 ## Itens fechados — ponteiro, não narrativa
 
