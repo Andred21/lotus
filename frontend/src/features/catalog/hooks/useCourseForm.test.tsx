@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useCourseForm } from './useCourseForm'
 
 const create = vi.fn()
@@ -19,10 +18,7 @@ vi.mock('../api/useSyncCourseRedatores', () => ({
   useSyncCourseRedatores: () => ({ mutateAsync: sync, isPending: false, error: null }),
 }))
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 beforeEach(() => {
   create.mockReset()

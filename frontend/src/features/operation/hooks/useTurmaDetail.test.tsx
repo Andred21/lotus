@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { api } from '@shared/api/axios'
+import { createWrapper } from '@shared/testing/providers'
 import { useTurmaDetail } from './useTurmaDetail'
 import { TURMA_TABS } from '../lib/turmaTabs'
 
@@ -17,19 +17,21 @@ const DOCS = TURMA_TABS.indexOf('docs')
 
 /** O GET da turma não tem parte nesta prova: o que se mede é a aba, que vem da
  * URL. Uma promessa que nunca resolve mantém o hook no ramo de carga sem
- * orfanar rejeição. (Cliente estável por teste — molde do `useTurmasPage`.) */
+ * orfanar rejeição. (Cliente estável por teste — molde do `useTurmasPage`.)
+ * `createWrapper` cobre só o provedor: a árvore de rota (`<Routes>/<Route>`,
+ * exigida por `useParams`) continua própria deste arquivo (§4.3 da spec). */
 function montar(rota: string) {
   get.mockReturnValue(new Promise(() => {}))
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const Wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={qc}>
+  const { wrapper: Provedor } = createWrapper()
+  function Wrapper({ children }: { children: ReactNode }) {
+    return (
       <MemoryRouter initialEntries={[rota]}>
         <Routes>
-          <Route path="/operacion/turmas/:id" element={<>{children}</>} />
+          <Route path="/operacion/turmas/:id" element={<Provedor>{children}</Provedor>} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>
-  )
+    )
+  }
 
   return renderHook(() => useTurmaDetail(), { wrapper: Wrapper })
 }

@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useValidationPage } from './useValidationPage'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
@@ -13,10 +12,20 @@ vi.mock('@shared/api/axios', () => ({
 
 const get = vi.mocked(api.get)
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+/**
+ * Seis dos sete casos consultam a MESMA chave (`'uuid-1'`), com mocks
+ * diferentes por teste — inclusive uma promise que nunca resolve no
+ * primeiro. Um único `createWrapper()` de módulo (a forma-padrão da
+ * migração) compartilharia UM client entre os sete `it()` — sem
+ * `afterEach` que limpe o cache, o segundo teste herdaria a query travada
+ * em `pending` do primeiro. O `beforeEach` refaz o client a cada teste,
+ * preservando a mesma isolação que o client construído dentro do
+ * componente de antes já dava (cada mount tinha o seu).
+ */
+let wrapper: ReturnType<typeof createWrapper>['wrapper']
+beforeEach(() => {
+  ;({ wrapper } = createWrapper())
+})
 
 // As datas ficam só como dado do DTO: quem decide o estado agora é o servidor, em `display_status`.
 const FUTURO = '2030-01-01'

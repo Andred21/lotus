@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useCrudFormWithPhoto } from './useCrudFormWithPhoto'
 
 const upload = vi.fn<(id: number, file: File) => Promise<void>>()
@@ -11,10 +10,10 @@ vi.mock('@shared/api/photoResource', () => ({
   photoResource: () => ({ upload, remove }),
 }))
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+/** Client POR TESTE, não por arquivo: o hook consulta uma `useQuery`, e um
+ * client de módulo faria os casos herdarem cache um do outro (Q-1 do review de
+ * 2026-09-04). */
+let wrapper: ReturnType<typeof createWrapper>['wrapper']
 
 type Fields = { id?: number; name: string }
 
@@ -58,6 +57,7 @@ function montar(mode: 'create' | 'edit' | 'view', onDone: () => void = () => und
 }
 
 beforeEach(() => {
+  ;({ wrapper } = createWrapper())
   criados.length = 0
   upload.mockReset()
   remove.mockReset()

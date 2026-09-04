@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useRegisterResult } from './useRegisterResult'
 import { api } from '@shared/api/axios'
 import type { EnrollmentData } from '@shared/types/generated'
@@ -12,10 +11,7 @@ vi.mock('@shared/api/axios', () => ({
 
 const put = vi.mocked(api.put)
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 // `grades` chega como objeto (`{final: ..., comentario: ...}`) apesar do tipo
 // gerado dizer `Array<any>` — o transformer não distingue mapa de lista em

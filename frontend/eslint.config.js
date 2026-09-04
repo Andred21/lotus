@@ -280,6 +280,41 @@ const CLEANUP_A_MAO = {
     'Desmonte à mão: o `afterEach(cleanup)` é global (src/test-setup.ts, P-69). Apague a linha e o import — repeti-la aqui não muda comportamento e faz o próximo copiar o molde.',
 }
 
+// Item 27: a montagem de provedor em teste tem UMA casa
+// (`src/shared/testing/providers.tsx`). Eram 33 arquivos e SETE grafias, e 20
+// dos 24 wrappers locais construíam o client dentro do componente — cache
+// morto a cada re-render.
+//
+// Nas TRÊS camadas, e não nas duas que a ficha do item pedia: `shared/` tinha
+// 4 dos 33 sítios, e camada descoberta é por onde o defeito volta. Foi assim
+// que a P-67 voltou, por grafia que a catraca não alcançava.
+//
+// Perímetro: `.ts` e `.tsx` nas três camadas — `features/` pelos blocos de
+// feature, `shared/` e `app/` pelos blocos `.tsx` mais o bloco de `.ts` logo
+// depois deles. Isento: `src/shared/testing/**` e `AppProviders.tsx`.
+//
+// O que ela NÃO pega, dito para ninguém supor cobertura que não existe:
+// apelido (`const C = QueryClient; new C()`). Casa grafia, não origem — mesmo
+// limite do `CLEANUP_A_MAO` e do `DROPDOWN_SEM_NOME`.
+const QUERY_CLIENT_A_MAO = {
+  selector: 'NewExpression[callee.name="QueryClient"]',
+  message:
+    'Client à mão: use `createWrapper()` ou `renderWithProviders()` de `@shared/testing/providers` (item 27). Precisa de opção diferente? Passe `queryClientOptions` — o desvio fica visível no sítio.',
+}
+
+// Onde `QueryClient` se constrói legitimamente: a aplicação e a home de teste.
+// Particionam os globs de `shared/` e `app/` pelo mesmo molde do
+// `FORA_DO_CAMPO_LIGADO` — sem o bloco gêmeo abaixo, o `ignores` diria "NENHUMA
+// régua vale aqui" em vez de "esta régua não vale aqui".
+//
+// `src/shared/testing/**`, e não o arquivo `providers.tsx`: a spec §4.4 isentou
+// o DIRETÓRIO, e a isenção por arquivo faria o próximo mecanismo de teste nascer
+// reprovando — convite a `eslint-disable` (Q-3 do review de 2026-09-04).
+const CONSTROEM_QUERY_CLIENT = [
+  'src/app/providers/AppProviders.tsx',
+  'src/shared/testing/**/*.{ts,tsx}',
+]
+
 // Os arquivos que o item 24 deixou fora POR MEDIÇÃO (spec §2), e que por isso
 // seguem extraindo o erro à mão. Não é dívida esquecida: é o escopo escrito.
 // Particiona o mesmo glob do bloco de componente — ver o bloco gêmeo abaixo. É
@@ -591,7 +626,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: [...FORA_DO_CAMPO_LIGADO],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // Gêmeo do bloco acima para os arquivos fora do item 24: MESMO array, menos
@@ -602,7 +637,7 @@ export default defineConfig([
   {
     files: FORA_DO_CAMPO_LIGADO,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
@@ -623,7 +658,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -807,6 +842,16 @@ export default defineConfig([
   // os 3 sítios foram convertidos para `--shell-ink`/`--shell-ink-muted`.
   {
     files: ['src/shared/**/*.tsx'],
+    ignores: [...CONSTROEM_QUERY_CLIENT],
+    rules: {
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
+    },
+  },
+  // Gêmeo do bloco acima para os dois arquivos que constroem `QueryClient` de
+  // verdade: MESMO array, menos `QUERY_CLIENT_A_MAO`. Mesmo molde do gêmeo de
+  // `FORA_DO_CAMPO_LIGADO`.
+  {
+    files: ['src/shared/testing/**/*.tsx'],
     rules: {
       'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, CLEANUP_A_MAO],
     },
@@ -841,6 +886,32 @@ export default defineConfig([
   // deste arquivo casa `no-restricted-syntax` em `src/app/**`.
   {
     files: ['src/app/**/*.tsx'],
+    ignores: [...CONSTROEM_QUERY_CLIENT],
+    rules: {
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
+    },
+  },
+  // O `.ts` de `shared/` e `app/`, que NENHUM bloco de `no-restricted-syntax`
+  // alcançava: os dois blocos acima são `*.tsx`, e a sonda provou o buraco no
+  // review de 2026-09-04 (Q-3) — `sonda.ts` com `new QueryClient` passava em
+  // `shared/` e `app/` e reprovava em `features/`, que já mede `{ts,tsx}`.
+  //
+  // Só a catraca de client, e não o array inteiro dos blocos `.tsx`: as outras
+  // réguas de lá são de JSX (cor, `disabled`/`readOnly`, âncora, dropdown) e
+  // nasceriam sem população num arquivo sem markup. Bloco próprio de `*.ts`,
+  // sem sobreposição com os `.tsx` — nenhum merge raso a temer.
+  {
+    files: ['src/shared/**/*.ts', 'src/app/**/*.ts'],
+    ignores: ['src/shared/testing/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', QUERY_CLIENT_A_MAO],
+    },
+  },
+  // Gêmeo do bloco acima para os dois arquivos que constroem `QueryClient` de
+  // verdade: MESMO array, menos `QUERY_CLIENT_A_MAO`. Mesmo molde do gêmeo de
+  // `FORA_DO_CAMPO_LIGADO`.
+  {
+    files: ['src/app/providers/AppProviders.tsx'],
     rules: {
       'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
     },

@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useSetPassword } from './useSetPassword'
 import { api } from '@shared/api/axios'
 
@@ -10,10 +9,7 @@ vi.mock('@shared/api/axios', async () => ({
   api: { post: vi.fn(), get: vi.fn() },
 }))
 
-function wrapper({ children }: { children: ReactNode }) {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 describe('useSetPassword', () => {
   beforeEach(() => vi.clearAllMocks())

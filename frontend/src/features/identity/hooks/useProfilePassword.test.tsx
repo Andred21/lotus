@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useProfilePassword } from './useProfilePassword'
 
 const chamadas = vi.hoisted(() => ({
@@ -20,12 +19,7 @@ vi.mock('../api/useProfile', () => ({
   }),
 }))
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 describe('useProfilePassword', () => {
   it('envia os tres campos que o DTO exige', () => {

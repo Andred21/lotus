@@ -197,13 +197,25 @@ describe('vite.config.ts', () => {
   // seguinte, que cria justamente `.env`) venceria os defaults sem que os
   // casos que os afirmam percebessem. Por isso TODOS saem de cena no
   // `beforeEach`, não só `.env`.
-  const NOMES_ENV_DA_RAIZ = ['.env', '.env.local', '.env.development', '.env.development.local'] as const
+  const NOMES_ENV = ['.env', '.env.local', '.env.development', '.env.development.local'] as const
+  /**
+   * As DUAS raízes que o `vite.config.ts` lê: `loadEnv(mode, RAIZ, 'LOTUS_')`
+   * para o offset de portas e `loadEnv(mode, __dirname, 'VITE_')` para saber se
+   * `VITE_API_URL` já está definido. Afastar só a primeira deixava o gate
+   * dependendo do disco de quem roda — era a P-58, medida em 2026-08-24.
+   */
+  const DIRETORIOS_ENV = [
+    { chave: '', base: RAIZ },
+    { chave: 'frontend/', base: join(RAIZ, 'frontend') },
+  ] as const
   const ENV_DA_RAIZ = join(RAIZ, '.env')
-  const CAMINHOS_ENV = NOMES_ENV_DA_RAIZ.map((nome) => ({
-    nome,
-    real: join(RAIZ, nome),
-    backup: join(RAIZ, `${nome}.backup-do-teste`),
-  }))
+  const CAMINHOS_ENV = DIRETORIOS_ENV.flatMap(({ chave, base }) =>
+    NOMES_ENV.map((nome) => ({
+      nome: `${chave}${nome}`,
+      real: join(base, nome),
+      backup: join(base, `${nome}.backup-do-teste`),
+    })),
+  )
 
   /** Guarda o valor original na primeira sobrescrita e aplica o novo. */
   const originais = new Map<string, string | undefined>()
