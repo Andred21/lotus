@@ -145,7 +145,7 @@ class PrimaryContactTest extends TestCase
     public function test_rota_nested_update_promove_a_via_winner_mesmo_b_tendo_id_maior(): void
     {
         // A (id menor, não principal) e B (id maior, principal). Ao promover A
-        // explicitamente, o $winner do ensureSingle deve prevalecer sobre o
+        // explicitamente, o $winner do ensureExactlyOne deve prevalecer sobre o
         // "último por id" (que seria B) — senão o serviço desmarcaria o contato
         // que o caller acabou de pedir para promover.
         $this->actingAsAdmin();

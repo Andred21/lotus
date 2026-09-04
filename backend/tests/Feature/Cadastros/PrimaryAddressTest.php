@@ -8,10 +8,11 @@ use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
- * Mesma invariante dos contatos, no endereço: no máximo 1 principal por
+ * Mesma invariante dos contatos, no endereço: exatamente 1 principal por
  * cliente, garantida na aplicação e nunca em trigger (ADR-02/ADR-08 — trigger
  * enxerga a conexão, não o usuário autenticado, e a auditoria perderia o
- * autor). Cliente SEM principal segue estado válido: ninguém é promovido.
+ * autor). Zero principal por efeito colateral (ex.: desmarcação) promove
+ * automaticamente o endereço mais antigo para manter a invariante.
  */
 class PrimaryAddressTest extends TestCase
 {
