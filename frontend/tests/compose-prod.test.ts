@@ -154,6 +154,12 @@ describe('docker-compose.prod.yml', () => {
     // deve passar.
     expect(PROD).toMatch(/^ {4}image: \$\{LOTUS_IMAGE\b/m)
     expect(PROD).toMatch(/^ {4}image: \$\{LOTUS_WEB_IMAGE\b/m)
+    // O antivírus entrou na promoção por SHA em 2026-09-04: `clamav/clamav`
+    // publica só linux/amd64 e o host é t4g/Graviton, então a imagem passou a
+    // ser construída aqui. Imagem de terceiro de volta neste serviço é o
+    // defeito que travou o primeiro deploy — "no matching manifest for
+    // linux/arm64/v8" no `compose pull`.
+    expect(PROD).toMatch(/^ {4}image: \$\{LOTUS_CLAMAV_IMAGE\b/m)
   })
 
   it('liga o nginx ao app via depends_on — fastcgi_pass resolve "app" no arranque do nginx', () => {
@@ -225,6 +231,19 @@ describe('docker-compose.prod.yml', () => {
       const [dependsOn] = regioesDaChave(blocoDoServico(servico), 'depends_on')
       expect(dependsOn ?? '').toMatch(/mysql:\s*\{?\s*condition:\s*service_healthy\b/)
     }
+  })
+
+  it('guarda a base do clamav em volume nomeado e dá teto de memória acima do que a base ocupa — 768m matava o daemon no carregamento', () => {
+    const bloco = blocoDoServico('clamav')
+    // Sem volume, os ~167 MB da base seriam rebaixados a cada deploy, porque a
+    // tag da imagem é o SHA do commit.
+    const [volumes] = regioesDaChave(bloco, 'volumes')
+    expect(volumes ?? '').toMatch(/clamav-data:\/var\/lib\/clamav/)
+    // Medido em 2026-09-04: a base carregada ocupa 1,03–1,11 GiB. O teto tem de
+    // ficar ACIMA disso, senão o cgroup mata o clamd durante o boot — e o
+    // sintoma seria upload em 503, longe da causa.
+    const [teto] = bloco.match(/^ {4}mem_limit: (\d+)m$/m)?.slice(1) ?? []
+    expect(Number(teto)).toBeGreaterThanOrEqual(1280)
   })
 
   it('põe teto de memória em todo serviço — t4g.small tem 2 GiB e OOM sem teto derruba o vizinho, não o culpado', () => {

@@ -138,18 +138,50 @@ services:
       timeout: 5s
       retries: 3
 
+  # Imagem PRÓPRIA (docker/Dockerfile.prod, alvo `clamav`), e não
+  # `clamav/clamav`: medido em 2026-09-04, o repositório oficial publica só
+  # linux/amd64 e este host é t4g/Graviton — o `compose pull` do deploy morria
+  # em "no matching manifest for linux/arm64/v8". Por isso a imagem entra por
+  # variável, como app e web: é o mesmo gancho de promoção por SHA.
   clamav:
-    image: clamav/clamav:1.4
+    image: ${LOTUS_CLAMAV_IMAGE:-lotus-clamav:local}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+      target: clamav
     restart: unless-stopped
-    mem_limit: 768m
+    # 1536m e não 768m. Duas medições de 2026-09-04: a base recém-baixada
+    # (main.cvd 84,9M + daily.cvd 22,3M) carrega em 1,032 GiB, e a base de uma
+    # imagem oficial com a daily já acumulada (daily.cld 82,2M) carrega em
+    # 1,113 GiB. Com 768m o clamd morria de OOM ao carregar a base — o teto que
+    # existia para proteger o vizinho matava justamente o dono; com 1280m
+    # arrancava a 82% do próprio teto, e a daily cresce todo dia. O
+    # `ConcurrentDatabaseReload no` do clamd.conf é o que impede o reload do
+    # freshclam de dobrar esse número.
+    #
+    # RISCO DECLARADO, a medir na Task 16 Step 4: 1,0 GiB residente num host de
+    # 2 GiB deixa pouco para mysql + FPM + Chromium do Gotenberg. `mem_limit` é
+    # teto, não reserva, e há 2 GiB de swap — mas se o `docker stats`/`free -m`
+    # do host mostrarem thrashing durante a geração de PDF, o critério de
+    # resize escrito na D4 (t4g.medium) é o remédio, não baixar este número.
+    mem_limit: 1536m
     logging: *logging
-    # Script que a própria imagem traz (medido): faz PING/PONG na 3310.
+    # A base NÃO é assada na imagem: são ~167 MB que o host puxaria a cada
+    # deploy, já que a tag é o SHA. No volume, ela é baixada uma vez e o
+    # freshclam a mantém em dia.
+    volumes:
+      - clamav-data:/var/lib/clamav
+    # PING/PONG na 3310 pelo próprio protocolo do daemon. `start_period` de
+    # 300 s porque o PRIMEIRO boot (volume vazio) baixa a base inteira antes de
+    # abrir o socket; o `app` depende deste serviço por `service_started`, então
+    # essa espera não trava o deploy.
     healthcheck:
-      test: ["CMD", "/usr/local/bin/clamdcheck.sh"]
+      test: ["CMD", "clamdscan", "--ping", "1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 300s
 
 volumes:
   mysql-data:
+  clamav-data:

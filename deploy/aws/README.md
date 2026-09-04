@@ -157,8 +157,10 @@ sudo mv /tmp/tls.conf /opt/lotus/nginx/
 
 `.env`: copie `deploy/aws/env.prod.example` para `/opt/lotus/.env`, preencha os `<...>` e
 proteja (`sudo chmod 600 /opt/lotus/.env`, dono root). **Sem o registro A ainda**, os quatro
-campos de host vão para o EIP e o `SESSION_DOMAIN` fica **comentado** — o molde explica por quê,
-e a consequência de errar isso é login em 401/419 com a API saudável, não erro de deploy. A `APP_KEY` se gera com o entrypoint
+campos de host vão para o EIP e o `SESSION_DOMAIN` recebe o literal **`null`** — nem o domínio
+(cookie não volta: 401/419 com a API saudável), nem o IP (`Domain=` com IP não faz domain-match e
+o navegador descarta o cookie), nem comentada (o gate do entrypoint exige a variável e o container
+sai 1). O molde explica a mecânica das três. A `APP_KEY` se gera com o entrypoint
 trocado — sem `--entrypoint php` o comando cai no entrypoint da imagem e falha:
 
 ```bash
@@ -166,7 +168,18 @@ docker run --rm --entrypoint php ghcr.io/gatika-cl/lotus-app:<sha> artisan key:g
 ```
 
 PAT clássico de escopo `read:packages` em `/opt/lotus/ghcr.token` (`sudo chmod 600`), sem quebra
-de linha extra — o `deploy.sh` alimenta o `docker login` com o arquivo inteiro.
+de linha extra — o `deploy.sh` alimenta o `docker login` com o arquivo inteiro. Para conferir o
+arquivo, o redirecionamento tem de acontecer DENTRO do root, senão o `<` é aberto pelo shell do
+`ubuntu` e devolve `Permission denied` num arquivo que está correto:
+
+```bash
+sudo sh -c 'docker login ghcr.io -u gatika-cl --password-stdin < /opt/lotus/ghcr.token'
+```
+
+**São TRÊS imagens por SHA**, não duas: `lotus-app`, `lotus-web` e `lotus-clamav`. O antivírus
+passou a ser imagem nossa em 2026-09-04 — `clamav/clamav` publica só `linux/amd64` e este host é
+Graviton, então o `compose pull` morria em `no matching manifest for linux/arm64/v8 in the
+manifest list entries`. O `deploy.sh` já exige os três manifestos antes de puxar qualquer coisa.
 
 ## 8. Deploy e admin inicial
 
@@ -183,10 +196,14 @@ desenvolvimento foi ignorado — a conta `admin@lotus.cl` de senha pública **nu
 produção. Então:
 
 ```bash
-cd /opt/lotus && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$(cat CURRENT_SHA) \
+cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA \
+  LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA \
   LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml \
   run --rm app php artisan db:seed --force
 ```
+
+`LOTUS_CLAMAV_IMAGE` não é decoração: `run --rm app` sobe as dependências do serviço, o antivírus
+é uma delas, e sem a variável o Compose procuraria `lotus-clamav:local` — que não existe no host.
 
 O primeiro admin de verdade se cria por tinker, com senha escolhida na hora (nunca em arquivo):
 

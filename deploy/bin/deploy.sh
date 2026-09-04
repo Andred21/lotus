@@ -20,6 +20,9 @@ BASE=/opt/lotus
 DONO="${LOTUS_RELEASE_OWNER:-gatika-cl}"
 APP="ghcr.io/$DONO/lotus-app:$SHA"
 WEB="ghcr.io/$DONO/lotus-web:$SHA"
+# O antivirus tambem e imagem NOSSA desde 2026-09-04: clamav/clamav so publica
+# linux/amd64 e este host e t4g/Graviton. Promovida pelo mesmo SHA que o resto.
+CLAM="ghcr.io/$DONO/lotus-clamav:$SHA"
 
 ARQUIVOS=(-f "$BASE/docker-compose.prod.yml")
 # O overlay TLS entra sozinho quando o cert já foi emitido (runbook §11).
@@ -28,7 +31,7 @@ if [ -f "$BASE/nginx/tls.conf" ] && [ -d /etc/letsencrypt/live ]; then
 fi
 
 compose() {
-  LOTUS_IMAGE="$APP" LOTUS_WEB_IMAGE="$WEB" LOTUS_ENV_FILE="$BASE/.env" \
+  LOTUS_IMAGE="$APP" LOTUS_WEB_IMAGE="$WEB" LOTUS_CLAMAV_IMAGE="$CLAM" LOTUS_ENV_FILE="$BASE/.env" \
     docker compose -p lotus --project-directory "$BASE" "${ARQUIVOS[@]}" "$@"
 }
 
@@ -38,6 +41,7 @@ docker login ghcr.io -u "$DONO" --password-stdin < "$BASE/ghcr.token" >/dev/null
 echo "==> manifestos de $SHA"
 docker manifest inspect "$APP" >/dev/null
 docker manifest inspect "$WEB" >/dev/null
+docker manifest inspect "$CLAM" >/dev/null
 
 echo "==> pull"
 compose pull --quiet
@@ -62,7 +66,7 @@ done
 CODIGO=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1/up" || echo 000)
 [ "$CODIGO" = "200" ] || { echo "erro: /up respondeu $CODIGO" >&2; exit 1; }
 
-for PAR in "app:$APP" "nginx:$WEB"; do
+for PAR in "app:$APP" "nginx:$WEB" "clamav:$CLAM"; do
   SERVICO="${PAR%%:*}"; ALVO="${PAR#*:}"
   ID_PUXADO=$(docker image inspect --format '{{.Id}}' "$ALVO")
   ID_RODANDO=$(docker inspect --format '{{.Image}}' "$(compose ps -q "$SERVICO")")
