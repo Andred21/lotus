@@ -18,7 +18,11 @@
 # bit a bit — promessa que este Dockerfile não teria como cumprir sozinho.
 
 # ── vendor ────────────────────────────────────────────────────────────────────
-FROM composer:2@sha256:4d71c3c2109c61d5415544264b59ad4087e4c5b7244481723664138fd36d5040 AS vendor
+# --platform=$BUILDPLATFORM: este estágio produz PHP puro, byte a byte igual em
+# qualquer arquitetura, então emulá-lo para arm64 paga QEMU para gerar o mesmo
+# resultado. O `app` continua por arquitetura — lá o docker-php-ext-install
+# compila extensão nativa e a emulação é inevitável.
+FROM --platform=$BUILDPLATFORM composer:2@sha256:4d71c3c2109c61d5415544264b59ad4087e4c5b7244481723664138fd36d5040 AS vendor
 WORKDIR /app
 COPY backend/composer.json backend/composer.lock ./
 # --ignore-platform-reqs (desvio do brief): o estágio `vendor` roda no image
@@ -36,7 +40,15 @@ COPY backend/ ./
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 
 # ── spa ───────────────────────────────────────────────────────────────────────
-FROM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 AS spa
+# --platform=$BUILDPLATFORM pelo mesmo motivo do `vendor`, e aqui ele não é só
+# economia: MEDIDO em 2026-09-04, no espelho de ccaacacf (run 33907874327 da
+# Gatika-CL), o `pnpm install` emulado para arm64 morreu em
+#   qemu: uncaught target signal 4 (Illegal instruction) - core dumped
+# aos 26,5 s e o passo PENDUROU — sem erro, sem timeout, 44 min até o cancelamento
+# à mão. O mesmo estágio em amd64 fechou em ~1 min. O `dist/` é HTML/CSS/JS
+# estático: construí-lo na plataforma do construtor dá o mesmo artefato sem
+# passar Node por emulador.
+FROM --platform=$BUILDPLATFORM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 AS spa
 WORKDIR /spa
 # O package.json vem ANTES do corepack de propósito: `corepack prepare
 # --activate` resolve a versão pelo campo `packageManager`, então o arquivo
