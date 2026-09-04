@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-arrumacao-de-testes
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-03-frontend-arrumacao-de-testes-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-09-03-frontend-arrumacao-de-testes.md
 context_packet: null
 blocker: null
 lanes:
@@ -47,20 +47,20 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: frontend-arrumacao-de-testes   # item 27, promovido explicitamente pelo Joao em 2026-09-03
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../fix-frontend
     branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
     active_spec: docs/superpowers/specs/2026-09-03-frontend-arrumacao-de-testes-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-09-03-frontend-arrumacao-de-testes.md
     context_packet: null
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
 last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio
 state_basis_commit: 3833810c
-updated_at: 2026-09-03T23:05:00-03:00
+updated_at: 2026-09-03T23:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (bloco **fechado** em 2026-09-03; PR por abrir) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-arrumacao-de-testes` (item 27) | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (aberta de `origin/main@182be2ab`; a do item 25 mesclou na PR #98) | `planning` |
+| `lane-c` | `frontend-arrumacao-de-testes` (item 27) | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (aberta de `origin/main@182be2ab`; a do item 25 mesclou na PR #98) | `ready_for_execution` |
 
 
 **O item 27 assumiu a `lane-c` em 2026-09-03** — `frontend-arrumacao-de-testes`, promovido
