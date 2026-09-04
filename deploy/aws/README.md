@@ -118,13 +118,26 @@ Alocar **Elastic IP** e associar à instância.
 Prova do cloud-init, por SSH:
 
 ```bash
-docker --version && docker compose version && free -m | grep -i swap && ls -ld /opt/lotus
+docker --version; docker compose version; aws --version; free -m | grep -i swap; ls -ld /opt/lotus
+sudo docker run --rm hello-world | tail -3
+aws sts get-caller-identity
 ```
 
-Esperado: Docker instalado, `Swap` ≈ 2047 MiB, `/opt/lotus` existente. Falhou →
+Esperado: Docker do repositório oficial (sem `ubuntu` no build), `Docker Compose version v2+`,
+`aws-cli/2.x`, `Swap` ≈ 2047 MiB, `/opt/lotus` em `drwxr-x---`. Falhou →
 `sudo cat /var/log/cloud-init-output.log`.
 
+O `Arn` do `sts` tem de ser `arn:aws:sts::<conta>:assumed-role/lotus-ec2/i-…` — **role assumida,
+não usuário IAM**. É essa linha que prova o hop limit 2; se vier timeout de ~10 s, o hop está em 1
+e todo o §8 em diante falha sem erro legível.
+
 ## 7. Artefatos no host
+
+**Tudo que fala com o Docker no host roda como root** — `sudo <comando>`, ou um shell de root com
+`sudo -i` para os blocos longos. O usuário `ubuntu` **não** entra no grupo `docker` de propósito:
+esse grupo é root sem senha, e o `/opt/lotus` é `750 root:root`. Logo `docker …` direto responde
+`permission denied while trying to connect to the docker API at unix:///var/run/docker.sock` —
+é o comportamento desenhado, não uma instalação quebrada.
 
 Do WSL, com o `.pem` da §6:
 
