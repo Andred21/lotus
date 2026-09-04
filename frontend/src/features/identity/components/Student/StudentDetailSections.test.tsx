@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider, type UseQueryResult } from '@tanstack/react-query'
+import { screen } from '@testing-library/react'
+import type { UseQueryResult } from '@tanstack/react-query'
+import { renderWithProviders } from '@shared/testing/providers'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { StudentDetailData } from '@shared/types/generated'
 import { StudentDetailSections } from './StudentDetailSections'
@@ -49,10 +50,7 @@ function detail(over: Partial<UseQueryResult<StudentDetailData, ProblemDetails>>
 /** A célula de certificado (coluna nova da tabela de turmas) chama
  * `useMutation` por baixo — precisa de um `QueryClientProvider` no ar, mesmo
  * quando o teste não fala de certificado. */
-const montar = (ui: Parameters<typeof render>[0]) => {
-  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
-}
+const montar = (ui: Parameters<typeof renderWithProviders>[0]) => renderWithProviders(ui)
 
 describe('StudentDetailSections — falha COM cache não apaga as seções', () => {
   it('falha SEM cache: o erro substitui as DUAS seções', () => {

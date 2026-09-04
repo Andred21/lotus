@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { cleanup, screen } from '@testing-library/react'
+import { renderWithProviders } from '@shared/testing/providers'
 import type { CertificateData } from '@shared/types/generated'
 import type { useHistorial } from '../../hooks/useHistorial'
 import { HistorialTable } from './HistorialTable'
@@ -75,13 +75,7 @@ const montar = (c: CertificateData) => {
 
   // A tabela monta os diálogos junto (`CertificateViewDialog` chama
   // `useCertificatePdf`), então o provider é obrigatório mesmo sem query viva.
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-
-  return render(
-    <QueryClientProvider client={qc}>
-      <HistorialTable />
-    </QueryClientProvider>,
-  )
+  return renderWithProviders(<HistorialTable />)
 }
 
 describe('HistorialTable — a linha do snapshot corrompido', () => {

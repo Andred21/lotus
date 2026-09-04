@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { renderWithProviders } from '@shared/testing/providers'
 import { api } from '@shared/api/axios'
 import { PeoplePage } from './PeoplePage'
 
@@ -34,21 +33,10 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const montar = () => {
-  const qc = new QueryClient({
-    // `staleTime` NÃO entra aqui: é justamente o que a página passa e o que
-    // este teste mede. Fixá-lo no client provaria o client, não a página.
-    defaultOptions: { queries: { retry: false } },
-  })
-
-  return render(
-    <MemoryRouter>
-      <QueryClientProvider client={qc}>
-        <PeoplePage />
-      </QueryClientProvider>
-    </MemoryRouter>,
-  )
-}
+const montar = () =>
+  // `staleTime` NÃO entra aqui: é justamente o que a página passa e o que
+  // este teste mede. Fixá-lo no client provaria o client, não a página.
+  renderWithProviders(<PeoplePage />, { route: '/' })
 
 const gtsDe = (recurso: string) => gets.filter((u) => u === `/api/${recurso}`).length
 
