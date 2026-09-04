@@ -23,6 +23,32 @@
 
 ---
 
+## Fechado em 2026-09-04 — `dominio-decisoes-de-rbac-e-semantica` (item 22)
+
+**A linha da tabela de ocupação, no dia do fechamento:**
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | `dominio-decisoes-de-rbac-e-semantica` (item 22) | Backend | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` (de `main@182be2ab`; a do item 26 mesclou na PR #99) | `ready_for_closure` (review feito; os cinco achados foram aprovados e corrigidos) |
+
+**O item 22 assumiu a `lane-a` em 2026-09-03** — `dominio-decisoes-de-rbac-e-semantica`, promovido
+explicitamente pelo João com a lane em `idle`. `Contexto: não` na fila, então **nasce direto em
+`ready_for_planning`**, sem Context Packet. É Backend, logo main tree (P-03), e a branch sai de
+`main@182be2ab` — o tip da `origin/main`, que já contém o item 26 mesclado (PR #99). Fonte: as
+quatro fichas travadas em decisão `D-09`, `D-10`, `D-11` e `D-16`; a `D-34` fica de fora por
+escrito, e escolher hospedeiro para ela segue sendo do João.
+
+**Há dois espelhos vivos, e é de propósito (precedente P-55).** O `state.md` da branch
+`refactor/frontend-arrumacao-de-testes` (árvore `../fix-frontend`, `updated_at` 2026-09-04T00:20)
+tem `focused_lane: lane-c` e o item 27 em `ready_for_planning`; este aqui volta o espelho para
+`lane-a`. As duas cópias **concordam sobre a `lane-a`** — ela estava `idle` nas duas —, então não há
+divergência de fase a bloquear: há duas lanes escrevendo o espelho em árvores diferentes, que é o
+que a integração serial resolve no merge. **A linha da `lane-c` nesta tabela é ponteiro, não
+estado** — escrever o estado de outra lane é justamente o que a invariante de dono proíbe.
+**O planejamento é serial:** o João decidiu que o 22 planeja primeiro; o item 27 espera.
+
+---
+
 ## Fechado em 2026-09-04 — `frontend-arrumacao-de-testes` (item 27)
 
 **O item 27 assumiu a `lane-c` em 2026-09-03** — `frontend-arrumacao-de-testes`, promovido
@@ -47,6 +73,8 @@ números — são **760** testes nesta árvore, não 759, e sete grafias de `Que
 **P-55**, e segue o precedente medido de 2026-08-26 (lane-b) e o de 2026-08-24, quando as três lanes
 fizeram o mesmo. A `lane-a` e a `lane-b` estão `idle`, então o espelho não desloca bloco ativo de
 ninguém.
+
+---
 
 ## Fechado em 2026-09-03 — `backend-envelope-de-erro-e-recusa-de-dominio` (item 26)
 

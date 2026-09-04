@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Spec: [`docs/superpowers/specs/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md`](../specs/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md). Divergência entre plano e spec bloqueia a task.
+- Spec: [`docs/superpowers/specs/archive/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md`](../../specs/archive/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md). Divergência entre plano e spec bloqueia a task.
 - **Bloco de backend roda no main tree** (pendência P-03), branch `refactor/backend-decisoes-de-rbac-e-semantica`, aberta de `main@182be2ab`.
 - Backend roda **no container**: `docker compose exec -T app php artisan test [--filter=X]`.
 - Pint roda **no host, de dentro de `backend/`, sempre com argumentos**: `cd backend && ./vendor/bin/pint <arquivos>`. **Nunca sobre `lang/`** (`.claude/rules/backend-lang.md`).

@@ -3,30 +3,30 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
 active_feature: null
-active_work_item: dominio-decisoes-de-rbac-e-semantica
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md
-active_plan: docs/superpowers/plans/2026-09-03-dominio-decisoes-de-rbac-e-semantica.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, promovido explicitamente pelo Joao em 2026-09-03
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: main-tree
-    branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; a anterior (refactor/backend-envelope-de-erro-e-recusa-de-dominio, item 26) mesclou na PR #99 (182be2ab)
-    active_spec: docs/superpowers/specs/2026-09-03-dominio-decisoes-de-rbac-e-semantica-design.md
-    active_plan: docs/superpowers/plans/2026-09-03-dominio-decisoes-de-rbac-e-semantica.md
+    branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; item 22 fechado em 2026-09-04 e a branch segue viva, aguardando rebase sobre origin/main@2619851d e merge
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio   # item 26, fechado em 2026-09-03
+    last_completed_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, fechado em 2026-09-04
   lane-b:
     active_feature: null
     active_work_item: null
@@ -58,9 +58,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
-last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio
-state_basis_commit: 50032566
-updated_at: 2026-09-04T17:40:00-03:00
+last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
+state_basis_commit: 953ef360
+updated_at: 2026-09-04T16:20:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,30 +160,14 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-03
+## Ocupação corrente — 2026-09-04
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `dominio-decisoes-de-rbac-e-semantica` (item 22) | Backend | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` (de `main@182be2ab`; a do item 26 mesclou na PR #99) | `ready_for_closure` (review feito; os cinco achados foram aprovados e corrigidos) |
+| `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch `refactor/backend-decisoes-de-rbac-e-semantica` segue viva, aguardando rebase sobre `origin/main@2619851d` e merge) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` **não existe mais** — a árvore está em `infra/producao-provisionamento-aws`; a lane corrige a própria linha quando voltar | `idle` |
 | `lane-c` | registro vivo **fora do main tree** | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` | ver o `state.md` da branch da lane |
 
-
-**O item 22 assumiu a `lane-a` em 2026-09-03** — `dominio-decisoes-de-rbac-e-semantica`, promovido
-explicitamente pelo João com a lane em `idle`. `Contexto: não` na fila, então **nasce direto em
-`ready_for_planning`**, sem Context Packet. É Backend, logo main tree (P-03), e a branch sai de
-`main@182be2ab` — o tip da `origin/main`, que já contém o item 26 mesclado (PR #99). Fonte: as
-quatro fichas travadas em decisão `D-09`, `D-10`, `D-11` e `D-16`; a `D-34` fica de fora por
-escrito, e escolher hospedeiro para ela segue sendo do João.
-
-**Há dois espelhos vivos, e é de propósito (precedente P-55).** O `state.md` da branch
-`refactor/frontend-arrumacao-de-testes` (árvore `../fix-frontend`, `updated_at` 2026-09-04T00:20)
-tem `focused_lane: lane-c` e o item 27 em `ready_for_planning`; este aqui volta o espelho para
-`lane-a`. As duas cópias **concordam sobre a `lane-a`** — ela estava `idle` nas duas —, então não há
-divergência de fase a bloquear: há duas lanes escrevendo o espelho em árvores diferentes, que é o
-que a integração serial resolve no merge. **A linha da `lane-c` nesta tabela é ponteiro, não
-estado** — escrever o estado de outra lane é justamente o que a invariante de dono proíbe.
-**O planejamento é serial:** o João decidiu que o 22 planeja primeiro; o item 27 espera.
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
 > em `ready_for_execution` enquanto o frontmatter andava até `ready_for_review` — as outras duas
@@ -215,11 +199,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-04 | `dominio-decisoes-de-rbac-e-semantica` (fecha as quatro fichas de decisão `D-09`, `D-10`, `D-11` e `D-16`; nenhuma pendência nasce ou fecha, mas **dispara sem pagar** os gatilhos da `P-51` e da `P-53`; nascem `RoleOptionData`, `StudentClientOptionData`, `UmContatoPrincipal` e `DeleteClientAddressAction`) | Item 22 da fila |
 | 2026-09-03 | `backend-envelope-de-erro-e-recusa-de-dominio` (paga a **P-71**, a **P-72** e a metade de comportamento da **P-60**; abre a **P-75** e a **P-76**; nascem `TipoDeRecusa` e `RecusaDeDominio` em `app/Shared/Exceptions/` e a rule `.claude/rules/backend-lang.md`) | Item 26 da fila |
 | 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
 | 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
 | 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
-| 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com

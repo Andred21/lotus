@@ -1,6 +1,6 @@
 # Medições — item 22 (`dominio-decisoes-de-rbac-e-semantica`)
 
-> Task 9 do plano `docs/superpowers/plans/2026-09-03-dominio-decisoes-de-rbac-e-semantica.md`.
+> Task 9 do plano `docs/superpowers/plans/archive/2026-09-03-dominio-decisoes-de-rbac-e-semantica.md`.
 > Medido contra o container `app` de pé (reiniciado no meio da sessão — ver §7), banco de dev
 > existente mutado temporariamente para as provas de `D-16` e `D-09` e devolvido ao estado
 > original em cada caso (ver §5 e §6). Browser real (Firefox via `playwright-cli`) usado para as
