@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-arrumacao-de-testes
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-09-03-frontend-arrumacao-de-testes-design.md
 active_plan: docs/superpowers/plans/2026-09-03-frontend-arrumacao-de-testes.md
 context_packet: null
-blocker: null
+blocker: "review do item 27: 5 achados aguardando decisao do Joao (Q-1 client compartilhado por arquivo, Q-2 medicao do DoD 2 nao registrada, Q-3 perimetro da catraca, Q-4 override que substitui o default, Q-5 indirecao vazia); suite 129/771 verde, lint 0, build verde"
 lanes:
   lane-a:
     active_feature: null
@@ -47,20 +47,20 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: frontend-arrumacao-de-testes   # item 27, promovido explicitamente pelo Joao em 2026-09-03
-    workflow_state: ready_for_review
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: ../fix-frontend
     branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
     active_spec: docs/superpowers/specs/2026-09-03-frontend-arrumacao-de-testes-design.md
     active_plan: docs/superpowers/plans/2026-09-03-frontend-arrumacao-de-testes.md
     context_packet: null
-    blocker: null
-    resume_state: null
+    blocker: "review do item 27: 5 achados aguardando decisao do Joao (Q-1 client compartilhado por arquivo, Q-2 medicao do DoD 2 nao registrada, Q-3 perimetro da catraca, Q-4 override que substitui o default, Q-5 indirecao vazia); suite 129/771 verde, lint 0, build verde"
+    resume_state: reviewing
     last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
 last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio
 state_basis_commit: 3833810c
-updated_at: 2026-09-04T01:41:58-03:00
+updated_at: 2026-09-04T04:35:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (bloco **fechado** em 2026-09-03; PR por abrir) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-arrumacao-de-testes` (item 27) | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (aberta de `origin/main@182be2ab`; a do item 25 mesclou na PR #98) | `ready_for_review` |
+| `lane-c` | `frontend-arrumacao-de-testes` (item 27) | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (aberta de `origin/main@182be2ab`; a do item 25 mesclou na PR #98) | `blocked` (review feito; 5 achados aguardam o João) |
 
 
 **O item 27 assumiu a `lane-c` em 2026-09-03** — `frontend-arrumacao-de-testes`, promovido
