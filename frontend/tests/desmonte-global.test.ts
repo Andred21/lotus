@@ -51,7 +51,11 @@ type ConfigDeTeste = { test?: { projects?: ProjetoDeTeste[] } }
  */
 describe('separação de ambientes por projeto (item 27)', () => {
   async function projetos(): Promise<ProjetoDeTeste[]> {
-    const { default: fabrica } = await import('../vite.config')
+    // A extensão `.ts` é obrigatória no import: `tsconfig.node.json` — que é o
+    // projeto que cobre `tests/` — resolve por `nodenext`, e sem ela o `tsc -b`
+    // do `pnpm build` para com TS2307 (mesma regra já documentada em
+    // `compose-dev.test.ts`).
+    const { default: fabrica } = await import('../vite.config.ts')
     expect(typeof fabrica).toBe('function')
     const config = (await fabrica({ command: 'serve', mode: 'development' })) as ConfigDeTeste
     const lista = config.test?.projects
@@ -82,6 +86,11 @@ describe('separação de ambientes por projeto (item 27)', () => {
     // A prova de comportamento, e não de declaração: se `tests/` voltar para
     // jsdom, `document` existe e este caso reprova. É o par de runtime das
     // duas asserções estruturais acima.
-    expect(typeof document).toBe('undefined')
+    //
+    // `document` referenciado direto não tipa aqui: `tsconfig.node.json` (o
+    // projeto que cobre `tests/`) declara `lib: ["ES2023"]`, sem `DOM` — de
+    // propósito, é o mesmo motivo pelo qual `tests/` não usa alias nem JSX.
+    // O acesso via `globalThis` evita o TS2584 sem enfraquecer a prova.
+    expect(typeof (globalThis as { document?: unknown }).document).toBe('undefined')
   })
 })
