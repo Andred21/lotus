@@ -71,6 +71,17 @@
 ## ADR-09 — Banco: MySQL 8 em AWS RDS gerenciado
 **Regra:** MySQL 8 em **RDS gerenciado** (classe pequena, ex. db.t4g.micro, região sul-americana). **NUNCA** no mesmo container/máquina da app. **Porquê:** snapshot automático, patching gerenciado, retenção/restore — persistência segura separada do compute efêmero. Descartado: banco em container/EC2 (risco de perda em restart).
 
+**Revisão 2026-09 (spec v2 do item 10, decisão D2 do brainstorming de 2026-09-02):** MySQL 8 em
+**container no host único de produção** (`docker-compose.prod.yml`), não em RDS. O que mudou: o
+teto de custo do bloco é US$ 30/mês (D8) e o RDS custaria ~US$ 15–20/mês — mais da metade do
+teto para ~10 usuários de baixa concorrência. O que NÃO mudou: a porta 3306 nunca é publicada
+(rede interna do Compose), o dado vive em volume nomeado, e a persistência segura continua
+sendo requisito — paga por `deploy/bin/backup-db.sh` (dump diário `--single-transaction` → S3,
+lifecycle de 30 dias, retenção mínima de 7 atendida) com **restore provado** no DoD do bloco.
+**Gatilho de reversão a RDS** (qualquer um): restore provado falhar; backup > 7 dias sem
+sucesso; cliente exigir RPO menor que o dump diário. RTO/RPO desta revisão: até 24 h de perda
+potencial + restore manual pelo runbook — aceito por decisão explícita do João em 2026-09-02.
+
 ## ADR-10 — Polimorfismo com enforceMorphMap
 **Regra:** relações polimórficas do Eloquent (tabela `files`, `audits`) **sempre** com `Relation::enforceMorphMap()` (alias fixos: 'redator', 'cotacao'...) no AppServiceProvider. **Porquê:** sem morph map, o tipo guarda o namespace da classe; renomear/mover classe corrompe dados históricos. O map desacopla do código-fonte. Trade-off: integridade referencial fica na aplicação (aceitável — acesso só via Laravel, baixa concorrência).
 

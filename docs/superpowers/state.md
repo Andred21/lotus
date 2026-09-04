@@ -1,15 +1,15 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-c
+focused_lane: lane-b
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: infra-producao-provisionamento-aws
+workflow_state: executing
+next_owner: claude
+next_action: continue_active_plan
 resume_state: null
-active_spec: null
-active_plan: null
+active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
+active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
 context_packet: null
 blocker: null
 lanes:
@@ -29,19 +29,21 @@ lanes:
     last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio   # item 26, fechado em 2026-09-03
   lane-b:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: infra-producao-provisionamento-aws
+    workflow_state: executing
+    next_owner: claude
+    next_action: continue_active_plan
     tree: ../lotus-infra
-    branch: chore/prontidao-pre-nuvem   # criada de infra/producao-provisionamento-aws@50f3a1f3 em 2026-08-29; main@37e0e2d4 mesclada para dentro (5b121aaa); fatia 1 mesclou no PR #86 (308edc50) e a branch segue viva para a PR 2 do fechamento
-    active_spec: null
-    active_plan: null
-    context_packet: null
+    branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
+    active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md   # spec v2, do brainstorming de 2026-09-02
+    active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md          # plano v2, 20 tasks (Fase A repo, Fase B AWS)
+    context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
     blocker: null
     resume_state: null
+    arquivos_do_descarte:
+      - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
+      - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
     parked_work_items:
-      - infra-producao-provisionamento-aws   # item 10, ready_for_planning em 2026-08-26; retoma apos este bloco; packet partial em context-packets/2026-08-26-infra-producao-provisionamento-aws.md
       - cicd-promocao-deploy-e-rollback      # item 12, blocked desde 2026-08-26 (nao ha host); packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
@@ -59,8 +61,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: frontend-arrumacao-de-testes
-state_basis_commit: e5aa89ff
-updated_at: 2026-09-04T13:05:00-03:00
+state_basis_commit: 9c038cca
+updated_at: 2026-09-04T15:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +167,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (bloco **fechado** em 2026-09-03; PR por abrir) | `idle` |
-| `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
 | `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (bloco **fechado** em 2026-09-04; PR por abrir) | `idle` |
 
 
