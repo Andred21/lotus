@@ -305,7 +305,7 @@ class BatchIssueTest extends TestCase
             ->assertJsonPath('1.ok', false);
 
         $this->assertStringContainsString(
-            'El redactor no está designado en esta clase.',
+            'El relator no está designado en esta clase.',
             $response->json('0.error'),
         );
 
@@ -359,7 +359,7 @@ class BatchIssueTest extends TestCase
         $fake = \Mockery::mock(IssueCertificateAction::class);
         $fake->shouldReceive('execute')->once()->andThrow(ValidationException::withMessages([
             'enrollment' => 'La clase no está concluida.',
-            'redator_id' => 'El redactor no está designado en esta clase.',
+            'redator_id' => 'El relator no está designado en esta clase.',
         ]));
         $this->instance(IssueCertificateAction::class, $fake);
 
@@ -372,7 +372,7 @@ class BatchIssueTest extends TestCase
             ->assertJsonPath('0.codigo', null)
             ->assertJsonPath(
                 '0.error',
-                'La clase no está concluida. El redactor no está designado en esta clase.',
+                'La clase no está concluida. El relator no está designado en esta clase.',
             );
     }
 

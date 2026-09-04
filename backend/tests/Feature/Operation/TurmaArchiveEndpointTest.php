@@ -128,7 +128,7 @@ class TurmaArchiveEndpointTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonPath(
                 'errors.turma.0',
-                'Un redactor de esta clase está archivado: restáuralo antes de restaurar la clase.',
+                __('operation.turma.restore_redator_archived'),
             );
 
         $this->assertSoftDeleted('turmas', ['id' => $turma->id]);

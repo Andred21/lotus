@@ -4,6 +4,7 @@ namespace Tests\Unit\Shared;
 
 use App\Shared\Exceptions\RecusaDeDominio;
 use PHPUnit\Framework\Attributes\Test;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Tests\Support\ScansPhpSource;
 use Tests\TestCase;
 
@@ -36,21 +37,46 @@ class RecusaDeDominioTest extends TestCase
         return $saida;
     }
 
+    /**
+     * A classe PSR-4 do arquivo, ou `null` se ela não existir.
+     */
+    private function classeDe(string $arquivo): ?string
+    {
+        $classe = 'App\\Domains\\'.str_replace(
+            '/',
+            '\\',
+            trim(substr($arquivo, strlen(base_path('app/Domains/')), -4), '/'),
+        );
+
+        return class_exists($classe) ? $classe : null;
+    }
+
+    /**
+     * Régua por TIPO, e não por texto do `extends` (Q-2 do review de
+     * 2026-09-03).
+     *
+     * O regex anterior casava só o literal `extends HttpException`. Uma
+     * `extends AccessDeniedHttpException` — ou um `use ... as HttpError` —
+     * escapava por ele E pela régua de status, porque subclasse de
+     * `HttpException` fixa o status dentro de si e não escreve `403` no corpo.
+     * O acoplamento domínio→HTTP voltaria inteiro com as duas catracas verdes.
+     * Perguntar `is_subclass_of` fecha a família toda de uma vez, e é o mesmo
+     * princípio da D5 da spec: decidir por tipo, nunca por inspeção de texto.
+     */
     #[Test]
     public function nenhuma_excecao_de_dominio_estende_http_exception(): void
     {
         $ofensores = [];
 
         foreach ($this->excecoesDeDominio() as $arquivo) {
-            $codigo = $this->codigoSemComentarios($arquivo);
+            $classe = $this->classeDe($arquivo);
 
-            if (preg_match('/extends\s+HttpException\b/', $codigo)
-                || preg_match('/extends\s+\\\\?Symfony\\\\Component\\\\HttpKernel\\\\Exception\\\\HttpException\b/', $codigo)) {
-                $ofensores[] = basename($arquivo);
+            if ($classe !== null && is_subclass_of($classe, HttpExceptionInterface::class)) {
+                $ofensores[] = basename($arquivo).'  '.get_parent_class($classe);
             }
         }
 
-        $this->assertSame([], $ofensores, "Exceção de domínio estendendo HttpException:\n".implode("\n", $ofensores));
+        $this->assertSame([], $ofensores, "Exceção de domínio acoplada a HTTP:\n".implode("\n", $ofensores));
     }
 
     #[Test]
@@ -73,13 +99,9 @@ class RecusaDeDominioTest extends TestCase
     public function toda_recusa_de_dominio_declara_um_tipo(): void
     {
         foreach ($this->excecoesDeDominio() as $arquivo) {
-            $classe = 'App\\Domains\\'.str_replace(
-                '/',
-                '\\',
-                trim(substr($arquivo, strlen(base_path('app/Domains/')), -4), '/'),
-            );
+            $classe = $this->classeDe($arquivo);
 
-            if (! class_exists($classe) || ! is_subclass_of($classe, RecusaDeDominio::class)) {
+            if ($classe === null || ! is_subclass_of($classe, RecusaDeDominio::class)) {
                 continue;
             }
 
