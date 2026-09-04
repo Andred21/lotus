@@ -78,20 +78,6 @@ class PrimaryContactTest extends TestCase
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true, 'deleted_at' => null]);
     }
 
-    public function test_cliente_sem_principal_e_valido(): void
-    {
-        $this->actingAsAdmin();
-
-        $this->postJson('/api/clients', $this->payload([
-            ['name' => 'Contato A', 'is_primary' => false],
-            ['name' => 'Contato B', 'is_primary' => false],
-        ]))->assertCreated();
-
-        // 0 principais é estado válido: o serviço não promove ninguém.
-        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => false]);
-        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => false]);
-    }
-
     public function test_nunca_mais_de_um_principal_com_tres_contatos(): void
     {
         $this->actingAsAdmin();
@@ -154,24 +140,6 @@ class PrimaryContactTest extends TestCase
 
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => false]);
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true]);
-    }
-
-    public function test_rota_nested_update_desmarcando_o_principal_nao_promove_ninguem(): void
-    {
-        $this->actingAsAdmin();
-        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
-        $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
-        $a = $client->contacts()->firstOrFail();
-
-        $this->putJson("/api/contacts/{$a->id}", [
-            'name' => 'Contato A', 'is_primary' => false,
-        ])->assertOk();
-
-        // 0 principais é estado válido: desmarcar o único principal não pode
-        // promover ninguém (ensureSingle faz early-return com primaries.count() == 0).
-        $this->assertSame(0, ClientContact::where('client_id', $client->id)
-            ->where('is_primary', true)
-            ->count());
     }
 
     public function test_rota_nested_update_promove_a_via_winner_mesmo_b_tendo_id_maior(): void

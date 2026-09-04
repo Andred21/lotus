@@ -7,10 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Garante a invariante "no máximo 1 principal por cliente" na camada de
+ * Garante a invariante "EXATAMENTE 1 principal por cliente" na camada de
  * aplicação, nunca em trigger (ADR-02/ADR-08: trigger enxerga a conexão, não o
  * usuário autenticado — a auditoria perderia o autor).
- * Cliente SEM principal é estado válido: o serviço não promove ninguém.
+ *
+ * **Emenda de 2026-09-03 (D-09).** Até aqui a regra era "no máximo 1", e o
+ * docblock declarava que cliente SEM principal era estado válido: o serviço
+ * não promovia ninguém. A tela nunca produziu esse estado — o rádio não
+ * desmarca e a remoção re-promove —, e a assimetria entre as duas camadas era
+ * a ficha D-09. O veredito: quem cede é o backend. Coleção que ficou sem
+ * principal por EFEITO COLATERAL (exclusão do principal) promove o mais antigo
+ * aqui; entrada EXPLÍCITA sem principal é recusada na validação, que é assunto
+ * do DTO e da Action, não deste serviço.
  *
  * Contato e endereço tinham a MESMA regra escrita duas vezes, byte a byte
  * (review de 2026-08-11, Q-4): o par divergia calado, e a correção de
@@ -32,10 +40,9 @@ abstract class PrimaryCollectionService
      *                              último por id, que é o "último marcado" no
      *                              replace-total.
      */
-    public function ensureSingle(Client $client, ?Model $winner = null): void
+    public function ensureExactlyOne(Client $client, ?Model $winner = null): void
     {
-        $primaries = $this->collection($client)
-            ->where('is_primary', true)
+        $items = $this->collection($client)
             ->orderBy('id')
             // Leitura TRAVADA, não comum: em REPEATABLE READ o SELECT comum volta
             // do snapshot da transação e NÃO enxerga o principal que a transação
@@ -46,7 +53,24 @@ abstract class PrimaryCollectionService
             ->lockForUpdate()
             ->get();
 
-        if ($primaries->count() <= 1) {
+        // Coleção vazia não tem principal a garantir. Quem exige ao menos um
+        // ITEM é a validação (`contacts.min:1`), não esta invariante.
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        $primaries = $items->where('is_primary', true);
+
+        // Zero principais só acontece por efeito colateral — a entrada
+        // explícita já foi recusada antes de chegar aqui (D-09). Promove o mais
+        // antigo, que é o que a tela faz ao remover o principal.
+        if ($primaries->isEmpty()) {
+            $items->first()->update(['is_primary' => true]);
+
+            return;
+        }
+
+        if ($primaries->count() === 1) {
             return;
         }
 

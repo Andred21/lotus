@@ -3,6 +3,7 @@
 namespace App\Domains\Commercial\Http\Controllers;
 
 use App\Domains\Commercial\Actions\CreateClientAddressAction;
+use App\Domains\Commercial\Actions\DeleteClientAddressAction;
 use App\Domains\Commercial\Actions\UpdateClientAddressAction;
 use App\Domains\Commercial\Data\ClientAddressData;
 use App\Domains\Commercial\Models\Client;
@@ -22,9 +23,9 @@ class ClientAddressController extends Controller
         return ClientAddressData::from($action->execute($address, $data));
     }
 
-    public function destroy(ClientAddress $address): Response
+    public function destroy(ClientAddress $address, DeleteClientAddressAction $action): Response
     {
-        $address->delete();
+        $action->execute($address);
 
         return response()->noContent();
     }

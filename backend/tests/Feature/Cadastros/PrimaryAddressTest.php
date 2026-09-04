@@ -3,7 +3,6 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Commercial\Models\Client;
-use App\Domains\Commercial\Models\ClientAddress;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -114,7 +113,7 @@ class PrimaryAddressTest extends TestCase
         $this->assertDatabaseHas('client_addresses', ['commune' => 'Las Condes', 'is_primary' => true]);
     }
 
-    public function test_rota_nested_update_desmarcando_o_principal_nao_promove_ninguem(): void
+    public function test_rota_nested_update_desmarcando_o_unico_principal_e_repromovido(): void
     {
         $this->actingAsAdmin();
         $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
@@ -125,9 +124,11 @@ class PrimaryAddressTest extends TestCase
             'commune' => 'Providencia', 'is_primary' => false,
         ])->assertOk();
 
-        $this->assertSame(0, ClientAddress::where('client_id', $client->id)
-            ->where('is_primary', true)
-            ->count());
+        // D-09/D20: endereço herda a PROMOÇÃO do serviço compartilhado, sem a
+        // recusa (que é só de contato). Sendo o único endereço, desmarcá-lo via
+        // PUT deixa a coleção sem principal por efeito colateral — o mesmo
+        // serviço que promove após um delete promove aqui também.
+        $this->assertTrue($a->fresh()->is_primary);
     }
 
     /**

@@ -24,7 +24,7 @@ class UpdateClientContactAction
 
             $contact->update($data->toArray());
 
-            $this->primaryContacts->ensureSingle($contact->client, $contact);
+            $this->primaryContacts->ensureExactlyOne($contact->client, $contact);
 
             return $contact->fresh();
         });
