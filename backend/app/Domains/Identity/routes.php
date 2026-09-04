@@ -77,6 +77,11 @@ Route::middleware('auth.active')->group(function () {
     Route::apiResource('students', StudentController::class)
         ->only(['index', 'store', 'show', 'update']);
 
+    // ANTES do apiResource: `roles/{role}` casaria com `assignable` e o binding
+    // daria 404 tentando resolver a palavra como id — mesma razão de
+    // `redatores/archived` e `users/archived` acima.
+    Route::get('roles/assignable', [RoleController::class, 'assignable']);
+
     Route::apiResource('roles', RoleController::class)->only(['index', 'store', 'update']);
     Route::get('permissions', [PermissionController::class, 'index']);
 

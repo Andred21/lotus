@@ -529,6 +529,10 @@ permissions: string[],
 id: undefined | number,
 is_system: undefined | boolean,
 };
+export type RoleOptionData = {
+id: number,
+name: string,
+};
 export type SeriesData = {
 turmas_iniciadas: MonthlyCountData[] | null,
 turmas_concluidas: MonthlyCountData[] | null,

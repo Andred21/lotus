@@ -141,7 +141,7 @@ class ListQueryBudgetTest extends TestCase
             $comParametro = str_contains($uri, '{');
             $coberta = $comParametro
                 ? array_key_exists($uri, self::COM_PAI) || array_key_exists($uri, self::COM_PAI_ISENTAS)
-                : array_key_exists($uri, $this->cenarios()) || array_key_exists($uri, self::ISENTAS) || $uri === 'api/dashboard/metricas';
+                : array_key_exists($uri, $this->cenarios()) || array_key_exists($uri, self::ISENTAS) || in_array($uri, ['api/dashboard/metricas', 'api/roles', 'api/roles/assignable'], true);
 
             if (! $coberta) {
                 $semCobertura[] = $uri;
@@ -197,6 +197,58 @@ class ListQueryBudgetTest extends TestCase
         $this->assertSame($comDois, $comVinte, sprintf(
             "%s custa %d queries com N=%d e %d com N=%d — há consulta por linha.\nÚltimas queries:\n%s",
             $uri, $comDois, self::N_PEQUENO, $comVinte, self::N_GRANDE, implode("\n", $this->ultimas),
+        ));
+    }
+
+    /**
+     * `api/roles` sai de `CENARIOS_URIS` desde a D-10: o índice rico é
+     * superadmin-only e o data provider genérico sempre entra como admin
+     * (mesmo padrão de `api/dashboard/metricas`, que também tem ator
+     * próprio). Teste dedicado para não perder a rede de N+1 do
+     * `with('permissions')` de `RoleController::index`.
+     */
+    public function test_a_contagem_de_queries_de_roles_nao_cresce_com_n(): void
+    {
+        $this->actingAsSuperadmin();
+
+        $semear = fn (int $n) => $this->repetir($n, fn () => Role::create(['name' => 'papel-'.(++$this->seq), 'guard_name' => 'web']));
+
+        $semear(self::N_PEQUENO);
+        $this->getJson('/api/roles')->assertOk();
+        $comDois = $this->contar('api/roles');
+
+        $semear(self::N_GRANDE - self::N_PEQUENO);
+        $this->getJson('/api/roles')->assertOk();
+        $comVinte = $this->contar('api/roles');
+
+        $this->assertSame($comDois, $comVinte, sprintf(
+            "api/roles custa %d queries com N=%d e %d com N=%d — há consulta por linha.\nÚltimas queries:\n%s",
+            $comDois, self::N_PEQUENO, $comVinte, self::N_GRANDE, implode("\n", $this->ultimas),
+        ));
+    }
+
+    /**
+     * `api/roles/assignable` (D-10): lookup enxuto sob `identity.user.view`,
+     * ator admin — mas fora de `CENARIOS_URIS` porque nasceu depois da
+     * varredura original e ganha teste próprio, não o genérico.
+     */
+    public function test_a_contagem_de_queries_de_roles_assignable_nao_cresce_com_n(): void
+    {
+        $this->actingAsAdmin();
+
+        $semear = fn (int $n) => $this->repetir($n, fn () => Role::create(['name' => 'papel-'.(++$this->seq), 'guard_name' => 'web']));
+
+        $semear(self::N_PEQUENO);
+        $this->getJson('/api/roles/assignable')->assertOk();
+        $comDois = $this->contar('api/roles/assignable');
+
+        $semear(self::N_GRANDE - self::N_PEQUENO);
+        $this->getJson('/api/roles/assignable')->assertOk();
+        $comVinte = $this->contar('api/roles/assignable');
+
+        $this->assertSame($comDois, $comVinte, sprintf(
+            "api/roles/assignable custa %d queries com N=%d e %d com N=%d — há consulta por linha.\nÚltimas queries:\n%s",
+            $comDois, self::N_PEQUENO, $comVinte, self::N_GRANDE, implode("\n", $this->ultimas),
         ));
     }
 
@@ -275,7 +327,6 @@ class ListQueryBudgetTest extends TestCase
         'api/budgets' => 1, 'api/budgets/archived' => 1,
         'api/redatores' => 1, 'api/redatores/archived' => 1,
         'api/users' => 1, 'api/users/archived' => 1,
-        'api/roles' => 1,
     ];
 
     /**
@@ -329,7 +380,6 @@ class ListQueryBudgetTest extends TestCase
             'api/redatores/archived' => fn (int $n) => $this->repetir($n, fn () => $this->redator()->delete()),
             'api/users' => fn (int $n) => $this->repetir($n, fn () => $this->staff()),
             'api/users/archived' => fn (int $n) => $this->repetir($n, fn () => $this->staff()->delete()),
-            'api/roles' => fn (int $n) => $this->repetir($n, fn () => Role::create(['name' => 'papel-'.(++$this->seq), 'guard_name' => 'web'])),
         ];
     }
 

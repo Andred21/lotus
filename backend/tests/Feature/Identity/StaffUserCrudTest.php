@@ -74,7 +74,9 @@ class StaffUserCrudTest extends TestCase
 
     public function test_get_roles_lista_com_flag_de_sistema(): void
     {
-        $this->actingAsAdmin();
+        // O índice rico é do superadmin desde a D-10: ele devolve as permissões
+        // de toda role, e admin comum enumerava as do superadmin por aqui.
+        $this->actingAsSuperadmin();
 
         $response = $this->getJson('/api/roles')->assertOk();
 
