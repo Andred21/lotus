@@ -23,7 +23,12 @@ import { render } from '@testing-library/react'
 export type ProviderOptions = {
   /** Quando presente, monta `MemoryRouter` com esta entrada inicial. */
   route?: string
-  /** Substitui o default POR INTEIRO — não é merge. */
+  /**
+   * MERGE sobre o default, eixo a eixo: o que você declara vence, o resto do
+   * `PADRAO` fica de pé. Substituir por inteiro derrubaria `retry: false` sem
+   * aviso — reintroduzindo em silêncio o que este mecanismo apagou de 33
+   * arquivos (Q-4 do review de 2026-09-04).
+   */
   queryClientOptions?: QueryClientConfig
 }
 
@@ -39,10 +44,24 @@ const PADRAO: QueryClientConfig = {
   },
 }
 
+/** Funde o override sobre o `PADRAO`, eixo a eixo. */
+function comDefault(over?: QueryClientConfig): QueryClientConfig {
+  if (over === undefined) return PADRAO
+  return {
+    ...over,
+    defaultOptions: {
+      ...over.defaultOptions,
+      queries: { ...PADRAO.defaultOptions?.queries, ...over.defaultOptions?.queries },
+      mutations: { ...PADRAO.defaultOptions?.mutations, ...over.defaultOptions?.mutations },
+    },
+  }
+}
+
 /**
  * Nasce sem consumidor, e é intencional: a catraca fecha `new QueryClient` em
  * todo teste das três camadas, então um caso futuro que precise de outra
- * opção precisa de uma porta — sem ela, a saída seria furar a catraca.
+ * opção precisa de uma porta — sem ela, a saída seria furar a catraca. A
+ * porta funde sobre o `PADRAO` (`comDefault`), nunca o substitui.
  *
  * **Chame por teste, não por arquivo.** Uma única chamada no escopo do
  * módulo entrega um client COMPARTILHADO por todos os `it()` daquele
@@ -53,13 +72,18 @@ const PADRAO: QueryClientConfig = {
  * cache um do outro. Onde houver query real, chame `createWrapper()` dentro
  * de um `beforeEach` (ou dentro de cada `it()`), não uma vez no topo do
  * arquivo.
+ *
+ * Os arquivos que hoje chamam no topo foram medidos um a um no review de
+ * 2026-09-04 (Q-1): os que sobraram testam hook só de `useMutation`, e
+ * mutation não guarda cache por chave. Os dois com `useQuery` de verdade —
+ * `useEntityPhoto` e `useCrudFormWithPhoto` — passaram para `beforeEach`.
  */
 export function createWrapper(opts: ProviderOptions = {}): {
   wrapper: ({ children }: { children: ReactNode }) => ReactElement
   client: QueryClient
 } {
   // FORA do componente: é o que mantém o cache vivo entre re-renders.
-  const client = new QueryClient(opts.queryClientOptions ?? PADRAO)
+  const client = new QueryClient(comDefault(opts.queryClientOptions))
   const { route } = opts
 
   function wrapper({ children }: { children: ReactNode }) {

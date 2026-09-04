@@ -37,11 +37,17 @@ describe('providers de teste', () => {
     expect(createWrapper().client.getDefaultOptions().queries?.staleTime).toBeUndefined()
   })
 
-  it('aceita override e o override substitui o default', () => {
+  it('o override FUNDE sobre o default em vez de substituí-lo', () => {
+    // Substituir por inteiro derrubaria `retry: false` e `refetchOnWindowFocus`
+    // sem aviso no sítio — o defeito que este mecanismo apagou de 33 arquivos
+    // voltaria pela porta de escape (Q-4 do review de 2026-09-04).
     const { client } = createWrapper({
       queryClientOptions: { defaultOptions: { queries: { retry: 3 } } },
     })
-    expect(client.getDefaultOptions().queries?.retry).toBe(3)
+    const padrao = client.getDefaultOptions()
+    expect(padrao.queries?.retry).toBe(3)
+    expect(padrao.queries?.refetchOnWindowFocus).toBe(false)
+    expect(padrao.mutations?.retry).toBe(false)
   })
 
   it('sem `route`, não monta router', () => {
