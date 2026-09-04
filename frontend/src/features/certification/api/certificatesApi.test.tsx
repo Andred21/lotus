@@ -13,9 +13,10 @@ vi.mock('@shared/api/axios', () => ({
 const get = vi.mocked(api.get)
 
 /**
- * O wrapper repete o default do `AppProviders` de propósito
- * (`refetchOnWindowFocus: false`): sem ele, a query passaria neste teste pelo
- * default do TanStack e a catraca não provaria nada.
+ * A prova depende de `refetchOnWindowFocus: false` estar no client — sem ele a
+ * query venceria por herdar o default do TanStack, não por decisão da feature.
+ * Quem o declara é o `PADRAO` de `@shared/testing/providers`, e
+ * `providers.test.tsx` guarda essa linha.
  */
 const { wrapper } = createWrapper()
 

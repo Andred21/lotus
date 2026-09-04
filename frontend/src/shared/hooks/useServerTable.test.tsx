@@ -9,12 +9,6 @@ interface Row {
   name: string
 }
 
-/** Cliente estável por teste, fora da função de render (padrão `comCliente()`
- * de `useTurmasPage.test.tsx`). */
-function comCliente() {
-  return createWrapper()
-}
-
 const meta = (over: Partial<PageMeta> = {}): PageMeta => ({
   page: 1, per_page: 10, total: 2, last_page: 1, total_unfiltered: 2, ...over,
 })
@@ -42,7 +36,7 @@ afterEach(() => {
 describe('useServerTable — a query que sai', () => {
   it('monta page/per_page sem q, sort nem filtro vazio, e devolve as linhas do envelope', async () => {
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas)))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
 
     const { result } = renderHook(
       () => useServerTable(fetchPage, { key: ['x'], filters: { status: null } }),
@@ -58,7 +52,7 @@ describe('useServerTable — a query que sai', () => {
 
   it('onPage pede a página certa a partir de first', async () => {
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useServerTable(fetchPage, { key: ['x'] }), { wrapper })
     await waitFor(() => expect(result.current.rows).toHaveLength(2))
 
@@ -71,7 +65,7 @@ describe('useServerTable — a query que sai', () => {
   it('digitar não busca a cada tecla: um GET depois do debounce, com q, na página 1', async () => {
     vi.useFakeTimers()
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useServerTable(fetchPage, { key: ['x'] }), { wrapper })
 
     await act(async () => {
@@ -108,7 +102,7 @@ describe('useServerTable — a query que sai', () => {
 
   it('trocar um filtro nomeado volta à página 1 e manda só os filtros preenchidos', async () => {
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result, rerender } = renderHook(
       ({ status }: { status: string | null }) => useServerTable(fetchPage, { key: ['x'], filters: { status } }),
       { wrapper, initialProps: { status: null as string | null } },
@@ -128,7 +122,7 @@ describe('useServerTable — a query que sai', () => {
     // página 3, o escopo antigo (só termo + filtros) não via diferença nenhuma
     // e a primeira query da lista nova saía com `page: 3`.
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result, rerender } = renderHook(
       ({ key }: { key: readonly unknown[] }) => useServerTable(fetchPage, { key }),
       { wrapper, initialProps: { key: ['turmas', 'list'] as readonly unknown[] } },
@@ -145,7 +139,7 @@ describe('useServerTable — a query que sai', () => {
 
   it('onSort manda `campo`/`-campo`, volta à página 1, e ordem zero tira o sort', async () => {
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useServerTable(fetchPage, { key: ['x'] }), { wrapper })
     await waitFor(() => expect(result.current.rows).toHaveLength(2))
     act(() => result.current.onPage({ first: 20 }))
@@ -168,14 +162,14 @@ describe('useServerTable — a query que sai', () => {
 describe('useServerTable — filtering mede EFEITO, não presença', () => {
   it('filtro presente que não corta linha não é "filtrando"; o que corta é', async () => {
     const semCorte = vi.fn(() => Promise.resolve(pagina(linhas, { total: 2, total_unfiltered: 2 })))
-    const a = comCliente()
+    const a = createWrapper()
     const naoCorta = renderHook(() => useServerTable(semCorte, { key: ['a'], filters: { status: 'x' } }), { wrapper: a.wrapper })
     await waitFor(() => expect(naoCorta.result.current.meta).toBeDefined())
     expect(naoCorta.result.current.filteredByScope).toBe(false)
     expect(naoCorta.result.current.filtering).toBe(false)
 
     const comCorte = vi.fn(() => Promise.resolve(pagina([linhas[0]], { total: 1, total_unfiltered: 2 })))
-    const b = comCliente()
+    const b = createWrapper()
     const corta = renderHook(() => useServerTable(comCorte, { key: ['b'], filters: { status: 'x' } }), { wrapper: b.wrapper })
     await waitFor(() => expect(corta.result.current.meta).toBeDefined())
     expect(corta.result.current.filteredByScope).toBe(true)
@@ -185,7 +179,7 @@ describe('useServerTable — filtering mede EFEITO, não presença', () => {
   it('busca conta em filtering mas não em filteredByScope', async () => {
     vi.useFakeTimers()
     const fetchPage = vi.fn(() => Promise.resolve(pagina([linhas[0]], { total: 1, total_unfiltered: 2 })))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useServerTable(fetchPage, { key: ['x'] }), { wrapper })
 
     act(() => result.current.onFilterChange('ana'))
@@ -200,7 +194,7 @@ describe('useServerTable — filtering mede EFEITO, não presença', () => {
   it('clear() zera termo e página', async () => {
     vi.useFakeTimers()
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useServerTable(fetchPage, { key: ['x'] }), { wrapper })
     act(() => result.current.onFilterChange('ana'))
     await act(async () => {
@@ -221,7 +215,7 @@ describe('useServerTable — filtering mede EFEITO, não presença', () => {
   it('clampa first quando a página pedida some (total encolheu)', async () => {
     let total = 30
     const fetchPage = vi.fn(() => Promise.resolve(pagina(linhas, { total, last_page: Math.ceil(total / 10), total_unfiltered: total })))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useServerTable(fetchPage, { key: ['x'] }), { wrapper })
     await waitFor(() => expect(result.current.meta).toBeDefined())
 
@@ -233,7 +227,7 @@ describe('useServerTable — filtering mede EFEITO, não presença', () => {
 
   it('falha sem corpo sobe `{}`, e refetch devolve a promise (Q-14)', async () => {
     const fetchPage = vi.fn(() => Promise.reject(undefined))
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useServerTable(fetchPage, { key: ['x'] }), { wrapper })
 
     await waitFor(() => expect(result.current.error).not.toBeNull())

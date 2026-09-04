@@ -10,13 +10,6 @@ vi.mock('@shared/api/axios', () => ({
 
 const get = vi.mocked(api.get)
 
-/** Cliente estável por teste — mesmo molde do useTurmasPage.test.tsx: um cliente
- * novo a cada render orfanaria a rejeição da query e o vitest reprovaria com
- * `Unknown Error: undefined`. */
-function comCliente() {
-  return createWrapper()
-}
-
 describe('usePendingQuotesPage', () => {
   beforeEach(() => {
     get.mockReset()
@@ -25,7 +18,7 @@ describe('usePendingQuotesPage', () => {
   it('normaliza a fila de pendentes na MESMA forma que useTurmasPage', async () => {
     get.mockResolvedValue({ data: [{ quote_id: 3 }] })
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => usePendingQuotesPage(), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -36,7 +29,7 @@ describe('usePendingQuotesPage', () => {
   it('devolve o envelope da falha, e `{}` quando o interceptor nao populou o corpo', async () => {
     get.mockRejectedValue(undefined)
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => usePendingQuotesPage(), { wrapper })
 
     await waitFor(() => expect(result.current.error).not.toBeNull())
@@ -49,7 +42,7 @@ describe('usePendingQuotesPage', () => {
     // `loading` (Q-14), e trocar por `() => void` compilaria sem quebrar nada acima.
     get.mockResolvedValue({ data: [] })
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => usePendingQuotesPage(), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))

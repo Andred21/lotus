@@ -11,8 +11,8 @@ vi.mock('@shared/api/axios', () => ({
 
 const get = vi.mocked(api.get)
 
-/** Mesmo default do `AppProviders` (`refetchOnWindowFocus: false`) — a catraca
- * só vale se a query tiver de vencê-lo. */
+/** A prova só vale contra `refetchOnWindowFocus: false`, que vem do `PADRAO` de
+ * `@shared/testing/providers` e é guardado por `providers.test.tsx`. */
 const { wrapper } = createWrapper()
 
 describe('useStudentDetail — revalidação do estado derivado', () => {

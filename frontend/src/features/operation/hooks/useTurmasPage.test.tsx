@@ -11,13 +11,6 @@ vi.mock('@shared/api/axios', () => ({
 
 const get = vi.mocked(api.get)
 
-/** Cliente estável por teste: uma fábrica que monta o QueryClient fora da função de render.
- * Se o cliente morasse no corpo da wrapper, cada render remontaria um novo e orfanaria a
- * rejeição da query — vitest reprova com `Unknown Error: undefined` e a test torna timeout. */
-function comCliente() {
-  return createWrapper()
-}
-
 const meta = { page: 1, per_page: 10, total: 1, last_page: 1, total_unfiltered: 1 }
 
 describe('useTurmasPage', () => {
@@ -28,7 +21,7 @@ describe('useTurmasPage', () => {
   it('modo ativo: pede /api/turmas com page/per_page e o status como filtro nomeado', async () => {
     get.mockResolvedValue({ data: { data: [{ id: 7, course_name: 'T-7' }], meta } })
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useTurmasPage('active', 'habilitada'), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -49,7 +42,7 @@ describe('useTurmasPage', () => {
       },
     })
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useTurmasPage('archived', null), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -62,7 +55,7 @@ describe('useTurmasPage', () => {
   it('trocar de modo na pagina 3 pede a PRIMEIRA pagina do endpoint novo (Q-3)', async () => {
     get.mockResolvedValue({ data: { data: [], meta: { ...meta, total: 30, last_page: 3, total_unfiltered: 30 } } })
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result, rerender } = renderHook(
       ({ mode }: { mode: ArchiveMode }) => useTurmasPage(mode, null),
       { wrapper, initialProps: { mode: 'active' as ArchiveMode } },
@@ -86,7 +79,7 @@ describe('useTurmasPage', () => {
   it('devolve rows vazio, e nao undefined, antes de a query voltar', () => {
     get.mockReturnValue(new Promise(() => {}))
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useTurmasPage('active', null), { wrapper })
 
     expect(result.current.rows).toEqual([])
@@ -96,7 +89,7 @@ describe('useTurmasPage', () => {
   it('devolve o envelope da falha, e `{}` quando o interceptor nao populou o corpo', async () => {
     get.mockRejectedValue(undefined)
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useTurmasPage('active', null), { wrapper })
 
     await waitFor(() => expect(result.current.error).not.toBeNull())
@@ -106,7 +99,7 @@ describe('useTurmasPage', () => {
   it('DEVOLVE a promise do refetch (Q-14)', async () => {
     get.mockResolvedValue({ data: { data: [], meta: { ...meta, total: 0, total_unfiltered: 0 } } })
 
-    const { wrapper } = comCliente()
+    const { wrapper } = createWrapper()
     const { result } = renderHook(() => useTurmasPage('active', null), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
