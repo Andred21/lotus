@@ -58,7 +58,8 @@ Os **11** arquivos de `frontend/tests/` usam `readFileSync`. **Zero** deles casa
 `document.` ou `window.`. Nenhum usa alias de path (`@shared`, `@features`): a única ocorrência de
 `'@` no diretório está **dentro de uma string de regex** do `desmonte-global.test.ts`.
 
-`environment` é o maior item do tempo medido (121,39s).
+`environment` é o maior item do tempo medido (121,39s) — **mas a remedição do review derrubou o
+tempo como motivo: veja a §3.8.** O que sustenta a separação é isolação.
 
 ### 3.3 Achado 2 — a montagem do provedor é copiada · **CONFIRMADO, e pior que a ficha diz**
 
@@ -147,6 +148,29 @@ isola é o teste. Conserto de uma linha, no arquivo que este bloco já vai abrir
 
 `vitest` **4.1.10**. `test.projects` é estável (e `test.workspace`, que ele substitui, foi removido
 na 4). Nada a instalar.
+
+### 3.8 Medição DEPOIS — 2026-09-04, no review (Q-2)
+
+O DoD §6.2 pede o tempo antes e depois, com o `environment` destacado. O registro
+faltava, e a medição não confirma o ganho que a §3.2 usou como motivo:
+
+| Rodada | Arquivos / testes | Parede | `environment` |
+|---|---|---|---|
+| Base (§3.1) | 128 / 760 | 96,68s | 121,39s |
+| Depois, 1ª | 129 / 771 | 84,08s | **132,26s** |
+| Depois, 2ª (seguida) | 129 / 771 | 70,58s | **110,36s** |
+| Depois das correções do review | 129 / 771 | 88,36s | **132,93s** |
+
+Duas rodadas seguidas, mesma árvore e mesma carga, variam ~20% entre si — e os
+11 arquivos de `tests/` respondem por ~1s de `environment` cada (~11s somados,
+entre workers). O efeito procurado é **menor que o ruído da medida**: este
+número não prova nem desmente ganho de tempo.
+
+**O que o bloco entrega na Task 1 é isolação, não velocidade:** `tests/` deixa
+de montar um DOM que não usa e deixa de herdar o `setupFiles` da app — o
+`afterEach(cleanup)` da P-69 não tem o que desmontar lá. É por isso que a
+separação vale; a linha de tempo fica registrada acima como medida, não como
+promessa cumprida.
 
 ---
 
@@ -265,7 +289,8 @@ que já dá aos `.env*` da raiz.
 
 1. `pnpm test` verde com **128 arquivos e 760 testes** — os mesmos da §3.1, conferidos por número,
    não por cor.
-2. Tempo registrado **antes e depois**, com o `environment` destacado (base: 96,68s / 121,39s).
+2. Tempo registrado **antes e depois**, com o `environment` destacado (base: 96,68s / 121,39s) —
+   registrado na **§3.8**, com as duas rodadas e a leitura de que o efeito é menor que o ruído.
 3. `tests/**` provado rodando em `environment: node` **por sonda** — não por leitura da config.
 4. `src/shared/testing/providers.tsx` existe e concentra a construção do client:
    `grep -rln 'new QueryClient' src --include='*.test.ts*'` devolve **vazio** (hoje: 33 arquivos), e

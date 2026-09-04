@@ -51,8 +51,13 @@ export default defineConfig(({ command, mode }) => {
     //
     // DOIS projetos, desde 2026-09-03 (item 27). `tests/` só lê o repositório
     // com `readFileSync` — medido: 11 de 11 arquivos, ZERO tocando `render(`,
-    // `document` ou `window` — e `environment` era o maior item do tempo da
-    // suíte (121,39s de 96,68s de parede, somados entre workers).
+    // `document` ou `window`.
+    //
+    // O motivo é ISOLAÇÃO, não velocidade: lá não há DOM a montar nem
+    // `afterEach(cleanup)` a herdar. A medição depois (spec §3.8) mostrou o
+    // `environment` entre 110,36s e 132,26s contra os 121,39s da base, com ~20%
+    // de variância entre rodadas seguidas — os 11 arquivos valem ~11s somados,
+    // abaixo do ruído. Ganho de tempo aqui não se afirma (Q-2 do review).
     //
     // `extends: true` no `unit` NÃO é decoração: sem ele o projeto perde os
     // `resolve.alias` (`@shared`, `@features`) e o plugin do React, e todo
