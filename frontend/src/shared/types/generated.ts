@@ -351,7 +351,7 @@ description: string,
 group: string,
 segregated: boolean,
 };
-export type PipelineStage = 'quote_pending' | 'quote_approved_without_turma' | 'turma_in_progress' | 'turma_ready_for_conclusion' | 'concluded_pending_issuance' | 'fully_issued';
+export type PipelineStage = 'quote_pending' | 'quote_approved_without_turma' | 'turma_in_progress' | 'turma_ready_for_conclusion' | 'concluded_pending_issuance' | 'fully_issued' | 'concluded_without_issuance';
 export type PipelineStageCountData = {
 stage: PipelineStage,
 count: number,

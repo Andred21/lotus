@@ -113,7 +113,7 @@ class ListQueryBudgetTest extends TestCase
      * dele. Número diferente aqui é mudança de propósito do endpoint —
      * atualize a constante no mesmo commit que a causou, nunca antes.
      */
-    private const DASHBOARD = ['admin' => 40, 'redator' => 7];
+    private const DASHBOARD = ['admin' => 41, 'redator' => 7];
 
     private int $seq = 0;
 

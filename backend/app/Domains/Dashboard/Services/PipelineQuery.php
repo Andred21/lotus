@@ -7,8 +7,10 @@ use App\Domains\Dashboard\Data\PipelineStageCountData;
 use App\Domains\Dashboard\Data\QuoteKpisData;
 use App\Domains\Dashboard\Enums\PendingItemType;
 use App\Domains\Dashboard\Enums\PipelineStage;
+use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * O funil comercial→operação→certificação, em baldes EXCLUSIVOS (spec §4.3).
@@ -30,7 +32,8 @@ use App\Domains\Operation\Models\Turma;
  *
  * As duas partições:
  *   em_andamento = não habilitada (`TurmaInProgress`) + habilitada (`TurmaReadyForConclusion`)
- *   concluída    = com emissão pendente (`ConcludedPendingIssuance`) + resto (`FullyIssued`)
+ *   concluída    = com emissão pendente (`ConcludedPendingIssuance`) + emitida
+ *                  (`FullyIssued`) + sem nada a emitir (`ConcludedWithoutIssuance`)
  *
  * Cotação aprovada que virou turma NÃO entra em balde de cotação: a turma dela
  * é que responde por ela, senão o mesmo negócio seria contado duas vezes.
@@ -72,6 +75,16 @@ class PipelineQuery
         // — o `CertificationMetricsQuery` já agrega por turma, que é a unidade
         // do funil.
         $emissaoPendente = count($certificationPendencias);
+        // Concluída sem nenhuma matrícula APROVADA (D-16). Cai aqui tanto a
+        // turma sem matrícula quanto a que só tem reprovados: a pergunta do
+        // funil é uma só — há algo a emitir?
+        $semNadaAEmitir = Turma::query()
+            ->where('status', TurmaStatus::Concluida)
+            ->whereDoesntHave(
+                'enrollments',
+                fn (Builder $query): Builder => $query->where('approval_status', EnrollmentApprovalStatus::Aprobado),
+            )
+            ->count();
 
         $stages[] = new PipelineStageCountData(
             stage: PipelineStage::TurmaInProgress,
@@ -87,7 +100,11 @@ class PipelineQuery
         );
         $stages[] = new PipelineStageCountData(
             stage: PipelineStage::FullyIssued,
-            count: $concluidas - $emissaoPendente,
+            count: $concluidas - $emissaoPendente - $semNadaAEmitir,
+        );
+        $stages[] = new PipelineStageCountData(
+            stage: PipelineStage::ConcludedWithoutIssuance,
+            count: $semNadaAEmitir,
         );
 
         return $stages;
