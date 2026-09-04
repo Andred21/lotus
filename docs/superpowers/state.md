@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-arrumacao-de-testes
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-03-frontend-arrumacao-de-testes-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -46,13 +46,13 @@ lanes:
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
     active_feature: null
-    active_work_item: frontend-arrumacao-de-testes   # item 27, promovido explicitamente pelo Joao em 2026-09-04
-    workflow_state: ready_for_planning
+    active_work_item: frontend-arrumacao-de-testes   # item 27, promovido explicitamente pelo Joao em 2026-09-03
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: ../fix-frontend
-    branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, em 2026-09-04
-    active_spec: null
+    branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
+    active_spec: docs/superpowers/specs/2026-09-03-frontend-arrumacao-de-testes-design.md
     active_plan: null
     context_packet: null
     blocker: null
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
 last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio
 state_basis_commit: 3833810c
-updated_at: 2026-09-04T00:20:00-03:00
+updated_at: 2026-09-03T23:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,16 +160,16 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-04
+## Ocupação corrente — 2026-09-03
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (bloco **fechado** em 2026-09-03; PR por abrir) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-arrumacao-de-testes` (item 27) | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (aberta de `origin/main@182be2ab`; a do item 25 mesclou na PR #98) | `ready_for_planning` |
+| `lane-c` | `frontend-arrumacao-de-testes` (item 27) | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (aberta de `origin/main@182be2ab`; a do item 25 mesclou na PR #98) | `planning` |
 
 
-**O item 27 assumiu a `lane-c` em 2026-09-04** — `frontend-arrumacao-de-testes`, promovido
+**O item 27 assumiu a `lane-c` em 2026-09-03** — `frontend-arrumacao-de-testes`, promovido
 explicitamente pelo João com a lane em `idle`, e é o **primeiro da ordem de execução** decidida em
 2026-09-03. `Contexto: não` na ficha, então **nasce em `ready_for_planning`**: não há packet a gerar,
 as fontes (o levantamento medido contra `main@24bf770c`, a ficha `P-58` candidata a hospedeiro e o
@@ -178,6 +178,14 @@ próprio código) vivem no repositório. O escopo é mecanismo de teste — `tes
 para os 33 arquivos que remontam o `QueryClient` à mão, e dois pares de arquivo sem sujeito próprio
 juntados — **sem tocar em asserção de comportamento**. A branch `refactor/frontend-arrumacao-de-testes`
 já existia desde `3833810c`, carregando só a reorganização do backlog; a promoção é agora.
+
+**O brainstorming remediu a ficha e derrubou um dos quatro achados.** Três confirmaram (os 11
+arquivos de `tests/` não tocam DOM; 33 sítios de `new QueryClient`; `shared/testing/` com só o
+`i18n.ts`), mas o quarto — juntar dois pares de arquivo de teste "partidos por acidente de autoria"
+— **não é acidente**: os dois docblocks declaram que a partição saiu da régua `max-lines` de 150, e
+a **`P-68` a ratificou por decisão escrita em 2026-09-03**. Juntos dão 224 linhas cada par. O João
+**recusou o achado** com veredito escrito, entre três saídas medidas. A ficha também erra em dois
+números — são **760** testes nesta árvore, não 759, e sete grafias de `QueryClient`, não uma.
 
 **O espelho do topo virou para a `lane-c` nesta árvore**, fora do main tree: é o mesmo caso da
 **P-55**, e segue o precedente medido de 2026-08-26 (lane-b) e o de 2026-08-24, quando as três lanes
