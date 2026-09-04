@@ -106,6 +106,79 @@ class MensagemLiteralTest extends TestCase
     }
 
     /**
+     * A TERCEIRA porta: o helper que repassa para `withMessages`.
+     *
+     * `CertificateEligibility::refuse()` chama
+     * `ValidationException::withMessages([$field => $message])` — com
+     * VARIÁVEIS. O detector de `withMessages` exige o par
+     * `'campo' => '<texto>'` na janela dele, então não via nada; e a frase de
+     * verdade mora no chamador, seis linhas acima. As seis recusas de emissão
+     * de certificado atravessaram assim o bloco de i18n que traduziu as outras
+     * 41 (Q-7 do review de 2026-09-03).
+     *
+     * A régua não conhece `refuse` pelo nome: ela DESCOBRE o encaminhador —
+     * método cujo corpo repassa para `withMessages` — e cobra frase literal no
+     * chamador dele. Helper novo com outro nome nasce coberto; foi a lição de
+     * ter fechado duas portas e a terceira existir.
+     */
+    #[Test]
+    public function nenhum_encaminhador_de_with_messages_carrega_texto_literal(): void
+    {
+        $ofensores = [];
+
+        foreach ($this->arquivosPhp('app') as $caminho) {
+            $linhas = file($caminho);
+            $encaminhadores = $this->encaminhadoresDeWithMessages($linhas);
+
+            if ($encaminhadores === []) {
+                continue;
+            }
+
+            $gatilho = '/(?:->|::)(?:'.implode('|', $encaminhadores).')\s*\(/';
+
+            foreach ($linhas as $i => $linha) {
+                if (! preg_match($gatilho, $linha)) {
+                    continue;
+                }
+
+                $frase = $this->fraseLiteralNaChamada($linhas, $i);
+                $sitio = basename($caminho).':'.($i + 1);
+
+                if ($frase !== null && ! array_key_exists($sitio, self::DEBITO_CONHECIDO)) {
+                    $ofensores[] = $sitio.'  '.$frase;
+                }
+            }
+        }
+
+        $this->assertSame([], $ofensores, "Frase literal repassada a withMessages por helper:\n".implode("\n", $ofensores));
+    }
+
+    /**
+     * Os métodos deste arquivo que repassam para `ValidationException::withMessages`.
+     *
+     * @param  list<string>  $linhas
+     * @return list<string>
+     */
+    private function encaminhadoresDeWithMessages(array $linhas): array
+    {
+        $nomes = [];
+
+        foreach ($linhas as $i => $linha) {
+            if (! preg_match('/function\s+(\w+)\s*\(/', $linha, $achado)) {
+                continue;
+            }
+
+            $corpo = implode('', array_slice($linhas, $i, 8));
+
+            if (str_contains($corpo, 'ValidationException::withMessages(')) {
+                $nomes[] = preg_quote($achado[1], '/');
+            }
+        }
+
+        return $nomes;
+    }
+
+    /**
      * A primeira frase escrita à mão dentro da chamada que começa na linha
      * `$inicio`, ou `null` se não houver.
      *
@@ -129,6 +202,17 @@ class MensagemLiteralTest extends TestCase
             }
         }
 
+        // O separador de `implode(', ', $campos)` é pontuação de junção, não
+        // frase escrita ao usuário — e a única razão de ele casar era ter um
+        // espaço dentro. Tirá-lo antes da varredura ensina o detector em vez de
+        // declarar dívida que não existe: a lista é inventário do que ficou
+        // literal, e ela só encolhe (Q-6 do review de 2026-09-03).
+        $bloco = preg_replace(
+            '/implode\(\s*(?:\'(?:[^\'\\\\]|\\\\.)*\'|"(?:[^"\\\\]|\\\\.)*")\s*,/',
+            'implode(',
+            $bloco,
+        );
+
         // Literais completos: aspas simples ou duplas, com escape respeitado.
         preg_match_all('/\'(?:[^\'\\\\]|\\\\.)*\'|"(?:[^"\\\\]|\\\\.)*"/', $bloco, $encontrados);
 
@@ -146,10 +230,13 @@ class MensagemLiteralTest extends TestCase
 
     /**
      * O que ficou literal, com o motivo. Cada linha aqui é dívida declarada, e
-     * some quando o sítio passar a ler `lang/`. As três `RuntimeException` são
+     * some quando o sítio passar a ler `lang/`. As entradas restantes são
      * diagnóstico interno: viram 500 mascarado em produção (`ProblemDetails`
      * §detailFor) e nunca chegam ao usuário, então traduzir seria trabalho para
-     * ninguém ler.
+     * ninguém ler. As cinco que CHEGAVAM ao usuário saíram no bloco
+     * `backend-envelope-de-erro-e-recusa-de-dominio` (2026-09-02); a lista é
+     * inventário, não permissão, e ela só encolhe — o detector aprende o falso
+     * positivo (Q-6 do review de 2026-09-03), a lista não o hospeda.
      */
     private const DEBITO_CONHECIDO = [
         // Diagnóstico interno: 500 mascarado em produção, ninguém lê.
@@ -160,16 +247,6 @@ class MensagemLiteralTest extends TestCase
         'OfficeRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',
         'OfficeRenderException.php:26' => 'RuntimeException interna; 500 mascarado.',
         'ArchivedListing.php:68' => 'InvalidArgumentException: chamador esqueceu `onlyTrashed()`; 500 mascarado.',
-
-        // Estas TRÊS chegam ao usuário e são dívida de verdade, medida no
-        // review de 2026-08-30. Ficaram fora porque o item 7 não tocou esses
-        // arquivos e catraca que nasce vermelha por dívida alheia trava o
-        // bloco seguinte (o mesmo motivo escrito na P-67).
-        'CorruptedSnapshotException.php:42' => 'PublicDetail em es_CL; frente Certification.',
-        'RedatorNaoElegivelException.php:16' => 'HttpException(422) em pt-BR; frente Operation.',
-        'RedatorNaoElegivelException.php:21' => 'HttpException(422) em pt-BR; frente Operation.',
-        'TurmaConfiguracaoException.php:15' => 'HttpException(422) em pt-BR; frente Operation.',
-        'TurmaConfiguracaoException.php:20' => 'HttpException(422) em pt-BR; frente Operation.',
     ];
 
     #[Test]

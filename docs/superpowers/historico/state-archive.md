@@ -23,6 +23,25 @@
 
 ---
 
+## Fechado em 2026-09-03 — `backend-envelope-de-erro-e-recusa-de-dominio` (item 26)
+
+**A `lane-a` recebeu o item 26 em 2026-09-02** — `backend-envelope-de-erro-e-recusa-de-dominio`,
+promovido explicitamente pelo João com a lane em `idle`, logo depois de a PR #96 mesclar o item 24 e
+a branch dele ser apagada nos dois lados. `Contexto: não`: as fontes são as fichas de
+`pendencias/abertas.md`, o review de arquitetura de 2026-09-02 e o próprio código — tudo no
+repositório, nada em Drive, Notion ou Figma. A branch sai de `main@4a0080ce`, o tip da `origin/main`.
+
+**O item foi escrito depois de remedir cada candidato contra `main@4a0080ce`**, e a medição está na
+própria ficha: o que entrou entrou por estar vivo no código, não por constar de ficha antiga. Três
+candidatos de backend foram descartados com motivo escrito — a fatia Site do candidato 2 (não existe
+em `main`; vive em `archive/site-contact-form-v1`), a `P-05`/`P-44`/`D-37` (já hospedadas no item 13)
+e a `D-34` (atravessa para o SPA e o hospedeiro é escolha do João). Cinco fichas de backend e um
+débito seguem vivos e **sem hospedeiro** — `P-49`, `P-51`, `P-52`, `P-54`, `P-59` e a `D-17` —, fora deste
+bloco por não compartilharem superfície de prova com o envelope de erro; a ficha do item 26 as nomeia
+uma a uma para quem pegar.
+
+---
+
 ## Fechado em 2026-09-03 — `frontend-dividas-de-mecanismo` (item 25)
 
 **A `lane-c` recebeu o item 25 em 2026-09-02** — `frontend-dividas-de-mecanismo`, promovido
@@ -52,6 +71,8 @@ existentes. A decisão **D3 não muda** — o warning alinha ao amarelo da tag; 
 registrado um achado que **não** se paga neste bloco e vira ficha na Task 5: no tema claro a família
 inteira de botão de severidade reprova AA no estado base (success 2,28:1, info 2,77:1, warning
 2,80:1, danger 3,76:1, help 3,96:1) — o warning nunca foi caso especial.
+
+---
 
 ## Fechado em 2026-09-02 — `backend-projecao-de-arquivados` (item 24)
 

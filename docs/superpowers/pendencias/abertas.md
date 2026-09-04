@@ -101,70 +101,73 @@ no lugar que o fatal de 128M apareceu aqui.
 
 # Backend
 
-## P-72 — o 419 devolve `detail` literal em inglês nos três locales
+## P-75 — o `SANCTUM_STATEFUL_DOMAINS` do `.env` não chega ao runtime, e o CSRF a partir do Vite devolve 401 em vez de 419
 
-**Bloco:** — · **Gatilho:** bloco que tocar `ProblemDetails::fromException` ou a proteção CSRF por
-outro motivo; o braço ganha `problem.detail.csrf` nos três locales no mesmo commit. Revisar em
+**Bloco:** — · **Gatilho:** bloco que tocar `backend/config/sanctum.php`, o `.env` da árvore ou a
+proteção CSRF, e puder provar `config('sanctum.stateful')` seguindo o `.env` com um teste. Revisar
+em **2026-10-31**.
+
+Medido em 2026-09-02, na sonda do 419 do bloco `backend-envelope-de-erro-e-recusa-de-dominio`
+(`audits/2026-09-02-item26-medicoes.md` §5), e promovido a ficha no review de 2026-09-03 (Q-4):
+`backend/.env` declara
+
+    SANCTUM_STATEFUL_DOMAINS=localhost:5173,localhost:5174,localhost:8080
+
+mas `config('sanctum.stateful')` resolve no runtime para `['localhost:5174', 'localhost:8080']` —
+**sem `localhost:5173`**, que é a porta padrão do Vite dev server no `CLAUDE.md` §6. Confirmado por
+`Str::is()` contra a lista real via tinker.
+
+**O sintoma:** uma escrita vinda do `:5173` sem token CSRF não é reconhecida como requisição de
+frontend por `EnsureFrontendRequestsAreStateful::fromFrontend()`, então ela nunca entra na sessão e
+cai no braço de `auth:sanctum` — **401**, e não o **419** que a proteção CSRF devolveria. A mesma
+sonda, repetida com `Referer: http://localhost:8080/` (presente na lista), devolveu o 419 esperado.
+
+Isso desloca o diagnóstico de quem for testar CSRF a partir do dev server real: o erro que aparece
+é "não autenticado", e a causa é "origem não é stateful". Não é defeito do bloco do envelope — a
+medição não toca `config/sanctum.php` nem `.env` —, mas é divergência de ambiente entre o que o
+`.env` diz e o que o framework lê, e ficha é o único lugar que a `auditar-docs` e o próximo bloco
+releem. Nota de audit datado ninguém relê (é a razão escrita deste Q-4).
+
+**Não confundir com a `P-56`**, que é outro eixo: lá o `XSRF-TOKEN` não é isolado ENTRE árvores e a
+aba parada volta 419. Aqui a origem legítima nem chega ao 419.
+
+---
+
+## P-76 — seis frases ao usuário seguem literais em `app/`, por três caminhos que nenhuma catraca alcança
+
+**Bloco:** — · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
+`Shared/Files/Rules` ou `AuthController::logout()` por outro motivo; cada sítio passa a ler `lang/`
+nos três locales no mesmo commit, **ou** a catraca ganha o caminho que faltava. Revisar em
 **2026-10-31**.
 
-Medido contra a API real no fechamento do `hardening-i18n-e-erros-api` (2026-08-30), em `PUT
-/api/turmas/3` com `X-XSRF-TOKEN` vencido:
+Herdada da **`P-71`**, que fechou em 2026-09-03 no `backend-envelope-de-erro-e-recusa-de-dominio`.
+A `P-71` pagou os cinco sítios que ela contava **e mais os seis** de
+`CertificateEligibility::refuse()`, que o Q-7 do review do mesmo dia descobriu — o encaminhador de
+`withMessages` virou a terceira porta coberta por `MensagemLiteralTest`. Estes seis **não** foram
+pagos, e estavam nomeados no corpo da `P-71`: ficha que fecha leva o resto junto se ninguém o
+reabrir, e foi por isso que esta nasceu.
 
-```
-es-CL  419 | Error en la solicitud | CSRF token mismatch.
-pt-BR  419 | Erro na requisição    | CSRF token mismatch.
-en     419 | Request error         | CSRF token mismatch.
-```
+Remedido contra a árvore em 2026-09-03, os três caminhos seguem vivos:
 
-O `title` **está** localizado — o 419 é um `HttpExceptionInterface` sem braço próprio, então cai no
-genérico `problem.title.http`, que o bloco traduziu. O `detail` não: o `default` do `detailFor()` é
-`$e->getMessage() ?: __('problem.detail.generic')`, e o `TokenMismatchException` do Laravel traz
-`CSRF token mismatch.` cru. Frase não vazia vence o fallback, e a resposta sai em inglês nos três
-idiomas.
-
-**Por que não foi consertado no bloco:** o 419 não está na spec nem no plano — os sete braços que a
-**D5** enumera são 401, 403, 404, 422, 429, 500 e o genérico. Fechar sprint não implementa (§0 do
-gate mede, não escreve), e o remédio não é de uma linha: ou o `detailFor()` ganha um braço
-`TokenMismatchException`, ou a catraca da Task 9 passa a enxergar `getMessage()` de exceção de
-framework — decisão de desenho do envelope, que é mecanismo da lei §5.4.
-
-A **P-56** vizinha (o `XSRF-TOKEN` não isolado entre árvores) descreve *quando* o 419 aparece em
-dev; esta descreve *o que ele diz* quando aparece.
-
-## P-71 — cinco recusas que o usuário lê continuam literais fora de `lang/`, em três domínios
-
-**Bloco:** — · **Gatilho:** bloco que tocar `Certification/Services` ou `Operation/Exceptions` por
-outro motivo; cada sítio sai da lista `DEBITO_CONHECIDO` da catraca no mesmo commit em que passar a
-ler `lang/`. Revisar em **2026-10-31**.
-
-Medido no review de 2026-08-30 (Q-2), depois que a catraca de exceção literal
-(`tests/Unit/Shared/MensagemLiteralTest::nenhuma_excecao_nova_carrega_texto_literal`) passou a
-enxergar o `throw`, e não só o `withMessages`. O `hardening-i18n-e-erros-api` traduziu 41 sítios e
-mais os quatro de role de sistema que este review pagou; estes cinco ficaram porque o bloco **não
-tocou esses arquivos**:
-
-| Sítio | Idioma de hoje | O que o usuário vê |
+| Sítio | Idioma de hoje | Por que a catraca não alcança |
 |---|---|---|
-| `CorruptedSnapshotException.php:42` | es_CL | `PublicDetail` — atravessa o mascaramento do 500 e é impresso cru pelo `CertificateViewDialog` em qualquer locale |
-| `RedatorNaoElegivelException.php:16,21` | pt-BR | as duas recusas da RN-09 na designação de redator |
-| `TurmaConfiguracaoException.php:15,20` | pt-BR | cotação não aprovada e turma já existente |
+| `Identity/Services/UserProvisioner.php:27-28` (RUT e e-mail duplicados) | pt-BR | a frase mora numa **constante de classe** (`DUPLICADO`), longe da chamada a `withMessages`; o detector lê janela, não constante |
+| `Shared/Rules/ValidRut.php:19` | **pt-BR** | `$fail('...')` é o contrato de `ValidationRule`, não `throw` nem `withMessages` — nenhuma das três portas cobertas |
+| `Shared/Rules/PrintableGrade.php:27` | es-CL | idem |
+| `Shared/Files/Rules/ScannedForMalware.php:34` | es-CL | idem |
+| `Identity/Http/Controllers/AuthController.php:107` (`'Sessão encerrada.'`) | pt-BR | é resposta de **sucesso** (`200`), não recusa; catraca de exceção não passa perto |
 
-Como não são `ValidationException`, o `ProblemDetails` preserva o `getMessage()` cru: um envelope
-misto, com `title` em es-CL e `detail` em pt-BR, é o resultado observável hoje.
+**Dois defeitos, não um.** O primeiro é o de sempre — frase fora de `lang/` não se traduz. O
+segundo é que **três sítios estão em pt-BR num produto es-CL**: o `ValidRut` e o `UserProvisioner`
+respondem em português a um operador chileno, e o `logout` também. Isso é observável hoje, sem
+mudar locale nenhum.
 
-**A catraca já as segura.** Cada uma está em `DEBITO_CONHECIDO` com o motivo escrito ao lado, no
-molde do `ParentLockOnChildWriteTest`, e **silêncio reprova**: exceção nova com texto literal nasce
-vermelha e escolhe entre traduzir e declarar. A lista é inventário, não permissão — ela só encolhe.
+**Por que fica aberta:** fechar pede a quarta porta da catraca (`$fail` de `ValidationRule`) e uma
+quinta para resposta de sucesso — não é dicionário, é mecanismo, e o mecanismo é o que a
+`.claude/rules/backend-lang.md` manda estender junto. O bloco do envelope fechou a lista de quatro
+mudanças que a spec dele declarou; abrir a quarta porta ali seria a quinta.
 
-**Por que ficou aberta:** traduzir os cinco custa dicionário em três idiomas por domínio, e a
-`CorruptedSnapshotException` é `sprintf` com dois `%s` — vira chave com dois parâmetros, o que muda a
-forma da factory. Fechar isso no review de um bloco de i18n de outro domínio seria o quinto arquivo
-fora da lista do plano. **A mesma doença tem outros portadores que a catraca não alcança** e que
-ficam nomeados aqui para quem pegar: `CertificateEligibility::refuse()` (6 recusas em es_CL, o
-literal chega por variável), `UserProvisioner::DUPLICADO` (RUT/e-mail duplicado em pt-BR, constante
-longe da chamada), as três `ValidationRule` com `$fail('...')` (`ValidRut`, `PrintableGrade`,
-`ScannedForMalware`) e o `AuthController::logout()` (`'Sessão encerrada.'`, resposta de SUCESSO —
-nenhuma catraca de exceção alcança esse caminho).
+---
 
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
@@ -483,38 +486,6 @@ coluna de certificado.
 > Fichas desta seção que carregam linha `**Bloco:**` foram agrupadas na consolidação de
 > 2026-08-22: a decisão que as trava passa a se resolver no brainstorming do bloco indicado.
 > Agrupar segue não promovendo nada.
-
-## P-60 — um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação pública dele devolve 500
-
-**Nasceu como `P-56` na mesma branch e foi renumerada pelo mesmo motivo** — a `main` já usava
-`P-56` para o `XSRF-TOKEN` entre árvores.
-
-**Bloco:** — · **Gatilho:** fecha quando um bloco puder reseedar ou corrigir o banco de dev (o mesmo
-candidato da [P-44](#p-44)), ou quando alguém decidir se o gate de snapshot apresentável deve
-degradar em vez de estourar. Revisar em **2026-10-31**.
-
-Medido no `/fechar-sprint` de 2026-08-24, contra a API real:
-`GET /api/publico/certificados/b47938cf-80fd-46de-8a76-f9cf611fec20` (`LOT-2026-1001`) devolve **500**
-em Problem Details, com `detail` = *"El certificado LOT-2026-1001 no puede presentarse: su documento
-congelado no tiene los campos aluno.name."*. O outro revogado do banco (`LOT-2026-1002`, mesmo
-fluxo) devolve **200** com `status: revocado` e `display_status: revocado`.
-
-**Não é regressão deste bloco.** O `LOT-2026-1001` foi criado em **2026-08-10 17:31**, antes do gate
-de snapshot apresentável (`82999214`, "politica de snapshot apresentavel num gate unico"), e é o
-único dos oito certificados do dev cujo snapshot cru não tem `aluno.name` — os outros sete têm. O
-`certificacao-historico-do-aluno` não escreve snapshot: ele lê `snapshot_ok` e o projeta na coluna.
-
-**As duas metades que o gatilho separa:**
-
-- **Dado de dev**: uma linha de snapshot velho sobreviveu à mudança de forma. Linha alheia de bloco
-  fechado se menciona, não se apaga — a decisão de reseedar o dev é do João, exatamente como na
-  P-44.
-- **Comportamento**: o gate hoje converte snapshot incompleto em **500** numa rota **pública**, a que
-  o QR do certificado impresso aponta. Se um documento antigo com a forma antiga existir em
-  produção, quem escaneia vê erro de servidor em vez de uma página que diz o que dá para dizer.
-  Decidir entre degradar (mostrar o que o snapshot tem) e continuar estourando é decisão do João, e
-  cabe no `hardening-i18n-e-erros-api` (item 7) ou em qualquer bloco que toque
-  `PublicCertificateData`.
 
 ## P-05 — migrations "adicionais" não consolidadas
 

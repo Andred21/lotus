@@ -28,21 +28,26 @@ use RuntimeException;
  * documento — quem apresenta é `show`, o PDF e o QR. Fechar esses dois seria a
  * quinta mudança de comportamento, e o §5 da spec é lista fechada de quatro.
  *
- * A mensagem é `PublicDetail`: escrita em es-CL para o operador ler na tela.
- * O `CertificateViewDialog` a imprime no `AppErrorState` quando o suporte
+ * A mensagem é `PublicDetail`: lida de `lang/` nos três locales. O
+ * `CertificateViewDialog` a imprime no `AppErrorState` quando o suporte
  * clica em Ver na linha marcada — é ali que ele descobre QUAIS campos faltam
  * (D8). Sem a interface, `ProblemDetails` a trocaria por "erro inesperado" em
  * produção, e a D8 valeria só com `APP_DEBUG=true`.
+ *
+ * **Ela NÃO é `RecusaDeDominio`** (spec de 2026-09-02, D5): o veredito da
+ * `P-60` é que a rota pública do QR continua estourando 500, e herdar da base
+ * a arrastaria para o mapa 422/403. Documento de peso legal não atesta o que
+ * não sabe; quem escaneia um certificado com snapshot corrompido vê a recusa,
+ * não uma página que inventa o que falta.
  */
 class CorruptedSnapshotException extends RuntimeException implements PublicDetail
 {
     /** @param  list<string>  $fields */
     public static function missingFields(string $codigo, array $fields): self
     {
-        return new self(sprintf(
-            'El certificado %s no puede presentarse: su documento congelado no tiene los campos %s.',
-            $codigo,
-            implode(', ', $fields),
-        ));
+        return new self(__('certification.snapshot.not_presentable', [
+            'codigo' => $codigo,
+            'campos' => implode(', ', $fields),
+        ]));
     }
 }

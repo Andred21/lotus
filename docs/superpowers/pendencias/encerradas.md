@@ -7,9 +7,18 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(cinco, todas fechadas em **2026-09-03** pelo `frontend-dividas-de-mecanismo` (item 25). A **P-73**
-e a **P-67** saíram neste mesmo fechamento — o primeiro posterior aos dos blocos que as encerraram
-em 2026-09-02 e 2026-09-01 —, e o parágrafo adiante é o rastro delas.)*
+*(oito, todas fechadas em **2026-09-03**: cinco pelo `frontend-dividas-de-mecanismo` (item 25) —
+`P-69`, `P-68`, `P-70`, `P-30` e `P-42` — e três pelo `backend-envelope-de-erro-e-recusa-de-dominio`
+(item 26) — `P-71`, `P-72` e a metade de comportamento da `P-60`. A **P-73** e a **P-67** saíram
+nestes fechamentos — os primeiros posteriores aos dos blocos que as encerraram em 2026-09-02 e
+2026-09-01 —, e o parágrafo adiante é o rastro delas.)*
+
+> **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
+> `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
+> por engano; as duas foram renumeradas no mesmo dia — a do item 25 para **`P-74`** e as do item 26
+> para **`P-75`** e **`P-76`**, nesta ordem de integração. Número de pendência não se reusa nem se
+> renumera para trás: é a mesma regra que o `state.md` escreveu para o rótulo de bloco na colisão
+> de 2026-09-02.
 
 ### P-69 — o vitest não tem `setupFiles`, então nada desmonta o que um teste monta
 
@@ -85,6 +94,121 @@ ao D1 (P-42)* — a grafia construída (`font-semibold` no título, `text-sm fon
 consequência medida (o `gap-2` × N linhas muda a altura de toda tabela que usa a célula). O snapshot
 **não foi reescrito em silêncio**: ganhou linha nova datada, no molde da emenda de 2026-08-24 ao
 ADR-13, e o docblock do `IdentityCell.tsx` aponta para ela. **Código intocado.**
+
+### P-71 — cinco recusas que o usuário lê continuam literais fora de `lang/`, em três domínios
+
+**Fechada em 2026-09-03**, no `backend-envelope-de-erro-e-recusa-de-dominio` (item 26), por
+mecanismo. Os cinco sítios que a ficha contava passaram a ler `lang/` nos três locales e saíram da
+`DEBITO_CONHECIDO` no mesmo commit: `RedatorNaoElegivelException:16,21` e
+`TurmaConfiguracaoException:15,20` (pt-BR), e a `CorruptedSnapshotException`, cujo `sprintf` de dois
+`%s` virou `certification.snapshot.not_presentable` com os parâmetros `:codigo` e `:campos`.
+
+**Ela pagou seis a mais do que contava.** O Q-7 do review de 2026-09-03 achou o que a própria ficha
+tinha nomeado sem hospedar: `CertificateEligibility::refuse()` recusava com seis frases literais em
+es-CL, e nenhuma catraca as via — o `withMessages` do helper recebe `[$field => $message]` em
+**variáveis**, e a frase mora no chamador, seis linhas acima. As seis saíram para
+`certification.eligibility.*` nos três locales, e `MensagemDeCertificadoLocalizadaTest` prova que
+são três traduções distintas, não a mesma frase copiada.
+
+**O mecanismo é o que fecha, não a tradução.** `MensagemLiteralTest` ganhou a **terceira porta**:
+`nenhum_encaminhador_de_with_messages_carrega_texto_literal` **descobre** o encaminhador pelo corpo
+do método (quem repassa para `withMessages`), não pelo nome, e cobra a frase literal no chamador
+dele. Helper novo com outro nome já nasce coberto. No mesmo passo, o Q-6 tirou
+`CorruptedSnapshotException.php:48` da `DEBITO_CONHECIDO` ensinando o detector a ignorar o
+separador de `implode(', ', ...)` — a lista é inventário e só encolhe, ela não hospeda falso
+positivo.
+
+**O que NÃO foi pago virou ficha:** a **`P-76`** recolhe os seis sítios restantes que a `P-71`
+nomeava e a catraca não alcança — `UserProvisioner::DUPLICADO`, os três `$fail()` de
+`ValidationRule` e o `'Sessão encerrada.'` do `logout`. Ficha que fecha não leva o resto junto.
+
+---
+
+### P-72 — o 419 devolve `detail` literal em inglês nos três locales
+
+**Fechada em 2026-09-03**, no mesmo bloco, por mecanismo e **medida contra a API real**, que é como
+o defeito foi medido. O `detailFor()` do `ProblemDetails` ganhou o braço próprio para
+`TokenMismatchException` e a chave `problem.detail.csrf` nasceu nos três locales. `PUT
+/api/turmas/3` com `X-XSRF-TOKEN: invalido`, remedido no fechamento:
+
+```
+es-CL  419 | Error en la solicitud | Tu sesión expiró o el formulario perdió validez. Recarga la página e inténtalo de nuevo.
+pt-BR  419 | Erro na requisição    | Sua sessão expirou ou o formulário perdeu validade. Recarregue a página e tente de novo.
+en     419 | Request error         | Your session expired or the form is no longer valid. Reload the page and try again.
+```
+
+Três frases distintas, nenhuma `CSRF token mismatch.`. O `title` já era localizado antes e
+continua.
+
+A sonda dessa medição destapou uma divergência de ambiente que **não é deste bloco** e virou a
+**`P-75`**: `config('sanctum.stateful')` não traz o `localhost:5173` que o `.env` declara, então o
+CSRF disparado do Vite dev server real cai em 401 e não no 419.
+
+---
+
+### P-60 — um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação pública dele devolve 500
+
+**A metade de COMPORTAMENTO fechou em 2026-09-03**, no mesmo bloco, **por decisão escrita** — a
+**D4** da spec: o gate `assertPresentable()` **não muda** e a rota pública continua estourando.
+`show`, PDF e QR seguem recusando juntos; só o idioma da frase mudou, junto com a `P-71`.
+
+A razão está no docblock da `CorruptedSnapshotException` e não só na spec: documento de peso legal
+não atesta o que não sabe. *Degradar* obrigaria `PublicCertificateData` a aceitar nome vazio;
+*recusa nomeada em 422* tiraria o caso do teto de 500 sem que o SPA tenha estado próprio para ele —
+contrato novo sem consumidor. A mesma decisão é o que mantém a exceção **fora** de
+`RecusaDeDominio` (D5): herdar da base a arrastaria para o mapa 422/403, e `RecusaNaoVaiAoLogTest`
+guarda a contra-prova — recusa de domínio não vai ao log, snapshot corrompido continua indo.
+
+**A metade do DADO DE DEV continua aberta** e não se fecha aqui: corrigir ou reseedar o
+`LOT-2026-1001` é o candidato da **`P-44`**, hospedada no item 13. Linha alheia de bloco fechado se
+menciona, não se apaga.
+
+---
+
+**A P-02 e a P-33 saíram no fechamento do `hardening-performance-e-dados` (2026-08-29)**, o
+primeiro posterior ao do bloco que as encerrou. As duas fecharam em 2026-08-26 no
+`hardening-auditoria-privacidade-e-observabilidade`, por **mecanismo** e não por promessa: a
+`RetentionPolicy` (`backend/app/Shared/Retention/RetentionPolicy.php`), os comandos
+`lotus:podar-auditoria` e `lotus:podar-logins`, o índice `audits_created_at_index` e o agendamento
+em `routes/console.php`/`scheduler` do `docker-compose.prod.yml`. A **P-46** saiu no fechamento do
+`frontend-estilizacao-padronizacao-de-componentes`, no mesmo dia e pelo mesmo critério. As três
+estão no git e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
+
+---
+
+**A P-03 e a P-15 saíram nos dois fechamentos de 2026-08-25** — a fatia 2 do
+`frontend-revisao-ui-por-modulo` e o `hardening-api-arquivos-e-abuso` —, os primeiros posteriores
+aos dos blocos que as encerraram. As duas foram **remedidas antes de sair**, não removidas na fé, e
+cada fechamento mediu de um lado:
+
+- **P-03, na worktree:** o container `app` de `../fix-frontend` recebe do compose
+  `APP_URL=http://localhost:8082`, `FRONTEND_URL=http://localhost:5175`,
+  `SANCTUM_STATEFUL_DOMAINS=localhost:5175,localhost:8082` e `SESSION_COOKIE=lotus_session_8082` —
+  medido com `docker compose exec -T app printenv` —, com o `backend/.env` da árvore ainda no offset
+  antigo: a injeção vence, que é o mecanismo que a ficha declarou pago, e o login pelo navegador em
+  `:5175` contra a API em `:8082` funciona com o arquivo como está.
+- **P-03, no main tree:** o offset vive em `.env.example` e nas seis variáveis `LOTUS_DEV_*` do
+  `docker-compose.yml`; a stack do fechamento do item 4 subiu no offset zero (`:8080`/`:3307`).
+- **P-15:** o certificado do aluno está exposto no detalhe por `StudentTurmaData::$certificate`
+  (`backend/app/Domains/Identity/Data/StudentTurmaData.php:36`), e o ramo recusado por escrito
+  (coluna `CERTIFICADOS` na listagem de alunos) continua declarado na §9 da spec do
+  `certificacao-historico-do-aluno` — que é o que impede a pendência de reabrir por silêncio.
+
+**Saíram no fechamento do `frontend-revisao-ui-por-modulo` (2026-08-24), o primeiro posterior aos
+dos blocos que as encerraram:** a **P-47** (os 7 redatores do seed sem a role `redator`, fechada em
+2026-08-23 pela migration de backfill `2026_08_22_000003_backfill_redator_role` e **remedida aqui**
+contra o MySQL de dev: os 7 do seed e os 2 usuários de gate e2e carregam a role) e a **P-50** (a
+suíte unida acima do `memory_limit` de 128M, fechada em 2026-08-22 e também remedida aqui — o
+`docker compose exec -T app php artisan test` do `CLAUDE.md` §6 terminou, 906 passed / 5 skipped).
+
+**A P-41 saiu neste fechamento (`tabelas-coluna-de-acoes-e-largura`, 2026-08-24), o primeiro
+posterior ao do bloco que a encerrou** — e foi **remedida antes de sair**, não removida na fé: o
+`min-w-0` do bloco de texto está em `frontend/src/shared/ui/IdentityCell/IdentityCell.tsx:74`. A
+metade não paga do gatilho continua declarada onde ela vive: `IdentityCell.test.tsx` conta
+`span.truncate` e não mede `scrollWidth > clientWidth` — trabalho do `frontend-hardening-final`,
+**pago em 2026-08-27**: o teste guarda o par `truncate` + `min-w-0` (`e560df27`) e a medida real de
+`scrollWidth > clientWidth`, que jsdom não faz, ficou no navegador (DoD 5 do audit do bloco, com
+sonda negativa).
 
 ## Rastro anterior, já removido
 

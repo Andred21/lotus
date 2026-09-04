@@ -59,7 +59,7 @@ class CertificateEligibility
     private function assertTurmaConcluida(Turma $turma): void
     {
         if ($turma->status !== TurmaStatus::Concluida) {
-            $this->refuse('turma', 'La clase aún no fue concluida: no se puede emitir el certificado (RN-08).');
+            $this->refuse('turma', __('certification.eligibility.turma_not_concluded'));
         }
     }
 
@@ -68,7 +68,7 @@ class CertificateEligibility
     private function assertMatriculaAprovada(Enrollment $enrollment): void
     {
         if ($enrollment->approval_status !== EnrollmentApprovalStatus::Aprobado) {
-            $this->refuse('enrollment', 'El alumno no fue aprobado: no se puede emitir el certificado.');
+            $this->refuse('enrollment', __('certification.eligibility.enrollment_not_approved'));
         }
     }
 
@@ -79,7 +79,7 @@ class CertificateEligibility
         // O critério de "vigente" é do `CertificateVigenciaResolver`, não daqui:
         // a mesma regra vale para esta porta e para o painel de emissão.
         if ($this->vigencia->existeVigenteForUpdate($enrollment->id)) {
-            $this->refuse('enrollment', 'Ya existe un certificado vigente para esta matrícula.');
+            $this->refuse('enrollment', __('certification.eligibility.certificate_already_active'));
         }
     }
 
@@ -90,7 +90,7 @@ class CertificateEligibility
         $template = $this->templates->latestForCourse($turma->course_id);
 
         if ($template === null) {
-            $this->refuse('template', 'El curso no tiene una plantilla de certificado aprobada.');
+            $this->refuse('template', __('certification.eligibility.template_not_approved'));
         }
 
         return $template;
@@ -105,7 +105,7 @@ class CertificateEligibility
         $ciudad = $this->templates->emissionCityFor($turma, $template);
 
         if ($ciudad === null) {
-            $this->refuse('template', 'La plantilla del curso no define una ciudad de emisión válida.');
+            $this->refuse('template', __('certification.eligibility.template_city_invalid'));
         }
 
         return $ciudad;
@@ -116,10 +116,21 @@ class CertificateEligibility
     private function assertRedatorDesignado(Turma $turma, Redator $redator): void
     {
         if (! $turma->redatores()->whereKey($redator->id)->exists()) {
-            $this->refuse('redator_id', 'El redactor no está designado en esta clase.');
+            $this->refuse('redator_id', __('certification.eligibility.redator_not_designated'));
         }
     }
 
+    /**
+     * As seis portas recusam pela MESMA saída, e a frase sempre sai de `lang/`.
+     *
+     * O `withMessages` daqui recebe variáveis (`[$field => $message]`), então o
+     * detector de `MensagemLiteralTest` não enxergava a frase — ela mora no
+     * chamador, seis linhas acima, longe da janela dele. Foi por essa fresta
+     * que as seis recusas ficaram literais em es-CL depois de o bloco de i18n
+     * traduzir as outras 41 (Q-7 do review de 2026-09-03). A catraca agora
+     * segue encaminhador: helper que repassa para `withMessages` é porta de
+     * mensagem, e frase literal no chamador dele reprova igual.
+     */
     private function refuse(string $field, string $message): never
     {
         throw ValidationException::withMessages([$field => $message]);

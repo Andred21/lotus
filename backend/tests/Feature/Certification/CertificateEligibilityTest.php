@@ -66,7 +66,7 @@ class CertificateEligibilityTest extends TestCase
         'certificado vigente' => 'Ya existe un certificado vigente para esta matrícula.',
         'curso sem template' => 'El curso no tiene una plantilla de certificado aprobada.',
         'sem cidade de emissão' => 'La plantilla del curso no define una ciudad de emisión válida.',
-        'sem redator designado' => 'El redactor no está designado en esta clase.',
+        'sem redator designado' => 'El relator no está designado en esta clase.',
     ];
 
     private Turma $emitivel;

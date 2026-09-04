@@ -29,11 +29,11 @@ class ValidationMessagesTest extends TestCase
     {
         $e = ValidationException::withMessages([
             'enrollment' => 'La clase no está concluida.',
-            'redator_id' => 'El redactor no está designado en esta clase.',
+            'redator_id' => 'El relator no está designado en esta clase.',
         ]);
 
         $this->assertSame(
-            'La clase no está concluida. El redactor no está designado en esta clase.',
+            'La clase no está concluida. El relator no está designado en esta clase.',
             ValidationMessages::squash($e),
         );
     }

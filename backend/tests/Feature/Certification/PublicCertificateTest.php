@@ -212,4 +212,34 @@ class PublicCertificateTest extends TestCase
     {
         return "/api/publico/certificados/{$this->certificate->uuid}";
     }
+
+    /**
+     * O VEREDITO da P-60, em teste: a rota pública do QR continua estourando
+     * diante de snapshot corrompido, e agora a recusa fala o idioma de quem
+     * escaneou. Degradar (200 com o que o snapshot tem) foi recusado no
+     * brainstorming de 2026-09-02 — documento de peso legal não atesta o que
+     * não sabe.
+     */
+    public function test_a_recusa_publica_sai_localizada_nos_tres_locales(): void
+    {
+        $snapshot = json_decode((string) $this->certificate->getRawOriginal('snapshot'), true);
+        $snapshot['aluno']['name'] = '';
+        $this->certificate->update(['snapshot' => $snapshot]);
+
+        $detalhes = [];
+
+        foreach (['es-CL', 'pt-BR', 'en'] as $locale) {
+            $corpo = $this->withHeaders(['Accept-Language' => $locale])
+                ->getJson($this->publicUrl())
+                ->assertStatus(500)
+                ->json();
+
+            $this->assertStringNotContainsString('certification.', $corpo['detail']);
+            $this->assertStringContainsString($this->certificate->codigo, $corpo['detail']);
+            $this->assertStringContainsString('aluno.name', $corpo['detail']);
+            $detalhes[] = $corpo['detail'];
+        }
+
+        $this->assertCount(3, array_unique($detalhes), 'Os três locales devolveram o mesmo detail.');
+    }
 }
