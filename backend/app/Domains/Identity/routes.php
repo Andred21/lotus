@@ -74,6 +74,10 @@ Route::middleware('auth.active')->group(function () {
     Route::apiResource('users', UserController::class)
         ->only(['index', 'store', 'show', 'update', 'destroy']);
 
+    // ANTES do apiResource, pela razão de sempre: `students/{student}` casaria
+    // com `client-options` e o binding daria 404 na palavra.
+    Route::get('students/client-options', [StudentController::class, 'clientOptions']);
+
     Route::apiResource('students', StudentController::class)
         ->only(['index', 'store', 'show', 'update']);
 

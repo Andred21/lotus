@@ -596,6 +596,10 @@ client_name: string,
 started_on: string,
 ended_on: string | null,
 };
+export type StudentClientOptionData = {
+id: number,
+legal_name: string,
+};
 export type StudentData = {
 id: undefined | number,
 name: string,

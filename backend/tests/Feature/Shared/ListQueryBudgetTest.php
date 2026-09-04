@@ -320,7 +320,8 @@ class ListQueryBudgetTest extends TestCase
 
     /** Só as chaves, para o data provider (estático) — o corpo está em `cenarios()`. */
     private const CENARIOS_URIS = [
-        'api/students' => 1, 'api/certificates' => 1, 'api/certificates/emission-panel' => 1,
+        'api/students' => 1, 'api/students/client-options' => 1,
+        'api/certificates' => 1, 'api/certificates/emission-panel' => 1,
         'api/turmas' => 1, 'api/turmas/archived' => 1, 'api/turmas/pendientes-configuracion' => 1,
         'api/courses' => 1, 'api/courses/archived' => 1,
         'api/clients' => 1, 'api/clients/archived' => 1,
@@ -372,6 +373,7 @@ class ListQueryBudgetTest extends TestCase
             },
             'api/courses' => fn (int $n) => $this->repetir($n, fn () => $this->curso()),
             'api/courses/archived' => fn (int $n) => $this->repetir($n, fn () => $this->curso()->delete()),
+            'api/students/client-options' => fn (int $n) => $this->repetir($n, fn () => $this->cliente()),
             'api/clients' => fn (int $n) => $this->repetir($n, fn () => $this->cliente()),
             'api/clients/archived' => fn (int $n) => $this->repetir($n, fn () => $this->cliente()->delete()),
             'api/budgets' => fn (int $n) => $this->repetir($n, fn () => $this->orcamento()),
