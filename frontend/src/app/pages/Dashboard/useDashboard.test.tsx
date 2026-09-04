@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useDashboard } from './useDashboard'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
@@ -13,25 +12,23 @@ vi.mock('@shared/api/axios', () => ({
 
 const get = vi.mocked(api.get)
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
-
-/** Wrapper com o cliente à mão, para o teste que precisa refazer o GET da MESMA
- * key. Com dado em mão e sem falha, o estado não expõe gatilho nenhum —
- * `staleRetry` só nasce DEPOIS do erro, e o `retry` que existia nos dois `ready`
- * era campo sem consumidor de produção (Q-4 da revisão de 2026-08-17). Quem
- * refaz o GET no produto é o próprio TanStack Query (montagem, foco, janela
- * voltando), e é isso que o `refetchQueries` reproduz. */
-function comCliente() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const Wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-  )
-
-  return { qc, Wrapper }
-}
+/**
+ * `beforeEach`, não `createWrapper()` de módulo: boa parte destes 12 casos
+ * consulta a MESMA chave — sete chamam `useDashboard()` sem período (a
+ * `dashboardKeys.metrics()` default) e dois PARES repetem literalmente o
+ * mesmo período de outro teste (as janelas de 'a query key varia por
+ * período' reaparecem em 'trocar a janela...', e as de 'falha na troca de
+ * janela...' em 'a recusa de validação...'). Um client de módulo
+ * compartilharia cache entre eles — o caso que mede "falha sem cache vira
+ * kind error" leria o payload do teste anterior e nunca chegaria a
+ * `kind: 'error'`. Também é de onde `qc.refetchQueries()` tira o client: os
+ * dois testes que refazem o GET da MESMA key usam o MESMO par
+ * `wrapper`/`qc` deste `beforeEach`, nunca um client próprio à parte. */
+let wrapper: ReturnType<typeof createWrapper>['wrapper']
+let qc: ReturnType<typeof createWrapper>['client']
+beforeEach(() => {
+  ;({ wrapper, client: qc } = createWrapper())
+})
 
 function admin(overrides: Partial<AdminDashboardData> = {}): AdminDashboardData {
   return {
@@ -133,9 +130,7 @@ describe('useDashboard', () => {
   // informação utilizável — a falha vira aviso AO LADO do que já veio.
   it('falha COM cache mantém os dados e avisa ao lado', async () => {
     get.mockResolvedValueOnce({ data: admin() })
-    const { qc, Wrapper } = comCliente()
-
-    const { result } = renderHook(() => useDashboard(), { wrapper: Wrapper })
+    const { result } = renderHook(() => useDashboard(), { wrapper })
     await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
 
     get.mockRejectedValue(problem('caiu no refetch'))
@@ -254,9 +249,7 @@ describe('useDashboard', () => {
   // envelope que o PRÓPRIO front sintetizou (rede caída) já é i18n e sai.
   it('detail escrito pelo FRONT sobrevive ao filtro da D-05', async () => {
     get.mockResolvedValueOnce({ data: admin() })
-    const { qc, Wrapper } = comCliente()
-
-    const { result } = renderHook(() => useDashboard(), { wrapper: Wrapper })
+    const { result } = renderHook(() => useDashboard(), { wrapper })
     await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
 
     get.mockRejectedValue({ ...problem('Revisa tu conexión.', 0), localDetail: true })

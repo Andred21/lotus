@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useEntityPhoto } from './useEntityPhoto'
 
 const upload = vi.fn<(id: number, file: File) => Promise<void>>()
@@ -13,10 +12,7 @@ vi.mock('@shared/api/photoResource', () => ({
   photoResource: () => ({ upload, remove }),
 }))
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 const arquivo = () => new File(['x'], 'foto.png', { type: 'image/png' })
 

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { createWrapper } from '@shared/testing/providers'
 import { useCrudFormWithPhoto } from './useCrudFormWithPhoto'
 
 const upload = vi.fn<(id: number, file: File) => Promise<void>>()
@@ -11,10 +10,7 @@ vi.mock('@shared/api/photoResource', () => ({
   photoResource: () => ({ upload, remove }),
 }))
 
-function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-}
+const { wrapper } = createWrapper()
 
 type Fields = { id?: number; name: string }
 
