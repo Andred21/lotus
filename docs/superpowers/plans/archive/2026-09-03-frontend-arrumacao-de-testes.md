@@ -8,7 +8,7 @@
 
 **Tech Stack:** vitest 4.1.10 · @testing-library/react · @tanstack/react-query · react-router-dom · eslint flat config.
 
-**Spec:** [`specs/2026-09-03-frontend-arrumacao-de-testes-design.md`](../specs/2026-09-03-frontend-arrumacao-de-testes-design.md)
+**Spec:** [`specs/2026-09-03-frontend-arrumacao-de-testes-design.md`](../../specs/archive/2026-09-03-frontend-arrumacao-de-testes-design.md)
 
 ## Global Constraints
 

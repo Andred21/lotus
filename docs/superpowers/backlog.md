@@ -22,7 +22,9 @@
 > 4. o texto riscado dos itens 16 e 10 saiu: `~~D-38~~` e `~~Comercial~~` são registro de bloco
 >    fechado, que vive em `historico/progress.md`.
 >
-> Item novo nesta passada: o **27** (`frontend-arrumacao-de-testes`).
+> O **27** (`frontend-arrumacao-de-testes`), item novo da passada de 2026-09-03, **fechou em
+> 2026-09-04** e saiu desta fila. Entrega em `historico/progress.md`; a `P-58`, que ele pagou,
+> está em `pendencias/encerradas.md`.
 > Histórico entregue → `historico/progress.md` · fichas `P-*` → `pendencias/abertas.md` ·
 > specs/planos → `specs/archive/` e `plans/archive/`. Não duplicar esses conteúdos aqui.
 > O registro canônico dos débitos `D-*` segue neste arquivo, na seção `# Débitos técnicos` —
@@ -59,7 +61,8 @@
   `D-69`) — **fechado em 2026-09-03**; o `26` em 2026-09-02, também aberto pelo João, juntando o
   **candidato 6** do mesmo review de arquitetura com as três fichas de backend que nenhum bloco
   hospedava (`P-71`, `P-72` e a metade de comportamento da `P-60`) — **fechado em 2026-09-03**; e o
-  `27` em 2026-09-03, do levantamento de frontend pedido pelo João, medido contra `main@24bf770c`.
+  `27` em 2026-09-03, do levantamento de frontend pedido pelo João, medido contra `main@24bf770c`
+  — **fechado em 2026-09-04**.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -78,14 +81,13 @@ sendo ato explícito no `state.md`. A fila abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **27** `frontend-arrumacao-de-testes` | Frontend | Nada nele depende de decisão do João, e ele barateia o que vem depois: as runs do 16 e as 12 medições do 23 rodam sobre a mesma suíte que hoje leva 134,9s |
-| 2 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
-| 3 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
-| 4 | **22** `dominio-decisoes-de-rbac-e-semantica` | Backend | Quatro decisões de domínio travadas no João; muda contrato e regenera `generated.ts`, então precede qualquer frontend que dependa desses campos |
-| 5 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
-| 6 | **10** `infra-producao-provisionamento-aws` | Infra | P0 de deploy, mas depende de quatro decisões do João e de conta AWS; nada de código o bloqueia |
-| 7 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | Estacionado com packet `status: blocked`: não há host. Destrava quando o 10 provisionar o alvo |
-| 8 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
+| 1 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
+| 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
+| 3 | **22** `dominio-decisoes-de-rbac-e-semantica` | Backend | Quatro decisões de domínio travadas no João; muda contrato e regenera `generated.ts`, então precede qualquer frontend que dependa desses campos |
+| 4 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
+| 5 | **10** `infra-producao-provisionamento-aws` | Infra | P0 de deploy, mas depende de quatro decisões do João e de conta AWS; nada de código o bloqueia |
+| 6 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | Estacionado com packet `status: blocked`: não há host. Destrava quando o 10 provisionar o alvo |
+| 7 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
 
 **A colisão 16 × 9, registrada e não resolvida:** o 16 tem uma run de `/lotus-ui-review` de
 **Administração** no escopo e o 9 pode **redesenhar a mesma tela**. Medir antes do veredito do 9 é
@@ -97,55 +99,6 @@ escopo foi movido de ficha.
 ---
 
 # Fila priorizada
-
-## 27. `frontend-arrumacao-de-testes`
-
-**Prioridade:** P1 · **Frente:** Frontend · **Contexto:** não
-**Fonte:** levantamento de 2026-09-03 contra `main@24bf770c`, pedido pelo João. Todos os números
-abaixo são medidos, não estimados.
-
-**Objetivo:** arrumar a suíte de frontend como mecanismo — ambiente, molde de montagem e sujeito de
-cada arquivo — sem tocar em uma única asserção de comportamento.
-
-**Linha de base medida (2026-09-03):** `pnpm test` verde, **128 arquivos, 759 testes, 12.665 linhas,
-134,87s** (`environment 190,59s` somado entre workers). 117 arquivos co-localizados em `src/`, 11 em
-`frontend/tests/`. A localização já é consistente; o que está desarrumado é outra coisa.
-
-**Escopo — quatro achados, cada um com a medição que o abre:**
-
-- **Os 11 arquivos de `frontend/tests/` rodam em jsdom sem precisar.** Todos leem o repositório com
-  `readFileSync` (compose, tema, glyph, docs, release) e nenhum monta componente; o `environment` é o
-  maior item do tempo medido. Separar por `test.projects` no `frontend/vite.config.ts` — `node` para
-  `tests/**`, `jsdom` para `src/**`. O comentário que já mora ali explicando por que `tests/` fica
-  fora de `src/` continua valendo e ganha o par que faltava.
-- **Não existe `renderWithProviders`, e 33 arquivos remontam o provedor à mão.** 33 constroem
-  `new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })`,
-  20 declaram wrapper próprio e 10 montam `MemoryRouter` por conta. É a mesma classe de defeito que
-  a **P-69** fechou no `cleanup` (grafia manual em 62 de 127 arquivos) e que a fábrica
-  `mockUseTranslation` já fechou no i18n — e as duas provam o remédio: home única mais catraca.
-- **`src/shared/testing/` tem só `i18n.ts`.** É o endereço natural do wrapper acima, e já tem 31
-  consumidores provando que o padrão pega. O i18n **não** entra no escopo: os 31 arquivos que mockam
-  `react-i18next` passam todos pela fábrica, zero grafia solta — medido, não suposto.
-- **Dois arquivos sem sujeito próprio:** `StudentCertificateCell.test.tsx` +
-  `StudentCertificateCellPdf.test.tsx` e `ValidationPage.test.tsx` + `ValidationPageFolio.test.tsx`.
-  São suítes irmãs do mesmo componente, partidas por acidente de autoria. Juntar sem perder um `it`.
-
-**Candidata a hospedeiro — decisão do João:** a **P-58** (`compose-dev.test.ts` afasta os `.env*` da
-raiz mas não o `frontend/.env`, e árvore com `VITE_API_URL` legado reprova 3 casos) é ficha de
-mecanismo de teste e sai barata aqui. Agrupar não promove; a ficha segue em `pendencias/abertas.md`
-com o gatilho dela até haver veredito.
-
-**Fora:** reescrever asserção, cobrir caso novo, mudar comportamento da aplicação, mexer em
-`src/test-setup.ts` (é o que a P-69 acabou de fixar) e tocar na régua de contraste da **P-74**, que é
-decisão de cor do João e não de arrumação.
-
-**DoD:** `pnpm test` verde com os **mesmos 759 testes**; tempo medido antes e depois registrado no
-fechamento; `tests/**` provado rodando em `environment: node` por sonda; wrapper único em
-`shared/testing/` com catraca no `frontend/eslint.config.js` que reprova `new QueryClient` em teste
-de `features/` e `app/` — vista reprovar por sonda negativa antes de virar régua, no molde de
-`CLEANUP_A_MAO` e `DROPDOWN_SEM_NOME`.
-
----
 
 ## 16. `frontend-revisao-ui-por-modulo`
 
@@ -380,7 +333,6 @@ ficam só como ponteiro, e a ficha delas é lá.
 | `DS-05` | João | Avatar do Perfil só vira task após medição justificar |
 | `DS-07` | João | Mural de credenciais é redesign próprio, com brainstorming |
 | `P-74` | João | Botão de severidade reprova AA no claro em 4 das 5 famílias |
-| `P-58` | João | `compose-dev.test.ts` não isola o `frontend/.env` — candidata ao item 27 |
 | `P-57` | João | `artisan test` fatala por memória em worktree com imagem `app` velha |
 | `P-28` | Lotus / João | Fundo final do certificado: aprovar ou corrigir |
 | `P-08` | Lotus | Manual varia por curso ou não |

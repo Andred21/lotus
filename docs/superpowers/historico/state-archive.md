@@ -23,6 +23,31 @@
 
 ---
 
+## Fechado em 2026-09-04 — `frontend-arrumacao-de-testes` (item 27)
+
+**O item 27 assumiu a `lane-c` em 2026-09-03** — `frontend-arrumacao-de-testes`, promovido
+explicitamente pelo João com a lane em `idle`, e é o **primeiro da ordem de execução** decidida em
+2026-09-03. `Contexto: não` na ficha, então **nasce em `ready_for_planning`**: não há packet a gerar,
+as fontes (o levantamento medido contra `main@24bf770c`, a ficha `P-58` candidata a hospedeiro e o
+próprio código) vivem no repositório. O escopo é mecanismo de teste — `test.projects` separando
+`node` para `tests/**` de `jsdom` para `src/**`, um `renderWithProviders` em `src/shared/testing/`
+para os 33 arquivos que remontam o `QueryClient` à mão, e dois pares de arquivo sem sujeito próprio
+juntados — **sem tocar em asserção de comportamento**. A branch `refactor/frontend-arrumacao-de-testes`
+já existia desde `3833810c`, carregando só a reorganização do backlog; a promoção é agora.
+
+**O brainstorming remediu a ficha e derrubou um dos quatro achados.** Três confirmaram (os 11
+arquivos de `tests/` não tocam DOM; 33 sítios de `new QueryClient`; `shared/testing/` com só o
+`i18n.ts`), mas o quarto — juntar dois pares de arquivo de teste "partidos por acidente de autoria"
+— **não é acidente**: os dois docblocks declaram que a partição saiu da régua `max-lines` de 150, e
+a **`P-68` a ratificou por decisão escrita em 2026-09-03**. Juntos dão 224 linhas cada par. O João
+**recusou o achado** com veredito escrito, entre três saídas medidas. A ficha também erra em dois
+números — são **760** testes nesta árvore, não 759, e sete grafias de `QueryClient`, não uma.
+
+**O espelho do topo virou para a `lane-c` nesta árvore**, fora do main tree: é o mesmo caso da
+**P-55**, e segue o precedente medido de 2026-08-26 (lane-b) e o de 2026-08-24, quando as três lanes
+fizeram o mesmo. A `lane-a` e a `lane-b` estão `idle`, então o espelho não desloca bloco ativo de
+ninguém.
+
 ## Fechado em 2026-09-03 — `backend-envelope-de-erro-e-recusa-de-dominio` (item 26)
 
 **A `lane-a` recebeu o item 26 em 2026-09-02** — `backend-envelope-de-erro-e-recusa-de-dominio`,

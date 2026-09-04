@@ -3,13 +3,13 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: frontend-arrumacao-de-testes
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-03-frontend-arrumacao-de-testes-design.md
-active_plan: docs/superpowers/plans/2026-09-03-frontend-arrumacao-de-testes.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
@@ -46,21 +46,21 @@ lanes:
     last_completed_work_item: prontidao-pre-nuvem
   lane-c:
     active_feature: null
-    active_work_item: frontend-arrumacao-de-testes   # item 27, promovido explicitamente pelo Joao em 2026-09-03
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../fix-frontend
     branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
-    active_spec: docs/superpowers/specs/2026-09-03-frontend-arrumacao-de-testes-design.md
-    active_plan: docs/superpowers/plans/2026-09-03-frontend-arrumacao-de-testes.md
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-dividas-de-mecanismo   # item 25, fechado em 2026-09-03
-last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio
-state_basis_commit: 3833810c
-updated_at: 2026-09-04T05:05:00-03:00
+    last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
+last_completed_work_item: frontend-arrumacao-de-testes
+state_basis_commit: e5aa89ff
+updated_at: 2026-09-04T13:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,37 +160,14 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-03
+## Ocupação corrente — 2026-09-04
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — | — | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (bloco **fechado** em 2026-09-03; PR por abrir) | `idle` |
 | `lane-b` | — (itens 10 e 12 **estacionados**) | — | `../lotus-infra` | `chore/prontidao-pre-nuvem` (fatia 1 mesclou no PR #86; a branch segue viva para a PR 2 do fechamento) | `idle` |
-| `lane-c` | `frontend-arrumacao-de-testes` (item 27) | Frontend | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (aberta de `origin/main@182be2ab`; a do item 25 mesclou na PR #98) | `ready_for_closure` (review feito; os 5 achados aprovados pelo João foram aplicados) |
+| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (bloco **fechado** em 2026-09-04; PR por abrir) | `idle` |
 
-
-**O item 27 assumiu a `lane-c` em 2026-09-03** — `frontend-arrumacao-de-testes`, promovido
-explicitamente pelo João com a lane em `idle`, e é o **primeiro da ordem de execução** decidida em
-2026-09-03. `Contexto: não` na ficha, então **nasce em `ready_for_planning`**: não há packet a gerar,
-as fontes (o levantamento medido contra `main@24bf770c`, a ficha `P-58` candidata a hospedeiro e o
-próprio código) vivem no repositório. O escopo é mecanismo de teste — `test.projects` separando
-`node` para `tests/**` de `jsdom` para `src/**`, um `renderWithProviders` em `src/shared/testing/`
-para os 33 arquivos que remontam o `QueryClient` à mão, e dois pares de arquivo sem sujeito próprio
-juntados — **sem tocar em asserção de comportamento**. A branch `refactor/frontend-arrumacao-de-testes`
-já existia desde `3833810c`, carregando só a reorganização do backlog; a promoção é agora.
-
-**O brainstorming remediu a ficha e derrubou um dos quatro achados.** Três confirmaram (os 11
-arquivos de `tests/` não tocam DOM; 33 sítios de `new QueryClient`; `shared/testing/` com só o
-`i18n.ts`), mas o quarto — juntar dois pares de arquivo de teste "partidos por acidente de autoria"
-— **não é acidente**: os dois docblocks declaram que a partição saiu da régua `max-lines` de 150, e
-a **`P-68` a ratificou por decisão escrita em 2026-09-03**. Juntos dão 224 linhas cada par. O João
-**recusou o achado** com veredito escrito, entre três saídas medidas. A ficha também erra em dois
-números — são **760** testes nesta árvore, não 759, e sete grafias de `QueryClient`, não uma.
-
-**O espelho do topo virou para a `lane-c` nesta árvore**, fora do main tree: é o mesmo caso da
-**P-55**, e segue o precedente medido de 2026-08-26 (lane-b) e o de 2026-08-24, quando as três lanes
-fizeram o mesmo. A `lane-a` e a `lane-b` estão `idle`, então o espelho não desloca bloco ativo de
-ninguém.
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
 > em `ready_for_execution` enquanto o frontmatter andava até `ready_for_review` — as outras duas
@@ -222,11 +199,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-04 | `frontend-arrumacao-de-testes` (fecha a **P-58**; nenhuma pendência nasce; nascem `test.projects` no `vite.config.ts`, `src/shared/testing/providers.tsx` e a catraca `QUERY_CLIENT_A_MAO`) | Item 27 da fila |
 | 2026-09-03 | `backend-envelope-de-erro-e-recusa-de-dominio` (paga a **P-71**, a **P-72** e a metade de comportamento da **P-60**; abre a **P-75** e a **P-76**; nascem `TipoDeRecusa` e `RecusaDeDominio` em `app/Shared/Exceptions/` e a rule `.claude/rules/backend-lang.md`) | Item 26 da fila |
 | 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
 | 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
 | 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
-| 2026-09-01 | `frontend-decisoes-de-ui-pendentes` (paga a **P-67** e as fichas `D-63`, `D-64`, `D-66`, `D-67`, `D-68`, `D-32`; abre a `D-69`, a `D-70` e o item 23) | Item 21 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com
