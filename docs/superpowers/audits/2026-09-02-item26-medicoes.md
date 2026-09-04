@@ -126,6 +126,10 @@ não toca `config/sanctum.php` nem `.env` — mas é uma divergência de ambient
 alguém testando o CSRF a partir do Vite real (`localhost:5173`) hoje cairia no mesmo 401 em vez do
 419 esperado.
 
+> **Emenda de 2026-09-03 (review, Q-4):** esta nota virou ficha — **`P-75`** em
+> `pendencias/abertas.md`, com linha no índice. Divergência medida que fica só em audit datado
+> ninguém relê; o que a `auditar-docs` e o próximo bloco leem é a ficha.
+
 ## 6. A recusa 422 e a 403 contra a API real
 
 Sessão autenticada como `admin@lotus.cl` (seed de dev, `local`/`demo`, role `superadmin`) via
@@ -149,6 +153,11 @@ domínio), locale `es-CL`:
 
 `detail` bate exato com `identity.errors.redator_only_action` em `es_CL`.
 
+> **Emenda de 2026-09-03 (review, Q-5):** a frase acima foi medida antes de o es_CL alinhar
+> `redactor` → `relator`. O valor da chave hoje é `Solo los relatores envían documentación
+> profesional.` A medição continua válida no que ela provava — o `detail` sai da chave, e não de
+> literal —, e o texto citado é o de 2026-09-02.
+
 ## 7. Banco de dev — nada para devolver
 
 A tentativa de 422 rodou dentro da transação de `CreateTurmaAction::execute()`: a exceção de
@@ -170,3 +179,72 @@ dado de dev precisou ser revertido.
 | Três catracas da §6 da spec vistas reprovar por sonda | Task 3 (comportamental, PASS→FAIL→PASS) e Task 4 (estática, §4 acima) |
 | `php artisan test` inteiro verde, sem edição em teste de endpoint | §1 e §2 acima |
 | Pint nos arquivos tocados; `generated.ts` diff vazio | §3 acima |
+
+---
+
+## 9. Remedição no `/fechar-sprint` de 2026-09-03
+
+As §5 e §6 foram medidas em **2026-09-02**, antes do review. Duas correções mudaram comportamento
+depois disso — o **Q-1** (recusa de domínio parou de ir ao log) e o **Q-5** (`redactor` → `relator`
+em es_CL) —, então o critério de aceite foi **medido de novo** contra a API real no fechamento.
+Sessão autenticada como `admin@lotus.cl` via `POST /api/login`, `Referer: http://localhost:8080/`.
+
+**419, os três locales** (`PUT /api/turmas/3`, `X-XSRF-TOKEN: invalido`):
+
+```
+es-CL  419 | Error en la solicitud | Tu sesión expiró o el formulario perdió validez. Recarga la página e inténtalo de nuevo.
+pt-BR  419 | Erro na requisição    | Sua sessão expirou ou o formulário perdeu validade. Recarregue a página e tente de novo.
+en     419 | Request error         | Your session expired or the form is no longer valid. Reload the page and try again.
+```
+
+**403 com o texto do Q-5** (`POST /api/profile/documents`, `Accept-Language: es-CL`):
+
+```json
+{"type":"https://lotus.cl/errors/forbidden","title":"Acceso denegado","status":403,"detail":"Solo los relatores envían documentación profesional.","instance":"/api/profile/documents"}
+```
+
+**422 de recusa de domínio** (`POST /api/quotes/2/turma`, cotação `rejected`, payload completo —
+`local_aplicacao` é obrigatório para `presencial`, senão a validação do DTO responde antes do gate):
+
+```json
+{"type":"https://lotus.cl/errors/http","title":"Error en la solicitud","status":422,"detail":"La cotización debe estar aprobada para configurar la clase.","instance":"/api/quotes/2/turma"}
+```
+
+**A prova do Q-1, que é a que não existia:** `storage/logs/laravel.log` foi zerado antes das duas
+chamadas acima. Depois delas:
+
+```
+grep -c "local.ERROR" storage/logs/laravel.log  →  0
+wc -l < storage/logs/laravel.log                →  0
+```
+
+**Zero linhas** — nem `error`, nem stack trace, nem sinal duplicado no 403. Antes do
+`dontReport(RecusaDeDominio::class)` cada uma dessas duas chamadas gravava um `error` com trace.
+
+## 10. O `pint lang/` acidental, revertido no fechamento
+
+O **Q-3** do review nomeou o acidente e escreveu a rule (`.claude/rules/backend-lang.md`), mas a
+reformatação seguia na branch. Medida e revertida aqui:
+
+```
+git diff --stat  main...HEAD -- backend/lang/   →  27 arquivos, 1383 inserções, 1353 remoções
+git diff -w --stat main...HEAD -- backend/lang/ →   9 arquivos,   30 inserções
+```
+
+Os **18** arquivos com diff `-w` vazio (`actions`, `auth`, `http-statuses`, `pagination`,
+`passwords`, `validation` × três locales) voltaram ao conteúdo da `main` com `git checkout main --`.
+Depois da reversão o bloco toca **10 arquivos de `lang/`, 58 linhas** — todas semânticas. Suíte
+reconferida depois da reversão: `LocaleParity`, `MensagemLiteral`, `RecusaDeDominio`,
+`EnvelopeLocalizado`, `RecusaNaoVaiAoLog`, `MensagemDeCertificadoLocalizada`,
+`MensagemDeOperacaoLocalizada` e `ValidationMessages` — **24 passed**.
+
+## 11. Gate do fechamento
+
+| Item | Resultado |
+|---|---|
+| Suíte backend | **1175 passed / 5 skipped** (a `main` mede 1162 / 5) |
+| `pnpm lint` | 0 achados |
+| `pnpm build` | verde (`tsc -b && vite build`) |
+| Pint nos arquivos do bloco | `{"tool":"pint","result":"passed"}` |
+| `generated.ts` | diff **vazio** depois de `typescript:transform` |
+| Critério de aceite contra a API real | §9 acima |

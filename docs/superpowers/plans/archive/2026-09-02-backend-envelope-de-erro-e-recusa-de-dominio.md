@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Spec: [`docs/superpowers/specs/2026-09-02-backend-envelope-de-erro-e-recusa-de-dominio-design.md`](../specs/2026-09-02-backend-envelope-de-erro-e-recusa-de-dominio-design.md). Divergência entre plano e spec bloqueia a task.
+- Spec: [`docs/superpowers/specs/2026-09-02-backend-envelope-de-erro-e-recusa-de-dominio-design.md`](../../specs/archive/2026-09-02-backend-envelope-de-erro-e-recusa-de-dominio-design.md). Divergência entre plano e spec bloqueia a task.
 - **Bloco de backend roda no main tree** (pendência P-03), branch `refactor/backend-envelope-de-erro-e-recusa-de-dominio`.
 - Backend roda **no container**: `docker compose exec -T app php artisan test [--filter=X]`.
 - Pint roda **no host, de dentro de `backend/`, sempre com argumentos**: `cd backend && ./vendor/bin/pint <arquivos>`.

@@ -21,15 +21,14 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (28)
+## Abertas (27)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-71 | Cinco recusas que o usuário lê continuam literais fora de `lang/` (`CorruptedSnapshotException`, `RedatorNaoElegivelException`, `TurmaConfiguracaoException`) — a catraca as segura em lista declarada, não as traduz | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | o item 26 toca `Operation/Exceptions` pelo candidato 6 e `CorruptedSnapshotException` pela `P-60`, que são os dois gatilhos escritos na ficha; revisar 2026-10-31 |
-| P-72 | O 419 devolve `detail` literal em inglês nos três locales (`CSRF token mismatch.`) — o `title` foi traduzido, o `detail` do `TokenMismatchException` vence o fallback | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | o item 26 reescreve o `detailFor()` do `ProblemDetails`, que é o gatilho escrito na ficha; revisar 2026-10-31 |
-| P-60 | Um certificado do banco de dev tem snapshot sem `aluno.name`, e a validação **pública** dele devolve 500 (o gate de snapshot apresentável estoura numa rota que o QR impresso alcança) | `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) | **só a metade de comportamento**: o item 26 decide entre degradar e continuar estourando. A metade do dado de dev segue com a `P-44`, no item 13; revisar 2026-10-31 |
+| P-75 | O `.env` declara `localhost:5173` em `SANCTUM_STATEFUL_DOMAINS` mas `config('sanctum.stateful')` não o traz — escrita vinda do Vite dev server cai em 401 (origem não-stateful) em vez do 419 do CSRF | — | bloco que tocar `config/sanctum.php`, o `.env` da árvore ou a proteção CSRF; revisar 2026-10-31 |
+| P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
@@ -43,14 +42,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > saiu do `backlog.md` no mesmo fechamento. Cada uma fechou por mecanismo verde ou por decisão
 > escrita, nenhuma por remoção na fé. O bloco abriu a **P-74**, que está na tabela abaixo.
 >
-> `backend-envelope-de-erro-e-recusa-de-dominio` = item 26 da fila, aberto em 2026-09-02: juntou as
-> três fichas acima com o **candidato 6** do review de arquitetura do mesmo dia
-> (`audits/2026-09-02-arquitetura-deepening.html`), que declara por escrito só valer dentro de um
-> bloco que já toque `Shared/Exceptions` — e a `P-71` e a `P-72` são os dois motivos independentes
-> para tocar ali. As três foram remedidas contra `main@4a0080ce` antes de o item ser escrito e
-> seguem vivas no código. A `P-60` entra **pela metade**: a de comportamento, porque
-> `CorruptedSnapshotException` é o arquivo que ela compartilha com a `P-71`; a do dado de dev segue
-> com a `P-44`, no item 13.
+> O **item 26** (`backend-envelope-de-erro-e-recusa-de-dominio`) **fechou em 2026-09-03** e saiu da
+> fila. Ele hospedava a `P-71`, a `P-72` e a metade de comportamento da `P-60`, e as três estão em
+> [`encerradas.md`](./encerradas.md). Duas fichas nasceram do fechamento e continuam na tabela
+> acima: a `P-75` (divergência de ambiente destapada pela sonda do 419) e a `P-76` (o que a `P-71`
+> nomeava e não pagou). A metade do **dado de dev** da `P-60` segue com a `P-44`, no item 13.
 
 ### Travadas em decisão — não entram em bloco
 
