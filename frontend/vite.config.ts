@@ -49,18 +49,45 @@ export default defineConfig(({ command, mode }) => {
     // arquivos de teste continuam type-checados pelo `tsc -b` do pnpm build, em
     // vez de virarem zona sem tipo.
     //
-    // COM `setupFiles`, desde 2026-09-02 (P-69): o `afterEach(cleanup)` do
-    // Testing Library era grafia manual em 62 dos 127 arquivos, e o desmonte
-    // dependia de quem copiava o molde de quem. O par que sustenta a decisão é
-    // a catraca `CLEANUP_A_MAO` (eslint.config.js) mais a guarda estática
-    // `tests/desmonte-global.test.ts`, que confere que ESTA linha existe.
+    // DOIS projetos, desde 2026-09-03 (item 27). `tests/` só lê o repositório
+    // com `readFileSync` — medido: 11 de 11 arquivos, ZERO tocando `render(`,
+    // `document` ou `window` — e `environment` era o maior item do tempo da
+    // suíte (121,39s de 96,68s de parede, somados entre workers).
+    //
+    // `extends: true` no `unit` NÃO é decoração: sem ele o projeto perde os
+    // `resolve.alias` (`@shared`, `@features`) e o plugin do React, e todo
+    // `src/**` deixa de compilar. O `repo` fica sem `extends` de propósito —
+    // ele não usa alias nem JSX, e herdar plugin é transform que ninguém lê.
     test: {
-      environment: "jsdom",
-      setupFiles: ["./src/test-setup.ts"],
-      // `tests/` fica fora de `src/` porque o que ele confere é o REPOSITÓRIO,
-      // não a app: o container `app` monta só `./backend` e `./frontend`, então
-      // o vitest é o único runner do projeto com acesso à raiz.
-      include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: 'unit',
+            environment: 'jsdom',
+            // COM `setupFiles`, desde 2026-09-02 (P-69): o `afterEach(cleanup)`
+            // do Testing Library era grafia manual em 62 dos 127 arquivos, e o
+            // desmonte dependia de quem copiava o molde de quem. O par que
+            // sustenta a decisão é a catraca `CLEANUP_A_MAO` (eslint.config.js)
+            // mais a guarda `tests/desmonte-global.test.ts`, que confere que
+            // ESTA linha existe e que ela mora NESTE projeto.
+            setupFiles: ['./src/test-setup.ts'],
+            include: ['src/**/*.test.{ts,tsx}'],
+          },
+        },
+        {
+          test: {
+            name: 'repo',
+            environment: 'node',
+            // `tests/` fica fora de `src/` porque o que ele confere é o
+            // REPOSITÓRIO, não a app: o container `app` monta só `./backend` e
+            // `./frontend`, então o vitest é o único runner do projeto com
+            // acesso à raiz. E por isso mesmo roda em `node`: não há DOM a
+            // montar, só arquivo a ler.
+            include: ['tests/**/*.test.{ts,tsx}'],
+          },
+        },
+      ],
     },
   };
 });
