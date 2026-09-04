@@ -10,7 +10,10 @@ vi.mock('@shared/api/photoResource', () => ({
   photoResource: () => ({ upload, remove }),
 }))
 
-const { wrapper } = createWrapper()
+/** Client POR TESTE, não por arquivo: o hook consulta uma `useQuery`, e um
+ * client de módulo faria os casos herdarem cache um do outro (Q-1 do review de
+ * 2026-09-04). */
+let wrapper: ReturnType<typeof createWrapper>['wrapper']
 
 type Fields = { id?: number; name: string }
 
@@ -54,6 +57,7 @@ function montar(mode: 'create' | 'edit' | 'view', onDone: () => void = () => und
 }
 
 beforeEach(() => {
+  ;({ wrapper } = createWrapper())
   criados.length = 0
   upload.mockReset()
   remove.mockReset()
