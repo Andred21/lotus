@@ -175,32 +175,6 @@ cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não
 
 ---
 
-## 22. `dominio-decisoes-de-rbac-e-semantica`
-
-**Prioridade:** P1 · **Frente:** Backend · **Contexto:** não
-**Fonte:** as fichas `D-09`, `D-10`, `D-11` e `D-16`.
-
-**Objetivo:** fechar as quatro decisões de domínio e RBAC travadas no João e aplicar o que cada uma
-decidir. São de frente diferente do item 21 — contrato, permissão e semântica de funil, não tinta.
-
-**Escopo:**
-- **`D-10`** — `GET /api/roles` deixa admin comum enumerar permissão de superadmin enquanto
-  `/api/permissions` é superadmin-only;
-- **`D-11`** — o dropdown de empresa do create de aluno chama `clientsApi` num módulo gated por
-  `identity.user.*`; duas mitigações de UI já foram revertidas por piorarem;
-- **`D-16`** — turma concluída com zero matrículas cai em `fully_issued`; o consumidor que faltava
-  existe desde 2026-08-17;
-- **`D-09`** — a UI não volta a zero contatos principais e o backend aceita zero; decidir qual
-  camada cede.
-
-**Fora:** a `D-34` (gate RBAC do Dashboard atravessando o seam como `null`) — **continua sem
-hospedeiro**, e escolher é do João; o candidato que sobrou é o item 9.
-
-**DoD:** as quatro fichas têm veredito escrito e o código que o veredito pedir, com prova de
-comportamento; mudança de contrato regenera `generated.ts` pelo DTO (lei §5.3).
-
----
-
 ## 9. `administracao-roles-permissoes-redesign`
 
 **Prioridade:** P1 · **Frente:** Frontend · **Contexto:** sim
@@ -325,10 +299,6 @@ ficam só como ponteiro, e a ficha delas é lá.
 
 | ID | Quem decide | Decisão / gatilho |
 |---|---|---|
-| `D-09` | João | UI e backend divergem sobre zero contatos principais — decidir qual camada cede |
-| `D-10` | João | Admin comum pode ou não enumerar permissões do superadmin via `GET /api/roles` |
-| `D-11` | João | RBAC do lookup de clientes usado no cadastro de aluno |
-| `D-16` | João | Semântica da turma concluída sem matrícula no funil. **Gatilho maduro** desde 2026-08-17 |
 | `D-70` | Lotus | `/validar` diz "contacta a Lotus" sem canal — publicar endereço ou telefone é decisão da Lotus |
 | `DS-05` | João | Avatar do Perfil só vira task após medição justificar |
 | `DS-07` | João | Mural de credenciais é redesign próprio, com brainstorming |
@@ -340,28 +310,6 @@ ficam só como ponteiro, e a ficha delas é lá.
 | `P-10` | Lotus | Tabela de alunos exibe Cliente ou não |
 | `P-13` | Lotus | Turma terá código próprio ou não |
 | `P-16` | Lotus | Aba inicial de Turma |
-
-> **As quatro primeiras (`D-09`, `D-10`, `D-11`, `D-16`) são a fonte do item 22** — entrar num bloco
-> não as promove, e o veredito segue sendo do João, no brainstorming daquele bloco.
-
-- **D-09** · A UI não consegue voltar a zero contatos principais; o backend aceita zero. Decidir
-  qual camada cede.
-
-- **D-10** · `GET /api/roles` permite a admin comum enumerar permissões do superadmin enquanto
-  `/api/permissions` é superadmin-only. (O Bloco 5.2a e a parte de teste saíram em 2026-08-11 com
-  o BD-2.)
-
-- **D-11** · O dropdown de empresa do create de aluno lista via `clientsApi`
-  (`commercial.client.view`) num módulo gated por `identity.user.*`: quem tem
-  `identity.user.create` sem a permissão de cliente cria aluno pela API e não pela tela. Duas
-  mitigações de UI foram revertidas por piorarem (`3e0bc36`, `03280c6`); o estado atual deixa a
-  falha visível (dropdown desabilitado + motivo + "Reintentar"). Decisão: endpoint sob
-  `identity.user.view`, permissão nova, ou aceitar o acoplamento.
-
-- **D-16** · Turma concluída com zero matrículas cai em `fully_issued` no funil — a spec §4.3
-  escolheu o balde de propósito, mas o rótulo afirma emissão completa onde não houve emissão.
-  **O gatilho venceu:** o consumidor que faltava (funil do B2) existe desde 2026-08-17. Decidir:
-  sétimo balde, ou rótulo que distinga "sem matrícula a emitir".
 
 - **D-70** · **`/validar` diz "contacta a Lotus" sem canal** — o item 21 (`D-67`) pôs a linha de
   orientação no ramo `notFound` dos três locales, **sem canal**: publicar endereço ou telefone numa

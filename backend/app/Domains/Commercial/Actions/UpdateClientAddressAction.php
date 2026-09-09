@@ -24,7 +24,7 @@ class UpdateClientAddressAction
 
             $address->update($data->toArray());
 
-            $this->primaryAddresses->ensureSingle($address->client, $address);
+            $this->primaryAddresses->ensureExactlyOne($address->client, $address);
 
             return $address->fresh();
         });

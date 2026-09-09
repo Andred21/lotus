@@ -6,6 +6,7 @@ return [
     'client' => [
         'archived' => 'This client was archived and no longer accepts changes.',
         'contact_required' => 'The client needs at least one contact.',
+        'primary_contact_required' => 'The client needs exactly one primary contact.',
     ],
     'budget' => [
         'approved_cannot_delete' => 'A budget with an approved quote cannot be deleted. Reject it first.',

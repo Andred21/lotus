@@ -1,29 +1,15 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-a
 active_feature: null
-active_work_item: infra-producao-provisionamento-aws
-workflow_state: executing
+active_work_item: null
+workflow_state: idle
 next_owner: joao
-next_action: continue_active_plan
-resume_state: |
-  PAUSA POR VIAGEM (2026-09-04). Tasks 11 a 16-Step-1 FEITAS e provadas; a stack de producao
-  esta implantada e responde em http://18.230.53.197 (SHA corporativo
-  a5fc92bb7728ea0da6dc16a62958e02556df999b). Retomar por aqui, nesta ordem:
-    1. Task 16 Steps 2-4: upload real (DoD 3), PDF de certificado (DoD 4) e a medicao de
-       memoria sob carga. Exige a instancia i-0789e30d781790dd4 ligada.
-    2. Task 17: backup + restore provado (DoD 5).
-    3. Task 18: alarme de billing (DoD 6) — ATENCAO: a conta e MEMBRO da org o-fdepe5skxg, e
-       a metrica AWS/Billing EstimatedCharges so e publicada na conta pagadora. Se nao houver
-       dado, o remedio previsto e AWS Budgets na propria conta, registrado como desvio.
-    4. Task 19: ramo FICHA — medido em 2026-09-04, app.lotusotec.cl -> 185.146.167.195
-       (hospedagem antiga), diferente do EIP 18.230.53.197. Sem TLS neste bloco.
-    5. Task 20: audit + gate + ready_for_review.
-  Pendencias de seguranca abertas: chave vazada AKIA3B7BDINPIEP2W4WK (conferir CloudTrail e
-  apagar) e a access key do usuario lotus-infra (apagar no fim do bloco).
-active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
-active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
+next_action: select_backlog_item
+resume_state: null
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
@@ -34,13 +20,13 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: refactor/backend-envelope-de-erro-e-recusa-de-dominio   # aberta de main@4a0080ce em 2026-09-02; bloco fechado em 2026-09-03, PR por abrir
+    branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; item 22 fechado em 2026-09-04 e a branch REBASADA sobre origin/main@9bdaac90 em 2026-09-09, com o item 27 e a infra ja dentro; segue viva na PR #104, aguardando merge
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: backend-envelope-de-erro-e-recusa-de-dominio   # item 26, fechado em 2026-09-03
+    last_completed_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, fechado em 2026-09-04
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
@@ -53,7 +39,22 @@ lanes:
     active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md          # plano v2, 20 tasks (Fase A repo, Fase B AWS)
     context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
     blocker: null
-    resume_state: null
+    resume_state: |
+      PAUSA POR VIAGEM (2026-09-04). Tasks 11 a 16-Step-1 FEITAS e provadas; a stack de producao
+      esta implantada e responde em http://18.230.53.197 (SHA corporativo
+      a5fc92bb7728ea0da6dc16a62958e02556df999b). Retomar por aqui, nesta ordem:
+        1. Task 16 Steps 2-4: upload real (DoD 3), PDF de certificado (DoD 4) e a medicao de
+           memoria sob carga. Exige a instancia i-0789e30d781790dd4 ligada.
+        2. Task 17: backup + restore provado (DoD 5).
+        3. Task 18: alarme de billing (DoD 6) - ATENCAO: a conta e MEMBRO da org o-fdepe5skxg, e
+           a metrica AWS/Billing EstimatedCharges so e publicada na conta pagadora. Se nao houver
+           dado, o remedio previsto e AWS Budgets na propria conta, registrado como desvio.
+        4. Task 19: ramo FICHA - medido em 2026-09-04, app.lotusotec.cl -> 185.146.167.195
+           (hospedagem antiga), diferente do EIP 18.230.53.197. Sem TLS neste bloco.
+        5. Task 20: audit + gate + ready_for_review.
+      Pendencias de seguranca abertas: chave vazada AKIA3B7BDINPIEP2W4WK (conferir CloudTrail e
+      apagar) e a access key do usuario lotus-infra (apagar no fim do bloco).
+      Retomar exige o espelho do topo voltar para lane-b (fronteira duravel, main tree).
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
@@ -74,9 +75,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: frontend-arrumacao-de-testes
-state_basis_commit: 9c038cca
-updated_at: 2026-09-04T15:00:00-03:00
+last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
+state_basis_commit: 04973a63
+updated_at: 2026-09-09T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -180,9 +181,9 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — | — | main tree | `refactor/backend-envelope-de-erro-e-recusa-de-dominio` (bloco **fechado** em 2026-09-03; PR por abrir) | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
-| `lane-c` | — | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (bloco **fechado** em 2026-09-04; PR por abrir) | `idle` |
+| `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 e `origin/main@618f390a` (PR #104) em 2026-09-09 | `executing` |
+| `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -215,11 +216,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-04 | `dominio-decisoes-de-rbac-e-semantica` (fecha as quatro fichas de decisão `D-09`, `D-10`, `D-11` e `D-16`; nenhuma pendência nasce ou fecha, mas **dispara sem pagar** os gatilhos da `P-51` e da `P-53`; nascem `RoleOptionData`, `StudentClientOptionData`, `UmContatoPrincipal` e `DeleteClientAddressAction`) | Item 22 da fila |
 | 2026-09-04 | `frontend-arrumacao-de-testes` (fecha a **P-58**; nenhuma pendência nasce; nascem `test.projects` no `vite.config.ts`, `src/shared/testing/providers.tsx` e a catraca `QUERY_CLIENT_A_MAO`) | Item 27 da fila |
 | 2026-09-03 | `backend-envelope-de-erro-e-recusa-de-dominio` (paga a **P-71**, a **P-72** e a metade de comportamento da **P-60**; abre a **P-75** e a **P-76**; nascem `TipoDeRecusa` e `RecusaDeDominio` em `app/Shared/Exceptions/` e a rule `.claude/rules/backend-lang.md`) | Item 26 da fila |
 | 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
 | 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
-| 2026-09-02 | `frontend-campo-de-formulario-liga-no-form` (o campo recebe `name` e busca valor, setter, erro e `readOnly` do form; catraca `ERRO_DE_CAMPO_A_MAO`) | **Sem ficha na fila** — o rótulo `item 24` foi tomado por engano; o 24 é o `backend-projecao-de-arquivados` |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com

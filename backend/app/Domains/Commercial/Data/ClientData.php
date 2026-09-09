@@ -3,6 +3,7 @@
 namespace App\Domains\Commercial\Data;
 
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Commercial\Rules\UmContatoPrincipal;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
@@ -64,7 +65,10 @@ class ClientData extends Data
             // obrigatoriedade do create mora na CreateClientAction, porque
             // rules() é estático e não distingue verbo (Drive
             // `entidade-contato-cliente.md`, ratificado em 2026-07-31).
-            'contacts' => ['sometimes', 'array', 'min:1'],
+            // `UmContatoPrincipal` fecha a D-09: quando a coleção vem, ela vem
+            // com exatamente um principal — a tela já mandava assim, e o
+            // contrato passou a dizer o mesmo em 2026-09-03.
+            'contacts' => ['sometimes', 'array', 'min:1', new UmContatoPrincipal],
         ];
     }
 

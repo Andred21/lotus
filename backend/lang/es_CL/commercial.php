@@ -6,6 +6,7 @@ return [
     'client' => [
         'archived' => 'Este cliente fue archivado y ya no acepta cambios.',
         'contact_required' => 'El cliente necesita al menos un contacto.',
+        'primary_contact_required' => 'El cliente necesita exactamente un contacto principal.',
     ],
     'budget' => [
         'approved_cannot_delete' => 'Un presupuesto con cotización aprobada no puede eliminarse. Rechácela antes.',

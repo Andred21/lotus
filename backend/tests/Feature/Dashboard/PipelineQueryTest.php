@@ -125,8 +125,9 @@ class PipelineQueryTest extends TestCase
             $this->createEnrollment($concluidaEmitida, EnrollmentApprovalStatus::Aprobado),
         );
 
-        // 7. concluída SEM nenhuma matrícula aprovada — a spec §4.3 manda cair
-        // em `fully_issued`: não há o que emitir, então não há pendência.
+        // 7. concluída SEM nenhuma matrícula aprovada — balde próprio desde a
+        // D-16: não há o que emitir, e "Totalmente emitida" afirmava emissão
+        // onde não houve nenhuma.
         $concluidaSemMatricula = $this->createTurma(TurmaStatus::Concluida);
         $this->createEnrollment($concluidaSemMatricula, EnrollmentApprovalStatus::Reprobado);
 
@@ -140,7 +141,8 @@ class PipelineQueryTest extends TestCase
             'turma_in_progress' => 1,
             'turma_ready_for_conclusion' => 1,
             'concluded_pending_issuance' => 1,
-            'fully_issued' => 2,
+            'fully_issued' => 1,
+            'concluded_without_issuance' => 1,
         ], $stages);
 
         // A prova de exclusividade: 2 cotações fora de turma + 5 turmas = 7.
@@ -163,12 +165,13 @@ class PipelineQueryTest extends TestCase
             PipelineStage::TurmaReadyForConclusion,
             PipelineStage::ConcludedPendingIssuance,
             PipelineStage::FullyIssued,
+            PipelineStage::ConcludedWithoutIssuance,
         ], array_map(fn ($row): PipelineStage => $row->stage, $stages));
 
         // As etapas de turma seguem intactas — o gate tira etapa, não altera
         // a contagem das que ficam.
         $this->assertSame(
-            [1, 0, 0, 0],
+            [1, 0, 0, 0, 0],
             array_map(fn ($row): int => $row->count, $stages),
         );
     }
@@ -184,12 +187,30 @@ class PipelineQueryTest extends TestCase
     {
         $commercial = app(CommercialMetricsQuery::class);
 
-        return app(PipelineQuery::class)->stages(
+        $stages = app(PipelineQuery::class)->stages(
             turmaKpis: app(OperationMetricsQuery::class)->kpis(),
             certificationPendencias: app(CertificationMetricsQuery::class)->pendencias(),
             quoteKpis: $includeQuoteStages ? $commercial->quoteKpis() : null,
             commercialPendencias: $includeQuoteStages ? $commercial->pendencias() : [],
         );
+
+        // Nenhum balde pode ser NEGATIVO, e a régua vive aqui para valer em
+        // todo cenário que passe pelo helper. `fully_issued` é o único balde
+        // por SUBTRAÇÃO (`concluidas - emissaoPendente - semNadaAEmitir`), e
+        // dois dos três termos nascem de critérios escritos em lugares
+        // diferentes — `CertificationMetricsQuery::pendingEnrollmentQuery()` e
+        // o `whereDoesntHave` do próprio `PipelineQuery`. Se um ganhar um
+        // filtro que o outro não ganha, a subtração fura por baixo. A soma não
+        // pega isso sozinha: um balde negativo compensado por outro inflado
+        // ainda soma o total certo.
+        foreach ($stages as $row) {
+            $this->assertGreaterThanOrEqual(0, $row->count, sprintf(
+                'O balde `%s` veio NEGATIVO (%d): os critérios que se subtraem divergiram.',
+                $row->stage->value, $row->count,
+            ));
+        }
+
+        return $stages;
     }
 
     private function createQuote(string $status): Quote

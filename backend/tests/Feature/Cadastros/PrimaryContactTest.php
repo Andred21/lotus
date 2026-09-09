@@ -3,7 +3,6 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Commercial\Models\Client;
-use App\Domains\Commercial\Models\ClientContact;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -26,17 +25,14 @@ class PrimaryContactTest extends TestCase
         ];
     }
 
-    public function test_create_com_dois_principais_mantem_apenas_o_ultimo(): void
+    public function test_create_com_dois_principais_e_422(): void
     {
         $this->actingAsAdmin();
 
         $this->postJson('/api/clients', $this->payload([
             ['name' => 'Contato A', 'is_primary' => true],
             ['name' => 'Contato B', 'is_primary' => true],
-        ]))->assertCreated();
-
-        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => false]);
-        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true]);
+        ]))->assertStatus(422);
     }
 
     public function test_update_marcando_b_desmarca_a(): void
@@ -57,7 +53,7 @@ class PrimaryContactTest extends TestCase
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true, 'deleted_at' => null]);
     }
 
-    public function test_update_com_dois_principais_mantem_apenas_o_ultimo(): void
+    public function test_update_com_dois_principais_e_422(): void
     {
         $this->actingAsAdmin();
 
@@ -69,42 +65,18 @@ class PrimaryContactTest extends TestCase
         $this->putJson("/api/clients/{$id}", $this->payload([
             ['name' => 'Contato A', 'is_primary' => true],
             ['name' => 'Contato B', 'is_primary' => true],
-        ]))->assertOk();
-
-        $this->assertSame(1, ClientContact::where('client_id', $id)
-            ->where('is_primary', true)
-            ->count());
-        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => false, 'deleted_at' => null]);
-        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true, 'deleted_at' => null]);
+        ]))->assertStatus(422);
     }
 
-    public function test_cliente_sem_principal_e_valido(): void
+    public function test_create_com_tres_principais_e_422(): void
     {
         $this->actingAsAdmin();
 
         $this->postJson('/api/clients', $this->payload([
-            ['name' => 'Contato A', 'is_primary' => false],
-            ['name' => 'Contato B', 'is_primary' => false],
-        ]))->assertCreated();
-
-        // 0 principais é estado válido: o serviço não promove ninguém.
-        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato A', 'is_primary' => false]);
-        $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => false]);
-    }
-
-    public function test_nunca_mais_de_um_principal_com_tres_contatos(): void
-    {
-        $this->actingAsAdmin();
-
-        $id = $this->postJson('/api/clients', $this->payload([
             ['name' => 'Contato A', 'is_primary' => true],
             ['name' => 'Contato B', 'is_primary' => true],
             ['name' => 'Contato C', 'is_primary' => true],
-        ]))->assertCreated()->json('id');
-
-        $this->assertSame(1, ClientContact::where('client_id', $id)
-            ->where('is_primary', true)
-            ->count());
+        ]))->assertStatus(422);
     }
 
     public function test_desmarcar_principal_e_auditado(): void
@@ -113,12 +85,12 @@ class PrimaryContactTest extends TestCase
 
         // A auditoria só existe se o unmark passar pelo evento do model. Um
         // ->where(...)->update(...) no query builder gravaria sem rastro (lei §5.2).
-        $this->postJson('/api/clients', $this->payload([
-            ['name' => 'Contato A', 'is_primary' => true],
-            ['name' => 'Contato B', 'is_primary' => true],
-        ]))->assertCreated();
+        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
+        $a = $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
 
-        $a = ClientContact::where('name', 'Contato A')->firstOrFail();
+        $this->postJson("/api/clients/{$client->id}/contacts", [
+            'name' => 'Contato B', 'is_primary' => true,
+        ])->assertCreated();
 
         $this->assertDatabaseHas('audits', [
             'auditable_type' => 'client_contact',
@@ -156,28 +128,10 @@ class PrimaryContactTest extends TestCase
         $this->assertDatabaseHas('client_contacts', ['name' => 'Contato B', 'is_primary' => true]);
     }
 
-    public function test_rota_nested_update_desmarcando_o_principal_nao_promove_ninguem(): void
-    {
-        $this->actingAsAdmin();
-        $client = $this->makeClientWithUser(['legal_name' => 'ACME Ltda']);
-        $client->contacts()->create(['name' => 'Contato A', 'is_primary' => true]);
-        $a = $client->contacts()->firstOrFail();
-
-        $this->putJson("/api/contacts/{$a->id}", [
-            'name' => 'Contato A', 'is_primary' => false,
-        ])->assertOk();
-
-        // 0 principais é estado válido: desmarcar o único principal não pode
-        // promover ninguém (ensureSingle faz early-return com primaries.count() == 0).
-        $this->assertSame(0, ClientContact::where('client_id', $client->id)
-            ->where('is_primary', true)
-            ->count());
-    }
-
     public function test_rota_nested_update_promove_a_via_winner_mesmo_b_tendo_id_maior(): void
     {
         // A (id menor, não principal) e B (id maior, principal). Ao promover A
-        // explicitamente, o $winner do ensureSingle deve prevalecer sobre o
+        // explicitamente, o $winner do ensureExactlyOne deve prevalecer sobre o
         // "último por id" (que seria B) — senão o serviço desmarcaria o contato
         // que o caller acabou de pedir para promover.
         $this->actingAsAdmin();

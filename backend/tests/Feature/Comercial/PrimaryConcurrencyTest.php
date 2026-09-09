@@ -100,7 +100,7 @@ class PrimaryConcurrencyTest extends TestCase
         $niveis = [];
         // Só o REBAIXAMENTO interessa. Escutar qualquer `updating` mediria a
         // escrita da própria Action, que roda dentro da transação de qualquer
-        // jeito — a guarda passaria verde com o `ensureSingle` do lado de fora.
+        // jeito — a guarda passaria verde com o `ensureExactlyOne` do lado de fora.
         Event::listen('eloquent.updating: '.ClientContact::class, function (ClientContact $c) use (&$niveis, $ana): void {
             if ($c->is($ana)) {
                 $niveis[] = DB::transactionLevel();
