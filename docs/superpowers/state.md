@@ -20,7 +20,7 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: main-tree
-    branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; item 22 fechado em 2026-09-04 e a branch REBASADA sobre origin/main@9bdaac90 em 2026-09-09, com o item 27 e a infra ja dentro; segue viva aguardando merge da PR
+    branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; item 22 fechado em 2026-09-04 e a branch REBASADA sobre origin/main@9bdaac90 em 2026-09-09, com o item 27 e a infra ja dentro; segue viva na PR #104, aguardando merge
     active_spec: null
     active_plan: null
     context_packet: null
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a PR está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
+| `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
 | `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
