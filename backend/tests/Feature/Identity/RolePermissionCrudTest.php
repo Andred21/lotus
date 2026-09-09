@@ -85,4 +85,37 @@ class RolePermissionCrudTest extends TestCase
             'password' => 'secret123', 'role' => 'coordinador', 'is_active' => true,
         ])->assertCreated()->assertJsonPath('role', 'coordinador');
     }
+
+    public function test_admin_comum_nao_lista_roles_com_permissoes(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson('/api/roles')->assertForbidden();
+    }
+
+    public function test_admin_comum_lista_roles_atribuiveis_sem_permissoes(): void
+    {
+        $this->actingAsAdmin();
+
+        $response = $this->getJson('/api/roles/assignable')->assertOk();
+
+        $admin = collect($response->json())->firstWhere('name', 'admin');
+
+        $this->assertNotNull($admin, 'A role admin não veio na lista de atribuíveis.');
+        $this->assertArrayHasKey('id', $admin);
+        $this->assertArrayNotHasKey('permissions', $admin, 'O lookup de roles não pode enumerar permissão.');
+        $this->assertArrayNotHasKey('is_system', $admin);
+    }
+
+    public function test_superadmin_segue_listando_roles_com_permissoes(): void
+    {
+        $this->actingAsSuperadmin();
+
+        $response = $this->getJson('/api/roles')->assertOk();
+
+        $admin = collect($response->json())->firstWhere('name', 'admin');
+
+        $this->assertTrue($admin['is_system']);
+        $this->assertNotEmpty($admin['permissions']);
+    }
 }

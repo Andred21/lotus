@@ -3,8 +3,10 @@
 namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Certification\Services\StudentCertificateHistory;
+use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Actions\CreateStudentAction;
 use App\Domains\Identity\Actions\UpdateStudentAction;
+use App\Domains\Identity\Data\StudentClientOptionData;
 use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Data\StudentDetailData;
 use App\Domains\Identity\Models\Student;
@@ -28,7 +30,7 @@ class StudentController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:identity.user.view', only: ['index', 'show']),
-            new Middleware('permission:identity.user.create', only: ['store']),
+            new Middleware('permission:identity.user.create', only: ['store', 'clientOptions']),
             new Middleware('permission:identity.user.update', only: ['update']),
         ];
     }
@@ -45,6 +47,24 @@ class StudentController extends Controller implements HasMiddleware
         return Student::query()
             ->withListingData()
             ->page($request, fn (Student $student) => StudentData::fromModel($student));
+    }
+
+    /**
+     * As empresas atribuíveis a um aluno no create.
+     *
+     * Gate `identity.user.create`, o da ação que o dropdown serve: o campo só
+     * é editável no create, e fora dele a tela mostra `current_client_name`,
+     * que já vem no `StudentData` (D-11).
+     *
+     * @return array<StudentClientOptionData>
+     */
+    public function clientOptions(): array
+    {
+        return Client::query()
+            ->orderBy('legal_name')
+            ->get(['id', 'legal_name'])
+            ->map(fn (Client $client) => StudentClientOptionData::fromModel($client))
+            ->all();
     }
 
     public function store(StudentData $data, CreateStudentAction $action): StudentData

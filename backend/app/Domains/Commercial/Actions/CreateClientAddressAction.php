@@ -23,7 +23,7 @@ class CreateClientAddressAction
 
             $address = $client->addresses()->create($data->toArray());
 
-            $this->primaryAddresses->ensureSingle($client, $address);
+            $this->primaryAddresses->ensureExactlyOne($client, $address);
 
             return $address->fresh();
         });

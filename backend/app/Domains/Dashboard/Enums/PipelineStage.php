@@ -11,4 +11,8 @@ enum PipelineStage: string
     case TurmaReadyForConclusion = 'turma_ready_for_conclusion';
     case ConcludedPendingIssuance = 'concluded_pending_issuance';
     case FullyIssued = 'fully_issued';
+    /** Concluída sem nenhuma matrícula aprovada: zero matrículas, ou todas
+     * reprovadas. Balde terminal alternativo — não é etapa por onde a turma
+     * passa a caminho da emissão (D-16). */
+    case ConcludedWithoutIssuance = 'concluded_without_issuance';
 }

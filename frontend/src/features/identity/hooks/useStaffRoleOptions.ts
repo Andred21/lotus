@@ -5,7 +5,7 @@ import { rolesApi } from '@shared/api/rolesApi'
  * GET é o comportamento de hoje, e mudá-lo sairia do "comportamento idêntico"
  * deste bloco. */
 export function useStaffRoleOptions() {
-  const roles = rolesApi.useList()
+  const roles = rolesApi.useAssignable()
 
   return {
     roleOptions: (roles.data ?? [])

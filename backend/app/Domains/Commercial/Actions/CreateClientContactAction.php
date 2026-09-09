@@ -23,7 +23,7 @@ class CreateClientContactAction
 
             $contact = $client->contacts()->create($data->toArray());
 
-            $this->primaryContacts->ensureSingle($client, $contact);
+            $this->primaryContacts->ensureExactlyOne($client, $contact);
 
             return $contact->fresh();
         });

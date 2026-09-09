@@ -69,8 +69,8 @@ class CreateClientAction
                 $client->contacts()->create($contact->toArray());
             }
 
-            $this->primaryAddresses->ensureSingle($client);
-            $this->primaryContacts->ensureSingle($client);
+            $this->primaryAddresses->ensureExactlyOne($client);
+            $this->primaryContacts->ensureExactlyOne($client);
 
             return $client->loadListingData();
         });

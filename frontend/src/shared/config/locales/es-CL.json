@@ -363,7 +363,8 @@
         "turma_in_progress": "Clase en curso",
         "turma_ready_for_conclusion": "Lista para concluir",
         "concluded_pending_issuance": "Concluida, por emitir",
-        "fully_issued": "Totalmente emitida"
+        "fully_issued": "Totalmente emitida",
+        "concluded_without_issuance": "Concluida, nada por emitir"
       }
     }
   },

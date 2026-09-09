@@ -6,7 +6,7 @@ use App\Domains\Commercial\Models\Client;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * "No máximo 1 endereço principal por cliente". A regra inteira vive na
+ * "EXATAMENTE 1 endereço principal por cliente". A regra inteira vive na
  * `PrimaryCollectionService`; aqui fica só qual coleção é a coleção.
  *
  * O parâmetro `winner` da base nasceu por causa desta entidade: a rota nested de

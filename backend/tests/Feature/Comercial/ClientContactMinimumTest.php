@@ -96,8 +96,8 @@ class ClientContactMinimumTest extends TestCase
      * tela (`backend-ddd.md`): o replace-total do pai E a rota nested da
      * própria entidade. Fechar só o `ClientData::rules()` deixa
      * `DELETE /api/contacts/{contact}` esvaziando a coleção pela porta dos
-     * fundos — mesmo buraco que `PrimaryContactService::ensureSingle()` já
-     * fecha para "no máximo 1 principal".
+     * fundos — mesmo buraco que `PrimaryContactService::ensureExactlyOne()` já
+     * fecha para "exatamente 1 principal".
      */
     public function test_delete_do_ultimo_contato_da_422_e_nao_apaga(): void
     {

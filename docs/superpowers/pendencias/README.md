@@ -40,19 +40,24 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > **A `P-58` fechou em 2026-09-04, no `frontend-arrumacao-de-testes` (item 27)**, por mecanismo: o
 > `compose-dev.test.ts` passou a afastar os `.env*` das **duas** raízes que o `vite.config.ts` lê, e
 > o gate deixou de depender do disco de quem roda — provado com `frontend/.env` posto e retirado. A
-> ficha está em [`encerradas.md`](./encerradas.md). **O bloco não abriu pendência nova.**
+> ficha está em [`encerradas.md`](./encerradas.md). **Nenhum dos dois blocos de 2026-09-04 abriu
+> pendência nova.**
 >
-> **As cinco fichas do `frontend-dividas-de-mecanismo` (item 25), fechadas em 2026-09-03, saíram
-> neste fechamento** — `P-68`, `P-69`, `P-70`, `P-30` e `P-42` completaram a sprint de rastro; o
-> parágrafo delas ficou em [`encerradas.md`](./encerradas.md), sob *Rastro anterior*. O débito `D-69`
-> tinha saído do `backlog.md` no fechamento daquele bloco. A **P-74**, que ele abriu, segue na
-> tabela abaixo.
+> **As oito fichas que estavam em rastro saíram nos dois fechamentos de 2026-09-04** — as cinco do
+> `frontend-dividas-de-mecanismo` (item 25: `P-68`, `P-69`, `P-70`, `P-30`, `P-42`) no fechamento do
+> item 27, e as três do `backend-envelope-de-erro-e-recusa-de-dominio` (item 26: `P-71`, `P-72` e a
+> metade de comportamento da `P-60`) no do item 22, que é o primeiro fechamento da `lane-a` desde
+> então. Cumpriram a sprint de rastro; o durável está nos commits e em
+> [`../historico/progress.md`](../historico/progress.md). As bordas que elas deixaram continuam
+> vivas e nomeadas nas tabelas desta página: a **P-74** (contraste por estado), a **P-75** e a
+> **P-76** (as duas do item 26) e a **P-44** (a metade de dado de dev da `P-60`).
 >
-> O **item 26** (`backend-envelope-de-erro-e-recusa-de-dominio`) **fechou em 2026-09-03** e saiu da
-> fila. Ele hospedava a `P-71`, a `P-72` e a metade de comportamento da `P-60`, e as três estão em
-> [`encerradas.md`](./encerradas.md). Duas fichas nasceram do fechamento e continuam na tabela
-> acima: a `P-75` (divergência de ambiente destapada pela sonda do 419) e a `P-76` (o que a `P-71`
-> nomeava e não pagou). A metade do **dado de dev** da `P-60` segue com a `P-44`, no item 13.
+> **O item 22 (`dominio-decisoes-de-rbac-e-semantica`) fechou em 2026-09-04 sem abrir nem encerrar
+> ficha desta pasta** — o que ele fechou foram quatro fichas de **decisão** do `backlog.md`
+> (`D-09`, `D-10`, `D-11` e `D-16`), que não moram aqui. Ele disparou o gatilho de **duas** fichas
+> vivas sem pagá-las, por decisão do João no gate: a **P-51** (tocou `UpdateClientAction` e
+> `ClientData`, casa do campo 2) e a **P-53** (tocou `.claude/rules/backend-ddd.md` por outro
+> motivo). As duas fichas registram o disparo; o gatilho **não se desarma** por isso.
 
 ### Travadas em decisão — não entram em bloco
 
@@ -78,19 +83,18 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (4)
+## Encerradas (1)
 
 **Em rastro:** a **P-58**, fechada em **2026-09-04** pelo `frontend-arrumacao-de-testes` (item 27),
-e as três que o `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) fechou em **2026-09-03** —
-a **P-71**, a **P-72** e a metade de comportamento da **P-60**. As três do item 26 são da `lane-a`,
-que não fechou bloco desde então: a sprint de rastro delas se conta pelo fechamento dela, não por
-este. As fichas estão em [`encerradas.md`](./encerradas.md).
+por mecanismo. A ficha está em [`encerradas.md`](./encerradas.md) e sai no próximo fechamento
+posterior ao dela.
 
-**As cinco do `frontend-dividas-de-mecanismo` (item 25) saíram neste fechamento** (2026-09-04), o
-primeiro posterior ao do bloco que as encerrou — `P-69`, `P-70`, `P-30`, `P-68` e `P-42`, cada uma
-fechada por mecanismo verde ou por decisão escrita, nenhuma por remoção na fé. O rastro delas está
-no parágrafo *Rastro anterior* de [`encerradas.md`](./encerradas.md), nos commits e nas linhas de
-entrega em [`../historico/progress.md`](../historico/progress.md).
+**As oito que estavam em rastro saíram nos dois fechamentos de 2026-09-04**: as cinco do
+`frontend-dividas-de-mecanismo` (item 25) — `P-69`, `P-70`, `P-30`, `P-68` e `P-42` — no do item 27,
+e as três do `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) — `P-71`, `P-72` e a metade de
+comportamento da `P-60` — no do item 22, o primeiro fechamento da `lane-a` desde então. Cada uma
+fechou por mecanismo verde ou por decisão escrita, nenhuma por remoção na fé. O rastro durável está
+nos commits e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-73 e a P-67 saíram neste fechamento** (2026-09-03), o primeiro posterior aos dos blocos que as
 encerraram — a P-73 em 2026-09-02 (PR #93, `pnpm audit` de volta a 0 por bump só de lockfile) e a

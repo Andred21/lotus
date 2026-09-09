@@ -363,7 +363,8 @@
         "turma_in_progress": "Class in progress",
         "turma_ready_for_conclusion": "Ready to conclude",
         "concluded_pending_issuance": "Concluded, to issue",
-        "fully_issued": "Fully issued"
+        "fully_issued": "Fully issued",
+        "concluded_without_issuance": "Concluded, nothing to issue"
       }
     }
   },

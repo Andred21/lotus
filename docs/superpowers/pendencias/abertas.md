@@ -401,6 +401,16 @@ deslocaram, e estão atualizadas abaixo.
 | `docs/adrs.md` | O arquivamento em cascata (`archived_with_parent` + `ArchivesChildren`/`LoadsCascadedChildren`, hooks `deleting`/`restored`) alcança 8 roots sem ADR | a única regra escrita é `frontend-fsliced.md:114-130`, que descreve o **kit de UI**, não o mecanismo de backend |
 | `abertas.md:57` | A âncora `[P-35](#p-35)` aponta para ficha que saiu de `abertas.md` no BD-14 e de `encerradas.md` no BD-12 | anterior a esta sprint; não corrigida por não ser dela |
 
+**Gatilho disparado e não pago — 2026-09-04, `dominio-decisoes-de-rbac-e-semantica` (item 22).**
+O bloco tocou `.claude/rules/backend-ddd.md` "por outro motivo" (o achado Q-5 do review: a rule
+citava `ensureSingle`, método que o próprio bloco renomeou para `ensureExactlyOne`) — três linhas.
+A outra metade do gatilho, *"e puder reconciliá-los contra a árvore"*, **não se cumpriu**:
+reconciliar as 12 divergências é trabalho de bloco de doc, não de correção de review, e o
+`active_work_item` do 22 eram as quatro decisões de domínio e RBAC. Decisão do João no gate de
+fechamento: anotar e seguir. **As 12 seguem válidas** — o bloco não tocou `estrutura-monolito.md`,
+`der-fisico.md`, `adrs.md` nem `CLAUDE.md`, e as coordenadas de linha do `backend-ddd.md` na tabela
+acima (24-26, 12-17, 38) não foram deslocadas pelas três linhas mudadas (que estão na linha 83).
+
 **O padrão é o mesmo que a P-52 nomeia:** doc de estrutura envelhece em silêncio porque nada mede o
 documento contra a árvore. A `auditar-docs` mede — mas só roda no fechamento, e reporta em vez de
 travar. Enquanto não houver catraca executável para `estrutura-monolito.md` (a `D-17` fez isso para
@@ -824,6 +834,22 @@ devolvia o acesso ao staff desligado sem ninguém pedir.
 Os campos **2 a 6** (`ClientData::$type`, `CourseData::$workload_hours`, `BudgetController::update`,
 `CourseTemplateController::update`) ficaram **fora por escrita explícita** na §2 da spec do bloco:
 nenhum é controle de acesso, e a ficha já os separa por gatilho próprio.
+
+### Gatilho disparado e não pago — 2026-09-04, `dominio-decisoes-de-rbac-e-semantica` (item 22)
+
+O bloco tocou **`UpdateClientAction.php`** e **`ClientData.php`**, que é o gatilho literal desta
+ficha e a casa do **campo 2** (`ClientData::$type = 'client'`). Tocou os dois pelo mesmo motivo
+estreito: `UpdateClientAction` só trocou a chamada renomeada (`ensureSingle` → `ensureExactlyOne`) e
+`ClientData` só ganhou a regra `UmContatoPrincipal` em `contacts`. **Nenhum dos cinco campos foi
+pago.**
+
+Por que não: o `active_work_item` do 22 eram as quatro decisões `D-09`/`D-10`/`D-11`/`D-16`, e o
+`/executar-bloco` fecha em "implemente somente `active_work_item`". O remédio (a) — `$type` sem
+default, como `bool|Optional` — **move `generated.ts`** e o narrowing do SPA, e chegaria depois do
+review do bloco, sem lente nenhuma sobre ele. Decisão do João no gate de fechamento de 2026-09-04:
+**anotar e seguir**, mesma forma da P-54, que registra um bloco que teve a oportunidade e não a
+usou. Este registro é o que faz a ficha valer alguma coisa para o próximo bloco: o gatilho já
+disparou uma vez sem ser pago, e o gatilho não se desarma por isso.
 
 > **As três fichas abaixo foram renumeradas no merge de fechamento (2026-08-28).** Nasceram
 > `P-62`, `P-63` e `P-64` na `lane-a` e viraram `P-64`, `P-65` e `P-66`: a `main` já trazia uma

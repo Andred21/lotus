@@ -104,6 +104,7 @@ class DashboardEndpointTest extends TestCase
             'turma_ready_for_conclusion' => 0,
             'concluded_pending_issuance' => 1,
             'fully_issued' => 0,
+            'concluded_without_issuance' => 0,
         ], $pipeline);
         $this->assertSame(5, array_sum($pipeline));
 
@@ -184,7 +185,7 @@ class DashboardEndpointTest extends TestCase
 
         // Funil sem as duas etapas de cotação, com as de turma intactas.
         $this->assertSame(
-            ['turma_in_progress', 'turma_ready_for_conclusion', 'concluded_pending_issuance', 'fully_issued'],
+            ['turma_in_progress', 'turma_ready_for_conclusion', 'concluded_pending_issuance', 'fully_issued', 'concluded_without_issuance'],
             array_column($response->json('pipeline'), 'stage'),
         );
 
@@ -340,9 +341,9 @@ class DashboardEndpointTest extends TestCase
         $this->assertSame([], $response->json('rankings.courses'));
         $this->assertSame([], $response->json('rankings.clients'));
 
-        // Funil vazio ainda declara as seis etapas: gráfico com eixo, não
+        // Funil vazio ainda declara as sete etapas: gráfico com eixo, não
         // ausência de gráfico.
-        $this->assertSame([0, 0, 0, 0, 0, 0], array_column($response->json('pipeline'), 'count'));
+        $this->assertSame([0, 0, 0, 0, 0, 0, 0], array_column($response->json('pipeline'), 'count'));
 
         foreach (['starting_soon', 'ending_soon', 'in_progress', 'overdue'] as $janela) {
             $this->assertSame([], $response->json("agenda.{$janela}"));
@@ -531,8 +532,10 @@ class DashboardEndpointTest extends TestCase
      * duas vezes por request. O teto conta só as queries contra `turmas` — é
      * onde a duplicação aparece e o total do request está cheio de ruído de
      * sessão e RBAC. Medido neste cenário: 13 depois do conserto, 20 antes
-     * (reproduzido devolvendo ao funil as instâncias próprias). O teto é guarda
-     * contra o regresso, não meta de performance (Q-6).
+     * (reproduzido devolvendo ao funil as instâncias próprias); 14 desde a
+     * D-16, que acrescentou uma pergunta nova ao funil (turma concluída sem
+     * nada a emitir) — uma query a mais, não o regresso da duplicação. O teto
+     * é guarda contra o regresso, não meta de performance (Q-6).
      */
     public function test_o_payload_do_admin_nao_reexecuta_a_agregacao_do_funil(): void
     {
@@ -546,7 +549,7 @@ class DashboardEndpointTest extends TestCase
             fn (string $sql): bool => str_contains($sql, 'from "turmas"'),
         ));
         $this->assertLessThanOrEqual(
-            13,
+            14,
             count($emTurmas),
             "Agregação de turma repetida — o funil voltou a consultar por conta própria:\n".implode("\n", $emTurmas),
         );

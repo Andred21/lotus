@@ -10,7 +10,7 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
     <AppCard>
       <AppCardHeader title={t('dashboard.pipeline.title')} />
       {maior === 0 ? (
-        // Todas as etapas em zero é funil VAZIO, não funil quebrado: seis barras
+        // Todas as etapas em zero é funil VAZIO, não funil quebrado: sete barras
         // de largura nula seriam indistinguíveis de um erro de render.
         <AppEmptyState icon="pi pi-filter" title={t('dashboard.pipeline.empty')} />
       ) : (
