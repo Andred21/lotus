@@ -196,11 +196,17 @@ desenvolvimento foi ignorado — a conta `admin@lotus.cl` de senha pública **nu
 produção. Então:
 
 ```bash
-cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA \
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && \
+  LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA \
   LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA \
   LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml \
-  run --rm app php artisan db:seed --force
+  run --rm app php artisan db:seed --force'
 ```
+
+O comando inteiro mora DENTRO do `sudo -i sh -c '…'`, e as aspas são **simples**, por duas razões
+medidas em 2026-09-10: `/opt/lotus` é `750 root:root`, então um `cd /opt/lotus` pelo `ubuntu`
+devolve `-bash: cd: /opt/lotus: Permission denied` antes de qualquer variável; e com aspas duplas
+o `$SHA` expandiria no shell do `ubuntu`, que não o tem, entregando ao Compose uma tag vazia.
 
 `LOTUS_CLAMAV_IMAGE` não é decoração: `run --rm app` sobe as dependências do serviço, o antivírus
 é uma delas, e sem a variável o Compose procuraria `lotus-clamav:local` — que não existe no host.
@@ -208,7 +214,7 @@ cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-a
 O primeiro admin de verdade se cria por tinker, com senha escolhida na hora (nunca em arquivo):
 
 ```bash
-cd /opt/lotus && ... run --rm app php artisan tinker
+sudo -i sh -c 'cd /opt/lotus && ... run --rm app php artisan tinker'
 >>> $u = App\Domains\Identity\Models\User::create(['uuid' => (string) Str::uuid(), 'name' => '<nome>', 'email' => '<email>', 'password' => Hash::make('<senha>'), 'type' => 'admin', 'is_active' => true]);
 >>> $u->syncRoles(['superadmin']);
 ```
