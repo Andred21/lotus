@@ -15,14 +15,23 @@ MYSQL=$(docker compose -p lotus --project-directory "$BASE" -f "$BASE/docker-com
 [ -n "$MYSQL" ] || { echo "erro: serviço mysql não está de pé" >&2; exit 1; }
 
 ARQ="lotus-$(date -u +%Y-%m-%dT%H-%M).sql.gz"
+BRUTO="/tmp/${ARQ%.gz}"
+# Dump de produção não fica no /tmp do host nem quando o script morre no meio.
+trap 'rm -f "$BRUTO" "/tmp/$ARQ"' EXIT
+
 # --single-transaction: dump consistente sem travar o InnoDB. A senha vem do
 # ambiente do PRÓPRIO container — não passa pela linha de comando do host.
 docker exec "$MYSQL" sh -c 'exec mysqldump --single-transaction --routines --triggers -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' \
-  | gzip > "/tmp/$ARQ"
+  > "$BRUTO"
 
-# Dump vazio é falha, não backup: schema + seed mínimo já passam de 10 KiB.
-[ "$(stat -c %s "/tmp/$ARQ")" -gt 10240 ] || { echo "erro: dump suspeito de vazio ($(stat -c %s "/tmp/$ARQ") bytes)" >&2; exit 1; }
+# As duas guardas medem o dump BRUTO. Medir o gzip aqui foi o erro que recusou o
+# primeiro backup real (2026-09-17): schema + seed mínimo dão 62 KiB crus e 8,9 KiB
+# comprimidos, e o piso de 10 KiB foi escrito para o tamanho cru.
+[ "$(stat -c %s "$BRUTO")" -gt 10240 ] || { echo "erro: dump suspeito de vazio ($(stat -c %s "$BRUTO") bytes)" >&2; exit 1; }
+# Rodapé do mysqldump: só existe se o dump chegou ao fim. Pipe que morre no meio
+# deixa um arquivo grande e inútil, e tamanho sozinho não distingue os dois.
+tail -1 "$BRUTO" | grep -q '^-- Dump completed' || { echo "erro: dump truncado (sem o rodape do mysqldump)" >&2; exit 1; }
 
+gzip -c "$BRUTO" > "/tmp/$ARQ"
 aws s3 cp "/tmp/$ARQ" "s3://$BUCKET/backups/$ARQ" --only-show-errors
-rm -f "/tmp/$ARQ"
 echo "backup ok: s3://$BUCKET/backups/$ARQ"
