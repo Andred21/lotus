@@ -676,6 +676,29 @@ bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variá
 Bloco alunos (2026-07-27, spec D11): divergência aceita por decisão do João no mesmo dia — a ordem
 atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 
+## P-77 — o registro A de `app.lotusotec.cl` ainda aponta para a hospedagem antiga, e sem ele não há TLS
+
+**Bloco:** — · **Gatilho:** fecha quando `app.lotusotec.cl` resolver **exatamente** o EIP
+`18.230.53.197`; a ação é o §11 do `deploy/aws/README.md` (certbot standalone + redeploy, que o
+`deploy.sh` já sabe fazer sozinho quando o certificado existe). Revisar em **2026-10-31**.
+
+Medido em 2026-09-04 e remedido em 2026-09-17, na Task 19 do item 10 v2:
+
+| Registro | Valor | |
+|---|---|---|
+| `A` | `185.146.167.195` | hospedagem antiga (WordPress) |
+| `AAAA` | `2a07:7800::195` | hospedagem antiga |
+| EIP da produção | `18.230.53.197` | — |
+
+O pedido do registro foi disparado à Lotus/agência na Task 1; a zona vive em `ns1–ns4.stackdns.com`
+e não temos acesso ao painel. **A prova é a igualdade, nunca "o nome resolve"** — existe curinga
+`*.lotusotec.cl` apontando para o WordPress, então qualquer nome responde.
+
+Enquanto o registro não chega, a produção atende em `http://18.230.53.197` (DoD 2, provado na Task
+15) e o bloco fecha sem TLS: o overlay `docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a
+catraca deles já estão no repositório desde a Task 7, prontos e nunca exercidos contra um
+certificado real. **Nada além do registro A separa os dois estados.**
+
 ---
 
 # Travadas em escrita fora do repositório
