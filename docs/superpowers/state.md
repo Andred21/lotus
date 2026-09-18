@@ -1,15 +1,31 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-a
+focused_lane: lane-b
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
-resume_state: null
-active_spec: null
-active_plan: null
+active_work_item: infra-producao-provisionamento-aws
+workflow_state: executing
+next_owner: claude
+next_action: continue_active_plan
+resume_state: |
+  RETOMADA EM 2026-09-17, depois da pausa por viagem de 2026-09-04. Tasks 11 a 16-Step-1 FEITAS e
+  provadas; a stack de producao segue implantada (SHA corporativo
+  a5fc92bb7728ea0da6dc16a62958e02556df999b). A instancia i-0789e30d781790dd4 estava `stopped` e foi
+  religada em 2026-09-17; a stack voltou sozinha e http://18.230.53.197/up == 200. Segue por aqui:
+    1. Task 16 Steps 2-4: upload real (DoD 3), PDF de certificado (DoD 4) e a medicao de memoria.
+    2. Task 17: backup + restore provado (DoD 5).
+    3. Task 18: alarme de billing (DoD 6) - ATENCAO: a conta e MEMBRO da org o-fdepe5skxg, e a
+       metrica AWS/Billing EstimatedCharges so e publicada na conta pagadora. Se nao houver dado, o
+       remedio previsto e AWS Budgets na propria conta, registrado como desvio.
+    4. Task 19: ramo FICHA - remedido em 2026-09-17, app.lotusotec.cl -> 2a07:7800::195 (hospedagem
+       antiga, agora por AAAA), diferente do EIP 18.230.53.197. Sem TLS neste bloco.
+    5. Task 20: audit + gate + ready_for_review.
+  Pendencias de seguranca: a chave vazada AKIA3B7BDINPIEP2W4WK JA NAO EXISTE na conta e o
+  CloudTrail dela so mostra 3 GetCallerIdentity do proprio lotus-infra em 2026-09-04 (sem uso de
+  terceiro) - conferido em 2026-09-17, evidencia vai para o audit da Task 20. Continua aberta a
+  access key AKIA3B7BDINPPYESZA6T do usuario lotus-infra, a apagar no fim do bloco.
+active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
+active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
 context_packet: null
 blocker: null
 lanes:
@@ -30,8 +46,8 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
-    workflow_state: executing   # pausado por viagem em 2026-09-04; ponto de retomada no resume_state do cabecalho
-    next_owner: joao
+    workflow_state: executing   # retomado em 2026-09-17; ponto de retomada no resume_state do cabecalho
+    next_owner: claude
     next_action: continue_active_plan
     tree: ../lotus-infra
     branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
@@ -40,21 +56,22 @@ lanes:
     context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
     blocker: null
     resume_state: |
-      PAUSA POR VIAGEM (2026-09-04). Tasks 11 a 16-Step-1 FEITAS e provadas; a stack de producao
-      esta implantada e responde em http://18.230.53.197 (SHA corporativo
-      a5fc92bb7728ea0da6dc16a62958e02556df999b). Retomar por aqui, nesta ordem:
-        1. Task 16 Steps 2-4: upload real (DoD 3), PDF de certificado (DoD 4) e a medicao de
-           memoria sob carga. Exige a instancia i-0789e30d781790dd4 ligada.
+      RETOMADA EM 2026-09-17, depois da pausa por viagem de 2026-09-04. Tasks 11 a 16-Step-1 FEITAS e
+      provadas; a stack de producao segue implantada (SHA corporativo
+      a5fc92bb7728ea0da6dc16a62958e02556df999b). A instancia i-0789e30d781790dd4 estava `stopped` e foi
+      religada em 2026-09-17; a stack voltou sozinha e http://18.230.53.197/up == 200. Segue por aqui:
+        1. Task 16 Steps 2-4: upload real (DoD 3), PDF de certificado (DoD 4) e a medicao de memoria.
         2. Task 17: backup + restore provado (DoD 5).
-        3. Task 18: alarme de billing (DoD 6) - ATENCAO: a conta e MEMBRO da org o-fdepe5skxg, e
-           a metrica AWS/Billing EstimatedCharges so e publicada na conta pagadora. Se nao houver
-           dado, o remedio previsto e AWS Budgets na propria conta, registrado como desvio.
-        4. Task 19: ramo FICHA - medido em 2026-09-04, app.lotusotec.cl -> 185.146.167.195
-           (hospedagem antiga), diferente do EIP 18.230.53.197. Sem TLS neste bloco.
+        3. Task 18: alarme de billing (DoD 6) - ATENCAO: a conta e MEMBRO da org o-fdepe5skxg, e a
+           metrica AWS/Billing EstimatedCharges so e publicada na conta pagadora. Se nao houver dado, o
+           remedio previsto e AWS Budgets na propria conta, registrado como desvio.
+        4. Task 19: ramo FICHA - remedido em 2026-09-17, app.lotusotec.cl -> 2a07:7800::195 (hospedagem
+           antiga, agora por AAAA), diferente do EIP 18.230.53.197. Sem TLS neste bloco.
         5. Task 20: audit + gate + ready_for_review.
-      Pendencias de seguranca abertas: chave vazada AKIA3B7BDINPIEP2W4WK (conferir CloudTrail e
-      apagar) e a access key do usuario lotus-infra (apagar no fim do bloco).
-      Retomar exige o espelho do topo voltar para lane-b (fronteira duravel, main tree).
+      Pendencias de seguranca: a chave vazada AKIA3B7BDINPIEP2W4WK JA NAO EXISTE na conta e o
+      CloudTrail dela so mostra 3 GetCallerIdentity do proprio lotus-infra em 2026-09-04 (sem uso de
+      terceiro) - conferido em 2026-09-17, evidencia vai para o audit da Task 20. Continua aberta a
+      access key AKIA3B7BDINPPYESZA6T do usuario lotus-infra, a apagar no fim do bloco.
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
@@ -77,7 +94,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
 state_basis_commit: 04973a63
-updated_at: 2026-09-09T00:00:00-03:00
+updated_at: 2026-09-17T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
