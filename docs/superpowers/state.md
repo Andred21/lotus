@@ -8,22 +8,23 @@ workflow_state: executing
 next_owner: claude
 next_action: continue_active_plan
 resume_state: |
-  RETOMADA EM 2026-09-17, depois da pausa por viagem de 2026-09-04. Tasks 11 a 16-Step-1 FEITAS e
-  provadas; a stack de producao segue implantada (SHA corporativo
-  a5fc92bb7728ea0da6dc16a62958e02556df999b). A instancia i-0789e30d781790dd4 estava `stopped` e foi
-  religada em 2026-09-17; a stack voltou sozinha e http://18.230.53.197/up == 200. Segue por aqui:
-    1. Task 16 Steps 2-4: upload real (DoD 3), PDF de certificado (DoD 4) e a medicao de memoria.
-    2. Task 17: backup + restore provado (DoD 5).
-    3. Task 18: alarme de billing (DoD 6) - ATENCAO: a conta e MEMBRO da org o-fdepe5skxg, e a
-       metrica AWS/Billing EstimatedCharges so e publicada na conta pagadora. Se nao houver dado, o
-       remedio previsto e AWS Budgets na propria conta, registrado como desvio.
-    4. Task 19: ramo FICHA - remedido em 2026-09-17, app.lotusotec.cl -> 2a07:7800::195 (hospedagem
-       antiga, agora por AAAA), diferente do EIP 18.230.53.197. Sem TLS neste bloco.
-    5. Task 20: audit + gate + ready_for_review.
-  Pendencias de seguranca: a chave vazada AKIA3B7BDINPIEP2W4WK JA NAO EXISTE na conta e o
-  CloudTrail dela so mostra 3 GetCallerIdentity do proprio lotus-infra em 2026-09-04 (sem uso de
-  terceiro) - conferido em 2026-09-17, evidencia vai para o audit da Task 20. Continua aberta a
-  access key AKIA3B7BDINPPYESZA6T do usuario lotus-infra, a apagar no fim do bloco.
+  RETOMADA EM 2026-09-17. A instancia i-0789e30d781790dd4 estava `stopped`; religada, a stack voltou
+  sozinha e http://18.230.53.197/up == 200. Nesta sessao fecharam a Task 17 (backup + restore, com
+  correcao da guarda do backup-db.sh em b3093022), a Task 18 (AWS Budgets `lotus-prod-teto`, desvio
+  previsto pela spec), a Task 19 (ramo ficha, P-77) e a Task 20 Steps 1-2 (audit
+  `audits/2026-09-17-item10-v2-provisionamento.md`; gate verde: lint 0, build ok, test 785/785,
+  diff de backend/generated.ts vazio contra a main).
+  FALTA, e so isso: Task 16 Steps 2 e 3 pelo CAMINHO DO PRODUTO — upload de documento pela UI (passa
+  pelo ClamAV, DoD 3) e emissao de certificado de teste pela UI (DoD 4). As duas cadeias por baixo ja
+  estao provadas (S3 via IMDSv2 com URL pre-assinada 200 e 403 sem assinatura; Chromium em 3 renders
+  sob carga, sem OOM). O que falta e a senha do primeiro admin, que so o Joao tem — gerada no host em
+  2026-09-04, nunca passou por sessao nem arquivo. Depois disso: Task 20 Step 3 e ready_for_review.
+  DECISOES ABERTAS PARA O JOAO, medidas no audit: (a) o criterio de resize do runbook §12 esta
+  satisfeito — swap em 694 MiB com o host ocioso, e o PDF so passa paginando o ClamAV; (b) a previsao
+  do mes e 35,74 USD contra teto de 30, e o t4g.medium dobra o EC2-Compute.
+  SEGURANCA: a chave vazada AKIA3B7BDINPIEP2W4WK nao existe mais na conta e o CloudTrail dela so tem
+  3 GetCallerIdentity do proprio lotus-infra (conferido em 2026-09-17). Continua aberta a access key
+  AKIA3B7BDINPPYESZA6T, a apagar no fechamento do bloco.
 active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
 active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
 context_packet: null
@@ -56,22 +57,23 @@ lanes:
     context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
     blocker: null
     resume_state: |
-      RETOMADA EM 2026-09-17, depois da pausa por viagem de 2026-09-04. Tasks 11 a 16-Step-1 FEITAS e
-      provadas; a stack de producao segue implantada (SHA corporativo
-      a5fc92bb7728ea0da6dc16a62958e02556df999b). A instancia i-0789e30d781790dd4 estava `stopped` e foi
-      religada em 2026-09-17; a stack voltou sozinha e http://18.230.53.197/up == 200. Segue por aqui:
-        1. Task 16 Steps 2-4: upload real (DoD 3), PDF de certificado (DoD 4) e a medicao de memoria.
-        2. Task 17: backup + restore provado (DoD 5).
-        3. Task 18: alarme de billing (DoD 6) - ATENCAO: a conta e MEMBRO da org o-fdepe5skxg, e a
-           metrica AWS/Billing EstimatedCharges so e publicada na conta pagadora. Se nao houver dado, o
-           remedio previsto e AWS Budgets na propria conta, registrado como desvio.
-        4. Task 19: ramo FICHA - remedido em 2026-09-17, app.lotusotec.cl -> 2a07:7800::195 (hospedagem
-           antiga, agora por AAAA), diferente do EIP 18.230.53.197. Sem TLS neste bloco.
-        5. Task 20: audit + gate + ready_for_review.
-      Pendencias de seguranca: a chave vazada AKIA3B7BDINPIEP2W4WK JA NAO EXISTE na conta e o
-      CloudTrail dela so mostra 3 GetCallerIdentity do proprio lotus-infra em 2026-09-04 (sem uso de
-      terceiro) - conferido em 2026-09-17, evidencia vai para o audit da Task 20. Continua aberta a
-      access key AKIA3B7BDINPPYESZA6T do usuario lotus-infra, a apagar no fim do bloco.
+      RETOMADA EM 2026-09-17. A instancia i-0789e30d781790dd4 estava `stopped`; religada, a stack voltou
+      sozinha e http://18.230.53.197/up == 200. Nesta sessao fecharam a Task 17 (backup + restore, com
+      correcao da guarda do backup-db.sh em b3093022), a Task 18 (AWS Budgets `lotus-prod-teto`, desvio
+      previsto pela spec), a Task 19 (ramo ficha, P-77) e a Task 20 Steps 1-2 (audit
+      `audits/2026-09-17-item10-v2-provisionamento.md`; gate verde: lint 0, build ok, test 785/785,
+      diff de backend/generated.ts vazio contra a main).
+      FALTA, e so isso: Task 16 Steps 2 e 3 pelo CAMINHO DO PRODUTO — upload de documento pela UI (passa
+      pelo ClamAV, DoD 3) e emissao de certificado de teste pela UI (DoD 4). As duas cadeias por baixo ja
+      estao provadas (S3 via IMDSv2 com URL pre-assinada 200 e 403 sem assinatura; Chromium em 3 renders
+      sob carga, sem OOM). O que falta e a senha do primeiro admin, que so o Joao tem — gerada no host em
+      2026-09-04, nunca passou por sessao nem arquivo. Depois disso: Task 20 Step 3 e ready_for_review.
+      DECISOES ABERTAS PARA O JOAO, medidas no audit: (a) o criterio de resize do runbook §12 esta
+      satisfeito — swap em 694 MiB com o host ocioso, e o PDF so passa paginando o ClamAV; (b) a previsao
+      do mes e 35,74 USD contra teto de 30, e o t4g.medium dobra o EC2-Compute.
+      SEGURANCA: a chave vazada AKIA3B7BDINPIEP2W4WK nao existe mais na conta e o CloudTrail dela so tem
+      3 GetCallerIdentity do proprio lotus-infra (conferido em 2026-09-17). Continua aberta a access key
+      AKIA3B7BDINPPYESZA6T, a apagar no fechamento do bloco.
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
