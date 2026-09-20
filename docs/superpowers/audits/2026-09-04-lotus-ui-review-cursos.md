@@ -103,4 +103,11 @@ END LOTUS UI REVIEW REPORT
 
 ## 3. Passe de correção
 
-_A preencher na Task 3._
+| Achado | Classe | Destino | Commit |
+|---|---|---|---|
+| UI-01 — cabeçalho "Redactores" trunca para "RED" em 1024x768 | `C` | corrige aqui | `7f3dddf4` |
+
+`redatorCount` trocou de `COL.count` (peso 7) para `COL.short` em `courseColumns.ts`: o cabeçalho é
+uma palavra de uma peça só, não um numeral, e a faixa estreita deixava o texto sumir atrás da coluna
+de ações. RED visto (`width` `13.11%` vs `21.66%` esperado), GREEN depois. Zero `C` aberto ao fim
+desta run.
