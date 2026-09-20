@@ -320,7 +320,8 @@ def familia_docker(args):
     if sub not in DOCKER_COMPOSE_SUB:
         negar("`docker compose %s` nao esta liberado na main." % sub)
     resto = args[2:]
-    if sub == "down" and ("-v" in resto or "--volumes" in resto):
+    if sub == "down" and ("--volumes" in resto
+                          or any(curta_contem(a, "v") for a in resto)):
         negar("`docker compose down -v` apaga o volume do banco de "
               "desenvolvimento.")
     if sub == "exec":
@@ -379,8 +380,9 @@ def familia_gh(args):
         negar("`gh` sem subcomando.")
     if args[0] == "api":
         for a in args[1:]:
-            if a in GH_API_ESCRITA or a.startswith("--method=") \
-                    or a.startswith("--field="):
+            if (a in GH_API_ESCRITA or a.startswith("--method=")
+                    or a.startswith("--field=")
+                    or curta_contem(a, "XfF")):
                 negar("`gh api %s` sai do GET." % a)
         return
     if len(args) < 2 or (args[0], args[1]) not in GH_LEITURA:

@@ -192,3 +192,13 @@ assert_nega   'pdftoppm -png /repo/doc.pdf'
 assert_libera 'pnpm test 2>/dev/null'
 assert_libera 'pnpm test 2>&1'
 assert_libera 'docker compose logs app 2>&1 | tail -20'
+
+# --- endurecimento pos-review: flags curtas agrupadas escaparam da
+# comparacao por igualdade exata, mesmo padrao ja corrigido em familia_git.
+# `docker compose down -vt5` = -v (bool) seguido de -t com valor "5" —
+# confirmado com `docker compose -f /dev/null down -vt5` (chega a "empty
+# compose file", ou seja, passou pelo parse de flags do proprio docker).
+assert_nega   'docker compose down -vt5'
+# `gh api -iX POST ...` = -i (bool) seguido de -X com valor "POST" —
+# confirmado com `gh api -iX GET rate_limit`, que respondeu de verdade.
+assert_nega   'gh api -iX POST repos/x/y/issues'
