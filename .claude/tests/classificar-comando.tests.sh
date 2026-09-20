@@ -142,3 +142,53 @@ assert_nega   'git push --no-verify origin main'
 assert_nega   'git commit --no-verify -m x'
 assert_nega   'git commit -n -m x'
 assert_libera 'git commit -m "docs: nota"'
+
+# --- docker
+assert_libera 'docker compose up -d'
+assert_libera 'docker compose ps'
+assert_libera 'docker compose logs -n 50 app'
+assert_libera 'docker compose exec -T app php artisan test'
+assert_libera 'docker compose exec -T app php artisan test --filter=CotacaoTest'
+assert_nega   'docker compose exec -T app sh -c "rm -rf /"'
+assert_nega   'docker compose exec -T app bash -c "ls"'
+assert_nega   'docker compose exec -T app php artisan migrate'
+assert_nega   'docker compose exec -T app php artisan db:seed'
+assert_nega   'docker compose exec -T app php artisan typescript:transform'
+assert_nega   'docker compose exec -T mysql php artisan test'
+assert_nega   'docker compose exec -T app php artisan test --coverage-html=cov'
+assert_nega   'docker compose down -v'
+assert_nega   'docker run --rm -v /:/host alpine ls'
+
+# --- pnpm
+assert_libera 'pnpm test'
+assert_libera 'pnpm build'
+assert_libera 'pnpm lint'
+assert_libera 'pnpm run test'
+assert_nega   'pnpm lint -- --fix'
+assert_nega   'pnpm dev'
+assert_nega   'pnpm add lodash'
+assert_nega   'pnpm install'
+assert_nega   'pnpm -C ../fix-frontend test'
+assert_nega   'pnpm --filter web build'
+
+# --- gh
+assert_libera 'gh pr list --state open'
+assert_libera 'gh pr view 104'
+assert_libera 'gh pr diff 104'
+assert_libera 'gh api repos/Andred21/lotus/pulls/104'
+assert_nega   'gh api -X POST repos/x/y/issues'
+assert_nega   'gh api repos/x/y/issues -f title=oi'
+assert_nega   'gh pr merge 104'
+assert_nega   'gh pr create --fill'
+
+# --- poppler
+assert_libera 'pdfinfo /repo/backend/storage/doc.pdf'
+assert_libera 'pdftoppm -png -r 144 -f 1 -l 1 /repo/doc.pdf /tmp/pdf-page'
+assert_nega   'pdftoppm -png /repo/doc.pdf /repo/pagina'
+assert_nega   'pdftoppm -png /repo/doc.pdf'
+
+# --- reinstatadas da Task 2: provam a varredura de redirecionamento fim a fim
+# agora que docker/pnpm reais existem (os stubs provisorios negariam sempre)
+assert_libera 'pnpm test 2>/dev/null'
+assert_libera 'pnpm test 2>&1'
+assert_libera 'docker compose logs app 2>&1 | tail -20'

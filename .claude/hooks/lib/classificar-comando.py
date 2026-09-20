@@ -299,16 +299,93 @@ def familia_git(args):
                       "configurada." % sub)
 
 
+DOCKER_COMPOSE_SUB = {"up", "down", "ps", "logs", "config", "version", "exec"}
+EXEC_FLAGS_OK = {"-T", "--no-TTY", "-i", "--interactive"}
+ARTISAN_FLAGS_ESCRITA = ("--coverage-html", "--log-junit", "--coverage-clover",
+                         "--coverage-xml")
+PNPM_SCRIPTS = {"test", "build", "lint"}
+PNPM_FLAGS_PROIBIDAS = {"-C", "--dir", "--filter", "-w", "--workspace-root"}
+GH_LEITURA = {("pr", "view"), ("pr", "list"), ("pr", "diff"), ("pr", "checks"),
+              ("run", "view"), ("run", "list"), ("repo", "view")}
+GH_API_ESCRITA = {"-X", "--method", "-f", "--field", "-F", "--raw-field"}
+
+
 def familia_docker(args):
-    negar("a familia `docker` ainda nao foi implementada neste guarda.")
+    if not args:
+        negar("`docker` sem subcomando.")
+    if args[0] != "compose":
+        negar("`docker %s` nao esta liberado; so `docker compose`, porque "
+              "`docker run` monta volume arbitrario." % args[0])
+    sub = args[1] if len(args) > 1 else ""
+    if sub not in DOCKER_COMPOSE_SUB:
+        negar("`docker compose %s` nao esta liberado na main." % sub)
+    resto = args[2:]
+    if sub == "down" and ("-v" in resto or "--volumes" in resto):
+        negar("`docker compose down -v` apaga o volume do banco de "
+              "desenvolvimento.")
+    if sub == "exec":
+        familia_docker_exec(resto)
+
+
+def familia_docker_exec(resto):
+    i = 0
+    while i < len(resto) and resto[i].startswith("-"):
+        if resto[i] not in EXEC_FLAGS_OK:
+            negar("`docker compose exec %s` nao esta liberado." % resto[i])
+        i += 1
+    corpo = resto[i + 1:]
+    if i >= len(resto) or not corpo:
+        negar("`docker compose exec` sem servico ou sem comando.")
+    if resto[i] != "app":
+        negar("`docker compose exec` so no servico `app`, nao em "
+              "`%s`." % resto[i])
+    if corpo[0] in ("sh", "bash", "ash", "zsh") or "-c" in corpo:
+        negar("`docker compose exec ... sh -c` e execucao arbitraria com "
+              "outro nome.")
+    if corpo[:2] != ["php", "artisan"]:
+        negar("dentro do container, so `php artisan test`.")
+    if len(corpo) < 3:
+        negar("`php artisan` sem subcomando.")
+    if corpo[2] != "test":
+        negar("`php artisan %s` escreve; so `test` esta liberado na "
+              "main." % corpo[2])
+    for a in corpo[3:]:
+        if a.startswith(ARTISAN_FLAGS_ESCRITA):
+            negar("`%s` escreve arquivo de relatorio." % a)
 
 
 def familia_pnpm(args):
-    negar("a familia `pnpm` ainda nao foi implementada neste guarda.")
+    if not args:
+        negar("`pnpm` sem script.")
+    for a in args:
+        if a in PNPM_FLAGS_PROIBIDAS or a.startswith("--dir=") \
+                or a.startswith("--filter="):
+            negar("`pnpm %s` troca qual package.json e lido." % a)
+    if "--" in args:
+        negar("a cauda depois de `--` e repassada ao script, e "
+              "`pnpm lint -- --fix` reescreve frontend/src/.")
+    alvo = args[0]
+    if alvo == "run":
+        if len(args) < 2:
+            negar("`pnpm run` sem script.")
+        alvo = args[1]
+    if alvo not in PNPM_SCRIPTS:
+        negar("`pnpm %s` nao esta liberado na main; so test, build e "
+              "lint." % alvo)
 
 
 def familia_gh(args):
-    negar("a familia `gh` ainda nao foi implementada neste guarda.")
+    if not args:
+        negar("`gh` sem subcomando.")
+    if args[0] == "api":
+        for a in args[1:]:
+            if a in GH_API_ESCRITA or a.startswith("--method=") \
+                    or a.startswith("--field="):
+                negar("`gh api %s` sai do GET." % a)
+        return
+    if len(args) < 2 or (args[0], args[1]) not in GH_LEITURA:
+        negar("`gh %s` nao esta liberado na main; so leitura." %
+              " ".join(args[:2]))
 
 
 def classificar_simples(tokens):
