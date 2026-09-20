@@ -738,8 +738,10 @@ atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 ## P-77 — o registro A de `app.lotusotec.cl` ainda aponta para a hospedagem antiga, e sem ele não há TLS
 
 **Bloco:** — · **Gatilho:** fecha quando `app.lotusotec.cl` resolver **exatamente** o EIP
-`18.230.53.197`; a ação é o §11 do `deploy/aws/README.md` (certbot standalone + redeploy, que o
-`deploy.sh` já sabe fazer sozinho quando o certificado existe). Revisar em **2026-10-31**.
+`18.230.53.197`; a ação é o §11 do `deploy/aws/README.md`, que desde 2026-09-20 tem **quatro**
+passos e não um — emitir o certificado, virar os cinco campos do `.env` para o domínio e para
+HTTPS, redeployar (o `deploy.sh` já sobe o overlay sozinho quando o certificado existe) e passar a
+renovação para webroot, com `certbot renew --dry-run` como gate. Revisar em **2026-10-31**.
 
 Medido em 2026-09-04 e remedido em 2026-09-17, na Task 19 do item 10 v2:
 

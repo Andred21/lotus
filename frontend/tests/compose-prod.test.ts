@@ -307,7 +307,19 @@ describe('docker-compose.prod-tls.yml', () => {
     const [volumes] = regioesDaChave(blocoDoServico('nginx', TLS), 'volumes')
     expect(volumes ?? '').toMatch(/\/etc\/letsencrypt:\/etc\/letsencrypt:ro/)
     expect(volumes ?? '').toMatch(/tls\.conf:\/etc\/nginx\/conf\.d\/default\.conf:ro/)
-    expect(volumes ?? '').toMatch(/certbot-webroot/)
+  })
+
+  it('o webroot do challenge é caminho do HOST, não volume nomeado — senão o certbot não escreve nele', () => {
+    // Q-6 do review de 2026-09-20: a renovação estava documentada como "o
+    // webroot do challenge é servido pelo tls.conf", e o webroot citado era o
+    // volume nomeado `certbot-webroot`, montado `:ro` e sem caminho no host.
+    // Quem PRODUZ o challenge é o certbot do host, que não alcança volume do
+    // Docker; quem SERVE é o nginx, e para esse `:ro` é o certo. Volume
+    // nomeado aqui é a renovação falhando calada, com o certificado expirando
+    // em 90 dias.
+    const [volumes] = regioesDaChave(blocoDoServico('nginx', TLS), 'volumes')
+    expect(volumes ?? '').toMatch(/^\s*-\s*\/[^\s:]*certbot[^\s:]*:\/var\/www\/certbot:ro\s*$/m)
+    expect(TLS).not.toMatch(/certbot-webroot/)
   })
 
   it('só toca o serviço nginx — app, mysql e o resto não mudam sob TLS', () => {

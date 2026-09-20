@@ -159,6 +159,7 @@ No host:
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
 sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
+sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
 
 `.env`: copie `deploy/aws/env.prod.example` para `/opt/lotus/.env`, preencha os `<...>` e
@@ -361,8 +362,33 @@ propósito, porque o healthcheck do nginx e o gate pós-deploy do `deploy.sh` fa
 127.0.0.1 (Q-1 do review de 2026-09-20). Se ele voltar a redirecionar, o deploy morre logo após o
 `up -d` — e a catraca `frontend/tests/nginx-conf.test.ts` existe para que isso não chegue ao host.
 
-Renovação: o timer systemd do certbot renova; o hook
-`/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh` recarrega o nginx:
+**Passo 4 — passar a renovação para webroot.** Este passo não é burocracia: sem ele o certificado
+expira em 90 dias, calado.
+
+O certbot grava em `/etc/letsencrypt/renewal/<dominio>.conf` o **authenticator da emissão**, e o
+`renew` repete o que está lá. Emitido em `--standalone`, o `renew` tentaria ligar na porta 80 — que
+agora é do nginx, de pé — e falharia. A emissão foi `--standalone` porque naquele momento não havia
+nginx servindo challenge nenhum; agora há, e o `tls.conf` serve
+`/.well-known/acme-challenge/` a partir de `/opt/lotus/certbot`, montado no container pelo overlay.
+(Era o Q-6 do review de 2026-09-20, junto com o webroot que antes era um volume nomeado `:ro` — sem
+caminho no host, ninguém escrevia nele.)
+
+```bash
+sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
+sudo certbot certonly --webroot -w /opt/lotus/certbot -d app.lotusotec.cl \
+  --cert-name app.lotusotec.cl --keep-until-expiring
+grep -E '^(authenticator|webroot_path)' /etc/letsencrypt/renewal/app.lotusotec.cl.conf
+```
+
+O `grep` tem de imprimir `authenticator = webroot`. **Se ainda disser `standalone`**, o certbot
+manteve o certificado sem reescrever a configuração; então se edita o arquivo à mão — `authenticator
+= webroot` e, na seção `[[webroot_map]]`, `app.lotusotec.cl = /opt/lotus/certbot`.
+
+O 755 do diretório não é detalhe: quem lê o challenge é o **worker** do nginx (uid 101), não o
+master, e `/opt/lotus` é `750 root:root`. O bind mount não carrega a permissão do pai, mas carrega a
+do próprio diretório.
+
+O hook de recarga vive em `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -370,7 +396,17 @@ docker compose -p lotus --project-directory /opt/lotus \
   -f /opt/lotus/docker-compose.prod.yml -f /opt/lotus/docker-compose.prod-tls.yml restart nginx
 ```
 
-Validar com `sudo certbot renew --dry-run` (o webroot do challenge é servido pelo `tls.conf`).
+**O gate, e ele é gate e não formalidade:**
+
+```bash
+sudo certbot renew --dry-run
+```
+
+Isto tem de passar **com o nginx de pé** — é o ensaio da renovação real, e é a única prova de que a
+cadeia toda funciona: authenticator certo, diretório com a permissão certa, e o `tls.conf` servindo
+o challenge sem redirecionar. Reprovando aqui, o certificado morre em 90 dias sem uma linha de
+aviso. Backup que nunca restaurou não é backup; renovação que nunca ensaiou não é renovação
+(lição 1).
 
 ## 12. Critério de resize
 
