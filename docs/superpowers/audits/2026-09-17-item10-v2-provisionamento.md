@@ -310,9 +310,41 @@ pnpm test  → 785/785 em 130 arquivos
 git diff main...HEAD -- backend/ frontend/src/shared/api/generated.ts → vazio
 ```
 
-### 11.2 Dado sintético da prova
+### 11.2 Dado sintético da prova — removido e conferido
 
-A cadeia `PRUEBA DOD` e o curso de teste `ss` foram criados só para esta prova e **devem sair da base
-de produção**; a decisão do João em 2026-09-20 foi apagar tudo, preservando o usuário `admin@lotus.cl`
-com a foto de perfil dele e a tabela `audits` (trilha de auditoria não se apaga — lei 2). O objeto
-`user-photos/4/…png` é a foto do admin e fica.
+A cadeia `PRUEBA DOD` e o curso de teste `ss` existiam só para esta prova. Decisão do João em
+2026-09-20: apagar tudo, preservando `admin@lotus.cl` com a foto de perfil e a tabela `audits`
+(trilha de auditoria não se apaga — lei 2).
+
+A primeira passada parou numa FK legítima:
+
+```
+SQLSTATE[23000]: ... `lotus`.`student_client_logs`,
+CONSTRAINT `student_client_logs_client_id_foreign` ... ON DELETE RESTRICT
+```
+
+`student_client_logs` referencia `students` **e** `clients` com `RESTRICT`: o vínculo aluno-cliente é
+registro histórico que se encerra por `ended_on` e não se apaga. A segunda passada removeu o vínculo
+sintético antes das pontas.
+
+Estado final da base, conferido por esta sessão depois da limpeza:
+
+```json
+{"certificates":0,"turmas":0,"enrollments":0,"redatores":0,"student_client_logs":0,
+ "students":0,"clients":0,"quotes":0,"budgets":0,"courses":0,"files":0,
+ "users":1,"audits":49}
+user id=4 type=admin active=sim foto=sim
+```
+
+Bucket, no mesmo momento — só os backups e a foto do admin:
+
+```
+backups/lotus-2026-09-18T00-49.sql.gz
+backups/lotus-2026-09-18T06-10.sql.gz
+backups/lotus-2026-09-20T06-10.sql.gz
+user-photos/4/H8owXWk5tBTzhiuZvOFv85fueUygzmjnx2WCRWD3.png
+```
+
+`GET http://18.230.53.197/up` → **200** depois da limpeza. Os 49 `audits` guardam a trilha do que a
+prova escreveu e apagou — inclusive a emissão do `LOT-2026-1000`, cujo certificado em si não existe
+mais.

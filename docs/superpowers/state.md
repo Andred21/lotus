@@ -4,29 +4,27 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: infra-producao-provisionamento-aws
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: |
-  DoD 3 e 4 FECHADOS EM 2026-09-20, pelo caminho do produto. O Joao subiu pela UI os tres documentos
-  obrigatorios da RN-16 (tres objetos em `turma/1/` as 20:49:47-20:49:55) e emitiu pela UI o
-  certificado LOT-2026-1000 (uuid 542d9254-…, valido_ate 2028-09-20; QR publico validado DE FORA com
-  200 e display_status=vigente; PDF do Gotenberg de producao com 213.425 bytes, A4; `dmesg` sem OOM).
-  O ClamAV foi provado ATIVO E DISCRIMINANTE contra o daemon real (EICAR=FOUND, limpo=OK) e o
-  `ClamAvScanner` falha FECHADO — upload que conclui e upload varrido.
-  METODO: nao existe seeder de nuvem. O `OperationDemoSeeder` tem guarda de ambiente e nao roda em
-  producao; os pre-requisitos da turma foram semeados por `artisan tinker` no host, pelas MESMAS
-  Actions do dominio, e so o que o DoD exige pela UI foi feito pela UI.
-  Task 20 Steps 1 e 2 refeitos: audit atualizado (§5.1, §6.1, §11) e gate verde — lint 0, build 0,
-  test 785/785 em 130 arquivos, diff de backend/generated.ts vazio contra a main.
-  FALTA, e so isso: APAGAR da base de producao a cadeia sintetica `PRUEBA DOD` e o curso de teste
-  `ss`, preservando `admin@lotus.cl` com a foto de perfil e a tabela `audits` (lei 2). O script
-  `limpeza-dod.php` esta escrito e conferido contra os models reais, mas a execucao remota de ESCRITA
-  foi RECUSADA pelo classificador do auto mode — precisa de permissao explicita do Joao ou de ele
-  rodar. Depois disso: Task 20 Step 3 e ready_for_review.
-  ACHADO COLATERAL, fora do escopo: ficha P-78 — a assinatura do relator e o aviso legal caem para
-  uma pagina propria (PDF com 3 paginas, ~25% do rodape da pagina 1 vazio). Nao e regressao da nuvem:
-  e o trade-off que o template documenta (`min-height` para nao sobrepor conteudo de peso legal).
+  BLOCO PROVADO E LIMPO EM 2026-09-20. Os sete DoD fecharam. Os dois que faltavam sairam pelo
+  caminho do produto: o Joao subiu pela UI os tres documentos da RN-16 (tres objetos em `turma/1/`)
+  e emitiu pela UI o certificado LOT-2026-1000 (QR publico 200 DE FORA, display_status=vigente; PDF
+  do Gotenberg com 213.425 bytes; `dmesg` sem OOM). O ClamAV foi provado DISCRIMINANTE contra o
+  daemon real (EICAR=FOUND, limpo=OK) e falha FECHADO — upload que conclui e upload varrido.
+  METODO: nao existe seeder de nuvem (`OperationDemoSeeder` tem guarda de ambiente). Os
+  pre-requisitos foram semeados por tinker pelas MESMAS Actions do dominio; so o que o DoD exige
+  pela UI foi feito pela UI.
+  LIMPEZA CONFERIDA: a cadeia sintetica e o curso `ss` sairam da base e do bucket. Sobrou 1 user
+  (id=4, admin, ativo, com foto), 49 `audits` e, no S3, so backups + a foto do admin. `/up` 200
+  depois da limpeza. A primeira passada parou na FK RESTRICT de `student_client_logs`; a segunda
+  removeu o vinculo antes das pontas.
+  Task 20 completa: audit em `audits/2026-09-17-item10-v2-provisionamento.md` (§5.1, §6.1, §11),
+  gate verde (lint 0, build 0, test 785/785 em 130 arquivos, diff de backend/generated.ts vazio).
+  PROXIMA ACAO: code review do bloco. NAO foi iniciado por esta sessao.
+  ACHADO COLATERAL, fora do escopo: ficha P-78 — a assinatura do relator cai para uma pagina propria
+  quando a folha 1 cresce. Nao e regressao da nuvem: e o trade-off que o template documenta.
   DECISOES ABERTAS PARA O JOAO, medidas no audit: (a) o criterio de resize do runbook §12 esta
   satisfeito — swap em 694 MiB com o host ocioso, e o PDF so passa paginando o ClamAV; (b) a previsao
   do mes e 35,74 USD contra teto de 30, e o t4g.medium dobra o EC2-Compute.
@@ -55,9 +53,9 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
-    workflow_state: executing   # retomado em 2026-09-17; ponto de retomada no resume_state do cabecalho
+    workflow_state: ready_for_review   # DoD 1-7 provados e base limpa em 2026-09-20
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review
     tree: ../lotus-infra
     branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
     active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md   # spec v2, do brainstorming de 2026-09-02
@@ -65,25 +63,23 @@ lanes:
     context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
     blocker: null
     resume_state: |
-      DoD 3 e 4 FECHADOS EM 2026-09-20, pelo caminho do produto. O Joao subiu pela UI os tres documentos
-      obrigatorios da RN-16 (tres objetos em `turma/1/` as 20:49:47-20:49:55) e emitiu pela UI o
-      certificado LOT-2026-1000 (uuid 542d9254-…, valido_ate 2028-09-20; QR publico validado DE FORA com
-      200 e display_status=vigente; PDF do Gotenberg de producao com 213.425 bytes, A4; `dmesg` sem OOM).
-      O ClamAV foi provado ATIVO E DISCRIMINANTE contra o daemon real (EICAR=FOUND, limpo=OK) e o
-      `ClamAvScanner` falha FECHADO — upload que conclui e upload varrido.
-      METODO: nao existe seeder de nuvem. O `OperationDemoSeeder` tem guarda de ambiente e nao roda em
-      producao; os pre-requisitos da turma foram semeados por `artisan tinker` no host, pelas MESMAS
-      Actions do dominio, e so o que o DoD exige pela UI foi feito pela UI.
-      Task 20 Steps 1 e 2 refeitos: audit atualizado (§5.1, §6.1, §11) e gate verde — lint 0, build 0,
-      test 785/785 em 130 arquivos, diff de backend/generated.ts vazio contra a main.
-      FALTA, e so isso: APAGAR da base de producao a cadeia sintetica `PRUEBA DOD` e o curso de teste
-      `ss`, preservando `admin@lotus.cl` com a foto de perfil e a tabela `audits` (lei 2). O script
-      `limpeza-dod.php` esta escrito e conferido contra os models reais, mas a execucao remota de ESCRITA
-      foi RECUSADA pelo classificador do auto mode — precisa de permissao explicita do Joao ou de ele
-      rodar. Depois disso: Task 20 Step 3 e ready_for_review.
-      ACHADO COLATERAL, fora do escopo: ficha P-78 — a assinatura do relator e o aviso legal caem para
-      uma pagina propria (PDF com 3 paginas, ~25% do rodape da pagina 1 vazio). Nao e regressao da nuvem:
-      e o trade-off que o template documenta (`min-height` para nao sobrepor conteudo de peso legal).
+      BLOCO PROVADO E LIMPO EM 2026-09-20. Os sete DoD fecharam. Os dois que faltavam sairam pelo
+      caminho do produto: o Joao subiu pela UI os tres documentos da RN-16 (tres objetos em `turma/1/`)
+      e emitiu pela UI o certificado LOT-2026-1000 (QR publico 200 DE FORA, display_status=vigente; PDF
+      do Gotenberg com 213.425 bytes; `dmesg` sem OOM). O ClamAV foi provado DISCRIMINANTE contra o
+      daemon real (EICAR=FOUND, limpo=OK) e falha FECHADO — upload que conclui e upload varrido.
+      METODO: nao existe seeder de nuvem (`OperationDemoSeeder` tem guarda de ambiente). Os
+      pre-requisitos foram semeados por tinker pelas MESMAS Actions do dominio; so o que o DoD exige
+      pela UI foi feito pela UI.
+      LIMPEZA CONFERIDA: a cadeia sintetica e o curso `ss` sairam da base e do bucket. Sobrou 1 user
+      (id=4, admin, ativo, com foto), 49 `audits` e, no S3, so backups + a foto do admin. `/up` 200
+      depois da limpeza. A primeira passada parou na FK RESTRICT de `student_client_logs`; a segunda
+      removeu o vinculo antes das pontas.
+      Task 20 completa: audit em `audits/2026-09-17-item10-v2-provisionamento.md` (§5.1, §6.1, §11),
+      gate verde (lint 0, build 0, test 785/785 em 130 arquivos, diff de backend/generated.ts vazio).
+      PROXIMA ACAO: code review do bloco. NAO foi iniciado por esta sessao.
+      ACHADO COLATERAL, fora do escopo: ficha P-78 — a assinatura do relator cai para uma pagina propria
+      quando a folha 1 cresce. Nao e regressao da nuvem: e o trade-off que o template documenta.
       DECISOES ABERTAS PARA O JOAO, medidas no audit: (a) o criterio de resize do runbook §12 esta
       satisfeito — swap em 694 MiB com o host ocioso, e o PDF so passa paginando o ClamAV; (b) a previsao
       do mes e 35,74 USD contra teto de 30, e o t4g.medium dobra o EC2-Compute.
@@ -112,7 +108,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
 state_basis_commit: 04973a63
-updated_at: 2026-09-17T00:00:00-03:00
+updated_at: 2026-09-20T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -217,7 +213,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 e `origin/main@618f390a` (PR #104) em 2026-09-09 | `executing` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 e `origin/main@618f390a` (PR #104) em 2026-09-09 | `ready_for_review` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
