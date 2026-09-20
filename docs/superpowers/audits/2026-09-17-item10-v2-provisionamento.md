@@ -79,8 +79,36 @@ Do **WSL**, contra o objeto recém-escrito:
 
 O objeto de sonda foi apagado no fim (`apagado=sim`, `restam=0` em `probes/`). Isso prova a cadeia
 inteira — role da instância, hop limit 2, escrita, leitura, assinatura e o bucket fechado ao
-público. **Pendente:** o upload pela UI, que é o que exercita também a varredura do ClamAV no
-caminho do produto (ver §11).
+público.
+
+### 5.1 Upload pela UI e ClamAV no caminho do produto — 2026-09-20 (fecha o DoD 3)
+
+O João subiu, logado na UI em `http://18.230.53.197`, os três documentos obrigatórios da RN-16 da
+turma de prova. Os objetos apareceram no bucket:
+
+```
+2026-09-20 20:49:47      78203 turma/1/RZIEjFf9g8ZG50W0clPK0gh1h6P6e3OG4kqxFjWb.pdf
+2026-09-20 20:49:49     148326 turma/1/KvVIFWRMiD9CVCz3dHvG8pv3VAWHo2dh7U8zf4D3.pdf
+2026-09-20 20:49:55     108526 turma/1/zv8dmMWJYzOtWaPeguY5CZomlni21RDY4GJhxIbL.pdf
+```
+
+O ClamAV de produção foi provado **ativo e discriminante** no mesmo dia, contra o daemon real, pelo
+`MalwareScanner` que a aplicação usa:
+
+| Arquivo | Resposta |
+|---|---|
+| EICAR | **FOUND** |
+| arquivo limpo | **OK** |
+
+Isso importa porque o `ClamAvScanner` **falha fechado** — resposta que não é `OK` nem `FOUND` vira
+`ScannerUnavailableException` e derruba o upload. Logo, upload que conclui é upload varrido; não há
+o modo de falha silencioso em que o antivírus está fora e os arquivos passam assim mesmo.
+
+> **Nota de método:** os pré-requisitos da turma (curso, template, relator com REUF, cliente,
+> orçamento, cotação aprovada, turma, matrícula) foram semeados por `artisan tinker` no host, pelas
+> mesmas Actions do domínio que o `OperationDemoSeeder` usa — ele próprio não roda em produção, por
+> guarda de ambiente (`app()->environment(['local','demo'])`). O que o DoD 3 e o DoD 4 exigem pela
+> UI — o upload e a emissão — foi feito pela UI.
 
 ## 6. PDF e memória sob carga (Task 16 — DoD 4 e Step 4)
 
@@ -122,6 +150,48 @@ minutos depois do boot, e terminou em ~1,08 GiB de 2 GiB. O critério de resize 
 `t4g.small` → `t4g.medium` quando houver *"swap sustentado em uso normal (`free -m`, não pico
 isolado)"*. **Esse critério está satisfeito.** A decisão é do João (custo + reinício da produção),
 não deste bloco; o que este bloco entrega é a medição que a dispara.
+
+### 6.1 Certificado emitido pela UI — 2026-09-20 (fecha o DoD 4)
+
+O João emitiu, pela UI, o certificado do aluno da turma de prova, depois de concluí-la (a RN-16 só
+destrava a conclusão com os três documentos da §5.1 no lugar — por isso o DoD 3 é pré-requisito
+natural do DoD 4):
+
+```
+id=1 codigo=LOT-2026-1000 uuid=542d9254-eb60-40f7-83a1-debd76129ffe
+status=emitido valido_ate=2028-09-20   (24 meses, do `validity_months` do template)
+enrollment=1 course=2 redator=1
+```
+
+As seis portas do `CertificateEligibility` foram exercidas de verdade: turma `Concluida`, matrícula
+`aprobado`, sem certificado vigente, template do curso presente, cidade de emissão (`Santiago`, do
+`local_aplicacao` da turma) e relator designado.
+
+**Validação pública do QR, de fora do host**, na rota anônima:
+
+```
+GET http://18.230.53.197/api/publico/certificados/542d9254-… → 200
+{"codigo":"LOT-2026-1000","status":"emitido","valido_ate":"2028-09-20",
+ "revoked_at":null,…,"display_status":"vigente"}
+```
+
+**PDF renderizado pelo Gotenberg de produção:** 213.425 bytes, A4, 3 páginas. Memória e OOM depois do
+fluxo real completo (3 uploads varridos + emissão + renders):
+
+| Container | Memória |
+|---|---|
+| `gotenberg` | 347 MiB / 768 MiB |
+| `clamav` | 341 MiB / 1,5 GiB |
+| `app` | 62,5 MiB / 768 MiB |
+| `mysql` | 115,2 MiB / 512 MiB |
+
+`free -m`: `used=1127 avail=148 swap=1055`. `dmesg | grep -i oom`: **0 linhas**. O padrão repete o da
+§6 — o host aguenta paginando o ClamAV, e o critério de resize segue satisfeito.
+
+**Achado colateral, fora do escopo deste bloco:** o PDF saiu com 3 páginas, e a página 2 tem só a
+assinatura do relator e o aviso legal, com ~25% do rodapé da página 1 vazio. Não é regressão da
+nuvem — é o trade-off que o template documenta (`min-height`, para não sobrepor conteúdo de peso
+legal). Ficha **P-78**, com a medição que falta indicada.
 
 ## 7. Backup e restore (Task 17 — DoD 5)
 
@@ -214,19 +284,35 @@ ação e a igualdade com o EIP como gatilho. A produção fica em HTTP no IP; o 
   sessão. **Apagar no fechamento do bloco** — segue aberta.
 - O `.env` de produção não tem access key: a aplicação usa o instance profile (§5).
 
-## 11. O que falta para o DoD fechar
+## 11. Estado do DoD — fechado em 2026-09-20
 
 | DoD | Estado |
 |---|---|
 | 1 — deploy por SHA | ✅ §4 |
 | 2 — `/up` 200 de fora | ✅ §4 |
-| 3 — S3 real | ⚠️ cadeia provada em §5; **falta o upload pela UI** (exercita o ClamAV no caminho do produto) |
-| 4 — PDF | ⚠️ Chromium provado sob carga em §6; **falta emitir um certificado de teste pela UI** |
+| 3 — S3 real | ✅ cadeia em §5, upload pela UI e ClamAV discriminante em §5.1 |
+| 4 — PDF | ✅ Chromium sob carga em §6, certificado `LOT-2026-1000` emitido pela UI em §6.1 |
 | 5 — restore | ✅ §7 |
 | 6 — teto de custo | ✅ §8 (por Budgets, desvio declarado) |
 | 7 — TLS | ✅ §9, ramo ficha (P-77) |
 
-Os dois ⚠️ dependem da senha do primeiro admin, gerada **no host** com `Str::password(20)` e que
-nunca passou por esta sessão nem por arquivo (Task 16 Step 1, 2026-09-04). São ações do João na UI
-em `http://18.230.53.197`; a verificação do outro lado (objeto no bucket, PDF, `dmesg`) é desta
-sessão.
+Os dois ⚠️ que restavam em 2026-09-17 dependiam da senha do primeiro admin, gerada **no host** com
+`Str::password(20)`, que nunca passou por sessão nem por arquivo (Task 16 Step 1, 2026-09-04). O João
+executou as duas ações na UI em **2026-09-20** e esta sessão verificou o outro lado: objetos no
+bucket, linha em `certificates`, QR público, PDF, `dmesg` e `docker stats`.
+
+### 11.1 Gate de fechamento (Task 20 Step 2)
+
+```
+pnpm lint  → 0
+pnpm build → 0
+pnpm test  → 785/785 em 130 arquivos
+git diff main...HEAD -- backend/ frontend/src/shared/api/generated.ts → vazio
+```
+
+### 11.2 Dado sintético da prova
+
+A cadeia `PRUEBA DOD` e o curso de teste `ss` foram criados só para esta prova e **devem sair da base
+de produção**; a decisão do João em 2026-09-20 foi apagar tudo, preservando o usuário `admin@lotus.cl`
+com a foto de perfil dele e a tabela `audits` (trilha de auditoria não se apaga — lei 2). O objeto
+`user-photos/4/…png` é a foto do admin e fica.

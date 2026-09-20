@@ -618,6 +618,36 @@ correto e com o conteúdo de peso legal íntegro; o que falta é ornamento. Corr
 3 (recompor o fundo, ou reproduzir as cunhas em CSS, e separar o fundo da primeira página do das
 seguintes).
 
+## P-78 — a assinatura do relator cai para uma página própria quando a folha 1 cresce
+
+**Bloco:** infra-producao-provisionamento-aws (achado da Task 16, não do escopo) · **Gatilho:** fecha
+quando um certificado com dado real da Lotus fechar o rodapé na página 1 **e** isso for remedido, ou
+quando o João decidir o corte (clamp por comprimento de nome/descrição) e ele for implementado.
+Revisar em **2026-10-31**.
+
+Medido em produção em **2026-09-20**, no certificado `LOT-2026-1000` emitido pela UI para provar o
+DoD 4: o PDF saiu com **3 páginas** — (1) o certificado, com ~25% do rodapé vazio, (2) só a
+assinatura do relator e o aviso legal, (3) o temário do curso. A assinatura é o que se espera ver ao
+pé do documento assinado, e ela apareceu sozinha numa folha.
+
+**Não é regressão da nuvem nem defeito novo.** É o trade-off que o próprio template documenta em
+[`backend/resources/views/certification/certificate.blade.php`](../../../backend/resources/views/certification/certificate.blade.php),
+no comentário do `min-height` da `.page`: com `height` fixo o Chromium pinta o excedente **por cima**
+da página seguinte (medido em 2026-08-08 — QR sobre o logo, assinatura sobre o cabeçalho, disclaimer
+atravessando a tabela: documento corrompido e sem aviso). Com `min-height` a folha cresce e a
+paginação leva o excedente para uma página limpa — "feio, porém íntegro". O mesmo comentário diz que
+**o que cortar é decisão de negócio, e está com o João.**
+
+O penhasco que o comentário mede é o `courses.name` passar de ~67 caracteres. **Não foi esse o caso
+aqui:** o nome do curso sintético tinha 38. O suspeito é a `description` de 137 caracteres que a
+sessão escreveu no curso de prova, que vira a narrativa da folha. **Isso não chegou a ser medido** —
+a re-renderização com descrição curta exigia escrita no banco de produção, e a sessão parou antes.
+Quem pegar esta ficha começa por aí: encurtar a descrição, re-renderizar e contar as páginas diz se o
+gatilho real é o nome, a descrição ou a soma dos dois.
+
+Ligada à [P-28](#p-28--o-fundo-do-certificado-não-reproduz-as-cunhas-nem-separa-a-página-2), que trata
+do **fundo** dessa página 2, não da quebra que a cria.
+
 ---
 
 # Travadas em decisão da Lotus
