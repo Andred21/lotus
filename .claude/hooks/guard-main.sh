@@ -36,6 +36,8 @@ corpo() {
   ler_payload
   local alvo cwd raiz_sessao dir_alvo raiz_alvo branch rel
   alvo=$(campo '.tool_input.file_path')
+  # NotebookEdit grava em notebook_path, nao em file_path.
+  [[ -z $alvo ]] && alvo=$(campo '.tool_input.notebook_path')
   cwd=$(campo '.cwd')
   [[ -z $alvo ]] && return 0
 

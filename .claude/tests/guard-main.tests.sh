@@ -76,3 +76,16 @@ git -C "$_c" commit -q --allow-empty -m segundo
 git -C "$_c" checkout -q --detach "$_c_commit1"
 acionar_hook "$GUARD" "$(payload_escrita "$_c" "$_c/backend/app/Models/X.php" '')"
 assert_igual '' "$SAIDA_HOOK" 'HEAD destacado num commit que main nao aponta mais libera backend/'
+
+# --- Item 4: alvo tambem vem de notebook_path (NotebookEdit)
+payload_notebook_edit() {
+  # $1 = cwd, $2 = notebook_path
+  jq -nc --arg cwd "$1" --arg np "$2" \
+    '{session_id:"teste", cwd:$cwd, tool_name:"NotebookEdit", tool_input:{notebook_path:$np}}'
+}
+
+acionar_hook "$GUARD" "$(payload_notebook_edit "$_a" "$_a/backend/notebook.ipynb")"
+assert_igual 'deny' "$(decisao "$SAIDA_HOOK")" 'NotebookEdit: nega backend/ na main via notebook_path'
+
+acionar_hook "$GUARD" "$(payload_notebook_edit "$_a" "$_a/docs/notebook.ipynb")"
+assert_igual '' "$SAIDA_HOOK" 'NotebookEdit: libera docs/ na main via notebook_path'
