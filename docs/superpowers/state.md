@@ -4,37 +4,35 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: infra-producao-provisionamento-aws
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: |
-  BLOCO PROVADO E LIMPO EM 2026-09-20. Os sete DoD fecharam. Os dois que faltavam sairam pelo
-  caminho do produto: o Joao subiu pela UI os tres documentos da RN-16 (tres objetos em `turma/1/`)
-  e emitiu pela UI o certificado LOT-2026-1000 (QR publico 200 DE FORA, display_status=vigente; PDF
-  do Gotenberg com 213.425 bytes; `dmesg` sem OOM). O ClamAV foi provado DISCRIMINANTE contra o
-  daemon real (EICAR=FOUND, limpo=OK) e falha FECHADO — upload que conclui e upload varrido.
-  METODO: nao existe seeder de nuvem (`OperationDemoSeeder` tem guarda de ambiente). Os
-  pre-requisitos foram semeados por tinker pelas MESMAS Actions do dominio; so o que o DoD exige
-  pela UI foi feito pela UI.
-  LIMPEZA CONFERIDA: a cadeia sintetica e o curso `ss` sairam da base e do bucket. Sobrou 1 user
-  (id=4, admin, ativo, com foto), 49 `audits` e, no S3, so backups + a foto do admin. `/up` 200
-  depois da limpeza. A primeira passada parou na FK RESTRICT de `student_client_logs`; a segunda
-  removeu o vinculo antes das pontas.
-  Task 20 completa: audit em `audits/2026-09-17-item10-v2-provisionamento.md` (§5.1, §6.1, §11),
-  gate verde (lint 0, build 0, test 785/785 em 130 arquivos, diff de backend/generated.ts vazio).
-  PROXIMA ACAO: code review do bloco. NAO foi iniciado por esta sessao.
-  ACHADO COLATERAL, fora do escopo: ficha P-78 — a assinatura do relator cai para uma pagina propria
-  quando a folha 1 cresce. Nao e regressao da nuvem: e o trade-off que o template documenta.
-  DECISOES ABERTAS PARA O JOAO, medidas no audit: (a) o criterio de resize do runbook §12 esta
-  satisfeito — swap em 694 MiB com o host ocioso, e o PDF so passa paginando o ClamAV; (b) a previsao
-  do mes e 35,74 USD contra teto de 30, e o t4g.medium dobra o EC2-Compute.
-  SEGURANCA: a chave vazada AKIA3B7BDINPIEP2W4WK nao existe mais na conta e o CloudTrail dela so tem
-  3 GetCallerIdentity do proprio lotus-infra (conferido em 2026-09-17). Continua aberta a access key
-  AKIA3B7BDINPPYESZA6T, a apagar no fechamento do bloco.
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
 active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
 context_packet: null
-blocker: null
+blocker: |
+  Review do item 10 v2 (2026-09-20) devolveu 9 achados e espera a decisao do Joao sobre o que
+  entra. Relatorio integral em `docs/superpowers/audits/2026-09-20-item10-v2-review.md`.
+  TEMA UNICO dos tres 🔴: o caminho do TLS foi escrito e nunca exercido de ponta a ponta, porque o
+  registro A nao chegou (P-77). Nao esta quebrado hoje; detona no dia em que o registro chegar.
+  Q-1 🔴 deploy.sh:66 pede 200 em http://127.0.0.1/up e o tls.conf:14-15 responde 301 — MEDIDO nesta
+  revisao com nginx:alpine. O runbook §11 manda rodar exatamente esse comando apos emitir o cert, e
+  ele aborta DEPOIS do `up -d`. Antes disso o healthcheck do nginx segue o 301 para
+  https://127.0.0.1 (cert de app.lotusotec.cl) e fica unhealthy.
+  Q-2 🔴 deploy/aws/env.prod.example omite SESSION_SECURE_COOKIE, que backend/.env.production.example
+  :68-75 documenta com o motivo exato — cookie de sessao Sanctum sem flag Secure sob TLS (lei §5.4).
+  Mesmo desvio em APP_LOCALE/APP_FALLBACK_LOCALE: config/app.php:88 cai em 'en' contra o ADR-15.
+  Q-3 🔴 o QR do certificado e FRONTEND_URL + /validar/{uuid} (CertificatePdfService.php:27) e o
+  molde manda por o EIP cru em FRONTEND_URL na fase sem DNS. Certificado e snapshot imutavel.
+  Q-4 a Q-8 🟡: gatilho do ADR-09 sem deteccao; guarda do bucket inalcancavel por set -e; renovacao
+  do certbot impossivel como documentada; tls.conf duplica prod.conf sem catraca; dump em /tmp 0644.
+  Q-9 🟢: freshclam sem supervisao.
+  REVISAO INDEPENDENTE do Codex acionada (risco ALTO) e fundida. Dois achados dele rejeitados com
+  verificacao propria no codigo (ci.yml:389 e clamav service_started) e um nao reportado por ruido.
+  Sem divergencia entre os revisores. Orfaos: nenhum. Catracas do bloco: 44 testes, 3 arquivos, verdes.
+  HERDADO, a preservar ate o fechamento (secao propria do relatorio): as decisoes (a) resize e (b)
+  teto de custo 35,74 USD contra 30; a access key AKIA3B7BDINPPYESZA6T, a apagar no fechamento.
 lanes:
   lane-a:
     active_feature: null
@@ -53,39 +51,37 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
-    workflow_state: ready_for_review   # DoD 1-7 provados e base limpa em 2026-09-20
-    next_owner: claude
-    next_action: request_code_review
+    workflow_state: blocked   # DoD 1-7 provados; o review de 2026-09-20 devolveu 9 achados
+    next_owner: joao
+    next_action: approve_review_findings
     tree: ../lotus-infra
     branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
     active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md   # spec v2, do brainstorming de 2026-09-02
     active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md          # plano v2, 20 tasks (Fase A repo, Fase B AWS)
     context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
-    blocker: null
-    resume_state: |
-      BLOCO PROVADO E LIMPO EM 2026-09-20. Os sete DoD fecharam. Os dois que faltavam sairam pelo
-      caminho do produto: o Joao subiu pela UI os tres documentos da RN-16 (tres objetos em `turma/1/`)
-      e emitiu pela UI o certificado LOT-2026-1000 (QR publico 200 DE FORA, display_status=vigente; PDF
-      do Gotenberg com 213.425 bytes; `dmesg` sem OOM). O ClamAV foi provado DISCRIMINANTE contra o
-      daemon real (EICAR=FOUND, limpo=OK) e falha FECHADO — upload que conclui e upload varrido.
-      METODO: nao existe seeder de nuvem (`OperationDemoSeeder` tem guarda de ambiente). Os
-      pre-requisitos foram semeados por tinker pelas MESMAS Actions do dominio; so o que o DoD exige
-      pela UI foi feito pela UI.
-      LIMPEZA CONFERIDA: a cadeia sintetica e o curso `ss` sairam da base e do bucket. Sobrou 1 user
-      (id=4, admin, ativo, com foto), 49 `audits` e, no S3, so backups + a foto do admin. `/up` 200
-      depois da limpeza. A primeira passada parou na FK RESTRICT de `student_client_logs`; a segunda
-      removeu o vinculo antes das pontas.
-      Task 20 completa: audit em `audits/2026-09-17-item10-v2-provisionamento.md` (§5.1, §6.1, §11),
-      gate verde (lint 0, build 0, test 785/785 em 130 arquivos, diff de backend/generated.ts vazio).
-      PROXIMA ACAO: code review do bloco. NAO foi iniciado por esta sessao.
-      ACHADO COLATERAL, fora do escopo: ficha P-78 — a assinatura do relator cai para uma pagina propria
-      quando a folha 1 cresce. Nao e regressao da nuvem: e o trade-off que o template documenta.
-      DECISOES ABERTAS PARA O JOAO, medidas no audit: (a) o criterio de resize do runbook §12 esta
-      satisfeito — swap em 694 MiB com o host ocioso, e o PDF so passa paginando o ClamAV; (b) a previsao
-      do mes e 35,74 USD contra teto de 30, e o t4g.medium dobra o EC2-Compute.
-      SEGURANCA: a chave vazada AKIA3B7BDINPIEP2W4WK nao existe mais na conta e o CloudTrail dela so tem
-      3 GetCallerIdentity do proprio lotus-infra (conferido em 2026-09-17). Continua aberta a access key
-      AKIA3B7BDINPPYESZA6T, a apagar no fechamento do bloco.
+    blocker: |
+      Review do item 10 v2 (2026-09-20) devolveu 9 achados e espera a decisao do Joao sobre o que
+      entra. Relatorio integral em `docs/superpowers/audits/2026-09-20-item10-v2-review.md`.
+      TEMA UNICO dos tres 🔴: o caminho do TLS foi escrito e nunca exercido de ponta a ponta, porque o
+      registro A nao chegou (P-77). Nao esta quebrado hoje; detona no dia em que o registro chegar.
+      Q-1 🔴 deploy.sh:66 pede 200 em http://127.0.0.1/up e o tls.conf:14-15 responde 301 — MEDIDO nesta
+      revisao com nginx:alpine. O runbook §11 manda rodar exatamente esse comando apos emitir o cert, e
+      ele aborta DEPOIS do `up -d`. Antes disso o healthcheck do nginx segue o 301 para
+      https://127.0.0.1 (cert de app.lotusotec.cl) e fica unhealthy.
+      Q-2 🔴 deploy/aws/env.prod.example omite SESSION_SECURE_COOKIE, que backend/.env.production.example
+      :68-75 documenta com o motivo exato — cookie de sessao Sanctum sem flag Secure sob TLS (lei §5.4).
+      Mesmo desvio em APP_LOCALE/APP_FALLBACK_LOCALE: config/app.php:88 cai em 'en' contra o ADR-15.
+      Q-3 🔴 o QR do certificado e FRONTEND_URL + /validar/{uuid} (CertificatePdfService.php:27) e o
+      molde manda por o EIP cru em FRONTEND_URL na fase sem DNS. Certificado e snapshot imutavel.
+      Q-4 a Q-8 🟡: gatilho do ADR-09 sem deteccao; guarda do bucket inalcancavel por set -e; renovacao
+      do certbot impossivel como documentada; tls.conf duplica prod.conf sem catraca; dump em /tmp 0644.
+      Q-9 🟢: freshclam sem supervisao.
+      REVISAO INDEPENDENTE do Codex acionada (risco ALTO) e fundida. Dois achados dele rejeitados com
+      verificacao propria no codigo (ci.yml:389 e clamav service_started) e um nao reportado por ruido.
+      Sem divergencia entre os revisores. Orfaos: nenhum. Catracas do bloco: 44 testes, 3 arquivos, verdes.
+      HERDADO, a preservar ate o fechamento (secao propria do relatorio): as decisoes (a) resize e (b)
+      teto de custo 35,74 USD contra 30; a access key AKIA3B7BDINPPYESZA6T, a apagar no fechamento.
+    resume_state: reviewing
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
@@ -107,8 +103,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
-state_basis_commit: 04973a63
-updated_at: 2026-09-20T00:00:00-03:00
+state_basis_commit: f6f73bcf
+updated_at: 2026-09-20T19:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -213,7 +209,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 e `origin/main@618f390a` (PR #104) em 2026-09-09 | `ready_for_review` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 e `origin/main@618f390a` (PR #104) em 2026-09-09 | `blocked` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
