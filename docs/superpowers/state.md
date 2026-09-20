@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: harness-hooks-de-guarda
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-20-harness-hooks-de-guarda-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -16,12 +16,12 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: harness-hooks-de-guarda
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: ../lotus-harness
     branch: chore/harness-hooks-de-guarda   # aberta de origin/main@618f390a em 2026-09-20; worktree novo, e nao o main tree, porque o guard-main que este bloco cria tem a main como SUJEITO
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-09-20-harness-hooks-de-guarda-design.md   # design aprovado em 2026-09-20; falta o plano
     active_plan: null
     context_packet: null   # Contexto: nao na ficha do 28 — as fontes sao o harness lido e o proprio repositorio
     blocker: null
@@ -61,7 +61,7 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
-state_basis_commit: a6051a8d
+state_basis_commit: c8283fec
 updated_at: 2026-09-20T00:00:00-03:00
 ---
 
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `harness-hooks-de-guarda` (item 28) | Harness | `../lotus-harness` | `chore/harness-hooks-de-guarda` | `ready_for_planning` |
+| `lane-a` | `harness-hooks-de-guarda` (item 28) | Harness | `../lotus-harness` | `chore/harness-hooks-de-guarda` | `planning` |
 | `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
