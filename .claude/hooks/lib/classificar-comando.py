@@ -303,11 +303,17 @@ DOCKER_COMPOSE_SUB = {"up", "down", "ps", "logs", "config", "version", "exec"}
 EXEC_FLAGS_OK = {"-T", "--no-TTY", "-i", "--interactive"}
 ARTISAN_FLAGS_ESCRITA = ("--coverage-html", "--log-junit", "--coverage-clover",
                          "--coverage-xml")
+ARTISAN_TEST_FLAGS_VALOR = {"--filter", "--testsuite", "--group",
+                            "--exclude-group"}
+ARTISAN_TEST_FLAGS_OK = {"--stop-on-failure", "--bail", "--parallel", "-p",
+                         "--compact", "--without-tty", "--colors",
+                         "--no-ansi", "--coverage"} | ARTISAN_TEST_FLAGS_VALOR
 PNPM_SCRIPTS = {"test", "build", "lint"}
 PNPM_FLAGS_PROIBIDAS = {"-C", "--dir", "--filter", "-w", "--workspace-root"}
 GH_LEITURA = {("pr", "view"), ("pr", "list"), ("pr", "diff"), ("pr", "checks"),
               ("run", "view"), ("run", "list"), ("repo", "view")}
-GH_API_ESCRITA = {"-X", "--method", "-f", "--field", "-F", "--raw-field"}
+GH_API_ESCRITA = {"-X", "--method", "-f", "--field", "-F", "--raw-field",
+                  "--input"}
 
 
 def familia_docker(args):
@@ -350,9 +356,28 @@ def familia_docker_exec(resto):
     if corpo[2] != "test":
         negar("`php artisan %s` escreve; so `test` esta liberado na "
               "main." % corpo[2])
-    for a in corpo[3:]:
+    # Daqui pra frente e allowlist, nao denylist: `artisan test` repassa
+    # posicional ao phpunit, que executa codigo de topo do arquivo indicado.
+    # Compara por token exato / por split("=")[0], nunca por startswith,
+    # senao `--coverage-html` passaria pelo prefixo de `--coverage`.
+    i = 3
+    while i < len(corpo):
+        a = corpo[i]
+        chave = a.split("=", 1)[0]
         if a.startswith(ARTISAN_FLAGS_ESCRITA):
             negar("`%s` escreve arquivo de relatorio." % a)
+        if not a.startswith("-"):
+            negar("`php artisan test %s` e argumento posicional; o phpunit "
+                  "repassa isso a um caminho de arquivo e executa o codigo "
+                  "de topo dele." % a)
+        if chave not in ARTISAN_TEST_FLAGS_OK:
+            negar("`%s` nao esta na lista de flags liberadas para `php "
+                  "artisan test` na main." % a)
+        if chave in ARTISAN_TEST_FLAGS_VALOR and "=" not in a:
+            i += 1
+            if i >= len(corpo):
+                negar("`%s` sem valor." % a)
+        i += 1
 
 
 def familia_pnpm(args):
@@ -366,13 +391,20 @@ def familia_pnpm(args):
         negar("a cauda depois de `--` e repassada ao script, e "
               "`pnpm lint -- --fix` reescreve frontend/src/.")
     alvo = args[0]
+    resto = args[1:]
     if alvo == "run":
-        if len(args) < 2:
+        if not resto:
             negar("`pnpm run` sem script.")
-        alvo = args[1]
+        alvo = resto[0]
+        resto = resto[1:]
     if alvo not in PNPM_SCRIPTS:
         negar("`pnpm %s` nao esta liberado na main; so test, build e "
               "lint." % alvo)
+    for a in resto:
+        if a.startswith("-"):
+            negar("`pnpm %s %s` e argumento extra repassado ao script, com "
+                  "ou sem `--`, e isso pode reescrever frontend/src/." %
+                  (alvo, a))
 
 
 def familia_gh(args):
@@ -382,6 +414,7 @@ def familia_gh(args):
         for a in args[1:]:
             if (a in GH_API_ESCRITA or a.startswith("--method=")
                     or a.startswith("--field=")
+                    or a.startswith("--input=")
                     or curta_contem(a, "XfF")):
                 negar("`gh api %s` sai do GET." % a)
         return

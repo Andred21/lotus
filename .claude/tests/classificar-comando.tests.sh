@@ -202,3 +202,32 @@ assert_nega   'docker compose down -vt5'
 # `gh api -iX POST ...` = -i (bool) seguido de -X com valor "POST" —
 # confirmado com `gh api -iX GET rate_limit`, que respondeu de verdade.
 assert_nega   'gh api -iX POST repos/x/y/issues'
+
+# --- fix pos-review (item 4): tres escapes reais achados na revisao da task 4
+
+# item 1 — pnpm: pass-through sem `--` reescreve frontend/src/
+assert_nega   'pnpm lint --fix'
+assert_nega   'pnpm test --reporter=junit --outputFile=/repo/x.json'
+assert_nega   'pnpm test -F web'
+assert_libera 'pnpm test'
+assert_libera 'pnpm build'
+assert_libera 'pnpm lint'
+assert_libera 'pnpm test 2>/dev/null'
+assert_libera 'pnpm test 2>&1'
+
+# item 2 — gh api --input carrega corpo de requisicao (inclusive mutation graphql)
+assert_nega   'gh api --input /tmp/body.json repos/x/y/issues'
+assert_nega   'gh api graphql --input /tmp/m.json'
+assert_nega   'gh api graphql --input=/tmp/m.json'
+assert_libera 'gh api repos/Andred21/lotus/pulls/104'
+assert_libera 'gh api -i rate_limit'
+assert_libera 'gh pr view 104'
+
+# item 3 — docker exec php artisan test: allowlist de flags, sem posicional
+assert_nega   'docker compose exec -T app php artisan test /repo/evil.php'
+assert_nega   'docker compose exec -T app php artisan test --env=production'
+assert_nega   'docker compose exec -T app php artisan test --configuration=/tmp/x.xml'
+assert_nega   'docker compose exec -T app php artisan test --coverage-html=cov'
+assert_libera 'docker compose exec -T app php artisan test'
+assert_libera 'docker compose exec -T app php artisan test --filter=CotacaoTest'
+assert_libera 'docker compose exec -T app php artisan test --filter CotacaoTest'
