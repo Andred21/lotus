@@ -72,11 +72,17 @@ Role `lotus-ec2`, trust policy de `ec2.amazonaws.com`, com política inline (sub
 {"Version": "2012-10-17", "Statement": [
   {"Effect": "Allow", "Action": ["s3:ListBucket"], "Resource": "arn:aws:s3:::<BUCKET>"},
   {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-   "Resource": "arn:aws:s3:::<BUCKET>/*"}
+   "Resource": "arn:aws:s3:::<BUCKET>/*"},
+  {"Effect": "Allow", "Action": ["sns:Publish"], "Resource": "<ARN DO TOPICO DA §10>"}
 ]}
 ```
 
 É esta role que dispensa access key de longa duração no `.env` (§7).
+
+O `sns:Publish` é do `verificar-backup.sh` (§9) e **só existe depois da §10**, que é quem cria o
+tópico. Duas ordens possíveis, nenhuma escondida: ou a §10 vem antes desta política, ou esta
+política volta aqui depois — o que não pode é o script existir sem a permissão, porque aí ele
+recusa rodar e o gatilho do ADR-09 continua sem detecção, que era o defeito original.
 
 **Pela CLI, a role não basta.** O console cria o *instance profile* junto, escondido; a CLI trata
 os dois como objetos separados e o launch da §6 não acha o profile se ele não existir:
@@ -143,7 +149,7 @@ Do WSL, com o `.pem` da §6:
 
 ```bash
 scp docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
-scp deploy/bin/deploy.sh deploy/bin/backup-db.sh ubuntu@<EIP>:/tmp/
+scp deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh ubuntu@<EIP>:/tmp/
 scp deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
 ```
 
@@ -151,7 +157,7 @@ No host:
 
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
 ```
 
@@ -233,10 +239,37 @@ sudo crontab -e
 
 ```
 10 6 * * * /opt/lotus/bin/backup-db.sh >> /var/log/lotus-backup.log 2>&1
+40 6 * * * /opt/lotus/bin/verificar-backup.sh >> /var/log/lotus-backup.log 2>&1
 ```
 
 06:10 UTC = 03:10 no Chile. Rodar uma vez à mão para provar: `sudo /opt/lotus/bin/backup-db.sh`
 deve imprimir `backup ok: s3://…`.
+
+**A segunda linha é a DETECÇÃO, e ela não é opcional.** A revisão 2026-09 do ADR-09 pagou o
+descarte do RDS com "backup provado" e escreveu o gatilho de volta — *backup > 7 dias sem sucesso,
+volta-se ao RDS*. Sem esta linha ninguém saberia que passaram 7 dias: a primeira linha manda o
+resultado para um log local que nada lê, e o host não tem MTA (Q-4 do review de 2026-09-20).
+
+O `verificar-backup.sh` olha o **efeito**, não o processo: a idade do objeto mais recente em
+`s3://<BUCKET>/backups/`. Por isso ele avisa mesmo quando o `backup-db.sh` morre antes de imprimir
+qualquer coisa, quando o cron some, ou quando a instância é recriada sem o crontab. Passando de
+**2 dias** ele publica no tópico SNS da §10 e sai 1 — 2 e não 7, para o gatilho do ADR chegar como
+decisão e não como descoberta.
+
+Duas chaves no `.env` o sustentam: `LOTUS_BACKUP_BUCKET` (já existe) e `LOTUS_ALERT_TOPIC_ARN`, o
+ARN do tópico da §10. **Sem o ARN ele recusa rodar** em vez de degradar para o silêncio, que é
+exatamente o que ele veio consertar. A região do publish sai do próprio ARN: o tópico vive em
+`us-east-1` e a EC2 em `sa-east-1`.
+
+Provar as duas pontas à mão, na ordem:
+
+```bash
+sudo /opt/lotus/bin/verificar-backup.sh          # com backup do dia: "backup ok: … 0d"
+sudo LOTUS_BACKUP_MAX_DIAS=-1 /opt/lotus/bin/verificar-backup.sh   # força o alerta
+```
+
+O segundo comando tem de sair 1 **e** chegar um e-mail. Alerta que nunca chegou não é alerta
+(lição 1) — e é a subscription da §10 que entrega, então ela precisa estar confirmada.
 
 **Restore provado** (backup que nunca restaurou não é backup):
 
@@ -261,7 +294,13 @@ Console (us-east-1) → CloudWatch → Alarms → Billing → métrica `Estimate
 condição `> 30` → ação: tópico SNS novo com o e-mail do João → **confirmar a subscription pelo
 e-mail** (sem confirmar, o alarme dispara para ninguém).
 
-Canal definitivo de alerta é decisão do bloco de observabilidade.
+**Guarde o ARN do tópico**: ele vai para `LOTUS_ALERT_TOPIC_ARN` no `/opt/lotus/.env` e para o
+`sns:Publish` da role da §4. O tópico tem dois consumidores, não um — o alarme de custo e o
+`verificar-backup.sh` da §9.
+
+Canal definitivo de alerta é decisão do bloco de observabilidade. Reusar este aqui não antecipa
+essa decisão: é a subscription que já existe e já foi confirmada, e trocar de canal depois é
+trocar um ARN no `.env`.
 
 ## 11. TLS — quando o registro A chegar
 
