@@ -203,8 +203,76 @@ def familia_leitura(nome, args):
                   "CLAUDE.md manda gerar em /tmp.")
 
 
+GIT_SUB = {
+    "status", "log", "diff", "show", "rev-parse", "merge-base", "cat-file",
+    "ls-files", "blame", "shortlog", "describe", "branch", "worktree",
+    "remote", "tag", "add", "commit", "merge", "fetch", "pull", "push",
+}
+GIT_GLOBAIS_COM_VALOR = {"-C", "--git-dir", "--work-tree", "--namespace"}
+GIT_BRANCH_ESCRITA = {"-d", "-D", "-m", "-M", "-c", "-C", "-f",
+                      "--delete", "--move", "--copy", "--force"}
+URL_REMOTA = re.compile(r"^(https?|git|ssh)://|^[^/\s]+@[^/\s]+:")
+
+
 def familia_git(args):
-    negar("a familia `git` ainda nao foi implementada neste guarda.")
+    i = 0
+    while i < len(args) and args[i].startswith("-"):
+        t = args[i]
+        # A comparacao e SENSIVEL A CAIXA de proposito: `-C` troca de
+        # diretorio e passa; `-c` injeta configuracao, e core.pager executa
+        # shell.
+        if t == "-c":
+            negar("`git -c` injeta configuracao, e `core.pager` executa "
+                  "shell. Para trocar de diretorio use `-C` maiusculo.")
+        if t.startswith("--config-env"):
+            negar("`git --config-env` injeta configuracao pelo ambiente.")
+        if t.startswith("--exec-path"):
+            negar("`git --exec-path` troca os binarios que o git executa.")
+        if t in GIT_GLOBAIS_COM_VALOR:
+            i += 2
+            continue
+        i += 1
+    if i >= len(args):
+        negar("`git` sem subcomando.")
+    sub = args[i]
+    resto = args[i + 1:]
+    if sub not in GIT_SUB:
+        negar("`git %s` nao esta na lista de subcomandos liberados na "
+              "main." % sub)
+    for a in resto:
+        if a == "-o" or a == "--output" or a.startswith("--output="):
+            negar("`git %s %s` escreve arquivo." % (sub, a))
+    if sub == "branch":
+        for a in resto:
+            if a in GIT_BRANCH_ESCRITA:
+                negar("`git branch %s` altera branch." % a)
+    elif sub == "tag":
+        for a in resto:
+            if a in ("-d", "--delete", "-f", "--force"):
+                negar("`git tag %s` altera tag." % a)
+    elif sub == "push":
+        for a in resto:
+            if a.startswith("--force") or a in ("-f", "-d", "--delete",
+                                                "--mirror", "--prune"):
+                negar("`git push %s` reescreve o remoto." % a)
+            if not a.startswith("-") and (a.startswith(":") or a.startswith("+")):
+                negar("o refspec `%s` apaga ou forca no remoto." % a)
+    elif sub == "worktree":
+        if not resto:
+            negar("`git worktree` sem subcomando.")
+        if resto[0] in ("remove", "move", "prune", "lock", "unlock", "repair"):
+            negar("`git worktree %s` mexe na arvore de outra lane." % resto[0])
+        if resto[0] == "add" and ("--force" in resto or "-f" in resto):
+            negar("`git worktree add --force` sobrescreve arvore existente.")
+    elif sub == "remote":
+        if resto and resto[0] in ("add", "remove", "rm", "set-url", "rename",
+                                  "set-head", "prune"):
+            negar("`git remote %s` altera o remoto." % resto[0])
+    elif sub in ("pull", "fetch"):
+        for a in resto:
+            if URL_REMOTA.match(a):
+                negar("`git %s` com URL busca de uma origem que nao esta "
+                      "configurada." % sub)
 
 
 def familia_docker(args):

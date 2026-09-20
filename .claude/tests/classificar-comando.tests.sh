@@ -70,3 +70,38 @@ assert_nega   'find . -name a#b -delete' \
               '# no meio da palavra esconde a flag -delete'
 assert_libera 'echo a#b' \
               '# no meio da palavra em comando de leitura legitimo'
+
+# --- familia git: o par que decide e -C contra -c
+assert_libera 'git status --porcelain'
+assert_libera 'git -C ../lotus-infra log --oneline -5'
+assert_nega   'git -c core.pager=sh log'
+assert_nega   'git --config-env=core.pager=X log'
+assert_nega   'git --exec-path=/tmp status'
+
+assert_libera 'git log --oneline -10'
+assert_libera 'git diff --stat'
+assert_libera 'git add docs/superpowers/state.md'
+assert_libera 'git commit -m "docs: nota"'
+assert_libera 'git branch --list'
+assert_libera 'git worktree list --porcelain'
+assert_libera 'git push origin HEAD'
+
+assert_nega   'git rebase -i HEAD~3'
+assert_nega   'git checkout -b nova'
+assert_nega   'git switch outra'
+assert_nega   'git restore .'
+assert_nega   'git stash pop'
+assert_nega   'git log -o saida.txt'
+assert_nega   'git branch -D antiga'
+assert_nega   'git branch -m velho novo'
+assert_nega   'git tag -d v1'
+assert_nega   'git push --force origin main'
+assert_nega   'git push origin :refs/heads/antiga'
+assert_nega   'git push origin +main'
+assert_nega   'git worktree remove ../fix-frontend'
+assert_nega   'git worktree add --force ../x branch'
+assert_nega   'git remote set-url origin https://exemplo.invalido/x.git'
+assert_nega   'git pull https://exemplo.invalido/x.git main'
+
+assert_libera 'git log -1 $(git rev-parse HEAD)'
+assert_nega   'git log -1 $(rm -rf /)'
