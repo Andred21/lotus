@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: infra-producao-provisionamento-aws
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: review_active_work_item
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md
 active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md
@@ -30,9 +30,9 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
-    workflow_state: reviewing   # o Joao aprovou os NOVE achados do review de 2026-09-20; correcoes em curso
+    workflow_state: ready_for_closure   # os NOVE achados do review de 2026-09-20 entraram e a revisao esta limpa
     next_owner: claude
-    next_action: review_active_work_item
+    next_action: close_active_work_item
     tree: ../lotus-infra
     branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
     active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md   # spec v2, do brainstorming de 2026-09-02
@@ -61,8 +61,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
-state_basis_commit: 605fe87a
-updated_at: 2026-09-20T19:20:00-03:00
+state_basis_commit: f9b56707
+updated_at: 2026-09-20T19:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -167,7 +167,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 e `origin/main@618f390a` (PR #104) em 2026-09-09 | `reviewing` |
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 e `origin/main@618f390a` (PR #104) em 2026-09-09 | `ready_for_closure` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 

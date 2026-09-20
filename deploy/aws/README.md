@@ -266,8 +266,11 @@ Provar as duas pontas à mão, na ordem:
 
 ```bash
 sudo /opt/lotus/bin/verificar-backup.sh          # com backup do dia: "backup ok: … 0d"
-sudo LOTUS_BACKUP_MAX_DIAS=-1 /opt/lotus/bin/verificar-backup.sh   # força o alerta
+sudo env LOTUS_BACKUP_MAX_DIAS=-1 /opt/lotus/bin/verificar-backup.sh   # força o alerta
 ```
+
+O `env` não é enfeite: com `env_reset` no sudoers, `sudo VAR=valor comando` pode ser recusado, e
+`sudo env VAR=valor` sempre passa porque quem monta o ambiente já é o root.
 
 O segundo comando tem de sair 1 **e** chegar um e-mail. Alerta que nunca chegou não é alerta
 (lição 1) — e é a subscription da §10 que entrega, então ela precisa estar confirmada.
