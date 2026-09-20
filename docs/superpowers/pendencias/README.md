@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (27)
+## Abertas (29)
 
 ### Agrupadas em bloco de execução
 
@@ -29,7 +29,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-75 | O `.env` declara `localhost:5173` em `SANCTUM_STATEFUL_DOMAINS` mas `config('sanctum.stateful')` não o traz — escrita vinda do Vite dev server cai em 401 (origem não-stateful) em vez do 419 do CSRF | — | bloco que tocar `config/sanctum.php`, o `.env` da árvore ou a proteção CSRF; revisar 2026-10-31 |
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
-| P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
+| P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
@@ -74,6 +74,8 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-77 | O registro A de `app.lotusotec.cl` aponta para a hospedagem antiga (`185.146.167.195`), não para o EIP `18.230.53.197` — sem ele a produção fica em HTTP e o overlay TLS da Task 7 nunca é exercido | Lotus | `app.lotusotec.cl` resolver exatamente o EIP; depois, §11 do `deploy/aws/README.md`; revisar 2026-10-31 |
 | P-78 | A assinatura do relator e o aviso legal caem para uma página própria quando a folha 1 do certificado cresce — medido no `LOT-2026-1000` de produção, PDF com 3 páginas | João | decidir o corte (clamp por comprimento) e implementá-lo, ou um certificado com dado real da Lotus fechar o rodapé na página 1; revisar 2026-10-31 |
 | P-79 | A URL do QR do certificado sai de `FRONTEND_URL` (`CertificatePdfService.php:27`) — chave de infra usada como conteúdo de documento legal imutável; a regra operacional foi escrita no molde e no runbook, o remédio estrutural (chave própria) não | — | bloco de backend que tocar `CertificatePdfService`, `config/app.php` ou a rota de validação; revisar 2026-10-31 |
+| P-80 | A previsão de custo do mês é **35,74 USD** contra o teto de **30** da decisão D8, e o critério de resize da EC2 (`t4g.medium`, +9 USD/mês) está satisfeito — as duas decisões são a mesma conversa | João | decidir teto **e** resize juntos, com a decisão escrita na spec/ADR que a carrega; revisar 2026-10-31 |
+| P-81 | A access key `AKIA3B7BDINPPYESZA6T` do usuário `lotus-infra`, que provisionou toda a Fase B, continua ativa — a produção não a usa (instance profile), mas é credencial de longa duração sem uso corrente | João | `aws iam list-access-keys --user-name lotus-infra` não devolver mais a chave; revisar 2026-10-31 |
 | P-49 | Eixos **redator** e **turma** fechados em 2026-08-23 (`lockForWrite()` nos cinco escritores + catraca); resta a janela **cotação × orçamento** | João | bloco que tocar `RestoreQuoteAction`/`DeleteBudgetAction` e puder travar os dois lados; revisar 2026-10-31 |
 | P-51 | Default literal em DTO de entrada — o campo de **acesso** (`is_active`) fechou em 2026-08-23; restam **cinco** campos sem controle de acesso | João | bloco que tocar `UpdateClientAction`/`UpdateCourseAction`, `BudgetController::update` ou `CourseTemplateController::update`; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
@@ -86,11 +88,20 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (0)
 
-**Em rastro:** a **P-58**, fechada em **2026-09-04** pelo `frontend-arrumacao-de-testes` (item 27),
-por mecanismo. A ficha está em [`encerradas.md`](./encerradas.md) e sai no próximo fechamento
-posterior ao dela.
+**Em rastro: nenhuma.** A **P-58** saiu neste fechamento (`infra-producao-provisionamento-aws`,
+2026-09-20), o primeiro posterior ao do bloco que a encerrou em 2026-09-04 — cumpriu a sprint de
+rastro. O durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
+
+**O item 10 v2 abriu três fichas e disparou uma sem pagar.** Nasceram a **P-77** (registro A, com a
+Lotus), a **P-78** (a assinatura do certificado na página 2, achado colateral da Task 16) e a
+**P-79** (o `FRONTEND_URL` como conteúdo de documento legal, aberta pelas correções do review). A
+**P-80** e a **P-81** nasceram no próprio gate de fechamento, para que o custo estourado e a access
+key não se percam no adiamento. E a **P-05** teve o gatilho *antes de subir para produção*
+**disparado e não pago**, por decisão do João no gate — a ficha registra o disparo e o gatilho não
+se desarma.
 
 **As oito que estavam em rastro saíram nos dois fechamentos de 2026-09-04**: as cinco do
 `frontend-dividas-de-mecanismo` (item 25) — `P-69`, `P-70`, `P-30`, `P-68` e `P-42` — no do item 27,

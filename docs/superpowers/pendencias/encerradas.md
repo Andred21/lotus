@@ -7,12 +7,12 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(uma: a **`P-58`**, fechada em **2026-09-04** pelo `frontend-arrumacao-de-testes` (item 27). As
-cinco do `frontend-dividas-de-mecanismo` (item 25) — `P-69`, `P-68`, `P-70`, `P-30` e `P-42` —
-saíram no fechamento do item 27, e as três do `backend-envelope-de-erro-e-recusa-de-dominio`
-(item 26) — `P-71`, `P-72` e a metade de comportamento da `P-60` — no do
-`dominio-decisoes-de-rbac-e-semantica` (item 22), o primeiro fechamento da `lane-a` desde então. O
-parágrafo do rastro adiante é o delas.)*
+*(nenhuma. A **`P-58`** saiu no fechamento do `infra-producao-provisionamento-aws` (item 10 v2,
+2026-09-20), o primeiro posterior ao do bloco que a encerrou em 2026-09-04 — cumpriu a sprint de
+rastro e o durável dela está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md). O item 10 v2 **não encerrou pendência
+nenhuma**: ele abriu a `P-77`, a `P-78` e a `P-79`, e o gate de fechamento dele abriu a `P-80` e a
+`P-81` para os itens que o João adiou. O parágrafo do rastro adiante é o das anteriores.)*
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -20,22 +20,6 @@ parágrafo do rastro adiante é o delas.)*
 > para **`P-75`** e **`P-76`**, nesta ordem de integração. Número de pendência não se reusa nem se
 > renumera para trás: é a mesma regra que o `state.md` escreveu para o rótulo de bloco na colisão
 > de 2026-09-02.
-
-### P-58 — a catraca do vite isola o `.env` da RAIZ e não o `frontend/.env`
-
-**Fechada em 2026-09-04**, por mecanismo, no item 27 (Task 7). `tests/compose-dev.test.ts` passou a
-afastar os quatro `.env*` das **duas** raízes que o `vite.config.ts` lê — a do repositório
-(`loadEnv(mode, RAIZ, 'LOTUS_')`, o offset de portas) e a de `frontend/`
-(`loadEnv(mode, __dirname, 'VITE_')`, que decide se `VITE_API_URL` já está definido). O `NOMES_ENV`
-antigo virou o produto `DIRETORIOS_ENV × NOMES_ENV`, com a chave do caminho relativa para que
-`.env` da raiz e `frontend/.env` não colidam nos mapas de plantados e backups pendentes.
-
-**Provado com o arquivo posto e retirado**, duas vezes: na execução, a versão pré-Task-7
-(`git show 32b05097:...`) com `frontend/.env` real no disco deu as **3 falhas** que a ficha
-descreve (`expected undefined to be '"http://localhost:8080"'`) e a versão nova, mesmo arquivo no
-disco, deu **12/12**; no fechamento, com `VITE_API_URL=http://localhost:8080` plantado de novo,
-`pnpm test --project=repo tests/compose-dev.test.ts` deu **12/12** e o arquivo saiu, deixando a
-árvore limpa. O gate deixou de depender do disco de quem roda.
 
 ## Rastro anterior, já removido
 

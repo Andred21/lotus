@@ -507,9 +507,23 @@ coluna de certificado.
 
 ## P-05 — migrations "adicionais" não consolidadas
 
-**Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção.
+**Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção —
+**disparado em 2026-09-20 e não pago** (seção abaixo). Revisar em **2026-10-31**.
 
 Decisão do João no Bloco 2 — evitar inchaço do folder.
+
+### Gatilho disparado e não pago — 2026-09-20, `infra-producao-provisionamento-aws` (item 10 v2)
+
+A produção subiu. O `deploy.sh a5fc92bb` rodou as **30 migrations** sobre banco novo na EC2 em
+2026-09-04 e a aplicação atende em `http://18.230.53.197` desde então — o gatilho desta ficha era
+exatamente esse momento, e ele passou sem a consolidação.
+
+Decisão do João no gate de fechamento de 2026-09-20: **disparar sem pagar**, junto com os outros
+três itens herdados do bloco (a [P-80](#p-80--a-previsão-de-custo-estoura-o-teto-de-d8-e-o-resize-da-ec2-piora-a-conta) e a [P-81](#p-81--a-access-key-que-provisionou-a-produção-continua-ativa)). O gatilho **não se desarma** — mas mudou de
+natureza, e quem pegar a ficha precisa saber disso: consolidar agora não é mais só reescrever o
+folder. A produção já tem as 30 linhas na tabela `migrations`, então uma consolidação ou preserva
+esse estado à mão ou só vale para ambiente novo. É a diferença entre o que a ficha custava antes de
+2026-09-04 e o que ela custa hoje.
 
 
 ## P-55 — a invariante do espelho proíbe o que toda lane precisa fazer
@@ -676,6 +690,61 @@ gatilho real é o nome, a descrição ou a soma dos dois.
 
 Ligada à [P-28](#p-28--o-fundo-do-certificado-não-reproduz-as-cunhas-nem-separa-a-página-2), que trata
 do **fundo** dessa página 2, não da quebra que a cria.
+
+## P-80 — a previsão de custo estoura o teto de D8, e o resize da EC2 piora a conta
+
+**Bloco:** infra-producao-provisionamento-aws (item 10 v2 — chega ao fechamento sem decisão) ·
+**Gatilho:** fecha quando o João decidir **as duas coisas na mesma conversa** — o teto (manter 30
+USD e cortar, ou elevá-lo ao número real) e o resize (`t4g.small` fica, ou promove a `t4g.medium`)
+— e a decisão estiver escrita na spec/ADR que a carrega. Revisar em **2026-10-31**.
+
+Medido em 2026-09-17, na Task 18 do item 10 v2 (`ce get-cost-and-usage`, 01–18/09):
+
+| | USD |
+|---|---|
+| Gasto real até 17/09 | 21,02 |
+| **Previsão do mês** | **35,74** |
+| Teto da decisão **D8** | 30,00 |
+
+Quebra: EC2-Compute 9,13 · EC2-Other (EBS) 4,48 · VPC (IPv4 público) 3,55 · Tax 3,36 · Route 53
+0,50 · S3 0,002. Parte do custo de VPC é o **EIP cobrado enquanto a instância ficou parada** —
+IPv4 público ocioso custa mais, não menos.
+
+**As duas decisões são uma só.** O critério de resize do runbook §12 está **satisfeito** (swap em
+694 MiB com o host ocioso; a geração de PDF só passa paginando o ClamAV), mas o `t4g.medium` sobe o
+EC2-Compute de ~9 para ~18 USD/mês. Decidir o resize sem decidir o teto produz um teto que já
+nasce falso; decidir o teto sem o resize decide sobre um custo que pode dobrar na semana seguinte.
+
+O alarme **existe e funciona** — Budget `lotus-prod-teto`, MONTHLY, 30 USD, `ACTUAL > 100%` e
+`FORECASTED > 100%` por e-mail para `jvbatalha32@gmail.com` (o DoD 6 fechou por ele). O que esta
+ficha guarda não é a falta do alarme: é que ele **vai disparar**, porque o número que ele vigia já
+está estourado na previsão.
+
+## P-81 — a access key que provisionou a produção continua ativa
+
+**Bloco:** infra-producao-provisionamento-aws (item 10 v2 — chega ao fechamento sem execução) ·
+**Gatilho:** fecha quando `aws iam list-access-keys --user-name lotus-infra` não devolver mais a
+`AKIA3B7BDINPPYESZA6T`. Ação: apagar a chave no console IAM ou por CLI. Revisar em **2026-10-31**.
+
+A `AKIA3B7BDINPPYESZA6T` (usuário `lotus-infra`, criada em 2026-09-04) é a credencial que executou
+todo o provisionamento da Fase B. O review de 2026-09-20 a marcou como *apagar no fechamento*; o
+João decidiu no gate do mesmo dia **adiar para um bloco futuro**, e a ficha existe para que o
+adiamento não vire esquecimento.
+
+**O que já está resolvido, e não se confunda com esta ficha:** a chave vazada
+`AKIA3B7BDINPIEP2W4WK` **já não existe** na conta, e o CloudTrail dela devolve três eventos, todos
+`GetCallerIdentity` do próprio `lotus-infra` em 2026-09-04 — nenhum uso de terceiro (conferido em
+2026-09-17). Esta ficha é sobre a chave **atual**, que não vazou.
+
+**Por que ela não é urgente como a outra foi:** a aplicação em produção não a usa — o `.env` do
+host não tem access key nenhuma, o acesso ao S3 vai pelo instance profile `lotus-ec2` (provado no
+DoD 3). A chave só serve para operar a conta de fora. Apagá-la não derruba nada; mantê-la é
+credencial de longa duração viva sem uso corrente, que é exatamente o que a política de rotação
+existe para evitar.
+
+**Quando for apagar, confira antes se ela não é a única via de acesso programático à conta** — se o
+MFA do usuário estiver indisponível (o fallback da Task 12), apagar a chave pode deixar a conta
+operável só pelo console.
 
 ---
 

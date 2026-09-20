@@ -1,6 +1,6 @@
 # Evidências — item 10 v2 (`infra-producao-provisionamento-aws`)
 
-> Task 20 do plano [`plans/2026-09-02-infra-producao-provisionamento-aws.md`](../plans/2026-09-02-infra-producao-provisionamento-aws.md).
+> Task 20 do plano [`plans/archive/2026-09-02-infra-producao-provisionamento-aws.md`](../plans/archive/2026-09-02-infra-producao-provisionamento-aws.md).
 > Conta AWS `760144413534`, região `sa-east-1`, instância `i-0789e30d781790dd4` (`t4g.small`),
 > EIP `18.230.53.197`, SHA corporativo implantado `a5fc92bb7728ea0da6dc16a62958e02556df999b`.
 >
