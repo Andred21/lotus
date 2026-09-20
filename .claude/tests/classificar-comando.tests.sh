@@ -105,3 +105,40 @@ assert_nega   'git pull https://exemplo.invalido/x.git main'
 
 assert_libera 'git log -1 $(git rev-parse HEAD)'
 assert_nega   'git log -1 $(rm -rf /)'
+
+# --- familia git: escapes achados no review (flags curtas agrupadas,
+# --upload-pack/--receive-pack/--exec e --no-verify). Cada regra abaixo prova
+# os dois lados: o comando perigoso nega, o comando legitimo vizinho libera —
+# senao a cobertura e fantasma.
+
+# flags curtas agrupadas: -Dq e -qD sao a mesma coisa para o parse-options
+assert_nega   'git branch -Dq b1'
+assert_nega   'git branch -qD b1'
+assert_nega   'git branch -qM b2 b2x'
+assert_nega   'git push -fq origin main'
+assert_nega   'git tag -df v1'
+assert_libera 'git push -n origin main'
+assert_libera 'git push -u origin main'
+assert_libera 'git branch -a'
+assert_libera 'git branch -v'
+assert_libera 'git branch -r'
+assert_libera 'git log -1'
+
+# --upload-pack / --receive-pack / --exec: execucao arbitraria por transporte local
+assert_nega   'git fetch --upload-pack=/tmp/evil /tmp/repo'
+assert_nega   'git push --receive-pack=sh origin main'
+assert_nega   'git push --exec=sh origin main'
+
+# URL_REMOTA nao cobria caminho local nem file://
+assert_nega   'git pull file:///tmp/evil main'
+assert_nega   'git pull ../evil main'
+assert_nega   'git pull /tmp/evil main'
+assert_libera 'git pull --rebase origin main'
+assert_libera 'git fetch --all'
+assert_libera 'git fetch origin main'
+
+# --no-verify desarma o pre-push do proprio projeto
+assert_nega   'git push --no-verify origin main'
+assert_nega   'git commit --no-verify -m x'
+assert_nega   'git commit -n -m x'
+assert_libera 'git commit -m "docs: nota"'

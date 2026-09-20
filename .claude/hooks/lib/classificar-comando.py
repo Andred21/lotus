@@ -214,6 +214,14 @@ GIT_BRANCH_ESCRITA = {"-d", "-D", "-m", "-M", "-c", "-C", "-f",
 URL_REMOTA = re.compile(r"^(https?|git|ssh)://|^[^/\s]+@[^/\s]+:")
 
 
+def curta_contem(token, letras):
+    """`-Dq` e `-qD` sao a mesma coisa para o parse-options do git, entao a
+    comparacao por igualdade exata do token nao basta: a letra perigosa pode
+    vir agrupada com outras. Mesma regua que o `sed -i` do familia_leitura."""
+    return (token.startswith("-") and not token.startswith("--")
+            and any(l in token[1:] for l in letras))
+
+
 def familia_git(args):
     i = 0
     while i < len(args) and args[i].startswith("-"):
@@ -242,21 +250,36 @@ def familia_git(args):
     for a in resto:
         if a == "-o" or a == "--output" or a.startswith("--output="):
             negar("`git %s %s` escreve arquivo." % (sub, a))
+        if (a.startswith("--upload-pack") or a.startswith("--receive-pack")
+                or a.startswith("--exec")):
+            negar("`git %s %s` passa um comando externo para o transporte "
+                  "local do git executar, o que e execucao arbitraria "
+                  "disfarcada de flag." % (sub, a))
     if sub == "branch":
         for a in resto:
-            if a in GIT_BRANCH_ESCRITA:
+            if a in GIT_BRANCH_ESCRITA or curta_contem(a, "dDmMcCf"):
                 negar("`git branch %s` altera branch." % a)
     elif sub == "tag":
         for a in resto:
-            if a in ("-d", "--delete", "-f", "--force"):
+            if a in ("-d", "--delete", "-f", "--force") or curta_contem(a, "df"):
                 negar("`git tag %s` altera tag." % a)
     elif sub == "push":
         for a in resto:
-            if a.startswith("--force") or a in ("-f", "-d", "--delete",
-                                                "--mirror", "--prune"):
+            if (a.startswith("--force") or a in ("-f", "-d", "--delete",
+                                                  "--mirror", "--prune")
+                    or curta_contem(a, "fd")):
                 negar("`git push %s` reescreve o remoto." % a)
             if not a.startswith("-") and (a.startswith(":") or a.startswith("+")):
                 negar("o refspec `%s` apaga ou forca no remoto." % a)
+            if a == "--no-verify" or a.startswith("--no-verify="):
+                negar("`git push --no-verify` pula o hook `pre-push` que "
+                      "recusa push direto na main.")
+    elif sub == "commit":
+        for a in resto:
+            if (a == "--no-verify" or a.startswith("--no-verify=")
+                    or curta_contem(a, "n")):
+                negar("`git commit %s` pula os hooks de commit — em "
+                      "`commit`, `-n` e `--no-verify`, nao `--dry-run`." % a)
     elif sub == "worktree":
         if not resto:
             negar("`git worktree` sem subcomando.")
@@ -270,7 +293,8 @@ def familia_git(args):
             negar("`git remote %s` altera o remoto." % resto[0])
     elif sub in ("pull", "fetch"):
         for a in resto:
-            if URL_REMOTA.match(a):
+            if (URL_REMOTA.match(a) or "://" in a
+                    or a.startswith(("/", "./", "../", "~"))):
                 negar("`git %s` com URL busca de uma origem que nao esta "
                       "configurada." % sub)
 
