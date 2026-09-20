@@ -5,6 +5,13 @@
 # (o scheduler vive dentro do container e não alcança `docker exec`).
 # Retenção: lifecycle rule do bucket expira backups/ em 30 dias (runbook §3).
 set -euo pipefail
+# O dump passa pelo /tmp do host, que é 1777, e o umask default do root é 022 —
+# os dois arquivos nasciam 0644, legíveis por qualquer usuário local. Não é
+# dado qualquer: são as tabelas `certificates` e `audits` inteiras, o material
+# de peso legal do produto, e o host tem o usuário `ubuntu` além do root. A
+# janela é curta porque o `trap ... EXIT` apaga no fim, mas o trap cobre
+# REMOÇÃO, não permissão (Q-8 do review de 2026-09-20).
+umask 077
 
 BASE=/opt/lotus
 # Só a chave que este script consome — sem `source` do .env inteiro.

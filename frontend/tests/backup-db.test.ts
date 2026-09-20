@@ -60,6 +60,19 @@ describe('deploy/bin/backup-db.sh', () => {
     expect(semComentarios).toMatch(/^trap .* EXIT$/m)
   })
 
+  it('nem legível por qualquer usuário local enquanto ele existe', () => {
+    // O `trap ... EXIT` cobre REMOÇÃO, não permissão. /tmp é 1777 e o umask
+    // default do root é 022, então o dump e o .gz nasciam 0644 — medido em
+    // 2026-09-20 (Q-8), e 0600 com o `umask 077`. O arquivo carrega as tabelas
+    // `certificates` e `audits` inteiras, e o host tem o usuário `ubuntu` além
+    // do root.
+    const linhas = semComentarios.split(/\r?\n/)
+    const umask = linhas.findIndex((linha) => /^umask 077$/.test(linha))
+    const primeiroArquivo = linhas.findIndex((linha) => linha.includes('> "$BRUTO"'))
+    expect(umask).toBeGreaterThan(-1)
+    expect(primeiroArquivo).toBeGreaterThan(umask)
+  })
+
   it('lê só a chave do bucket, sem `source` do .env inteiro', () => {
     expect(semComentarios).toContain("grep -E '^LOTUS_BACKUP_BUCKET=' \"$BASE/.env\"")
     expect(semComentarios).not.toMatch(/^\s*(source|\.)\s+"\$BASE\/\.env"/m)
