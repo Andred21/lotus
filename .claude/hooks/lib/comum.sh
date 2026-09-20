@@ -1,6 +1,11 @@
 # Casca comum dos hooks. Aqui nao mora politica: so leitura de stdin,
 # resolucao de raiz e emissao de JSON.
 
+# O fail-open e o contrato e fica: sem jq, os guards saem 0 e ficam mudos.
+# Mas mudo e diferente de sem rastro — sem isso, "jq ausente" e
+# indistinguivel de um "libera" deliberado. Nao muda exit code nem stdout.
+command -v jq >/dev/null 2>&1 || printf 'harness: jq ausente, guards desativados\n' >&2
+
 ler_payload() { PAYLOAD=$(cat); }
 
 campo() {
@@ -20,7 +25,22 @@ raiz_de() {
 
 branch_de() {
   [[ -d ${1:-} ]] || return 0
-  git -C "$1" rev-parse --abbrev-ref HEAD 2>/dev/null
+  local branch ref
+  branch=$(git -C "$1" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  if [[ $branch == HEAD ]]; then
+    # HEAD destacado: --abbrev-ref devolve a string literal "HEAD", o que
+    # esconde de quem chama que o commit atual pode ser exatamente o de
+    # main (bisect, checkout de sha, rebase em andamento). Resolve pelas
+    # refs que apontam para o commit atual, e casa "main" exatamente,
+    # linha a linha, para "main-antiga" nao colar por substring.
+    while IFS= read -r ref; do
+      if [[ $ref == main ]]; then
+        branch=main
+        break
+      fi
+    done < <(git -C "$1" branch --points-at HEAD --format='%(refname:short)' 2>/dev/null)
+  fi
+  printf '%s' "$branch"
 }
 
 negar_pretooluse() {

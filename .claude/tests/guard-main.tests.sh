@@ -59,3 +59,20 @@ assert_igual '' "$SAIDA_HOOK" 'alvo fora de qualquer repositorio: falha aberta'
 acionar_hook "$GUARD" ''
 assert_igual 0 "$CODIGO_HOOK" 'payload vazio sai 0'
 assert_igual '' "$SAIDA_HOOK" 'payload vazio nao emite decisao'
+
+# --- HEAD destacado nao desarma a allowlist
+_c=$(criar_repo); registrar_descarte "$_c"
+_c_commit1=$(git -C "$_c" rev-parse HEAD)
+git -C "$_c" checkout -q --detach HEAD
+
+acionar_hook "$GUARD" "$(payload_escrita "$_c" "$_c/backend/app/Models/X.php" '')"
+assert_igual 'deny' "$(decisao "$SAIDA_HOOK")" 'HEAD destacado no commit da main nega escrita em backend/'
+
+acionar_hook "$GUARD" "$(payload_escrita "$_c" "$_c/docs/nota.md" '')"
+assert_igual '' "$SAIDA_HOOK" 'HEAD destacado no commit da main libera docs/'
+
+git -C "$_c" checkout -q main
+git -C "$_c" commit -q --allow-empty -m segundo
+git -C "$_c" checkout -q --detach "$_c_commit1"
+acionar_hook "$GUARD" "$(payload_escrita "$_c" "$_c/backend/app/Models/X.php" '')"
+assert_igual '' "$SAIDA_HOOK" 'HEAD destacado num commit que main nao aponta mais libera backend/'

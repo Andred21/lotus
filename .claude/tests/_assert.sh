@@ -76,9 +76,18 @@ limpar_descartes() {
 
 acionar_hook() {
   # $1 = caminho do hook, $2 = payload JSON. Seta SAIDA_HOOK e CODIGO_HOOK.
+  # Todo hook deste harness sai 0 por contrato (ver comentario no topo dos
+  # hooks): um codigo diferente de 0 e sempre defeito, mesmo quando a
+  # asseracao do chamador nao confere CODIGO_HOOK explicitamente. Sem isso,
+  # um hook inexistente ou morto (ex.: exit 127, sem saida) se disfarca de
+  # "libera" deliberado em toda asseracao que so olha SAIDA_HOOK.
   local hook=$1 payload=$2
   SAIDA_HOOK=$(printf '%s' "$payload" | bash "$hook" 2>/dev/null)
   CODIGO_HOOK=$?
+  if [[ $CODIGO_HOOK -ne 0 ]]; then
+    FALHAS_TESTE=$((FALHAS_TESTE + 1))
+    printf '  FALHA %s saiu com codigo %s (contrato exige 0)\n' "$hook" "$CODIGO_HOOK"
+  fi
 }
 
 campo_json() {
