@@ -3,10 +3,10 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: harness-hooks-de-guarda
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -15,18 +15,18 @@ blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: main-tree
-    branch: refactor/backend-decisoes-de-rbac-e-semantica   # aberta de main@182be2ab em 2026-09-03; item 22 fechado em 2026-09-04 e a branch REBASADA sobre origin/main@9bdaac90 em 2026-09-09, com o item 27 e a infra ja dentro; segue viva na PR #104, aguardando merge
+    active_work_item: harness-hooks-de-guarda
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
+    tree: ../lotus-harness
+    branch: chore/harness-hooks-de-guarda   # aberta de origin/main@618f390a em 2026-09-20; worktree novo, e nao o main tree, porque o guard-main que este bloco cria tem a main como SUJEITO
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: null   # Contexto: nao na ficha do 28 — as fontes sao o harness lido e o proprio repositorio
     blocker: null
     resume_state: null
-    last_completed_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, fechado em 2026-09-04
+    last_completed_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, fechado em 2026-09-04; a PR #104 MESCLOU em origin/main@618f390a
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
@@ -61,8 +61,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
-state_basis_commit: 04973a63
-updated_at: 2026-09-09T00:00:00-03:00
+state_basis_commit: a6051a8d
+updated_at: 2026-09-20T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,11 +162,11 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-04
+## Ocupação corrente — 2026-09-20
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
+| `lane-a` | `harness-hooks-de-guarda` (item 28) | Harness | `../lotus-harness` | `chore/harness-hooks-de-guarda` | `ready_for_planning` |
 | `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
