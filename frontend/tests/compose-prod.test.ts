@@ -246,6 +246,24 @@ describe('docker-compose.prod.yml', () => {
     expect(Number(teto)).toBeGreaterThanOrEqual(1280)
   })
 
+  it('o healthcheck do clamav pergunta a IDADE da base, não só se o daemon responde', () => {
+    // Q-9 do review de 2026-09-20: `clamdscan --ping 1` prova que o daemon está
+    // vivo, nunca que a base é atual. O `freshclam -d` do entrypoint roda sem
+    // supervisor; morrendo ele, o container ficava `healthy` para sempre com
+    // assinaturas paradas — e antivírus de base velha falha ABERTO, ao
+    // contrário do resto do caminho de upload, que falha fechado.
+    const [health] = regioesDaChave(blocoDoServico('clamav'), 'healthcheck')
+    expect(health ?? '').toMatch(/clamdscan --ping 1/)
+    // `.cvd` é o download inteiro, `.cld` a mesma base com os cdiff aplicados:
+    // o freshclam escreve ora um, ora outro, então a pergunta cobre os dois.
+    expect(health ?? '').toMatch(/daily\.c\[lv\]d/)
+    // Janela em minutos, e ela tem de caber num fim de semana sem publicação
+    // (>1 dia) sem virar "qualquer coisa serve" (<=7 dias).
+    const [minutos] = (health ?? '').match(/-mmin -(\d+)/)?.slice(1) ?? []
+    expect(Number(minutos)).toBeGreaterThan(24 * 60)
+    expect(Number(minutos)).toBeLessThanOrEqual(7 * 24 * 60)
+  })
+
   it('põe teto de memória em todo serviço — t4g.small tem 2 GiB e OOM sem teto derruba o vizinho, não o culpado', () => {
     for (const servico of ['app', 'scheduler', 'nginx', 'mysql', 'gotenberg', 'clamav']) {
       expect(blocoDoServico(servico)).toMatch(/^ {4}mem_limit: /m)
@@ -307,7 +325,19 @@ describe('docker-compose.prod-tls.yml', () => {
     const [volumes] = regioesDaChave(blocoDoServico('nginx', TLS), 'volumes')
     expect(volumes ?? '').toMatch(/\/etc\/letsencrypt:\/etc\/letsencrypt:ro/)
     expect(volumes ?? '').toMatch(/tls\.conf:\/etc\/nginx\/conf\.d\/default\.conf:ro/)
-    expect(volumes ?? '').toMatch(/certbot-webroot/)
+  })
+
+  it('o webroot do challenge é caminho do HOST, não volume nomeado — senão o certbot não escreve nele', () => {
+    // Q-6 do review de 2026-09-20: a renovação estava documentada como "o
+    // webroot do challenge é servido pelo tls.conf", e o webroot citado era o
+    // volume nomeado `certbot-webroot`, montado `:ro` e sem caminho no host.
+    // Quem PRODUZ o challenge é o certbot do host, que não alcança volume do
+    // Docker; quem SERVE é o nginx, e para esse `:ro` é o certo. Volume
+    // nomeado aqui é a renovação falhando calada, com o certificado expirando
+    // em 90 dias.
+    const [volumes] = regioesDaChave(blocoDoServico('nginx', TLS), 'volumes')
+    expect(volumes ?? '').toMatch(/^\s*-\s*\/[^\s:]*certbot[^\s:]*:\/var\/www\/certbot:ro\s*$/m)
+    expect(TLS).not.toMatch(/certbot-webroot/)
   })
 
   it('só toca o serviço nginx — app, mysql e o resto não mudam sob TLS', () => {

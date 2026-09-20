@@ -171,12 +171,27 @@ services:
     # freshclam a mantém em dia.
     volumes:
       - clamav-data:/var/lib/clamav
-    # PING/PONG na 3310 pelo próprio protocolo do daemon. `start_period` de
-    # 300 s porque o PRIMEIRO boot (volume vazio) baixa a base inteira antes de
-    # abrir o socket; o `app` depende deste serviço por `service_started`, então
-    # essa espera não trava o deploy.
+    # DUAS perguntas, porque uma só respondia menos do que aparentava. O
+    # PING/PONG na 3310 prova que o daemon está VIVO; ele não prova que a base
+    # de assinaturas está ATUAL. O `freshclam -d` do entrypoint roda em segundo
+    # plano e sem supervisor — morrendo ele, o container seguia `healthy` por
+    # tempo indefinido com assinaturas paradas, e antivírus de base velha falha
+    # ABERTO (falso negativo), ao contrário do resto do caminho de upload, que
+    # este bloco provou falhar fechado. Era o Q-9 do review de 2026-09-20.
+    #
+    # A segunda pergunta é a idade da daily: `.cvd` (download inteiro) ou `.cld`
+    # (a mesma base com os cdiff aplicados), por isso o `c[lv]d`. 3 dias, e não
+    # 1: a ClamAV publica daily várias vezes ao dia, mas um fim de semana sem
+    # publicação não pode pintar o serviço de vermelho. Se um dia piscar por
+    # isso, o remédio é alargar a janela — nunca tirar a pergunta.
+    # Medido em 2026-09-20 no alpine:3.21 da própria imagem: base de 2 dias
+    # passa, de 5 dias reprova, volume sem base reprova.
+    #
+    # `start_period` de 300 s porque o PRIMEIRO boot (volume vazio) baixa a base
+    # inteira antes de abrir o socket; o `app` depende deste serviço por
+    # `service_started`, então essa espera não trava o deploy.
     healthcheck:
-      test: ["CMD", "clamdscan", "--ping", "1"]
+      test: ["CMD-SHELL", "clamdscan --ping 1 && find /var/lib/clamav -name 'daily.c[lv]d' -mmin -4320 | grep -q ."]
       interval: 30s
       timeout: 10s
       retries: 5

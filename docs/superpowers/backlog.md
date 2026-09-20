@@ -48,9 +48,10 @@
   quebraria as citações e pareceria promoção. O `1` e o `14` saíram em 2026-08-22, o `3` em
   2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
   2026-08-27, o `5` em 2026-08-28, o `6` e o `18` em 2026-08-29, o `7` e o `19` em 2026-08-30, o
-  `20` em 2026-08-31, o `21` em 2026-09-01, o `24` em 2026-09-02, o `25` e o `26` em 2026-09-03, e o
-  `10` **encolheu** em vez de sair (o runtime foi entregue; sobrou o provisionamento). A fila salta
-  os números que já fecharam, de propósito.
+  `20` em 2026-08-31, o `21` em 2026-09-01, o `24` em 2026-09-02, o `25` e o `26` em 2026-09-03, o
+  `22` e o `27` em 2026-09-04 e o `10` em 2026-09-20. O `10` é o único que **encolheu antes de
+  sair**: o runtime foi entregue em 2026-08-22 e a ficha ficou só com o provisionamento, que fechou
+  agora. A fila salta os números que já fecharam, de propósito.
 - **Item novo entra com número novo, e o lugar dele na fila é o da dependência, não o do número.** O
   `16` nasceu assim em 2026-08-22, o `17` em 2026-08-24 e o `21` e o `22` em 2026-08-31 — os dois
   **abertos pelo João**, recortando por frente as onze fichas travadas em decisão que nenhum bloco
@@ -85,9 +86,8 @@ sendo ato explícito no `state.md`. A fila abaixo está escrita nesta ordem.
 | 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
 | 3 | **22** `dominio-decisoes-de-rbac-e-semantica` | Backend | Quatro decisões de domínio travadas no João; muda contrato e regenera `generated.ts`, então precede qualquer frontend que dependa desses campos |
 | 4 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
-| 5 | **10** `infra-producao-provisionamento-aws` | Infra | P0 de deploy, mas depende de quatro decisões do João e de conta AWS; nada de código o bloqueia |
-| 6 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | Estacionado com packet `status: blocked`: não há host. Destrava quando o 10 provisionar o alvo |
-| 7 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
+| 5 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | **Destravado em 2026-09-20**: o item 10 provisionou o host e fechou. O packet `status: blocked` de 2026-08-26 teve o gatilho de staleness vencido e **precisa regenerar** antes de qualquer planejamento |
+| 6 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
 
 **A colisão 16 × 9, registrada e não resolvida:** o 16 tem uma run de `/lotus-ui-review` de
 **Administração** no escopo e o 9 pode **redesenhar a mesma tela**. Medir antes do veredito do 9 é
@@ -199,50 +199,14 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 
 ---
 
-## 10. `infra-producao-provisionamento-aws`
-
-> **Desestacionado em 2026-08-31:** o item 20 (`prontidao-pre-nuvem`) fechou e saiu desta fila — o
-> par corporativo do GHCR está provado, puxado e executado por `scripts/provar-release.sh`. Packet
-> `partial` de 2026-08-26 guardado; ver `state.md`. Promoção segue sendo do João.
-
-**Prioridade:** P0 para deploy · **Frente:** Infra · **Contexto:** sim
-**Fonte:** ADR-09/11/13/14; Notion `10.1.1–10.1.6`, `10.1.8`; Drive `RNF-DIS-01/03/04`.
-
-**O runtime já foi entregue e saiu desta fila.** O `infra-producao-runtime-e-aws` fechou em
-2026-08-22 com o `Dockerfile.prod` multi-stage, o `docker-compose.prod.yml` sem serviço de dev, o
-Nginx de origem única com `/up` como healthcheck, `APP_DEBUG=false`, secrets por `env_file` fora da
-imagem e a **P-50** paga por medição (CLI 320M, FPM 256M). Ver `historico/progress.md` e
-`specs/archive/2026-08-22-infra-producao-runtime-e-aws-design.md`. **O que sobra aqui é a conta AWS,
-que aquele bloco declarou explicitamente fora de escopo** — MinIO não é S3 e Mailpit não é SES.
-
-**Objetivo:** provisionar os recursos reais da AWS e rodar a imagem já construída sobre eles.
-
-**Escopo:**
-- EC2 + Security Groups;
-- RDS MySQL 8 separado da EC2 + snapshot com retenção mínima de 7 dias;
-- S3 privado + IAM least privilege + CORS necessário;
-- e-mail/domínio + DKIM (saída do sandbox do SES);
-- TLS automático/renovação (Certbot na EC2, decidido pela task 10.1.6 e pelo ADR-14);
-- CloudWatch/alerta básico.
-
-**Quatro decisões do João que o bloco anterior mediu como abertas e não supôs** — cada uma bloqueia
-o recurso correspondente, nenhuma bloqueia o planejamento: região (`sa-east-1` × `us-east-1`),
-tamanho final da EC2 (`t4g.small` sugerido pelo Drive, `t4g.medium` se o Gotenberg pressionar
-memória), controle do DNS de `lotus.cl` mais o canal do alerta CloudWatch, e o teto de custo
-(estimativa externa de US$ 35–55/mês sem ALB).
-
-**Herança a carregar do runtime:** o `key:generate` precisa de `--entrypoint php` (registrado na §10
-da spec arquivada), e o `RNF-DIS-02` × ADR-14 segue **`unresolved`**, reservado ao gate do item 13.
-
-**DoD:** a imagem promovida por SHA sobe sobre RDS, S3 e SES reais, passa healthcheck em HTTPS e não
-depende do working tree do servidor.
-
----
-
 ## 12. `cicd-promocao-deploy-e-rollback`
 
-> **Estacionado desde 2026-08-26** (packet `status: blocked`: não há host). Retoma quando o item 10
-> provisionar o alvo; ver `state.md`.
+> **Destravado em 2026-09-20, e ainda não promovido.** Ficou estacionado desde 2026-08-26 com o
+> packet em `status: blocked` — não havia host. O item 10 provisionou o host e fechou, então o
+> gatilho de staleness que aquele packet declara (*"um alvo AWS real ser provisionado"*) **venceu**:
+> o packet guardado é evidência de um bloqueio que já passou e **precisa regenerar** antes de
+> qualquer planejamento. `status: blocked` nunca prossegue (§6 do `/planejar-bloco`). Promoção segue
+> sendo do João; ver `state.md`.
 
 **Prioridade:** P0 · **Frente:** GitHub/Infra · **Contexto:** sim
 **Fonte:** decisão atual de CI/CD; ADR-14; Notion `10.1.7`.

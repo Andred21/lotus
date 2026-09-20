@@ -17,7 +17,7 @@ billing), certbot, mysqldump, vitest (catracas).
 
 ## Global Constraints
 
-- Spec: `docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md` (v2).
+- Spec: `docs/superpowers/specs/archive/2026-09-02-infra-producao-provisionamento-aws-design.md` (v2).
 - Teto de custo: **US$ 30/mês** (D8). Região: **`sa-east-1`** (D3). Compute: **`t4g.small`** (D4).
 - `docker-compose.prod.yml` e overlays têm catraca (`frontend/tests/compose-prod.test.ts`) — toda
   mudança soma asserção **no mesmo commit** (lição 19).

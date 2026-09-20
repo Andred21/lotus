@@ -1,7 +1,7 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-a
+focused_lane: lane-b
 active_feature: null
 active_work_item: null
 workflow_state: idle
@@ -29,23 +29,23 @@ lanes:
     last_completed_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, fechado em 2026-09-04
   lane-b:
     active_feature: null
-    active_work_item: infra-producao-provisionamento-aws
-    workflow_state: executing
-    next_owner: claude
-    next_action: continue_active_plan
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../lotus-infra
-    branch: infra/producao-provisionamento-aws   # RESETADA para main@8efd85f2 em 2026-09-02 a pedido do Joao: o item 10 replaneja do zero
-    active_spec: docs/superpowers/specs/2026-09-02-infra-producao-provisionamento-aws-design.md   # spec v2, do brainstorming de 2026-09-02
-    active_plan: docs/superpowers/plans/2026-09-02-infra-producao-provisionamento-aws.md          # plano v2, 20 tasks (Fase A repo, Fase B AWS)
-    context_packet: null   # decisao D9 da spec v2: nao regenera — os fatos externos ja estao medidos no state.md
+    branch: infra/producao-provisionamento-aws   # item 10 v2 fechado em 2026-09-20; Fase A ja em main pelas PRs #101/#102/#103, Fase B nesta branch
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
     parked_work_items:
-      - cicd-promocao-deploy-e-rollback      # item 12, blocked desde 2026-08-26 (nao ha host); packet em context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md
-    last_completed_work_item: prontidao-pre-nuvem
+      - cicd-promocao-deploy-e-rollback      # item 12; o packet (context-packets/2026-08-26-...) segue blocked, mas o GATILHO DE STALENESS dele venceu em 2026-09-04 — o item 10 provisionou o host. Regenerar antes de planejar.
+    last_completed_work_item: infra-producao-provisionamento-aws   # item 10 v2, fechado em 2026-09-20
   lane-c:
     active_feature: null
     active_work_item: null
@@ -60,9 +60,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
-state_basis_commit: 04973a63
-updated_at: 2026-09-09T00:00:00-03:00
+last_completed_work_item: infra-producao-provisionamento-aws
+state_basis_commit: 25086f5e
+updated_at: 2026-09-20T20:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,12 +162,12 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-04
+## Ocupação corrente — 2026-09-20
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
-| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
+| `lane-b` | — (item 10 v2 **fechado em 2026-09-20**; o 12 segue **estacionado**, com o gatilho do packet vencido) | — | `../lotus-infra` | `infra/producao-provisionamento-aws` | `idle` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
@@ -178,20 +178,15 @@ disjuntas, colisão mínima de arquivos:
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
 
-**A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
-explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
-fechou: o 11 constrói o artefato imutável por SHA, o 12 o promove para produção com aprovação,
-health e rollback. Nasceu em `context_required` (`Contexto: sim` na fila) e **o packet do Codex voltou `status: blocked`** no mesmo dia, com `RECOMMENDED_TRANSITION: blocked`: nao ha destino de deploy. O item 10 (`infra-producao-provisionamento-aws`) segue na fila com as quatro decisoes abertas, e nenhuma das cinco fontes externas consultadas entrega host, credencial SSH ou `/opt/lotus` — o `SSH EC2 -> compose pull -> migrate -> up -> /up` do escopo nao tem onde acontecer. O packet foi guardado assim mesmo, porque e a evidencia do bloqueio; **ele nao autoriza planejamento** (§6 do `/planejar-bloco`: `status: blocked` nunca prossegue). A leitura viva de `Gatika-CL/lotus` falhou com `404`, entao Environment/secrets/branches do corporativo ficam sem comprovacao — a P-62 ja prevê o teto do plano Free. A branch
-`cicd/promocao-deploy-e-rollback` sai de `main@83945ff3` — o tip da `origin/main`, que já contém o
-item 11 mesclado (PR #79), então o artefato que este bloco promove existe. **O espelho do topo virou
-para `lane-b` nesta árvore**, fora do main tree: é a **P-55**, e segue o precedente medido de
-2026-08-24, quando as três lanes fizeram o mesmo. A `lane-a` está em `ready_for_planning` do item 5
-na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segue serial.
-
-**O item 10 assumiu a `lane-b` em 2026-08-26** — `infra-producao-provisionamento-aws`, promovido explicitamente pelo Joao **depois** de o item 12 voltar `blocked` por depender dele. E a saida escolhida entre as tres oferecidas: provisionar antes, em vez de recortar o 12 num workflow que nunca roda. O item 10 tambem e `Contexto: sim`, entao nasce em `context_required`. A branch `infra/producao-provisionamento-aws` sai da propria `cicd/promocao-deploy-e-rollback@10030c65`, e nao da `main`, **de proposito**: o packet do item 12 e o registro do bloqueio viajam junto e chegam a `main` no merge, para que ninguem refaca a medicao. **As quatro decisoes abertas (regiao, tamanho da EC2, DNS/SES + canal de alerta, teto de custo) nao bloqueiam o planejamento** — o proprio item 10 diz isso por escrito; cada uma bloqueia o recurso correspondente, e elas se fecham no brainstorming, com a evidencia de custo e latencia que o packet trouxer.
-
-**O item 12 fica estacionado, nao cancelado.** Ele segue no `backlog.md` (fila nao se mexe durante planejamento), o packet `status: blocked` fica guardado como evidencia e o campo `parked_work_item` da lane-b registra o vinculo. Quando o 10 provisionar o host, o packet do 12 regenera pelo gatilho de staleness que ele mesmo declara: *"um alvo AWS real ser provisionado"*.
-
+**O item 12 segue estacionado na `lane-b`, e o gatilho do packet dele venceu.** O
+`cicd-promocao-deploy-e-rollback` continua no `backlog.md` e o packet
+`context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md` continua `status: blocked` — mas o
+motivo do bloqueio **deixou de existir em 2026-09-04**: o item 10 provisionou o host, que é
+exatamente o gatilho de staleness que aquele packet declara (*"um alvo AWS real ser
+provisionado"*). O packet **precisa regenerar antes de qualquer planejamento do 12**; o que está
+guardado é a evidência de um bloqueio que já passou, e `status: blocked` nunca autoriza prosseguir
+(§6 do `/planejar-bloco`). A narrativa de como o 12 chegou a esse estado está em
+`historico/state-archive.md`, sob o fechamento de 2026-09-20.
 
 ## Itens fechados — ponteiro, não narrativa
 
@@ -201,11 +196,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-20 | `infra-producao-provisionamento-aws` (item 10, **v2** — replanejado do zero; a v1 e a R5 foram descartadas para `archive/`). Os sete DoD fecharam, o sétimo pelo **ramo ficha** que a Task 19 prevê. Fecha a **P-58**; abre a **P-77**, a **P-78**, a **P-79** e — no próprio gate de fechamento, por decisão do João de adiar — a **P-80** (custo) e a **P-81** (access key); **dispara a `P-05` sem pagar** (a produção subiu com as 30 migrations não consolidadas). Nascem `deploy/bin/verificar-backup.sh`, `deploy/nginx/tls.conf`, `docker-compose.prod-tls.yml`, `deploy/aws/user-data.sh` e o runbook `deploy/aws/README.md`; o ADR-09 ganha a revisão 2026-09 e a lição 19 é emendada pela terceira ocorrência | Item 10 da fila |
 | 2026-09-04 | `dominio-decisoes-de-rbac-e-semantica` (fecha as quatro fichas de decisão `D-09`, `D-10`, `D-11` e `D-16`; nenhuma pendência nasce ou fecha, mas **dispara sem pagar** os gatilhos da `P-51` e da `P-53`; nascem `RoleOptionData`, `StudentClientOptionData`, `UmContatoPrincipal` e `DeleteClientAddressAction`) | Item 22 da fila |
 | 2026-09-04 | `frontend-arrumacao-de-testes` (fecha a **P-58**; nenhuma pendência nasce; nascem `test.projects` no `vite.config.ts`, `src/shared/testing/providers.tsx` e a catraca `QUERY_CLIENT_A_MAO`) | Item 27 da fila |
 | 2026-09-03 | `backend-envelope-de-erro-e-recusa-de-dominio` (paga a **P-71**, a **P-72** e a metade de comportamento da **P-60**; abre a **P-75** e a **P-76**; nascem `TipoDeRecusa` e `RecusaDeDominio` em `app/Shared/Exceptions/` e a rule `.claude/rules/backend-lang.md`) | Item 26 da fila |
 | 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
-| 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com
