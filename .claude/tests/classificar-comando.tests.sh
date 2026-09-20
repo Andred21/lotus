@@ -4,16 +4,21 @@ CLASSIF="$DIR_HOOKS/lib/classificar-comando.py"
 classificar() { LOTUS_RAIZ=/repo python3 "$CLASSIF" "$1" 2>&1; }
 
 assert_libera() {
+  # $2 e opcional: titulo de exibicao, para os casos com newline literal em
+  # $1, que quebrariam a linha do relatorio se ecoados crus.
   local saida; saida=$(classificar "$1")
-  assert_igual '' "$saida" "libera: $1"
+  local titulo=${2:-$1}
+  assert_igual '' "$saida" "libera: $titulo"
 }
 assert_nega() {
+  # $2 e opcional: mesma razao do assert_libera acima.
   local saida; saida=$(classificar "$1")
+  local titulo=${2:-$1}
   if [[ -n $saida ]]; then
-    printf '  ok    nega: %s\n' "$1"
+    printf '  ok    nega: %s\n' "$titulo"
   else
     FALHAS_TESTE=$((FALHAS_TESTE + 1))
-    printf '  FALHA nega: %s\n          liberou em vez de negar\n' "$1"
+    printf '  FALHA nega: %s\n          liberou em vez de negar\n' "$titulo"
   fi
 }
 
@@ -49,3 +54,19 @@ assert_nega   'node -e "process.exit(0)"'
 assert_nega   'npx eslint .'
 assert_nega   'comandoquenaoexiste --flag'
 assert_nega   './vendor/bin/pint app/Models'
+
+# --- quebra de linha: newline separa comandos como ';', mas so fora de aspas
+assert_nega   $'ls docs\ngit push --force origin main' \
+              'newline fora de aspas: segunda linha perigosa'
+assert_libera $'ls docs\ncat README.md' \
+              'newline fora de aspas: as duas linhas sao leitura'
+assert_libera $'echo "linha1\nlinha2"' \
+              'newline dentro de aspas: e dado, nao separador'
+
+# --- # no meio da palavra: shlex tem `#` como comentario, bash nao tem
+assert_nega   'echo x#y; rm -rf /' \
+              '# no meio da palavra esconde um segundo comando'
+assert_nega   'find . -name a#b -delete' \
+              '# no meio da palavra esconde a flag -delete'
+assert_libera 'echo a#b' \
+              '# no meio da palavra em comando de leitura legitimo'

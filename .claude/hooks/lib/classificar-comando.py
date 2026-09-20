@@ -117,6 +117,16 @@ def varrer(linha):
         if aspas is None and c in "<>" and i + 1 < n and linha[i + 1] == "(":
             negar("substituicao de processo vira caminho de arquivo magico, "
                   "e este guarda nao sabe para onde ele aponta.")
+        if aspas is None and c == "\n":
+            # newline fora de aspas separa comandos igual a ';' no bash, mas
+            # shlex com whitespace_split trata newline como espaco e descarta
+            # o separador, dobrando a segunda linha nos argumentos da
+            # primeira. So aqui, em varrer(), da para saber se o newline esta
+            # dentro de aspas (dado) ou fora (separador) — o tokenizador ja
+            # recebe a linha escaneada e nao tem mais esse contexto.
+            saida.append(" ; ")
+            i += 1
+            continue
         if aspas is None and c == ">":
             fd2 = saida[-1:] == ["2"] and (len(saida) == 1 or saida[-2].isspace())
             m = REDIR_OK.match(linha, i)
@@ -137,6 +147,11 @@ def varrer(linha):
 def tokenizar(linha):
     lex = shlex.shlex(linha, posix=False, punctuation_chars=True)
     lex.whitespace_split = True
+    # shlex por padrao trata '#' como inicio de comentario em qualquer
+    # posicao da palavra; bash so reconhece '#' como comentario no comeco
+    # da palavra. Sem isto, "echo x#y; rm -rf /" vira um comentario que
+    # engole o resto da linha e esconde o `rm -rf /` do classificador.
+    lex.commenters = ""
     try:
         return list(lex)
     except ValueError as e:
