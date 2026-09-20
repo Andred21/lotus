@@ -160,7 +160,13 @@ proteja (`sudo chmod 600 /opt/lotus/.env`, dono root). **Sem o registro A ainda*
 campos de host vão para o EIP e o `SESSION_DOMAIN` recebe o literal **`null`** — nem o domínio
 (cookie não volta: 401/419 com a API saudável), nem o IP (`Domain=` com IP não faz domain-match e
 o navegador descarta o cookie), nem comentada (o gate do entrypoint exige a variável e o container
-sai 1). O molde explica a mecânica das três. A `APP_KEY` se gera com o entrypoint
+sai 1). O molde explica a mecânica das três. **Na mesma fase o `SESSION_SECURE_COOKIE` vai para
+`false`** — com `true` em HTTP puro o browser não grava o cookie e o login não fecha; ele volta a
+`true` no §11, junto com o domínio. E a fase sem DNS tem uma proibição: **nenhum certificado REAL
+se emite enquanto o `FRONTEND_URL` for o EIP**, porque o QR do certificado nasce desse campo
+(`CertificatePdfService`) e o documento é snapshot imutável — o EIP ficaria congelado no QR de um
+papel de peso legal. Certificado de prova nesta fase se apaga junto com a prova.
+A `APP_KEY` se gera com o entrypoint
 trocado — sem `--entrypoint php` o comando cai no entrypoint da imagem e falha:
 
 ```bash
@@ -268,17 +274,53 @@ resolve.
 dig +short app.lotusotec.cl   # tem de ser exatamente o EIP
 ```
 
-Emissão (uma vez):
+**Passo 1 — emitir o certificado** (uma vez, com o nginx parado):
 
 ```bash
 sudo apt-get install -y certbot
 docker compose -p lotus --project-directory /opt/lotus -f /opt/lotus/docker-compose.prod.yml stop nginx
 sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m <email>
+```
+
+**Passo 2 — virar o `.env` para o domínio e para HTTPS.** Este passo é do TLS tanto quanto o
+certificado, e é o que a fase sem DNS deixou pendurado. São **cinco** campos, não um:
+
+```bash
+sudo -e /opt/lotus/.env
+```
+
+| Campo | Fase sem DNS | Agora |
+|---|---|---|
+| `APP_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
+| `FRONTEND_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
+| `SANCTUM_STATEFUL_DOMAINS` | `<EIP>` | `app.lotusotec.cl` |
+| `SESSION_DOMAIN` | `null` (literal) | `app.lotusotec.cl` |
+| `SESSION_SECURE_COOKIE` | `false` | `true` |
+
+Os dois últimos são os que mordem em silêncio. `SESSION_SECURE_COOKIE` ausente **não** equivale a
+`false`: `session.php:172` lê `env('SESSION_SECURE_COOKIE')` sem default, a ausência vira null, e o
+cookie de sessão do Sanctum passa a viajar em claro sob TLS sem aparecer em diff nenhum (lei §5.4).
+E `FRONTEND_URL` não é só infra: o QR do certificado é `FRONTEND_URL + /validar/{uuid}`, gravado
+para sempre num documento de peso legal — **só depois deste passo se emite certificado real**.
+
+**Passo 3 — subir com o overlay:**
+
+```bash
 sudo /opt/lotus/bin/deploy.sh "$(cat /opt/lotus/CURRENT_SHA)"
 ```
 
-O `deploy.sh` detecta o certificado e sobe com o overlay TLS sozinho. Depois:
-`curl -s -o /dev/null -w '%{http_code}' https://app.lotusotec.cl/up` → `200`.
+O `deploy.sh` detecta o certificado e sobe com o overlay TLS sozinho. Prova, nesta ordem:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://app.lotusotec.cl/up      # 200
+curl -s -o /dev/null -w '%{http_code}\n' http://app.lotusotec.cl/inicio   # 301
+curl -sI https://app.lotusotec.cl/api/... | grep -i '^set-cookie'          # tem `Secure`
+```
+
+O `/up` na 80 responde **200**, e não 301: o `tls.conf` isenta esse caminho do redirect de
+propósito, porque o healthcheck do nginx e o gate pós-deploy do `deploy.sh` falam HTTP puro na
+127.0.0.1 (Q-1 do review de 2026-09-20). Se ele voltar a redirecionar, o deploy morre logo após o
+`up -d` — e a catraca `frontend/tests/nginx-conf.test.ts` existe para que isso não chegue ao host.
 
 Renovação: o timer systemd do certbot renova; o hook
 `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh` recarrega o nginx:

@@ -257,6 +257,35 @@ repositório prova lock.
   recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
   desta ficha). Turma 7 restaurada ao fim do gate.
 
+## P-79 — a URL que vai no QR do certificado é a mesma chave de infra, e as duas têm ciclo de vida diferente
+
+**Bloco:** — · **Gatilho:** bloco de backend que tocar `CertificatePdfService`, `config/app.php` ou
+a rota pública de validação, e puder provar a chave nova com teste. Fecha quando a URL pública de
+validação sair de `FRONTEND_URL` para chave própria, **ou** quando o João decidir por escrito que a
+regra operacional basta. Revisar em **2026-10-31**.
+
+Aberta no review de 2026-09-20 (Q-3). O QR do certificado é montado assim:
+
+    // backend/app/Domains/Certification/Services/CertificatePdfService.php:27
+    $url = rtrim(config('app.frontend_url'), '/')."/validar/{$certificate->uuid}";
+
+`FRONTEND_URL` é **infra**: muda quando o host muda, quando o DNS chega, quando o TLS entra. O QR é
+**conteúdo de documento legal**: gravado no PDF, ele é imutável depois da emissão. Um certificado
+emitido enquanto o `FRONTEND_URL` apontar para o EIP cru carrega esse IP para sempre — e o EIP é
+descartável por definição.
+
+**O que já foi pago neste bloco** (commit do review, lane-b): a regra operacional. O molde
+`deploy/aws/env.prod.example` e o runbook §7/§11 passaram a dizer, com o motivo, que **nenhum
+certificado real se emite antes de o `FRONTEND_URL` estar no domínio definitivo com https**, e o
+§11 virou os cinco campos de uma vez em vez de só o `SESSION_DOMAIN`.
+
+**O que fica aberto:** a regra é procedimento, não mecanismo — ela depende de quem opera lembrar.
+O remédio estrutural é uma chave própria (`CERTIFICATE_VALIDATION_URL`, com fallback para
+`app.frontend_url` enquanto não for preenchida), que torna explícito que aquele valor é conteúdo de
+documento e não endereço de serviço. É mudança de **backend**, e a lane-b é worktree de infra: o
+gate de árvore do `/executar-bloco` manda backend para o main tree, que é onde o compose monta. Por
+isso vira ficha e não patch aqui.
+
 ---
 
 # Documentação e mecanismo
