@@ -8,7 +8,12 @@ set -euo pipefail
 
 BASE=/opt/lotus
 # Só a chave que este script consome — sem `source` do .env inteiro.
-BUCKET=$(grep -E '^LOTUS_BACKUP_BUCKET=' "$BASE/.env" | cut -d= -f2-)
+# O `|| true` não é ruído: com `set -euo pipefail`, grep sem match sai 1,
+# `pipefail` propaga pelo `cut` e a ATRIBUIÇÃO sai 1 — `set -e` matava o script
+# aqui, uma linha antes da guarda, e a mensagem abaixo nunca imprimia. A guarda
+# existe justamente para quem edita o `.env` do host e derruba a chave, que é o
+# caso em que o script morria mudo (Q-5 do review de 2026-09-20).
+BUCKET=$(grep -E '^LOTUS_BACKUP_BUCKET=' "$BASE/.env" | cut -d= -f2- || true)
 [ -n "$BUCKET" ] || { echo "erro: LOTUS_BACKUP_BUCKET ausente do .env" >&2; exit 1; }
 
 MYSQL=$(docker compose -p lotus --project-directory "$BASE" -f "$BASE/docker-compose.prod.yml" ps -q mysql)

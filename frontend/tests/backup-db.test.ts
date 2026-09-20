@@ -65,6 +65,19 @@ describe('deploy/bin/backup-db.sh', () => {
     expect(semComentarios).not.toMatch(/^\s*(source|\.)\s+"\$BASE\/\.env"/m)
   })
 
+  it('a guarda do bucket é ALCANÇÁVEL — sem o `|| true`, `set -e` mata uma linha antes dela', () => {
+    // Medido em 2026-09-20 (Q-5): grep sem match sai 1, `pipefail` propaga pelo
+    // `cut` e a atribuição sai 1, então o script morria MUDO na linha de cima e
+    // a mensagem nunca imprimia. Com o `|| true`, a mesma sonda imprime
+    // "erro: LOTUS_BACKUP_BUCKET ausente do .env" e sai 1. A guarda existe
+    // exatamente para quem edita o `.env` do host e derruba a chave.
+    const leitura = semComentarios
+      .split(/\r?\n/)
+      .find((linha) => linha.startsWith('BUCKET='))
+    expect(leitura).toBeDefined()
+    expect(leitura).toMatch(/\|\|\s*true\s*\)$/)
+  })
+
   it('a senha do mysql vem do ambiente do container, não da linha de comando do host', () => {
     expect(semComentarios).toContain('-p"$MYSQL_ROOT_PASSWORD"')
     expect(semComentarios).toContain('docker exec "$MYSQL" sh -c')
