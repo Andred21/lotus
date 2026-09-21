@@ -149,4 +149,54 @@ END LOTUS UI REVIEW REPORT
 
 ## 3. Passe de correção
 
-_A preencher na Task 5._
+| Achado | Classe | Destino | Commit |
+|---|---|---|---|
+| UI-01 — coluna de identidade some atrás da coluna de ações fixa em 390x844 | `C` | **deferido** — ver nota | — |
+| UI-02 — RUT sobrepõe "Cursos habilitados" em 1024x768 | `C` | corrige aqui | `a8b1564d` |
+| UI-03 — "Último acceso" cortado pela coluna de ações fixa em 1024x768 | `C` | corrige aqui | `d07aa877` |
+| UI-04 — `dataKey` inexistente na tabela de turmas do Alumno | `C` | corrige aqui | `39f0bc8f` |
+
+**UI-02** — `redatorColumns.ts` trocou o peso de `rut` de `COL.rut` (9) para `COL.short` (13): em
+1024x768, com as 5 colunas de dado da tabela, o peso original reservava 92,5px contra um RUT de
+100,8px. RED visto (`14.46%` vs `19.5%` esperado), GREEN depois. Medido no navegador pós-fix: célula
+124,8px, texto 100,8px, ~8px de folga, sem sobreposição.
+
+**UI-04** — `StudentDetailSections.tsx` ganhou `dataKey="turma_id"`, mesmo padrão já provado em
+`EmissionStudentsTable` (ficha f3 UI-06). RED visto (aviso de "key" ausente em console), GREEN
+depois. Teste precisou ser o PRIMEIRO do arquivo — React deduplica o aviso por nome do componente
+pai (`TableBody`), não por dado, e um teste mais abaixo que já monta a mesma tabela mascara o novo.
+
+**UI-03** — investigação encontrou uma causa-raiz diferente da que o relatório do Task 4 inferiu.
+A hipótese original (`tableWidths()` não reserva a largura da coluna de ações antes de repartir os
+pesos) foi testada e descartada: medido direto no navegador, a sobreposição é
+`larguraDaTabela − larguraDaMoldura` por inteiro, **independente** de como os pesos das colunas de
+dado são repartidos entre si (confirmado reescrevendo os pesos ao vivo via DevTools — a
+sobreposição não mudou). A causa real é o piso `min-w-[48rem]` (768px) do `AppDataTable`, maior que
+os 718px de moldura em 1024x768: o piso vence, força rolagem, e a coluna presa (`right: 0`) passa a
+cobrir o que estaria visível sem ela. Uma tentativa intermediária de reserva exata via `calc()`
+misturando `%` e `rem` no `width` da coluna também foi testada e descartada — confirmado em tabela
+sintética que o Chromium ignora esse `calc()` sob `table-layout: fixed` e reparte o espaço restante
+IGUALMENTE entre as colunas afetadas, artefato visível como larguras idênticas (~115px) nas 5
+colunas de dado. Fix aplicado: `SearchableTableFrame` passa a repassar `pt` ao `AppDataTable`
+por baixo (mecanismo novo, reaproveitável pelas outras 11 tabelas do débito `D-65`), e
+`RedatoresTable` reduz seu piso para `min-w-[42rem]` (672px), que cabe nos 718px sem rolar. GREEN
+visto tanto no teste (`RedatoresTable.test.tsx`, assinatura da classe no `<table>`) quanto no
+navegador (`tableWidth === wrapperClientWidth === 718`, sem `scrollWidth` excedente). Sem regressão
+em 1440x900 (tabela continua preenchendo o card).
+
+**UI-01 — deferido, não corrigido nesta run.** A mesma investigação mostrou que a correção de UI-03
+NÃO fecha UI-01: em 390x844 (276px de moldura), a coluna de ações de `RedatoresTable` (3 ícones,
+12rem) precisaria reservar ~70% da largura da tabela para não sobrepor nada — nenhum `min-width`
+razoável resolve isso (ou a tabela cabe nesse piso e vira ilegível, ou sobra sobreposição
+proporcional ao que faltar). Este não é um achado de matemática de coluna: é a coluna de ações
+carregando ícones demais para o espaço físico de um viewport de telefone. Fix real é de UX —
+colapsar os 3 ícones (Reenviar invitación / Archivar-Restaurar / Ver) num controle de overflow
+abaixo de algum breakpoint —, decisão de design fora do escopo mecânico desta task. Reclassificado
+de "corrige aqui" para **deferido**, com nota registrada na ficha `D-65` de
+`docs/superpowers/backlog.md` (item 23, `frontend-tabelas-reserva-e-rolagem`), incluindo a direção
+nova (colapso de ícones) que as duas direções já listadas ali (sinal de rolagem / `min-width` menor)
+não cobrem. Desvio do triágio mecânico padrão (`C` → sempre "corrige aqui"), justificado pela
+impossibilidade física medida, não por preferência.
+
+Zero `C` aberto sem destino ao fim desta run: 3 corrigidos, 1 deferido com ficha e reasoning
+registrados.

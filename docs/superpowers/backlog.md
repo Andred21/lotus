@@ -282,6 +282,10 @@ presa come largura que as outras colunas já reservaram, e o efeito muda de tabe
 Duas direções a medir nas 12 tabelas, a 1024px: (a) sinal de rolagem no wrapper, para que a
 rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor onde a reserva não
 cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
+`RedatoresTable` já recebeu (b) como fix pontual em 2026-09-20 (item 16 fatia 3, UI-03) — ver o
+detalhe na ficha `D-65`, que também registra uma TERCEIRA direção (colapsar ícones de ação em
+overflow) para a tabela com 2+ ícones em viewport muito estreito, onde (a) e (b) sozinhas não
+fecham (390x844, UI-01 da mesma run, deferido).
 
 ---
 
@@ -469,6 +473,26 @@ ficam só como ponteiro, e a ficha delas é lá.
   `12rem` (`RedatoresTable` ativo), `16rem` (`HistorialTable`). Não se corrige numa constante: são
   12 decisões. **Estava listada entre as decisões não promovíveis até 2026-09-03** — mas tem
   hospedeiro desde que o item 23 nasceu, e débito com bloco não é decisão travada.
+
+  **Remedido em 2026-09-20, run de Pessoas (item 16 fatia 3, UI-01/UI-03):** medido direto no
+  navegador que a sobreposição é `larguraDaTabela - larguraDaMoldura`, **por inteiro** — não depende
+  de como `tableWidths()` reparte o % entre as colunas de dado (confirmado patchando a tabela viva
+  com pesos diferentes: a sobreposição não mudou 1px). Corrigir `columnWidth.ts` não bastava por
+  isso; a correção real é reduzir o `min-w` da TABELA. Aplicado como fix pontual (não a varredura das
+  12): `RedatoresTable` ganhou `pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}` via
+  `SearchableTableFrame` (que agora repassa `pt` ao `AppDataTable` por baixo — mecanismo novo,
+  reaproveitável pelas outras 11). Fecha UI-03 (1024x768, 718px de moldura: 672px cabe sem rolar).
+  Quem fizer a varredura do item 23: `RedatoresTable` já está no piso reduzido, não repita.
+
+  **Direção nova, não coberta pelas duas do item 23:** em 390x844 (276px de moldura), `RedatoresTable`
+  ativo precisaria reservar ~70% da tabela para a coluna de 3 ícones não sobrepor nada — nenhum
+  `min-width` razoável resolve (ou a tabela cabe e vira ilegível, ou sobra sobreposição). UI-01 da
+  mesma run ficou **deferido**, não corrigido — é achado de UX (3 ícones por linha em coluna presa
+  de mobile), não de matemática de coluna. Tabela com 2+ ícones de ação PROVAVELMENTE precisa
+  colapsar as ações num menu de overflow abaixo de algum breakpoint — decisão de design, não
+  medição; `RedatorRowActions` + o botão solto de "Reenviar invitación" em `RedatoresTable.tsx` são
+  o caso mais severo hoje (3 ícones), candidato natural a entrar primeiro nessa direção quando o
+  item 23 (ou um item de design a montante dele) for executado.
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
