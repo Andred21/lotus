@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: harness-hooks-de-guarda
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-20-harness-hooks-de-guarda-design.md
 active_plan: docs/superpowers/plans/2026-09-20-harness-hooks-de-guarda.md
@@ -16,9 +16,9 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: harness-hooks-de-guarda
-    workflow_state: executing
+    workflow_state: ready_for_review
     next_owner: claude
-    next_action: continue_active_plan
+    next_action: request_code_review   # 10 tasks provadas; a review do branch inteiro achou 2 Criticos + 1 Importante, os tres corrigidos e reprovados nos dois sentidos. Restam questoes de POLITICA para o Joao decidir (ver .superpowers/sdd/progress.md)
     tree: ../lotus-harness
     branch: chore/harness-hooks-de-guarda   # aberta de main@4dba322b em 2026-09-20 (a origin/main esta em 618f390a; os dois commits a mais sao a spec e o plano DESTE bloco, e sem eles a arvore nao teria nem o plano nem um state.md que conhece o item 28). Worktree novo, e nao o main tree, porque o guard-main que este bloco cria tem a main como SUJEITO
     active_spec: docs/superpowers/specs/2026-09-20-harness-hooks-de-guarda-design.md   # design aprovado em 2026-09-20
