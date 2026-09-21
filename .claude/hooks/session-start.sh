@@ -47,8 +47,12 @@ corpo() {
   linhas+=('Harness de blocos. Lanes:')
   linhas+=('')
 
+  # O separador e o Unit Separator (0x1F), nao TAB: TAB e espaco em branco
+  # para o IFS e uma sequencia de TABs COLAPSA, entao um campo vazio no meio
+  # empurra todos os seguintes uma casa para a esquerda. Ver o docstring do
+  # ler-estado.py.
   local id ws item br_lane tree na marca outro estado_outro ws2 item2
-  while IFS=$'\t' read -r _ id ws item br_lane tree na; do
+  while IFS=$'\x1f' read -r _ id ws item br_lane tree na; do
     reclamadas+=("$br_lane")
     marca='  '
     [[ -n $br_lane && $br_lane == "$branch_atual" ]] && marca='* '
@@ -63,7 +67,7 @@ corpo() {
         # si mesma. Foi esta divergencia — a main dizendo lane-c idle enquanto
         # a arvore dizia executing — que custou duas paradas no planejamento
         # deste bloco.
-        IFS=$'\t' read -r _ _ ws2 item2 _ < <(python3 "$LER_ESTADO" "$estado_outro" | awk -F'\t' -v k="$id" '$2==k')
+        IFS=$'\x1f' read -r _ _ ws2 item2 _ < <(python3 "$LER_ESTADO" "$estado_outro" | awk -F$'\x1f' -v k="$id" '$2==k')
         if [[ -n $ws2 && ( $ws2 != "$ws" || $item2 != "$item" ) ]]; then
           vencidas+=("$id: a main diz [$ws / ${item:-sem-item}], a arvore $tree diz [$ws2 / ${item2:-sem-item}]")
         fi
