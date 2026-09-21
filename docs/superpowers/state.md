@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: cicd-promocao-deploy-e-rollback
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
 context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
 blocker: null
 lanes:
@@ -30,13 +30,13 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: cicd-promocao-deploy-e-rollback
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../lotus-infra
     branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; a homonima de 2026-08-26 estava inteira dentro da main (PR #105 mesclou o item 10 v2)
     active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
     context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
     blocker: null
     resume_state: null
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: infra-producao-provisionamento-aws
 state_basis_commit: cff022d4
-updated_at: 2026-09-21T20:55:00-03:00
+updated_at: 2026-09-21T21:40:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
-| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `planning` |
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `ready_for_execution` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
@@ -234,6 +234,21 @@ versionado e idempotente com readback**, que o João roda e a sessão confere �
 `.github/workflows/ci.yml` **não têm catraca nenhuma hoje**, embora a lição 19 já liste
 `deploy/bin/*.sh` entre os pares guardados. Glob na lição não é asserção no arquivo, e o bloco
 entrega os dois testes junto com o que mexe neles.
+
+**O plano está escrito e a lane vai a `ready_for_execution`.**
+`plans/2026-09-21-cicd-promocao-deploy-e-rollback.md`, **doze tasks**, `executor: claude`. As tasks
+1 a 4 crescem o `deploy/bin/deploy.sh` em quatro camadas, nessa ordem (cadeado e `CURRENT_SHA`
+atômico, gate de schema, chave do dump no `backup-db.sh`, dump e ledger); a 5 e a 6 escrevem o
+workflow e o script de IAM; a 7 é doc. **As tasks 8, 9, 10 e 12 têm execução do João** — escrita na
+conta AWS e no host de produção não passa pela sessão, que lê a saída, confere contra o esperado e
+escreve a evidência em `audits/2026-09-21-cicd-promocao-deploy-e-rollback.md`.
+
+**A task 11 mescla na `main` e espelha ANTES das provas do botão, e isso é imposição de
+plataforma, não preferência:** `workflow_dispatch` só existe quando o arquivo está na branch
+default, e a única via até `Gatika-CL/lotus` é o `scripts/espelhar-corporativo.sh`. Por isso todas as
+provas que dão para fazer por SSH — ledger, cadeado, dump, rollback limpo e rollback recusado —
+ficam nas tasks 9 e 10, antes da integração. Há precedente na mesma lane: o item 20 também mesclou
+e espelhou no meio do bloco.
 
 **A branch e o espelho.** `cicd/promocao-deploy-e-rollback` foi **recriada** de
 `origin/main@cff022d4` — o tip que já traz o item 10 v2 mesclado (PR #105). A homônima de 2026-08-26
