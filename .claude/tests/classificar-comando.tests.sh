@@ -303,3 +303,51 @@ assert_libera 'sed -n "/warning/p" app.log'
 assert_libera 'sed "s/a/b/g" README.md'
 assert_libera 'sed -n "/switch/d;/warn/p" a.txt'
 assert_libera 'sort a.txt | uniq -c | sort -rn'
+
+# --- Q-1: separador em allowlist. `|&` nao quebrava o comando, entao o lado
+# direito inteiro entrava como argumento de um comando de leitura inofensivo.
+# Cobre os dois lados: o que separa continua separando, o que nao se reconhece
+# nega em vez de virar argumento.
+assert_nega   'ls |& rm -rf /tmp/x'
+assert_nega   'cat a.txt |& tee saida.txt'
+assert_nega   'ls |& python3 -c "import os"'
+assert_nega   'ls ;& rm x'
+assert_nega   'ls ;;& rm x'
+assert_nega   'ls; (rm -rf /)'
+assert_contem "$(classificar 'ls |& rm -rf /tmp/x')" \
+              'executa codigo arbitrario' '|& quebra o comando e o rm e classificado'
+assert_contem "$(classificar 'ls; (rm -rf /)')" \
+              'pontuacao de shell' 'pontuacao nao reconhecida nega em vez de passar'
+assert_libera 'cat a.txt | grep foo'
+assert_libera 'ls docs && git status'
+assert_libera 'ls docs; git status'
+assert_libera 'docker compose logs app & '
+
+# --- Q-2: -C/--git-dir/--work-tree para fora da raiz so leem. A spec 5.3
+# autorizou `-C` para leitura; somado a add/commit/push virava escrita cruzada.
+# LOTUS_RAIZ do arquivo e /repo, entao `..` cai fora e `backend` cai dentro.
+assert_nega   'git -C ../lotus-infra commit -m x'
+assert_nega   'git -C ../lotus-infra add .'
+assert_nega   'git -C /home/jvbat/projetos/fix-frontend push origin HEAD'
+assert_nega   'git -C ../outra merge origin/main'
+assert_nega   'git --git-dir=../lotus-infra/.git add .'
+assert_nega   'git --work-tree=/tmp/x commit -m y'
+assert_nega   'git --git-dir ../lotus-infra/.git commit -m z'
+assert_nega   'git -C'
+assert_contem "$(classificar 'git -C ../lotus-infra commit -m x')" \
+              'arvore de outra lane' 'escrita cruzada nega pelo motivo certo'
+assert_libera 'git -C ../lotus-infra log --oneline -5'
+assert_libera 'git -C ../lotus-infra status --porcelain'
+assert_libera 'git --git-dir=../lotus-infra/.git log -1'
+assert_libera 'git -C backend log -1'
+assert_libera 'git -C . commit -m "docs: nota"'
+assert_libera 'git commit -m "docs: nota"'
+# Sem LOTUS_RAIZ nao da para provar que o destino e interno: nega (fecha).
+assert_igual  '' "$(LOTUS_RAIZ= python3 "$CLASSIF" 'git -C qualquer log -1' 2>&1)" \
+              'sem LOTUS_RAIZ: leitura cruzada ainda passa'
+if [[ -n $(LOTUS_RAIZ= python3 "$CLASSIF" 'git -C qualquer commit -m x' 2>&1) ]]; then
+  printf '  ok    nega: sem LOTUS_RAIZ, escrita com -C falha fechada\n'
+else
+  FALHAS_TESTE=$((FALHAS_TESTE + 1))
+  printf '  FALHA nega: sem LOTUS_RAIZ, escrita com -C falha fechada\n'
+fi

@@ -3,7 +3,9 @@
 
 Contrato:
   argv[1]     a linha de comando
-  LOTUS_RAIZ  raiz do repositorio (opcional; so o pdftoppm usa)
+  LOTUS_RAIZ  raiz do repositorio. Sem ela, `git -C` e o pdftoppm
+              perdem a referencia de "dentro"; o git nega e o
+              pdftoppm libera, cada um para o lado seguro do seu risco
 
   exit 0 + stdout vazio  -> liberado
   exit 0 + motivo        -> negado
@@ -22,7 +24,13 @@ import sys
 RAIZ = os.environ.get("LOTUS_RAIZ", "")
 SUBST = "__SUBSTITUICAO__"
 REDIR_OK = re.compile(r">&1(?=\s|$)|>{1,2}\s*/dev/null(?=\s|$)")
-OPERADORES = {"|", "||", "&&", ";", ";;", "&", "\n"}
+# Separadores de comando, em ALLOWLIST. A lista anterior enumerava o que
+# separa e deixava o resto passar como argumento: `ls |& rm -rf /tmp/x` virava
+# um unico comando simples de nome `ls`, e o lado direito entrava inteiro sem
+# ser classificado. Quarta vez que uma denylist vazou aqui. Agora o inverso:
+# token feito so de pontuacao de shell ou esta nesta lista, ou nega.
+OPERADORES = {"|", "||", "&&", ";", ";;", "&", "|&", ";&", ";;&", "\n"}
+PONTUACAO_SHELL = set("|&;()<>")
 
 LEITURA = {
     "ls", "cat", "head", "tail", "grep", "rg", "find", "wc", "sort", "uniq",
@@ -226,6 +234,10 @@ def tokenizar(linha):
         negar("o comando nao pode ser analisado sintaticamente (%s)." % e)
 
 
+def so_pontuacao(token):
+    return bool(token) and set(token) <= PONTUACAO_SHELL
+
+
 def partir_em_simples(tokens):
     simples, atual = [], []
     for t in tokens:
@@ -233,11 +245,25 @@ def partir_em_simples(tokens):
             if atual:
                 simples.append(atual)
             atual = []
+        elif so_pontuacao(t):
+            negar("`%s` e pontuacao de shell que este classificador nao "
+                  "reconhece como separador de comando, entao o que vem "
+                  "depois nao seria classificado." % t)
         else:
             atual.append(t)
     if atual:
         simples.append(atual)
     return simples
+
+
+def fora_da_raiz(caminho):
+    """Falha FECHADA: sem RAIZ nao da para provar que o caminho e interno.
+
+    Diferente de destino_fora_do_repo(), que existe para o pdftoppm e cujo
+    "nao sei" significa liberar."""
+    if not RAIZ:
+        return True
+    return destino_fora_do_repo(caminho)
 
 
 def destino_fora_do_repo(caminho):
@@ -377,6 +403,17 @@ GIT_SUB = {
     "remote", "tag", "add", "commit", "merge", "fetch", "pull", "push",
 }
 GIT_GLOBAIS_COM_VALOR = {"-C", "--git-dir", "--work-tree", "--namespace"}
+# As tres que MUDAM A ARVORE ALVO. `--namespace` fica de fora: muda o refspace,
+# nao o diretorio.
+GIT_GLOBAIS_DE_DESTINO = {"-C", "--git-dir", "--work-tree"}
+# Unicos subcomandos liberados quando o destino cai fora da raiz. A spec 5.3
+# autorizou `-C` pensando em leitura (`git -C ../lotus-infra log`); combinada
+# com `add`/`commit`/`merge`/`push` ela virava escrita cruzada, que a Regra 1
+# do guard-main promete impedir por qualquer caminho.
+GIT_SUB_CRUZADA = {
+    "status", "log", "diff", "show", "rev-parse", "merge-base", "cat-file",
+    "ls-files", "blame", "shortlog", "describe",
+}
 GIT_BRANCH_ESCRITA = {"-d", "-D", "-m", "-M", "-c", "-C", "-f",
                       "--delete", "--move", "--copy", "--force"}
 URL_REMOTA = re.compile(r"^(https?|git|ssh)://|^[^/\s]+@[^/\s]+:")
@@ -392,6 +429,7 @@ def curta_contem(token, letras):
 
 def familia_git(args):
     i = 0
+    destinos = []
     while i < len(args) and args[i].startswith("-"):
         t = args[i]
         # A comparacao e SENSIVEL A CAIXA de proposito: `-C` troca de
@@ -405,8 +443,17 @@ def familia_git(args):
         if t.startswith("--exec-path"):
             negar("`git --exec-path` troca os binarios que o git executa.")
         if t in GIT_GLOBAIS_COM_VALOR:
+            if i + 1 >= len(args):
+                negar("`git %s` sem valor." % t)
+            if t in GIT_GLOBAIS_DE_DESTINO:
+                destinos.append(desaspar(args[i + 1]))
             i += 2
             continue
+        for g in GIT_GLOBAIS_DE_DESTINO:
+            # `--git-dir=X` nao casa por igualdade com o conjunto acima e
+            # passava direto.
+            if t.startswith(g + "="):
+                destinos.append(desaspar(t[len(g) + 1:]))
         i += 1
     if i >= len(args):
         negar("`git` sem subcomando.")
@@ -415,6 +462,11 @@ def familia_git(args):
     if sub not in GIT_SUB:
         negar("`git %s` nao esta na lista de subcomandos liberados na "
               "main." % sub)
+    for d in destinos:
+        if fora_da_raiz(d) and sub not in GIT_SUB_CRUZADA:
+            negar("`git %s` com destino `%s` escreve na arvore de outra "
+                  "lane. Fora da raiz so passa leitura; para escrever, abra "
+                  "a sessao naquela arvore." % (sub, d))
     for a in resto:
         if a == "-o" or a == "--output" or a.startswith("--output="):
             negar("`git %s %s` escreve arquivo." % (sub, a))

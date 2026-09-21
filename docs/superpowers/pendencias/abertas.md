@@ -261,6 +261,28 @@ repositório prova lock.
 
 # Documentação e mecanismo
 
+## P-77 — a spec dos hooks de guarda §9 descreve um harness de testes que não é o entregue
+
+**Bloco:** — · **Gatilho:** fecha quando a §9 da
+`specs/2026-09-20-harness-hooks-de-guarda-design.md` for corrigida para descrever o harness real, ou
+quando o harness ganhar o `trap` e o `assert_verdadeiro` que ela promete. Revisar em **2026-10-31**.
+
+Medido em 2026-09-20, no `/revisar-sprint` do bloco `harness-hooks-de-guarda` (achado Q-6, aprovado
+pelo João junto com Q-1..Q-5). Três frases da spec descrevem algo que o código entregue não faz:
+
+| Spec | O que existe |
+|---|---|
+| §9: "`trap` limpa na saída" | `limpar_descartes` é chamada **uma vez**, no fim de `.claude/tests/run-all.sh:27`. Sem `trap`: no caminho feliz limpa (verificado — nenhuma sobra no `TMPDIR`), mas um `Ctrl-C` no meio da suíte vaza os repositórios descartáveis |
+| §9: promete `assert_verdadeiro` | a suíte oferece `assert_igual`, `assert_contem` e `assert_nao_contem`. Já anotado pelo revisor anterior em `.superpowers/sdd/review-final.md` |
+| §5.2: escreve `posix=True` | o classificador usa `posix=False` somado a `desaspar()`, que foi decisão **deliberada** — `posix=True` resolveria as aspas antes do classificador ver o token, que é exatamente o escape C1 |
+
+Nenhuma das três muda o comportamento dos hooks, e por isso não são achado de código: são a spec
+descrevendo um alvo que o bloco não acertou de propósito (a terceira) ou não implementou (as duas
+primeiras). Ficou aberta porque corrigir a spec de um bloco ainda não fechado é reescrever o
+contrato no meio da revisão; a correção sai barata no `/fechar-sprint` do próprio bloco, junto com
+a emenda da §11 sobre `PreToolUse` disparar para `mcp__.*`, que está na mesma lista de decisões do
+João.
+
 ## P-32 — a guarda da lição 13 confere path, não classe
 
 **Bloco:** BD-15 · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a
