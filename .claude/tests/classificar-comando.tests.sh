@@ -231,3 +231,44 @@ assert_nega   'docker compose exec -T app php artisan test --coverage-html=cov'
 assert_libera 'docker compose exec -T app php artisan test'
 assert_libera 'docker compose exec -T app php artisan test --filter=CotacaoTest'
 assert_libera 'docker compose exec -T app php artisan test --filter CotacaoTest'
+
+# --- fix final de review (fix 1): aspas e barra invertida em posicao de FLAG
+# O classificador compara o token como o agente o escreveu; o bash compara
+# depois de expandir. `--forc\e` nao e `--force` aqui e E `--force` la. A
+# regra fecha a CLASSE: token que vira flag depois da expansao nega, sem
+# tentar adivinhar em que flag ele vai dar.
+
+# os cinco escapes reproduzidos no review, agora negados
+assert_nega   'git push --forc\e origin main'
+assert_nega   'find . -name x -exe\c rm {} ;'
+assert_nega   'sed --in-plac\e s/a/b/ README.md'
+assert_nega   'git branch --delet\e antiga'
+assert_nega   'git worktree remov\e ../outra'
+
+# a forma por aspas desvia identico, entao cai junto
+assert_nega   'git push --forc"e" origin main'
+assert_nega   "git push --forc'e' origin main"
+assert_nega   'git branch --delet"e" antiga'
+assert_nega   'git remote set-ur\l origin https://exemplo.invalido/x.git'
+assert_nega   'sed -i"" "s/a/b/" README.md'
+
+# o outro lado: as flags literais continuam negando pelo motivo de sempre,
+# e nao pela regra nova de ambiguidade
+assert_contem "$(classificar 'git push --force origin main')" \
+              'reescreve o remoto' 'git push --force nega pelo motivo original'
+assert_contem "$(classificar 'git branch --delete antiga')" \
+              'altera branch' 'git branch --delete nega pelo motivo original'
+assert_contem "$(classificar 'git worktree remove ../outra')" \
+              'arvore de outra lane' 'git worktree remove nega pelo motivo original'
+assert_contem "$(classificar 'sed --in-place s/a/b/ README.md')" \
+              'reescreve o arquivo' 'sed --in-place nega pelo motivo original'
+assert_contem "$(classificar 'find . -name x -exec rm {} ;')" \
+              'executa comando ou escreve' 'find -exec nega pelo motivo original'
+
+# o outro lado do escopo: barra invertida e aspas dentro de ARGUMENTO sao
+# normais e continuam passando — a regra so olha posicao de flag
+assert_libera 'grep -rn "padrao\.txt" backend/app'
+assert_libera 'cat "arquivo com espaco.txt"'
+assert_libera 'grep -rn "a\.b\.c" backend/app'
+assert_libera 'find . -name "*.log" -type f'
+assert_libera 'git commit -m "docs: nota com \"aspas\" dentro"'

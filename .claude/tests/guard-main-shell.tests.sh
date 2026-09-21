@@ -43,3 +43,22 @@ cp "$DIR_HOOKS/lib/comum.sh" "$_quebrado/.claude/hooks/lib/"
 acionar_hook "$_quebrado/.claude/hooks/guard-main-shell.sh" "$(payload_bash "$_quebrado" 'ls')"
 assert_igual 'deny' "$(decisao_sh "$SAIDA_HOOK")" 'classificador ausente: falha fechada'
 assert_igual 0 "$CODIGO_HOOK" 'falha fechada tambem sai 0'
+
+# --- fix final de review (fix 1): os escapes fim a fim, pelo
+# guarda, e nao so pelo classificador — foi assim que o review os reproduziu.
+for _escape in 'git push --forc\e origin main' \
+               'find . -name x -exe\c rm {} ;' \
+               'sed --in-plac\e s/a/b/ README.md' \
+               'git branch --delet\e antiga' \
+               'git worktree remov\e ../outra'; do
+  acionar_hook "$GUARDSH" "$(payload_bash "$_m" "$_escape")"
+  assert_igual 'deny' "$(decisao_sh "$SAIDA_HOOK")" "nega na main, fim a fim: $_escape"
+done
+
+# O outro lado, pelo mesmo caminho: o vizinho legitimo continua passando.
+for _ok in 'grep -rn "padrao\.txt" backend/app' \
+           'cat "arquivo com espaco.txt"' \
+           'sed -n "1,20p" README.md'; do
+  acionar_hook "$GUARDSH" "$(payload_bash "$_m" "$_ok")"
+  assert_igual '' "$SAIDA_HOOK" "libera na main, fim a fim: $_ok"
+done

@@ -54,6 +54,74 @@ def desaspar(token):
     return token
 
 
+# Caracteres que o bash RESOLVE antes de executar e que este classificador,
+# que compara o token como o agente o escreveu, nao resolve.
+AMBIGUOS = ("\\", "\"", "'")
+
+
+def expandir(token):
+    """Aproxima o que o bash entrega ao comando depois de tirar aspas e barra
+    invertida. E aproximacao de proposito: dentro de aspas duplas o bash so
+    trata `\\` como escape antes de alguns caracteres, e aqui trata sempre.
+    O erro da aproximacao cai SEMPRE para o lado de enxergar uma flag, e quem
+    chama nega ao ver uma — errar para o lado de negar e o que a falha
+    fechada pede."""
+    saida, i, n, aspas = [], 0, len(token), None
+    while i < n:
+        c = token[i]
+        if aspas == "'":
+            if c == "'":
+                aspas = None
+            else:
+                saida.append(c)
+            i += 1
+        elif c == "\\" and i + 1 < n:
+            saida.append(token[i + 1])
+            i += 2
+        elif aspas is None and c in "\"'":
+            aspas = c
+            i += 1
+        elif aspas == "\"" and c == "\"":
+            aspas = None
+            i += 1
+        else:
+            saida.append(c)
+            i += 1
+    return "".join(saida)
+
+
+def flag_ambigua(bruto):
+    """True quando o token vira uma FLAG depois da expansao do bash sem ser
+    uma flag literal aqui.
+
+    O buraco: toda regra de flag longa deste arquivo compara por igualdade
+    (`a == "--force"`, `a in GIT_BRANCH_ESCRITA`). O bash compara DEPOIS de
+    expandir, entao `--forc\\e`, `--forc"e"` e `"--force"` executam `--force`
+    enquanto aqui sao outra string. Nao da para reconstruir com seguranca o
+    que a flag vira em todo caso, entao a ambiguidade e negada em bloco —
+    fecha a CLASSE, nao as instancias achadas no review.
+
+    O escopo e posicao de FLAG. Barra invertida e aspas dentro de ARGUMENTO
+    sao normais (`grep -rn "padrao\\.txt"`, `cat "arquivo com espaco.txt"`) e
+    continuam passando: elas nao decidem nada neste classificador."""
+    if not any(c in bruto for c in AMBIGUOS):
+        return False
+    return expandir(bruto).startswith("-")
+
+
+def exigir_literal(token, contexto):
+    """A mesma ambiguidade da flag_ambigua, em posicao de SUBCOMANDO comparado
+    contra lista de NEGACAO. Onde a lista e de LIBERACAO (`GIT_SUB`,
+    `DOCKER_COMPOSE_SUB`, `PNPM_SCRIPTS`, `GH_LEITURA`) o token torto ja nao
+    casa e cai sozinho; onde a lista nega, `remov\\e` passaria por cima."""
+    if any(c in token for c in AMBIGUOS):
+        negar("`%s` traz aspas ou barra invertida onde o guarda compara o "
+              "subcomando de %s contra uma lista de negacao. O bash resolve "
+              "esses caracteres antes de executar e este guarda nao, entao "
+              "nao da para afirmar qual subcomando vai rodar."
+              % (token, contexto))
+
+
 def fechar(linha, i):
     """linha[i] == '('; devolve o indice do ')' correspondente."""
     profundidade = 0
@@ -283,11 +351,14 @@ def familia_git(args):
     elif sub == "worktree":
         if not resto:
             negar("`git worktree` sem subcomando.")
+        exigir_literal(resto[0], "`git worktree`")
         if resto[0] in ("remove", "move", "prune", "lock", "unlock", "repair"):
             negar("`git worktree %s` mexe na arvore de outra lane." % resto[0])
         if resto[0] == "add" and ("--force" in resto or "-f" in resto):
             negar("`git worktree add --force` sobrescreve arvore existente.")
     elif sub == "remote":
+        if resto:
+            exigir_literal(resto[0], "`git remote`")
         if resto and resto[0] in ("add", "remove", "rm", "set-url", "rename",
                                   "set-head", "prune"):
             negar("`git remote %s` altera o remoto." % resto[0])
@@ -424,6 +495,15 @@ def familia_gh(args):
 
 
 def classificar_simples(tokens):
+    # Antes de desasparar: em posicao de flag, aspas e barra invertida sao
+    # ambiguidade, e ambiguidade nega. O nome do comando (tokens[0]) ja e
+    # coberto pelo fullmatch mais abaixo, que nao aceita nenhum dos dois.
+    for bruto in tokens[1:]:
+        if flag_ambigua(bruto):
+            negar("o token `%s` tem aspas ou barra invertida e, depois que o "
+                  "bash as resolve, vira uma FLAG. Este guarda compara a flag "
+                  "como voce a escreveu, entao nao da para afirmar qual flag "
+                  "vai rodar — escreva a flag literal." % bruto)
     tokens = [desaspar(t) for t in tokens]
     if not tokens:
         return
