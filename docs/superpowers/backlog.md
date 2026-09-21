@@ -63,7 +63,7 @@
   hospedava (`P-71`, `P-72` e a metade de comportamento da `P-60`) — **fechado em 2026-09-03**; e o
   `27` em 2026-09-03, do levantamento de frontend pedido pelo João, medido contra `main@24bf770c`
   — **fechado em 2026-09-04**; e o `28` em 2026-09-20, aberto pelo João a partir da leitura do
-  harness do `Ela-Decora/ElaDecora-Brain`.
+  harness do `Ela-Decora/ElaDecora-Brain` — **fechado em 2026-09-20**.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -82,14 +82,13 @@ sendo ato explícito no `state.md`. A fila abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **28** `harness-hooks-de-guarda` | Harness | Catraca que falta: hoje nada impede escrita de código na `main` nem aviso de conclusão sem verificação. Sai barato, não depende de nenhum outro item e protege todos os seguintes |
-| 2 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
-| 3 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
-| 4 | **22** `dominio-decisoes-de-rbac-e-semantica` | Backend | Quatro decisões de domínio travadas no João; muda contrato e regenera `generated.ts`, então precede qualquer frontend que dependa desses campos |
-| 5 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
-| 6 | **10** `infra-producao-provisionamento-aws` | Infra | P0 de deploy, mas depende de quatro decisões do João e de conta AWS; nada de código o bloqueia |
-| 7 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | Estacionado com packet `status: blocked`: não há host. Destrava quando o 10 provisionar o alvo |
-| 8 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
+| 1 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
+| 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
+| 3 | **22** `dominio-decisoes-de-rbac-e-semantica` | Backend | Quatro decisões de domínio travadas no João; muda contrato e regenera `generated.ts`, então precede qualquer frontend que dependa desses campos |
+| 4 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
+| 5 | **10** `infra-producao-provisionamento-aws` | Infra | P0 de deploy, mas depende de quatro decisões do João e de conta AWS; nada de código o bloqueia |
+| 6 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | Estacionado com packet `status: blocked`: não há host. Destrava quando o 10 provisionar o alvo |
+| 7 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
 
 **A colisão 16 × 9, registrada e não resolvida:** o 16 tem uma run de `/lotus-ui-review` de
 **Administração** no escopo e o 9 pode **redesenhar a mesma tela**. Medir antes do veredito do 9 é
@@ -101,65 +100,6 @@ escopo foi movido de ficha.
 ---
 
 # Fila priorizada
-
-## 28. `harness-hooks-de-guarda`
-
-**Prioridade:** P1 · **Frente:** Harness · **Contexto:** não
-**Fonte:** o harness do `Ela-Decora/ElaDecora-Brain` (`.claude/hooks/`, `.claude/settings.json`,
-`.claude/tests/`), lido em 2026-09-20 a pedido do João. Lá os guardas nasceram de cicatriz — o
-bloco B-027 daquele repo existe porque escrever arquivo por comando de shell contornava o guarda
-de Edit/Write.
-
-O Lotus tem o fluxo de blocos escrito em prosa nos commands e **nenhuma catraca que o sustente**:
-não há `.claude/settings.json` versionado, não há hook nenhum. Toda invariante do `state.md` e do
-`/executar-bloco` depende de o agente lembrar dela. O ElaDecora resolveu o mesmo problema com
-cinco hooks; o escopo deste item é **portá-los para bash** (o Lotus roda WSL, o original é
-PowerShell) — portar é reescrever, não copiar.
-
-Os cinco, com o que muda na tradução para o Lotus:
-
-- **`guard-main`** (`PreToolUse`, `Edit|Write|NotebookEdit`) — nega escrita quando a branch da
-  árvore que contém o alvo for `main`; passam `docs/`, `.claude/`, `.agents/`, `CLAUDE.md`,
-  `INSTRUÇÕES-DO-PROJETO.md` e `CONTRIBUINDO.md`. Nega também escrita **cruzada** entre árvores,
-  que é o caso real do Lotus: três lanes, duas em worktree (`../lotus-infra`, `../fix-frontend`).
-  A regra é por **branch**, não por árvore — por isso convive com a P-03, que manda o bloco de
-  backend rodar no main tree: lá a árvore está numa branch de lane, não na `main`.
-- **`guard-main-shell`** (`PreToolUse`, `Bash`) — restringe o shell a uma lista de permitidos
-  enquanto a branch da sessão for `main`. É o hook que fecha o buraco do anterior. Porte com
-  parser de bash (pipe, `&&`, `;`, subshell, redirecionamento, `$(...)`), não com regex sobre a
-  linha. A lista do Lotus precisa cobrir leitura, `git` de integração sem as formas destrutivas,
-  e o que o projeto usa de fato: `docker compose` por subcomando, `pnpm` por script, `pdfinfo`,
-  `pdftoppm`. Fica de fora tudo que executa pacote arbitrário e tudo que escreve por
-  redirecionamento.
-- **`guard-secrets`** (`PreToolUse`, `Edit|Write`) — nega gravar `.env`/`.env.*` (exceto o nominal
-  `.env.example`) e conteúdo com marca de credencial. As marcas do Lotus não são as do ElaDecora:
-  `APP_KEY=base64:`, chave de acesso e segredo da AWS/S3/MinIO, senha de RDS, token do GitHub.
-- **`session-start`** — injeta o estado no início da sessão. No Lotus a fonte é o frontmatter de
-  `docs/superpowers/state.md`: `focused_lane`, e por lane `workflow_state`, `next_action`, `tree`
-  e `branch`, mais `branch`/`HEAD`/arquivos sujos do git de agora, marcando qual lane é a desta
-  sessão.
-- **`stop-verify`** (`Stop`) — reintroduz a lei da `verification-before-completion` quando a
-  árvore tem arquivo modificado sob `backend/` ou `frontend/`, cobrando a saída de
-  `docker compose exec -T app php artisan test` e de `pnpm build` / `pnpm test`. Duas guardas
-  contra laço: o campo `stop_hook_active` e uma marca por sessão+commit.
-
-Contrato comum, que o ElaDecora pagou caro para aprender e não se reinventa aqui: **falha
-aberta** em erro de infraestrutura, `exit 0` sempre (nunca `exit 2`), `PreToolUse` responde com
-`hookSpecificOutput.permissionDecision`, o `Stop` responde com `decision`/`reason` na raiz, e a
-raiz do repositório vem de `git rev-parse`, nunca de `CLAUDE_PROJECT_DIR` — numa sessão dentro de
-worktree a variável aponta para a árvore errada.
-
-**A entrega inclui a suíte que prova os hooks**, em bash, rodável por um alvo só. Hook sem teste
-é prosa com `exit 0`: o DoD deste item é cada guarda negando o caso que deve negar e liberando o
-caso que deve liberar, com a saída colada — não "o arquivo existe".
-
-**Fora do escopo, por decisão do João em 2026-09-20:** o `lane.ps1` (abrir/fechar/descobrir lane
-e portão de independência), o `lint-diferencial`, o `aceitacao.ps1` com o par
-`efeito_externo`/`aceitacao.md`, e a migração do `state.md` único para um `estado.md` por bloco.
-Os quatro são do mesmo harness e podem virar item depois; nenhum deles é pré-requisito destes
-cinco hooks.
-
----
 
 ## 16. `frontend-revisao-ui-por-modulo`
 

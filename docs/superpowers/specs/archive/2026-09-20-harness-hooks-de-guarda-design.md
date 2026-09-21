@@ -181,18 +181,26 @@ equivalente. O substituto é `shlex` com `punctuation_chars=True`, e o que o AST
 descer em substituição de comando — passa a ser escrito à mão.
 
 ```
-1. shlex(cmd, posix=True, punctuation_chars=True)
+1. shlex(cmd, posix=False, punctuation_chars=True) + desaspar() por token
    ValueError (aspas abertas) -> nega: "nao pode ser analisado sintaticamente"
 2. $(...) e `...`  -> extrai por balanceamento e classifica RECURSIVO
    <(...)          -> nega (substituicao de processo vira caminho de arquivo magico)
 3. redirecionamento > >> &>  -> nega
    excecoes: 2>/dev/null e 2>&1, que nao escrevem em arquivo
-4. quebra em comandos simples por  |  ||  &&  ;  &  e nova linha
+4. quebra em comandos simples por ALLOWLIST de separadores:
+   |  ||  &&  ;  ;;  &  |&  ;&  ;;&  e nova linha
+   token feito so de pontuacao de shell fora dessa lista -> nega
 5. por comando simples:
    prefixo VAR=valor        -> nega
    nome nao literal ($x, *) -> nega
    despacha por familia
 ```
+
+`posix=False` é deliberado, e não um detalhe de implementação. Com `posix=True` o `shlex`
+resolve as aspas antes de o classificador ver o token, e `git push "--forc"e` chegaria já como
+`--force` — o classificador comparia a string expandida sem saber que o agente a escondeu. Mantendo
+`posix=False`, o token chega cru; `desaspar()` remove as aspas onde a comparação precisa, e aspas ou
+barra invertida **em posição de flag** negam por ambiguidade (o escape C1 da revisão de branch).
 
 O passo 5, primeiro item, é o `GIT_EXTERNAL_DIFF=... git diff` do original entrando por outra
 porta: atribuição de variável na frente do comando muda o que o comando faz sem mudar o nome dele.
@@ -216,6 +224,12 @@ Negado:
 
 - flag global `-c` e `--config-env` — injetam configuração, e `core.pager` executa shell. A
   comparação é **sensível a caixa**: `-C` (trocar diretório) passa, `-c` nega;
+- `-C`, `--git-dir` e `--work-tree` (nas duas formas, `-C X` e `--git-dir=X`) **apontando para fora
+  de `LOTUS_RAIZ`**, combinados com qualquer subcomando que não seja de leitura. `git -C
+  ../lotus-infra log` é a leitura que a allowlist queria autorizar; `git -C ../lotus-infra commit`
+  é escrita na árvore de outra lane, que a Regra 1 do `guard-main` promete impedir por qualquer
+  caminho. Sem `LOTUS_RAIZ` no ambiente, a regra falha **fechada** — não dá para provar que o
+  destino é interno;
 - `--exec-path`;
 - `-o` e `--output` em **qualquer** subcomando;
 - `branch` com `-d -D -m -M -c -C -f --delete --move --copy --force`;
@@ -369,21 +383,25 @@ verificação — e diz que o hook lê a árvore inteira e não sabe quais arqui
 
 Decisão: runner bash próprio, repositório git descartável por caso. Sem dependência externa.
 
-`_assert.sh` oferece `assert_igual`, `assert_verdadeiro` e `assert_contem`. A contenção é
+`_assert.sh` oferece `assert_igual`, `assert_contem` e `assert_nao_contem`. A contenção é
 **literal e sem caixa**, não padrão de glob: o original apanhou disso, porque `-like` tratava a
 crase como caractere de escape e nenhum trecho com crase casava — e motivo de recusa cita código
 em markdown o tempo todo. O contador de falhas é variável global, o que funciona porque
 `run-all.sh` faz `source` de cada arquivo em vez de rodar em subshell.
 
 `criar_repo()` monta o descartável: `mktemp -d`, `git init -q -b main`, `user.name` e `user.email`
-**locais**, um commit vazio, as pastas do caso. `trap` limpa na saída. Nada toca o repositório
+**locais**, um commit vazio, as pastas do caso. Cada caso registra o descartável com
+`registrar_descarte`, e `run-all.sh` arma `trap limpar_descartes EXIT` — a limpeza vale também para
+`Ctrl-C` no meio da suíte, não só para o caminho feliz. Nada toca o repositório
 real — em particular, nada de `git stash`: a pilha tem stashes alheios, e provar catraca com
 stash já custou caro neste projeto.
 
 Acionar um hook é `printf '%s' "$payload" | bash .claude/hooks/X.sh`, com o `cwd` do payload
 apontando para o descartável; a saída é lida com `jq -r`.
 
-Seis arquivos: `classificar-comando.tests.sh` (unitário puro, sem git) e um por hook.
+Sete arquivos: `classificar-comando.tests.sh` (unitário puro, sem git), um por hook, e
+`_assert.tests.sh`, que prova as próprias asserções — sem ele, uma `assert_contem` quebrada deixaria
+a suíte inteira verde por vacuidade.
 
 Regras que a suíte obedece:
 
@@ -418,3 +436,9 @@ declarada como tal, e não como caixa que o agente marca sozinho.
   variável.
 - Nenhum hook cobre ferramentas de MCP nem nada fora dos matchers declarados no §3.1. Escrita por
   servidor MCP não passa pelo `guard-main` nem pelo `guard-secrets`.
+
+  **Emenda de 2026-09-20 (fechamento do bloco):** a frase acima descrevia o buraco como se ele fosse
+  fechado por construção. Não é. Verificado contra o binário instalado do Claude Code: o matcher de
+  `PreToolUse` **aceita `mcp__.*`**, então o bypass é fechável — falta um guarda que saiba ler o
+  `tool_input` de cada servidor, que é outro bloco. O limite real é "os hooks deste bloco não cobrem
+  MCP", não "hooks não cobrem MCP".

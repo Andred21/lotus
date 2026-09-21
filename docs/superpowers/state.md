@@ -3,30 +3,30 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-a
 active_feature: null
-active_work_item: harness-hooks-de-guarda
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-20-harness-hooks-de-guarda-design.md
-active_plan: docs/superpowers/plans/2026-09-20-harness-hooks-de-guarda.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: harness-hooks-de-guarda
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item   # /revisar-sprint em 2026-09-20 sobre 4dba322b..HEAD: Q-1..Q-5 aprovados pelo Joao e corrigidos com asercao no mesmo commit; Q-6 virou a pendencia P-77
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../lotus-harness
-    branch: chore/harness-hooks-de-guarda   # aberta de main@4dba322b em 2026-09-20 (a origin/main esta em 618f390a; os dois commits a mais sao a spec e o plano DESTE bloco, e sem eles a arvore nao teria nem o plano nem um state.md que conhece o item 28). Worktree novo, e nao o main tree, porque o guard-main que este bloco cria tem a main como SUJEITO
-    active_spec: docs/superpowers/specs/2026-09-20-harness-hooks-de-guarda-design.md   # design aprovado em 2026-09-20
-    active_plan: docs/superpowers/plans/2026-09-20-harness-hooks-de-guarda.md   # 10 tasks; handoff declara executor: claude
-    context_packet: null   # Contexto: nao na ficha do 28 — as fontes sao o harness lido e o proprio repositorio
+    branch: chore/harness-hooks-de-guarda   # item 28 fechado em 2026-09-20; a branch NAO foi mesclada — integracao e serial e e passo proprio, com o Joao
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, fechado em 2026-09-04; a PR #104 MESCLOU em origin/main@618f390a
+    last_completed_work_item: harness-hooks-de-guarda   # item 28, fechado em 2026-09-20
   lane-b:
     active_feature: null
     active_work_item: infra-producao-provisionamento-aws
@@ -60,9 +60,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: dominio-decisoes-de-rbac-e-semantica
-state_basis_commit: 4dba322b
-updated_at: 2026-09-20T00:00:00-03:00
+last_completed_work_item: harness-hooks-de-guarda
+state_basis_commit: 623c1c5b
+updated_at: 2026-09-20T23:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `harness-hooks-de-guarda` (item 28) | Harness | `../lotus-harness` | `chore/harness-hooks-de-guarda` | `executing` |
+| `lane-a` | — (item 28 **fechado em 2026-09-20**) | — | `../lotus-harness` | `chore/harness-hooks-de-guarda` (**não mesclada**) | `idle` |
 | `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 | `executing` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
@@ -201,11 +201,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-20 | `harness-hooks-de-guarda` (fecha a **P-77**; abre a **P-78** — sete decisões de política dos guardas que só existiam no ledger gitignorado — e a **P-79** — o harness não existe em doc versionado; nascem `.claude/settings.json`, `.claude/hooks/` com os cinco guardas e `.claude/tests/` com sete arquivos) | Item 28 da fila |
 | 2026-09-04 | `dominio-decisoes-de-rbac-e-semantica` (fecha as quatro fichas de decisão `D-09`, `D-10`, `D-11` e `D-16`; nenhuma pendência nasce ou fecha, mas **dispara sem pagar** os gatilhos da `P-51` e da `P-53`; nascem `RoleOptionData`, `StudentClientOptionData`, `UmContatoPrincipal` e `DeleteClientAddressAction`) | Item 22 da fila |
 | 2026-09-04 | `frontend-arrumacao-de-testes` (fecha a **P-58**; nenhuma pendência nasce; nascem `test.projects` no `vite.config.ts`, `src/shared/testing/providers.tsx` e a catraca `QUERY_CLIENT_A_MAO`) | Item 27 da fila |
 | 2026-09-03 | `backend-envelope-de-erro-e-recusa-de-dominio` (paga a **P-71**, a **P-72** e a metade de comportamento da **P-60**; abre a **P-75** e a **P-76**; nascem `TipoDeRecusa` e `RecusaDeDominio` em `app/Shared/Exceptions/` e a rule `.claude/rules/backend-lang.md`) | Item 26 da fila |
 | 2026-09-03 | `frontend-dividas-de-mecanismo` (fecha `P-68`, `P-69`, `P-70`, `P-30`, `P-42` e o débito `D-69`; abre a **P-74**) | Item 25 da fila |
-| 2026-09-02 | `backend-projecao-de-arquivados` (nenhuma pendência nasce ou fecha; abre `ArchivedListing` e `RespostaDeRecurso` em `app/Shared/`) | Item 24 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com

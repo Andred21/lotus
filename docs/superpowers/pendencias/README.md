@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (27)
+## Abertas (28)
 
 ### Agrupadas em bloco de execução
 
@@ -31,7 +31,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
-| P-77 | A §9 da spec dos hooks de guarda promete `trap` de limpeza e `assert_verdadeiro`; a suíte entregue não tem nenhum dos dois, e a §5.2 diz `posix=True` onde o classificador usa `posix=False` de propósito | — | `/fechar-sprint` do `harness-hooks-de-guarda`, junto com a emenda da §11 sobre MCP; revisar 2026-10-31 |
+| P-79 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | — | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
@@ -64,6 +64,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
+| P-78 | Sete decisões de política dos guardas (allowlist da `main` para `.github/`/`.githooks/`/`.codex/`/`.superpowers/`, `merge --ff-only`, o `docker/probe.env` real, os três caminhos do `stop-verify`, o motivo que ensina a alargar a allowlist, `git commit` sem `-m`) ficaram só no ledger, que é **gitignorado** | João | João decidir cada linha — a favor ou contra — e a decisão virar commit; revisar 2026-10-31 |
 | P-74 | O botão de severidade reprova AA no estado base do tema claro em quatro das cinco famílias (success 2,28:1, info 2,77:1, danger 3,76:1, help 3,96:1) — o `warning`, que a P-30 fechou, era a quarta pior | João | uma régua por estado, no molde do `describe` da P-30 em `frontend/tests/tone-ink.test.ts`, cobrir as cinco severidades nos três estados e todas passarem 4,5:1; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
@@ -86,9 +87,16 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (1)
 
-**Em rastro:** a **P-58**, fechada em **2026-09-04** pelo `frontend-arrumacao-de-testes` (item 27),
-por mecanismo. A ficha está em [`encerradas.md`](./encerradas.md) e sai no próximo fechamento
-posterior ao dela.
+**Em rastro:** a **P-77**, fechada em **2026-09-20** pelo `harness-hooks-de-guarda` (item 28) — no
+fechamento do próprio bloco que a abriu, pelos **dois** lados do gatilho: a spec foi corrigida (§5.2,
+§9 e, de quebra, §5.3 e §11) e o `run-all.sh` ganhou o `trap` que a §9 prometia, provado nos dois
+sentidos. A ficha está em [`encerradas.md`](./encerradas.md) e sai no próximo fechamento posterior
+ao dela.
+
+**A P-58 saiu neste fechamento** (2026-09-20), o primeiro posterior ao do
+`frontend-arrumacao-de-testes` (item 27), que a encerrou em 2026-09-04 por mecanismo — a catraca do
+vite passou a afastar os `.env*` das duas raízes que o `vite.config.ts` lê. O rastro durável está
+nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **As oito que estavam em rastro saíram nos dois fechamentos de 2026-09-04**: as cinco do
 `frontend-dividas-de-mecanismo` (item 25) — `P-69`, `P-70`, `P-30`, `P-68` e `P-42` — no do item 27,

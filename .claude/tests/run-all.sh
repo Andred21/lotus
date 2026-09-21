@@ -18,6 +18,12 @@ if [[ -z $_sonda || ! -d $_sonda ]]; then
 fi
 rmdir "$_sonda"
 
+# A limpeza tambem no EXIT, e nao so na linha reta depois do laco: `Ctrl-C` no
+# meio da suite, ou um `exit` de dentro de um arquivo de teste, vazava os
+# repositorios descartaveis no TMPDIR. `limpar_descartes` e idempotente (zera o
+# array), entao a chamada explicita do fim e o trap nao se atrapalham.
+trap limpar_descartes EXIT
+
 arquivos=("$dir"/*.tests.sh)
 for a in "${arquivos[@]}"; do
   printf '== %s\n' "$(basename "$a")"

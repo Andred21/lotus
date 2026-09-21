@@ -7,12 +7,9 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(uma: a **`P-58`**, fechada em **2026-09-04** pelo `frontend-arrumacao-de-testes` (item 27). As
-cinco do `frontend-dividas-de-mecanismo` (item 25) — `P-69`, `P-68`, `P-70`, `P-30` e `P-42` —
-saíram no fechamento do item 27, e as três do `backend-envelope-de-erro-e-recusa-de-dominio`
-(item 26) — `P-71`, `P-72` e a metade de comportamento da `P-60` — no do
-`dominio-decisoes-de-rbac-e-semantica` (item 22), o primeiro fechamento da `lane-a` desde então. O
-parágrafo do rastro adiante é o delas.)*
+*(uma: a **`P-77`**, fechada em **2026-09-20** pelo `harness-hooks-de-guarda` (item 28). A
+**`P-58`** cumpriu a sprint de rastro e saiu neste mesmo fechamento — o parágrafo do rastro adiante
+é o dela.)*
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -21,23 +18,37 @@ parágrafo do rastro adiante é o delas.)*
 > renumera para trás: é a mesma regra que o `state.md` escreveu para o rótulo de bloco na colisão
 > de 2026-09-02.
 
-### P-58 — a catraca do vite isola o `.env` da RAIZ e não o `frontend/.env`
+### P-77 — a spec dos hooks de guarda §9 descrevia um harness de testes que não era o entregue
 
-**Fechada em 2026-09-04**, por mecanismo, no item 27 (Task 7). `tests/compose-dev.test.ts` passou a
-afastar os quatro `.env*` das **duas** raízes que o `vite.config.ts` lê — a do repositório
-(`loadEnv(mode, RAIZ, 'LOTUS_')`, o offset de portas) e a de `frontend/`
-(`loadEnv(mode, __dirname, 'VITE_')`, que decide se `VITE_API_URL` já está definido). O `NOMES_ENV`
-antigo virou o produto `DIRETORIOS_ENV × NOMES_ENV`, com a chave do caminho relativa para que
-`.env` da raiz e `frontend/.env` não colidam nos mapas de plantados e backups pendentes.
+**Fechada em 2026-09-20**, no fechamento do próprio bloco que a abriu (item 28), pelos dois lados do
+gatilho: a spec foi corrigida **e** o harness ganhou o `trap` que ela prometia.
 
-**Provado com o arquivo posto e retirado**, duas vezes: na execução, a versão pré-Task-7
-(`git show 32b05097:...`) com `frontend/.env` real no disco deu as **3 falhas** que a ficha
-descreve (`expected undefined to be '"http://localhost:8080"'`) e a versão nova, mesmo arquivo no
-disco, deu **12/12**; no fechamento, com `VITE_API_URL=http://localhost:8080` plantado de novo,
-`pnpm test --project=repo tests/compose-dev.test.ts` deu **12/12** e o arquivo saiu, deixando a
-árvore limpa. O gate deixou de depender do disco de quem roda.
+| O que a spec dizia | O que foi feito |
+|---|---|
+| §9: "`trap` limpa na saída" | `run-all.sh` ganhou `trap limpar_descartes EXIT`, e a §9 passou a descrever o mecanismo real (registro por caso + trap). **Provado nos dois sentidos:** com `TMPDIR` próprio e `timeout -s INT` no meio da suíte, **0 sobras** com o trap e **2 sobras** com a linha do trap neutralizada numa cópia |
+| §9: prometia `assert_verdadeiro` | corrigida para `assert_igual`, `assert_contem` e `assert_nao_contem`, que são as três que `_assert.sh` oferece. A §9 também dizia "seis arquivos" onde há **sete** — falta[va] o `_assert.tests.sh`, que prova as próprias asserções |
+| §5.2: escrevia `posix=True` | corrigida para `posix=False` + `desaspar()`, com o parágrafo que explica **por que** é deliberado: `posix=True` resolveria as aspas antes de o classificador ver o token, e `git push "--forc"e` chegaria já expandido — o escape C1 |
+
+Duas emendas entraram junto, pelo mesmo motivo (spec descrevendo o que o código não faz): a §5.2
+passou a documentar a **allowlist** de separadores de comando e a §5.3 ganhou a regra de `-C` /
+`--git-dir` / `--work-tree` para fora da raiz — as duas nasceram das correções Q-1..Q-3 do review.
+
+A §11 foi emendada no mesmo commit: ela descrevia o buraco de MCP como fechado por construção, e
+o revisor verificou contra o binário instalado que o matcher de `PreToolUse` **aceita `mcp__.*`**.
+O limite real é "os hooks deste bloco não cobrem MCP", não "hooks não cobrem MCP" — fechá-lo é
+outro bloco. A spec arquivada está em
+[`../specs/archive/2026-09-20-harness-hooks-de-guarda-design.md`](../specs/archive/2026-09-20-harness-hooks-de-guarda-design.md).
 
 ## Rastro anterior, já removido
+
+**A P-58 saiu no fechamento do `harness-hooks-de-guarda` (2026-09-20)**, o primeiro posterior ao do
+`frontend-arrumacao-de-testes` (item 27), que a encerrou em 2026-09-04 por mecanismo: o
+`compose-dev.test.ts` passou a afastar os `.env*` das **duas** raízes que o `vite.config.ts` lê — a
+do repositório (`loadEnv(mode, RAIZ, 'LOTUS_')`) e a de `frontend/` (`loadEnv(mode, __dirname,
+'VITE_')`) —, e o gate deixou de depender do disco de quem roda, provado com o arquivo posto e
+retirado duas vezes (3 falhas na versão pré-Task-7, 12/12 na nova, com o mesmo `frontend/.env` no
+disco). O rastro durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **As três do `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) saíram no fechamento do
 `dominio-decisoes-de-rbac-e-semantica` (2026-09-04)**, o primeiro da `lane-a` posterior ao bloco que

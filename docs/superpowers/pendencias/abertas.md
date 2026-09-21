@@ -261,27 +261,27 @@ repositório prova lock.
 
 # Documentação e mecanismo
 
-## P-77 — a spec dos hooks de guarda §9 descreve um harness de testes que não é o entregue
+## P-79 — o harness de guarda não existe em nenhum doc versionado
 
-**Bloco:** — · **Gatilho:** fecha quando a §9 da
-`specs/2026-09-20-harness-hooks-de-guarda-design.md` for corrigida para descrever o harness real, ou
-quando o harness ganhar o `trap` e o `assert_verdadeiro` que ela promete. Revisar em **2026-10-31**.
+**Bloco:** — · **Gatilho:** fecha quando `docs/estrutura-monolito.md` descrever `.claude/hooks/`,
+`.claude/tests/` e `.claude/settings.json`, ou quando o `CONTRIBUINDO.md` disser o que os cinco
+hooks negam e como se acrescenta entrada à allowlist. Revisar em **2026-10-31**.
 
-Medido em 2026-09-20, no `/revisar-sprint` do bloco `harness-hooks-de-guarda` (achado Q-6, aprovado
-pelo João junto com Q-1..Q-5). Três frases da spec descrevem algo que o código entregue não faz:
+Medido em 2026-09-20, no `/fechar-sprint` do `harness-hooks-de-guarda` (item 28). O bloco entregou
+cinco hooks que passam a governar **toda** sessão futura — e nenhum doc versionado os menciona:
 
-| Spec | O que existe |
+| Doc | O que ele diz hoje |
 |---|---|
-| §9: "`trap` limpa na saída" | `limpar_descartes` é chamada **uma vez**, no fim de `.claude/tests/run-all.sh:27`. Sem `trap`: no caminho feliz limpa (verificado — nenhuma sobra no `TMPDIR`), mas um `Ctrl-C` no meio da suíte vaza os repositórios descartáveis |
-| §9: promete `assert_verdadeiro` | a suíte oferece `assert_igual`, `assert_contem` e `assert_nao_contem`. Já anotado pelo revisor anterior em `.superpowers/sdd/review-final.md` |
-| §5.2: escreve `posix=True` | o classificador usa `posix=False` somado a `desaspar()`, que foi decisão **deliberada** — `posix=True` resolveria as aspas antes do classificador ver o token, que é exatamente o escape C1 |
+| `docs/estrutura-monolito.md` | zero ocorrências de `.claude`. É o doc que o `CLAUDE.md` §3 manda ler "antes de criar arquivo novo — para saber ONDE ele vai", e ele não conhece a pasta |
+| `CONTRIBUINDO.md` | descreve o `pre-push` de `.githooks`, que é outro mecanismo. Nada sobre os hooks do Claude Code |
+| `CLAUDE.md` §4 e §6 | tabelam comandos e skills; hook não aparece |
 
-Nenhuma das três muda o comportamento dos hooks, e por isso não são achado de código: são a spec
-descrevendo um alvo que o bloco não acertou de propósito (a terceira) ou não implementou (as duas
-primeiras). Ficou aberta porque corrigir a spec de um bloco ainda não fechado é reescrever o
-contrato no meio da revisão; a correção sai barata no `/fechar-sprint` do próprio bloco, junto com
-a emenda da §11 sobre `PreToolUse` disparar para `mcp__.*`, que está na mesma lista de decisões do
-João.
+A consequência não é estética: quando o `guard-main-shell` negar um comando legítimo, o remédio é
+"acrescente a entrada em `.claude/hooks/lib/classificar-comando.py` e commite" — o próprio motivo de
+recusa diz isso —, e não há doc que explique a régua da allowlist nem por que ela existe. O bloco
+não escreveu nada disso porque o plano não listou entregável de doc; a spec §3.4 cobre a
+consequência de versionar os hooks, mas a spec agora está em `specs/archive/`, que ninguém lê por
+rotina.
 
 ## P-32 — a guarda da lição 13 confere path, não classe
 
@@ -504,6 +504,30 @@ coluna de certificado.
 
 Decisão do João no Bloco 2 — evitar inchaço do folder.
 
+
+## P-78 — sete decisões de política dos guardas ficaram só no ledger, que é gitignorado
+
+**Gatilho:** fecha quando o João decidir cada uma das sete linhas abaixo — a favor ou contra, tanto
+faz, desde que a decisão vire commit. Revisar em **2026-10-31**.
+
+Medido em 2026-09-20, no `/fechar-sprint` do `harness-hooks-de-guarda`. O review de branch triou
+sete pontos que **não** foram corrigidos porque cada um muda política escrita à mão, e política de
+segurança não se alarga por conta do agente. O registro deles vive em `.superpowers/sdd/progress.md`
+e `.superpowers/sdd/review-final.md` — e `.superpowers/` inteiro é **gitignorado**: a worktree some,
+eles somem junto. Por isso a ficha.
+
+| # | Decisão em aberto | Estado hoje |
+|---|---|---|
+| a | `.github/`, `.githooks/` e `.codex/` fora da allowlist de escrita na `main` | negados. São versionados, e editá-los na `main` é trabalho normal; o revisor argumentou a favor de incluí-los e eu concordo com o raciocínio, mas alargar allowlist de segurança é do João |
+| b | `.superpowers/` fora da mesma allowlist | negado — e é onde o `CLAUDE.md` §3 manda o ledger morar. Provado contra a `main` real: `Write` em `.superpowers/sdd/progress.md` volta `deny` |
+| c | `git merge` na `main` sem `--ff-only` | liberado. `merge` e `pull` mutam a árvore, enquanto `checkout`, `switch`, `restore` e `stash` são negados exatamente por isso |
+| d | `docker/probe.env` real (versionado, 1591 bytes) | negado pelo `guard-secrets`, pelo `APP_KEY=base64:` que ele de fato contém. Isentar por nome ou manter o `deny` é decisão de política, não de código — a suíte não o isentou |
+| e | `stop-verify` cobra `backend/`, `frontend/` e `.claude/`, e só | os três limites vieram da §8 da spec. `docs/` não está entre os caminhos vigiados, e a suíte prova que não está |
+| f | o motivo de recusa ensina a alargar a própria allowlist | "acrescente a entrada em `.claude/hooks/lib/...` e commite". Não está errado — a edição exige commit visível —, mas um guarda que documenta o próprio caminho de extensão baixa o atrito do auto-alargamento |
+| g | `git commit` sem `-m` passa e abre o `$EDITOR` | pendura o turno. Não é fuga de segurança, é ergonomia |
+
+Nenhuma das sete é fuga conhecida: são escolhas onde o guarda está mais apertado (a, b, d, e) ou
+mais frouxo (c, f, g) do que talvez se queira, e o bloco parou na linha certa ao não decidir sozinho.
 
 ## P-55 — a invariante do espelho proíbe o que toda lane precisa fazer
 
