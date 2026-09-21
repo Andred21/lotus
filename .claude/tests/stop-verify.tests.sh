@@ -29,6 +29,22 @@ assert_nao_contem "$_r" 'pnpm build' 'nao cobra o frontend quando o frontend nao
 acionar_hook "$PARADA" "$(payload_stop "$_v" teste-back false)"
 assert_igual '' "$SAIDA_HOOK" 'a marca impede repetir o aviso para o mesmo commit'
 
+# --- a marca e por sessao: outra sessao, mesmo commit, mesma arvore suja, avisa de novo
+acionar_hook "$PARADA" "$(payload_stop "$_v" teste-back-outra-sessao false)"
+assert_igual 'block' "$(campo_json "$SAIDA_HOOK" '.decision')" 'sessao diferente com o mesmo commit ainda bloqueia'
+
+# --- a marca e por commit: a mesma sessao avisa de novo quando o HEAD muda
+_head_base=$(git -C "$_v" rev-parse HEAD)
+git -C "$_v" add -A
+git -C "$_v" commit -q -m 'commita o backend sujo'
+printf 'y\n' > "$_v/backend/Outro.php"
+acionar_hook "$PARADA" "$(payload_stop "$_v" teste-back false)"
+assert_igual 'block' "$(campo_json "$SAIDA_HOOK" '.decision')" 'mesma sessao com HEAD novo bloqueia de novo'
+
+# --- desfaz o commit auxiliar: os testes seguintes assumem backend/ limpo de novo
+git -C "$_v" reset -q --hard "$_head_base"
+rm -f "$_v/backend/Outro.php"
+
 # --- guarda primaria contra laco
 acionar_hook "$PARADA" "$(payload_stop "$_v" teste-laco true)"
 assert_igual '' "$SAIDA_HOOK" 'stop_hook_active corta o laco imediato'

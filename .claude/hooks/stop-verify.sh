@@ -37,7 +37,7 @@ corpo() {
   head=$(git -C "$raiz" rev-parse --short HEAD 2>/dev/null); [[ -z $head ]] && head=sem-head
   marca="${TMPDIR:-/tmp}/lotus-stopverify-${sid}-${head}.marca"
   [[ -e $marca ]] && return 0
-  : > "$marca" 2>/dev/null
+  { : > "$marca"; } 2>/dev/null || true
 
   # Cobra so o que foi tocado. Pedir 'pnpm build' quando so o backend mudou
   # treina o leitor a ignorar o aviso.
