@@ -13,6 +13,14 @@ if ! ls /var/lib/clamav/*.c[lv]d >/dev/null 2>&1; then
 fi
 
 # Atualização periódica em segundo plano; NotifyClamd recarrega o daemon.
+#
+# SEM supervisor, e isso é escolha: o `exec clamd` substitui este shell, então
+# não sobra quem vigie o filho. Pôr um supervisor aqui para um processo só
+# custaria mais do que resolve. Quem cobre a queda dele é o HEALTHCHECK do
+# serviço (docker-compose.prod.yml), que desde 2026-09-20 pergunta também a
+# idade da daily — freshclam morto para de rejuvenescer o arquivo e o container
+# vira `unhealthy` em três dias, em vez de ficar verde para sempre com a base
+# congelada (Q-9 do review do mesmo dia).
 freshclam -d --stdout &
 
 exec clamd

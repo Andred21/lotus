@@ -39,7 +39,7 @@
     active_work_item: harness-hooks-de-guarda
     workflow_state: ready_for_closure
     next_owner: claude
-    next_action: close_active_work_item   # /revisar-sprint em 2026-09-20 sobre 4dba322b..HEAD: Q-1..Q-5 aprovados pelo Joao e corrigidos com asercao no mesmo commit; Q-6 virou a pendencia P-77
+    next_action: close_active_work_item   # /revisar-sprint em 2026-09-20 sobre 4dba322b..HEAD: Q-1..Q-5 aprovados pelo Joao e corrigidos com asercao no mesmo commit; Q-6 virou a pendencia P-82 (nasceu P-77; renumerada na integracao, porque o item 10 v2 fechou a mesma faixa no mesmo dia e mesclou antes, pela PR #105)
     tree: ../lotus-harness
     branch: chore/harness-hooks-de-guarda   # aberta de main@4dba322b em 2026-09-20 (a origin/main esta em 618f390a; os dois commits a mais sao a spec e o plano DESTE bloco, e sem eles a arvore nao teria nem o plano nem um state.md que conhece o item 28). Worktree novo, e nao o main tree, porque o guard-main que este bloco cria tem a main como SUJEITO
     active_spec: docs/superpowers/specs/2026-09-20-harness-hooks-de-guarda-design.md   # design aprovado em 2026-09-20
@@ -99,6 +99,34 @@ duas divergências de estado reais (`lane-b` e `lane-c`) mais uma árvore órfã
 estavam invisíveis até aqui.
 
 **A branch não foi mesclada no fechamento.** Integração é serial e é passo próprio, com o João.
+
+---
+
+## Fechado em 2026-09-20 — `infra-producao-provisionamento-aws` (item 10, v2)
+
+**A linha da tabela de ocupação, no dia do fechamento:**
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-b` | `infra-producao-provisionamento-aws` (item 10 v2; o 12 segue **estacionado**) | Infra | `../lotus-infra` | `infra/producao-provisionamento-aws` — **resetada** para `main@8efd85f2` em 2026-09-02; `origin/main@9c038cca` mesclada para dentro em 2026-09-04 e `origin/main@618f390a` (PR #104) em 2026-09-09 | `ready_for_closure` |
+
+> **O que sobreviveu ao fechamento e continua no `state.md`:** o item 12 segue **estacionado** na
+> `lane-b`, e o gatilho de staleness do packet dele — *"um alvo AWS real ser provisionado"* — foi
+> **disparado por este bloco**. Isso é estado corrente, não narrativa, e por isso ficou lá.
+
+**A `lane-b` recebeu o item 12 em 2026-08-26** — `cicd-promocao-deploy-e-rollback`, promovido
+explicitamente pelo João com a lane em `idle`. É a continuação direta do item 11, que esta mesma lane
+fechou: o 11 constrói o artefato imutável por SHA, o 12 o promove para produção com aprovação,
+health e rollback. Nasceu em `context_required` (`Contexto: sim` na fila) e **o packet do Codex voltou `status: blocked`** no mesmo dia, com `RECOMMENDED_TRANSITION: blocked`: nao ha destino de deploy. O item 10 (`infra-producao-provisionamento-aws`) segue na fila com as quatro decisoes abertas, e nenhuma das cinco fontes externas consultadas entrega host, credencial SSH ou `/opt/lotus` — o `SSH EC2 -> compose pull -> migrate -> up -> /up` do escopo nao tem onde acontecer. O packet foi guardado assim mesmo, porque e a evidencia do bloqueio; **ele nao autoriza planejamento** (§6 do `/planejar-bloco`: `status: blocked` nunca prossegue). A leitura viva de `Gatika-CL/lotus` falhou com `404`, entao Environment/secrets/branches do corporativo ficam sem comprovacao — a P-62 ja prevê o teto do plano Free. A branch
+`cicd/promocao-deploy-e-rollback` sai de `main@83945ff3` — o tip da `origin/main`, que já contém o
+item 11 mesclado (PR #79), então o artefato que este bloco promove existe. **O espelho do topo virou
+para `lane-b` nesta árvore**, fora do main tree: é a **P-55**, e segue o precedente medido de
+2026-08-24, quando as três lanes fizeram o mesmo. A `lane-a` está em `ready_for_planning` do item 5
+na branch dela; o João decidiu que o 12 planeja primeiro, e o planejamento segue serial.
+
+**O item 10 assumiu a `lane-b` em 2026-08-26** — `infra-producao-provisionamento-aws`, promovido explicitamente pelo Joao **depois** de o item 12 voltar `blocked` por depender dele. E a saida escolhida entre as tres oferecidas: provisionar antes, em vez de recortar o 12 num workflow que nunca roda. O item 10 tambem e `Contexto: sim`, entao nasce em `context_required`. A branch `infra/producao-provisionamento-aws` sai da propria `cicd/promocao-deploy-e-rollback@10030c65`, e nao da `main`, **de proposito**: o packet do item 12 e o registro do bloqueio viajam junto e chegam a `main` no merge, para que ninguem refaca a medicao. **As quatro decisoes abertas (regiao, tamanho da EC2, DNS/SES + canal de alerta, teto de custo) nao bloqueiam o planejamento** — o proprio item 10 diz isso por escrito; cada uma bloqueia o recurso correspondente, e elas se fecham no brainstorming, com a evidencia de custo e latencia que o packet trouxer.
+
+**O item 12 fica estacionado, nao cancelado.** Ele segue no `backlog.md` (fila nao se mexe durante planejamento), o packet `status: blocked` fica guardado como evidencia e o campo `parked_work_item` da lane-b registra o vinculo. Quando o 10 provisionar o host, o packet do 12 regenera pelo gatilho de staleness que ele mesmo declara: *"um alvo AWS real ser provisionado"*.
 
 ---
 

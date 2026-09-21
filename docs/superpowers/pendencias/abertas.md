@@ -257,11 +257,44 @@ repositório prova lock.
   recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
   desta ficha). Turma 7 restaurada ao fim do gate.
 
+## P-79 — a URL que vai no QR do certificado é a mesma chave de infra, e as duas têm ciclo de vida diferente
+
+**Bloco:** — · **Gatilho:** bloco de backend que tocar `CertificatePdfService`, `config/app.php` ou
+a rota pública de validação, e puder provar a chave nova com teste. Fecha quando a URL pública de
+validação sair de `FRONTEND_URL` para chave própria, **ou** quando o João decidir por escrito que a
+regra operacional basta. Revisar em **2026-10-31**.
+
+Aberta no review de 2026-09-20 (Q-3). O QR do certificado é montado assim:
+
+    // backend/app/Domains/Certification/Services/CertificatePdfService.php:27
+    $url = rtrim(config('app.frontend_url'), '/')."/validar/{$certificate->uuid}";
+
+`FRONTEND_URL` é **infra**: muda quando o host muda, quando o DNS chega, quando o TLS entra. O QR é
+**conteúdo de documento legal**: gravado no PDF, ele é imutável depois da emissão. Um certificado
+emitido enquanto o `FRONTEND_URL` apontar para o EIP cru carrega esse IP para sempre — e o EIP é
+descartável por definição.
+
+**O que já foi pago neste bloco** (commit do review, lane-b): a regra operacional. O molde
+`deploy/aws/env.prod.example` e o runbook §7/§11 passaram a dizer, com o motivo, que **nenhum
+certificado real se emite antes de o `FRONTEND_URL` estar no domínio definitivo com https**, e o
+§11 virou os cinco campos de uma vez em vez de só o `SESSION_DOMAIN`.
+
+**O que fica aberto:** a regra é procedimento, não mecanismo — ela depende de quem opera lembrar.
+O remédio estrutural é uma chave própria (`CERTIFICATE_VALIDATION_URL`, com fallback para
+`app.frontend_url` enquanto não for preenchida), que torna explícito que aquele valor é conteúdo de
+documento e não endereço de serviço. É mudança de **backend**, e a lane-b é worktree de infra: o
+gate de árvore do `/executar-bloco` manda backend para o main tree, que é onde o compose monta. Por
+isso vira ficha e não patch aqui.
+
 ---
 
 # Documentação e mecanismo
 
-## P-79 — o harness de guarda não existe em nenhum doc versionado
+## P-84 — o harness de guarda não existe em nenhum doc versionado
+
+*(nasceu `P-79` no fechamento do item 28 e foi renumerada na integração: o item 10 v2 fechou
+a mesma faixa no mesmo dia e mesclou antes, pela PR #105. Ver a nota da colisão em
+[`encerradas.md`](./encerradas.md).)*
 
 **Bloco:** — · **Gatilho:** fecha quando `docs/estrutura-monolito.md` descrever `.claude/hooks/`,
 `.claude/tests/` e `.claude/settings.json`, ou quando o `CONTRIBUINDO.md` disser o que os cinco
@@ -500,12 +533,30 @@ coluna de certificado.
 
 ## P-05 — migrations "adicionais" não consolidadas
 
-**Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção.
+**Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção —
+**disparado em 2026-09-20 e não pago** (seção abaixo). Revisar em **2026-10-31**.
 
 Decisão do João no Bloco 2 — evitar inchaço do folder.
 
+### Gatilho disparado e não pago — 2026-09-20, `infra-producao-provisionamento-aws` (item 10 v2)
 
-## P-78 — sete decisões de política dos guardas ficaram só no ledger, que é gitignorado
+A produção subiu. O `deploy.sh a5fc92bb` rodou as **30 migrations** sobre banco novo na EC2 em
+2026-09-04 e a aplicação atende em `http://18.230.53.197` desde então — o gatilho desta ficha era
+exatamente esse momento, e ele passou sem a consolidação.
+
+Decisão do João no gate de fechamento de 2026-09-20: **disparar sem pagar**, junto com os outros
+três itens herdados do bloco (a [P-80](#p-80--a-previsão-de-custo-estoura-o-teto-de-d8-e-o-resize-da-ec2-piora-a-conta) e a [P-81](#p-81--a-access-key-que-provisionou-a-produção-continua-ativa)). O gatilho **não se desarma** — mas mudou de
+natureza, e quem pegar a ficha precisa saber disso: consolidar agora não é mais só reescrever o
+folder. A produção já tem as 30 linhas na tabela `migrations`, então uma consolidação ou preserva
+esse estado à mão ou só vale para ambiente novo. É a diferença entre o que a ficha custava antes de
+2026-09-04 e o que ela custa hoje.
+
+
+## P-83 — sete decisões de política dos guardas ficaram só no ledger, que é gitignorado
+
+*(nasceu `P-78` no fechamento do item 28 e foi renumerada na integração: o item 10 v2 fechou
+a mesma faixa no mesmo dia e mesclou antes, pela PR #105. Ver a nota da colisão em
+[`encerradas.md`](./encerradas.md).)*
 
 **Gatilho:** fecha quando o João decidir cada uma das sete linhas abaixo — a favor ou contra, tanto
 faz, desde que a decisão vire commit. Revisar em **2026-10-31**.
@@ -664,6 +715,91 @@ correto e com o conteúdo de peso legal íntegro; o que falta é ornamento. Corr
 3 (recompor o fundo, ou reproduzir as cunhas em CSS, e separar o fundo da primeira página do das
 seguintes).
 
+## P-78 — a assinatura do relator cai para uma página própria quando a folha 1 cresce
+
+**Bloco:** infra-producao-provisionamento-aws (achado da Task 16, não do escopo) · **Gatilho:** fecha
+quando um certificado com dado real da Lotus fechar o rodapé na página 1 **e** isso for remedido, ou
+quando o João decidir o corte (clamp por comprimento de nome/descrição) e ele for implementado.
+Revisar em **2026-10-31**.
+
+Medido em produção em **2026-09-20**, no certificado `LOT-2026-1000` emitido pela UI para provar o
+DoD 4: o PDF saiu com **3 páginas** — (1) o certificado, com ~25% do rodapé vazio, (2) só a
+assinatura do relator e o aviso legal, (3) o temário do curso. A assinatura é o que se espera ver ao
+pé do documento assinado, e ela apareceu sozinha numa folha.
+
+**Não é regressão da nuvem nem defeito novo.** É o trade-off que o próprio template documenta em
+[`backend/resources/views/certification/certificate.blade.php`](../../../backend/resources/views/certification/certificate.blade.php),
+no comentário do `min-height` da `.page`: com `height` fixo o Chromium pinta o excedente **por cima**
+da página seguinte (medido em 2026-08-08 — QR sobre o logo, assinatura sobre o cabeçalho, disclaimer
+atravessando a tabela: documento corrompido e sem aviso). Com `min-height` a folha cresce e a
+paginação leva o excedente para uma página limpa — "feio, porém íntegro". O mesmo comentário diz que
+**o que cortar é decisão de negócio, e está com o João.**
+
+O penhasco que o comentário mede é o `courses.name` passar de ~67 caracteres. **Não foi esse o caso
+aqui:** o nome do curso sintético tinha 38. O suspeito é a `description` de 137 caracteres que a
+sessão escreveu no curso de prova, que vira a narrativa da folha. **Isso não chegou a ser medido** —
+a re-renderização com descrição curta exigia escrita no banco de produção, e a sessão parou antes.
+Quem pegar esta ficha começa por aí: encurtar a descrição, re-renderizar e contar as páginas diz se o
+gatilho real é o nome, a descrição ou a soma dos dois.
+
+Ligada à [P-28](#p-28--o-fundo-do-certificado-não-reproduz-as-cunhas-nem-separa-a-página-2), que trata
+do **fundo** dessa página 2, não da quebra que a cria.
+
+## P-80 — a previsão de custo estoura o teto de D8, e o resize da EC2 piora a conta
+
+**Bloco:** infra-producao-provisionamento-aws (item 10 v2 — chega ao fechamento sem decisão) ·
+**Gatilho:** fecha quando o João decidir **as duas coisas na mesma conversa** — o teto (manter 30
+USD e cortar, ou elevá-lo ao número real) e o resize (`t4g.small` fica, ou promove a `t4g.medium`)
+— e a decisão estiver escrita na spec/ADR que a carrega. Revisar em **2026-10-31**.
+
+Medido em 2026-09-17, na Task 18 do item 10 v2 (`ce get-cost-and-usage`, 01–18/09):
+
+| | USD |
+|---|---|
+| Gasto real até 17/09 | 21,02 |
+| **Previsão do mês** | **35,74** |
+| Teto da decisão **D8** | 30,00 |
+
+Quebra: EC2-Compute 9,13 · EC2-Other (EBS) 4,48 · VPC (IPv4 público) 3,55 · Tax 3,36 · Route 53
+0,50 · S3 0,002. Parte do custo de VPC é o **EIP cobrado enquanto a instância ficou parada** —
+IPv4 público ocioso custa mais, não menos.
+
+**As duas decisões são uma só.** O critério de resize do runbook §12 está **satisfeito** (swap em
+694 MiB com o host ocioso; a geração de PDF só passa paginando o ClamAV), mas o `t4g.medium` sobe o
+EC2-Compute de ~9 para ~18 USD/mês. Decidir o resize sem decidir o teto produz um teto que já
+nasce falso; decidir o teto sem o resize decide sobre um custo que pode dobrar na semana seguinte.
+
+O alarme **existe e funciona** — Budget `lotus-prod-teto`, MONTHLY, 30 USD, `ACTUAL > 100%` e
+`FORECASTED > 100%` por e-mail para `jvbatalha32@gmail.com` (o DoD 6 fechou por ele). O que esta
+ficha guarda não é a falta do alarme: é que ele **vai disparar**, porque o número que ele vigia já
+está estourado na previsão.
+
+## P-81 — a access key que provisionou a produção continua ativa
+
+**Bloco:** infra-producao-provisionamento-aws (item 10 v2 — chega ao fechamento sem execução) ·
+**Gatilho:** fecha quando `aws iam list-access-keys --user-name lotus-infra` não devolver mais a
+`AKIA3B7BDINPPYESZA6T`. Ação: apagar a chave no console IAM ou por CLI. Revisar em **2026-10-31**.
+
+A `AKIA3B7BDINPPYESZA6T` (usuário `lotus-infra`, criada em 2026-09-04) é a credencial que executou
+todo o provisionamento da Fase B. O review de 2026-09-20 a marcou como *apagar no fechamento*; o
+João decidiu no gate do mesmo dia **adiar para um bloco futuro**, e a ficha existe para que o
+adiamento não vire esquecimento.
+
+**O que já está resolvido, e não se confunda com esta ficha:** a chave vazada
+`AKIA3B7BDINPIEP2W4WK` **já não existe** na conta, e o CloudTrail dela devolve três eventos, todos
+`GetCallerIdentity` do próprio `lotus-infra` em 2026-09-04 — nenhum uso de terceiro (conferido em
+2026-09-17). Esta ficha é sobre a chave **atual**, que não vazou.
+
+**Por que ela não é urgente como a outra foi:** a aplicação em produção não a usa — o `.env` do
+host não tem access key nenhuma, o acesso ao S3 vai pelo instance profile `lotus-ec2` (provado no
+DoD 3). A chave só serve para operar a conta de fora. Apagá-la não derruba nada; mantê-la é
+credencial de longa duração viva sem uso corrente, que é exatamente o que a política de rotação
+existe para evitar.
+
+**Quando for apagar, confira antes se ela não é a única via de acesso programático à conta** — se o
+MFA do usuário estiver indisponível (o fallback da Task 12), apagar a chave pode deixar a conta
+operável só pelo console.
+
 ---
 
 # Travadas em decisão da Lotus
@@ -721,6 +857,31 @@ bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variá
 
 Bloco alunos (2026-07-27, spec D11): divergência aceita por decisão do João no mesmo dia — a ordem
 atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
+
+## P-77 — o registro A de `app.lotusotec.cl` ainda aponta para a hospedagem antiga, e sem ele não há TLS
+
+**Bloco:** — · **Gatilho:** fecha quando `app.lotusotec.cl` resolver **exatamente** o EIP
+`18.230.53.197`; a ação é o §11 do `deploy/aws/README.md`, que desde 2026-09-20 tem **quatro**
+passos e não um — emitir o certificado, virar os cinco campos do `.env` para o domínio e para
+HTTPS, redeployar (o `deploy.sh` já sobe o overlay sozinho quando o certificado existe) e passar a
+renovação para webroot, com `certbot renew --dry-run` como gate. Revisar em **2026-10-31**.
+
+Medido em 2026-09-04 e remedido em 2026-09-17, na Task 19 do item 10 v2:
+
+| Registro | Valor | |
+|---|---|---|
+| `A` | `185.146.167.195` | hospedagem antiga (WordPress) |
+| `AAAA` | `2a07:7800::195` | hospedagem antiga |
+| EIP da produção | `18.230.53.197` | — |
+
+O pedido do registro foi disparado à Lotus/agência na Task 1; a zona vive em `ns1–ns4.stackdns.com`
+e não temos acesso ao painel. **A prova é a igualdade, nunca "o nome resolve"** — existe curinga
+`*.lotusotec.cl` apontando para o WordPress, então qualquer nome responde.
+
+Enquanto o registro não chega, a produção atende em `http://18.230.53.197` (DoD 2, provado na Task
+15) e o bloco fecha sem TLS: o overlay `docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a
+catraca deles já estão no repositório desde a Task 7, prontos e nunca exercidos contra um
+certificado real. **Nada além do registro A separa os dois estados.**
 
 ---
 

@@ -72,11 +72,17 @@ Role `lotus-ec2`, trust policy de `ec2.amazonaws.com`, com política inline (sub
 {"Version": "2012-10-17", "Statement": [
   {"Effect": "Allow", "Action": ["s3:ListBucket"], "Resource": "arn:aws:s3:::<BUCKET>"},
   {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-   "Resource": "arn:aws:s3:::<BUCKET>/*"}
+   "Resource": "arn:aws:s3:::<BUCKET>/*"},
+  {"Effect": "Allow", "Action": ["sns:Publish"], "Resource": "<ARN DO TOPICO DA §10>"}
 ]}
 ```
 
 É esta role que dispensa access key de longa duração no `.env` (§7).
+
+O `sns:Publish` é do `verificar-backup.sh` (§9) e **só existe depois da §10**, que é quem cria o
+tópico. Duas ordens possíveis, nenhuma escondida: ou a §10 vem antes desta política, ou esta
+política volta aqui depois — o que não pode é o script existir sem a permissão, porque aí ele
+recusa rodar e o gatilho do ADR-09 continua sem detecção, que era o defeito original.
 
 **Pela CLI, a role não basta.** O console cria o *instance profile* junto, escondido; a CLI trata
 os dois como objetos separados e o launch da §6 não acha o profile se ele não existir:
@@ -143,7 +149,7 @@ Do WSL, com o `.pem` da §6:
 
 ```bash
 scp docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
-scp deploy/bin/deploy.sh deploy/bin/backup-db.sh ubuntu@<EIP>:/tmp/
+scp deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh ubuntu@<EIP>:/tmp/
 scp deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
 ```
 
@@ -151,8 +157,9 @@ No host:
 
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
+sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
 
 `.env`: copie `deploy/aws/env.prod.example` para `/opt/lotus/.env`, preencha os `<...>` e
@@ -160,7 +167,13 @@ proteja (`sudo chmod 600 /opt/lotus/.env`, dono root). **Sem o registro A ainda*
 campos de host vão para o EIP e o `SESSION_DOMAIN` recebe o literal **`null`** — nem o domínio
 (cookie não volta: 401/419 com a API saudável), nem o IP (`Domain=` com IP não faz domain-match e
 o navegador descarta o cookie), nem comentada (o gate do entrypoint exige a variável e o container
-sai 1). O molde explica a mecânica das três. A `APP_KEY` se gera com o entrypoint
+sai 1). O molde explica a mecânica das três. **Na mesma fase o `SESSION_SECURE_COOKIE` vai para
+`false`** — com `true` em HTTP puro o browser não grava o cookie e o login não fecha; ele volta a
+`true` no §11, junto com o domínio. E a fase sem DNS tem uma proibição: **nenhum certificado REAL
+se emite enquanto o `FRONTEND_URL` for o EIP**, porque o QR do certificado nasce desse campo
+(`CertificatePdfService`) e o documento é snapshot imutável — o EIP ficaria congelado no QR de um
+papel de peso legal. Certificado de prova nesta fase se apaga junto com a prova.
+A `APP_KEY` se gera com o entrypoint
 trocado — sem `--entrypoint php` o comando cai no entrypoint da imagem e falha:
 
 ```bash
@@ -196,11 +209,17 @@ desenvolvimento foi ignorado — a conta `admin@lotus.cl` de senha pública **nu
 produção. Então:
 
 ```bash
-cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA \
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && \
+  LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA \
   LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA \
   LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml \
-  run --rm app php artisan db:seed --force
+  run --rm app php artisan db:seed --force'
 ```
+
+O comando inteiro mora DENTRO do `sudo -i sh -c '…'`, e as aspas são **simples**, por duas razões
+medidas em 2026-09-10: `/opt/lotus` é `750 root:root`, então um `cd /opt/lotus` pelo `ubuntu`
+devolve `-bash: cd: /opt/lotus: Permission denied` antes de qualquer variável; e com aspas duplas
+o `$SHA` expandiria no shell do `ubuntu`, que não o tem, entregando ao Compose uma tag vazia.
 
 `LOTUS_CLAMAV_IMAGE` não é decoração: `run --rm app` sobe as dependências do serviço, o antivírus
 é uma delas, e sem a variável o Compose procuraria `lotus-clamav:local` — que não existe no host.
@@ -208,7 +227,7 @@ cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-a
 O primeiro admin de verdade se cria por tinker, com senha escolhida na hora (nunca em arquivo):
 
 ```bash
-cd /opt/lotus && ... run --rm app php artisan tinker
+sudo -i sh -c 'cd /opt/lotus && ... run --rm app php artisan tinker'
 >>> $u = App\Domains\Identity\Models\User::create(['uuid' => (string) Str::uuid(), 'name' => '<nome>', 'email' => '<email>', 'password' => Hash::make('<senha>'), 'type' => 'admin', 'is_active' => true]);
 >>> $u->syncRoles(['superadmin']);
 ```
@@ -221,10 +240,40 @@ sudo crontab -e
 
 ```
 10 6 * * * /opt/lotus/bin/backup-db.sh >> /var/log/lotus-backup.log 2>&1
+40 6 * * * /opt/lotus/bin/verificar-backup.sh >> /var/log/lotus-backup.log 2>&1
 ```
 
 06:10 UTC = 03:10 no Chile. Rodar uma vez à mão para provar: `sudo /opt/lotus/bin/backup-db.sh`
 deve imprimir `backup ok: s3://…`.
+
+**A segunda linha é a DETECÇÃO, e ela não é opcional.** A revisão 2026-09 do ADR-09 pagou o
+descarte do RDS com "backup provado" e escreveu o gatilho de volta — *backup > 7 dias sem sucesso,
+volta-se ao RDS*. Sem esta linha ninguém saberia que passaram 7 dias: a primeira linha manda o
+resultado para um log local que nada lê, e o host não tem MTA (Q-4 do review de 2026-09-20).
+
+O `verificar-backup.sh` olha o **efeito**, não o processo: a idade do objeto mais recente em
+`s3://<BUCKET>/backups/`. Por isso ele avisa mesmo quando o `backup-db.sh` morre antes de imprimir
+qualquer coisa, quando o cron some, ou quando a instância é recriada sem o crontab. Passando de
+**2 dias** ele publica no tópico SNS da §10 e sai 1 — 2 e não 7, para o gatilho do ADR chegar como
+decisão e não como descoberta.
+
+Duas chaves no `.env` o sustentam: `LOTUS_BACKUP_BUCKET` (já existe) e `LOTUS_ALERT_TOPIC_ARN`, o
+ARN do tópico da §10. **Sem o ARN ele recusa rodar** em vez de degradar para o silêncio, que é
+exatamente o que ele veio consertar. A região do publish sai do próprio ARN: o tópico vive em
+`us-east-1` e a EC2 em `sa-east-1`.
+
+Provar as duas pontas à mão, na ordem:
+
+```bash
+sudo /opt/lotus/bin/verificar-backup.sh          # com backup do dia: "backup ok: … 0d"
+sudo env LOTUS_BACKUP_MAX_DIAS=-1 /opt/lotus/bin/verificar-backup.sh   # força o alerta
+```
+
+O `env` não é enfeite: com `env_reset` no sudoers, `sudo VAR=valor comando` pode ser recusado, e
+`sudo env VAR=valor` sempre passa porque quem monta o ambiente já é o root.
+
+O segundo comando tem de sair 1 **e** chegar um e-mail. Alerta que nunca chegou não é alerta
+(lição 1) — e é a subscription da §10 que entrega, então ela precisa estar confirmada.
 
 **Restore provado** (backup que nunca restaurou não é backup):
 
@@ -249,7 +298,13 @@ Console (us-east-1) → CloudWatch → Alarms → Billing → métrica `Estimate
 condição `> 30` → ação: tópico SNS novo com o e-mail do João → **confirmar a subscription pelo
 e-mail** (sem confirmar, o alarme dispara para ninguém).
 
-Canal definitivo de alerta é decisão do bloco de observabilidade.
+**Guarde o ARN do tópico**: ele vai para `LOTUS_ALERT_TOPIC_ARN` no `/opt/lotus/.env` e para o
+`sns:Publish` da role da §4. O tópico tem dois consumidores, não um — o alarme de custo e o
+`verificar-backup.sh` da §9.
+
+Canal definitivo de alerta é decisão do bloco de observabilidade. Reusar este aqui não antecipa
+essa decisão: é a subscription que já existe e já foi confirmada, e trocar de canal depois é
+trocar um ARN no `.env`.
 
 ## 11. TLS — quando o registro A chegar
 
@@ -262,20 +317,81 @@ resolve.
 dig +short app.lotusotec.cl   # tem de ser exatamente o EIP
 ```
 
-Emissão (uma vez):
+**Passo 1 — emitir o certificado** (uma vez, com o nginx parado):
 
 ```bash
 sudo apt-get install -y certbot
 docker compose -p lotus --project-directory /opt/lotus -f /opt/lotus/docker-compose.prod.yml stop nginx
 sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m <email>
+```
+
+**Passo 2 — virar o `.env` para o domínio e para HTTPS.** Este passo é do TLS tanto quanto o
+certificado, e é o que a fase sem DNS deixou pendurado. São **cinco** campos, não um:
+
+```bash
+sudo -e /opt/lotus/.env
+```
+
+| Campo | Fase sem DNS | Agora |
+|---|---|---|
+| `APP_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
+| `FRONTEND_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
+| `SANCTUM_STATEFUL_DOMAINS` | `<EIP>` | `app.lotusotec.cl` |
+| `SESSION_DOMAIN` | `null` (literal) | `app.lotusotec.cl` |
+| `SESSION_SECURE_COOKIE` | `false` | `true` |
+
+Os dois últimos são os que mordem em silêncio. `SESSION_SECURE_COOKIE` ausente **não** equivale a
+`false`: `session.php:172` lê `env('SESSION_SECURE_COOKIE')` sem default, a ausência vira null, e o
+cookie de sessão do Sanctum passa a viajar em claro sob TLS sem aparecer em diff nenhum (lei §5.4).
+E `FRONTEND_URL` não é só infra: o QR do certificado é `FRONTEND_URL + /validar/{uuid}`, gravado
+para sempre num documento de peso legal — **só depois deste passo se emite certificado real**.
+
+**Passo 3 — subir com o overlay:**
+
+```bash
 sudo /opt/lotus/bin/deploy.sh "$(cat /opt/lotus/CURRENT_SHA)"
 ```
 
-O `deploy.sh` detecta o certificado e sobe com o overlay TLS sozinho. Depois:
-`curl -s -o /dev/null -w '%{http_code}' https://app.lotusotec.cl/up` → `200`.
+O `deploy.sh` detecta o certificado e sobe com o overlay TLS sozinho. Prova, nesta ordem:
 
-Renovação: o timer systemd do certbot renova; o hook
-`/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh` recarrega o nginx:
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://app.lotusotec.cl/up      # 200
+curl -s -o /dev/null -w '%{http_code}\n' http://app.lotusotec.cl/inicio   # 301
+curl -sI https://app.lotusotec.cl/api/... | grep -i '^set-cookie'          # tem `Secure`
+```
+
+O `/up` na 80 responde **200**, e não 301: o `tls.conf` isenta esse caminho do redirect de
+propósito, porque o healthcheck do nginx e o gate pós-deploy do `deploy.sh` falam HTTP puro na
+127.0.0.1 (Q-1 do review de 2026-09-20). Se ele voltar a redirecionar, o deploy morre logo após o
+`up -d` — e a catraca `frontend/tests/nginx-conf.test.ts` existe para que isso não chegue ao host.
+
+**Passo 4 — passar a renovação para webroot.** Este passo não é burocracia: sem ele o certificado
+expira em 90 dias, calado.
+
+O certbot grava em `/etc/letsencrypt/renewal/<dominio>.conf` o **authenticator da emissão**, e o
+`renew` repete o que está lá. Emitido em `--standalone`, o `renew` tentaria ligar na porta 80 — que
+agora é do nginx, de pé — e falharia. A emissão foi `--standalone` porque naquele momento não havia
+nginx servindo challenge nenhum; agora há, e o `tls.conf` serve
+`/.well-known/acme-challenge/` a partir de `/opt/lotus/certbot`, montado no container pelo overlay.
+(Era o Q-6 do review de 2026-09-20, junto com o webroot que antes era um volume nomeado `:ro` — sem
+caminho no host, ninguém escrevia nele.)
+
+```bash
+sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
+sudo certbot certonly --webroot -w /opt/lotus/certbot -d app.lotusotec.cl \
+  --cert-name app.lotusotec.cl --keep-until-expiring
+grep -E '^(authenticator|webroot_path)' /etc/letsencrypt/renewal/app.lotusotec.cl.conf
+```
+
+O `grep` tem de imprimir `authenticator = webroot`. **Se ainda disser `standalone`**, o certbot
+manteve o certificado sem reescrever a configuração; então se edita o arquivo à mão — `authenticator
+= webroot` e, na seção `[[webroot_map]]`, `app.lotusotec.cl = /opt/lotus/certbot`.
+
+O 755 do diretório não é detalhe: quem lê o challenge é o **worker** do nginx (uid 101), não o
+master, e `/opt/lotus` é `750 root:root`. O bind mount não carrega a permissão do pai, mas carrega a
+do próprio diretório.
+
+O hook de recarga vive em `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh`:
 
 ```bash
 #!/usr/bin/env bash
@@ -283,7 +399,17 @@ docker compose -p lotus --project-directory /opt/lotus \
   -f /opt/lotus/docker-compose.prod.yml -f /opt/lotus/docker-compose.prod-tls.yml restart nginx
 ```
 
-Validar com `sudo certbot renew --dry-run` (o webroot do challenge é servido pelo `tls.conf`).
+**O gate, e ele é gate e não formalidade:**
+
+```bash
+sudo certbot renew --dry-run
+```
+
+Isto tem de passar **com o nginx de pé** — é o ensaio da renovação real, e é a única prova de que a
+cadeia toda funciona: authenticator certo, diretório com a permissão certa, e o `tls.conf` servindo
+o challenge sem redirecionar. Reprovando aqui, o certificado morre em 90 dias sem uma linha de
+aviso. Backup que nunca restaurou não é backup; renovação que nunca ensaiou não é renovação
+(lição 1).
 
 ## 12. Critério de resize
 

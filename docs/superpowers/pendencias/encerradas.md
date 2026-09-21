@@ -7,9 +7,13 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(uma: a **`P-77`**, fechada em **2026-09-20** pelo `harness-hooks-de-guarda` (item 28). A
-**`P-58`** cumpriu a sprint de rastro e saiu neste mesmo fechamento — o parágrafo do rastro adiante
-é o dela.)*
+*(uma: a **`P-82`** — nascida `P-77` —, fechada em **2026-09-20** pelo `harness-hooks-de-guarda`
+(item 28), no fechamento do próprio bloco que a abriu. A **`P-58`** cumpriu a sprint de rastro e saiu
+nos dois fechamentos de 2026-09-20; o parágrafo do rastro adiante é o dela. O item 10 v2 **não
+encerrou pendência nenhuma**: ele abriu a `P-77`, a `P-78` e a `P-79`, e o gate de fechamento dele
+abriu a `P-80` e a `P-81` para os itens que o João adiou. E a **`P-05`** teve o gatilho *antes de
+subir para produção* **disparado e não pago**, por decisão do João no gate — a ficha registra o
+disparo e o gatilho não se desarma.)*
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -18,9 +22,21 @@
 > renumera para trás: é a mesma regra que o `state.md` escreveu para o rótulo de bloco na colisão
 > de 2026-09-02.
 
-### P-77 — a spec dos hooks de guarda §9 descrevia um harness de testes que não era o entregue
+> **Os números `P-77`, `P-78` e `P-79` foram disputados em 2026-09-20.** Dois blocos fecharam no
+> mesmo dia, em árvores diferentes, e cada um alocou a mesma faixa: o
+> `infra-producao-provisionamento-aws` (item 10 v2, `lane-b`) e o `harness-hooks-de-guarda` (item 28,
+> `lane-a`). O item 10 integrou primeiro, pela **PR #105**, então os três IDs são dele. As três
+> fichas do item 28 foram renumeradas **na integração**, não no fechamento: `P-77` → **`P-82`** (a
+> spec do harness), `P-78` → **`P-83`** (as sete decisões de política) e `P-79` → **`P-84`** (o
+> harness fora de doc versionado). É o mesmo precedente do `P-73`: renumera quem chega depois, nunca
+> quem já está publicado. **A causa é estrutural, não descuido** — a numeração é um contador global
+> sem reserva, e duas lanes que fecham no mesmo dia sem integrar entre si colidem por construção. A
+> **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
-**Fechada em 2026-09-20**, no fechamento do próprio bloco que a abriu (item 28), pelos dois lados do
+### P-82 — a spec dos hooks de guarda §9 descrevia um harness de testes que não era o entregue
+
+**Fechada em 2026-09-20** (nasceu `P-77`; renumerada na integração), no fechamento do próprio
+bloco que a abriu (item 28), pelos dois lados do
 gatilho: a spec foi corrigida **e** o harness ganhou o `trap` que ela prometia.
 
 | O que a spec dizia | O que foi feito |
@@ -41,7 +57,9 @@ outro bloco. A spec arquivada está em
 
 ## Rastro anterior, já removido
 
-**A P-58 saiu no fechamento do `harness-hooks-de-guarda` (2026-09-20)**, o primeiro posterior ao do
+**A P-58 saiu nos dois fechamentos de 2026-09-20** — o do
+`infra-producao-provisionamento-aws` (item 10 v2), que integrou primeiro, e o do
+`harness-hooks-de-guarda` (item 28) —, os primeiros posteriores ao do
 `frontend-arrumacao-de-testes` (item 27), que a encerrou em 2026-09-04 por mecanismo: o
 `compose-dev.test.ts` passou a afastar os `.env*` das **duas** raízes que o `vite.config.ts` lê — a
 do repositório (`loadEnv(mode, RAIZ, 'LOTUS_')`) e a de `frontend/` (`loadEnv(mode, __dirname,

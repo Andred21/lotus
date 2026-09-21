@@ -82,6 +82,13 @@ lifecycle de 30 dias, retenção mínima de 7 atendida) com **restore provado** 
 sucesso; cliente exigir RPO menor que o dump diário. RTO/RPO desta revisão: até 24 h de perda
 potencial + restore manual pelo runbook — aceito por decisão explícita do João em 2026-09-02.
 
+**Quem detecta o segundo gatilho** (emenda de 2026-09-20, Q-4 do review do item 10 v2):
+`deploy/bin/verificar-backup.sh`, no cron do host, mede a idade do objeto mais recente em
+`s3://<BUCKET>/backups/` e publica no tópico SNS do billing alarm passando de 2 dias. Até esta
+emenda o gatilho não tinha como disparar: o cron do backup escrevia num log local que nada lia e o
+host não tem MTA. O limite é 2 e não 7 para o gatilho do ADR chegar como decisão, com folga, e não
+como descoberta. Gatilho sem detecção é gatilho decorativo — lição 1 aplicada à própria regra.
+
 ## ADR-10 — Polimorfismo com enforceMorphMap
 **Regra:** relações polimórficas do Eloquent (tabela `files`, `audits`) **sempre** com `Relation::enforceMorphMap()` (alias fixos: 'redator', 'cotacao'...) no AppServiceProvider. **Porquê:** sem morph map, o tipo guarda o namespace da classe; renomear/mover classe corrompe dados históricos. O map desacopla do código-fonte. Trade-off: integridade referencial fica na aplicação (aceitável — acesso só via Laravel, baixa concorrência).
 
