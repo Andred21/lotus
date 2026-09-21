@@ -18,10 +18,20 @@ for _neg in .env .env.local backend/.env.production frontend/.env; do
   assert_igual 'deny' "$(decisao_seg "$SAIDA_HOOK")" "nega pelo nome: $_neg"
 done
 
-for _lib in .env.example backend/.env.example backend/.env.production.example frontend/.env.example docker/probe.env; do
+for _lib in .env.example backend/.env.example backend/.env.production.example frontend/.env.example; do
   acionar_hook "$SEGREDOS" "$(payload_escrita "$_s" "$_s/$_lib" 'APP_ENV=local')"
   assert_igual '' "$SAIDA_HOOK" "libera pelo nome: $_lib"
 done
+
+# O docker/probe.env fica fora do laco acima e leva titulo proprio: a peneira de
+# NOME deixa passar (nao termina em .env por comecar com 'probe'), mas o arquivo
+# real e versionado e tem APP_KEY com valor, entao a peneira de CONTEUDO o nega.
+# O titulo antigo dizia 'libera pelo nome: docker/probe.env' e passava so porque
+# o conteudo do teste era falso — criava confianca justo no caso que nomeava.
+acionar_hook "$SEGREDOS" "$(payload_escrita "$_s" "$_s/docker/probe.env" 'APP_ENV=local')"
+assert_igual '' "$SAIDA_HOOK" 'docker/probe.env: so a peneira de nome nao o pega'
+acionar_hook "$SEGREDOS" "$(payload_escrita "$_s" "$_s/docker/probe.env" "$(printf 'APP_KEY=base64:%s=\n' "$(printf 'Q%.0s' {1..43})")")"
+assert_igual 'deny' "$(decisao_seg "$SAIDA_HOOK")" 'docker/probe.env com APP_KEY: a peneira de conteudo pega'
 
 # --- peneira de conteudo
 acionar_hook "$SEGREDOS" "$(payload_escrita "$_s" "$_s/docs/nota.md" "$_appkey")"
