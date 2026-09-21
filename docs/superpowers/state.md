@@ -3,10 +3,10 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-b
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: cicd-promocao-deploy-e-rollback
+workflow_state: context_required
+next_owner: codex
+next_action: generate_context_packet
 resume_state: null
 active_spec: null
 active_plan: null
@@ -29,12 +29,12 @@ lanes:
     last_completed_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, fechado em 2026-09-04
   lane-b:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: cicd-promocao-deploy-e-rollback
+    workflow_state: context_required
+    next_owner: codex
+    next_action: generate_context_packet
     tree: ../lotus-infra
-    branch: infra/producao-provisionamento-aws   # item 10 v2 fechado em 2026-09-20; Fase A ja em main pelas PRs #101/#102/#103, Fase B nesta branch
+    branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; a homonima de 2026-08-26 estava inteira dentro da main (PR #105 mesclou o item 10 v2)
     active_spec: null
     active_plan: null
     context_packet: null
@@ -43,8 +43,6 @@ lanes:
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
-    parked_work_items:
-      - cicd-promocao-deploy-e-rollback      # item 12; o packet (context-packets/2026-08-26-...) segue blocked, mas o GATILHO DE STALENESS dele venceu em 2026-09-04 — o item 10 provisionou o host. Regenerar antes de planejar.
     last_completed_work_item: infra-producao-provisionamento-aws   # item 10 v2, fechado em 2026-09-20
   lane-c:
     active_feature: null
@@ -61,8 +59,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: infra-producao-provisionamento-aws
-state_basis_commit: 25086f5e
-updated_at: 2026-09-20T20:10:00-03:00
+state_basis_commit: cff022d4
+updated_at: 2026-09-20T21:25:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -167,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
-| `lane-b` | — (item 10 v2 **fechado em 2026-09-20**; o 12 segue **estacionado**, com o gatilho do packet vencido) | — | `../lotus-infra` | `infra/producao-provisionamento-aws` | `idle` |
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `context_required` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
@@ -178,15 +176,32 @@ disjuntas, colisão mínima de arquivos:
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
 
-**O item 12 segue estacionado na `lane-b`, e o gatilho do packet dele venceu.** O
-`cicd-promocao-deploy-e-rollback` continua no `backlog.md` e o packet
-`context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md` continua `status: blocked` — mas o
-motivo do bloqueio **deixou de existir em 2026-09-04**: o item 10 provisionou o host, que é
-exatamente o gatilho de staleness que aquele packet declara (*"um alvo AWS real ser
-provisionado"*). O packet **precisa regenerar antes de qualquer planejamento do 12**; o que está
-guardado é a evidência de um bloqueio que já passou, e `status: blocked` nunca autoriza prosseguir
-(§6 do `/planejar-bloco`). A narrativa de como o 12 chegou a esse estado está em
-`historico/state-archive.md`, sob o fechamento de 2026-09-20.
+**A `lane-b` recebeu o item 12 em 2026-09-20** — `cicd-promocao-deploy-e-rollback`, promovido
+explicitamente pelo João com a lane em `idle`, na mesma sessão em que o item 10 v2 fechou e mesclou.
+É a continuação direta do 11 e do 20: o 11 constrói o artefato imutável por SHA, o 20 provou que o
+par do GHCR puxa e executa, o 10 provisionou o host — e o 12 promove esse artefato para a produção
+que agora existe, com aprovação, health e rollback. Nasce em **`context_required`** (`Contexto: sim`
+na fila).
+
+**O packet de 2026-08-26 não serve, e é por isso que a lane não nasce em `ready_for_planning`.**
+`context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md` está em `status: blocked`, e o
+gatilho de staleness que ele próprio declara (*"um alvo AWS real ser provisionado"*) **venceu em
+2026-09-04**: o motivo do bloqueio era não haver destino de deploy, e o item 10 criou o destino. O
+que está guardado é evidência de um bloqueio que já passou, e `status: blocked` nunca autoriza
+prosseguir (§6 do `/planejar-bloco`). `context_packet` fica `null` até o packet novo existir.
+
+**A branch e o espelho.** `cicd/promocao-deploy-e-rollback` foi **recriada** de
+`origin/main@cff022d4` — o tip que já traz o item 10 v2 mesclado (PR #105). A homônima de 2026-08-26
+apontava para `10030c65` e estava **inteira dentro da `main`**, então mover o rótulo não descartou
+commit nenhum. O espelho do topo já apontava para `lane-b` e foi escrito **nesta árvore**, fora do
+main tree: é a **P-55**, pelo mesmo precedente de 2026-08-24 e de 2026-08-26 (`655b9796`), e a ficha
+segue aberta aguardando decisão do João.
+
+**Divergências de Git observadas na promoção, nenhuma da `lane-b` e nenhuma tratada aqui:** o `main`
+local (`../lotus`) está 4 commits à frente e 21 atrás de `origin/main`, e o worktree `../fix-frontend`
+está em `refactor/frontend-revisao-ui-f3` enquanto a `lane-c` registra
+`refactor/frontend-arrumacao-de-testes` com o item 27 fechado. As duas ficam registradas para quem
+for mexer nessas lanes.
 
 ## Itens fechados — ponteiro, não narrativa
 
