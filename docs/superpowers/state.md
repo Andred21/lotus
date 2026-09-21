@@ -4,11 +4,11 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: cicd-promocao-deploy-e-rollback
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
 active_plan: null
 context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
 blocker: null
@@ -30,12 +30,12 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: cicd-promocao-deploy-e-rollback
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: ../lotus-infra
     branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; a homonima de 2026-08-26 estava inteira dentro da main (PR #105 mesclou o item 10 v2)
-    active_spec: null
+    active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
     active_plan: null
     context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
     blocker: null
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: infra-producao-provisionamento-aws
 state_basis_commit: cff022d4
-updated_at: 2026-09-20T22:05:00-03:00
+updated_at: 2026-09-21T20:55:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
-| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `ready_for_planning` |
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `planning` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
@@ -210,6 +210,30 @@ tem. **É limitação do arranjo, não da fonte** — Notion e GitHub respondera
 Drive é planejamento canônico (`CLAUDE.md` §3). A lacuna se fecha no brainstorming, com a consulta
 feita pelo lado que tem o conector interativo; o packet, que é o que precede Drive/Notion/Figma, já
 existe.
+
+**As duas lacunas do packet fecharam no brainstorming, e nenhuma virou suposição.** Os três
+documentos do Drive foram lidos pelo conector desta sessão: o `decisao-stack.md` canônico ainda
+manda *"deploy reproduzível: script (git pull → rebuild → restart). Manual via SSH no início;
+GitHub Actions quando incomodar. NÃO montar pipeline completo no dia 1. `[FASE 2]`"* — texto
+**vencido**, e o ADR-14 ganha emenda datada dentro do bloco, sem que o original se apague. O
+`GITHUB-CORP` fechou por medição direta: `Gatika-CL/lotus` é **privado em organização free** e
+`Andred21/lotus` é **público**; **nenhum dos dois tem Environment configurado**, e plano free em
+repositório privado não oferece Environment, protection rule nem environment secret — a mesma raiz
+da **P-62**. É esse fato que decide onde mora o botão de promoção.
+
+**O brainstorming travou quatro decisões e a spec está escrita.** Transporte por **SSM Session
+Manager com OIDC** — a Actions assume role federada e chama `ssm send-command`, sem inbound novo no
+SG e sem chave estática. Botão no **corporativo, sem Environment**, compensado por acesso de escrita,
+input de confirmação, `concurrency` de grupo único sem cancelamento e log com ator e SHA — menos que
+um Environment, e registrado como tal, extensão da **P-62**. Rollback com **dump pré-deploy mais
+delta de migrations num ledger `releases.jsonl` append-only**, e **recusa** do `deploy.sh` quando o
+banco está à frente da imagem alvo, apontando a chave exata do dump. Lado AWS como **script
+versionado e idempotente com readback**, que o João roda e a sessão confere — não console, não IaC.
+
+**Achado de lição 19 que o bloco tem de pagar:** `deploy/bin/deploy.sh` e
+`.github/workflows/ci.yml` **não têm catraca nenhuma hoje**, embora a lição 19 já liste
+`deploy/bin/*.sh` entre os pares guardados. Glob na lição não é asserção no arquivo, e o bloco
+entrega os dois testes junto com o que mexe neles.
 
 **A branch e o espelho.** `cicd/promocao-deploy-e-rollback` foi **recriada** de
 `origin/main@cff022d4` — o tip que já traz o item 10 v2 mesclado (PR #105). A homônima de 2026-08-26
