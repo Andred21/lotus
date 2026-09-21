@@ -272,3 +272,34 @@ assert_libera 'cat "arquivo com espaco.txt"'
 assert_libera 'grep -rn "a\.b\.c" backend/app'
 assert_libera 'find . -name "*.log" -type f'
 assert_libera 'git commit -m "docs: nota com \"aspas\" dentro"'
+
+# --- fix final de review (fix 2): porta de escrita dentro da familia de
+# LEITURA. `sort`, `uniq`, `tree` e `sed` seguem liberados; o que nega e a
+# forma que grava — mesma regua que a spec ja aplica a `sed -i`.
+assert_nega   'sort -o backend/Evil.php /etc/hostname'
+assert_nega   'sort --output=backend/Evil.php a.txt'
+assert_nega   'sort --output backend/Evil.php a.txt'
+assert_nega   'sort -uo backend/Evil.php a.txt'
+assert_libera 'sort a.txt'
+assert_libera 'sort -u a.txt'
+assert_libera 'sort -k1,1 -t: /etc/passwd'
+
+assert_nega   'uniq a.txt out.txt'
+assert_libera 'uniq a.txt'
+assert_libera 'uniq -c a.txt'
+assert_libera 'uniq -f 2 a.txt'
+
+assert_nega   'tree -o saida.txt'
+assert_nega   'tree --output=saida.txt'
+assert_libera 'tree'
+assert_libera 'tree -L 2 backend'
+
+assert_nega   'sed -n "w backend/X.php" a.txt'
+assert_nega   'sed -e "w backend/X.php" a.txt'
+assert_nega   'sed "s/a/b/w backend/X.php" a.txt'
+assert_nega   'sed -n "1,20{w backend/X.php}" a.txt'
+assert_libera 'sed -n "1,20p" README.md'
+assert_libera 'sed -n "/warning/p" app.log'
+assert_libera 'sed "s/a/b/g" README.md'
+assert_libera 'sed -n "/switch/d;/warn/p" a.txt'
+assert_libera 'sort a.txt | uniq -c | sort -rn'

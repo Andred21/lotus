@@ -248,6 +248,70 @@ def destino_fora_do_repo(caminho):
     return alvo != raiz and not alvo.startswith(raiz + os.sep)
 
 
+# --- portas de escrita embutidas na familia de LEITURA
+#
+# Desvio declarado em relacao a spec: a spec lista `sort`, `uniq`, `tree` e
+# `sed` como comandos de leitura, e eles continuam na lista. O que cai aqui e
+# a CAPACIDADE de escrita que cada um carrega por dentro — `sort -o ARQUIVO`,
+# o segundo posicional do `uniq`, `tree -o ARQUIVO` e o comando `w` do script
+# do `sed`. Nao e contradicao da spec: e a mesma regua que a propria spec ja
+# aplica a `sed -i`, que tambem mantem o `sed` liberado e derruba so a forma
+# que escreve. Um `sort -o backend/Evil.php` cria arquivo no repositorio
+# exatamente como o `Write` que o guard-main.sh nega.
+#
+# Erro de leitura de script de sed cai para o lado de NEGAR: na main o sed e
+# de leitura, e uma negacao a mais custa uma mensagem, enquanto uma liberacao
+# a mais custa um arquivo escrito.
+_SED_ENDERECO = r"(?:[0-9]+|\$|/(?:\\.|[^/\\])*/[IM]*)"
+SED_ESCRITA_CMD = re.compile(
+    r"(?:^|[;\n{])\s*"
+    r"(?:" + _SED_ENDERECO + r"(?:\s*,\s*" + _SED_ENDERECO + r")?)?"
+    r"\s*!?\s*[wW](?![A-Za-z])"
+)
+SED_ESCRITA_FLAG = re.compile(
+    r"[sy](.)(?:\\.|(?!\1).)*\1(?:\\.|(?!\1).)*\1[a-zA-Z0-9]*[wW]"
+)
+UNIQ_FLAGS_VALOR = {"-f", "-s", "-w", "--skip-fields", "--skip-chars",
+                    "--check-chars"}
+
+
+def sed_scripts(args):
+    """Os tokens que o sed le como SCRIPT: o valor de `-e`/`--expression` e,
+    na falta deles, o primeiro posicional. Nome de arquivo nao entra, senao
+    um arquivo chamado `w.md` viraria negacao."""
+    scripts, i, n, ja_tem = [], 0, len(args), False
+    while i < n:
+        a = args[i]
+        if a.startswith("--"):
+            chave, igual, valor = a.partition("=")
+            if chave == "--expression":
+                ja_tem = True
+                if igual:
+                    scripts.append(valor)
+                elif i + 1 < n:
+                    i += 1
+                    scripts.append(args[i])
+            i += 1
+            continue
+        if a.startswith("-") and len(a) > 1:
+            # `-e` pode vir agrupada e com o valor colado: `sed -ne 'p'`.
+            if "e" in a[1:]:
+                ja_tem = True
+                colado = a[a.index("e", 1) + 1:]
+                if colado:
+                    scripts.append(colado)
+                elif i + 1 < n:
+                    i += 1
+                    scripts.append(args[i])
+            i += 1
+            continue
+        if not ja_tem:
+            scripts.append(a)
+            ja_tem = True
+        i += 1
+    return scripts
+
+
 def familia_leitura(nome, args):
     if nome == "sed":
         for a in args:
@@ -255,6 +319,42 @@ def familia_leitura(nome, args):
                 negar("`sed --in-place` reescreve o arquivo.")
             if a.startswith("-") and not a.startswith("--") and "i" in a:
                 negar("`sed -i` reescreve o arquivo no lugar. `sed -n` passa.")
+        for s in sed_scripts(args):
+            if SED_ESCRITA_CMD.search(s) or SED_ESCRITA_FLAG.search(s):
+                negar("o script `%s` tem um comando `w` de sed, que grava o "
+                      "espaco de padroes num arquivo. `sed -n \"1,20p\"` "
+                      "passa." % s)
+    if nome == "sort":
+        for a in args:
+            if (a in ("-o", "--output") or a.startswith("--output=")
+                    or curta_contem(a, "o")):
+                negar("`sort %s` grava a saida ordenada num arquivo, que e "
+                      "escrita com outro nome. `sort a.txt` e `sort -u a.txt` "
+                      "passam." % a)
+    if nome == "tree":
+        for a in args:
+            if (a in ("-o", "--output") or a.startswith("--output=")
+                    or curta_contem(a, "o")):
+                negar("`tree %s` grava a listagem num arquivo. `tree` sozinho "
+                      "passa." % a)
+    if nome == "uniq":
+        posicionais, i = [], 0
+        while i < len(args):
+            a = args[i]
+            if a in UNIQ_FLAGS_VALOR:
+                # Estas consomem o proximo token; sem isto o `2` de
+                # `uniq -f 2 a.txt` contaria como posicional.
+                i += 2
+                continue
+            if a.startswith("-") and a != "-":
+                i += 1
+                continue
+            posicionais.append(a)
+            i += 1
+        if len(posicionais) > 1:
+            negar("`uniq` com dois posicionais grava: o segundo (`%s`) e o "
+                  "arquivo de SAIDA. `uniq a.txt` passa."
+                  % posicionais[1])
     if nome == "find":
         for a in args:
             if a in ("-exec", "-execdir", "-ok", "-okdir", "-delete",
