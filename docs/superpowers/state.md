@@ -20,7 +20,7 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../lotus-harness
-    branch: chore/harness-hooks-de-guarda   # item 28 fechado em 2026-09-20; a branch NAO foi mesclada — integracao e serial e e passo proprio, com o Joao
+    branch: chore/harness-hooks-de-guarda   # item 28 fechado em 2026-09-20; PR #106 aberta, aguardando o merge do Joao — integracao e serial e e passo proprio
     active_spec: null
     active_plan: null
     context_packet: null
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — (item 28 **fechado em 2026-09-20**) | — | `../lotus-harness` | `chore/harness-hooks-de-guarda` (**não mesclada**) | `idle` |
+| `lane-a` | — (item 28 **fechado em 2026-09-20**) | — | `../lotus-harness` | `chore/harness-hooks-de-guarda` — `origin/main@cff022d4` (PR #105) mesclada para dentro em 2026-09-20; a **PR #106** está aberta | `idle` |
 | `lane-b` | — (item 10 v2 **fechado em 2026-09-20**; o 12 segue **estacionado**, com o gatilho do packet vencido) | — | `../lotus-infra` | `infra/producao-provisionamento-aws` | `idle` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
