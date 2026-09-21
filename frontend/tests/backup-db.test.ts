@@ -95,4 +95,20 @@ describe('deploy/bin/backup-db.sh', () => {
     expect(semComentarios).toContain('-p"$MYSQL_ROOT_PASSWORD"')
     expect(semComentarios).toContain('docker exec "$MYSQL" sh -c')
   })
+
+  it('publica a chave do dump sem obrigar ninguém a parsear a frase', () => {
+    expect(semComentarios).toContain('LOTUS_BACKUP_SAIDA')
+  })
+
+  it('só publica a chave DEPOIS do upload — chave sem objeto no S3 é mentira', () => {
+    const linhas = semComentarios.split(/\r?\n/)
+    const envio = linhas.findIndex((linha) => linha.includes('aws s3 cp'))
+    const chave = linhas.findIndex((linha) => linha.includes('LOTUS_BACKUP_SAIDA'))
+    expect(envio).toBeGreaterThan(-1)
+    expect(chave).toBeGreaterThan(envio)
+  })
+
+  it('não mexe no stdout que o cron do host consome', () => {
+    expect(semComentarios).toMatch(/^echo "backup ok: /m)
+  })
 })
