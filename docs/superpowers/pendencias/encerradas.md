@@ -7,12 +7,13 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(nenhuma. A **`P-58`** saiu no fechamento do `infra-producao-provisionamento-aws` (item 10 v2,
-2026-09-20), o primeiro posterior ao do bloco que a encerrou em 2026-09-04 — cumpriu a sprint de
-rastro e o durável dela está nos commits e na linha de entrega em
-[`../historico/progress.md`](../historico/progress.md). O item 10 v2 **não encerrou pendência
-nenhuma**: ele abriu a `P-77`, a `P-78` e a `P-79`, e o gate de fechamento dele abriu a `P-80` e a
-`P-81` para os itens que o João adiou. O parágrafo do rastro adiante é o das anteriores.)*
+*(uma: a **`P-82`** — nascida `P-77` —, fechada em **2026-09-20** pelo `harness-hooks-de-guarda`
+(item 28), no fechamento do próprio bloco que a abriu. A **`P-58`** cumpriu a sprint de rastro e saiu
+nos dois fechamentos de 2026-09-20; o parágrafo do rastro adiante é o dela. O item 10 v2 **não
+encerrou pendência nenhuma**: ele abriu a `P-77`, a `P-78` e a `P-79`, e o gate de fechamento dele
+abriu a `P-80` e a `P-81` para os itens que o João adiou. E a **`P-05`** teve o gatilho *antes de
+subir para produção* **disparado e não pago**, por decisão do João no gate — a ficha registra o
+disparo e o gatilho não se desarma.)*
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -21,7 +22,51 @@ nenhuma**: ele abriu a `P-77`, a `P-78` e a `P-79`, e o gate de fechamento dele 
 > renumera para trás: é a mesma regra que o `state.md` escreveu para o rótulo de bloco na colisão
 > de 2026-09-02.
 
+> **Os números `P-77`, `P-78` e `P-79` foram disputados em 2026-09-20.** Dois blocos fecharam no
+> mesmo dia, em árvores diferentes, e cada um alocou a mesma faixa: o
+> `infra-producao-provisionamento-aws` (item 10 v2, `lane-b`) e o `harness-hooks-de-guarda` (item 28,
+> `lane-a`). O item 10 integrou primeiro, pela **PR #105**, então os três IDs são dele. As três
+> fichas do item 28 foram renumeradas **na integração**, não no fechamento: `P-77` → **`P-82`** (a
+> spec do harness), `P-78` → **`P-83`** (as sete decisões de política) e `P-79` → **`P-84`** (o
+> harness fora de doc versionado). É o mesmo precedente do `P-73`: renumera quem chega depois, nunca
+> quem já está publicado. **A causa é estrutural, não descuido** — a numeração é um contador global
+> sem reserva, e duas lanes que fecham no mesmo dia sem integrar entre si colidem por construção. A
+> **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
+
+### P-82 — a spec dos hooks de guarda §9 descrevia um harness de testes que não era o entregue
+
+**Fechada em 2026-09-20** (nasceu `P-77`; renumerada na integração), no fechamento do próprio
+bloco que a abriu (item 28), pelos dois lados do
+gatilho: a spec foi corrigida **e** o harness ganhou o `trap` que ela prometia.
+
+| O que a spec dizia | O que foi feito |
+|---|---|
+| §9: "`trap` limpa na saída" | `run-all.sh` ganhou `trap limpar_descartes EXIT`, e a §9 passou a descrever o mecanismo real (registro por caso + trap). **Provado nos dois sentidos:** com `TMPDIR` próprio e `timeout -s INT` no meio da suíte, **0 sobras** com o trap e **2 sobras** com a linha do trap neutralizada numa cópia |
+| §9: prometia `assert_verdadeiro` | corrigida para `assert_igual`, `assert_contem` e `assert_nao_contem`, que são as três que `_assert.sh` oferece. A §9 também dizia "seis arquivos" onde há **sete** — falta[va] o `_assert.tests.sh`, que prova as próprias asserções |
+| §5.2: escrevia `posix=True` | corrigida para `posix=False` + `desaspar()`, com o parágrafo que explica **por que** é deliberado: `posix=True` resolveria as aspas antes de o classificador ver o token, e `git push "--forc"e` chegaria já expandido — o escape C1 |
+
+Duas emendas entraram junto, pelo mesmo motivo (spec descrevendo o que o código não faz): a §5.2
+passou a documentar a **allowlist** de separadores de comando e a §5.3 ganhou a regra de `-C` /
+`--git-dir` / `--work-tree` para fora da raiz — as duas nasceram das correções Q-1..Q-3 do review.
+
+A §11 foi emendada no mesmo commit: ela descrevia o buraco de MCP como fechado por construção, e
+o revisor verificou contra o binário instalado que o matcher de `PreToolUse` **aceita `mcp__.*`**.
+O limite real é "os hooks deste bloco não cobrem MCP", não "hooks não cobrem MCP" — fechá-lo é
+outro bloco. A spec arquivada está em
+[`../specs/archive/2026-09-20-harness-hooks-de-guarda-design.md`](../specs/archive/2026-09-20-harness-hooks-de-guarda-design.md).
+
 ## Rastro anterior, já removido
+
+**A P-58 saiu nos dois fechamentos de 2026-09-20** — o do
+`infra-producao-provisionamento-aws` (item 10 v2), que integrou primeiro, e o do
+`harness-hooks-de-guarda` (item 28) —, os primeiros posteriores ao do
+`frontend-arrumacao-de-testes` (item 27), que a encerrou em 2026-09-04 por mecanismo: o
+`compose-dev.test.ts` passou a afastar os `.env*` das **duas** raízes que o `vite.config.ts` lê — a
+do repositório (`loadEnv(mode, RAIZ, 'LOTUS_')`) e a de `frontend/` (`loadEnv(mode, __dirname,
+'VITE_')`) —, e o gate deixou de depender do disco de quem roda, provado com o arquivo posto e
+retirado duas vezes (3 falhas na versão pré-Task-7, 12/12 na nova, com o mesmo `frontend/.env` no
+disco). O rastro durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **As três do `backend-envelope-de-erro-e-recusa-de-dominio` (item 26) saíram no fechamento do
 `dominio-decisoes-de-rbac-e-semantica` (2026-09-04)**, o primeiro da `lane-a` posterior ao bloco que
