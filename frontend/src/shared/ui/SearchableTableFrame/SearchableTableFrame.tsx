@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { DataTableValueArray } from 'primereact/datatable'
+import type { DataTablePassThroughOptions, DataTableValueArray } from 'primereact/datatable'
 import { AppDataTable } from '../AppDataTable'
 import { AppCardToolbar } from '../AppCard'
 import { AppEmptyState } from '../AppEmptyState'
@@ -83,6 +83,13 @@ interface SearchableTableFrameBaseProps<T> {
    * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
    * retorno — e faria o tipo mentir sobre o contrato. */
   onRetry?: () => void | Promise<unknown>
+  /** Repassa ao `AppDataTable` por baixo — mesmo `mergePt` dele, então uma
+   * folha como `table.className` SUBSTITUI a do wrapper (nunca concatena).
+   * Existe para a tabela com coluna de ações larga (3+ ícones) poder reduzir
+   * o piso `min-w-[48rem]` default, que força rolagem (e a coluna presa
+   * cobrindo dado) em viewport onde caberia sem rolar (UI-03,
+   * `RedatoresTable`). */
+  pt?: DataTablePassThroughOptions
   /** As `<AppColumn/>`. */
   children: ReactNode
 }
@@ -115,6 +122,7 @@ export function SearchableTableFrame<T>({
   sortOrder,
   onSort,
   rows,
+  pt,
   children,
 }: SearchableTableFrameProps<T>) {
   const { t } = useTranslation()
@@ -211,6 +219,7 @@ export function SearchableTableFrame<T>({
         sortField={sortField}
         sortOrder={sortOrder}
         onSort={onSort}
+        pt={pt}
       >
         {children}
       </AppDataTable>

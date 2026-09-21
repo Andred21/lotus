@@ -51,6 +51,13 @@ export function RedatoresTable({
   return (
     <SearchableTableFrame
       table={table}
+      // O piso default do AppDataTable (`min-w-[48rem]` = 768px) é maior que
+      // os 718px de moldura em 1024x768: o piso vence, força rolagem, e a
+      // coluna de ações presa (`right: 0`) passa a cobrir "Último acceso" com
+      // 50px de sobreposição — a tabela rolaria sem precisar (UI-03,
+      // `2026-09-04-lotus-ui-review-personas.md`). 42rem (672px) cabe nos
+      // 718px com folga e ainda dá espaço de sobra às 5 colunas de dado.
+      pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}
       searchPlaceholder={t('redator.searchPlaceholder')}
       emptyState={
         <AppEmptyState
