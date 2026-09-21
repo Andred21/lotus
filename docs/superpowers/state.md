@@ -4,13 +4,13 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: cicd-promocao-deploy-e-rollback
-workflow_state: context_required
-next_owner: codex
-next_action: generate_context_packet
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
-context_packet: null
+context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
 blocker: null
 lanes:
   lane-a:
@@ -30,14 +30,14 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: cicd-promocao-deploy-e-rollback
-    workflow_state: context_required
-    next_owner: codex
-    next_action: generate_context_packet
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
     tree: ../lotus-infra
     branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; a homonima de 2026-08-26 estava inteira dentro da main (PR #105 mesclou o item 10 v2)
     active_spec: null
     active_plan: null
-    context_packet: null
+    context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
     blocker: null
     resume_state: null
     arquivos_do_descarte:
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: infra-producao-provisionamento-aws
 state_basis_commit: cff022d4
-updated_at: 2026-09-20T21:25:00-03:00
+updated_at: 2026-09-20T22:05:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 22 **fechado em 2026-09-04**; a branch foi **rebasada sobre `origin/main@9bdaac90`** em 2026-09-09 e a **PR #104** está aberta) | — | main tree | `refactor/backend-decisoes-de-rbac-e-semantica` | `idle` |
-| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `context_required` |
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `ready_for_planning` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
@@ -183,12 +183,33 @@ par do GHCR puxa e executa, o 10 provisionou o host — e o 12 promove esse arte
 que agora existe, com aprovação, health e rollback. Nasce em **`context_required`** (`Contexto: sim`
 na fila).
 
-**O packet de 2026-08-26 não serve, e é por isso que a lane não nasce em `ready_for_planning`.**
-`context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md` está em `status: blocked`, e o
-gatilho de staleness que ele próprio declara (*"um alvo AWS real ser provisionado"*) **venceu em
-2026-09-04**: o motivo do bloqueio era não haver destino de deploy, e o item 10 criou o destino. O
-que está guardado é evidência de um bloqueio que já passou, e `status: blocked` nunca autoriza
-prosseguir (§6 do `/planejar-bloco`). `context_packet` fica `null` até o packet novo existir.
+**O packet de 2026-08-26 não servia, e por isso a lane passou por `context_required` antes de
+planejar.** `context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md` estava em
+`status: blocked`, e o gatilho de staleness que ele próprio declara (*"um alvo AWS real ser
+provisionado"*) **venceu em 2026-09-04**: o motivo do bloqueio era não haver destino de deploy, e o
+item 10 criou o destino. `status: blocked` nunca autoriza prosseguir (§6 do `/planejar-bloco`).
+
+**O packet novo é `context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md`**, gerado pelo
+Codex sob a skill `lotus-context-packet` em `base_commit ba22ddce`, `status: partial`,
+`RECOMMENDED_TRANSITION: ready_for_planning`. Validado pelo caller: markers exatos, frontmatter
+completo, 7 key facts (teto 8), 659 palavras de corpo (teto 1.200), as quatro fontes `unavailable`
+com evidência registrada. Ele **desfaz a premissa central da ficha de 2026-08-26**: o release
+deixou de ser o par `app`+`web` e passou a ser o **trio** `lotus-app`, `lotus-web` e
+`lotus-clamav` sob o mesmo SHA corporativo, e o `deploy/bin/deploy.sh` já cobre
+`pull → migrate → up → health → digests → CURRENT_SHA`. O que falta ao 12 é a **promoção remota
+governada** e o **rollback auditável** — hoje só existe `CURRENT_SHA`, sem registro do anterior.
+
+**Duas fontes externas ficaram fora, e as duas estão declaradas como limitação do brainstorming.**
+O `GITHUB-CORP` (`Gatika-CL/lotus`) devolveu **404 medido nesta rodada**, não copiado do packet
+velho — Environment, secrets e branch protection do corporativo seguem ilegíveis pelo conector, e o
+planejamento tem de prever *readback* em vez de presumir proteção. Os **três documentos do Drive**
+(`10eFmpqDTKL4wfWsJW-Rr7dDuBkb1RtaI`, `14Q_wL6G6acSCUaMLIr9BO2blqiGrPMGw`,
+`1L8vq7Pp1xFBSvzyISg5sw6SVVihzSR5l`) falharam com `user cancelled MCP tool call` nas sete
+chamadas: o conector do Drive exige consentimento interativo que a invocação headless do Codex não
+tem. **É limitação do arranjo, não da fonte** — Notion e GitHub responderam na mesma sessão —, e o
+Drive é planejamento canônico (`CLAUDE.md` §3). A lacuna se fecha no brainstorming, com a consulta
+feita pelo lado que tem o conector interativo; o packet, que é o que precede Drive/Notion/Figma, já
+existe.
 
 **A branch e o espelho.** `cicd/promocao-deploy-e-rollback` foi **recriada** de
 `origin/main@cff022d4` — o tip que já traz o item 10 v2 mesclado (PR #105). A homônima de 2026-08-26
