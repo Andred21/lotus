@@ -57,4 +57,24 @@ describe('deploy/bin/deploy.sh', () => {
     expect(semComentarios.match(/docker manifest inspect/g)).toHaveLength(3)
     expect(indiceDe('docker manifest inspect')).toBeLessThan(indiceDe('compose pull'))
   })
+
+  it('mede o schema APLICADO no banco, não um diff de arquivos', () => {
+    expect(semComentarios).toContain('SELECT migration FROM migrations')
+  })
+
+  it('mede o schema CONHECIDO pela imagem alvo, não pela árvore de trabalho', () => {
+    expect(semComentarios).toMatch(/docker run --rm --entrypoint sh "\$APP"/)
+    expect(semComentarios).toContain('/var/www/database/migrations')
+  })
+
+  it('o gate roda depois do pull e antes do migrate', () => {
+    const gate = indiceDe('A_FRENTE=')
+    expect(gate).toBeGreaterThan(indiceDe('compose pull'))
+    expect(gate).toBeLessThan(indiceDe('artisan migrate'))
+  })
+
+  it('recusa alvo cujo schema o banco já ultrapassou', () => {
+    expect(semComentarios).toMatch(/exit 4/)
+    expect(semComentarios).toContain('LOTUS_ACEITAR_SCHEMA_A_FRENTE')
+  })
 })

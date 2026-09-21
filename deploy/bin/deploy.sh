@@ -61,6 +61,34 @@ docker manifest inspect "$CLAM" >/dev/null
 echo "==> pull"
 compose pull --quiet
 
+echo "==> gate de schema"
+MYSQL=$(compose ps -q mysql)
+[ -n "$MYSQL" ] || { echo "erro: servico mysql nao esta de pe" >&2; exit 1; }
+
+# APLICADAS: o que o BANCO realmente tem. Lido da tabela, nao suposto.
+APLICADAS=$(docker exec "$MYSQL" sh -c \
+  'exec mysql -N -B -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SELECT migration FROM migrations" "$MYSQL_DATABASE"' \
+  | sort)
+# CONHECIDAS: o que a IMAGEM ALVO sabe. Diff de arquivos entre dois SHAs nao
+# serve: ele nao enxerga `change()` nem `rename` destrutivo, e e exatamente por
+# isso que a medicao sai da imagem que vai rodar.
+CONHECIDAS=$(docker run --rm --entrypoint sh "$APP" -c 'ls /var/www/database/migrations' \
+  | sed 's/\.php$//' | sort)
+
+A_FRENTE=$(comm -23 <(printf '%s\n' "$APLICADAS") <(printf '%s\n' "$CONHECIDAS"))
+PENDENTES=$(comm -13 <(printf '%s\n' "$APLICADAS") <(printf '%s\n' "$CONHECIDAS"))
+
+if [ -n "$A_FRENTE" ]; then
+  echo "erro: o banco esta A FRENTE de $SHA — a imagem alvo nao conhece:" >&2
+  printf '  %s\n' $A_FRENTE >&2
+  echo "restaure o dump da release que as introduziu (procure em $BASE/releases.jsonl) e so entao promova." >&2
+  # O escape existe para o operador com o dump na mao. O WORKFLOW nunca define
+  # esta variavel (catraca em workflow-deploy.test.ts), entao o caminho
+  # automatizado nao tem como contornar o gate.
+  [ "${LOTUS_ACEITAR_SCHEMA_A_FRENTE:-0}" = "1" ] || exit 4
+  echo "aviso: LOTUS_ACEITAR_SCHEMA_A_FRENTE=1 — seguindo por sua conta." >&2
+fi
+
 echo "==> migrate"
 compose run --rm app php artisan migrate --force
 
