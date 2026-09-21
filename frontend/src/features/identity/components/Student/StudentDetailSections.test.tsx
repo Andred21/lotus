@@ -53,6 +53,28 @@ function detail(over: Partial<UseQueryResult<StudentDetailData, ProblemDetails>>
 const montar = (ui: Parameters<typeof renderWithProviders>[0]) => renderWithProviders(ui)
 
 describe('StudentDetailSections — falha COM cache não apaga as seções', () => {
+  /* PRIMEIRO da suíte, e não por acaso: React deduplica o aviso de "key"
+   * ausente por NOME DO COMPONENTE PAI (`TableBody`, guardado em
+   * `ownerHasKeyUseWarning` — módulo `react-dom`), não por dado. Qualquer
+   * teste abaixo que já monte esta mesma tabela de turmas consome o aviso
+   * primeiro e mascara este; ele só prova o que promete sendo o primeiro a
+   * renderizar `StudentDetailSections` no arquivo. */
+  it('tabela de turmas usa dataKey="turma_id" — a linha não tem "id" (UI-04)', () => {
+    // `StudentTurmaData` não expõe `id`; sem `dataKey` explícito o wrapper cai
+    // no default `"id"` (AppDataTable.tsx:108) e toda linha vira chave
+    // `undefined` — React acusa em console.error, mesmo com uma linha só.
+    const erro = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    montar(<StudentDetailSections detail={detail({})} />)
+
+    const avisoDeChave = erro.mock.calls.some((chamada) =>
+      String(chamada[0]).includes('unique "key" prop'),
+    )
+    expect(avisoDeChave).toBe(false)
+
+    erro.mockRestore()
+  })
+
   it('falha SEM cache: o erro substitui as DUAS seções', () => {
     montar(
       <StudentDetailSections

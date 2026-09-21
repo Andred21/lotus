@@ -92,6 +92,7 @@ export function StudentDetailSections({
         <AppDataTable
           value={estado.data.turmas}
           emptyMessage={t("student.noTurmas")}
+          dataKey="turma_id"
         >
           <AppColumn
             header={t("student.turmaCode")}
