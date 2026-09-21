@@ -17,6 +17,21 @@ if [ ${#SHA} -ne 40 ] || [ -n "$(printf '%s' "$SHA" | tr -d '0-9a-f')" ]; then
 fi
 
 BASE=/opt/lotus
+
+# Um deploy por vez NO HOST. O `concurrency` do workflow enfileira dois runs da
+# Actions, mas não sabe que o João pode estar rodando este script por SSH ao
+# mesmo tempo — e o inverso também vale. As duas camadas cobrem coisas
+# diferentes; nenhuma sozinha cobre as duas.
+# O fd abre em APPEND de propósito: `exec 9>` truncaria o arquivo ANTES do
+# flock, e quem chegasse segundo apagaria o PID de quem chegou primeiro,
+# justamente a informação que a mensagem de recusa precisa dar.
+exec 9>>"$BASE/.deploy.lock"
+if ! flock -n 9; then
+  echo "erro: outro deploy ja esta rodando (pid $(cat "$BASE/.deploy.pid" 2>/dev/null || echo '?'))" >&2
+  exit 3
+fi
+printf '%s\n' "$$" > "$BASE/.deploy.pid"
+
 DONO="${LOTUS_RELEASE_OWNER:-gatika-cl}"
 APP="ghcr.io/$DONO/lotus-app:$SHA"
 WEB="ghcr.io/$DONO/lotus-web:$SHA"
@@ -73,5 +88,11 @@ for PAR in "app:$APP" "nginx:$WEB" "clamav:$CLAM"; do
   [ "$ID_PUXADO" = "$ID_RODANDO" ] || { echo "erro: $SERVICO roda imagem diferente da puxada" >&2; exit 1; }
 done
 
-echo "$SHA" > "$BASE/CURRENT_SHA"
+# `>` trunca e só depois escreve: processo morto entre as duas coisas deixa o
+# host sem saber que SHA está rodando. `mv` dentro do mesmo sistema de arquivos
+# é rename(2), que é atômico — ou o arquivo é o antigo, ou é o novo.
+NOVO=$(mktemp "$BASE/.current_sha.XXXXXX")
+printf '%s\n' "$SHA" > "$NOVO"
+chmod 644 "$NOVO"
+mv -f "$NOVO" "$BASE/CURRENT_SHA"
 echo "==> DEPLOY OK: $SHA"
