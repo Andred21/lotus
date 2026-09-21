@@ -54,8 +54,17 @@ assert_nao_contem() {
 
 criar_repo() {
   # Repositorio descartavel para um caso de teste. Ecoa o caminho.
+  # Se o mktemp falhar, aborta o subshell sem ecoar path. Isto NAO derruba a
+  # suite — `criar_repo` e chamado dentro de `$(...)` — mas garante path vazio e
+  # mensagem visivel. Quem derruba a suite e o pre-voo do run-all.sh, no shell
+  # principal. As duas travas existem porque `git -C ""` nao da erro: cai no
+  # diretorio atual, que e o repo real.
   local raiz
-  raiz=$(mktemp -d "${TMPDIR:-/tmp}/lotus-hooks-teste.XXXXXX")
+  raiz=$(mktemp -d "${TMPDIR:-/tmp}/lotus-hooks-teste.XXXXXX") || raiz=''
+  if [[ -z $raiz || ! -d $raiz ]]; then
+    printf 'ABORTADO: nao consegui criar repo descartavel; nao vou rodar git contra o repo real\n' >&2
+    exit 1
+  fi
   git -C "$raiz" init -q -b main
   git -C "$raiz" config user.email harness@lotus.local
   git -C "$raiz" config user.name 'Harness de teste'

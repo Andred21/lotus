@@ -34,6 +34,9 @@ acionar_hook "$PARADA" "$(payload_stop "$_v" teste-back-outra-sessao false)"
 assert_igual 'block' "$(campo_json "$SAIDA_HOOK" '.decision')" 'sessao diferente com o mesmo commit ainda bloqueia'
 
 # --- a marca e por commit: a mesma sessao avisa de novo quando o HEAD muda
+# Estas sao as unicas linhas da suite que ESCREVEM num repo. Se $_v vier vazio,
+# `git -C ""` cai no diretorio atual e o reset la embaixo apaga o WIP do Joao.
+[[ -d $_v && -d $_v/.git ]] || { printf 'ABORTADO: repo descartavel invalido\n' >&2; exit 1; }
 _head_base=$(git -C "$_v" rev-parse HEAD)
 git -C "$_v" add -A
 git -C "$_v" commit -q -m 'commita o backend sujo'
