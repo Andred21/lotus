@@ -127,6 +127,9 @@ if [ "$PING" != "Online" ]; then
       echo "erro: o agente SSM de $INSTANCIA esta $PING apos ${ESPERA_SEGUNDOS}s" >&2
       ;;
   esac
+  # ~300 s e' da ordem de um heartbeat do agente: o host pode estar sao e ter
+  # registrado logo depois. A saida que o operador le tem de dizer isto.
+  echo "       reexecutar este script e' seguro: tudo nele e' idempotente." >&2
   exit 1
 fi
 echo

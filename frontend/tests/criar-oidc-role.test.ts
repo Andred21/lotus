@@ -46,6 +46,16 @@ const documento = (nome: string): Documento => {
 const acoesDe = (doc: Documento): string[] =>
   doc.Statement.flatMap((s) => [s.Action].flat()).sort()
 
+/** Um comando por entrada, com a continuação de linha do shell já juntada. */
+const comandosAws = semComentarios
+  .replace(/\\\n\s*/g, ' ')
+  .split('\n')
+  .map((linha) => linha.trim())
+  .filter((linha) => linha.startsWith('aws '))
+
+const alvoDe = (comando: string): string | undefined =>
+  comando.match(/--role-name (\S+)/)?.[1]
+
 describe('deploy/aws/criar-oidc-e-role.sh', () => {
   it('é executável e falha alto', () => {
     expect(statSync(CAMINHO).mode & 0o111).not.toBe(0)
@@ -53,6 +63,9 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
   })
 
   it('fixa a trust na main do repositório corporativo', () => {
+    // O único literal de que a trust inteira depende; trocá-lo falha fechado,
+    // mas falha no lugar errado — nenhum token do GitHub casaria.
+    expect(semComentarios).toContain('EMISSOR=token.actions.githubusercontent.com')
     const trust = documento('trust')
     expect(trust.Statement).toHaveLength(1)
     const statement = trust.Statement[0]
@@ -94,6 +107,26 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
     ])
   })
 
+  it('a lotus-deploy não recebe permissão além da inline mínima', () => {
+    // Parsear os heredocs prova o CONTEÚDO dos documentos, nunca que eles são a
+    // única concessão: um `attach-role-policy --role-name "$ROLE" --policy-arn
+    // …/AdministratorAccess` ao lado deles passava nos nove testes, e o readback
+    // também não lista as managed policies da role. Aqui se conta.
+    const concessoes = comandosAws.filter((c) => /(attach|put)-role-policy/.test(c))
+    expect(concessoes).toHaveLength(2)
+
+    const inline = concessoes.filter((c) => c.includes('put-role-policy'))
+    expect(inline).toHaveLength(1)
+    expect(alvoDe(inline[0])).toBe('"$ROLE"')
+    expect(inline[0]).toContain('--policy-name lotus-deploy-ssm')
+
+    // A única managed policy do script é a do agente, e vai para a role da EC2.
+    const anexada = concessoes.filter((c) => c.includes('attach-role-policy'))
+    expect(anexada).toHaveLength(1)
+    expect(alvoDe(anexada[0])).toBe('lotus-ec2')
+    expect(anexada[0]).toContain('arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore')
+  })
+
   it('é idempotente — reexecutar não estraga nada', () => {
     expect(semComentarios).toContain('get-open-id-connect-provider')
     expect(semComentarios).toContain('update-assume-role-policy')
@@ -104,15 +137,15 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
     // ClientIDList. Sem isto, o erro só aparece no configure-aws-credentials,
     // com cara de bug de trust policy.
     expect(semComentarios).toContain('add-client-id-to-open-id-connect-provider')
-    expect(semComentarios).toMatch(/--query 'ClientIDList'/)
+    expect(semComentarios).toMatch(/--query '?ClientIDList'?/)
   })
 
   it('espera o agente SSM registrar antes de acusar agente morto', () => {
     // O attach de AmazonSSMManagedInstanceCore pode ser a primeira permissão de
     // SSM que o host recebe; o agente reregistra no próprio retry, em minutos.
     // Medir uma vez só reprovaria a execução correta.
-    expect(semComentarios).toMatch(/FIM=\$\(\(\s*\$\(date \+%s\)\s*\+\s*ESPERA_SEGUNDOS\s*\)\)/)
-    expect(semComentarios).toMatch(/\[ "\$\(date \+%s\)" -lt "\$FIM" \]/)
+    expect(semComentarios).toMatch(/FIM=\$\(\(\s*\$\(date \+%s\)\s*\+\s*\$?ESPERA_SEGUNDOS\s*\)\)/)
+    expect(semComentarios).toMatch(/\[ "\$\(date \+%s\)" -l[te] "\$FIM" \]/)
     const espera = semComentarios.match(/ESPERA_SEGUNDOS=(\d+)/)
     expect(espera).not.toBeNull()
     expect(Number(espera?.[1])).toBeGreaterThanOrEqual(120)
@@ -121,8 +154,14 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
   it('exige o agente SSM Online no readback', () => {
     expect(semComentarios).toContain('describe-instance-information')
     expect(semComentarios).toContain('PingStatus')
-    expect(semComentarios).toMatch(/if \[ "\$PING" != "Online" \]; then/)
-    expect(semComentarios).toMatch(/^\s*exit 1$/m)
+    // O `exit 1` tem de estar DENTRO da guarda: solto, qualquer `exit 1` do
+    // arquivo satisfazia a asserção.
+    const guarda = semComentarios.match(/if \[ "\$PING" != "Online" \]; then([\s\S]*?)\nfi/)
+    expect(guarda).not.toBeNull()
+    expect(guarda?.[1]).toMatch(/\n\s*exit 1\s*$/)
+    // 300 s é cerca de um heartbeat do agente, então o operador pode cair aqui
+    // com o host são. A saída que ele lê tem de dizer o que fazer.
+    expect(guarda?.[1]).toContain('reexecutar este script')
   })
 
   it('não deixa documento de política no /tmp depois de rodar', () => {
