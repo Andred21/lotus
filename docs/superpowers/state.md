@@ -1,12 +1,12 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-a
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: backend-config-e-conteudo-de-documento
+workflow_state: ready_for_planning
+next_owner: claude
+next_action: plan_active_work_item
 resume_state: null
 active_spec: null
 active_plan: null
@@ -15,18 +15,18 @@ blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: ../lotus-harness
-    branch: chore/harness-hooks-de-guarda   # item 28 fechado em 2026-09-20; PR #106 aberta, aguardando o merge do Joao — integracao e serial e e passo proprio
+    active_work_item: backend-config-e-conteudo-de-documento
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
+    tree: main-tree
+    branch: null   # a branch do item 29 abre no /executar-bloco. A anterior (chore/harness-hooks-de-guarda, item 28) MESCLOU na PR #106 em 2026-09-20 — merge 38e08a08; o state.md so soube em 2026-09-21
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: harness-hooks-de-guarda   # item 28, fechado em 2026-09-20
+    last_completed_work_item: harness-hooks-de-guarda   # item 28, fechado em 2026-09-20, mesclado na PR #106
   lane-b:
     active_feature: null
     active_work_item: null
@@ -61,8 +61,8 @@ lanes:
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: infra-producao-provisionamento-aws
-state_basis_commit: 25086f5e
-updated_at: 2026-09-20T23:55:00-03:00
+state_basis_commit: 38e08a08
+updated_at: 2026-09-21T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,11 +162,11 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-20
+## Ocupação corrente — 2026-09-21
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — (item 28 **fechado em 2026-09-20**) | — | `../lotus-harness` | `chore/harness-hooks-de-guarda` — `origin/main@cff022d4` (PR #105) mesclada para dentro em 2026-09-20; a **PR #106** está aberta | `idle` |
+| `lane-a` | **29** `backend-config-e-conteudo-de-documento` (`P-79`, `P-75`, `P-59`) | Backend | main tree (gate P-03) | — (abre no `/executar-bloco`); a anterior, `chore/harness-hooks-de-guarda`, **mesclou** na PR #106 (`38e08a08`) | `ready_for_planning` |
 | `lane-b` | — (item 10 v2 **fechado em 2026-09-20**; o 12 segue **estacionado**, com o gatilho do packet vencido) | — | `../lotus-infra` | `infra/producao-provisionamento-aws` | `idle` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
@@ -177,6 +177,21 @@ disjuntas, colisão mínima de arquivos:
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
+**A `lane-a` recebeu o item 29 em 2026-09-21, por promoção explícita do João.** O bloco nasce direto
+em `ready_for_planning` — a ficha diz `Contexto: não`, e as três fontes (`P-79`, `P-75`, `P-59`) são
+fichas deste repositório, então não há rota de Context Packet. **Main tree, pelo gate P-03:** o
+escopo é `backend/config/`, e o compose monta o main tree; segue valendo que só há uma lane de
+backend, então a P-03 não é disparada.
+
+**Duas correções de registro entraram no mesmo commit, e vale dizer por quê.** A anotação da `lane-a`
+afirmava que a **PR #106 estava aberta, aguardando o merge do João**; o Git diz que ela **mesclou em
+2026-09-20** (`38e08a08`), e o `state_basis_commit` ainda apontava `25086f5e`. Não era divergência de
+**fase** — a lane estava `idle` pelas duas fontes, então a invariante de PARAR não disparou —, mas
+era divergência de **integração**, e ela custou uma decisão: na leitura de pendências que originou
+este item, o bloco de harness (`P-83` + `P-84`) foi recomendado ao João como *bloqueado à espera do
+merge da #106*, o que já era falso havia um dia. Anotação de integração envelhece sozinha e ninguém
+a relê; é a mesma classe da lição 13. A segunda correção é no `backlog.md`: a tabela *Ordem de
+execução* ainda listava o **item 22** na posição 3, fechado desde 2026-09-04.
 
 **O item 12 segue estacionado na `lane-b`, e o gatilho do packet dele venceu.** O
 `cicd-promocao-deploy-e-rollback` continua no `backlog.md` e o packet

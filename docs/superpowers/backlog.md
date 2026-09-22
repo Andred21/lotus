@@ -49,7 +49,7 @@
   2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
   2026-08-27, o `5` em 2026-08-28, o `6` e o `18` em 2026-08-29, o `7` e o `19` em 2026-08-30, o
   `20` em 2026-08-31, o `21` em 2026-09-01, o `24` em 2026-09-02, o `25` e o `26` em 2026-09-03, o
-  `22` e o `27` em 2026-09-04 e o `10` em 2026-09-20. O `10` é o único que **encolheu antes de
+  `22` e o `27` em 2026-09-04 e o `10` e o `28` em 2026-09-20. O `10` é o único que **encolheu antes de
   sair**: o runtime foi entregue em 2026-08-22 e a ficha ficou só com o provisionamento, que fechou
   agora. A fila salta os números que já fecharam, de propósito.
 - **Item novo entra com número novo, e o lugar dele na fila é o da dependência, não o do número.** O
@@ -64,7 +64,9 @@
   hospedava (`P-71`, `P-72` e a metade de comportamento da `P-60`) — **fechado em 2026-09-03**; e o
   `27` em 2026-09-03, do levantamento de frontend pedido pelo João, medido contra `main@24bf770c`
   — **fechado em 2026-09-04**; e o `28` em 2026-09-20, aberto pelo João a partir da leitura do
-  harness do `Ela-Decora/ElaDecora-Brain` — **fechado em 2026-09-20**.
+  harness do `Ela-Decora/ElaDecora-Brain` — **fechado em 2026-09-20**; e o `29` em 2026-09-21,
+  aberto pelo João a partir do agrupamento das 33 fichas de `pendencias/abertas.md` por "lado" —
+  três chaves de `backend/config/` que nenhum bloco hospedava (`P-79`, `P-75`, `P-59`).
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -78,14 +80,16 @@
 
 # Ordem de execução
 
-Recomendação por dependência e risco, decidida em 2026-09-03. **Não promove nada** — promover segue
-sendo ato explícito no `state.md`. A fila abaixo está escrita nesta ordem.
+Recomendação por dependência e risco, decidida em 2026-09-03 e **emendada em 2026-09-21**, por
+decisão do João: o **22** saiu da tabela — fechou em 2026-09-04 e a linha ficou para trás por 17
+dias —, e o **29** entrou na frente. **Não promove nada** — promover segue sendo ato explícito no
+`state.md`. A fila abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
-| 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
-| 3 | **22** `dominio-decisoes-de-rbac-e-semantica` | Backend | Quatro decisões de domínio travadas no João; muda contrato e regenera `generated.ts`, então precede qualquer frontend que dependa desses campos |
+| 1 | **29** `backend-config-e-conteudo-de-documento` | Backend | A `P-79` grava conteúdo de documento **legal imutável** a partir de chave de infra, e a regra operacional do runbook do item 10 já proíbe emitir certificado real antes de o `FRONTEND_URL` estar no domínio definitivo — o remédio estrutural precede a emissão. Três fichas no mesmo diretório e um instrumento de prova só; bloco pequeno, que não disputa frente com nenhum outro da fila |
+| 2 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
+| 3 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
 | 4 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
 | 5 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | **Destravado em 2026-09-20**: o item 10 provisionou o host e fechou. O packet `status: blocked` de 2026-08-26 teve o gatilho de staleness vencido e **precisa regenerar** antes de qualquer planejamento |
 | 6 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
@@ -100,6 +104,50 @@ escopo foi movido de ficha.
 ---
 
 # Fila priorizada
+
+## 29. `backend-config-e-conteudo-de-documento`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Backend · **Contexto:** não
+**Fonte:** `pendencias/abertas.md` — `P-79`, `P-75` e `P-59`. Aberto pelo João em **2026-09-21**, a
+partir do agrupamento das 33 fichas abertas por "lado": as três dividem diretório (`backend/config/`)
+e instrumento de prova (um teste lendo `config(...)` contra o `.env`), e nenhuma tinha hospedeiro —
+as três estavam com `Bloco: —` desde que nasceram.
+
+**Objetivo:** três chaves de configuração do backend divergem do que o `.env` promete. Uma delas
+grava **conteúdo de documento legal**. Cada uma fecha por mecanismo — config corrigida mais um teste
+que prove a chave seguindo o `.env` —, não por leitura.
+
+**Escopo:**
+- **`P-79`** — `CertificatePdfService.php:27` monta a URL do QR a partir de
+  `config('app.frontend_url')`. Chave própria (`CERTIFICATE_VALIDATION_URL`, com fallback para
+  `app.frontend_url` enquanto não preenchida), para que o valor declare que é conteúdo de documento
+  e não endereço de serviço. O certificado é imutável depois da emissão; o `FRONTEND_URL` é
+  descartável por definição, e o item 10 já pagou o lado **operacional** disto (molde e runbook §7/§11)
+  — o que falta é o mecanismo.
+- **`P-75`** — `config('sanctum.stateful')` resolve **sem** `localhost:5173`, que é a porta do Vite
+  no `CLAUDE.md` §6, embora o `.env` a declare. Escrita vinda do dev server não é reconhecida como
+  requisição de frontend e cai em **401** em vez do **419** do CSRF, deslocando o diagnóstico de
+  quem for testar CSRF.
+- **`P-59`** — `config/app.php:75` fixa `'timezone' => 'UTC'` como literal, sem `env()`, então o
+  `APP_TIMEZONE=America/Santiago` do `.env.example` nunca chega ao framework.
+
+**A `P-59` carrega uma decisão, não só um patch.** A própria ficha registra por que ela não entrou
+no bloco que a mediu: trocar o fuso do servidor **reinterpreta toda data já gravada**, e o Chile tem
+horário de verão, então a diferença não é constante. O alcance conhecido hoje é pequeno (só
+certificado com prazo, e o `CertificateDisplayStatus` já declara o fuso explicitamente para não
+herdar o errado), mas o defeito é global. **O veredito sai no brainstorming deste bloco** — esta
+ficha não o presume.
+
+**Fora de escopo, por decisão do João em 2026-09-21:** a **`P-76`** (seis frases literais em `app/`,
+que pedem a 4ª e a 5ª porta da catraca do `MensagemLiteralTest`). Outro instrumento de prova e outros
+arquivos — `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules`, `AuthController::logout()` —, que
+este bloco não toca; o gatilho dela não seria nem disparado aqui. Segue sem hospedeiro.
+
+**DoD:** as três chaves provadas por teste lendo `config(...)` contra o `.env`, não por inspeção; a
+`P-79` provada também no artefato — um certificado emitido carregando a URL da chave nova, e o
+fallback exercido nos dois sentidos. Nenhuma mudança de contrato: `generated.ts` com diff vazio.
+
+---
 
 ## 16. `frontend-revisao-ui-por-modulo`
 
