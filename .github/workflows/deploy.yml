@@ -61,7 +61,7 @@ jobs:
           echo "compare main...$SHA = $ESTADO"
           case "$ESTADO" in
             identical|behind) ;;
-            *) echo "erro: $SHA nao esta na main (status $ESTADO)" >&2; exit 1 ;;
+            *) echo "erro: $SHA nao esta na main (status ${ESTADO:-inacessivel})" >&2; exit 1 ;;
           esac
 
       - name: O CI daquele SHA terminou verde
@@ -118,16 +118,25 @@ jobs:
           echo "CommandId=$COMANDO"
 
           ESTADO=Pending
-          # Orcamento do polling: 200 * 5s = 1000s (~16min40) nominais. O job
-          # tem timeout-minutes: 20 -- o orcamento fica perto desse teto, com
-          # folga pros passos anteriores (SHA, CI, GHCR, OIDC) e pra latencia
-          # normal da propria API do loop, sem estoura-lo. O orcamento antigo
-          # (120 * 5s = 600s, ~10-11min ja com latencia) parava na metade do
-          # timeout: o pior caso real do host em deploy.sh -- pull multi-arch a
-          # frio do trio de imagens, o mysqldump antes do migrate, o migrate em
-          # si e ate 150s de espera de health do nginx -- passa disso, e um
-          # deploy saudavel caia no orcamento antigo.
-          for _ in $(seq 1 200); do
+          # Orcamento do polling: relogio de parede, nao contador de
+          # iteracoes. Contar iteracoes so mede o sleep (200 * 5s = 1000s
+          # nominais); cada iteracao TAMBEM chama `aws ssm
+          # get-command-invocation`, e essa chamada custa ~0.6-1.5s no AWS CLI
+          # v2 num runner hospedado. A ~1s por chamada o loop de 200 iteracoes
+          # chegava a ~1200s reais -- igual ao timeout-minutes: 20 do job, e
+          # isso e' ANTES dos quatro passos de gate anteriores (SHA, CI, GHCR,
+          # OIDC) e das duas leituras finais de stdout/stderr. Um deploy
+          # saudavel porem lento era morto pelo timeout do proprio job antes
+          # do ramo de orcamento esgotado (abaixo) conseguir imprimir sua
+          # mensagem -- as duas metades do fix anterior colidiam exatamente
+          # onde as duas fazem falta. Por isso o orcamento agora e' um
+          # deadline absoluto, imune a latencia por chamada:
+          # ORCAMENTO_SEGUNDOS=840 (14min) e' ~70% dos 1200s do
+          # timeout-minutes: 20, com folga real pros passos anteriores e
+          # pelas duas leituras finais de saida.
+          ORCAMENTO_SEGUNDOS=840
+          FIM=$(( $(date +%s) + ORCAMENTO_SEGUNDOS ))
+          while [ "$(date +%s)" -lt "$FIM" ]; do
             # `get-command-invocation` devolve InvocationDoesNotExist na janela
             # entre o send e o registro da invocacao; o `|| echo Pending` e' o que
             # distingue "ainda nao apareceu" de "falhou".

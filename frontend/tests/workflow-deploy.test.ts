@@ -90,16 +90,37 @@ describe('.github/workflows/deploy.yml', () => {
     )
   })
 
-  it('orçamento do polling fica perto do timeout do job (20min), não na metade', () => {
-    const match = semComentarios.match(/seq 1 (\d+)\); do/)
-    expect(match).not.toBeNull()
-    const segundos = Number(match![1]) * 5
-    // O job tem timeout-minutes: 20 (1200s). O orçamento antigo (120 * 5s =
-    // 600s, ~10-11min com latência) parava na metade e derrubava um deploy
-    // saudável no host; o novo tem que ficar perto do teto do job, com folga
-    // pros passos anteriores, sem estourá-lo.
-    expect(segundos).toBeGreaterThan(900)
-    expect(segundos).toBeLessThan(1200)
+  it('orçamento do polling é uma fração sensata do timeout do job, não um número solto', () => {
+    // Contar iterações mede só o sleep: cada iteração também chama `aws ssm
+    // get-command-invocation`, cuja latência (~0.6-1.5s no AWS CLI v2 num
+    // runner hospedado) o workflow não controla — por isso o loop agora usa
+    // um deadline de relógio de parede (ORCAMENTO_SEGUNDOS), não um contador.
+    // Esta âncora lê os dois números — o orçamento e o timeout-minutes do
+    // job — e prende um ao outro: as duas mutações que o teste antigo (que
+    // olhava só o orçamento) deixava passar agora ficam vermelhas aqui,
+    // porque é a RAZÃO entre os dois que importa — subir o orçamento além
+    // do timeout do job, ou cortar o timeout do job com o orçamento parado,
+    // quebra a razão nos dois sentidos.
+    const orcamentoMatch = semComentarios.match(/ORCAMENTO_SEGUNDOS=(\d+)/)
+    expect(orcamentoMatch).not.toBeNull()
+    const orcamentoSegundos = Number(orcamentoMatch![1])
+
+    const timeoutMatch = semComentarios.match(/timeout-minutes:\s*(\d+)/)
+    expect(timeoutMatch).not.toBeNull()
+    const timeoutSegundos = Number(timeoutMatch![1]) * 60
+
+    const fracao = orcamentoSegundos / timeoutSegundos
+    expect(fracao).toBeGreaterThanOrEqual(0.55)
+    expect(fracao).toBeLessThanOrEqual(0.8)
+
+    // O mecanismo importa tanto quanto a razão entre os números: um
+    // contador de iterações que somasse os mesmos 840s não seria imune à
+    // latência por chamada que motivou a troca. Ancora que o loop calcula
+    // um FIM absoluto contra `date +%s` — não `seq 1 <N>`.
+    expect(semComentarios).toMatch(
+      /FIM=\$\(\(\s*\$\(date \+%s\)\s*\+\s*ORCAMENTO_SEGUNDOS\s*\)\)/,
+    )
+    expect(semComentarios).not.toMatch(/seq 1 \d+\); do/)
   })
 
   it('orçamento esgotado sem estado final não parece falha do deploy', () => {
