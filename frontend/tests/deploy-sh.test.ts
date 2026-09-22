@@ -50,7 +50,7 @@ describe('deploy/bin/deploy.sh', () => {
   it('mantém a conferência de digest puxado contra digest em execução', () => {
     expect(semComentarios).toContain('ID_PUXADO')
     expect(semComentarios).toContain('ID_RODANDO')
-    expect(indiceDe('ID_RODANDO')).toBeLessThan(indiceDe('CURRENT_SHA'))
+    expect(indiceDe('ID_RODANDO')).toBeLessThan(indiceDe('mv -f'))
   })
 
   it('exige os três manifestos antes de puxar', () => {
@@ -76,5 +76,43 @@ describe('deploy/bin/deploy.sh', () => {
   it('recusa alvo cujo schema o banco já ultrapassou', () => {
     expect(semComentarios).toMatch(/exit 4/)
     expect(semComentarios).toContain('LOTUS_ACEITAR_SCHEMA_A_FRENTE')
+  })
+
+  it('abre o ledger antes do migrate e o fecha no fim', () => {
+    expect(semComentarios).toContain('"evento":"inicio"')
+    expect(semComentarios).toContain('"evento":"fim"')
+    expect(indiceDe('"evento":"inicio"')).toBeLessThan(indiceDe('artisan migrate'))
+  })
+
+  it('escreve o ledger em append, nunca sobrescrevendo', () => {
+    expect(semComentarios).toMatch(/>> "\$LEDGER"/)
+    expect(semComentarios).not.toMatch(/[^>]> "\$LEDGER"/)
+  })
+
+  it('tira o dump antes do migrate e aborta o deploy se ele falhar', () => {
+    const dump = indiceDe('LOTUS_BACKUP_SAIDA')
+    expect(dump).toBeGreaterThan(-1)
+    expect(dump).toBeLessThan(indiceDe('artisan migrate'))
+  })
+
+  it('só tira dump quando há migration pendente', () => {
+    expect(semComentarios).toMatch(/if \[ -n "\$PENDENTES" \]/)
+  })
+
+  it('registra o SHA anterior explicitamente, em vez de deixar deduzir', () => {
+    expect(semComentarios).toContain('sha_anterior')
+  })
+
+  it('identifica quem promoveu, com default para o caminho manual', () => {
+    expect(semComentarios).toMatch(/LOTUS_DEPLOY_ATOR:-manual:/)
+  })
+
+  it('recusa nome de migration fora de [A-Za-z0-9_] em vez de emitir JSON quebrado', () => {
+    expect(semComentarios).toMatch(/\^\[A-Za-z0-9_\]\+\$/)
+  })
+
+  it('fecha o ledger também no caminho de falha, por trap', () => {
+    expect(semComentarios).toMatch(/^trap .* EXIT$/m)
+    expect(semComentarios).toContain('"resultado":"falha"')
   })
 })

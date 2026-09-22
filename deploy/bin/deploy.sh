@@ -32,6 +32,48 @@ if ! flock -n 9; then
 fi
 printf '%s\n' "$$" > "$BASE/.deploy.pid"
 
+LEDGER="$BASE/releases.jsonl"
+[ -f "$LEDGER" ] || install -m 640 /dev/null "$LEDGER"
+ATOR="${LOTUS_DEPLOY_ATOR:-manual:$(id -un)}"
+ETAPA=inicio
+INICIO_ESCRITO=0
+
+agora() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+
+# Uma linha por evento, em append. `>>` com linha curta e' escrita atomica no
+# Linux, e o flock da linha de cima ja garante escritor unico de qualquer jeito.
+ledger() { printf '%s\n' "$1" >> "$LEDGER"; }
+
+# Nome de migration do Laravel e' [A-Za-z0-9_]. Qualquer coisa fora disso aborta
+# em vez de produzir JSON quebrado no unico registro que sobra quando o banco
+# esta fora do ar — que e' exatamente quando se le este arquivo.
+json_lista() {
+  local nome saida=""
+  while IFS= read -r nome; do
+    [ -n "$nome" ] || continue
+    printf '%s' "$nome" | grep -qE '^[A-Za-z0-9_]+$' \
+      || { echo "erro: nome de migration inesperado: $nome" >&2; exit 1; }
+    saida="$saida,\"$nome\""
+  done
+  printf '[%s]' "${saida#,}"
+}
+
+# Tentativa interrompida deixa `inicio` sem `fim`. Isso nao e' buraco: e' a
+# informacao que se quer quando o deploy morreu no meio, e e' ela que aponta o
+# dump. O trap fecha o que der para fechar.
+ao_sair() {
+  local codigo=$?
+  if [ "$INICIO_ESCRITO" = 1 ]; then
+    if [ "$codigo" = 0 ]; then
+      ledger '{"ts":"'"$(agora)"'","evento":"fim","sha":"'"$SHA"'","resultado":"ok","etapa":"ok"}'
+    else
+      ledger '{"ts":"'"$(agora)"'","evento":"fim","sha":"'"$SHA"'","resultado":"falha","etapa":"'"$ETAPA"'"}'
+    fi
+  fi
+  exit "$codigo"
+}
+trap ao_sair EXIT
+
 DONO="${LOTUS_RELEASE_OWNER:-gatika-cl}"
 APP="ghcr.io/$DONO/lotus-app:$SHA"
 WEB="ghcr.io/$DONO/lotus-web:$SHA"
@@ -89,12 +131,36 @@ if [ -n "$A_FRENTE" ]; then
   echo "aviso: LOTUS_ACEITAR_SCHEMA_A_FRENTE=1 — seguindo por sua conta." >&2
 fi
 
+ANTERIOR=$(cat "$BASE/CURRENT_SHA" 2>/dev/null || true)
+if [ -n "$ANTERIOR" ]; then ANTERIOR_JSON="\"$ANTERIOR\""; else ANTERIOR_JSON=null; fi
+
+DUMP_JSON=null
+if [ -n "$PENDENTES" ]; then
+  echo "==> dump pre-deploy (ha migration pendente)"
+  # Deploy sem migration nao precisa de dump para voltar: o gate acima ja prova
+  # que o alvo anterior e' limpo. Se o dump passar a custar minutos, ele sai do
+  # caminho critico — o gatilho esta escrito no runbook.
+  SAIDA_DUMP=$(mktemp)
+  # Falha do backup ABORTA o deploy: promover sem a evidencia de rollback e'
+  # promover sem rede, e o `set -e` ja faz isso valer.
+  LOTUS_BACKUP_SAIDA="$SAIDA_DUMP" "$BASE/bin/backup-db.sh"
+  DUMP_JSON="\"$(cat "$SAIDA_DUMP")\""
+  rm -f "$SAIDA_DUMP"
+fi
+
+MIGRACOES_JSON=$(printf '%s\n' "$PENDENTES" | json_lista)
+ledger '{"ts":"'"$(agora)"'","evento":"inicio","sha":"'"$SHA"'","sha_anterior":'"$ANTERIOR_JSON"',"migrations":'"$MIGRACOES_JSON"',"dump":'"$DUMP_JSON"',"ator":"'"$ATOR"'"}'
+INICIO_ESCRITO=1
+
+ETAPA=migrate
 echo "==> migrate"
 compose run --rm app php artisan migrate --force
 
+ETAPA=up
 echo "==> up"
 compose up -d --no-build --pull never
 
+ETAPA=health
 echo "==> esperando o nginx ficar healthy (até 150 s)"
 NGINX=$(compose ps -q nginx)
 ESTADO="?"
@@ -109,6 +175,7 @@ done
 CODIGO=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1/up" || echo 000)
 [ "$CODIGO" = "200" ] || { echo "erro: /up respondeu $CODIGO" >&2; exit 1; }
 
+ETAPA=digests
 for PAR in "app:$APP" "nginx:$WEB" "clamav:$CLAM"; do
   SERVICO="${PAR%%:*}"; ALVO="${PAR#*:}"
   ID_PUXADO=$(docker image inspect --format '{{.Id}}' "$ALVO")
