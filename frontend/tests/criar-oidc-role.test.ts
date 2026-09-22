@@ -7,6 +7,12 @@ import { join, resolve } from 'node:path'
  * identidade que promove release. O que ele não pode virar: uma role ampla, uma
  * trust aberta a qualquer repositório, ou um script que termina verde com o
  * agente SSM morto — role perfeita com agente morto não promove nada.
+ *
+ * Os dois documentos IAM são lidos do heredoc e PARSEADOS, não procurados por
+ * substring: a versão anterior desta catraca deixava passar um terceiro
+ * statement `{"Action":"ssm:*","Resource":"*"}`, a remoção da condição de
+ * `aud` e um `sub` em lista com curinga no segundo item — os três medidos,
+ * verdes nos sete testes. Substring prova presença, nunca ausência.
  */
 const RAIZ = resolve(__dirname, '..', '..')
 const CAMINHO = join(RAIZ, 'deploy', 'aws', 'criar-oidc-e-role.sh')
@@ -15,6 +21,31 @@ const semComentarios = SCRIPT.split(/\r?\n/)
   .filter((linha) => !/^\s*#/.test(linha))
   .join('\n')
 
+type Statement = {
+  Effect: string
+  Action: string | string[]
+  Resource?: string | string[]
+  Principal?: Record<string, string>
+  Condition?: Record<string, Record<string, string | string[]>>
+}
+type Documento = { Version: string; Statement: Statement[] }
+
+/**
+ * O heredoc é JSON válido antes da expansão: as variáveis do shell vivem todas
+ * dentro de strings. Parsear aqui é o que permite asserção sobre o CONJUNTO de
+ * ações — uma ação a mais reprova, e é a ação a mais que amplia privilégio.
+ */
+const documento = (nome: string): Documento => {
+  const achado = SCRIPT.match(
+    new RegExp(`cat > "\\$TMP/${nome}\\.json" <<JSON\\n([\\s\\S]*?)\\nJSON$`, 'm'),
+  )
+  if (!achado) throw new Error(`heredoc de ${nome}.json não encontrado em ${CAMINHO}`)
+  return JSON.parse(achado[1]) as Documento
+}
+
+const acoesDe = (doc: Documento): string[] =>
+  doc.Statement.flatMap((s) => [s.Action].flat()).sort()
+
 describe('deploy/aws/criar-oidc-e-role.sh', () => {
   it('é executável e falha alto', () => {
     expect(statSync(CAMINHO).mode & 0o111).not.toBe(0)
@@ -22,21 +53,45 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
   })
 
   it('fixa a trust na main do repositório corporativo', () => {
-    expect(semComentarios).toContain('repo:$REPO:ref:refs/heads/main')
-    expect(semComentarios).toContain('sts.amazonaws.com')
+    const trust = documento('trust')
+    expect(trust.Statement).toHaveLength(1)
+    const statement = trust.Statement[0]
+    expect(statement.Effect).toBe('Allow')
+    expect(statement.Action).toBe('sts:AssumeRoleWithWebIdentity')
+    expect(statement.Principal).toEqual({ Federated: '$ARN_OIDC' })
+    expect(statement.Condition).toEqual({
+      StringEquals: {
+        '$EMISSOR:aud': 'sts.amazonaws.com',
+        '$EMISSOR:sub': 'repo:$REPO:ref:refs/heads/main',
+      },
+    })
   })
 
   it('não usa curinga na condição de sub — trust aberta é conta aberta', () => {
-    expect(semComentarios).not.toMatch(/"?[^"]*:sub"?\s*:\s*"[^"]*\*/)
-    expect(semComentarios).toContain('StringEquals')
+    const condicao = documento('trust').Statement[0].Condition ?? {}
+    // Só StringEquals: StringLike existe para aceitar curinga, e é assim que a
+    // trust se abre sem que nenhum `*` apareça onde se costuma procurar.
+    expect(Object.keys(condicao)).toEqual(['StringEquals'])
+    for (const valor of Object.values(condicao.StringEquals)) {
+      expect(Array.isArray(valor)).toBe(false)
+      expect(valor as string).not.toContain('*')
+    }
   })
 
   it('a política é mínima: um comando, uma instância, um documento', () => {
-    expect(semComentarios).toContain('ssm:SendCommand')
-    expect(semComentarios).toContain('instance/$INSTANCIA')
-    expect(semComentarios).toContain('document/AWS-RunShellScript')
-    expect(semComentarios).not.toContain('ssm:StartSession')
-    expect(semComentarios).not.toMatch(/"Action"\s*:\s*"\*"/)
+    const politica = documento('ssm')
+    expect(politica.Statement.map((s) => s.Effect)).toEqual(['Allow', 'Allow'])
+    // Conjunto EXATO. Ampliar a role passa a exigir mexer nesta linha.
+    expect(acoesDe(politica)).toEqual([
+      'ssm:GetCommandInvocation',
+      'ssm:ListCommandInvocations',
+      'ssm:SendCommand',
+    ])
+    const envio = politica.Statement.find((s) => [s.Action].flat().includes('ssm:SendCommand'))
+    expect(envio?.Resource).toEqual([
+      'arn:aws:ec2:$REGIAO:$CONTA:instance/$INSTANCIA',
+      'arn:aws:ssm:$REGIAO::document/AWS-RunShellScript',
+    ])
   })
 
   it('é idempotente — reexecutar não estraga nada', () => {
@@ -44,13 +99,33 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
     expect(semComentarios).toContain('update-assume-role-policy')
   })
 
+  it('garante a audiência no provider que já existia', () => {
+    // Provider vindo de outra ferramenta pode não ter sts.amazonaws.com no
+    // ClientIDList. Sem isto, o erro só aparece no configure-aws-credentials,
+    // com cara de bug de trust policy.
+    expect(semComentarios).toContain('add-client-id-to-open-id-connect-provider')
+    expect(semComentarios).toMatch(/--query 'ClientIDList'/)
+  })
+
+  it('espera o agente SSM registrar antes de acusar agente morto', () => {
+    // O attach de AmazonSSMManagedInstanceCore pode ser a primeira permissão de
+    // SSM que o host recebe; o agente reregistra no próprio retry, em minutos.
+    // Medir uma vez só reprovaria a execução correta.
+    expect(semComentarios).toMatch(/FIM=\$\(\(\s*\$\(date \+%s\)\s*\+\s*ESPERA_SEGUNDOS\s*\)\)/)
+    expect(semComentarios).toMatch(/\[ "\$\(date \+%s\)" -lt "\$FIM" \]/)
+    const espera = semComentarios.match(/ESPERA_SEGUNDOS=(\d+)/)
+    expect(espera).not.toBeNull()
+    expect(Number(espera?.[1])).toBeGreaterThanOrEqual(120)
+  })
+
   it('exige o agente SSM Online no readback', () => {
     expect(semComentarios).toContain('describe-instance-information')
     expect(semComentarios).toContain('PingStatus')
-    expect(semComentarios).toMatch(/\[ "\$PING" = "Online" \]/)
+    expect(semComentarios).toMatch(/if \[ "\$PING" != "Online" \]; then/)
+    expect(semComentarios).toMatch(/^\s*exit 1$/m)
   })
 
   it('não deixa documento de política no /tmp depois de rodar', () => {
-    expect(semComentarios).toMatch(/^trap .* EXIT$/m)
+    expect(semComentarios).toMatch(/^trap 'rm -rf "\$TMP"' EXIT$/m)
   })
 })

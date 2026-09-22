@@ -25,7 +25,19 @@ ROLE=lotus-deploy
 echo "==> conta $CONTA, regiao $REGIAO, repositorio $REPO, instancia $INSTANCIA"
 
 if aws iam get-open-id-connect-provider --open-id-connect-provider-arn "$ARN_OIDC" >/dev/null 2>&1; then
-  echo "==> provider OIDC ja existe"
+  # "Existe" nao e' "esta certo": um provider criado antes por outra ferramenta
+  # pode nao ter sts.amazonaws.com no ClientIDList, e ai o AssumeRole so falha
+  # muito depois, no configure-aws-credentials, com cara de bug de trust
+  # policy. Mede-se a audiencia em vez de supo-la.
+  AUDIENCIAS=$(aws iam get-open-id-connect-provider \
+    --open-id-connect-provider-arn "$ARN_OIDC" --query 'ClientIDList' --output text)
+  if printf '%s\n' $AUDIENCIAS | grep -qx sts.amazonaws.com; then
+    echo "==> provider OIDC ja existe, com a audiencia sts.amazonaws.com"
+  else
+    aws iam add-client-id-to-open-id-connect-provider \
+      --open-id-connect-provider-arn "$ARN_OIDC" --client-id sts.amazonaws.com
+    echo "==> provider OIDC ja existia SEM sts.amazonaws.com — audiencia acrescentada"
+  fi
 else
   # O thumbprint deixou de ser verificado pela AWS para ESTE emissor em 2023,
   # mas a API continua exigindo o campo. Valor documentado pela AWS.
@@ -85,11 +97,38 @@ echo "===== readback ====="
 aws iam get-role --role-name "$ROLE" --query 'Role.AssumeRolePolicyDocument' --output json
 aws iam list-role-policies --role-name "$ROLE" --output text
 aws iam list-attached-role-policies --role-name lotus-ec2 --output text
-PING=$(aws ssm describe-instance-information --region "$REGIAO" \
-  --filters "Key=InstanceIds,Values=$INSTANCIA" \
-  --query 'InstanceInformationList[0].PingStatus' --output text)
+# O attach acima pode ser a PRIMEIRA permissao de SSM que o host recebe, e o
+# agente so reregistra no proprio intervalo de retry — minutos. Medir uma vez so
+# reprovaria justamente a execucao correta, mandando o operador caçar defeito em
+# agente saudavel. Entao espera-se, com teto, e a mensagem nomeia a espera.
+# Reexecutar o script e' seguro: tudo aqui e' idempotente.
+ESPERA_SEGUNDOS=300
+FIM=$(( $(date +%s) + ESPERA_SEGUNDOS ))
+while :; do
+  PING=$(aws ssm describe-instance-information --region "$REGIAO" \
+    --filters "Key=InstanceIds,Values=$INSTANCIA" \
+    --query 'InstanceInformationList[0].PingStatus' --output text 2>/dev/null || echo erro)
+  [ "$PING" = "Online" ] && break
+  [ "$(date +%s)" -lt "$FIM" ] || break
+  echo "    agente ainda nao respondeu (estado: $PING) — esperando ate ${ESPERA_SEGUNDOS}s"
+  sleep 15
+done
+
 echo "PingStatus de $INSTANCIA: $PING"
-[ "$PING" = "Online" ] || { echo "erro: o agente SSM de $INSTANCIA nao esta Online" >&2; exit 1; }
+if [ "$PING" != "Online" ]; then
+  # `None` e' lista vazia: a instancia nao esta no inventario do SSM, o que e'
+  # outro problema (agente ausente ou parado) e outro conserto.
+  case "$PING" in
+    None|erro)
+      echo "erro: $INSTANCIA nao aparece no inventario do SSM apos ${ESPERA_SEGUNDOS}s." >&2
+      echo "       confira o agente no host: snap services amazon-ssm-agent" >&2
+      ;;
+    *)
+      echo "erro: o agente SSM de $INSTANCIA esta $PING apos ${ESPERA_SEGUNDOS}s" >&2
+      ;;
+  esac
+  exit 1
+fi
 echo
 echo "secret AWS_DEPLOY_ROLE_ARN = arn:aws:iam::$CONTA:role/$ROLE"
 echo "secret AWS_INSTANCE_ID     = $INSTANCIA"
