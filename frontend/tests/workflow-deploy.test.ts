@@ -31,6 +31,17 @@ describe('.github/workflows/deploy.yml', () => {
     expect(semComentarios).toContain('PROMOVER')
   })
 
+  it('a confirmação PROMOVER tem mecanismo, não só a palavra solta', () => {
+    // As duas linhas acima passam mesmo se o comparador shell inteiro for
+    // apagado: 'PROMOVER' sobrevive na description do input e 'confirmar' no
+    // nome dele. Esta âncora no `[ "$CONFIRMAR" = "PROMOVER" ]` seguido de um
+    // `exit 1` no caminho de falha — se a comparação sumir ou for
+    // enfraquecida (por exemplo perder o exit), este teste vai vermelho.
+    expect(semComentarios).toMatch(
+      /\[\s*"\$CONFIRMAR"\s*=\s*"PROMOVER"\s*\][\s\S]{0,80}\|\|[\s\S]{0,150}exit 1/,
+    )
+  })
+
   it('serializa sem cancelar — matar um deploy no migrate produz estado inconsistente', () => {
     expect(semComentarios).toMatch(/group:\s*producao/)
     expect(semComentarios).toMatch(/cancel-in-progress:\s*false/)
@@ -67,6 +78,40 @@ describe('.github/workflows/deploy.yml', () => {
 
   it('tem escopo de leitura do GHCR privado para o imagetools inspect', () => {
     expect(semComentarios).toMatch(/packages:\s*read/)
+  })
+
+  it('SHA fora da main não mata o passo antes da própria mensagem de erro', () => {
+    // Sob o `bash -e` do runner, um SHA de 404 (o jeito mais provável de cair
+    // neste gate) faria a atribuição sem guarda matar o passo antes do `case`
+    // rodar, e a mensagem "nao esta na main" nunca chegaria a imprimir. Mesma
+    // forma que o ci.yml usa no compare de main do espelho.
+    expect(semComentarios).toMatch(
+      /ESTADO=\$\(gh api "repos\/\$GITHUB_REPOSITORY\/compare\/main\.\.\.\$SHA" --jq \.status 2>\/dev\/null\) \|\| ESTADO=""/,
+    )
+  })
+
+  it('orçamento do polling fica perto do timeout do job (20min), não na metade', () => {
+    const match = semComentarios.match(/seq 1 (\d+)\); do/)
+    expect(match).not.toBeNull()
+    const segundos = Number(match![1]) * 5
+    // O job tem timeout-minutes: 20 (1200s). O orçamento antigo (120 * 5s =
+    // 600s, ~10-11min com latência) parava na metade e derrubava um deploy
+    // saudável no host; o novo tem que ficar perto do teto do job, com folga
+    // pros passos anteriores, sem estourá-lo.
+    expect(segundos).toBeGreaterThan(900)
+    expect(segundos).toBeLessThan(1200)
+  })
+
+  it('orçamento esgotado sem estado final não parece falha do deploy', () => {
+    // Mensagem distinta de "deploy falhou": o comando pode continuar rodando
+    // no host depois que o job desiste de esperar, e não pode ler como se o
+    // deploy tivesse dado errado — é isso que evita o operador apertar o
+    // botão de novo sobre um deploy ainda em andamento.
+    expect(semComentarios).toContain('NAO acione o botao de novo')
+    expect(semComentarios).toContain('/opt/lotus/releases.jsonl')
+    expect(semComentarios).toMatch(/NAO acione o botao de novo[\s\S]{0,200}exit 1/)
+    // E o caso de falha real do host continua distinto e continua saindo 1.
+    expect(semComentarios).toMatch(/Failed\|Cancelled\|TimedOut\)[\s\S]{0,120}exit 1/)
   })
 
   it('nao interpola confirmar direto no run: — so via env', () => {

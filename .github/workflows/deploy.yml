@@ -50,7 +50,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          ESTADO=$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$SHA" --jq .status)
+          # `|| ESTADO=""` e nao um `gh api` sem guarda: sob o `bash -e` do
+          # runner, um SHA que nao existe no repositorio (o jeito mais provavel
+          # de cair neste gate) faz a API responder 404, o `gh api` sai com
+          # erro, e a atribuicao mataria o passo antes do `case` abaixo rodar
+          # -- a mensagem "nao esta na main" nunca chegaria a imprimir. O
+          # `2>/dev/null` evita que o corpo do erro do gh vaze para dentro de
+          # $ESTADO. Mesma forma que o ci.yml usa no compare de main do espelho.
+          ESTADO=$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$SHA" --jq .status 2>/dev/null) || ESTADO=""
           echo "compare main...$SHA = $ESTADO"
           case "$ESTADO" in
             identical|behind) ;;
@@ -111,7 +118,16 @@ jobs:
           echo "CommandId=$COMANDO"
 
           ESTADO=Pending
-          for _ in $(seq 1 120); do
+          # Orcamento do polling: 200 * 5s = 1000s (~16min40) nominais. O job
+          # tem timeout-minutes: 20 -- o orcamento fica perto desse teto, com
+          # folga pros passos anteriores (SHA, CI, GHCR, OIDC) e pra latencia
+          # normal da propria API do loop, sem estoura-lo. O orcamento antigo
+          # (120 * 5s = 600s, ~10-11min ja com latencia) parava na metade do
+          # timeout: o pior caso real do host em deploy.sh -- pull multi-arch a
+          # frio do trio de imagens, o mysqldump antes do migrate, o migrate em
+          # si e ate 150s de espera de health do nginx -- passa disso, e um
+          # deploy saudavel caia no orcamento antigo.
+          for _ in $(seq 1 200); do
             # `get-command-invocation` devolve InvocationDoesNotExist na janela
             # entre o send e o registro da invocacao; o `|| echo Pending` e' o que
             # distingue "ainda nao apareceu" de "falhou".
@@ -128,4 +144,20 @@ jobs:
           aws ssm get-command-invocation --command-id "$COMANDO" --instance-id "$INSTANCIA" \
             --query StandardErrorContent --output text || true
           echo "estado final: $ESTADO"
-          [ "$ESTADO" = "Success" ] || exit 1
+
+          case "$ESTADO" in
+            Success) exit 0 ;;
+            Failed|Cancelled|TimedOut)
+              echo "erro: deploy falhou no host (estado $ESTADO)" >&2
+              exit 1
+              ;;
+            *)
+              # Orcamento esgotado sem estado final NAO e' o mesmo que o deploy
+              # ter falhado: o comando pode continuar rodando no host depois que
+              # este job desiste de esperar. Nao deixar essa mensagem parecer
+              # falha e' o que evita o operador apertar o botao de novo sobre um
+              # deploy que ainda esta em andamento.
+              echo "erro: orcamento de espera esgotado sem estado final do SSM (estado $ESTADO). O comando pode CONTINUAR rodando no host -- NAO acione o botao de novo. Confira /opt/lotus/releases.jsonl no host para ver o que de fato aconteceu." >&2
+              exit 1
+              ;;
+          esac
