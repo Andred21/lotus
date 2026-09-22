@@ -36,6 +36,11 @@ type Documento = { Version: string; Statement: Statement[] }
  * ações — uma ação a mais reprova, e é a ação a mais que amplia privilégio.
  */
 const documento = (nome: string): Documento => {
+  // O match abaixo é não-global e lê o PRIMEIRO heredoc com este caminho. Um
+  // segundo `cat >` para o mesmo arquivo sobrescreveria o documento depois de
+  // parseado, e a asserção do `--policy-document` continuaria literalmente
+  // verdadeira. Um por caminho.
+  expect(SCRIPT.match(new RegExp(`cat > "\\$TMP/${nome}\\.json"`, 'g'))).toHaveLength(1)
   const achado = SCRIPT.match(
     new RegExp(`cat > "\\$TMP/${nome}\\.json" <<JSON\\n([\\s\\S]*?)\\nJSON$`, 'm'),
   )
