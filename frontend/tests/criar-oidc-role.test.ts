@@ -46,12 +46,21 @@ const documento = (nome: string): Documento => {
 const acoesDe = (doc: Documento): string[] =>
   doc.Statement.flatMap((s) => [s.Action].flat()).sort()
 
-/** Um comando por entrada, com a continuação de linha do shell já juntada. */
+/**
+ * Um comando por entrada, com a continuação de linha do shell já juntada.
+ * `[ \t]*` e não `\s*`: `\s` come o `\n`, então uma continuação seguida de
+ * LINHA EM BRANCO colava o comando seguinte na mesma entrada — o bash termina o
+ * comando ali e roda dois. Medido: uma barra e uma linha em branco antes de um
+ * `attach-role-policy` de AdministratorAccess deixavam as quatro asserções
+ * verdes, lendo o `--role-name` do PRIMEIRO comando.
+ */
 const comandosAws = semComentarios
-  .replace(/\\\n\s*/g, ' ')
+  .replace(/\\\n[ \t]*/g, ' ')
   .split('\n')
   .map((linha) => linha.trim())
-  .filter((linha) => linha.startsWith('aws '))
+  // `aws` também aparece depois de `if` e dentro de `$(…)`, e as duas formas
+  // concedem igual.
+  .filter((linha) => /(^|[\s;&|(])aws\s/.test(linha))
 
 const alvoDe = (comando: string): string | undefined =>
   comando.match(/--role-name (\S+)/)?.[1]
@@ -112,6 +121,10 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
     // única concessão: um `attach-role-policy --role-name "$ROLE" --policy-arn
     // …/AdministratorAccess` ao lado deles passava nos nove testes, e o readback
     // também não lista as managed policies da role. Aqui se conta.
+    // Tripwire independente do parse acima: qualquer forma de escrever a
+    // concessão entra nesta contagem, inclusive as que o filtro não pegaria.
+    expect(semComentarios.match(/(attach|put)-role-policy/g) ?? []).toHaveLength(2)
+
     const concessoes = comandosAws.filter((c) => /(attach|put)-role-policy/.test(c))
     expect(concessoes).toHaveLength(2)
 
@@ -119,6 +132,9 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
     expect(inline).toHaveLength(1)
     expect(alvoDe(inline[0])).toBe('"$ROLE"')
     expect(inline[0]).toContain('--policy-name lotus-deploy-ssm')
+    // Amarra a chamada ao documento que esta catraca parseou: sem isto, o
+    // heredoc pode estar perfeito e a role receber outro arquivo.
+    expect(inline[0]).toContain('--policy-document "file://$TMP/ssm.json"')
 
     // A única managed policy do script é a do agente, e vai para a role da EC2.
     const anexada = concessoes.filter((c) => c.includes('attach-role-policy'))
@@ -129,7 +145,11 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
 
   it('é idempotente — reexecutar não estraga nada', () => {
     expect(semComentarios).toContain('get-open-id-connect-provider')
-    expect(semComentarios).toContain('update-assume-role-policy')
+    const trust = comandosAws.filter((c) => /(update-assume-role-policy|create-role)/.test(c))
+    expect(trust).toHaveLength(2)
+    // Os dois ramos — role nova e role que já existia — têm de aplicar o mesmo
+    // documento, que é o que a catraca leu.
+    for (const comando of trust) expect(comando).toContain('file://$TMP/trust.json')
   })
 
   it('garante a audiência no provider que já existia', () => {
