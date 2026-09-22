@@ -51,5 +51,5 @@ aws s3 cp "/tmp/$ARQ" "s3://$BUCKET/backups/$ARQ" --only-show-errors
 # exatamente a mesma linha, e quem quer o dado pede o arquivo.
 # Depois do upload, nunca antes: chave publicada sem objeto no S3 e' mentira
 # gravada no ledger justamente na hora em que alguem vai precisar dela.
-[ -z "${LOTUS_BACKUP_SAIDA:-}" ] || printf '%s\n' "s3://$BUCKET/backups/$ARQ" > "$LOTUS_BACKUP_SAIDA"
+[ -z "${LOTUS_BACKUP_SAIDA:-}" ] || printf '%s\n' "s3://$BUCKET/backups/$ARQ" > "$LOTUS_BACKUP_SAIDA" || { echo "erro: não foi possível escrever a chave em $LOTUS_BACKUP_SAIDA" >&2; exit 1; }
 echo "backup ok: s3://$BUCKET/backups/$ARQ"

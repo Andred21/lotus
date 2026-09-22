@@ -111,4 +111,17 @@ describe('deploy/bin/backup-db.sh', () => {
   it('não mexe no stdout que o cron do host consome', () => {
     expect(semComentarios).toMatch(/^echo "backup ok: /m)
   })
+
+  it('a escrita de LOTUS_BACKUP_SAIDA falha alto, com "erro:" em vez do erro cru do bash', () => {
+    // Todo outro guard do arquivo (BUCKET, MYSQL, tamanho, rodapé) imprime
+    // "erro: ..." em stderr antes de sair. Sem essa guarda na escrita da chave,
+    // um path sem diretório ou sem permissão mata o script no erro cru do bash
+    // (em inglês, via `set -e`) depois de um dump que já subiu com sucesso pro
+    // S3 — sem diagnóstico e sem a linha "backup ok" que o cron espera.
+    const escrita = semComentarios
+      .split(/\r?\n/)
+      .find((linha) => linha.includes('LOTUS_BACKUP_SAIDA') && linha.includes('printf'))
+    expect(escrita).toBeDefined()
+    expect(escrita).toMatch(/\|\|\s*\{\s*echo "erro:.*\$LOTUS_BACKUP_SAIDA.*>&2;\s*exit 1;\s*\}$/)
+  })
 })
