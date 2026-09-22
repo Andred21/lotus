@@ -94,6 +94,22 @@ aws iam get-instance-profile --instance-profile-name lotus-ec2 \
   --query 'InstanceProfile.Roles[].RoleName' --output text   # tem de imprimir: lotus-ec2
 ```
 
+**A role da EC2 ganha SSM (item 12).** A promoção pela Actions chega ao host por
+`ssm send-command`, e para isso o agente precisa falar com o serviço:
+`AmazonSSMManagedInstanceCore` anexada à `lotus-ec2`. **Nenhuma regra nova de inbound no
+`lotus-web`** — o agente sai pela 443, que o outbound já libera.
+
+**A role que a Actions assume é outra:** `lotus-deploy`, federada por OIDC, sem access key. As duas
+nascem de um script só, idempotente e com readback:
+
+```bash
+LOTUS_INSTANCIA=<i-...> deploy/aws/criar-oidc-e-role.sh
+```
+
+Ele termina imprimindo os dois valores que viram *repository secret* em `Gatika-CL/lotus`:
+`AWS_DEPLOY_ROLE_ARN` e `AWS_INSTANCE_ID`. Eles **não** vão para o YAML: `.github/` atravessa o
+espelho e o repositório pessoal é público.
+
 ## 5. Security Group
 
 SG `lotus-web`, na **VPC default de `sa-east-1`**:
@@ -196,14 +212,51 @@ manifest list entries`. O `deploy.sh` já exige os três manifestos antes de pux
 
 ## 8. Deploy e admin inicial
 
+**O caminho normal é o botão.** Em `Gatika-CL/lotus`, Actions → *Promover para producao* →
+`Run workflow`, com o SHA de 40 hexadecimais e a palavra `PROMOVER`. O workflow confere que o SHA
+está na `main`, que o CI dele terminou verde e que os três manifestos existem no GHCR; assume a
+role `lotus-deploy` por OIDC; e manda o host rodar **este mesmo script**:
+
 ```bash
 sudo /opt/lotus/bin/deploy.sh <sha de 40 hexadecimais>
 ```
 
-Rollback: o mesmo comando com o SHA anterior (`cat /opt/lotus/CURRENT_SHA` mostra o corrente).
-Migration incompatível é limite declarado — estratégia de rollback de schema é do item 12.
+**O SSH manual é contingência**, não o caminho de todo dia: serve quando a Actions está fora do ar
+ou quando o rollback precisa do escape do §8.1. Os dois caminhos disputam o mesmo `flock` em
+`/opt/lotus/.deploy.lock` — o segundo sai com código **3** em vez de rodar junto.
 
-**Admin inicial.** O `DatabaseSeeder` foi medido: em ambiente que não seja `local`/`demo` ele
+### 8.1 Rollback
+
+`cat /opt/lotus/CURRENT_SHA` mostra o corrente; `/opt/lotus/releases.jsonl` mostra o histórico
+(§8.2). Promover o SHA anterior é o rollback, e o script decide se ele é seguro:
+
+- **o alvo conhece tudo que o banco tem** → roda igual a um deploy normal;
+- **o banco está à frente do alvo** → o script **recusa** com código **4**, lista as migrations que
+  sobram e manda procurar o dump no ledger. Restaure o dump **antes** de promover. Só depois disso,
+  e só por SSH, `LOTUS_ACEITAR_SCHEMA_A_FRENTE=1` pula o gate. O workflow nunca define essa
+  variável: o caminho automatizado não tem como contorná-lo.
+
+### 8.2 O ledger `releases.jsonl`
+
+Append-only, `640 root:root`, duas linhas por tentativa:
+
+```bash
+sudo tail -4 /opt/lotus/releases.jsonl
+```
+
+- `{"evento":"inicio",…}` sai **antes** do `migrate` e traz `sha`, `sha_anterior`, as `migrations`
+  que vão rodar, a chave `dump` (ou `null`, quando não havia migration pendente) e o `ator`.
+- `{"evento":"fim",…}` traz `resultado` e a `etapa` em que parou.
+- **`inicio` sem `fim` significa deploy interrompido no meio.** Não é buraco no registro: é a
+  informação que se quer nessa hora, e é a linha que aponta o dump.
+
+O dump pré-deploy só acontece quando há migration pendente — deploy sem migration se desfaz
+promovendo o SHA anterior, e o gate do §8.1 prova que ele é limpo. **Gatilho para rever:** se o
+dump passar a custar minutos, ele sai do caminho crítico do deploy.
+
+### 8.3 Admin inicial
+
+O `DatabaseSeeder` foi medido: em ambiente que não seja `local`/`demo` ele
 instala **só roles e permissões** (`RolePermissionSeeder`, ADR-07) e avisa que o admin de
 desenvolvimento foi ignorado — a conta `admin@lotus.cl` de senha pública **nunca** nasce em
 produção. Então:
