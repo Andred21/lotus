@@ -64,4 +64,16 @@ describe('.github/workflows/deploy.yml', () => {
     expect(semComentarios).toContain('actions/workflows/ci.yml/runs')
     expect(semComentarios).toContain('compare/main...')
   })
+
+  it('tem escopo de leitura do GHCR privado para o imagetools inspect', () => {
+    expect(semComentarios).toMatch(/packages:\s*read/)
+  })
+
+  it('nao interpola confirmar direto no run: — so via env', () => {
+    expect(semComentarios).toContain('CONFIRMAR: ${{ inputs.confirmar }}')
+    // Qualquer ocorrencia de `${{ inputs.confirmar }}` que nao venha logo
+    // depois de `CONFIRMAR: ` esta fora do bloco `env:` — ou seja, de volta
+    // interpolada direto num `run:`.
+    expect(semComentarios).not.toMatch(/(?<!CONFIRMAR: )\$\{\{\s*inputs\.confirmar\s*\}\}/)
+  })
 })

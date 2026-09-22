@@ -22,6 +22,7 @@ permissions:
   id-token: write   # OIDC: e' isto que dispensa access key de longa duracao
   contents: read
   actions: read     # ler a conclusao do run de CI do SHA alvo
+  packages: read    # GHCR e' privado; imagetools inspect precisa do escopo
 
 jobs:
   promover:
@@ -35,13 +36,14 @@ jobs:
     timeout-minutes: 20
     env:
       SHA: ${{ inputs.sha }}
+      CONFIRMAR: ${{ inputs.confirmar }}
       REGIAO: sa-east-1
     steps:
       - name: Formato do SHA e confirmacao
         run: |
           printf '%s' "$SHA" | grep -qE '^[0-9a-f]{40}$' \
             || { echo "erro: sha precisa de 40 hexadecimais minusculos" >&2; exit 1; }
-          [ "${{ inputs.confirmar }}" = "PROMOVER" ] \
+          [ "$CONFIRMAR" = "PROMOVER" ] \
             || { echo "erro: confirmar precisa ser exatamente PROMOVER" >&2; exit 1; }
 
       - name: O SHA esta na main deste repositorio
