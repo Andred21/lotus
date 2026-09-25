@@ -66,9 +66,12 @@ return [
     | Application Timezone
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | UTC por DECISÃO, não por default (P-59, spec D2 do item 29): é o fuso
+    | em que o servidor grava e compara instantes. Literal de propósito, sem
+    | env(): America/Santiago aqui reinterpretaria todo DATETIME já gravado,
+    | e o Chile tem horário de verão. O dia do cliente (o impresso no
+    | certificado, o "hoje" de vigência) sai de App\Shared\Support\FusoDoNegocio.
+    | Guarda: tests/Feature/Shared/FusoDeArmazenamentoTest.php.
     |
     */
 
