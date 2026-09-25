@@ -56,6 +56,13 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
 
+    // Base da URL pública de validação que vai no QR do certificado (P-79).
+    // NÃO é endereço de serviço: é conteúdo de documento de peso legal, e a
+    // cópia distribuída do PDF carrega o valor para sempre. Por isso não herda
+    // o FRONTEND_URL em produção — lá ela é obrigatória e https, e sem ela
+    // emitir e baixar recusam (Certification\Services\CertificateValidationUrl).
+    'certificate_validation_url' => env('CERTIFICATE_VALIDATION_URL'),
+
     'certificate_issuer' => [
         'name' => env('CERTIFICATE_ISSUER_NAME', 'OTEC LOTUS SpA'),
         'rut' => env('CERTIFICATE_ISSUER_RUT', '77.510.327-2'),

@@ -20,4 +20,7 @@ return [
     'snapshot' => [
         'not_presentable' => 'Certificate :codigo cannot be presented: its frozen document is missing the fields :campos.',
     ],
+    'validation_url' => [
+        'not_configured' => 'The certificate validation address is not configured with https. No certificate is issued or downloaded until the system administrator configures it.',
+    ],
 ];
