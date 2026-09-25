@@ -342,6 +342,42 @@ class IssueCertificateTest extends TestCase
         $this->assertSame('2027-12-31', $certificate->valido_ate->toDateString());
     }
 
+    /**
+     * P-79: em produção, sem a base https do QR, o certificado não nasce — um
+     * documento que ninguém consegue baixar. Preenchida a chave, a emissão
+     * segue e o primeiro número do ano continua livre.
+     */
+    public function test_emissao_em_producao_sem_chave_https_recusa_e_nao_cria_certificado(): void
+    {
+        // Resolução do controlador: autentica e cria a fixture ANTES de trocar
+        // para produção — o seeding do admin pede confirmação quando o
+        // ambiente já é produção. E como o CSRF/stateful entra em vigor fora
+        // de `testing`, todo POST depois da troca leva `Sec-Fetch-Site`.
+        $this->actingAsAdmin();
+        $this->createTemplate();
+        $this->app->detectEnvironment(fn (): string => 'production');
+        $this->withHeader('Sec-Fetch-Site', 'same-origin');
+        config([
+            'app.frontend_url' => 'https://app.lotusotec.cl',
+            'app.certificate_validation_url' => null,
+        ]);
+
+        $this->postJson($this->issueUrl(), $this->validPayload())
+            ->assertStatus(500)
+            ->assertJsonPath(
+                'detail',
+                'La dirección de validación de certificados no está configurada con https. Ningún certificado se emite ni se descarga hasta que el administrador del sistema la configure.',
+            );
+
+        $this->assertDatabaseCount('certificates', 0);
+
+        config(['app.certificate_validation_url' => 'https://app.lotusotec.cl']);
+
+        $this->postJson($this->issueUrl(), $this->validPayload())
+            ->assertCreated()
+            ->assertJsonPath('codigo', 'LOT-2026-1000');
+    }
+
     public function test_emissao_grava_auditoria_com_o_usuario_que_emitiu(): void
     {
         $admin = $this->actingAsAdmin();

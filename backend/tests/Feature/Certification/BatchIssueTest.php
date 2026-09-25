@@ -95,6 +95,30 @@ class BatchIssueTest extends TestCase
         });
     }
 
+    /**
+     * P-79: o lote só captura `ValidationException` por item, então a recusa
+     * de configuração derruba o lote inteiro antes do primeiro certificado.
+     */
+    public function test_lote_em_producao_sem_chave_https_recusa_sem_emitir_nenhum(): void
+    {
+        // Resolução do controlador: autentica e cria a fixture ANTES de trocar
+        // para produção — o seeding do admin pede confirmação quando o
+        // ambiente já é produção. E como o CSRF/stateful entra em vigor fora
+        // de `testing`, o POST depois da troca leva `Sec-Fetch-Site`.
+        $this->actingAsAdmin();
+        $enrollmentB = $this->segundaMatricula();
+        $this->app->detectEnvironment(fn (): string => 'production');
+        config(['app.certificate_validation_url' => null]);
+
+        $this->withHeader('Sec-Fetch-Site', 'same-origin')
+            ->postJson($this->batchUrl(), [
+                'enrollment_ids' => [$this->enrollmentA->id, $enrollmentB->id],
+                'redator_id' => $this->redator->id,
+            ])->assertStatus(500);
+
+        $this->assertDatabaseCount('certificates', 0);
+    }
+
     public function test_lote_com_um_ja_emitido_reporta_falha_do_item_sem_impedir_o_outro(): void
     {
         $this->actingAsAdmin();

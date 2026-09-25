@@ -9,7 +9,10 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CertificatePdfService
 {
-    public function __construct(private readonly HtmlToPdf $pdf) {}
+    public function __construct(
+        private readonly HtmlToPdf $pdf,
+        private readonly CertificateValidationUrl $validationUrl,
+    ) {}
 
     public function render(Certificate $certificate): string
     {
@@ -24,7 +27,9 @@ class CertificatePdfService
         // incompleto — é um documento que atesta o que ninguém sabe.
         $certificate->snapshot->assertPresentable($certificate->codigo);
 
-        $url = rtrim(config('app.frontend_url'), '/')."/validar/{$certificate->uuid}";
+        // P-79: a base do QR é conteúdo de documento, com dono próprio — em
+        // produção, sem ela em https, o PDF não é montado.
+        $url = $this->validationUrl->para($certificate);
         $qr = base64_encode((string) QrCode::format('svg')
             ->size(180)
             ->margin(0)

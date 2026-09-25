@@ -7,6 +7,7 @@ use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateEligibility;
 use App\Domains\Certification\Services\CertificateNumberService;
 use App\Domains\Certification\Services\CertificateSnapshotBuilder;
+use App\Domains\Certification\Services\CertificateValidationUrl;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
 use App\Shared\Support\FusoDoNegocio;
@@ -19,10 +20,15 @@ class IssueCertificateAction
         private readonly CertificateNumberService $numbers,
         private readonly CertificateSnapshotBuilder $snapshots,
         private readonly CertificateEligibility $eligibility,
+        private readonly CertificateValidationUrl $validationUrl,
     ) {}
 
     public function execute(Enrollment $enrollment, Redator $redator): Certificate
     {
+        // P-79: certificado que ninguém consegue baixar não nasce. A recusa
+        // vem antes da transação — nada é gravado, nenhum número é tocado.
+        $this->validationUrl->base();
+
         return DB::transaction(function () use ($enrollment, $redator) {
             // Um instante para a emissão inteira. A sequência espera pelo lock,
             // e três `now()` separados deixam uma emissão da virada do ano
