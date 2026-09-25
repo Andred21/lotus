@@ -2,8 +2,8 @@
 
 namespace App\Domains\Identity\Enums;
 
+use App\Shared\Support\FusoDoNegocio;
 use App\Shared\Support\JanelaDeAviso;
-use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 
 /**
@@ -35,7 +35,7 @@ enum DocumentValidityStatus: string
             return self::Vigente;
         }
 
-        $hoje = CarbonImmutable::today();
+        $hoje = FusoDoNegocio::hoje();
 
         if ($validUntil->lessThan($hoje)) {
             return self::Vencido;

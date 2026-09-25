@@ -5,7 +5,7 @@ namespace App\Domains\Identity\Services;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Enums\LinkOutcome;
 use App\Domains\Identity\Models\Student;
-use Illuminate\Support\Carbon;
+use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -23,7 +23,7 @@ class StudentClientLinkService
                 return LinkOutcome::AlreadyLinked;
             }
 
-            $today = Carbon::today();
+            $today = FusoDoNegocio::hoje();
 
             if ($open !== null) {
                 $open->ended_on = $today;
