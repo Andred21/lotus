@@ -169,10 +169,12 @@ campos de host vão para o EIP e o `SESSION_DOMAIN` recebe o literal **`null`** 
 o navegador descarta o cookie), nem comentada (o gate do entrypoint exige a variável e o container
 sai 1). O molde explica a mecânica das três. **Na mesma fase o `SESSION_SECURE_COOKIE` vai para
 `false`** — com `true` em HTTP puro o browser não grava o cookie e o login não fecha; ele volta a
-`true` no §11, junto com o domínio. E a fase sem DNS tem uma proibição: **nenhum certificado REAL
-se emite enquanto o `FRONTEND_URL` for o EIP**, porque o QR do certificado nasce desse campo
-(`CertificatePdfService`) e o documento é snapshot imutável — o EIP ficaria congelado no QR de um
-papel de peso legal. Certificado de prova nesta fase se apaga junto com a prova.
+`true` no §11, junto com o domínio. E na fase sem DNS o `CERTIFICATE_VALIDATION_URL` fica
+**vazio**: o QR do certificado nasce dele (`CertificateValidationUrl`), a cópia distribuída do PDF
+o carrega para sempre, e em produção o backend **recusa emitir e baixar certificado** sem ele em
+https — 500 com a razão no `detail` e no log. Até o item 29 isto era uma proibição de procedimento
+sobre o `FRONTEND_URL`; agora é mecanismo (P-79), e o EIP não tem como chegar a um documento. Nesta
+fase nem certificado de prova se emite em produção.
 A `APP_KEY` se gera com o entrypoint
 trocado — sem `--entrypoint php` o comando cai no entrypoint da imagem e falha:
 
@@ -326,7 +328,7 @@ sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m <email>
 ```
 
 **Passo 2 — virar o `.env` para o domínio e para HTTPS.** Este passo é do TLS tanto quanto o
-certificado, e é o que a fase sem DNS deixou pendurado. São **cinco** campos, não um:
+certificado, e é o que a fase sem DNS deixou pendurado. São **seis** campos, não um:
 
 ```bash
 sudo -e /opt/lotus/.env
@@ -336,6 +338,7 @@ sudo -e /opt/lotus/.env
 |---|---|---|
 | `APP_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
 | `FRONTEND_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
+| `CERTIFICATE_VALIDATION_URL` | vazia | `https://app.lotusotec.cl` |
 | `SANCTUM_STATEFUL_DOMAINS` | `<EIP>` | `app.lotusotec.cl` |
 | `SESSION_DOMAIN` | `null` (literal) | `app.lotusotec.cl` |
 | `SESSION_SECURE_COOKIE` | `false` | `true` |
@@ -343,8 +346,9 @@ sudo -e /opt/lotus/.env
 Os dois últimos são os que mordem em silêncio. `SESSION_SECURE_COOKIE` ausente **não** equivale a
 `false`: `session.php:172` lê `env('SESSION_SECURE_COOKIE')` sem default, a ausência vira null, e o
 cookie de sessão do Sanctum passa a viajar em claro sob TLS sem aparecer em diff nenhum (lei §5.4).
-E `FRONTEND_URL` não é só infra: o QR do certificado é `FRONTEND_URL + /validar/{uuid}`, gravado
-para sempre num documento de peso legal — **só depois deste passo se emite certificado real**.
+E o `CERTIFICATE_VALIDATION_URL` não é infra: é a base do QR do certificado, que a cópia
+distribuída do PDF carrega para sempre — **só com ele preenchido em https o backend volta a emitir e
+a entregar PDF**. Não herda o `FRONTEND_URL`, de propósito (P-79).
 
 **Passo 3 — subir com o overlay:**
 
