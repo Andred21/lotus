@@ -82,7 +82,7 @@ no lugar que o fatal de 128M apareceu aqui.
 
 ## P-75 — o `SANCTUM_STATEFUL_DOMAINS` do `.env` não chega ao runtime, e o CSRF a partir do Vite devolve 401 em vez de 419
 
-**Bloco:** — · **Gatilho:** bloco que tocar `backend/config/sanctum.php`, o `.env` da árvore ou a
+**Bloco:** 29 `backend-config-e-conteudo-de-documento` · **Gatilho:** bloco que tocar `backend/config/sanctum.php`, o `.env` da árvore ou a
 proteção CSRF, e puder provar `config('sanctum.stateful')` seguindo o `.env` com um teste. Revisar
 em **2026-10-31**.
 
@@ -109,6 +109,24 @@ releem. Nota de audit datado ninguém relê (é a razão escrita deste Q-4).
 
 **Não confundir com a `P-56`**, que é outro eixo: lá o `XSRF-TOKEN` não é isolado ENTRE árvores e a
 aba parada volta 419. Aqui a origem legítima nem chega ao 419.
+
+### Veredito — 2026-09-24, item 29 (`backend-config-e-conteudo-de-documento`)
+
+**A config não diverge do ambiente; a medição de 2026-09-02 bateu na porta errada.** Desde
+`03127249` (2026-08-24), o `docker-compose.yml:19` injeta no container
+`SANCTUM_STATEFUL_DOMAINS=localhost:${LOTUS_DEV_VITE_PORT},localhost:${LOTUS_DEV_HTTP_PORT}`, e
+variável de ambiente real vence o `backend/.env` por desenho — o próprio `backend/.env.example:5-9`
+avisa que editar ali não tem efeito. O `.env` da raiz do main tree declara `LOTUS_DEV_VITE_PORT=5174`
+com `LOTUS_DEV_HTTP_PORT=8080`, e é exatamente isso que o runtime resolveu
+(`['localhost:5174', 'localhost:8080']`). O Vite desta árvore sobe em `:5174` com `strictPort`. A
+sonda com `Referer: http://localhost:5173/` saiu de uma porta onde nada desta árvore roda, e o 401
+era o comportamento correto para origem não-stateful.
+
+O mecanismo que o gatilho pedia — provar a chave seguindo o ambiente — já existe, no lado que a
+produz: `frontend/tests/compose-dev.test.ts` ("injeta no app toda chave de URL que carrega porta,
+derivada da mesma variável"). Nenhum código, nenhum teste novo. **Fecha por veredito** no
+fechamento do item 29. O offset misto do `.env` local (Vite em +1, HTTP em +0) é arquivo
+gitignorado e escolha do João: é a causa da medição, não um defeito do repositório.
 
 ---
 
@@ -259,7 +277,7 @@ repositório prova lock.
 
 ## P-79 — a URL que vai no QR do certificado é a mesma chave de infra, e as duas têm ciclo de vida diferente
 
-**Bloco:** — · **Gatilho:** bloco de backend que tocar `CertificatePdfService`, `config/app.php` ou
+**Bloco:** 29 `backend-config-e-conteudo-de-documento` · **Gatilho:** bloco de backend que tocar `CertificatePdfService`, `config/app.php` ou
 a rota pública de validação, e puder provar a chave nova com teste. Fecha quando a URL pública de
 validação sair de `FRONTEND_URL` para chave própria, **ou** quando o João decidir por escrito que a
 regra operacional basta. Revisar em **2026-10-31**.
@@ -502,7 +520,7 @@ sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do
 `P-55` para a invariante do espelho, então quem renumera é a recém-chegada. As menções a "P-55"
 escritas por este bloco no `historico/` foram acertadas junto; a `P-55` da `main` fica onde está.
 
-**Bloco:** — · **Gatilho:** bloco que tocar `backend/config/app.php` ou qualquer derivação de data no
+**Bloco:** 29 `backend-config-e-conteudo-de-documento` · **Gatilho:** bloco que tocar `backend/config/app.php` ou qualquer derivação de data no
 servidor e puder trocar o literal por `env('APP_TIMEZONE', 'UTC')` com prova. Revisar em **2026-10-31**.
 
 Medido no gate de navegador do `certificacao-historico-do-aluno` (2026-08-24):
