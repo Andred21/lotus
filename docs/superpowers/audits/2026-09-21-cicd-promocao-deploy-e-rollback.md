@@ -69,3 +69,102 @@ profile padrão da máquina, não o da conta. Nada foi escrito na conta com a cr
   `lotus-ec2` não tinha permissão. Ficou `Online` sozinho depois que a política foi anexada, após dez
   ciclos de espera. **O Step 3 não foi necessário**, e por isso `deploy/aws/user-data.sh` não foi
   emendado.
+
+## Task 9 — deploy manual, cadeado e dump
+
+Executada pelo João em 2026-09-24/25, por SSH com `-i ~/.ssh/lotus-prod.pem` (a chave padrão da
+máquina é recusada pelo host).
+
+**Step 1 — scripts no host:**
+
+```text
+-rwxr-x--- 1 root root 3482 Sep 25 02:41 backup-db.sh
+-rwxr-x--- 1 root root 7891 Sep 25 02:41 deploy.sh
+```
+
+Só dois: o `verificar-backup.sh` **não estava no host** — ver o achado abaixo.
+
+**Step 2 — promover o SHA já em produção (`a5fc92bb7728ea0da6dc16a62958e02556df999b`):** login,
+manifestos, pull do trio, `==> gate de schema` sem recusa, `Nothing to migrate.`, `up`, nginx
+healthy, `==> DEPLOY OK: a5fc92bb7728ea0da6dc16a62958e02556df999b`. Nenhum dump. Efeito colateral
+observado: o `lotus-gotenberg-1` foi **recriado** — `gotenberg/gotenberg:8` é tag móvel, e o pull
+trouxe um digest novo. Promover o mesmo SHA não é, portanto, um no-op estrito fora do trio.
+
+**Step 3 — ledger (DoD 3):**
+
+```text
+{"ts":"2026-09-25T02:42:21Z","evento":"inicio","sha":"a5fc92bb7728ea0da6dc16a62958e02556df999b","sha_anterior":"a5fc92bb7728ea0da6dc16a62958e02556df999b","migrations":[],"dump":null,"ator":"manual:root"}
+{"ts":"2026-09-25T02:42:27Z","evento":"fim","sha":"a5fc92bb7728ea0da6dc16a62958e02556df999b","resultado":"ok","etapa":"ok"}
+---
+a5fc92bb7728ea0da6dc16a62958e02556df999b
+```
+
+`sha_anterior` = `sha`, `migrations` vazio, `"dump": null` declarado, ator `manual:root`, fecho
+`ok/ok`, `CURRENT_SHA` batendo.
+
+**Step 4 — cadeado:** o comando do plano ganhou um `wait` no fim, para o SSH não encerrar o deploy
+em background. Trecho decisivo, com as duas saídas intercaladas:
+
+```text
+==> login ghcr.io
+==> manifestos de a5fc92bb7728ea0da6dc16a62958e02556df999b
+erro: outro deploy ja esta rodando (pid 2036654)
+codigo=3
+==> pull
+…
+==> DEPLOY OK: a5fc92bb7728ea0da6dc16a62958e02556df999b
+```
+
+**Step 5 — a chave do dump pelo arquivo:**
+
+```text
+backup ok: s3://lotus-prod-760144413534/backups/lotus-2026-09-25T02-43.sql.gz
+---
+s3://lotus-prod-760144413534/backups/lotus-2026-09-25T02-43.sql.gz
+```
+
+A mesma URI no stdout e, sozinha, no arquivo de `LOTUS_BACKUP_SAIDA`.
+
+### Achado herdado do item 10 — a detecção do backup não existia em produção
+
+O `verificar-backup.sh` do Step 5 respondeu `command not found`. Medido em seguida, host e conta:
+
+- `crontab -l` do root só tinha a linha das 06:10 (`backup-db.sh`); a das 06:40 não existia;
+- `sns list-topics` vazio **em todas as regiões**; a `lotus-ec2` só tinha a inline `lotus-s3`;
+- instalado o script, ele recusou: `erro: LOTUS_ALERT_TOPIC_ARN ausente do .env — sem canal nao ha aviso`.
+
+Causa: o runbook §10 criava o tópico SNS junto com o billing alarm; o item 10 (evidência §8)
+trocou o alarme por AWS Budgets, que manda e-mail direto, e o tópico nunca nasceu. O e-mail de
+custo que o João recebe é do Budgets `lotus-prod-teto`, subscriber `EMAIL` — nada a ver com SNS.
+A produção fazia backup todo dia (`lotus-backup.log`: 22, 23 e 24/09 `backup ok`), mas **nada
+avisaria se parasse**, e o gatilho de reversão do ADR-09 ficava sem detecção.
+
+**Decisão do João (2026-09-24): pagar dentro do item 12**, porque o DoD 6 da spec exige o
+verificador aprovando. Executado por ele:
+
+```text
+arn:aws:sns:sa-east-1:760144413534:lotus-alertas
+email   arn:aws:sns:sa-east-1:760144413534:lotus-alertas:16af7e17-211a-4147-87d7-4b0891408283
+
+POLICYNAMES     lotus-alerta
+POLICYNAMES     lotus-s3
+{ "Effect": "Allow", "Action": "sns:Publish",
+  "Resource": "arn:aws:sns:sa-east-1:760144413534:lotus-alertas" }
+
+LOTUS_ALERT_TOPIC_ARN=arn:aws:sns:sa-east-1:760144413534:lotus-alertas
+600 root
+
+backup ok: o mais recente tem 0d (limite 2d) — 2026-09-25T02:43:51+00:00
+codigo=0
+Lotus: o backup mais recente de s3://lotus-prod-760144413534/backups/ tem 0 dias (limite -1). Ultimo: 2026-09-25T02:43:51+00:00. Aos 7 dias o gatilho de reversao do ADR-09 dispara.
+codigo=1
+
+10 6 * * * /opt/lotus/bin/backup-db.sh >> /var/log/lotus-backup.log 2>&1
+40 6 * * * /opt/lotus/bin/verificar-backup.sh >> /var/log/lotus-backup.log 2>&1
+```
+
+A subscription saiu de `pending confirmation` para um ARN (confirmada pelo link do e-mail). O
+alerta forçado saiu 1 **sem** a linha `erro: o alerta NAO saiu`, isto é, o `sns publish` passou;
+e o e-mail "Lotus: backup do banco de producao" chegou à caixa do João (confirmado por ele em 2026-09-25). O tópico vive em `sa-east-1`, não em `us-east-1`: a
+região só existia por causa do billing alarm. O runbook §4/§9/§10 e o `env.prod.example` foram
+corrigidos no mesmo commit.
