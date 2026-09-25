@@ -106,6 +106,15 @@ escolha do João; o veredito o registra como a causa da medição, não o corrig
 
 - **`P-76`** — decisão do João de 2026-09-21, mantida.
 - Datas calculadas no **frontend** (formatação e "hoje" do React): o bloco é backend.
+- **`Dashboard/Services/AnalyticsQuery`** (achado no planejamento, 2026-09-24): agrupa INSTANTES
+  (`created_at`, `approved_at`, `concluded_at`) por mês com `format('Y-m')` em UTC, e filtra o
+  período com limites também em UTC. É coerente por dentro. Migrar só o agrupamento criaria balde
+  fora do período — uma linha de 31/08 às 22h em Santiago entra em setembro pelo limite UTC e cai
+  no balde de agosto. Limites e baldes precisam mudar juntos, com conversão do período de dias
+  locais para instantes UTC. Fica fora deste bloco e vira ficha nova no fechamento.
+- Consequência operacional aceita da D3: na fase sem DNS a produção **recusa** emitir e baixar
+  certificado, inclusive o de prova `LOT-2026-1000` já emitido. É a proibição do runbook virando
+  comportamento.
 - Consolidar `DataSql`, `JanelaDeAviso` ou a `CertificateQueryBuilder` no `FusoDoNegocio` além do
   que a delegação do `CertificateDisplayStatus` já alcança.
 - Reemitir ou corrigir certificados já emitidos: a produção só tem o `LOT-2026-1000` de prova, e o

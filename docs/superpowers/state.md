@@ -4,25 +4,25 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: backend-config-e-conteudo-de-documento
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-24-backend-config-e-conteudo-de-documento-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-09-24-backend-config-e-conteudo-de-documento.md
 context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
     active_work_item: backend-config-e-conteudo-de-documento
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: main-tree
     branch: null   # a branch do item 29 abre no /executar-bloco. A anterior (chore/harness-hooks-de-guarda, item 28) MESCLOU na PR #106 em 2026-09-20 — merge 38e08a08; o state.md so soube em 2026-09-21
     active_spec: docs/superpowers/specs/2026-09-24-backend-config-e-conteudo-de-documento-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-09-24-backend-config-e-conteudo-de-documento.md
     context_packet: null
     blocker: null
     resume_state: null
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | **29** `backend-config-e-conteudo-de-documento` (`P-79`, `P-75`, `P-59`) | Backend | main tree (gate P-03) | — (abre no `/executar-bloco`); a anterior, `chore/harness-hooks-de-guarda`, **mesclou** na PR #106 (`38e08a08`) | `planning` |
+| `lane-a` | **29** `backend-config-e-conteudo-de-documento` (`P-79`, `P-75`, `P-59`) | Backend | main tree (gate P-03) | — (abre no `/executar-bloco`); a anterior, `chore/harness-hooks-de-guarda`, **mesclou** na PR #106 (`38e08a08`) | `ready_for_execution` |
 | `lane-b` | — (item 10 v2 **fechado em 2026-09-20**; o 12 segue **estacionado**, com o gatilho do packet vencido) | — | `../lotus-infra` | `infra/producao-provisionamento-aws` | `idle` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
