@@ -303,6 +303,45 @@ class IssueCertificateTest extends TestCase
         $this->assertSame('2027-12-31', $certificate->valido_ate->toDateString());
     }
 
+    /**
+     * P-59: o dia impresso é o de Santiago. 02:00 UTC de 25/09 são 23:00 de
+     * 24/09 no Chile (UTC-3, horário de verão) — o relógio UTC congelava a
+     * data de amanhã no snapshot e no `valido_ate`.
+     */
+    public function test_emissao_as_23h_de_santiago_grava_o_dia_local(): void
+    {
+        $this->actingAsAdmin();
+        $this->createTemplate(['validity_months' => 12]);
+        Carbon::setTestNow(Carbon::parse('2026-09-25 02:00:00', 'UTC'));
+
+        $this->postJson($this->issueUrl(), $this->validPayload())->assertCreated();
+
+        $certificate = Certificate::query()->sole();
+
+        $this->assertSame('2026-09-24', $certificate->snapshot->emitido_em);
+        $this->assertSame('2027-09-24', $certificate->valido_ate->toDateString());
+    }
+
+    /**
+     * P-59: o ANO do código é o de Santiago. 02:30 UTC de 01/01/2027 ainda são
+     * 23:30 de 31/12/2026 no Chile — o relógio UTC emitia `LOT-2027` com data
+     * de 2027 para um certificado emitido em 2026.
+     */
+    public function test_emissao_na_noite_de_31_12_em_santiago_usa_o_ano_local(): void
+    {
+        $this->actingAsAdmin();
+        $this->createTemplate(['validity_months' => 12]);
+        Carbon::setTestNow(Carbon::parse('2027-01-01 02:30:00', 'UTC'));
+
+        $this->postJson($this->issueUrl(), $this->validPayload())->assertCreated();
+
+        $certificate = Certificate::query()->sole();
+
+        $this->assertSame('LOT-2026-1000', $certificate->codigo);
+        $this->assertSame('2026-12-31', $certificate->snapshot->emitido_em);
+        $this->assertSame('2027-12-31', $certificate->valido_ate->toDateString());
+    }
+
     public function test_emissao_grava_auditoria_com_o_usuario_que_emitiu(): void
     {
         $admin = $this->actingAsAdmin();

@@ -9,6 +9,7 @@ use App\Domains\Certification\Services\CertificateNumberService;
 use App\Domains\Certification\Services\CertificateSnapshotBuilder;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
+use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -26,7 +27,11 @@ class IssueCertificateAction
             // Um instante para a emissão inteira. A sequência espera pelo lock,
             // e três `now()` separados deixam uma emissão da virada do ano
             // gravar data de 2027 num código LOT-2026.
-            $now = now();
+            //
+            // E o instante no fuso de SANTIAGO (P-59): `->year`, o `emitido_em`
+            // do snapshot e o `valido_ate` são datas do documento, e o relógio
+            // UTC as adiantava um dia das 21h à meia-noite locais.
+            $now = FusoDoNegocio::agora();
 
             // As seis portas. A decisão mora nelas; o painel de emissão só
             // REPORTA os mesmos motivos (`EmissionPanelQuery`), e por isso a
