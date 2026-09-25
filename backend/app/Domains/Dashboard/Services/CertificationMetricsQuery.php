@@ -13,7 +13,7 @@ use App\Domains\Dashboard\Enums\PendingItemType;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
-use Carbon\CarbonImmutable;
+use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 
 class CertificationMetricsQuery
@@ -38,7 +38,7 @@ class CertificationMetricsQuery
                 severity: DashboardSeverity::Normal,
                 entity_id: $enrollment->turma_id,
                 description: __('dashboard.pending.certificates_pending'),
-                date: $enrollment->turma->concluded_at?->toDateString(),
+                date: FusoDoNegocio::dataDe($enrollment->turma->concluded_at),
                 navigation: ['turma_id' => $enrollment->turma_id],
             ))
             ->all();
@@ -52,7 +52,7 @@ class CertificationMetricsQuery
      */
     public function alertas(): array
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
         $horizon = DashboardWindows::expiryHorizon();
 
         return Certificate::query()

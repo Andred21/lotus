@@ -2,6 +2,7 @@
 
 namespace App\Domains\Dashboard\Data;
 
+use App\Shared\Support\FusoDoNegocio;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
@@ -70,13 +71,13 @@ class DashboardFilterData extends Data
     {
         return $this->period_start !== null
             ? CarbonImmutable::parse($this->period_start)->startOfDay()
-            : CarbonImmutable::today()->subMonths(self::DEFAULT_MONTHS)->startOfDay();
+            : FusoDoNegocio::hoje()->subMonths(self::DEFAULT_MONTHS)->startOfDay();
     }
 
     public function end(): CarbonImmutable
     {
         return $this->period_end !== null
             ? CarbonImmutable::parse($this->period_end)->endOfDay()
-            : CarbonImmutable::today()->endOfDay();
+            : FusoDoNegocio::hoje()->endOfDay();
     }
 }

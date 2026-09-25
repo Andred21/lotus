@@ -13,7 +13,7 @@ use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
-use Carbon\CarbonImmutable;
+use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Database\Eloquent\Collection;
 
 class OperationMetricsQuery
@@ -28,7 +28,7 @@ class OperationMetricsQuery
     /** @return array{em_andamento:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int} */
     public function kpis(): array
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
         $query = Turma::query()->where('status', TurmaStatus::EmAndamento);
 
         return [
@@ -49,7 +49,7 @@ class OperationMetricsQuery
 
     public function agenda(): AgendaData
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
         $horizon = DashboardWindows::turmaHorizon();
         $turmas = $this->turmasEmAndamento();
 
