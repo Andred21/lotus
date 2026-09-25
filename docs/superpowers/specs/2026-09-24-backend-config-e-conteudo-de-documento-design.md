@@ -112,6 +112,11 @@ escolha do João; o veredito o registra como a causa da medição, não o corrig
   fora do período — uma linha de 31/08 às 22h em Santiago entra em setembro pelo limite UTC e cai
   no balde de agosto. Limites e baldes precisam mudar juntos, com conversão do período de dias
   locais para instantes UTC. Fica fora deste bloco e vira ficha nova no fechamento.
+  **Emenda de 2026-09-25 (review Q-1, aprovada pelo João):** a premissa caiu. Os limites do
+  `AnalyticsQuery` vêm do `DashboardFilterData`, que a D1 migrou — o período default passou a
+  terminar às 23:59:59 UTC do dia de Santiago, e das 21h à meia-noite locais o que acontecia no dia
+  sumia das séries e dos rankings. Limites e baldes migraram juntos neste bloco
+  (`FusoDoNegocio::inicioDoDia()`/`fimDoDia()` e mês de Santiago); a ficha nova não nasce.
 - Consequência operacional aceita da D3: na fase sem DNS a produção **recusa** emitir e baixar
   certificado, inclusive o de prova `LOT-2026-1000` já emitido. É a proibição do runbook virando
   comportamento.

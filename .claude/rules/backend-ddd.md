@@ -197,13 +197,20 @@ literal **por decisão** (P-59, item 29): trocá-lo reinterpretaria todo `DATETI
 de `App\Shared\Support\FusoDoNegocio`:
 
 - `hoje()` para comparar com coluna `date` — tem a mesma forma do cast (meia-noite no fuso da app);
-- `agora()` para o instante com calendário local (`->year` do código, `emitido_em`);
-- `dataDe($instante)` para projetar um `datetime` (`approved_at`, `concluded_at`) em dia.
+- `agora()` para LER o calendário local do relógio (`->year` do código, `emitido_em`) — **nunca**
+  para gravar ou filtrar instante. O Eloquent e o query builder formatam a hora de parede do Carbon
+  sem converter: `revoked_at = FusoDoNegocio::agora()` grava 23:00 onde o instante é 02:00 UTC.
+  Instante gravado ou filtrado continua `now()`;
+- `dataDe($instante)` para projetar um `datetime` (`approved_at`, `concluded_at`) em dia;
+- `inicioDoDia($dia)`/`fimDoDia($dia)` para o caminho inverso: filtrar coluna `datetime` por dia do
+  cliente. Um período em dias (`DashboardFilterData::start()`/`end()`) comparado cru com instante
+  UTC corta as últimas horas do dia de Santiago; e limite e balde mensal mudam JUNTOS, senão a
+  linha cai fora do período ou no mês errado (ref.: `AnalyticsQuery`, review Q-1 do item 29).
 
 **Catraca:** `tests/Unit/Shared/DataDeCalendarioTest.php` reprova `today()` e `now()` projetado em
-data no resto de `app/`. Ela lê grafia: `$now = now()` numa linha e `$now->year` noutra passa — o
-guarda desse caso é teste de comportamento com o relógio congelado entre 21h e meia-noite de
-Santiago.
+data no resto de `app/`, e `FusoDoNegocio::agora()` atribuído a coluna `*_at`. Ela lê grafia:
+`$now = now()` numa linha e `$now->year` noutra passa — o guarda desse caso é teste de
+comportamento com o relógio congelado entre 21h e meia-noite de Santiago.
 
 ## Mensagem ao usuário sai de `lang/`, nunca do código
 

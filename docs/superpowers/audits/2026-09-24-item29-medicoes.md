@@ -252,3 +252,65 @@ HTTP 200
 ```
 
 O `backend/.env` voltou ao que era antes do Step 5 (a linha foi removida pelo João).
+
+## 8. Correções do review de 2026-09-25
+
+O `/revisar-sprint` devolveu dois achados 🟡. O João aprovou os dois, sem nova rodada do Codex (a
+revisão independente travou e foi cancelada sem achados).
+
+### Q-1 — período do dashboard em dias de Santiago
+
+A D1 migrou o default do `DashboardFilterData` para `FusoDoNegocio::hoje()`, mas o `AnalyticsQuery`
+compara esse limite com instantes UTC (`created_at`, `approved_at`, `concluded_at`). Das 21h à
+meia-noite de Santiago, o que acontecia no dia sumia das séries e dos rankings: uma regressão do
+próprio bloco, medida no review com o relógio em 01:00 UTC de 25/09.
+
+Correção: `FusoDoNegocio::inicioDoDia()` e `fimDoDia()` convertem o dia do cliente nos instantes
+em que ele começa e termina em Santiago, e o balde mensal de instante passa a ser o mês de Santiago
+(`dataDe()`). Coluna `date` (`start_date`) segue comparando dia com dia. O fim do dia é o início do
+seguinte menos 1µs, porque `endOfDay()` em Santiago perde a hora repetida da volta do horário de
+verão:
+
+```
+2026-04-04  endOfDay() = 2026-04-05 02:59:59.999999 UTC   início do dia seguinte - 1µs = 03:59:59.999999 UTC
+2026-04-05  início     = 2026-04-05 04:00:00 UTC
+```
+
+Sondas (arquivo restaurado de cópia no scratchpad, `cmp` conferido):
+
+| Sonda | `periodo_e_baldes` | `periodo_default` |
+|---|---|---|
+| `AnalyticsQuery` de `HEAD` (9f9b0d9e) | ⨯ | ⨯ |
+| só os limites (balde em UTC) | ⨯ | ✓ |
+| só o balde (limites crus) | ⨯ | ⨯ |
+| `fimDoDia()` por `endOfDay()` | `FusoDoNegocioTest::os_dias_encostam_na_troca_de_horario` ⨯ | |
+
+O `DashboardEndpointTest` gravava `approved_at` como data pura, ou seja, meia-noite UTC, que em
+Santiago ainda é a noite anterior. A fixture passou a gravar o meio-dia UTC do dia pedido; nenhuma
+asserção mudou.
+
+Fora do achado, visto no caminho: no sqlite a coluna `date` guarda `Y-m-d 00:00:00`, então
+`whereBetween('start_date', [..., 'Y-m-d'])` exclui o último dia por comparação de string. No MySQL
+a coluna é `DATE` e o problema não existe. Já era assim antes do bloco, e o teste novo evita a borda.
+
+### Q-2 — `agora()` não grava instante
+
+Docblock do `FusoDoNegocio::agora()` e a rule `backend-ddd.md` dizem que ele serve para LER o
+calendário, nunca para gravar ou filtrar instante. A catraca `DataDeCalendarioTest` ganhou a
+grafia `agora() gravado como instante` (`*_at` recebendo `FusoDoNegocio::agora()`). Sonda com
+`['revoked_at' => FusoDoNegocio::agora()]` injetado na `IssueCertificateAction`:
+
+```
+⨯ nenhum arquivo de app deriva data do relogio do servidor
++    0 => 'Domains/Certification/Actions/IssueCertificateAction.php: agora() gravado como instante'
+```
+
+### Verificação depois das correções
+
+```
+docker compose exec -T app php artisan test
+Tests:    5 skipped, 1221 passed (9284 assertions)
+```
+
++5 em relação à §1: dois do `AnalyticsQueryTest` e três do `FusoDoNegocioTest`. `generated.ts`
+sem diff depois do `typescript:transform`. Pint `passed` nos sete `.php` tocados.

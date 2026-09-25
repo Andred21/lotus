@@ -16,6 +16,11 @@ use Tests\Support\ScansPhpSource;
  * GRAFIA. `$now = now();` numa linha e `$now->year` noutra passam por ela — é
  * exatamente a forma do defeito da `IssueCertificateAction`, e quem o guarda
  * é o comportamento (`IssueCertificateTest`, os dois testes de Santiago).
+ *
+ * O avesso também reprova (review Q-2 do item 29): `FusoDoNegocio::agora()`
+ * atribuído a coluna `*_at`. O Eloquent grava a hora de parede do Carbon sem
+ * convertê-la, e o instante sairia 3 a 4 horas errado. Mesmo limite de
+ * grafia: passar por variável escapa.
  */
 class DataDeCalendarioTest extends TestCase
 {
@@ -29,6 +34,7 @@ class DataDeCalendarioTest extends TestCase
         'today()' => '/(?<![\w$>:])today\s*\(/',
         'Carbon::today()' => '/\b(?:Carbon|CarbonImmutable)::today\s*\(/',
         'now() projetado em data' => '/(?:(?<![\w$>:])now|\b(?:Carbon|CarbonImmutable)::now)\s*\(\s*\)(?:\s*->\s*(?:copy|add\w*|sub\w*)\s*\([^()]*\))*\s*->\s*(?:toDateString|startOfDay|endOfDay)\s*\(/',
+        'agora() gravado como instante' => '/_at[\'"]?\s*(?:=>|=)\s*FusoDoNegocio::agora\s*\(/',
     ];
 
     public function test_nenhum_arquivo_de_app_deriva_data_do_relogio_do_servidor(): void
@@ -55,7 +61,7 @@ class DataDeCalendarioTest extends TestCase
         $this->assertSame(
             [],
             $violacoes,
-            'Data de calendário derivada do relógio UTC. Use App\Shared\Support\FusoDoNegocio (hoje(), agora(), dataDe()).',
+            'Data de calendário derivada do relógio UTC, ou FusoDoNegocio::agora() gravado como instante. Veja .claude/rules/backend-ddd.md, "Data de calendário sai do FusoDoNegocio".',
         );
     }
 
@@ -69,6 +75,9 @@ class DataDeCalendarioTest extends TestCase
             '$d = now()->toDateString();',
             '$d = CarbonImmutable::now()->addDays(self::DIAS)->endOfDay();',
             '$d = Carbon::now()->startOfDay();',
+            "\$c->forceFill(['revoked_at' => FusoDoNegocio::agora()]);",
+            '$quote->approved_at = FusoDoNegocio::agora();',
+            "['expires_at' => FusoDoNegocio::agora()->addDays(3)]",
         ];
         $permitidas = [
             '$d = now();',
@@ -77,6 +86,9 @@ class DataDeCalendarioTest extends TestCase
             '$d = FusoDoNegocio::hoje();',
             '$d = $relogio->today();',
             '$d = CarbonImmutable::now(self::TIMEZONE);',
+            "\$c->forceFill(['revoked_at' => now()]);",
+            '$now = FusoDoNegocio::agora();',
+            "['codigo' => 'LOT-'.FusoDoNegocio::agora()->year]",
         ];
 
         foreach ($proibidas as $codigo) {

@@ -4,28 +4,28 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: backend-config-e-conteudo-de-documento
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-09-24-backend-config-e-conteudo-de-documento-design.md
 active_plan: docs/superpowers/plans/2026-09-24-backend-config-e-conteudo-de-documento.md
 context_packet: null
-blocker: "review do item 29 (2026-09-25) devolveu 2 achados 🟡 aguardando o João — Q-1 período default do dashboard perde as últimas 3h do dia de Santiago; Q-2 FusoDoNegocio::agora() gravado em coluna datetime desloca 3–4h. Revisão independente do Codex travou e foi cancelada, sem achados"
+blocker: null
 lanes:
   lane-a:
     active_feature: null
     active_work_item: backend-config-e-conteudo-de-documento
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: main-tree
     branch: fix/backend-config-e-conteudo-de-documento   # aberta de main@5be61b63 em 2026-09-24 pelo /executar-bloco. A anterior (chore/harness-hooks-de-guarda, item 28) MESCLOU na PR #106 em 2026-09-20 — merge 38e08a08
     active_spec: docs/superpowers/specs/2026-09-24-backend-config-e-conteudo-de-documento-design.md
     active_plan: docs/superpowers/plans/2026-09-24-backend-config-e-conteudo-de-documento.md
     context_packet: null
-    blocker: "review do item 29 (2026-09-25) devolveu 2 achados 🟡 aguardando o João — Q-1 período default do dashboard perde as últimas 3h do dia de Santiago; Q-2 FusoDoNegocio::agora() gravado em coluna datetime desloca 3–4h. Revisão independente do Codex travou e foi cancelada, sem achados"
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: harness-hooks-de-guarda   # item 28, fechado em 2026-09-20, mesclado na PR #106
   lane-b:
     active_feature: null
@@ -62,7 +62,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: infra-producao-provisionamento-aws
 state_basis_commit: 38e08a08
-updated_at: 2026-09-24T00:00:00-03:00
+updated_at: 2026-09-25T00:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | **29** `backend-config-e-conteudo-de-documento` (`P-79`, `P-75`, `P-59`) | Backend | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`); a anterior, `chore/harness-hooks-de-guarda`, **mesclou** na PR #106 (`38e08a08`) | `blocked` (achados do review) |
+| `lane-a` | **29** `backend-config-e-conteudo-de-documento` (`P-79`, `P-75`, `P-59`) | Backend | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`); a anterior, `chore/harness-hooks-de-guarda`, **mesclou** na PR #106 (`38e08a08`) | `ready_for_closure` (Q-1 e Q-2 do review aplicados) |
 | `lane-b` | — (item 10 v2 **fechado em 2026-09-20**; o 12 segue **estacionado**, com o gatilho do packet vencido) | — | `../lotus-infra` | `infra/producao-provisionamento-aws` | `idle` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 

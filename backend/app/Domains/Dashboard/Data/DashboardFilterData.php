@@ -18,6 +18,12 @@ use Spatie\LaravelData\Data;
  *
  * Janela invertida sobe `ValidationException`, que o handler global converte em
  * 422 RFC 7807 — nunca `abort()` à mão (ADR-03).
+ *
+ * `start()` e `end()` são DIAS do cliente, na forma do cast `date` (meia-noite
+ * e fim do dia no fuso da aplicação), não instantes. Quem filtra coluna
+ * `datetime` converte pelo `FusoDoNegocio::inicioDoDia()`/`fimDoDia()`, como o
+ * `AnalyticsQuery` — comparados crus com instante UTC, cortavam as últimas
+ * horas do dia de Santiago (review Q-1 do item 29).
  */
 class DashboardFilterData extends Data
 {

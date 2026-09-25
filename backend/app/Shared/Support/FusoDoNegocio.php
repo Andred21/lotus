@@ -25,7 +25,15 @@ final class FusoDoNegocio
 {
     public const TIMEZONE = 'America/Santiago';
 
-    /** O instante atual expresso no fuso do negócio: `->year` e `->toDateString()` são os locais. */
+    /**
+     * O instante atual expresso no fuso do negócio: `->year` e `->toDateString()` são os locais.
+     *
+     * Serve para LER o calendário do relógio, nunca para gravar ou comparar
+     * instante. O Eloquent e o query builder formatam a hora de parede do
+     * Carbon sem convertê-la para o fuso da aplicação: `revoked_at = agora()`
+     * grava 23:00 onde o instante é 02:00 UTC — 3 a 4 horas erradas, sem erro
+     * nenhum. Instante gravado ou filtrado continua `now()`.
+     */
     public static function agora(): CarbonImmutable
     {
         return CarbonImmutable::now(self::TIMEZONE);
@@ -52,5 +60,28 @@ final class FusoDoNegocio
         return $instante === null
             ? null
             : CarbonImmutable::instance($instante)->setTimezone(self::TIMEZONE)->toDateString();
+    }
+
+    /**
+     * O primeiro INSTANTE, no fuso da aplicação, do dia local de `$dia` — o
+     * inverso do `dataDe()`. É o limite para filtrar coluna `datetime` por dia
+     * do cliente: o dia 24/09 de Santiago começa às 03:00 UTC (04:00 no inverno).
+     * Só o `->toDateString()` de `$dia` é lido; a hora e o fuso dele não contam.
+     */
+    public static function inicioDoDia(CarbonInterface $dia): CarbonImmutable
+    {
+        return CarbonImmutable::parse($dia->toDateString(), self::TIMEZONE)
+            ->setTimezone(date_default_timezone_get());
+    }
+
+    /**
+     * O último instante do dia local de `$dia`: o início do dia seguinte menos
+     * 1µs. `endOfDay()` em Santiago não serve — na volta do horário de verão
+     * as 23h se repetem, `23:59:59` é ambíguo e o PHP escolhe a primeira
+     * passagem, perdendo a hora final do dia.
+     */
+    public static function fimDoDia(CarbonInterface $dia): CarbonImmutable
+    {
+        return self::inicioDoDia(CarbonImmutable::parse($dia->toDateString())->addDay())->subMicrosecond();
     }
 }

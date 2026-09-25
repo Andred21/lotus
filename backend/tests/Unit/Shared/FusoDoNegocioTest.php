@@ -72,4 +72,41 @@ class FusoDoNegocioTest extends TestCase
         $this->assertSame('UTC', $instante->getTimezone()->getName());
         $this->assertNull(FusoDoNegocio::dataDe(null));
     }
+
+    /** 24/09 é verão (UTC-3); 31/08 é inverno (UTC-4). Só a data do argumento conta. */
+    public function test_inicio_e_fim_do_dia_sao_os_instantes_do_dia_local(): void
+    {
+        $dia = CarbonImmutable::parse('2026-09-24 23:59:59');
+
+        $this->assertSame('2026-09-24 03:00:00', FusoDoNegocio::inicioDoDia($dia)->toDateTimeString());
+        $this->assertSame('2026-09-25 02:59:59.999999', FusoDoNegocio::fimDoDia($dia)->format('Y-m-d H:i:s.u'));
+        $this->assertSame(date_default_timezone_get(), FusoDoNegocio::fimDoDia($dia)->getTimezone()->getName());
+        $this->assertSame('2026-08-31 04:00:00', FusoDoNegocio::inicioDoDia(CarbonImmutable::parse('2026-08-31'))->toDateTimeString());
+    }
+
+    /**
+     * Na volta do horário de verão (04/04/2026 à meia-noite volta a 23h) o dia
+     * local tem 25 horas, e o fim dele encosta no começo do seguinte sem
+     * buraco. `endOfDay()` em Santiago parava às 02:59:59 UTC e perdia a hora
+     * repetida; na ida (06/09, 00:00 não existe) o dia começa às 01:00 locais.
+     */
+    public function test_os_dias_encostam_na_troca_de_horario(): void
+    {
+        $volta = CarbonImmutable::parse('2026-04-04');
+
+        $this->assertSame('2026-04-04 03:00:00', FusoDoNegocio::inicioDoDia($volta)->toDateTimeString());
+        $this->assertSame('2026-04-05 03:59:59.999999', FusoDoNegocio::fimDoDia($volta)->format('Y-m-d H:i:s.u'));
+        $this->assertSame('2026-04-05 04:00:00', FusoDoNegocio::inicioDoDia($volta->addDay())->toDateTimeString());
+        $this->assertSame('2026-09-06 04:00:00', FusoDoNegocio::inicioDoDia(CarbonImmutable::parse('2026-09-06'))->toDateTimeString());
+    }
+
+    public function test_limites_do_dia_nao_mutam_o_argumento(): void
+    {
+        $dia = Carbon::parse('2026-09-24 12:00:00');
+
+        FusoDoNegocio::inicioDoDia($dia);
+        FusoDoNegocio::fimDoDia($dia);
+
+        $this->assertSame('2026-09-24 12:00:00', $dia->toDateTimeString());
+    }
 }
