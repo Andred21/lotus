@@ -2,10 +2,10 @@
 
 namespace App\Domains\Certification\Enums;
 
+use App\Shared\Support\FusoDoNegocio;
 use App\Shared\Support\JanelaDeAviso;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
-use Illuminate\Support\Carbon;
 
 /**
  * O estado de EXIBIÇÃO do certificado — dono único da regra (spec D4).
@@ -29,17 +29,17 @@ enum CertificateDisplayStatus: string
     case Revocado = 'revocado';
 
     /**
-     * D10: `config/app.php` fixa `'timezone' => 'UTC'` LITERAL, sem `env()`, e
-     * o `APP_TIMEZONE=America/Santiago` do `.env.example` é ignorado. Corrigir
-     * o config muda comportamento global e não cabe neste bloco — então a
-     * derivação declara o fuso em vez de herdar o errado.
+     * D10: o fuso é o do `FusoDoNegocio` (P-59, item 29). Esta `hoje()` devolve
+     * meia-noite EM Santiago — não a forma de `FusoDoNegocio::hoje()` — porque
+     * `for()` reconstrói os dois lados por componentes, e `EmissionPanelRequest`
+     * e `CertificateQueryBuilder` já contam com o fuso carregado.
      */
-    public const TIMEZONE = 'America/Santiago';
+    public const TIMEZONE = FusoDoNegocio::TIMEZONE;
 
     /** "Hoje" no fuso do cliente, à meia-noite. Comparação é por data pura. */
     public static function hoje(): CarbonImmutable
     {
-        return CarbonImmutable::instance(Carbon::now(self::TIMEZONE))->startOfDay();
+        return FusoDoNegocio::agora()->startOfDay();
     }
 
     /**
