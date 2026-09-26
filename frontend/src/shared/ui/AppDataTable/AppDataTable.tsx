@@ -117,12 +117,20 @@ export function AppDataTable<T extends DataTableValueArray>({
       // volta, e o card salta de altura a cada GET. O que muda é o TEXTO.
       paginatorLeft={loading ? t('common.loading') : footerCount}
       paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
+      // `widthPt` funde por ÚLTIMO, e não o `pt` do chamador: o guard "sem
+      // linha, sem largura mínima" (comentário acima) tem que vencer até uma
+      // tabela cujo CHAMADOR também escreve `table.className` (UsersTable,
+      // RolesTable, RedatoresTable — UI-02 desta run e UI-03 de Pessoas), ou o
+      // vazio/erro dessas telas volta a forçar `min-w-[42rem]` (672px) dentro
+      // de uma moldura de 276px em 390x844 — a MESMA classe de rolagem
+      // indevida que o guard existe para prevenir. Com linha (`widthPt = {}`),
+      // a fusão não muda nada e o `pt` do chamador segue vencendo, como antes.
       pt={mergePt<DataTableProps<DataTableValueArray>['pt']>(
         mergePt<DataTablePassThroughOptions>(
           { ...appDataTablePt, paginator: appPaginatorPt },
-          widthPt,
+          pt as DataTablePassThroughOptions,
         ),
-        pt as DataTableProps<DataTableValueArray>['pt'],
+        widthPt as DataTableProps<DataTableValueArray>['pt'],
       )}
       // O comparador do `BodyCell` compara DADO, não função: `defaultKeysToCompare`
       // lista `rowData` e `field` e não lista `body`
