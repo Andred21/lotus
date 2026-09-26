@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: cicd-host-alinhado-ao-sha
 active_work_item: cicd-host-alinhado-ao-sha
-workflow_state: reviewing
-next_owner: claude
-next_action: review_active_work_item
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
 active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
 context_packet: null
-blocker: null
+blocker: "review do item 31 (2026-09-26) devolveu 2 achados aguardando o João — Q-1 🟡 catraca da razão orçamento/timeout ignora o ORCAMENTO_LEITURA novo (sonda 90→600, soma 1440s > 1200s do job, suíte verde); Q-2 🟢 filtro de chaves do .env imprime o prefixo de linha de continuação de valor multilinha. Risco baixo (CI/CD fora dos domínios §5, executor claude); Codex MCP fora do ar, sem revisão independente"
 lanes:
   lane-a:
     active_feature: null
@@ -30,16 +30,16 @@ lanes:
   lane-b:
     active_feature: cicd-host-alinhado-ao-sha
     active_work_item: cicd-host-alinhado-ao-sha   # item 31, promovido pelo Joao em 2026-09-26 (P-88 + P-87, P-86 condicional); Contexto: nao
-    workflow_state: reviewing
-    next_owner: claude
-    next_action: review_active_work_item
+    workflow_state: blocked
+    next_owner: joao
+    next_action: approve_review_findings
     tree: ../lotus-infra
     branch: cicd/host-alinhado-ao-sha   # aberta de origin/main@e5ac01a9 em 2026-09-26; ate af1526eb mesclada na PR #112 (fe6077df) e espelhada (3abd8136, em producao); os commits de doc seguintes vao com o fechamento. A anterior (cicd/promocao-deploy-e-rollback, item 12) mesclou inteira pelas PRs #108 a #111 (e5ac01a9)
     active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
     active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
     context_packet: null
-    blocker: null
-    resume_state: null
+    blocker: "review do item 31 (2026-09-26) devolveu 2 achados aguardando o João — Q-1 🟡 catraca da razão orçamento/timeout ignora o ORCAMENTO_LEITURA novo (sonda 90→600, soma 1440s > 1200s do job, suíte verde); Q-2 🟢 filtro de chaves do .env imprime o prefixo de linha de continuação de valor multilinha. Risco baixo (CI/CD fora dos domínios §5, executor claude); Codex MCP fora do ar, sem revisão independente"
+    resume_state: reviewing
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `reviewing` (execução concluída em 2026-09-26: Tasks 1–9, DoD provadas ao vivo — runs 36264643022 vermelho e 36265032582 verde; até `af1526eb` mesclada na PR #112, `fe6077df`) |
+| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `blocked` (achados do review; execução concluída em 2026-09-26: Tasks 1–9, DoD provadas ao vivo — runs 36264643022 vermelho e 36265032582 verde; até `af1526eb` mesclada na PR #112, `fe6077df`) |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
