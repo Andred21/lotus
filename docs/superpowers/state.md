@@ -3,14 +3,14 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-b
 active_feature: null
-active_work_item: cicd-promocao-deploy-e-rollback
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
-active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
-context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
+active_spec: null
+active_plan: null
+context_packet: null
 blocker: null
 lanes:
   lane-a:
@@ -29,21 +29,21 @@ lanes:
     last_completed_work_item: backend-config-e-conteudo-de-documento   # item 29, fechado em 2026-09-25; branch ainda nao mesclada
   lane-b:
     active_feature: null
-    active_work_item: cicd-promocao-deploy-e-rollback
-    workflow_state: executing
-    next_owner: claude
-    next_action: continue_active_plan
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../lotus-infra
-    branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; a homonima de 2026-08-26 estava inteira dentro da main (PR #105 mesclou o item 10 v2)
-    active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
-    active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
-    context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
+    branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; o item 12 fechou nela em 2026-09-26 e o que veio depois da PR #108 (tip 418bc5aa) NAO foi mesclado — integracao e passo proprio, com o Joao
+    active_spec: null
+    active_plan: null
+    context_packet: null
     blocker: null
     resume_state: null
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
-    last_completed_work_item: infra-producao-provisionamento-aws   # item 10 v2, fechado em 2026-09-20
+    last_completed_work_item: cicd-promocao-deploy-e-rollback   # item 12, fechado em 2026-09-26; branch ainda nao mesclada
   lane-c:
     active_feature: null
     active_work_item: null
@@ -58,9 +58,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: infra-producao-provisionamento-aws
-state_basis_commit: 9664faf5
-updated_at: 2026-09-25T23:00:00-03:00
+last_completed_work_item: cicd-promocao-deploy-e-rollback
+state_basis_commit: 35784d9f
+updated_at: 2026-09-26T04:50:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,12 +160,12 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-25
+## Ocupação corrente — 2026-09-26
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `executing` |
+| `lane-b` | — (item 12 `cicd-promocao-deploy-e-rollback` **fechado em 2026-09-26**) | — | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`; a PR #108 mesclou até `418bc5aa`, e as provas do botão, o review e o fechamento **não estão mesclados**) | `idle` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
@@ -176,93 +176,6 @@ disjuntas, colisão mínima de arquivos:
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
 
-**A `lane-b` recebeu o item 12 em 2026-09-20** — `cicd-promocao-deploy-e-rollback`, promovido
-explicitamente pelo João com a lane em `idle`, na mesma sessão em que o item 10 v2 fechou e mesclou.
-É a continuação direta do 11 e do 20: o 11 constrói o artefato imutável por SHA, o 20 provou que o
-par do GHCR puxa e executa, o 10 provisionou o host — e o 12 promove esse artefato para a produção
-que agora existe, com aprovação, health e rollback. Nasce em **`context_required`** (`Contexto: sim`
-na fila).
-
-**O packet de 2026-08-26 não servia, e por isso a lane passou por `context_required` antes de
-planejar.** `context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md` estava em
-`status: blocked`, e o gatilho de staleness que ele próprio declara (*"um alvo AWS real ser
-provisionado"*) **venceu em 2026-09-04**: o motivo do bloqueio era não haver destino de deploy, e o
-item 10 criou o destino. `status: blocked` nunca autoriza prosseguir (§6 do `/planejar-bloco`).
-
-**O packet novo é `context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md`**, gerado pelo
-Codex sob a skill `lotus-context-packet` em `base_commit ba22ddce`, `status: partial`,
-`RECOMMENDED_TRANSITION: ready_for_planning`. Validado pelo caller: markers exatos, frontmatter
-completo, 7 key facts (teto 8), 659 palavras de corpo (teto 1.200), as quatro fontes `unavailable`
-com evidência registrada. Ele **desfaz a premissa central da ficha de 2026-08-26**: o release
-deixou de ser o par `app`+`web` e passou a ser o **trio** `lotus-app`, `lotus-web` e
-`lotus-clamav` sob o mesmo SHA corporativo, e o `deploy/bin/deploy.sh` já cobre
-`pull → migrate → up → health → digests → CURRENT_SHA`. O que falta ao 12 é a **promoção remota
-governada** e o **rollback auditável** — hoje só existe `CURRENT_SHA`, sem registro do anterior.
-
-**Duas fontes externas ficaram fora, e as duas estão declaradas como limitação do brainstorming.**
-O `GITHUB-CORP` (`Gatika-CL/lotus`) devolveu **404 medido nesta rodada**, não copiado do packet
-velho — Environment, secrets e branch protection do corporativo seguem ilegíveis pelo conector, e o
-planejamento tem de prever *readback* em vez de presumir proteção. Os **três documentos do Drive**
-(`10eFmpqDTKL4wfWsJW-Rr7dDuBkb1RtaI`, `14Q_wL6G6acSCUaMLIr9BO2blqiGrPMGw`,
-`1L8vq7Pp1xFBSvzyISg5sw6SVVihzSR5l`) falharam com `user cancelled MCP tool call` nas sete
-chamadas: o conector do Drive exige consentimento interativo que a invocação headless do Codex não
-tem. **É limitação do arranjo, não da fonte** — Notion e GitHub responderam na mesma sessão —, e o
-Drive é planejamento canônico (`CLAUDE.md` §3). A lacuna se fecha no brainstorming, com a consulta
-feita pelo lado que tem o conector interativo; o packet, que é o que precede Drive/Notion/Figma, já
-existe.
-
-**As duas lacunas do packet fecharam no brainstorming, e nenhuma virou suposição.** Os três
-documentos do Drive foram lidos pelo conector desta sessão: o `decisao-stack.md` canônico ainda
-manda *"deploy reproduzível: script (git pull → rebuild → restart). Manual via SSH no início;
-GitHub Actions quando incomodar. NÃO montar pipeline completo no dia 1. `[FASE 2]`"* — texto
-**vencido**, e o ADR-14 ganha emenda datada dentro do bloco, sem que o original se apague. O
-`GITHUB-CORP` fechou por medição direta: `Gatika-CL/lotus` é **privado em organização free** e
-`Andred21/lotus` é **público**; **nenhum dos dois tem Environment configurado**, e plano free em
-repositório privado não oferece Environment, protection rule nem environment secret — a mesma raiz
-da **P-62**. É esse fato que decide onde mora o botão de promoção.
-
-**O brainstorming travou quatro decisões e a spec está escrita.** Transporte por **SSM Session
-Manager com OIDC** — a Actions assume role federada e chama `ssm send-command`, sem inbound novo no
-SG e sem chave estática. Botão no **corporativo, sem Environment**, compensado por acesso de escrita,
-input de confirmação, `concurrency` de grupo único sem cancelamento e log com ator e SHA — menos que
-um Environment, e registrado como tal, extensão da **P-62**. Rollback com **dump pré-deploy mais
-delta de migrations num ledger `releases.jsonl` append-only**, e **recusa** do `deploy.sh` quando o
-banco está à frente da imagem alvo, apontando a chave exata do dump. Lado AWS como **script
-versionado e idempotente com readback**, que o João roda e a sessão confere — não console, não IaC.
-
-**Achado de lição 19 que o bloco tem de pagar:** `deploy/bin/deploy.sh` e
-`.github/workflows/ci.yml` **não têm catraca nenhuma hoje**, embora a lição 19 já liste
-`deploy/bin/*.sh` entre os pares guardados. Glob na lição não é asserção no arquivo, e o bloco
-entrega os dois testes junto com o que mexe neles.
-
-**O plano está escrito e a lane vai a `ready_for_execution`.**
-`plans/2026-09-21-cicd-promocao-deploy-e-rollback.md`, **doze tasks**, `executor: claude`. As tasks
-1 a 4 crescem o `deploy/bin/deploy.sh` em quatro camadas, nessa ordem (cadeado e `CURRENT_SHA`
-atômico, gate de schema, chave do dump no `backup-db.sh`, dump e ledger); a 5 e a 6 escrevem o
-workflow e o script de IAM; a 7 é doc. **As tasks 8, 9, 10 e 12 têm execução do João** — escrita na
-conta AWS e no host de produção não passa pela sessão, que lê a saída, confere contra o esperado e
-escreve a evidência em `audits/2026-09-21-cicd-promocao-deploy-e-rollback.md`.
-
-**A task 11 mescla na `main` e espelha ANTES das provas do botão, e isso é imposição de
-plataforma, não preferência:** `workflow_dispatch` só existe quando o arquivo está na branch
-default, e a única via até `Gatika-CL/lotus` é o `scripts/espelhar-corporativo.sh`. Por isso todas as
-provas que dão para fazer por SSH — ledger, cadeado, dump, rollback limpo e rollback recusado —
-ficam nas tasks 9 e 10, antes da integração. Há precedente na mesma lane: o item 20 também mesclou
-e espelhou no meio do bloco.
-
-**A branch e o espelho.** `cicd/promocao-deploy-e-rollback` foi **recriada** de
-`origin/main@cff022d4` — o tip que já traz o item 10 v2 mesclado (PR #105). A homônima de 2026-08-26
-apontava para `10030c65` e estava **inteira dentro da `main`**, então mover o rótulo não descartou
-commit nenhum. O espelho do topo já apontava para `lane-b` e foi escrito **nesta árvore**, fora do
-main tree: é a **P-55**, pelo mesmo precedente de 2026-08-24 e de 2026-08-26 (`655b9796`), e a ficha
-segue aberta aguardando decisão do João.
-
-**Divergências de Git observadas na promoção, nenhuma da `lane-b` e nenhuma tratada aqui:** o `main`
-local (`../lotus`) está 4 commits à frente e 21 atrás de `origin/main`, e o worktree `../fix-frontend`
-está em `refactor/frontend-revisao-ui-f3` enquanto a `lane-c` registra
-`refactor/frontend-arrumacao-de-testes` com o item 27 fechado. As duas ficam registradas para quem
-for mexer nessas lanes.
-
 ## Itens fechados — ponteiro, não narrativa
 
 O que cada bloco **entregou** está em `historico/progress.md`, uma linha com plano, spec, packet e
@@ -271,11 +184,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-26 | `cicd-promocao-deploy-e-rollback` (abre a **P-86** e a **P-87**, esta com o gatilho disparado pelo próprio review e não pago; emenda a **P-62** com o botão sem Environment; nascem `.github/workflows/deploy.yml`, `deploy/aws/criar-oidc-e-role.sh`, o ledger `releases.jsonl`, o gate de schema e o cadeado do `deploy.sh`, e as catracas `workflow-deploy`, `deploy-sh`, `backup-db` e `criar-oidc-role`; ADR-14 ganha emenda datada e a lição 19 a regra da sonda que apaga o exit) | Item 12 da fila |
 | 2026-09-25 | `backend-config-e-conteudo-de-documento` (fecha a **P-59** e a **P-79** por mecanismo e a **P-75** por veredito escrito; abre a **P-85**; dispara sem pagar, pela segunda vez, a **P-53**; nascem `App\Shared\Support\FusoDoNegocio`, `Certification\Services\CertificateValidationUrl` e `ValidacaoDeCertificadoNaoConfigurada`, e as catracas `DataDeCalendarioTest` e `FusoDeArmazenamentoTest`; `config/app.php` fica em `UTC` literal por decisão escrita) | Item 29 da fila |
 | 2026-09-20 | `harness-hooks-de-guarda` (fecha a **P-82**; abre a **P-83** — sete decisões de política dos guardas que só existiam no ledger gitignorado — e a **P-84** — o harness não existe em doc versionado; nascem `.claude/settings.json`, `.claude/hooks/` com os cinco guardas e `.claude/tests/` com sete arquivos) | Item 28 da fila |
 | 2026-09-20 | `infra-producao-provisionamento-aws` (item 10, **v2** — replanejado do zero; a v1 e a R5 foram descartadas para `archive/`). Os sete DoD fecharam, o sétimo pelo **ramo ficha** que a Task 19 prevê. Fecha a **P-58**; abre a **P-77**, a **P-78**, a **P-79** e — no próprio gate de fechamento, por decisão do João de adiar — a **P-80** (custo) e a **P-81** (access key); **dispara a `P-05` sem pagar** (a produção subiu com as 30 migrations não consolidadas). Nascem `deploy/bin/verificar-backup.sh`, `deploy/nginx/tls.conf`, `docker-compose.prod-tls.yml`, `deploy/aws/user-data.sh` e o runbook `deploy/aws/README.md`; o ADR-09 ganha a revisão 2026-09 e a lição 19 é emendada pela terceira ocorrência | Item 10 da fila |
 | 2026-09-04 | `dominio-decisoes-de-rbac-e-semantica` (fecha as quatro fichas de decisão `D-09`, `D-10`, `D-11` e `D-16`; nenhuma pendência nasce ou fecha, mas **dispara sem pagar** os gatilhos da `P-51` e da `P-53`; nascem `RoleOptionData`, `StudentClientOptionData`, `UmContatoPrincipal` e `DeleteClientAddressAction`) | Item 22 da fila |
-| 2026-09-04 | `frontend-arrumacao-de-testes` (fecha a **P-58**; nenhuma pendência nasce; nascem `test.projects` no `vite.config.ts`, `src/shared/testing/providers.tsx` e a catraca `QUERY_CLIENT_A_MAO`) | Item 27 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com

@@ -639,6 +639,19 @@ manter como está) e o bloco não mudou visibilidade nem protection. Quando prot
 couber, os required checks são **cinco**: `audit-dev` decide desde 2026-08-29 (D1 da spec do item
 20) — o `image` já depende dele.
 
+**Emenda de 2026-09-26 (bloco `cicd-promocao-deploy-e-rollback`, item 12).** A mesma raiz tira da
+promoção o **Environment**: plano free em repositório privado não oferece Environment, required
+reviewer nem environment secret, e `Gatika-CL/lotus` não tem nenhum (medido no brainstorming do
+item 12). O botão `.github/workflows/deploy.yml` mora no corporativo **sem Environment**, e a
+aprovação é a composição que a spec §4 descreve e a §12.1 declara mais fraca: só quem tem escrita no
+corporativo dispara `workflow_dispatch`; o input `confirmar` tem de ser exatamente `PROMOVER`; a
+`concurrency` é de grupo único e não cancela; o log leva ator e SHA, e o ledger `releases.jsonl` do
+host também. A guarda `if: github.repository == 'Gatika-CL/lotus'` impede o repositório público de
+promover — provada pelo run `36225909713`, `skipped` com zero passos
+([`../audits/2026-09-21-cicd-promocao-deploy-e-rollback.md`](../audits/2026-09-21-cicd-promocao-deploy-e-rollback.md),
+Task 12, Step 6). **Fecha junto com esta ficha:** quando a org virar Team, o job `promover` ganha
+`environment:` com required reviewer, e os dois secrets de deploy passam a ser do Environment.
+
 ## P-28 — o fundo do certificado não reproduz as cunhas nem separa a página 2
 
 **Gatilho:** fecha quando o fundo passar a distinguir página 1 das seguintes **e** as cunhas
@@ -1089,4 +1102,56 @@ fabricar um release-sonda (a migration inútil ficaria para sempre na história 
 está provado: o `backup-db.sh` publica a chave por `LOTUS_BACKUP_SAIDA` (Task 9), o deploy sem
 migration registra `"dump": null`, e o `deploy-sh.test.ts` assere o ramo do dump **por texto**
 (dump antes do `migrate`, só com `PENDENTES`) — não por execução. O ramo nunca rodou.
+
+## P-87 — o botão promove imagens, mas o host guarda compose, `tls.conf`, `.env` e os próprios scripts de `deploy/bin/` por cópia, e nada avisa quando eles ficam para trás
+
+**Bloco:** cicd-promocao-deploy-e-rollback (item 12) · **Quem decide:** João · **Gatilho:** o
+próximo commit que mudar `docker-compose.prod.yml`, `docker-compose.prod-tls.yml`,
+`deploy/nginx/tls.conf`, `deploy/aws/env.prod.example` ou `deploy/bin/*.sh`, ou o João escolher o
+mecanismo abaixo. Revisar em **2026-10-31**.
+
+Medido em 2026-09-26, antes do primeiro disparo do botão:
+- o host rodava o compose do `db8f8736`, sem o healthcheck do clamav que olha a idade da base
+  (`f9b56707`, Q-9);
+- o overlay e o `tls.conf` eram os do `53ca6ce7`, sem a renovação (Q-6) e sem a isenção do `/up`
+  (Q-1);
+- o `.env` não tinha 10 das 40 chaves do molde (Q-2). Sem `APP_LOCALE`, a produção respondia em
+  `en`.
+
+As três correções vieram do review do item 10, em 2026-09-20, e nenhuma chegou ao host em seis
+dias. O runbook §7 só instala esses arquivos quando o host nasce, e o `deploy.sh` — que o botão
+invoca — promove **imagens** por SHA. Nada compara o que o host guarda com o que o SHA promovido
+espera, e um rollback herda os arquivos do host, não os do SHA alvo. Nesta execução o João
+sincronizou tudo à mão (audit do item 12, "Antes do botão"), mas a causa segue aberta: o próximo
+desvio passa do mesmo jeito.
+
+Direções, para o João escolher:
+
+- (a) **Detectar:** a imagem `app` carrega os hashes dos arquivos de compose e do `tls.conf`, e os
+  nomes das chaves do molde. O gate do `deploy.sh` compara com o host, como já faz com as
+  migrations. O host continua sendo a fonte.
+- (b) **Entregar:** o botão manda os arquivos de compose e o `tls.conf` pelo próprio SSM antes do
+  `deploy.sh`, e o SHA vira a fonte. O `.env` não tem como ir assim, porque tem segredo; dele só
+  vale conferir os nomes.
+- (c) **Procedimento:** a §8 do runbook ganha o passo "antes de promover, confira a §7", e o risco
+  fica aceito por escrito.
+
+**Emenda de 2026-09-26 (review do item 12, Q-4).** A ficha nasceu sem `deploy/bin/*.sh`, que é o
+caso mais grave. O botão não leva o `deploy.sh`: ele executa a cópia que está no host. O gate, o
+ledger e o dump deste bloco chegaram lá porque o João reinstalou o script à mão ("Antes do botão"
+no audit). Uma correção desses scripts pode entrar na `main` e nunca rodar em produção.
+
+O gatilho já disparou. As correções do review mudaram o `deploy.sh`: agora ele grava
+`schema_a_frente` e passa o rótulo do dump. Também mudaram o `backup-db.sh`, cuja chave agora vai
+até o segundo e aceita rótulo. **Depois do merge, os dois precisam ser reinstalados pela §7 do
+runbook antes do próximo disparo do botão.** Enquanto isso não acontecer, o host continua com a
+versão anterior. Nada quebra, mas o escape não deixa rastro, e o dump do deploy pode colidir com o
+do cron.
+
+As direções mudam assim:
+
+- Em (a), o `deploy.sh` não consegue conferir a si mesmo. Uma cópia velha não tem a conferência
+  nova. Para os scripts, quem detecta é o workflow: ele pede o `sha256sum` de `/opt/lotus/bin/*.sh`
+  por SSM e compara com o SHA promovido.
+- Em (b), os scripts entram no pacote que o SSM entrega, junto com o compose e o `tls.conf`.
 

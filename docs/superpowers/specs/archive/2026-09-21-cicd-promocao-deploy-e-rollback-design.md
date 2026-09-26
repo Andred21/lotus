@@ -157,6 +157,18 @@ evento. Duas linhas por tentativa, de propósito:
 `CURRENT_SHA` **continua existindo** — o runbook §8 e o costume do João leem ele — e passa a ser
 escrito por `mv` de temporário no mesmo diretório, que é atômico, em vez de redirecionamento.
 
+**Emenda de 2026-09-26 (review Q-3 e Q-1, aprovadas pelo João):**
+
+- A linha `inicio` ganha `"schema_a_frente":[…]`: é `APLICADAS \ CONHECIDAS` da §6. A lista só
+  fica cheia quando o escape foi usado, porque sem ele o gate já saiu com 4. No caso normal ela sai
+  vazia, pela mesma regra do `"dump": null`: a ausência é declarada, não omitida. Sem o campo, o
+  escape só aparecia no stderr, e a linha ficava idêntica à de um deploy comum.
+- A busca do dump que precede uma migration ignora essa lista. Ela nomeia migrations que a
+  tentativa não introduziu.
+- O restore do runbook §8.1.1 acrescenta ao ledger uma linha `{"evento":"restore",…}`, escrita pelo
+  operador, com o dump carregado e a cópia do banco descartado. O `deploy.sh` não escreve essa
+  linha e a busca do dump não a lê.
+
 ## 6. O gate de compatibilidade de schema
 
 O `deploy.sh` passa a medir dois conjuntos **antes** de qualquer escrita:
@@ -196,6 +208,12 @@ tem de provar que as duas guardas (piso de 10 KiB no bruto, rodapé do `mysqldum
 do envio.
 
 Falha do backup **aborta o deploy**. Promover sem a evidência de rollback é promover sem rede.
+
+**Emenda de 2026-09-26 (review Q-5, aprovada pelo João):** a chave do dump ia só até o minuto. Um
+deploy com migration e o cron no mesmo minuto gravavam no mesmo objeto. O versioning guardava o
+primeiro como versão noncurrent, e a chave anotada no ledger passava a abrir o outro dump, sem
+aviso. Agora a chave vai até o segundo e aceita um rótulo opcional, `LOTUS_BACKUP_ROTULO`
+(`[a-z0-9-]`). O `deploy.sh` passa `pre-deploy-<sha de 12>`, e o cron não passa nada.
 
 ## 8. Serialização, duas camadas
 
@@ -290,6 +308,13 @@ o `deploy.sh` tivesse catraca — glob na lição não é catraca no arquivo.
    que o dump vem antes e que a falha dele aborta.
 5. **O ledger vive no disco do host.** Se o EBS morrer, o registro morre junto. Aceito: os dumps
    estão no S3 e o histórico de promoção também existe no log das Actions.
+6. **A `lotus-deploy` roda qualquer comando no host, como root.** *(Emenda de 2026-09-26, review
+   Q-6.)* A política restringe o alvo a UMA instância e UM documento. Mas esse documento é o
+   `AWS-RunShellScript`, e o comentário do `criar-oidc-e-role.sh` dizia que a role só mandava "UM
+   comando". O poder não é novo: quem escreve na `main` já leva código para a produção, e a `main`
+   não tem protection (P-62). Para estreitar, é preciso um documento SSM próprio, com o `sha`
+   validado por `allowedPattern`. Isso troca o documento que o workflow chama e exige rodar o
+   script de novo na conta. Não entra neste bloco.
 
 ## 13. Definition of Done — comportamento provado
 

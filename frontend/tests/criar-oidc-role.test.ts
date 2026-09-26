@@ -77,9 +77,16 @@ describe('deploy/aws/criar-oidc-e-role.sh', () => {
   })
 
   it('fixa a trust na main do repositório corporativo', () => {
-    // O único literal de que a trust inteira depende; trocá-lo falha fechado,
-    // mas falha no lugar errado — nenhum token do GitHub casaria.
+    // Um dos dois literais de que a trust inteira depende; trocá-lo falha
+    // fechado, mas falha no lugar errado — nenhum token do GitHub casaria.
     expect(semComentarios).toContain('EMISSOR=token.actions.githubusercontent.com')
+    // O outro. Repositório criado depois de 2026-07-15 emite o `sub` imutável
+    // do GitHub, com os IDs do dono e do repositório (`repo:DONO@ID/REPO@ID:…`),
+    // e o corporativo nasceu em 2026-08-25. Só com os nomes, nenhum token dele
+    // casa. Medido em 2026-09-26 no `sub_claim_prefix` da API de OIDC do repo.
+    expect(semComentarios).toMatch(
+      /^REPO="\$\{LOTUS_REPO:-Gatika-CL@310231788\/lotus@1345572200\}"$/m,
+    )
     const trust = documento('trust')
     expect(trust.Statement).toHaveLength(1)
     const statement = trust.Statement[0]
