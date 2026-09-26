@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ArchiveSwitch, FormErrorBanner, InlineLoadState } from '@shared/ui'
+import { FormErrorBanner, InlineLoadState } from '@shared/ui'
 import { loadMessage } from '@shared/lib'
 import type { ArchiveMode } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
@@ -10,7 +10,7 @@ import { ArchivedQuotesList, type QuoteRow as ArchivedRow } from './ArchivedQuot
 
 export function QuotesList({
   quotes, onEdit, onRemove, onApprove, onReject,
-  mode, onModeChange, archived, onRestore,
+  mode, archived, onRestore,
 }: {
   quotes: QuoteData[]
   onEdit?: (q: QuoteData) => void
@@ -19,7 +19,6 @@ export function QuotesList({
   onReject?: (q: QuoteData) => void
   /** Arquivados da cotação é visão LOCAL desta lista, não da página (spec D5). */
   mode: ArchiveMode
-  onModeChange: (mode: ArchiveMode) => void
   archived: {
     items: ArchivedRow[]
     loading: boolean
@@ -41,12 +40,6 @@ export function QuotesList({
   const visiveis = mode === 'archived' ? archived.items : quotes
   const nameLost = courses.isError && visiveis.some((q) => !courses.hasCourse(q.course_id))
 
-  const cabecalho = (
-    <div className="flex justify-end px-4 pt-4">
-      <ArchiveSwitch value={mode} onChange={onModeChange} />
-    </div>
-  )
-
   /* Falha do GET de cursos NÃO esconde as cotações (D2): o que ela explica é o
    * `—` no lugar do nome. Erro de mutação de arquivo é outra categoria e vive
    * nos banners da lista ativa.
@@ -65,7 +58,6 @@ export function QuotesList({
   if (arquivados) {
     return (
       <div>
-        {cabecalho}
         <div className="m-4 empty:m-0">{avisoDeNome}</div>
         <ArchivedQuotesList
           quotes={archived.items}
@@ -83,7 +75,6 @@ export function QuotesList({
   if (quotes.length === 0) {
     return (
       <div>
-        {cabecalho}
         <p className="p-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('budget.noQuotes')}</p>
       </div>
     )
@@ -91,7 +82,6 @@ export function QuotesList({
 
   return (
     <div>
-      {cabecalho}
       <div className="m-4 empty:m-0">
         <FormErrorBanner message={files.fileError} />
         {files.sizeError && <FormErrorBanner message={files.sizeError} />}

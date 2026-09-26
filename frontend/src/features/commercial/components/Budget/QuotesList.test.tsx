@@ -51,7 +51,6 @@ const arquivadoVazio = {
 }
 const PROPS_ARQUIVADOS = {
   mode: 'active' as const,
-  onModeChange: () => {},
   archived: arquivadoVazio,
   onRestore: () => {},
 }
@@ -90,21 +89,9 @@ describe('QuotesList sob falha do GET de cursos', () => {
   })
 })
 
-it('mostra o switch de arquivados mesmo sem cotação ativa', () => {
-  render(
-    <QuotesList
-      quotes={[]}
-      mode="active"
-      onModeChange={() => {}}
-      archived={arquivadoVazio}
-      onRestore={() => {}}
-    />,
-  )
-
-  // `t` devolve a própria chave neste arquivo (mock do topo) — mesma convenção
-  // do resto do repo (ver `BudgetDetailPage.test.tsx`): o que se prova é QUE
-  // chave titula o botão, não o texto em espanhol que só existe em runtime real.
-  expect(screen.getByRole('button', { name: /archive\.archived/i })).toBeTruthy()
+it('a lista de cotações não desenha régua própria para o alternador', () => {
+  const { container } = render(<QuotesList quotes={[COTACAO]} {...PROPS_ARQUIVADOS} />)
+  expect(container.querySelector('.justify-end.px-4.pt-4')).toBeNull()
 })
 
 /** f1 UI-02 remedida na run 5 de 2026-08-30: o par saía 40px (Rechazar,
