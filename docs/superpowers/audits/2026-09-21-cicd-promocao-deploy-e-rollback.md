@@ -177,7 +177,7 @@ contra o GHCR corporativo: o `a5fc92bb` é o **primeiro** SHA com o trio; `683e6
 repositórios, passa das 30 migrations que a produção tem. Não havia como "promover um SHA com
 migration a mais" (Step 3). Decisão do João: provar a recusa com uma linha-sentinela na tabela
 `migrations` — o gate lê a tabela literalmente —, e levar a metade do DoD 6 que exige migration
-real para a **P-82**. Emenda registrada no fim do plano.
+real para a **P-85**. Emenda registrada no fim do plano.
 
 Executado pelo João, por SSH, com `docker exec -i lotus-mysql-1 mysql` recebendo o SQL por stdin:
 

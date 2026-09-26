@@ -23,6 +23,85 @@
 
 ---
 
+## Fechado em 2026-09-20 — `harness-hooks-de-guarda` (item 28)
+
+**A linha da tabela de ocupação, no dia do fechamento:**
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | `harness-hooks-de-guarda` (item 28) | Harness | `../lotus-harness` | `chore/harness-hooks-de-guarda` | `executing` |
+
+**O bloco da lane no frontmatter, no dia do fechamento:**
+
+```yaml
+  lane-a:
+    active_feature: null
+    active_work_item: harness-hooks-de-guarda
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item   # /revisar-sprint em 2026-09-20 sobre 4dba322b..HEAD: Q-1..Q-5 aprovados pelo Joao e corrigidos com asercao no mesmo commit; Q-6 virou a pendencia P-82 (nasceu P-77; renumerada na integracao, porque o item 10 v2 fechou a mesma faixa no mesmo dia e mesclou antes, pela PR #105)
+    tree: ../lotus-harness
+    branch: chore/harness-hooks-de-guarda   # aberta de main@4dba322b em 2026-09-20 (a origin/main esta em 618f390a; os dois commits a mais sao a spec e o plano DESTE bloco, e sem eles a arvore nao teria nem o plano nem um state.md que conhece o item 28). Worktree novo, e nao o main tree, porque o guard-main que este bloco cria tem a main como SUJEITO
+    active_spec: docs/superpowers/specs/2026-09-20-harness-hooks-de-guarda-design.md   # design aprovado em 2026-09-20
+    active_plan: docs/superpowers/plans/2026-09-20-harness-hooks-de-guarda.md   # 10 tasks; handoff declara executor: claude
+    context_packet: null   # Contexto: nao na ficha do 28 — as fontes sao o harness lido e o proprio repositorio
+    blocker: null
+    resume_state: null
+    last_completed_work_item: dominio-decisoes-de-rbac-e-semantica   # item 22, fechado em 2026-09-04; a PR #104 MESCLOU em origin/main@618f390a
+```
+
+**Este bloco não acumulou narrativa em prosa no `state.md`** — nasceu, executou, foi revisado e
+fechou no mesmo dia (2026-09-20), e os comentários de linha do YAML acima são todo o registro que o
+`state.md` chegou a ter dele. Para a entrada não ficar oca, o que os comentários não dizem:
+
+O item 28 assumiu a `lane-a` em 2026-09-20, promovido explicitamente pelo João com a lane em `idle`.
+`Contexto: não` na fila, então nasceu direto em `ready_for_planning`. A fonte é o harness do
+`Ela-Decora/ElaDecora-Brain`, lido a pedido do João; o escopo foi **portar para bash** os cinco
+hooks de lá — portar é reescrever, não copiar, e o original é PowerShell.
+
+**A branch saiu de `main@4dba322b`, e não de `origin/main@618f390a`, por necessidade:** os dois
+commits a mais são a spec e o plano deste próprio bloco, e sem eles a árvore não teria nem o plano
+nem um `state.md` que conhece o item 28. `618f390a` é ancestral de `4dba322b` e os dois
+intermediários são só documentação deste bloco — superconjunto estrito, mesma intenção.
+
+**Worktree nova, e não o main tree, de propósito:** o `guard-main` que este bloco cria tem a `main`
+como **sujeito**. Escrever na árvore que o guarda governa é o caso em que um erro se tranca sozinho
+do lado de fora.
+
+**O que o bloco entregou:** `guard-main` (nega escrita por `Edit`/`Write`/`NotebookEdit` quando a
+branch da árvore-alvo é `main`, fora de uma allowlist de 3 prefixos + 5 arquivos de raiz, e nega
+escrita cruzada entre árvores), `guard-main-shell` (o mesmo pela porta do Bash, com um classificador
+de linha de comando em allowlist por família), `guard-secrets` (`.env`/`.env.*` por nome, com
+exceção nominal do `.env.example`, e marca de credencial por conteúdo), `session-start` (injeta o
+inventário das lanes e a divergência entre o `state.md` da `main` e o de cada árvore) e
+`stop-verify` (cobra evidência de verificação quando a árvore tem arquivo modificado sob `backend/`,
+`frontend/` ou `.claude/`). Mais a suíte que os prova: sete arquivos, repositório git descartável por
+caso, cada hook provado **nos dois sentidos**.
+
+**Oito escapes foram achados depois da execução, nenhum por teste vermelho.** Três no review de
+branch — barra invertida ou aspas em posição de flag anulavam **toda** regra de flag longa
+(`git push --forc\e` era liberado, e o bash expande de volta); a família "leitura pura" tinha quatro
+primitivas de escrita (`sort -o`, `uniq IN OUT`, `tree -o`, script de `sed` com comando `w`); e campo
+vazio deslocava a linha inteira do `session-start`, porque o separador era TAB e TAB colapsa para o
+IFS — o efeito silencioso era a comparação de estado ser **pulada** justo para a lane cuja
+divergência motivou o hook. Cinco no `/revisar-sprint` — `|&`, `;&` e `;;&` não separavam comandos;
+`git -C`/`--git-dir`/`--work-tree` para fora da raiz combinados com `add`/`commit`/`push` viravam
+escrita na árvore de outra lane; o sentinela `main-tree` não era resolvido, e a lane em main tree
+ganhava um `FECHAMENTO INTERROMPIDO` falso; e a lane era reclamada por **branch**, o que fazia três
+das quatro árvores do repositório real aparecerem como órfãs. **A lição que se repete:** as famílias
+com allowlist resistiram; as denylists de flag e de separador é que caíram, quatro vezes.
+
+**O item 4 do DoD ficou declarado e não marcado na execução** — `settings.json` é lido na abertura
+da sessão, então o disparo dos hooks não se prova dentro da sessão que os escreve. **Foi provado no
+fechamento, por esta sessão**, a primeira aberta depois do commit que registrou os hooks: o
+`SessionStart` imprimiu o inventário das três lanes, marcou a `lane-a` como a desta sessão e acusou
+duas divergências de estado reais (`lane-b` e `lane-c`) mais uma árvore órfã — divergências que
+estavam invisíveis até aqui.
+
+**A branch não foi mesclada no fechamento.** Integração é serial e é passo próprio, com o João.
+
+---
+
 ## Fechado em 2026-09-20 — `infra-producao-provisionamento-aws` (item 10, v2)
 
 **A linha da tabela de ocupação, no dia do fechamento:**

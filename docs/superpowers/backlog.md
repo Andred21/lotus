@@ -63,7 +63,8 @@
   **candidato 6** do mesmo review de arquitetura com as três fichas de backend que nenhum bloco
   hospedava (`P-71`, `P-72` e a metade de comportamento da `P-60`) — **fechado em 2026-09-03**; e o
   `27` em 2026-09-03, do levantamento de frontend pedido pelo João, medido contra `main@24bf770c`
-  — **fechado em 2026-09-04**.
+  — **fechado em 2026-09-04**; e o `28` em 2026-09-20, aberto pelo João a partir da leitura do
+  harness do `Ela-Decora/ElaDecora-Brain` — **fechado em 2026-09-20**.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o

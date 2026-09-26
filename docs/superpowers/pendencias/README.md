@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (29)
+## Abertas (33)
 
 ### Agrupadas em bloco de execução
 
@@ -31,6 +31,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
+| P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | — | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
@@ -63,6 +64,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
+| P-83 | Sete decisões de política dos guardas (allowlist da `main` para `.github/`/`.githooks/`/`.codex/`/`.superpowers/`, `merge --ff-only`, o `docker/probe.env` real, os três caminhos do `stop-verify`, o motivo que ensina a alargar a allowlist, `git commit` sem `-m`) ficaram só no ledger, que é **gitignorado** | João | João decidir cada linha — a favor ou contra — e a decisão virar commit; revisar 2026-10-31 |
 | P-74 | O botão de severidade reprova AA no estado base do tema claro em quatro das cinco famílias (success 2,28:1, info 2,77:1, danger 3,76:1, help 3,96:1) — o `warning`, que a P-30 fechou, era a quarta pior | João | uma régua por estado, no molde do `describe` da P-30 em `frontend/tests/tone-ink.test.ts`, cobrir as cinco severidades nos três estados e todas passarem 4,5:1; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
@@ -76,7 +78,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-79 | A URL do QR do certificado sai de `FRONTEND_URL` (`CertificatePdfService.php:27`) — chave de infra usada como conteúdo de documento legal imutável; a regra operacional foi escrita no molde e no runbook, o remédio estrutural (chave própria) não | — | bloco de backend que tocar `CertificatePdfService`, `config/app.php` ou a rota de validação; revisar 2026-10-31 |
 | P-80 | A previsão de custo do mês é **35,74 USD** contra o teto de **30** da decisão D8, e o critério de resize da EC2 (`t4g.medium`, +9 USD/mês) está satisfeito — as duas decisões são a mesma conversa | João | decidir teto **e** resize juntos, com a decisão escrita na spec/ADR que a carrega; revisar 2026-10-31 |
 | P-81 | A access key `AKIA3B7BDINPPYESZA6T` do usuário `lotus-infra`, que provisionou toda a Fase B, continua ativa — a produção não a usa (instance profile), mas é credencial de longa duração sem uso corrente | João | `aws iam list-access-keys --user-name lotus-infra` não devolver mais a chave; revisar 2026-10-31 |
-| P-82 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade) | — | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
+| P-85 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade) | — | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
 | P-49 | Eixos **redator** e **turma** fechados em 2026-08-23 (`lockForWrite()` nos cinco escritores + catraca); resta a janela **cotação × orçamento** | João | bloco que tocar `RestoreQuoteAction`/`DeleteBudgetAction` e puder travar os dois lados; revisar 2026-10-31 |
 | P-51 | Default literal em DTO de entrada — o campo de **acesso** (`is_active`) fechou em 2026-08-23; restam **cinco** campos sem controle de acesso | João | bloco que tocar `UpdateClientAction`/`UpdateCourseAction`, `BudgetController::update` ou `CourseTemplateController::update`; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
@@ -91,9 +93,16 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (0)
 
-**Em rastro: nenhuma.** A **P-58** saiu neste fechamento (`infra-producao-provisionamento-aws`,
-2026-09-20), o primeiro posterior ao do bloco que a encerrou em 2026-09-04 — cumpriu a sprint de
-rastro. O durável está nos commits e na linha de entrega em
+**Em rastro:** a **P-82** — nascida `P-77` e renumerada na integração —, fechada em **2026-09-20**
+pelo `harness-hooks-de-guarda` (item 28), no fechamento do próprio bloco que a abriu, pelos **dois**
+lados do gatilho: a spec foi corrigida (§5.2, §9 e, de quebra, §5.3 e §11) e o `run-all.sh` ganhou o
+`trap` que a §9 prometia, provado nos dois sentidos. A ficha está em
+[`encerradas.md`](./encerradas.md) e sai no próximo fechamento posterior ao dela.
+
+**A P-58 saiu nos dois fechamentos de 2026-09-20** — o do `infra-producao-provisionamento-aws`
+(item 10 v2), que integrou primeiro, e o do `harness-hooks-de-guarda` (item 28) —, os primeiros
+posteriores ao do `frontend-arrumacao-de-testes` (item 27), que a encerrou em 2026-09-04 por
+mecanismo. O rastro durável está nos commits e na linha de entrega em
 [`../historico/progress.md`](../historico/progress.md).
 
 **O item 10 v2 abriu três fichas e disparou uma sem pagar.** Nasceram a **P-77** (registro A, com a
