@@ -89,3 +89,52 @@ sessão), antes e depois do run — idênticas:
 | `CURRENT_SHA` | `df30a6bdfbbf26f3b9fa9397eaeb9ff6071eb523` | idem |
 
 O botão recusou sem tocar o host: nenhuma linha nova no ledger, o release no ar é o mesmo.
+
+## Task 8 — verde ao vivo (DoD 5 e 6)
+
+**Reinstalação (o João, pela §7).** Árvore: o worktree, com `deploy/bin`, compose, overlay e
+`tls.conf` iguais a `origin/main` (`fe6077df4249c0b1ec0f392732e6e16faa6962e2`). Foram reinstalados os
+três `deploy/bin/*.sh` (`scp` para `/tmp`, `sudo mv` para `/opt/lotus/bin/`, `chmod +x` feito com
+`sudo sh -c`: o glob expandido pelo `ubuntu` não enxerga `/opt/lotus/bin`). Só o `deploy.sh` mudou de
+conteúdo; `backup-db.sh` e `verificar-backup.sh` voltaram com o mesmo hash. Dono dos três no host:
+`ubuntu:ubuntu`, modo `755`.
+
+**Conferência pré-botão.** Leitura do host (heredoc `LEITURA`, lido pelo João em 19:07Z) contra
+`git archive origin/main` como alvo e como `main`:
+
+| Caminho no host | sha256 (12 primeiros) |
+|---|---|
+| `docker-compose.prod.yml` | `734d2892b423` |
+| `docker-compose.prod-tls.yml` | `f3b1d0b86e70` |
+| `nginx/tls.conf` | `4e9a76e87d84` |
+| `bin/backup-db.sh` | `4d28a5273788` |
+| `bin/deploy.sh` | `84b2e1cbe6ad` (era `72fb8b358b52`) |
+| `bin/verificar-backup.sh` | `f5f6a2a6ca3e` |
+
+Chaves no `.env`: 40. Saída do script: `host alinhado ao SHA alvo`, `saida=0`.
+
+**Botão.** O João apertou com `3abd81364ac6946d9bfea38725a9f53f578c5068` e `PROMOVER`:
+[run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582),
+2026-09-26T19:08:58Z, conclusão `success`; todos os passos `success`, inclusive
+`O host esta alinhado ao SHA alvo` e `deploy.sh no host, por SSM`. No log:
+
+```
+host alinhado ao SHA alvo
+==> DEPLOY OK: 3abd81364ac6946d9bfea38725a9f53f578c5068
+estado final: Success
+```
+
+**Host depois** (lido pelo João):
+
+```
+{"ts":"2026-09-26T19:09:37Z","evento":"inicio","sha":"3abd81364ac6946d9bfea38725a9f53f578c5068","sha_anterior":"df30a6bdfbbf26f3b9fa9397eaeb9ff6071eb523","migrations":[],"schema_a_frente":[],"dump":null,"ator":"github:36265032582:Andred21"}
+{"ts":"2026-09-26T19:10:09Z","evento":"fim","sha":"3abd81364ac6946d9bfea38725a9f53f578c5068","resultado":"ok","etapa":"ok"}
+```
+
+- `CURRENT_SHA`: `3abd81364ac6946d9bfea38725a9f53f578c5068`.
+- `grep -c LOTUS_RELEASE_OWNER /opt/lotus/bin/deploy.sh`: `0`.
+- `curl http://18.230.53.197/up`: `200` (lido pela sessão).
+
+**P-86, ramo (b).** A linha `inicio` traz `"migrations":[]` e `"dump":null`, como a previsão da Task 6.
+A P-86 fica aberta com nota datada: o release `3abd8136…` não tinha migration nova; o dump segue sem
+deploy real.
