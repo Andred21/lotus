@@ -149,8 +149,8 @@ END LOTUS UI REVIEW REPORT
 |---|---|---|---|
 | UI-01 — nome de role aparece como slug cru ("redator" em português numa tela es-CL) | `C` | corrige aqui | `e3f09648` |
 | UI-02 — Usuarios e Roles rolam em 1024x768, coluna de ações cobre a última coluna de dado | `C` | corrige aqui | `db7a0920` |
-| UI-03 — régua de abas transborda 4px em 390x844 | `B` | ficha `D-*` (Task 10) | — |
-| UI-04 — rótulos de permissão expõem jargão interno (Flujo N, RN-02, soft delete) | `B` | ficha `D-*` (Task 10) | — |
+| UI-03 — régua de abas transborda 4px em 390x844 | `B` | corrige aqui (Task 8) | `f80b62de` |
+| UI-04 — rótulos de permissão expõem jargão interno (Flujo N, RN-02, soft delete) | `B` | ficha `D-71` | — |
 
 **UI-01** — `roleLabel(name, t)` (novo, `shared/lib/roles.ts`, ao lado de `displayRole`) devolve
 `t('roleName.<name>')` para os 3 roles de sistema (`superadmin`, `admin`, `redator`) e o nome cru
@@ -187,7 +187,16 @@ débito, e a forma já estava provada num irmão (`RedatoresTable`), o que o cri
 autoriza corrigir aqui. Nota deixada na ficha `D-65` para o item 23 não repetir `UsersTable` e
 `RolesTable` na varredura.
 
-**UI-03 e UI-04 — não corrigidos nesta run**, por triagem `B`/composição de UMA tela sem forma
-provada num irmão: destino é a ficha `D-*` que a Task 10 escreve.
+**UI-03 — corrigido pela Task 8, não por esta run:** o item 16 ligou `scrollable` na régua de abas de
+`AdministracionPage` com estes números (`f80b62de`). A tabela desta seção listava, por erro, "ficha
+`D-*` (Task 10)" como destino — corrigido acima; nenhuma ficha nasce daqui.
+
+**UI-04 — não corrigido nesta run**, por triagem `B`/composição de UMA tela sem forma provada num
+irmão: destino é a ficha `D-71` (`docs/superpowers/backlog.md`), escrita pela Task 10.
+
+**Dois follow-ups de review da Task 7, registrados aqui para o rastro ficar num lugar só:**
+`1b26b070` fez o guard de largura mínima da tabela vazia voltar a vencer o `pt` do chamador, e
+`b4102fd1` cobriu com teste o título do `RoleDialog` e as opções de role do `StaffUserDialog` — os
+dois nascidos da correção do UI-01 e do UI-02 acima.
 
 Zero `C` aberto ao fim desta run: 2 corrigidos (UI-01, UI-02).
