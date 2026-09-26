@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: cicd-promocao-deploy-e-rollback
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: review_active_work_item
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
 active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
@@ -30,9 +30,9 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: cicd-promocao-deploy-e-rollback
-    workflow_state: reviewing
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: review_active_work_item
+    next_action: close_active_work_item
     tree: ../lotus-infra
     branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; a homonima de 2026-08-26 estava inteira dentro da main (PR #105 mesclou o item 10 v2)
     active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `reviewing` (7 achados corrigidos; falta a lente Codex) |
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `ready_for_closure` (7 achados corrigidos em `19aeb734`; lente Codex dispensada pelo João) |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
