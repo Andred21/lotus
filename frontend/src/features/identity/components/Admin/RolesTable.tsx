@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, stickyActionsColumn,
-  reducedFloorTablePt,
+  useCollapsibleActionsColumn, reducedFloorTablePt,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
 import { roleLabel } from '@shared/lib'
@@ -23,6 +23,9 @@ export function RolesTable({
 }) {
   const { t } = useTranslation()
   const largura = roleWidths()
+  // Uma ação só, nada a colapsar: no telefone a coluna encolhe para o botão e
+  // devolve ao nome a faixa que os 6rem comiam (Q-1 do review de 2026-09-26).
+  const colunaDeAcoes = useCollapsibleActionsColumn('6rem')
 
   // Sem busca nesta aba: só um vazio possível, o de "sem dado".
   const empty = (
@@ -65,7 +68,7 @@ export function RolesTable({
         />
         <AppColumn
           body={(r: RoleData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
-          style={stickyActionsColumn('6rem')}
+          style={stickyActionsColumn(colunaDeAcoes.width)}
         />
       </AppDataTable>
     </>

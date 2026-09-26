@@ -54,6 +54,7 @@
     "active": "Ativo",
     "inactive": "Inativo",
     "view": "Ver",
+    "moreActions": "Mais ações",
     "upload": "Enviar documento",
     "fileTooLarge": "O arquivo tem {{size}} e o máximo é {{limit}}.",
     "preview": "Ver",

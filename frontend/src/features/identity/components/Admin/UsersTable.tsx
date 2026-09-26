@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, reducedFloorTablePt } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, reducedFloorTablePt } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 import { formatDateTime, roleLabel, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
@@ -36,6 +36,9 @@ export function UsersTable({
   const archived = mode === 'archived'
   const largura = userWidths(archived)
   const table = useTableFilter(users, (u) => [u.name, u.email])
+  // Abaixo de `sm` arquivar e ver colapsam num menu e a coluna encolhe junto —
+  // em 390x844 ela cobria o nome (Q-1 do review de 2026-09-26).
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : '9rem')
 
   return (
     <SearchableTableFrame
@@ -96,9 +99,10 @@ export function UsersTable({
             onView={onView}
             onArchive={onArchive}
             onRestore={onRestore}
+            collapsed={colunaDeAcoes.collapsed}
           />
         )}
-        style={stickyActionsColumn(archived ? '10rem' : '9rem')}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   )

@@ -54,6 +54,7 @@
     "active": "Active",
     "inactive": "Inactive",
     "view": "View",
+    "moreActions": "More actions",
     "upload": "Upload document",
     "fileTooLarge": "The file is {{size}} and the maximum is {{limit}}.",
     "preview": "View",
