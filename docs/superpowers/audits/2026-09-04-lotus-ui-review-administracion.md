@@ -44,7 +44,8 @@ Usuarios e Roles y permisos) · **Base:** `refactor/frontend-revisao-ui-f3` @ `8
     `fix-frontend`) tem um usuário só, `admin@lotus.cl`.
   - **`D-65`** (coluna de ações presa cobre a coluna de identidade em `390x844`) — reproduz nas duas
     tabelas desta tela (screens/10 e 11). É a mesma ficha que recebeu o UI-01 de Pessoas como
-    deferido; não vira achado novo.
+    deferido; não vira achado novo. **Corrigido depois, pelo review do bloco (Q-1, `b5d3e5be`)** —
+    ver a última nota da §3.
   - **`P-74`** (severidade reprova AA no claro) — nenhum botão de severidade na jornada além dos
     primários; não avaliada aqui.
 - Estados não testados, por exigirem mock, falha fabricada ou escrita: `loading`, erro de carga,
@@ -200,3 +201,20 @@ irmão: destino é a ficha `D-71` (`docs/superpowers/backlog.md`), escrita pela 
 dois nascidos da correção do UI-01 e do UI-02 acima.
 
 Zero `C` aberto ao fim desta run: 2 corrigidos (UI-01, UI-02).
+
+**Mobile de Usuarios e Roles — corrigido pelo review do bloco (Q-1, `b5d3e5be`).** O relatório
+marcou as duas tabelas em 390x844 como "Conhecido (D-65)", apoiado numa nota que o próprio bloco
+escreveu na `D-65` ao deferir o UI-01 de Pessoas — um `C` virando conhecido sem passar pelo João. O
+review de 2026-09-26 reabriu os dois e o João decidiu consertar aqui, junto com Pessoas: abaixo de
+`sm` as ações da linha colapsam num menu (`RowActions`) e a coluna presa encolhe para 4.5rem
+(`useCollapsibleActionsColumn`); o detalhe está na §3 de `2026-09-04-lotus-ui-review-personas.md`.
+Medido no navegador em 390x844, es-CL:
+
+| Tabela | Coluna presa | Nome coberto | Controle na linha |
+|---|---|---|---|
+| Usuarios | 144 → 72px | 29px → 0 | arquivar e ver → "Más acciones" |
+| Roles | 96 → 72px | 0 → 0 | "Ver" |
+
+Em Roles os 6rem **não** cobriam o nome — os rótulos traduzidos têm até 93px contra 164px à vista.
+A coluna encolhe por consistência com as irmãs e devolve folga, não por defeito medido. 1024x768 e
+1440x900 sem mudança (9rem e 6rem, ícones soltos).

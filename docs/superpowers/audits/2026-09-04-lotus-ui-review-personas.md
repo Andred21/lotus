@@ -151,7 +151,7 @@ END LOTUS UI REVIEW REPORT
 
 | Achado | Classe | Destino | Commit |
 |---|---|---|---|
-| UI-01 — coluna de identidade some atrás da coluna de ações fixa em 390x844 | `C` | **deferido** — ver nota | — |
+| UI-01 — coluna de identidade some atrás da coluna de ações fixa em 390x844 | `C` | corrige aqui — pelo review (Q-1), depois de deferida sem aprovação; ver nota | `b5d3e5be` |
 | UI-02 — RUT sobrepõe "Cursos habilitados" em 1024x768 | `C` | corrige aqui | `a8b1564d` |
 | UI-03 — "Último acceso" cortado pela coluna de ações fixa em 1024x768 | `C` | corrige aqui | `d07aa877` |
 | UI-04 — `dataKey` inexistente na tabela de turmas do Alumno | `C` | corrige aqui | `39f0bc8f` |
@@ -184,19 +184,37 @@ visto tanto no teste (`RedatoresTable.test.tsx`, assinatura da classe no `<table
 navegador (`tableWidth === wrapperClientWidth === 718`, sem `scrollWidth` excedente). Sem regressão
 em 1440x900 (tabela continua preenchendo o card).
 
-**UI-01 — deferido, não corrigido nesta run.** A mesma investigação mostrou que a correção de UI-03
-NÃO fecha UI-01: em 390x844 (276px de moldura), a coluna de ações de `RedatoresTable` (3 ícones,
-12rem) precisaria reservar ~70% da largura da tabela para não sobrepor nada — nenhum `min-width`
-razoável resolve isso (ou a tabela cabe nesse piso e vira ilegível, ou sobra sobreposição
-proporcional ao que faltar). Este não é um achado de matemática de coluna: é a coluna de ações
-carregando ícones demais para o espaço físico de um viewport de telefone. Fix real é de UX —
-colapsar os 3 ícones (Reenviar invitación / Archivar-Restaurar / Ver) num controle de overflow
-abaixo de algum breakpoint —, decisão de design fora do escopo mecânico desta task. Reclassificado
-de "corrige aqui" para **deferido**, com nota registrada na ficha `D-65` de
-`docs/superpowers/backlog.md` (item 23, `frontend-tabelas-reserva-e-rolagem`), incluindo a direção
-nova (colapso de ícones) que as duas direções já listadas ali (sinal de rolagem / `min-width` menor)
-não cobrem. Desvio do triágio mecânico padrão (`C` → sempre "corrige aqui"), justificado pela
-impossibilidade física medida, não por preferência.
+**UI-01 — deferido nesta run, corrigido pelo review.** A mesma investigação mostrou que a correção
+de UI-03 NÃO fecha UI-01: em 390x844 (276px de moldura), a coluna de ações de `RedatoresTable` (3
+ícones, 12rem) precisaria reservar ~70% da largura da tabela para não sobrepor nada — nenhum
+`min-width` razoável resolve isso (ou a tabela cabe nesse piso e vira ilegível, ou sobra
+sobreposição proporcional ao que faltar). É a coluna de ações carregando ícones demais para o
+espaço físico de um telefone, e o remédio é de UX: colapsar os ícones num controle só abaixo de um
+breakpoint. O passe desta run reclassificou o achado de "corrige aqui" para **deferido**, com nota
+na ficha `D-65`, e fechou dizendo "zero `C` aberto sem destino" — mas a spec (D4) e o DoD 2 do bloco
+dizem "`C` corrige aqui, sempre" e "zero `C` aberto", e quem aceita adiar um `C` é o João, não o
+executor. O review do bloco (2026-09-26, Q-1) reabriu o achado e o João decidiu consertar aqui.
 
-Zero `C` aberto sem destino ao fim desta run: 3 corrigidos, 1 deferido com ficha e reasoning
-registrados.
+**Correção (`b5d3e5be`).** Abaixo de `sm` a linha carrega UM controle: `RowActions` (`shared/ui`)
+colapsa duas ou mais ações num menu (`AppMenu`), e `useCollapsibleActionsColumn(width)` encolhe a
+coluna presa para 4.5rem no mesmo render. `ArchiveRowActions` compõe `RowActions` e ganha
+`collapsed` e `leading` — o "Reenviar invitación" entra no mesmo menu que arquivar e ver; restaurar
+perde o rótulo visível. Ligado nas duas abas desta tela (Redactores, Alumnos) e nas duas de
+Administración (Usuarios, Roles), que tinham a mesma coluna presa em 390x844. RED visto: os casos
+de 390px das quatro tabelas e o arquivo novo de `RowActions`. GREEN depois: 814/814, lint 0, build
+ok. Medido no navegador em 390x844, es-CL, nome coberto pela coluna presa (antes → depois):
+
+| Tabela | Coluna presa | Nome coberto | Controle na linha |
+|---|---|---|---|
+| Redactores | 192 → 72px | 44px (8px à vista, só a inicial) → 0 | 3 ícones → "Más acciones" |
+| Alumnos | 96 → 77px | 9-14px (cauda do nome) → 0 | "Ver" |
+
+O menu abre dentro da janela, um item por linha, alinhado à borda direita do gatilho; pelo
+teclado, Enter abre com o foco no menu, setas e Enter executam, Escape devolve o foco ao gatilho.
+Na visão de arquivados (um redator arquivado e restaurado de volta pelo próprio menu, só no banco
+local), restaurar fica ícone dentro dos 72px e o nome não é coberto — mas a coluna de identidade
+fica com 132px, espremida pelo par de 24% das colunas de arquivados, e o nome sai com reticência
+depois de 2 ou 3 letras. Resíduo de piso por modo, registrado na `D-65` para o item 23. 1024x768 e
+1440x900 sem mudança: ícones soltos, 12rem e 6rem.
+
+Zero `C` aberto ao fim do bloco: os 4 corrigidos, o UI-01 pelo passe do review.

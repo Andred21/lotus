@@ -257,7 +257,7 @@ defeito de wrapper que nenhuma leitura de código tinha achado.
   medidas na fatia 3 (Task 8): Personas deu `[1119, 1119, false]` em 1440x900, `[718, 718, false]`
   em 1024x768 e `[276, 276, false]` em 390x844 — não transborda em viewport nenhum, sem a prop.
   Administración deu `[1134, 1134, false]` em 1440x900, `[718, 718, false]` em 1024x768 e
-  `[276, 280, true]` em 390x844 — transborda 4px só no viewport estreito (reconfirmado no
+  `[280, 276, true]` em 390x844 — transborda 4px só no viewport estreito (reconfirmado no
   navegador nesta fatia, antes de agir), e a prop foi ligada **só nela**;
 - a **`D-59`**, que é composição de UMA tela de Comercial;
 - os achados `C` de cada run se fecham no mesmo bloco, com medida; os `B` viram ficha `D-*` se não
@@ -289,10 +289,11 @@ presa come largura que as outras colunas já reservaram, e o efeito muda de tabe
 Duas direções a medir nas 12 tabelas, a 1024px: (a) sinal de rolagem no wrapper, para que a
 rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor onde a reserva não
 cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
-`RedatoresTable` já recebeu (b) como fix pontual em 2026-09-20 (item 16 fatia 3, UI-03) — ver o
-detalhe na ficha `D-65`, que também registra uma TERCEIRA direção (colapsar ícones de ação em
-overflow) para a tabela com 2+ ícones em viewport muito estreito, onde (a) e (b) sozinhas não
-fecham (390x844, UI-01 da mesma run, deferido).
+`RedatoresTable`, `UsersTable` e `RolesTable` já receberam (b) na fatia 3 do item 16, pelo valor
+nomeado `reducedFloorTablePt` (`AppDataTable/style.ts`). A ficha `D-65` registra ainda uma TERCEIRA
+direção, (c) colapsar as ações da linha num menu abaixo de `sm`, que (a) e (b) não cobrem em
+390x844 — **já aplicada** em Redactores, Alumnos, Usuarios e Roles pelo Q-1 do review daquela
+fatia (`b5d3e5be`). Nas outras oito, (c) é medição, não suposição.
 
 ---
 
@@ -451,24 +452,13 @@ ficam só como ponteiro, e a ficha delas é lá.
 > | 2026-08-31 | `D-60` | paga — **não** pelo hospedeiro que ela declarava: a f3 UI-03 do item 19 subiu o motivo do bloqueio para a linha do CTA com `aria-describedby` (`EmissionPanel.tsx:92-105`, `EmissionStudentsTable.tsx:100-101`) | item 19 |
 > | 2026-08-31 | `D-61` | **absorvida pela `D-67`** — mesmo defeito registrado duas vezes; a `D-61` fica como ID queimado | saneamento com o João |
 > | 2026-09-03 | `D-69` | paga — os quatro sítios de utility de paleta em `features/` morreram e a **partição `files: CATRACA_COR` foi removida**; a prova é o `pnpm lint` verde **sem** a lista, não o grep | item 25, Task 1 |
+> | 2026-09-26 | `D-59` | paga — o alternador Activos/Archivados de "Cotizaciones" subiu para o slot `actions` do `AppCardHeader` (`BudgetQuotesCard`) e a régua própria de 56px sumiu, medido nos três viewports (`f1220b1d`, teste em `eafd1aec`). A ficha seguiu aberta aqui até o Q-2 do review | fatia 3 do item 16 |
 > | 2026-09-26 | — (herança da Task 12 da fatia 1, nunca escrita) | **morta antes de nascer** — a recusa em espanhol fixo de `Turma.php:200` já virou `__('operation.turma.concluded_locked')` nos três locales; reconfirmado em `Turma.php:201` nesta leitura. Paga em 2026-08-30, junto com `D-07`/`D-18`/`D-36`/`D-38`/`D-58`, antes de a ficha ganhar nome | item 7 (reconfirmado pela Task 10 da fatia 3 do item 16) |
 >
 > **O que aqueles fechamentos deixaram aberto, e que não é débito:** cinco recusas literais fora de
 > `lang/` viraram a **P-71** e o 419 virou a **P-72** — as duas fechadas depois pelo item 26; a
 > legenda do `AppLineChart` fechou como **P-63** em 2026-09-01; e o item 25 abriu a **P-74**. Todas
 > em `pendencias/`.
-
-- **D-59 · O alternador Activos/Archivados do card "Cotizaciones" gasta uma linha própria** →
-  `frontend-revisao-ui-por-modulo` (item 16). UI-03 da run de Comercial de 2026-08-25
-  (`audits/2026-08-25-lotus-ui-review-comercial.md`), classe `B`. Em `/comercial/presupuestos/:id` a
-  linha `div.flex.justify-end.px-4.pt-4` (`QuotesList.tsx:45`, conferida viva em 2026-09-03) tem
-  1134px de largura e 56px de altura para carregar UM filho de 228px encostado à direita — 943px de
-  faixa vazia entre o cabeçalho "Cotizaciones 3" e a primeira cotação. Diferente das listas do
-  índice, este card não tem busca para ocupar o lado esquerdo da régua. O remédio provável é subir o
-  alternador para o slot `actions` do `AppCardHeader` (`AppCard.tsx:174`), que já existe; ficou de
-  fora da fatia 2 porque é composição de UMA tela e pede remedir o detalhe inteiro nos três
-  viewports. **DoD:** o card abre com o alternador na linha do cabeçalho e sem faixa vazia, medido
-  nos três viewports.
 
 - **D-65 · A reserva da coluna presa não é uma constante** → `frontend-tabelas-reserva-e-rolagem`
   (item 23). f3 UI-01: a reserva de `stickyActionsColumn` é em `rem` e as colunas são em %, sobre
@@ -487,29 +477,36 @@ ficam só como ponteiro, e a ficha delas é lá.
   de como `tableWidths()` reparte o % entre as colunas de dado (confirmado patchando a tabela viva
   com pesos diferentes: a sobreposição não mudou 1px). Corrigir `columnWidth.ts` não bastava por
   isso; a correção real é reduzir o `min-w` da TABELA. Aplicado como fix pontual (não a varredura das
-  12): `RedatoresTable` ganhou `pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}` via
-  `SearchableTableFrame` (que agora repassa `pt` ao `AppDataTable` por baixo — mecanismo novo,
-  reaproveitável pelas outras 11). Fecha UI-03 (1024x768, 718px de moldura: 672px cabe sem rolar).
+  12): `RedatoresTable` ganhou o piso de 42rem via `SearchableTableFrame` (que agora repassa `pt`
+  ao `AppDataTable` por baixo — mecanismo novo, reaproveitável pelas outras 11). Fecha UI-03 (1024x768, 718px de moldura: 672px cabe sem rolar).
   Quem fizer a varredura do item 23: `RedatoresTable` já está no piso reduzido, não repita.
 
   **Remedido em 2026-09-26, run de Administración (item 16 fatia 3, UI-02):** mesmo defeito, mesmo
-  fix pontual — `UsersTable` e `RolesTable` também ganharam `pt={{ table: { className:
-  'min-w-[42rem] table-fixed' } }}` (a primeira via `SearchableTableFrame`, a segunda direto no
-  `AppDataTable`, que já aceita `pt`). Medido em 1024x768: as duas foram de 718/768/768
+  fix pontual — `UsersTable` e `RolesTable` também ganharam o piso de 42rem (a primeira via
+  `SearchableTableFrame`, a segunda direto no `AppDataTable`, que já aceita `pt`). Medido em 1024x768: as duas foram de 718/768/768
   (wrapper/scrollWidth/tabela, com rolagem forçada e sobreposição) para 718/718/718 — "Último
   acceso" e "PERMISOS" saem inteiros. Sem regressão em 1440x900 (1134/1134/1134 nas duas). Quem
   fizer a varredura do item 23: `UsersTable` e `RolesTable`, como `RedatoresTable`, já estão no piso
-  reduzido — não repita as três.
+  reduzido — não repita as três. **Desde o Q-5 do review da fatia 3 (`6a2c2f53`) o piso é o valor
+  nomeado `reducedFloorTablePt`**, que compõe o mesmo `table-fixed` do default: quem varrer as
+  outras nove importa a constante, nunca a string — `mergePt` substitui a folha
+  `table.className`, e a cópia literal divergiria em silêncio do wrapper.
 
-  **Direção nova, não coberta pelas duas do item 23:** em 390x844 (276px de moldura), `RedatoresTable`
-  ativo precisaria reservar ~70% da tabela para a coluna de 3 ícones não sobrepor nada — nenhum
-  `min-width` razoável resolve (ou a tabela cabe e vira ilegível, ou sobra sobreposição). UI-01 da
-  mesma run ficou **deferido**, não corrigido — é achado de UX (3 ícones por linha em coluna presa
-  de mobile), não de matemática de coluna. Tabela com 2+ ícones de ação PROVAVELMENTE precisa
-  colapsar as ações num menu de overflow abaixo de algum breakpoint — decisão de design, não
-  medição; `RedatorRowActions` + o botão solto de "Reenviar invitación" em `RedatoresTable.tsx` são
-  o caso mais severo hoje (3 ícones), candidato natural a entrar primeiro nessa direção quando o
-  item 23 (ou um item de design a montante dele) for executado.
+  **Terceira direção, APLICADA em 2026-09-26 nas quatro tabelas da fatia 3 do item 16** (Q-1 do
+  review, `b5d3e5be`). Em 390x844 (276px de moldura) nenhum `min-width` fecha: `RedatoresTable`
+  ativo precisaria reservar ~70% da tabela para a coluna de 3 ícones. A UI-01 de Pessoas (classe
+  `C`) tinha sido deferida para cá sem aprovação; o review a reabriu e o João decidiu consertar no
+  bloco. Abaixo de `sm` a linha carrega UM controle: `RowActions` (`shared/ui`) colapsa duas ou
+  mais ações num menu, e `useCollapsibleActionsColumn(width)` encolhe a coluna presa para 4.5rem
+  no mesmo render — os dois saem do mesmo booleano, porque um sem o outro é defeito. Medido no
+  navegador, nome coberto pela coluna presa (antes → depois): Redactores 44px, com só a inicial à
+  vista → 0; Usuarios 29px → 0; Alumnos 9-14px → 0; Roles 0 → 0 (os 6rem não cobriam o nome).
+  1024x768 e 1440x900 não mudam. **Para o item 23:** é opt-in por tabela — as outras oito ligam o
+  hook e passam `collapsed` ao `*RowActions` depois de medir, não por padrão. **Resíduo medido, não
+  corrigido:** na visão de arquivados em 390x844 a coluna de identidade de Redactores fica com 132px,
+  espremida pelo par fixo de 24% das colunas de arquivados, e o nome sai com reticência depois de 2
+  ou 3 letras — não está mais coberto, está estreito. É decisão de piso por modo, a mesma família
+  de (b), e fica com o item 23.
 
 - **D-71 · Rótulos `perm.*` do diálogo de Roles expõem jargão interno (Flujo N, RN-02, soft delete),
   nos 3 locales** → **sem bloco hospedeiro.** UI-04 da run de Administración de 2026-09-26
