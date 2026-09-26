@@ -145,4 +145,49 @@ END LOTUS UI REVIEW REPORT
 
 ## 3. Passe de correção
 
-_A preencher na Task 7._
+| Achado | Classe | Destino | Commit |
+|---|---|---|---|
+| UI-01 — nome de role aparece como slug cru ("redator" em português numa tela es-CL) | `C` | corrige aqui | `e3f09648` |
+| UI-02 — Usuarios e Roles rolam em 1024x768, coluna de ações cobre a última coluna de dado | `C` | corrige aqui | `db7a0920` |
+| UI-03 — régua de abas transborda 4px em 390x844 | `B` | ficha `D-*` (Task 10) | — |
+| UI-04 — rótulos de permissão expõem jargão interno (Flujo N, RN-02, soft delete) | `B` | ficha `D-*` (Task 10) | — |
+
+**UI-01** — `roleLabel(name, t)` (novo, `shared/lib/roles.ts`, ao lado de `displayRole`) devolve
+`t('roleName.<name>')` para os 3 roles de sistema (`superadmin`, `admin`, `redator`) e o nome cru
+para role customizado, que não tem chave. Aplicado nos 4 pontos que o achado listou: coluna "Rol" de
+`UsersTable`, coluna "Nombre" de `RolesTable`, título do `RoleDialog` e opções/valor do dropdown em
+`useStaffRoleOptions`/`StaffUserDialog`. RED visto antes da correção: 4 falhas em 776 testes
+(`roleLabel is not a function`; "Unable to find an element with the text: roleName.redator" /
+"roleName.superadmin"). GREEN depois: 780/780 (a suíte ganhou os 3 arquivos de teste novos —
+`roles.test.ts`, `UsersTable.test.tsx`, `RolesTable.test.tsx`). Medido no navegador, 1440x900,
+es-CL: coluna Rol mostra "SuperAdmin"; aba Roles y permisos mostra "Administrador" / "Redactor" /
+"SuperAdmin"; diálogo do role "redator" abre com título "Redactor" (antes: "redator").
+
+**UI-02** — mesma raiz e mesmo remédio já provados em `RedatoresTable` (UI-03 da run de Pessoas,
+commit `d07aa877`): o piso default do `AppDataTable` (`min-w-[48rem]` = 768px,
+`AppDataTable/style.ts:73`) é maior que os 718px de moldura em 1024x768, força rolagem, e a coluna
+de ações presa cobre a última coluna de dado. `UsersTable` repassa
+`pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}` pelo passthrough do
+`SearchableTableFrame` (mecanismo que já existia, ligado por `RedatoresTable`); `RolesTable` passa o
+mesmo `pt` direto ao `AppDataTable`, que já aceita a prop. RED visto: as duas tabelas com teste
+asserting `min-w-[42rem]` falhavam contra o `min-w-[48rem]` herdado. GREEN depois: 782/782, lint 0,
+build ok. Medido no navegador, 1024x768: Usuarios (Activos, 1 linha) foi de 718/768/768
+(wrapper/scrollWidth/tabela) para 718/718/718 — "Último acceso" ("26-09-2026 03:33 p. m.") sai
+inteiro; Roles (3 linhas) mesma mudança — cabeçalho "PERMISOS" sai inteiro (x 788–903), ação (x
+903–999) sem sobrepor. Usuarios em Archivados (0 linhas nesta base — mesma limitação de dado da run
+original): a correção é incondicional (className fixo no `pt`), e a tabela mede 718/718/718
+estruturalmente, mas o PrimeReact aplica `class="p-datatable-thead hidden"` no vazio — não há linha
+para confirmar ausência de sobreposição de coluna com dado real, só a largura da tabela. Sem
+regressão em 1440x900: as duas tabelas seguem 1134/1134/1134, preenchendo o card.
+
+Desvio do "achado de wrapper corrige-se no wrapper": o remédio é pontual (`pt` por tabela), não a
+correção do default em `AppDataTable/style.ts` — a ficha `D-65`/item 23
+(`frontend-tabelas-reserva-e-rolagem`, `docs/superpowers/backlog.md`) é quem varre as 12 tabelas do
+débito, e a forma já estava provada num irmão (`RedatoresTable`), o que o critério mecânico do plano
+autoriza corrigir aqui. Nota deixada na ficha `D-65` para o item 23 não repetir `UsersTable` e
+`RolesTable` na varredura.
+
+**UI-03 e UI-04 — não corrigidos nesta run**, por triagem `B`/composição de UMA tela sem forma
+provada num irmão: destino é a ficha `D-*` que a Task 10 escreve.
+
+Zero `C` aberto ao fim desta run: 2 corrigidos (UI-01, UI-02).

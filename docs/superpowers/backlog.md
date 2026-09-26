@@ -484,6 +484,15 @@ ficam só como ponteiro, e a ficha delas é lá.
   reaproveitável pelas outras 11). Fecha UI-03 (1024x768, 718px de moldura: 672px cabe sem rolar).
   Quem fizer a varredura do item 23: `RedatoresTable` já está no piso reduzido, não repita.
 
+  **Remedido em 2026-09-26, run de Administración (item 16 fatia 3, UI-02):** mesmo defeito, mesmo
+  fix pontual — `UsersTable` e `RolesTable` também ganharam `pt={{ table: { className:
+  'min-w-[42rem] table-fixed' } }}` (a primeira via `SearchableTableFrame`, a segunda direto no
+  `AppDataTable`, que já aceita `pt`). Medido em 1024x768: as duas foram de 718/768/768
+  (wrapper/scrollWidth/tabela, com rolagem forçada e sobreposição) para 718/718/718 — "Último
+  acceso" e "PERMISOS" saem inteiros. Sem regressão em 1440x900 (1134/1134/1134 nas duas). Quem
+  fizer a varredura do item 23: `UsersTable` e `RolesTable`, como `RedatoresTable`, já estão no piso
+  reduzido — não repita as três.
+
   **Direção nova, não coberta pelas duas do item 23:** em 390x844 (276px de moldura), `RedatoresTable`
   ativo precisaria reservar ~70% da tabela para a coluna de 3 ícones não sobrepor nada — nenhum
   `min-width` razoável resolve (ou a tabela cabe e vira ilegível, ou sobra sobreposição). UI-01 da
