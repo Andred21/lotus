@@ -68,6 +68,10 @@ EXIGIR" e "SE a task toca schema", e parte a lista em duas.
 **Fere:** catálogo universal.
 **Severidade:** 🟢 melhoria · **Esforço:** P
 
+## Decisão
+
+O João aprovou os cinco achados em 2026-09-26, todos para corrigir neste bloco.
+
 ## Fora do escopo desta revisão
 
 Registrado para o João e não corrigido aqui. A limpeza dos restos do Q-1 no repo real foi negada
