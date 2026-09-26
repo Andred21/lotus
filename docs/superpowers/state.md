@@ -84,8 +84,11 @@ pendente depois do merge.
 1. **No máximo três lanes vivas.** Cada lane é um bloco, uma branch `<tipo>/<NN>-<slug>` e uma
    worktree irmã, conduzida por uma sessão própria. Abrir lane passa pelo portão do
    `lane.sh abrir`: nada de quarta lane, nada de dois blocos que dependem um do outro (pela linha
-   `**Depende:**` das fichas, transitivamente, nos dois sentidos) e nada de porta repetida. O
-   `lane.sh conferir` acusa dois planos vivos que tocam os mesmos arquivos.
+   `**Depende:**` das fichas, transitivamente, nos dois sentidos) e nada de offset repetido. O
+   portão compara o offset, lido do `LOTUS_DEV_HTTP_PORT` do `.env` de cada árvore; porta avulsa
+   fora da tabela do `.env.example` fica com o `docker compose up`, que falha alto. O
+   `lane.sh conferir` acusa dois planos vivos que tocam os mesmos arquivos, lendo o `plano.md` da
+   pasta de cada bloco; a lane que não tem um sai nomeada como `NAO CONFERIDA`.
 2. **`next_action` começa pelo token do `workflow_state`.** Se não começar, o arquivo está
    corrompido: pare, relate e reconstrua a partir do git e dos artefatos do bloco. O `SessionStart`
    acusa isso como `ESTADO INCOERENTE`.

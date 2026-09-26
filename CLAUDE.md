@@ -40,13 +40,13 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
   a Drive, Notion ou Figma e não substitui spec, plano, rules, ADRs ou código.
 - **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada no main tree:
   para abrir lane, no planejamento, no fechamento ou por solicitação explícita do João.
+- **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
+- **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task a task. Serve
+  somente para retomar detalhe fino da execução; nunca decide a fase.
 
 > **Transição até o item 31 mesclar:** os commands e skills ainda dizem `state.md`, `lanes:` e
 > `focused_lane`. Leia "o `estado.md` do bloco" onde eles dizem `state.md` (`state.md`,
 > seção Transição).
-- **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
-- **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task a task. Serve
-  somente para retomar detalhe fino da execução; nunca decide a fase.
 
 | Doc                                 | Consulte antes de                                               |
 | ------------------------------------|-----------------------------------------------------------------|
