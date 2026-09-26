@@ -2,13 +2,13 @@
 schema_version: 3
 id: 30
 slug: 30-harness-estado-por-bloco
-workflow_state: reviewing
-next_owner: claude
-next_action: approve_review_findings revisao em curso, sem achado ainda
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: resolve_blocker aprovar os achados Q-1 a Q-5 do revisao.md
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md
 active_plan: docs/superpowers/plans/2026-09-26-harness-estado-por-bloco.md
-active_review: null
+active_review: docs/superpowers/blocos/30-harness-estado-por-bloco/revisao.md
 active_acceptance: null
 context_packet: null
 efeito_externo: nao
@@ -17,9 +17,9 @@ branch: chore/30-harness-estado-por-bloco
 worktree: ../lotus-harness
 offset: null
 lane_base: 65d81bc9
-commit: 3e07a451
-blocker: null
-updated_at: 2026-09-26T14:41:46-03:00
+commit: 3a1e96e0
+blocker: review do bloco 30 saiu com 5 achados (2 amarelos, 3 verdes) aguardando aprovacao do Joao
+updated_at: 2026-09-26T14:49:09-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
