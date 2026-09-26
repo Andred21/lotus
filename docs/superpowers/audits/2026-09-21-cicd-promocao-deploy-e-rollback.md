@@ -263,6 +263,10 @@ contra um ledger de mentira. Release refeita devolveu o dump mais recente, `x` n
 ledger vazio sobreviveu. Esse ramo depende de um deploy com migration e fica na **P-86**, junto
 com o dump pré-deploy.
 
+**O DoD 4, o rollback limpo, rodou depois do botão.** Voltar pede uma release anterior com o trio,
+e antes do Step 1 da Task 12 só existia o `a5fc92bb` (emenda, item 4). A evidência está na Task 12,
+em *Task 10, DoD 4 — o rollback limpo, por SSH*.
+
 ## Task 11 — integração
 
 **A `main` andou duas vezes durante a task**: o item 28 (hooks do harness, PR #106) e o item 29
@@ -463,3 +467,165 @@ estado final: Success
   `healthy` na mesma imagem (`7dcddc01…`, a única no host, MySQL 8.0.46), cujo digest já estava
   fixado no compose do `a5fc92bb`.
 - O `app.locale` efetivo é `es_CL` (Q-2).
+
+### Task 10, DoD 4 — o rollback limpo, por SSH
+
+Às 06:48Z o João voltou a produção do `1142911b` para o `a5fc92bb` com o comando da Task 10,
+Step 2. Os dois SHAs têm as mesmas 30 migrations, então o banco não fica à frente de nenhum deles.
+Trecho da saída:
+
+```text
+ssh … 'sudo /opt/lotus/bin/deploy.sh a5fc92bb7728ea0da6dc16a62958e02556df999b; echo "codigo=$?"'
+==> login ghcr.io
+==> manifestos de a5fc92bb7728ea0da6dc16a62958e02556df999b
+==> pull
+(…)
+==> gate de schema
+(…)
+==> migrate
+ Container lotus-mysql-1 Running
+ Container lotus-gotenberg-1 Running
+ Container lotus-clamav-1 Recreate
+(…)
+   INFO  Nothing to migrate.
+==> up
+(…)
+ Container lotus-app-1 Recreate
+(…)
+ Container lotus-nginx-1 Recreate
+ Container lotus-scheduler-1 Recreate
+(…)
+==> esperando o nginx ficar healthy (até 150 s)
+==> DEPLOY OK: a5fc92bb7728ea0da6dc16a62958e02556df999b
+```
+
+A linha `codigo=` não veio na colagem. O código 0 fica provado pelo ledger: o trap `ao_sair` só
+grava `"resultado":"ok"` quando o script sai com 0.
+
+**Conferido por leitura às 06:49Z:**
+
+- `/up` responde 200 de fora e de dentro, e o `CURRENT_SHA` é `a5fc92bb…`.
+- O ledger fecha o par. O `sha_anterior` aponta para o release de onde se voltou, e o ator é o
+  manual:
+
+  ```text
+  {"ts":"2026-09-26T06:48:08Z","evento":"inicio","sha":"a5fc92bb7728ea0da6dc16a62958e02556df999b","sha_anterior":"1142911b26430466522bab0be2a87b0e32c4952b","migrations":[],"dump":null,"ator":"manual:root"}
+  {"ts":"2026-09-26T06:48:41Z","evento":"fim","sha":"a5fc92bb7728ea0da6dc16a62958e02556df999b","resultado":"ok","etapa":"ok"}
+  ```
+
+- `app`, `scheduler`, `nginx` e `clamav` voltaram às imagens do `a5fc92bb`. O `mysql` e o
+  `gotenberg` ficaram, porque a configuração deles não depende do SHA, e o `mysql` já tinha nascido
+  com o `.env` novo no Step 1.
+- A imagem velha do `clamav` passou no healthcheck novo, como a Task 11 previu. O container nasceu
+  às 06:48:19Z, e o healthcheck falhou duas vezes com código 21 (06:48:29Z e 06:48:34Z) enquanto o
+  `clamd` carregava a base. Respondeu `PONG` a partir de 06:48:40Z, dentro do `start_period` de
+  300 s.
+
+### Step 2 — dois disparos seguidos, e o segundo esperou (DoD 2)
+
+O João disparou o botão duas vezes, com dois segundos de intervalo, as duas com o `1142911b` e
+`PROMOVER`. Era também a volta do rollback acima. A sessão leu a API a cada 3 s e registrou cada
+mudança de estado:
+
+```text
+06:51:55 | 36225030524 queued
+06:52:01 | 36225030524 queued ;36225032217 pending
+06:52:08 | 36225030524 in_progress ;36225032217 pending
+06:53:08 | 36225030524 completed success;36225032217 pending
+06:53:11 | 36225030524 completed success;36225032217 in_progress
+06:53:43 | 36225030524 completed success;36225032217 completed success
+```
+
+- [Run 36225030524](https://github.com/Gatika-CL/lotus/actions/runs/36225030524), o primeiro. O
+  job `promover` correu de 06:52:04Z a 06:53:07Z, 48 s deles no passo do `deploy.sh`, e levou o
+  host do `a5fc92bb` ao `1142911b`.
+- [Run 36225032217](https://github.com/Gatika-CL/lotus/actions/runs/36225032217), o segundo. Ficou
+  `pending` desde o disparo (06:51:57Z) até o fim do primeiro. O job dele só foi **criado** às
+  06:53:08Z, um segundo depois do fim do job do primeiro, e correu até 06:53:42Z, 23 s deles no
+  `deploy.sh`.
+- Os dois terminaram `success`. Nenhum foi cancelado, e nenhum passo de um correu junto com
+  passo do outro.
+
+A API chama a espera de `pending`, e o plano a chamava de `Queued`; o comportamento é o mesmo. A
+`concurrency` está declarada no workflow, não no job, e por isso segura o run inteiro antes de o
+job existir.
+
+Os dois logs repetem as linhas de gate e de identidade do Step 1 (`identical`, `success`,
+`trio presente`, `assumed-role/lotus-deploy/GitHubActions`), passam pelo `Nothing to migrate` e
+fecham com `DEPLOY OK: 1142911b…` e `estado final: Success`. O que muda é o que o compose fez em
+cada um, no stderr do host:
+
+```text
+# 36225030524, CommandId=7a5a8877-5808-473f-8af5-56b094454f7e
+ Container lotus-clamav-1 Recreate
+(…)
+ Container lotus-app-1 Recreate
+(…)
+ Container lotus-nginx-1 Recreate
+ Container lotus-scheduler-1 Recreate
+
+# 36225032217, CommandId=08c82013-6676-4e93-892d-57bafc26ff05
+ Container lotus-clamav-1 Running
+(…)
+ Container lotus-scheduler-1 Running
+(…)
+ Container lotus-nginx-1 Running
+(…)
+ Container lotus-app-1 Running
+```
+
+**Conferido por leitura às 06:55Z:**
+
+- O ledger tem os dois pares em sequência. O `inicio` do segundo (06:53:32Z) vem 33 s depois do
+  `fim` do primeiro (06:52:59Z), e o `sha_anterior` dele já é o `1142911b`:
+
+  ```text
+  {"ts":"2026-09-26T06:52:32Z","evento":"inicio","sha":"1142911b26430466522bab0be2a87b0e32c4952b","sha_anterior":"a5fc92bb7728ea0da6dc16a62958e02556df999b","migrations":[],"dump":null,"ator":"github:36225030524:Andred21"}
+  {"ts":"2026-09-26T06:52:59Z","evento":"fim","sha":"1142911b26430466522bab0be2a87b0e32c4952b","resultado":"ok","etapa":"ok"}
+  {"ts":"2026-09-26T06:53:32Z","evento":"inicio","sha":"1142911b26430466522bab0be2a87b0e32c4952b","sha_anterior":"1142911b26430466522bab0be2a87b0e32c4952b","migrations":[],"dump":null,"ator":"github:36225032217:Andred21"}
+  {"ts":"2026-09-26T06:53:37Z","evento":"fim","sha":"1142911b26430466522bab0be2a87b0e32c4952b","resultado":"ok","etapa":"ok"}
+  ```
+
+- O `CURRENT_SHA` é `1142911b…`, o `/up` responde 200 de fora e de dentro, e as imagens são os
+  digests que o CI publicou (`8c009eca…`, `636d68f3…` e `80d2a658…`).
+- `app`, `scheduler`, `nginx` e `clamav` nasceram entre 06:52:32Z e 06:52:41Z, no primeiro run. O
+  segundo não recriou nada. O `mysql` roda desde 06:41:04Z (Step 1) e o `gotenberg` desde
+  2026-09-25T02:42Z.
+- O ledger tem 12 linhas: 6 `inicio`, 6 `fim` e nenhum `falha`.
+
+**Limite, não medido: um terceiro disparo.** A doc do GitHub, lida em 2026-09-26, diz que o padrão
+da `concurrency` (`queue: single`) guarda um só run `pending` por grupo: *"When a new job or
+workflow run is queued, any existing `pending` job or workflow run in the same group is canceled
+and replaced."* Com três disparos seguidos, o do meio seria cancelado sem rodar, e o terceiro
+tomaria o lugar dele. O DoD 2 continua valendo, porque o run em andamento nunca é cancelado, e
+deploy cortado no meio é o que a §8 da spec quer evitar. Mas "nenhum é cancelado" só vale para dois
+disparos. A mesma doc descreve `queue: max`, que deixa até 100 runs esperando. Se o botão deve
+enfileirar todo pedido ou deixar valer o último fica para a review.
+
+### Step 5 — a conta não ganhou porta (DoD 7)
+
+Lido pela sessão às 07:01Z, só com chamadas de leitura (perfil `lotus`), com o comando do plano. O
+IP do João fica fora, como no `deploy/aws/README.md`:
+
+```text
+aws ec2 describe-security-groups --region sa-east-1 --filters Name=group-name,Values=lotus-web \
+  --query 'SecurityGroups[0].IpPermissions[].[IpProtocol,FromPort,IpRanges[].CidrIp]' --output json
+(o JSON da saída, aqui numa linha só)
+[["tcp", 80, ["0.0.0.0/0"]], ["tcp", 22, ["<IP do João>/32"]], ["tcp", 443, ["0.0.0.0/0"]]]
+```
+
+São as três regras de sempre, e nada mais: nenhuma origem IPv6, nenhuma prefix list, nenhuma
+referência a outro SG.
+
+O DoD pede as mesmas regras *de antes do bloco*, e o estado de hoje sozinho não prova isso. O
+histórico do CloudTrail em `sa-east-1` cobre 90 dias, desde 2026-06-28. Nele, o
+`sg-0a0876fb2c66689c5` tem três eventos, todos de 2026-09-04:
+
+- `CreateSecurityGroup` às 16:45:28Z;
+- um único `AuthorizeSecurityGroupIngress` às 16:47:13Z, com exatamente as três regras acima;
+- o `RunInstances` da EC2 às 16:49:40Z.
+
+Nesses 90 dias, a região não tem nenhum `RevokeSecurityGroupIngress`, `ModifySecurityGroupRules`
+nem outro `AuthorizeSecurityGroupIngress`. As regras são as de 2026-09-04, e o bloco, aberto em
+2026-09-21, não mexeu nelas. A outra metade do DoD 7, o `get-caller-identity` com a `lotus-deploy`
+assumida por OIDC, está no Step 1 e se repete nos dois runs do Step 2.
