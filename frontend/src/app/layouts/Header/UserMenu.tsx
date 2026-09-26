@@ -5,7 +5,7 @@ import { AppAvatar, AppButton, AppMenu } from '@shared/ui'
 import type { AppMenuRef, MenuItem } from '@shared/ui'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import { useLogout } from '@features/identity/api/authApi'
-import { displayRole } from '@shared/lib'
+import { roleLabel } from '@shared/lib'
 
 export function UserMenu() {
   const { t } = useTranslation()
@@ -16,7 +16,7 @@ export function UserMenu() {
 
   if (!user) return null
 
-  const roleKey = displayRole(user.roles)
+  const role = user.roles[0]
 
   const items: MenuItem[] = [
     { label: t('userMenu.profile'), icon: 'pi pi-user', command: () => navigate('/perfil') },
@@ -87,7 +87,7 @@ export function UserMenu() {
         <span className="sr-only min-w-0 max-w-40 text-left sm:not-sr-only sm:block lg:max-w-56">
           <span className="block truncate text-sm font-semibold text-white">{user.name}</span>
 
-          <span className="block truncate text-sm text-white/75">{roleKey && t(roleKey)}</span>
+          <span className="block truncate text-sm text-white/75">{role && roleLabel(role, t)}</span>
         </span>
 
         <i className="pi pi-angle-down" aria-hidden="true" />
