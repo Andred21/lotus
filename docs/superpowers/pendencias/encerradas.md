@@ -7,10 +7,115 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(nenhuma. A **`P-59`**, a **`P-75`** e a **`P-79`** cumpriram a sprint de rastro e saíram no
-fechamento do `cicd-promocao-deploy-e-rollback` (item 12, 2026-09-26); o parágrafo do rastro adiante
-é o delas. O item 12 não encerrou ficha: abriu a **`P-86`** e a **`P-87`**, emendou a **`P-62`** com
-o botão sem Environment e disparou, sem pagar, o gatilho da **`P-87`**.)*
+## P-87 — o botão promove imagens, mas o host guarda compose, `tls.conf`, `.env` e os próprios scripts de `deploy/bin/` por cópia, e nada avisa quando eles ficam para trás
+
+**Encerrada em 2026-09-26 (item 31), pela direção (a), detectar.** O botão confere o
+host antes de promover (`.github/scripts/conferir-alinhamento.sh`, runtime e chaves
+contra o SHA alvo, `bin/*.sh` contra a `main`), sem escape. Recusou ao vivo com
+`bin/deploy.sh diferente`
+([run 36264643022](https://github.com/Gatika-CL/lotus/actions/runs/36264643022)) e
+promoveu depois da reinstalação
+([run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582)). O SSH
+segue sem conferência, declarado no runbook §8.
+
+**Bloco:** cicd-promocao-deploy-e-rollback (item 12); hospedada por `cicd-host-alinhado-ao-sha`
+(item 31) desde 2026-09-26, que escolheu a direção (a) · **Quem decide:** João · **Gatilho:** o
+próximo commit que mudar `docker-compose.prod.yml`, `docker-compose.prod-tls.yml`,
+`deploy/nginx/tls.conf`, `deploy/aws/env.prod.example` ou `deploy/bin/*.sh`, ou o João escolher o
+mecanismo abaixo. Revisar em **2026-10-31**.
+
+Medido em 2026-09-26, antes do primeiro disparo do botão:
+- o host rodava o compose do `db8f8736`, sem o healthcheck do clamav que olha a idade da base
+  (`f9b56707`, Q-9);
+- o overlay e o `tls.conf` eram os do `53ca6ce7`, sem a renovação (Q-6) e sem a isenção do `/up`
+  (Q-1);
+- o `.env` não tinha 10 das 40 chaves do molde (Q-2). Sem `APP_LOCALE`, a produção respondia em
+  `en`.
+
+As três correções vieram do review do item 10, em 2026-09-20, e nenhuma chegou ao host em seis
+dias. O runbook §7 só instala esses arquivos quando o host nasce, e o `deploy.sh` — que o botão
+invoca — promove **imagens** por SHA. Nada compara o que o host guarda com o que o SHA promovido
+espera, e um rollback herda os arquivos do host, não os do SHA alvo. Nesta execução o João
+sincronizou tudo à mão (audit do item 12, "Antes do botão"), mas a causa segue aberta: o próximo
+desvio passa do mesmo jeito.
+
+Direções, para o João escolher:
+
+- (a) **Detectar:** a imagem `app` carrega os hashes dos arquivos de compose e do `tls.conf`, e os
+  nomes das chaves do molde. O gate do `deploy.sh` compara com o host, como já faz com as
+  migrations. O host continua sendo a fonte.
+- (b) **Entregar:** o botão manda os arquivos de compose e o `tls.conf` pelo próprio SSM antes do
+  `deploy.sh`, e o SHA vira a fonte. O `.env` não tem como ir assim, porque tem segredo; dele só
+  vale conferir os nomes.
+- (c) **Procedimento:** a §8 do runbook ganha o passo "antes de promover, confira a §7", e o risco
+  fica aceito por escrito.
+
+**Emenda de 2026-09-26 (review do item 12, Q-4).** A ficha nasceu sem `deploy/bin/*.sh`, que é o
+caso mais grave. O botão não leva o `deploy.sh`: ele executa a cópia que está no host. O gate, o
+ledger e o dump deste bloco chegaram lá porque o João reinstalou o script à mão ("Antes do botão"
+no audit). Uma correção desses scripts pode entrar na `main` e nunca rodar em produção.
+
+O gatilho já disparou. As correções do review mudaram o `deploy.sh`: agora ele grava
+`schema_a_frente` e passa o rótulo do dump. Também mudaram o `backup-db.sh`, cuja chave agora vai
+até o segundo e aceita rótulo. **Depois do merge, os dois precisam ser reinstalados pela §7 do
+runbook antes do próximo disparo do botão.** Enquanto isso não acontecer, o host continua com a
+versão anterior. Nada quebra, mas o escape não deixa rastro, e o dump do deploy pode colidir com o
+do cron.
+
+As direções mudam assim:
+
+- Em (a), o `deploy.sh` não consegue conferir a si mesmo. Uma cópia velha não tem a conferência
+  nova. Para os scripts, quem detecta é o workflow: ele pede o `sha256sum` de `/opt/lotus/bin/*.sh`
+  por SSM e compara com o SHA promovido.
+- Em (b), os scripts entram no pacote que o SSM entrega, junto com o compose e o `tls.conf`.
+
+**Disparo de 2026-09-26, pago à mão.** O review do item 12 mudou `deploy.sh` e `backup-db.sh`
+(`19aeb734`). Depois do merge e do espelho, o João reinstalou os dois pelo runbook §7, às 08:40Z.
+Host, `origin/main` e o corporativo `df30a6bd` ficaram com os mesmos hashes, e o botão promoveu o
+`df30a6bd` com o script novo (audit do item 12, "Depois do fechamento"). **A causa segue aberta:**
+foi de novo sincronização manual, e nada teria avisado se ela não acontecesse.
+
+## P-88 — o `deploy.sh` aceita promover imagem de qualquer dono do GHCR, inclusive do repositório pessoal
+
+**Encerrada em 2026-09-26 (item 31).** `DONO=gatika-cl` literal no `deploy.sh`, com o
+`docker login -u` pelo mesmo dono; a catraca de `deploy-sh.test.ts` foi vista reprovar
+com `${LOTUS_RELEASE_OWNER:-gatika-cl}` devolvido e com `DONO=andred21`; o host roda o
+script novo desde o
+[run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582) (`grep -c
+LOTUS_RELEASE_OWNER` = 0).
+
+**Bloco:** `cicd-host-alinhado-ao-sha` (item 31), desde 2026-09-26 · **Quem decide:** João ·
+**Gatilho:** o próximo commit que mudar
+`deploy/bin/deploy.sh` (o mesmo da **P-87**, para que o host receba as duas correções numa
+reinstalação só), ou o João promover a correção. Revisar em **2026-10-31**.
+
+**A regra:** a produção roda **sempre** imagem de `ghcr.io/gatika-cl/`, nunca de
+`ghcr.io/andred21/`. Decisão do João em 2026-09-26, no fechamento do item 12.
+
+**Hoje ela vale por padrão, não por mecanismo.** O `deploy.sh` monta o nome das três imagens com
+`DONO="${LOTUS_RELEASE_OWNER:-gatika-cl}"`: o dono é uma variável de ambiente com `gatika-cl` como
+padrão. Um `LOTUS_RELEASE_OWNER=andred21 /opt/lotus/bin/deploy.sh <sha do pessoal>` por SSH promove
+o trio do repositório pessoal. As imagens de `andred21` são **públicas** no GHCR, então o pull nem
+precisa de credencial. Nenhuma catraca de `frontend/tests/deploy-sh.test.ts` reprova isso.
+
+**Medido em 2026-09-26, só por leitura, e a produção estava certa:**
+- os quatro containers nossos (`app`, `scheduler`, `nginx`, `clamav`) rodam
+  `ghcr.io/gatika-cl/lotus-*:1142911b…`, e as sete imagens `ghcr.io` em cache no host são todas de
+  `gatika-cl`;
+- `1142911b`, `a5fc92bb` e `683e6221` existem em `Gatika-CL/lotus` como `release: espelho de …`,
+  com `Source-Commit`, e o `1142911b` não existe em `Andred21/lotus` (422);
+- o ledger tem seis deploys, todos para `1142911b` ou `a5fc92bb`;
+- `LOTUS_RELEASE_OWNER` não aparece em `/opt/lotus`, em `/etc/environment` nem no perfil do root,
+  e o `deploy.yml` não a passa no comando do SSM.
+
+**Fecha quando:**
+- o `deploy.sh` tiver `gatika-cl` fixo, sem variável de ambiente;
+- uma catraca em `deploy-sh.test.ts` reprovar qualquer outro dono, e for vista reprovar pela sonda
+  que devolve o `${LOTUS_RELEASE_OWNER:-…}`;
+- o host tiver o `deploy.sh` novo, pela reinstalação do runbook §7.
+
+*(P-87 e P-88, encerradas pelo item 31 em 2026-09-26. A **`P-59`**, a **`P-75`** e a **`P-79`**
+saíram no fechamento do item 12.)*
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
