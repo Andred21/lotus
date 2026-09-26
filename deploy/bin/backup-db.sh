@@ -26,7 +26,19 @@ BUCKET=$(grep -E '^LOTUS_BACKUP_BUCKET=' "$BASE/.env" | cut -d= -f2- || true)
 MYSQL=$(docker compose -p lotus --project-directory "$BASE" -f "$BASE/docker-compose.prod.yml" ps -q mysql)
 [ -n "$MYSQL" ] || { echo "erro: serviço mysql não está de pé" >&2; exit 1; }
 
-ARQ="lotus-$(date -u +%Y-%m-%dT%H-%M).sql.gz"
+# A chave era por minuto, e o deploy com migration e o cron no mesmo minuto
+# gravavam no mesmo objeto: o versioning guardava o anterior como noncurrent, e
+# a chave que o ledger registrou passava a abrir o outro dump, sem aviso (Q-5 do
+# review de 2026-09-26). Segundos separam execuções em série; o rótulo separa o
+# cron (sem rótulo) do deploy (`pre-deploy-<sha>`), que podem cair no mesmo
+# segundo. O verificar-backup.sh lê LastModified, não o nome.
+# `case`, não grep: grep sem linha nenhuma sai 1 e recusaria o rótulo vazio do
+# cron, e grep por linha aprovaria um rótulo com quebra de linha no meio.
+ROTULO="${LOTUS_BACKUP_ROTULO:-}"
+case "$ROTULO" in
+  *[!a-z0-9-]*) echo "erro: LOTUS_BACKUP_ROTULO fora de [a-z0-9-]: $ROTULO" >&2; exit 1 ;;
+esac
+ARQ="lotus-$(date -u +%Y-%m-%dT%H-%M-%S)${ROTULO:+-$ROTULO}.sql.gz"
 BRUTO="/tmp/${ARQ%.gz}"
 # Dump de produção não fica no /tmp do host nem quando o script morre no meio.
 trap 'rm -f "$BRUTO" "/tmp/$ARQ"' EXIT

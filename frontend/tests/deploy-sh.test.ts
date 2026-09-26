@@ -99,9 +99,31 @@ describe('deploy/bin/deploy.sh', () => {
     expect(corpo).toContain('tail -n 1')
   })
 
+  it('a busca do dump ignora a lista schema_a_frente de um escape', () => {
+    // A linha de um escape nomeia migrations que ela NÃO introduziu, com
+    // "dump": null. Sem tirar a lista antes, ela viraria a última linha e a
+    // recusa seguinte diria "nenhum registrado" para uma migration que tem dump.
+    const corpo = semComentarios.match(/^dump_que_introduziu\(\) \{\n([\s\S]*?)^\}$/m)?.[1] ?? ''
+    const corte = corpo.indexOf(`sed 's/"schema_a_frente":\\[[^]]*\\]//'`)
+    expect(corte).toBeGreaterThan(-1)
+    expect(corte).toBeLessThan(corpo.indexOf('grep -F "\\"$1\\""'))
+  })
+
   it('a busca do dump tolera ausência — senão `set -e` mata antes da recusa', () => {
     const corpo = semComentarios.match(/^dump_que_introduziu\(\) \{\n([\s\S]*?)^\}$/m)?.[1] ?? ''
     expect(corpo).toMatch(/\|\|\s*true\s*$/m)
+  })
+
+  it('o escape do gate fica no ledger, não só no stderr', () => {
+    // Review de 2026-09-26 (Q-3): com LOTUS_ACEITAR_SCHEMA_A_FRENTE=1 a linha
+    // `inicio` saía idêntica à de um deploy normal, e rodar código velho sobre
+    // schema novo é justamente a decisão que o rollback auditável (spec §1.2)
+    // precisa registrar. Lista vazia no caso normal: ausência declarada, como o
+    // `"dump": null`.
+    expect(semComentarios).toMatch(/^A_FRENTE_JSON=\$\(printf '%s\\n' "\$A_FRENTE" \| json_lista\)$/m)
+    const inicio =
+      linhas.find((linha) => linha.startsWith("ledger '") && linha.includes('"evento":"inicio"')) ?? ''
+    expect(inicio).toContain(`"schema_a_frente":'"$A_FRENTE_JSON"'`)
   })
 
   it('abre o ledger antes do migrate e o fecha no fim', () => {
@@ -119,6 +141,19 @@ describe('deploy/bin/deploy.sh', () => {
     const dump = indiceDe('LOTUS_BACKUP_SAIDA')
     expect(dump).toBeGreaterThan(-1)
     expect(dump).toBeLessThan(indiceDe('artisan migrate'))
+    // O aborto é o `set -e` agindo sobre a chamada NUA. Até a review de
+    // 2026-09-26 (Q-2) nada aqui olhava isso: com `|| true` na chamada, o deploy
+    // seguia sem dump e gravava `"dump":""` no ledger, e esta catraca continuava
+    // verde. A linha tem de terminar no caminho do script — sem `||`, `&&`, `;`
+    // ou `if` em volta — e o script não pode desligar o `-e` em lugar nenhum.
+    expect(semComentarios).toMatch(/^\s*(?:[A-Z_]+="[^"]*"\s+)+"\$BASE\/bin\/backup-db\.sh"\s*$/m)
+    expect(semComentarios).not.toMatch(/^\s*set \+[a-z]*e/m)
+  })
+
+  it('o dump do deploy leva o SHA na chave e não colide com o do cron', () => {
+    // Review de 2026-09-26 (Q-5): no S3, o dump pré-deploy passa a dizer de que
+    // promoção ele é, e o rótulo o separa do dump diário do mesmo segundo.
+    expect(semComentarios).toMatch(/LOTUS_BACKUP_ROTULO="pre-deploy-\$\{SHA:0:12\}"/)
   })
 
   it('só tira dump quando há migration pendente', () => {

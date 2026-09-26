@@ -236,14 +236,107 @@ ou quando o rollback precisa do escape do §8.1. Os dois caminhos disputam o mes
 
 ### 8.1 Rollback
 
-`cat /opt/lotus/CURRENT_SHA` mostra o corrente; `/opt/lotus/releases.jsonl` mostra o histórico
-(§8.2). Promover o SHA anterior é o rollback, e o script decide se ele é seguro:
+`cat /opt/lotus/CURRENT_SHA` mostra o SHA corrente, e `/opt/lotus/releases.jsonl` mostra o
+histórico (§8.2). O rollback é promover o SHA anterior pelo botão, como qualquer promoção. O gate
+decide se isso é seguro:
 
-- **o alvo conhece tudo que o banco tem** → roda igual a um deploy normal;
-- **o banco está à frente do alvo** → o script **recusa** com código **4**, lista as migrations que
-  sobram e manda procurar o dump no ledger. Restaure o dump **antes** de promover. Só depois disso,
-  e só por SSH, `LOTUS_ACEITAR_SCHEMA_A_FRENTE=1` pula o gate. O workflow nunca define essa
-  variável: o caminho automatizado não tem como contorná-lo.
+- **o alvo conhece tudo que o banco tem**: roda igual a um deploy normal;
+- **o banco está à frente do alvo**: o script **recusa** com código **4** e lista as migrations que
+  sobram, cada uma com a chave do dump que a precede, lida do ledger. A lista vem ordenada. A
+  primeira é a migration mais antiga, e o dump dela desfaz todas. Siga o §8.1.1.
+
+**Com `fim` em `"etapa":"migrate"`, siga o §8.1.1 mesmo se o gate não recusar.** O DDL do MySQL não
+é transacional. Uma migration que morre no meio deixa tabela ou coluna criada sem linha na
+`migrations`, e o gate só lê essa tabela, então não vê o que ficou. O rollback passa, mas o próximo
+deploy para frente morre em `Table '…' already exists`. O dump a restaurar é o da linha `inicio`
+dessa tentativa.
+
+**O escape `LOTUS_ACEITAR_SCHEMA_A_FRENTE=1` não faz parte do restore.** Com o dump restaurado, o
+gate passa sozinho. O escape serve para outra decisão: rodar o código antigo sobre o schema novo
+**sem** restaurar, por exemplo quando a migration à frente só acrescentou tabela e o código antigo
+não a lê. Só funciona por SSH, porque o workflow nunca define a variável. A linha `inicio` registra
+o uso em `schema_a_frente`.
+
+#### 8.1.1 Restaurar o dump
+
+**Restaurar descarta tudo que foi escrito depois do dump**: certificados emitidos, matrículas e a
+trilha de auditoria. No ensaio de 2026-09-26, um certificado emitido depois do dump sumiu. Antes de
+restaurar, pese a alternativa: promover para frente um SHA que corrija a release não perde nada.
+Restaure quando a release estiver corrompendo dado, ou quando não houver correção próxima.
+
+**O restore não é carregar o dump por cima.** O `mysqldump` sem `--databases` só derruba as tabelas
+que existiam quando o dump foi tirado. As tabelas criadas pelas migrations à frente ficam para
+trás, e o próximo deploy para frente morre no `migrate`. Isso foi medido no ensaio: `ERROR 1050
+(42S01) ... Table 'coisas' already exists`. O database é apagado e recriado antes da carga.
+
+Todos os comandos abaixo rodam num shell só de root (`sudo -i`), na ordem:
+
+```bash
+umask 077 && cd /opt/lotus
+C="docker compose -p lotus --project-directory /opt/lotus -f docker-compose.prod.yml"
+DUMP=s3://<bucket>/backups/<chave>   # a que a recusa imprimiu, ou o "dump" da linha inicio que parou no migrate
+```
+
+1. **Baixar e conferir o dump, antes de parar qualquer coisa.** A última linha tem de ser
+   `-- Dump completed on …`. Sem ela, pare aqui: o banco ainda está intacto.
+
+   ```bash
+   aws s3 cp "$DUMP" /root/restore.sql.gz --only-show-errors
+   gunzip -t /root/restore.sql.gz && gunzip -c /root/restore.sql.gz | tail -1
+   ```
+
+2. **Pegar o cadeado do deploy e parar quem escreve.** Com o cadeado na mão, o botão sai com código
+   3 em vez de promover no meio do restore. Se `cadeado ok` não aparecer, há um deploy rodando:
+   espere ele terminar e repita. O `nginx` continua de pé e responde 502 na API até o passo 7.
+
+   ```bash
+   exec 9>>/opt/lotus/.deploy.lock && flock -n 9 && echo "cadeado ok"
+   $C stop app scheduler
+   ```
+
+3. **Guardar o banco de agora**, porque o passo 4 vai apagá-lo. Essa cópia é tudo que resta do
+   que o restore descarta. A regra `expira-backups` (§3) a apaga em 30 dias.
+
+   ```bash
+   LOTUS_BACKUP_SAIDA=/root/antes.txt LOTUS_BACKUP_ROTULO=antes-do-restore /opt/lotus/bin/backup-db.sh
+   ANTES=$(cat /root/antes.txt)
+   ```
+
+4. **Apagar e recriar o database, depois carregar o dump.** O `CREATE DATABASE` sem charset repete o
+   que a imagem do MySQL fez quando o volume nasceu. Cada tabela do dump traz o próprio charset. Se
+   a carga falhar no meio, repita o passo 4 inteiro: o `DROP` limpa o que a carga parcial deixou.
+
+   ```bash
+   MYSQL=$($C ps -q mysql)
+   docker exec "$MYSQL" sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE \`$MYSQL_DATABASE\`; CREATE DATABASE \`$MYSQL_DATABASE\`"'
+   gunzip -c /root/restore.sql.gz | docker exec -i "$MYSQL" sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'
+   ```
+
+5. **Conferir.** Nenhuma das migrations que a recusa listou pode aparecer:
+
+   ```bash
+   docker exec "$MYSQL" sh -c 'exec mysql -N -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SELECT migration FROM migrations ORDER BY id DESC LIMIT 5" "$MYSQL_DATABASE"'
+   ```
+
+6. **Registrar no ledger.** O `deploy.sh` não sabe que houve restore, e sem esta linha o rollback
+   apareceria no histórico como uma promoção comum:
+
+   ```bash
+   printf '{"ts":"%s","evento":"restore","dump":"%s","antes":"%s","ator":"manual:%s"}\n' \
+     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$DUMP" "$ANTES" "$(id -un)" >> /opt/lotus/releases.jsonl
+   ```
+
+7. **Soltar o cadeado e promover o SHA que deve rodar**, pelo botão e **sem escape**. O gate passa
+   sozinho, porque o banco voltou a ser o de antes da release. O `deploy.sh` sobe `app` e
+   `scheduler` de novo.
+
+   ```bash
+   exec 9>&-
+   rm /root/restore.sql.gz /root/antes.txt
+   ```
+
+O ensaio completo (restore por cima contra `DROP`/`CREATE`, na mesma imagem `mysql:8.0` da
+produção) está na evidência do item 12, em *Review de 2026-09-26*.
 
 ### 8.2 O ledger `releases.jsonl`
 
@@ -253,9 +346,16 @@ Append-only, `640 root:root`, duas linhas por tentativa:
 sudo tail -4 /opt/lotus/releases.jsonl
 ```
 
-- `{"evento":"inicio",…}` sai **antes** do `migrate` e traz `sha`, `sha_anterior`, as `migrations`
-  que vão rodar, a chave `dump` (ou `null`, quando não havia migration pendente) e o `ator`.
+- `{"evento":"inicio",…}` sai **antes** do `migrate` e traz:
+  - `sha` e `sha_anterior`;
+  - as `migrations` que vão rodar;
+  - `schema_a_frente`, as migrations que o alvo não conhece. A lista só fica cheia quando o escape
+    do §8.1 foi usado; num deploy comum ela sai vazia;
+  - a chave `dump`, ou `null` quando não havia migration pendente;
+  - o `ator`.
 - `{"evento":"fim",…}` traz `resultado` e a `etapa` em que parou.
+- `{"evento":"restore",…}` não é escrita pelo `deploy.sh`. O operador a escreve no passo 6 do
+  §8.1.1, com o `dump` carregado e a cópia `antes` do banco descartado.
 - **`inicio` sem `fim` significa deploy interrompido no meio.** Não é buraco no registro: é a
   informação que se quer nessa hora, e é a linha que aponta o dump.
 

@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 #
-# Deploy por SHA no host de produção (spec v2 do item 10, §11).
-# Sequência: login -> pull -> migrate -> up -> /up -> digests -> CURRENT_SHA.
-# Rollback: rodar de novo com o SHA anterior (migration incompatível é limite
-# declarado — estratégia é do item 12).
+# Deploy por SHA no host de produção (spec v2 do item 10, §11; item 12).
+# Sequência: cadeado -> login -> manifestos -> pull -> gate de schema -> dump
+# (só com migration pendente) -> ledger `inicio` -> migrate -> up -> /up ->
+# digests -> CURRENT_SHA -> ledger `fim`.
+# Rollback: promover o SHA anterior. Com o banco à frente do alvo o gate recusa,
+# e o que vem antes de promover de novo é o restore do runbook §8.1.1.
 #
 # Uso:  deploy.sh <sha de 40 hexadecimais>
+# Ambiente, todos opcionais:
+#   LOTUS_DEPLOY_ATOR               quem promove, no ledger (default manual:<usuário>)
+#   LOTUS_ACEITAR_SCHEMA_A_FRENTE=1 pula a recusa do gate; só por SSH, e fica no
+#                                   ledger como `schema_a_frente`
+#   LOTUS_RELEASE_OWNER             dono das imagens no GHCR (default gatika-cl)
+# Saída: 0 ok, 1 falha, 2 uso, 3 outro deploy rodando, 4 banco à frente do alvo.
 # Pré:  /opt/lotus/.env, /opt/lotus/ghcr.token (PAT read:packages),
 #       /opt/lotus/docker-compose.prod.yml (e o overlay TLS, se ativo).
 set -euo pipefail
@@ -66,8 +74,12 @@ json_lista() {
 # elemento inteiro e nunca o prefixo de "x_y". Sem linha, ou com "dump": null,
 # a saida e' vazia. O `|| true` nao e' enfeite: com pipefail, grep sem match
 # mataria o script aqui, antes de a recusa dizer o que fazer.
+# A lista `schema_a_frente` sai da linha antes da busca: ela nomeia migration
+# que o deploy NAO introduziu, e um escape com "dump": null viraria a ultima
+# linha e apagaria a chave certa.
 dump_que_introduziu() {
-  grep -F '"evento":"inicio"' "$LEDGER" | grep -F "\"$1\"" | tail -n 1 \
+  grep -F '"evento":"inicio"' "$LEDGER" | sed 's/"schema_a_frente":\[[^]]*\]//' \
+    | grep -F "\"$1\"" | tail -n 1 \
     | sed -n 's/.*"dump":"\([^"]*\)".*/\1/p' || true
 }
 
@@ -141,12 +153,13 @@ if [ -n "$A_FRENTE" ]; then
     CHAVE=$(dump_que_introduziu "$M")
     echo "  $M  (dump anterior: ${CHAVE:-nenhum registrado no ledger})" >&2
   done
-  echo "restaure o dump da PRIMEIRA linha — a migration mais antiga — e so entao promova." >&2
-  # O escape existe para o operador com o dump na mao. O WORKFLOW nunca define
-  # esta variavel (catraca em workflow-deploy.test.ts), entao o caminho
-  # automatizado nao tem como contornar o gate.
+  echo "restaure o dump da PRIMEIRA linha — a migration mais antiga — e so entao promova (runbook §8.1.1)." >&2
+  # Com o dump restaurado o gate passa sozinho, sem escape. O escape e' para
+  # outra decisao: rodar codigo velho sobre schema novo SEM restaurar. O
+  # WORKFLOW nunca define esta variavel (catraca em workflow-deploy.test.ts),
+  # entao o caminho automatizado nao tem como contornar o gate.
   [ "${LOTUS_ACEITAR_SCHEMA_A_FRENTE:-0}" = "1" ] || exit 4
-  echo "aviso: LOTUS_ACEITAR_SCHEMA_A_FRENTE=1 — seguindo por sua conta." >&2
+  echo "aviso: LOTUS_ACEITAR_SCHEMA_A_FRENTE=1 — seguindo por sua conta; fica no ledger como schema_a_frente." >&2
 fi
 
 ANTERIOR=$(cat "$BASE/CURRENT_SHA" 2>/dev/null || true)
@@ -161,13 +174,19 @@ if [ -n "$PENDENTES" ]; then
   SAIDA_DUMP=$(mktemp)
   # Falha do backup ABORTA o deploy: promover sem a evidencia de rollback e'
   # promover sem rede, e o `set -e` ja faz isso valer.
-  LOTUS_BACKUP_SAIDA="$SAIDA_DUMP" "$BASE/bin/backup-db.sh"
+  # O rotulo poe o SHA na chave do S3: o dump diz de que promocao ele e', e nao
+  # colide com o do cron no mesmo segundo.
+  LOTUS_BACKUP_SAIDA="$SAIDA_DUMP" LOTUS_BACKUP_ROTULO="pre-deploy-${SHA:0:12}" "$BASE/bin/backup-db.sh"
   DUMP_JSON="\"$(cat "$SAIDA_DUMP")\""
   rm -f "$SAIDA_DUMP"
 fi
 
 MIGRACOES_JSON=$(printf '%s\n' "$PENDENTES" | json_lista)
-ledger '{"ts":"'"$(agora)"'","evento":"inicio","sha":"'"$SHA"'","sha_anterior":'"$ANTERIOR_JSON"',"migrations":'"$MIGRACOES_JSON"',"dump":'"$DUMP_JSON"',"ator":"'"$ATOR"'"}'
+# Nao vazia so quando o escape foi usado: sem ele, o gate ja saiu com 4. Sai
+# sempre, vazia no caso normal, pelo mesmo motivo do `"dump": null` — ausencia
+# declarada, e nao omitida (Q-3 do review de 2026-09-26).
+A_FRENTE_JSON=$(printf '%s\n' "$A_FRENTE" | json_lista)
+ledger '{"ts":"'"$(agora)"'","evento":"inicio","sha":"'"$SHA"'","sha_anterior":'"$ANTERIOR_JSON"',"migrations":'"$MIGRACOES_JSON"',"schema_a_frente":'"$A_FRENTE_JSON"',"dump":'"$DUMP_JSON"',"ator":"'"$ATOR"'"}'
 INICIO_ESCRITO=1
 
 ETAPA=migrate

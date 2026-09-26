@@ -8,7 +8,7 @@
 
 **Tech Stack:** Bash 5 (host Ubuntu 24.04 arm64), GitHub Actions, AWS IAM/OIDC/SSM (`sa-east-1`), Docker Compose v2, MySQL 8, Vitest (projeto `repo`, ambiente node) para as catracas.
 
-**Spec:** [`specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md`](../specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md)
+**Spec:** [`specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md`](../../specs/archive/2026-09-21-cicd-promocao-deploy-e-rollback-design.md)
 **Context Packet:** [`context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md`](../context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md) (`status: partial`; as duas lacunas foram fechadas no brainstorming — spec §1.3)
 
 ## Global Constraints

@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (31)
+## Abertas (34)
 
 ### Agrupadas em bloco de execução
 
@@ -29,6 +29,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-85 | No sqlite da suíte o `whereBetween` de `start_date` do `AnalyticsQuery` (série e dois rankings) deixa de fora o último dia do período — a produção (MySQL) acerta, a suíte não enxerga a borda; `DataSql::literal` já resolve isso em outro lugar | — | bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de período do dashboard; revisar 2026-10-31 |
+| P-88 | O `deploy.sh` aceita promover imagem de qualquer dono do GHCR: `LOTUS_RELEASE_OWNER=andred21` por SSH puxa o trio público do repositório pessoal, e a regra "produção é sempre `gatika-cl`" vale por padrão, não por mecanismo | — | próximo commit que mudar `deploy/bin/deploy.sh` (junto com a P-87), ou o João promover; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | 31 | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
@@ -87,6 +88,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-80 | A previsão de custo do mês é **35,74 USD** contra o teto de **30** da decisão D8, e o critério de resize da EC2 (`t4g.medium`, +9 USD/mês) está satisfeito — as duas decisões são a mesma conversa | João | decidir teto **e** resize juntos, com a decisão escrita na spec/ADR que a carrega; revisar 2026-10-31 |
 | P-81 | A access key `AKIA3B7BDINPPYESZA6T` do usuário `lotus-infra`, que provisionou toda a Fase B, continua ativa — a produção não a usa (instance profile), mas é credencial de longa duração sem uso corrente | João | `aws iam list-access-keys --user-name lotus-infra` não devolver mais a chave; revisar 2026-10-31 |
 | P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade) | — | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
+| P-87 | O botão promove imagens, mas o compose, o `tls.conf`, o `.env` e os scripts de `deploy/bin/` (o próprio `deploy.sh` que o botão executa) chegam ao host por cópia manual e nada compara o host com o SHA — em 2026-09-26 os quatro primeiros estavam atrás da `main` (Q-1, Q-2, Q-6 e Q-9 do review do item 10 nunca tinham chegado lá); o review do item 12 mudou `deploy.sh` e `backup-db.sh` e disparou o gatilho | João | João escolher entre detectar (o workflow compara o host com o SHA), entregar pelo SSM do botão ou aceitar o risco no runbook; ou o próximo commit que mudar esses arquivos; revisar 2026-10-31 |
 | P-49 | Eixos **redator** e **turma** fechados em 2026-08-23 (`lockForWrite()` nos cinco escritores + catraca); resta a janela **cotação × orçamento** | João | bloco que tocar `RestoreQuoteAction`/`DeleteBudgetAction` e puder travar os dois lados; revisar 2026-10-31 |
 | P-51 | Default literal em DTO de entrada — o campo de **acesso** (`is_active`) fechou em 2026-08-23; restam **cinco** campos sem controle de acesso | João | bloco que tocar `UpdateClientAction`/`UpdateCourseAction`, `BudgetController::update` ou `CourseTemplateController::update`; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
@@ -94,15 +96,30 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 | P-55 | A invariante proíbe a lane de escrever os campos singulares do `state.md`, mas cada lane precisa do espelho apontando para si na própria árvore — e três lanes já fizeram isso | João | João escolher entre reescrever a invariante ou dar ao espelho um mecanismo próprio; revisar 2026-10-31 |
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
-| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
+| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas. Desde o item 12, a mesma raiz deixa o botão de promoção sem Environment | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (3)
+## Encerradas (0)
 
-**Em rastro:** a **P-59**, a **P-75** e a **P-79**, fechadas em **2026-09-25** pelo
-`backend-config-e-conteudo-de-documento` (item 29). As fichas estão em
-[`encerradas.md`](./encerradas.md) e saem no próximo fechamento posterior ao delas.
+**Em rastro:** nenhuma.
+
+**A P-59, a P-75 e a P-79 saíram no fechamento do item 12 (2026-09-26)**, o primeiro posterior ao
+do `backend-config-e-conteudo-de-documento` (item 29), que as encerrou em 2026-09-25 — a P-59 e a
+P-79 por mecanismo, a P-75 por veredito escrito. O rastro durável está nos commits e na linha de
+entrega em [`../historico/progress.md`](../historico/progress.md).
+
+**O item 12 (`cicd-promocao-deploy-e-rollback`) fechou em 2026-09-26 sem encerrar ficha.** Abriu a
+**P-86** (o dump pré-deploy nunca rodou num deploy com migration) e a **P-87** (o host recebe por
+cópia o que o botão não promove), e emendou a **P-62**: o botão mora no corporativo sem Environment,
+que é a mesma raiz do plano free. O próprio review do item disparou o gatilho da **P-87** ao mudar
+`deploy.sh` e `backup-db.sh`, e o gatilho não foi pago: o host roda a versão da `main` de hoje, e as
+correções só chegam lá pela integração seguida da reinstalação do runbook §7, que é do João.
+
+**A P-88 nasceu depois do fechamento do item 12, no mesmo dia, por pedido do João.** A regra
+"produção roda sempre imagem de `gatika-cl`, nunca do repositório pessoal" foi conferida em
+produção e estava certa, mas o `deploy.sh` aceita trocar o dono por variável de ambiente. O João
+escolheu registrar em vez de corrigir antes do merge.
 
 **A P-82 saiu no fechamento do item 29 (2026-09-25)**, o primeiro posterior ao do
 `harness-hooks-de-guarda` (item 28), que a encerrou em 2026-09-20 pelos dois lados do gatilho — a

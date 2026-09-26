@@ -108,6 +108,29 @@ describe('deploy/bin/backup-db.sh', () => {
     expect(chave).toBeGreaterThan(envio)
   })
 
+  it('duas execuções no mesmo minuto não gravam na mesma chave', () => {
+    // Review de 2026-09-26 (Q-5): a chave era por minuto. Um deploy com migration
+    // e o cron no mesmo minuto escreviam no mesmo objeto; o versioning guardava o
+    // anterior como noncurrent, e a chave gravada no ledger passava a abrir o
+    // outro dump, sem aviso. Segundos separam execuções em série; o rótulo separa
+    // o cron do deploy, que podem coincidir no mesmo segundo.
+    expect(semComentarios).toMatch(/date -u \+%Y-%m-%dT%H-%M-%S/)
+    expect(semComentarios).toMatch(/^ROTULO="\$\{LOTUS_BACKUP_ROTULO:-\}"$/m)
+    expect(semComentarios).toContain('${ROTULO:+-$ROTULO}.sql.gz')
+  })
+
+  it('rótulo fora de [a-z0-9-] é recusado antes de virar chave do S3', () => {
+    const linhas = semComentarios.split(/\r?\n/)
+    // `case` e não grep: grep sem linha sai 1 (recusaria o rótulo vazio do cron)
+    // e grep por linha aprovaria rótulo com quebra de linha no meio.
+    const guarda = linhas.findIndex((linha) => linha.includes('*[!a-z0-9-]*)'))
+    const chave = linhas.findIndex((linha) => linha.startsWith('ARQ='))
+    expect(guarda).toBeGreaterThan(-1)
+    expect(linhas[guarda]).toMatch(/echo "erro:.*>&2;\s*exit 1\s*;;$/)
+    expect(linhas[guarda - 1]).toMatch(/^case "\$ROTULO" in$/)
+    expect(guarda).toBeLessThan(chave)
+  })
+
   it('não mexe no stdout que o cron do host consome', () => {
     expect(semComentarios).toMatch(/^echo "backup ok: /m)
   })

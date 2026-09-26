@@ -9,7 +9,13 @@
 # Uso:  LOTUS_INSTANCIA=i-0123456789abcdef0 deploy/aws/criar-oidc-e-role.sh
 set -euo pipefail
 
-REPO="${LOTUS_REPO:-Gatika-CL/lotus}"
+# Com os IDs do dono e do repositorio, e nao so os nomes: repositorio criado
+# depois de 2026-07-15 emite o `sub` imutavel do GitHub (`repo:DONO@ID/REPO@ID:`),
+# e o corporativo nasceu em 2026-08-25. Um `sub` so com nomes nunca casa, e o
+# AssumeRole volta AccessDenied. Os IDs sao `.owner.id` e `.id` de
+# `gh api repos/Gatika-CL/lotus`. E' o ID que impede um repositorio recriado com
+# o mesmo nome de herdar esta trust.
+REPO="${LOTUS_REPO:-Gatika-CL@310231788/lotus@1345572200}"
 REGIAO="${LOTUS_REGIAO:-sa-east-1}"
 INSTANCIA="${LOTUS_INSTANCIA:-}"
 [ -n "$INSTANCIA" ] || { echo "erro: defina LOTUS_INSTANCIA=i-..." >&2; exit 2; }
@@ -70,10 +76,16 @@ else
   echo "==> role $ROLE criada"
 fi
 
-# Minima de verdade: mandar UM comando, para UMA instancia, com UM documento.
-# Nada de ssm:StartSession — esta role nao abre shell. `GetCommandInvocation` e
-# `ListCommandInvocations` ficam em "*" porque sao leitura e o id do comando so
-# existe depois do send.
+# UMA instancia e UM documento — mas o documento e' o `AWS-RunShellScript`, que
+# roda QUALQUER comando como root. A role nao se limita ao `deploy.sh <sha>`: quem
+# a assume (o workflow da `main` do corporativo, pela trust acima) manda o shell
+# que quiser para o host. Isso nao abre poder novo — quem escreve na `main` ja
+# leva codigo para a producao, e a `main` nao tem protection (P-62) —, mas e' o
+# limite real, declarado na spec §12.6 (Q-6 do review de 2026-09-26). Estreitar e'
+# um documento SSM proprio com o `sha` validado por `allowedPattern`.
+# Nada de ssm:StartSession — esta role nao abre sessao interativa.
+# `GetCommandInvocation` e `ListCommandInvocations` ficam em "*" porque sao
+# leitura e o id do comando so existe depois do send.
 cat > "$TMP/ssm.json" <<JSON
 {"Version":"2012-10-17","Statement":[
  {"Effect":"Allow","Action":"ssm:SendCommand","Resource":[

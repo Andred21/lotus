@@ -7,11 +7,10 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(três: a **`P-59`**, a **`P-75`** e a **`P-79`**, fechadas em **2026-09-25** pelo
-`backend-config-e-conteudo-de-documento` (item 29) — a `P-59` e a `P-79` por mecanismo, a `P-75` por
-veredito escrito. A **`P-82`** cumpriu a sprint de rastro e saiu neste mesmo fechamento; o parágrafo
-do rastro adiante é o dela. O item 29 abriu a **`P-85`** (a borda do último dia no sqlite da suíte)
-e disparou pela segunda vez, sem pagar, o gatilho da **`P-53`**, por decisão do João no gate.)*
+*(nenhuma. A **`P-59`**, a **`P-75`** e a **`P-79`** cumpriram a sprint de rastro e saíram no
+fechamento do `cicd-promocao-deploy-e-rollback` (item 12, 2026-09-26); o parágrafo do rastro adiante
+é o delas. O item 12 não encerrou ficha: abriu a **`P-86`** e a **`P-87`**, emendou a **`P-62`** com
+o botão sem Environment e disparou, sem pagar, o gatilho da **`P-87`**.)*
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -31,60 +30,16 @@ e disparou pela segunda vez, sem pagar, o gatilho da **`P-53`**, por decisão do
 > sem reserva, e duas lanes que fecham no mesmo dia sem integrar entre si colidem por construção. A
 > **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
-### P-59 — `config/app.php` fixava `'timezone' => 'UTC'` como literal, e o `APP_TIMEZONE` do `.env` era ignorado
-
-**Fechada em 2026-09-25**, por mecanismo, no item 29 — **na direção contrária à que a ficha
-propunha**, por decisão do João no brainstorming (spec D1 e D2). A ficha pedia
-`env('APP_TIMEZONE', 'UTC')`; o bloco manteve o `'UTC'` **literal**, agora como decisão escrita no
-`config/app.php`, porque com a chave lida do ambiente bastaria alguém escrever `America/Santiago` no
-`.env` de produção para reinterpretar em silêncio todo `DATETIME` já gravado. A divergência entre
-`.env` e config fechou do lado do molde: `APP_TIMEZONE` saiu de `backend/.env.example`, o
-`backend/.env.production.example` passou a dizer que a ausência dela é decisão, e `FusoDeArmazenamentoTest` prova `config('app.timezone') ===
-'UTC'` **com** `APP_TIMEZONE=America/Santiago` no ambiente (sonda com o `env()` de volta: reprova com
-`'America/Santiago'`).
-
-O alcance que a ficha chamava de "pequeno" não era: `IssueCertificateAction` derivava do `now()` em
-UTC o **`emitido_em` do snapshot**, o `valido_ate` e o **ano do código** — certificado emitido depois
-das 21h de Santiago congelava a data de amanhã, e em 31/12 à noite saía `LOT-<ano seguinte>`. Nasceu
-`App\Shared\Support\FusoDoNegocio`, dono único da data de calendário (`hoje()`, `agora()`,
-`dataDe()`, `inicioDoDia()`, `fimDoDia()`), e os sítios de Certification, Identity, Operation e
-Dashboard passaram por ele; a catraca `tests/Unit/Shared/DataDeCalendarioTest.php` reprova
-`today()`, `now()` projetado em data e `agora()` gravado em `*_at`. **Provado contra a API real no
-fechamento**, às 21:57 de Santiago (00:57 UTC de 26/09): o `LOT-2026-1001` saiu com `emitido_em
-2026-09-25`, `Emisión: 25-09-2026` no PDF e `valido_ate 2027-09-25`, e o dashboard contou o
-certificado no dia e no mês de Santiago. O certificado de prova foi revogado.
-
-### P-75 — o `SANCTUM_STATEFUL_DOMAINS` do `.env` não chegava ao runtime, e o CSRF a partir do Vite devolvia 401 em vez de 419
-
-**Fechada em 2026-09-25**, por **veredito escrito**, no item 29 (spec D4). A config nunca divergiu
-do ambiente: desde `03127249` o `docker-compose.yml:19` injeta
-`SANCTUM_STATEFUL_DOMAINS=localhost:${LOTUS_DEV_VITE_PORT},localhost:${LOTUS_DEV_HTTP_PORT}`, que
-vence o `backend/.env` por desenho, e o `.env` da raiz do main tree declara `VITE=5174` com
-`HTTP=8080` — exatamente o que o runtime resolveu. A sonda de 2026-09-02 bateu de `:5173`, onde nada
-desta árvore roda, e o 401 era o comportamento correto para origem não-stateful. O mecanismo que o
-gatilho pedia já existia no lado que produz a chave (`frontend/tests/compose-dev.test.ts`). Nenhum
-código, nenhum teste novo; o veredito completo ficou no corpo da ficha, commit `b8ccb588`.
-
-### P-79 — a URL que ia no QR do certificado era a mesma chave de infra
-
-**Fechada em 2026-09-25**, por mecanismo, no item 29 (spec D3) — com uma volta a mais do que a ficha
-pedia. A ficha propunha chave própria **com fallback incondicional** para `app.frontend_url`; o
-bloco limitou o fallback a fora de produção, porque esquecer a chave em produção cairia de volta no
-EIP, o mesmo modo de falha da regra operacional que a ficha criticava. Nasceram
-`config('app.certificate_validation_url')`, o dono único
-`Certification\Services\CertificateValidationUrl` e a exceção
-`ValidacaoDeCertificadoNaoConfigurada` (`RuntimeException` + `PublicDetail`, 500 nomeado e logado,
-não `RecusaDeDominio`). Em produção, chave vazia ou sem `https://` recusa o PDF **e** a emissão —
-antes da transação, então não nasce certificado que ninguém consegue baixar. O molde
-`env.prod.example` e o runbook §7/§11 trocaram a proibição de procedimento pelo mecanismo.
-
-**Provado no artefato real, QR decodificado do PDF:** com a chave, o certificado 6001 carregou
-`https://valida.lotus.example/validar/<uuid>`; sem ela, o mesmo certificado carregou
-`http://localhost:5174/validar/<uuid>` (audit §5-6); no fechamento, o 6002 saiu com o fallback de
-`local`. Consequência aceita: sem o registro A (**`P-77`**), a produção recusa emitir e baixar
-certificado, o `LOT-2026-1000` de prova inclusive.
-
 ## Rastro anterior, já removido
+
+**A P-59, a P-75 e a P-79 saíram no fechamento do `cicd-promocao-deploy-e-rollback` (item 12,
+2026-09-26)**, o primeiro posterior ao do `backend-config-e-conteudo-de-documento` (item 29), que as
+encerrou em 2026-09-25: a P-59 por mecanismo, com o `'UTC'` literal como decisão escrita e o
+`FusoDoNegocio` dono da data de calendário (catracas `FusoDeArmazenamentoTest` e
+`DataDeCalendarioTest`); a P-75 por veredito escrito, pois a config nunca divergiu do ambiente; e a
+P-79 por mecanismo, com a chave própria do QR, obrigatória e `https` em produção, provada no QR
+decodificado do PDF. O rastro durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-82 saiu no fechamento do `backend-config-e-conteudo-de-documento` (item 29, 2026-09-25)**, o
 primeiro posterior ao do `harness-hooks-de-guarda` (item 28), que a abriu e a encerrou em 2026-09-20
