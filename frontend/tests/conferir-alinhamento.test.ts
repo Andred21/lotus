@@ -45,6 +45,7 @@ beforeAll(() => {
   escrever(join(main, 'docker-compose.prod.yml'), 'services: {app: {image: main}}\n')
   escrever(join(main, 'deploy', 'bin', 'deploy.sh'), '#!/bin/sh\necho novo\n')
   escrever(join(main, 'deploy', 'bin', 'backup-db.sh'), '#!/bin/sh\necho backup\n')
+  escrever(join(main, 'deploy', 'bin', 'verificar-backup.sh'), '#!/bin/sh\necho verificar\n')
 })
 
 afterAll(() => {
@@ -58,6 +59,7 @@ const alinhada = (): string[] => [
   `${sha256(join(alvo, 'deploy', 'nginx', 'tls.conf'))}  nginx/tls.conf`,
   `${sha256(join(main, 'deploy', 'bin', 'backup-db.sh'))}  bin/backup-db.sh`,
   `${sha256(join(main, 'deploy', 'bin', 'deploy.sh'))}  bin/deploy.sh`,
+  `${sha256(join(main, 'deploy', 'bin', 'verificar-backup.sh'))}  bin/verificar-backup.sh`,
   '--- chaves',
   'APP_NAME',
   'APP_LOCALE',
@@ -100,6 +102,30 @@ describe('.github/scripts/conferir-alinhamento.sh', () => {
     expect(r.stderr).toContain('deploy/aws/README.md')
     expect(r.status).toBe(1)
   })
+
+  // Cada arquivo de runtime tem a conferência dele. Só o compose principal
+  // tinha caso negativo, e apagar a linha do overlay TLS no script passava
+  // verde (Q-3 do review do item 31).
+  it.each(['docker-compose.prod.yml', 'docker-compose.prod-tls.yml', 'nginx/tls.conf'])(
+    '%s com hash diferente do ALVO reprova',
+    (caminho) => {
+      const r = conferir(comLinha(caminho, `${'0'.repeat(64)}  ${caminho}`))
+      expect(r.stdout).toMatch(new RegExp(`^${caminho.replace(/[./-]/g, '\\$&')} diferente$`, 'm'))
+      expect(r.status).toBe(1)
+    },
+  )
+
+  // Todo script de deploy/bin/ da main é conferido, não uma lista fixa: com
+  // dois scripts na fixture, trocar o glob por `{backup-db,deploy}.sh`
+  // passava verde (Q-3 do review do item 31).
+  it.each(['backup-db.sh', 'deploy.sh', 'verificar-backup.sh'])(
+    'bin/%s da main ausente no host reprova',
+    (script) => {
+      const r = conferir(comLinha(`bin/${script}`, null))
+      expect(r.stdout).toMatch(new RegExp(`^bin/${script.replace(/[.-]/g, '\\$&')} ausente$`, 'm'))
+      expect(r.status).toBe(1)
+    },
+  )
 
   it('deploy.sh diferente da MAIN reprova, mesmo igual ao do alvo', () => {
     const r = conferir(

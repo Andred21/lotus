@@ -142,9 +142,8 @@ jobs:
 
           ESTADO_LEITURA=Pending
           # Mesmo relogio de parede do passo de deploy, com orcamento proprio:
-          # a leitura leva segundos. Nome proprio de proposito -- a catraca da
-          # razao com o timeout do job le a PRIMEIRA ocorrencia do orcamento
-          # do deploy.
+          # a leitura leva segundos. Os dois orcamentos saem do MESMO
+          # timeout-minutes do job, e a catraca prende a SOMA deles a ele.
           ORCAMENTO_LEITURA=90
           FIM_LEITURA=$(( $(date +%s) + ORCAMENTO_LEITURA ))
           while [ "$(date +%s)" -lt "$FIM_LEITURA" ]; do
@@ -197,8 +196,9 @@ jobs:
           # onde as duas fazem falta. Por isso o orcamento agora e' um
           # deadline absoluto, imune a latencia por chamada:
           # ORCAMENTO_SEGUNDOS=840 (14min) e' ~70% dos 1200s do
-          # timeout-minutes: 20, com folga real pros passos anteriores e
-          # pelas duas leituras finais de saida.
+          # timeout-minutes: 20; somado aos 90s do ORCAMENTO_LEITURA da
+          # conferencia (item 31), ~78%, com folga real pros passos anteriores
+          # e pelas duas leituras finais de saida.
           ORCAMENTO_SEGUNDOS=840
           FIM=$(( $(date +%s) + ORCAMENTO_SEGUNDOS ))
           while [ "$(date +%s)" -lt "$FIM" ]; do
