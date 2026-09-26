@@ -185,6 +185,19 @@ sudo mv /tmp/tls.conf /opt/lotus/nginx/
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
 
+**O botão confere esta instalação antes de promover** (item 31). Um `send-command` só de leitura
+lista o sha256 dos dois composes, do `nginx/tls.conf` e de cada `bin/*.sh`, e os **nomes** das
+chaves do `.env` (o valor nunca sai do host). O script `.github/scripts/conferir-alinhamento.sh`
+compara no runner, com duas referências: o runtime e as chaves contra o **SHA que está sendo
+promovido**, e os scripts contra a **`main`**. Arquivo diferente ou ausente, ou chave do molde que
+falta no `.env`, reprovam o botão antes do deploy, uma linha por item. Script ou chave **a mais**
+no host não reprovam.
+
+Duas consequências. **Todo merge que mudar `deploy/bin/*.sh` trava o botão até a reinstalação** —
+os scripts vêm sempre de uma árvore na `main` atual (`git diff --quiet origin/main -- deploy/bin`
+antes do `scp`). E o script de conferência **não vai para o host**: ele roda no runner a partir do
+checkout da `main`, então não entra no `scp` acima.
+
 `.env`: copie `deploy/aws/env.prod.example` para `/opt/lotus/.env`, preencha os `<...>` e
 proteja (`sudo chmod 600 /opt/lotus/.env`, dono root). **Sem o registro A ainda**, os quatro
 campos de host vão para o EIP e o `SESSION_DOMAIN` recebe o literal **`null`** — nem o domínio
@@ -224,14 +237,18 @@ manifest list entries`. O `deploy.sh` já exige os três manifestos antes de pux
 **O caminho normal é o botão.** Em `Gatika-CL/lotus`, Actions → *Promover para producao* →
 `Run workflow`, com o SHA de 40 hexadecimais e a palavra `PROMOVER`. O workflow confere que o SHA
 está na `main`, que o CI dele terminou verde e que os três manifestos existem no GHCR; assume a
-role `lotus-deploy` por OIDC; e manda o host rodar **este mesmo script**:
+role `lotus-deploy` por OIDC; confere que o host tem o runtime e os scripts que o SHA
+pressupõe (§7 — reprovou, o remédio é reinstalar pela §7 e promover de novo); e manda o host rodar
+**este mesmo script**:
 
 ```bash
 sudo /opt/lotus/bin/deploy.sh <sha de 40 hexadecimais>
 ```
 
 **O SSH manual é contingência**, não o caminho de todo dia: serve quando a Actions está fora do ar
-ou quando o rollback precisa do escape do §8.1. Os dois caminhos disputam o mesmo `flock` em
+ou quando o rollback precisa do escape do §8.1. **Ele pula a conferência da §7**: promove com o host
+como estiver. Antes de um deploy por SSH, confira à mão que o que foi instalado pela §7 é o do SHA.
+Os dois caminhos disputam o mesmo `flock` em
 `/opt/lotus/.deploy.lock` — o segundo sai com código **3** em vez de rodar junto.
 
 ### 8.1 Rollback
@@ -244,6 +261,21 @@ decide se isso é seguro:
 - **o banco está à frente do alvo**: o script **recusa** com código **4** e lista as migrations que
   sobram, cada uma com a chave do dump que a precede, lida do ledger. A lista vem ordenada. A
   primeira é a migration mais antiga, e o dump dela desfaz todas. Siga o §8.1.1.
+
+**Se o runtime mudou entre o SHA rodando e o alvo, o botão recusa** nomeando o arquivo
+(`docker-compose.prod.yml diferente`, por exemplo). Instale pela §7 os arquivos de runtime **do SHA
+alvo** e promova de novo. O SHA do corporativo não existe no clone de desenvolvimento; a árvore de
+origem vem do trailer `Source-Commit:`:
+
+```bash
+ORIGEM=$(gh api repos/Gatika-CL/lotus/commits/<sha alvo> --jq .commit.message | sed -n 's/^Source-Commit: //p')
+git show "$ORIGEM:docker-compose.prod.yml"     > /tmp/docker-compose.prod.yml
+git show "$ORIGEM:docker-compose.prod-tls.yml" > /tmp/docker-compose.prod-tls.yml
+git show "$ORIGEM:deploy/nginx/tls.conf"       > /tmp/tls.conf
+```
+
+Depois, `scp` e `mv` como na §7. **Os scripts de `bin/` não voltam**: a referência deles é sempre
+a `main`, e o `deploy.sh` atual promove um SHA antigo.
 
 **Com `fim` em `"etapa":"migrate"`, siga o §8.1.1 mesmo se o gate não recusar.** O DDL do MySQL não
 é transacional. Uma migration que morre no meio deixa tabela ou coluna criada sem linha na

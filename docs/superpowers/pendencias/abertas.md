@@ -1089,7 +1089,8 @@ captura e em que chave ela acumula, o que é decisão do João e alimenta direta
 
 ## P-86 — o dump pré-deploy nunca rodou num deploy de verdade
 
-**Bloco:** cicd-promocao-deploy-e-rollback (item 12) · **Gatilho:** o primeiro release corporativo
+**Bloco:** cicd-promocao-deploy-e-rollback (item 12); hospedada **condicionalmente** por
+`cicd-host-alinhado-ao-sha` (item 31) desde 2026-09-26 · **Gatilho:** o primeiro release corporativo
 que trouxer migration nova. Nele, conferir: a linha `inicio` do `releases.jsonl` com `migrations`
 não vazio e `dump` com a chave `s3://…`, esse objeto existindo no S3, e o `verificar-backup.sh`
 aprovando. Se houver rollback recusado depois dele, a recusa tem de imprimir essa mesma chave ao
@@ -1105,7 +1106,8 @@ migration registra `"dump": null`, e o `deploy-sh.test.ts` assere o ramo do dump
 
 ## P-87 — o botão promove imagens, mas o host guarda compose, `tls.conf`, `.env` e os próprios scripts de `deploy/bin/` por cópia, e nada avisa quando eles ficam para trás
 
-**Bloco:** cicd-promocao-deploy-e-rollback (item 12) · **Quem decide:** João · **Gatilho:** o
+**Bloco:** cicd-promocao-deploy-e-rollback (item 12); hospedada por `cicd-host-alinhado-ao-sha`
+(item 31) desde 2026-09-26, que escolheu a direção (a) · **Quem decide:** João · **Gatilho:** o
 próximo commit que mudar `docker-compose.prod.yml`, `docker-compose.prod-tls.yml`,
 `deploy/nginx/tls.conf`, `deploy/aws/env.prod.example` ou `deploy/bin/*.sh`, ou o João escolher o
 mecanismo abaixo. Revisar em **2026-10-31**.
@@ -1164,7 +1166,8 @@ foi de novo sincronização manual, e nada teria avisado se ela não acontecesse
 
 ## P-88 — o `deploy.sh` aceita promover imagem de qualquer dono do GHCR, inclusive do repositório pessoal
 
-**Bloco:** — (fora de bloco) · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
+**Bloco:** `cicd-host-alinhado-ao-sha` (item 31), desde 2026-09-26 · **Quem decide:** João ·
+**Gatilho:** o próximo commit que mudar
 `deploy/bin/deploy.sh` (o mesmo da **P-87**, para que o host receba as duas correções numa
 reinstalação só), ou o João promover a correção. Revisar em **2026-10-31**.
 

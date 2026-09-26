@@ -68,6 +68,10 @@
   aberto pelo João a partir do agrupamento das 33 fichas de `pendencias/abertas.md` por "lado" —
   três chaves de `backend/config/` que nenhum bloco hospedava (`P-79`, `P-75`, `P-59`) — **fechado em
   2026-09-25**.
+  O `31` nasceu em 2026-09-26, aberto pelo João juntando a `P-88` e a `P-87` pelo gatilho comum
+  (o próximo commit que mudar `deploy/bin/deploy.sh`), com a `P-86` condicional. **O `30` foi
+  saltado**: a branch órfã `chore/30-harness-estado-por-bloco` (`../lotus-harness`) já o usa sem
+  ficha aqui, e reusá-lo apontaria duas coisas com o mesmo número.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -90,6 +94,7 @@ uma casa. **Não promove nada** — promover segue sendo ato explícito no
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
+| 0 | **31** `cicd-host-alinhado-ao-sha` | Infra | **Promovido pelo João em 2026-09-26, na `lane-b`.** Frente disjunta das outras linhas; o gatilho das duas fichas já disparou e o botão segue confiando em sincronização manual |
 | 1 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
 | 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
 | 3 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
@@ -105,6 +110,25 @@ escopo foi movido de ficha.
 ---
 
 # Fila priorizada
+
+## 31. `cicd-host-alinhado-ao-sha`
+
+**Prioridade:** P1 · **Frente:** Infra/CI-CD · **Contexto:** não
+**Fonte:** fichas `P-88`, `P-87` e `P-86` de `pendencias/abertas.md`; spec
+`specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md`.
+
+**Objetivo:** a regra "produção roda sempre imagem de `gatika-cl`" vira mecanismo, e o botão de
+promoção deixa de confiar em sincronização manual do host — recusa quando o runtime do host diverge
+do SHA alvo ou os scripts divergem da `main`.
+
+**Escopo:** `deploy.sh` com dono literal (`P-88`); `.github/scripts/conferir-alinhamento.sh` e o
+passo que o chama no `deploy.yml`, antes do deploy (`P-87`, direção (a)); catracas; runbook §7/§8.
+A **`P-86`** entra só se houver, na execução, SHA na `main` com migration que a produção não tem.
+
+**DoD:** vermelho ao vivo (o botão reprova nomeando o `deploy.sh` antes da reinstalação) e verde ao
+vivo (promove depois dela), com as catracas vistas reprovar por sonda.
+
+---
 
 ## 16. `frontend-revisao-ui-por-modulo`
 
