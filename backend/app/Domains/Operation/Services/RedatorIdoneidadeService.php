@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Exceptions\RedatorNaoElegivelException;
+use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Contracts\Database\Query\Builder;
 
 /**
@@ -42,7 +43,7 @@ class RedatorIdoneidadeService
             ->where('type', RedatorDocumentType::REUF->value)
             ->where(fn (Builder $q) => $q
                 ->whereNull('valid_until')
-                ->orWhereDate('valid_until', '>=', now()->toDateString()))
+                ->orWhereDate('valid_until', '>=', FusoDoNegocio::hoje()->toDateString()))
             ->exists();
     }
 }

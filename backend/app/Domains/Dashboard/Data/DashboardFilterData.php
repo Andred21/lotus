@@ -2,6 +2,7 @@
 
 namespace App\Domains\Dashboard\Data;
 
+use App\Shared\Support\FusoDoNegocio;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\Validator;
 use Spatie\LaravelData\Data;
@@ -17,6 +18,12 @@ use Spatie\LaravelData\Data;
  *
  * Janela invertida sobe `ValidationException`, que o handler global converte em
  * 422 RFC 7807 — nunca `abort()` à mão (ADR-03).
+ *
+ * `start()` e `end()` são DIAS do cliente, na forma do cast `date` (meia-noite
+ * e fim do dia no fuso da aplicação), não instantes. Quem filtra coluna
+ * `datetime` converte pelo `FusoDoNegocio::inicioDoDia()`/`fimDoDia()`, como o
+ * `AnalyticsQuery` — comparados crus com instante UTC, cortavam as últimas
+ * horas do dia de Santiago (review Q-1 do item 29).
  */
 class DashboardFilterData extends Data
 {
@@ -70,13 +77,13 @@ class DashboardFilterData extends Data
     {
         return $this->period_start !== null
             ? CarbonImmutable::parse($this->period_start)->startOfDay()
-            : CarbonImmutable::today()->subMonths(self::DEFAULT_MONTHS)->startOfDay();
+            : FusoDoNegocio::hoje()->subMonths(self::DEFAULT_MONTHS)->startOfDay();
     }
 
     public function end(): CarbonImmutable
     {
         return $this->period_end !== null
             ? CarbonImmutable::parse($this->period_end)->endOfDay()
-            : CarbonImmutable::today()->endOfDay();
+            : FusoDoNegocio::hoje()->endOfDay();
     }
 }

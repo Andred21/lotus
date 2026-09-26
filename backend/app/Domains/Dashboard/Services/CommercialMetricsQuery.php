@@ -9,6 +9,7 @@ use App\Domains\Dashboard\Data\QuoteKpisData;
 use App\Domains\Dashboard\Enums\DashboardModule;
 use App\Domains\Dashboard\Enums\DashboardSeverity;
 use App\Domains\Dashboard\Enums\PendingItemType;
+use App\Shared\Support\FusoDoNegocio;
 
 class CommercialMetricsQuery
 {
@@ -62,7 +63,7 @@ class CommercialMetricsQuery
                 quote: $quote,
                 type: PendingItemType::QuoteApprovedWithoutTurma,
                 description: __('dashboard.pending.quote_without_turma'),
-                date: $quote->approved_at?->toDateString(),
+                date: FusoDoNegocio::dataDe($quote->approved_at),
             ));
 
         return $awaitingApproval

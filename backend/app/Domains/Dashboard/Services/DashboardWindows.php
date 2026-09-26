@@ -2,6 +2,7 @@
 
 namespace App\Domains\Dashboard\Services;
 
+use App\Shared\Support\FusoDoNegocio;
 use App\Shared\Support\JanelaDeAviso;
 use Carbon\CarbonImmutable;
 
@@ -18,11 +19,11 @@ final class DashboardWindows
 
     public static function turmaHorizon(): CarbonImmutable
     {
-        return CarbonImmutable::now()->addDays(self::TURMA_WINDOW_DAYS)->endOfDay();
+        return FusoDoNegocio::hoje()->addDays(self::TURMA_WINDOW_DAYS)->endOfDay();
     }
 
     public static function expiryHorizon(): CarbonImmutable
     {
-        return CarbonImmutable::now()->addDays(JanelaDeAviso::DIAS)->endOfDay();
+        return FusoDoNegocio::hoje()->addDays(JanelaDeAviso::DIAS)->endOfDay();
     }
 }

@@ -49,7 +49,7 @@
   2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
   2026-08-27, o `5` em 2026-08-28, o `6` e o `18` em 2026-08-29, o `7` e o `19` em 2026-08-30, o
   `20` em 2026-08-31, o `21` em 2026-09-01, o `24` em 2026-09-02, o `25` e o `26` em 2026-09-03, o
-  `22` e o `27` em 2026-09-04 e o `10` em 2026-09-20. O `10` é o único que **encolheu antes de
+  `22` e o `27` em 2026-09-04, o `10` e o `28` em 2026-09-20 e o `29` em 2026-09-25. O `10` é o único que **encolheu antes de
   sair**: o runtime foi entregue em 2026-08-22 e a ficha ficou só com o provisionamento, que fechou
   agora. A fila salta os números que já fecharam, de propósito.
 - **Item novo entra com número novo, e o lugar dele na fila é o da dependência, não o do número.** O
@@ -64,7 +64,10 @@
   hospedava (`P-71`, `P-72` e a metade de comportamento da `P-60`) — **fechado em 2026-09-03**; e o
   `27` em 2026-09-03, do levantamento de frontend pedido pelo João, medido contra `main@24bf770c`
   — **fechado em 2026-09-04**; e o `28` em 2026-09-20, aberto pelo João a partir da leitura do
-  harness do `Ela-Decora/ElaDecora-Brain` — **fechado em 2026-09-20**.
+  harness do `Ela-Decora/ElaDecora-Brain` — **fechado em 2026-09-20**; e o `29` em 2026-09-21,
+  aberto pelo João a partir do agrupamento das 33 fichas de `pendencias/abertas.md` por "lado" —
+  três chaves de `backend/config/` que nenhum bloco hospedava (`P-79`, `P-75`, `P-59`) — **fechado em
+  2026-09-25**.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -78,17 +81,19 @@
 
 # Ordem de execução
 
-Recomendação por dependência e risco, decidida em 2026-09-03. **Não promove nada** — promover segue
-sendo ato explícito no `state.md`. A fila abaixo está escrita nesta ordem.
+Recomendação por dependência e risco, decidida em 2026-09-03 e **emendada em 2026-09-21**, por
+decisão do João: o **22** saiu da tabela — fechou em 2026-09-04 e a linha ficou para trás por 17
+dias —, e o **29** entrou na frente. O **29** saiu em 2026-09-25, fechado; as posições abaixo dele
+subiram uma casa sem mudar a ordem relativa. **Não promove nada** — promover segue sendo ato explícito no
+`state.md`. A fila abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
 | 1 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
 | 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
-| 3 | **22** `dominio-decisoes-de-rbac-e-semantica` | Backend | Quatro decisões de domínio travadas no João; muda contrato e regenera `generated.ts`, então precede qualquer frontend que dependa desses campos |
-| 4 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
-| 5 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | **Destravado em 2026-09-20**: o item 10 provisionou o host e fechou. O packet `status: blocked` de 2026-08-26 teve o gatilho de staleness vencido e **precisa regenerar** antes de qualquer planejamento |
-| 6 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
+| 3 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
+| 4 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | **Destravado em 2026-09-20**: o item 10 provisionou o host e fechou. O packet `status: blocked` de 2026-08-26 teve o gatilho de staleness vencido e **precisa regenerar** antes de qualquer planejamento |
+| 5 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
 
 **A colisão 16 × 9, registrada e não resolvida:** o 16 tem uma run de `/lotus-ui-review` de
 **Administração** no escopo e o 9 pode **redesenhar a mesma tela**. Medir antes do veredito do 9 é

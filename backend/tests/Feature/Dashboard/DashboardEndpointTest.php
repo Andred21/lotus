@@ -789,12 +789,18 @@ class DashboardEndpointTest extends TestCase
         ]);
     }
 
+    /**
+     * `$approvedOn` é o DIA da aprovação, e o instante gravado é o meio-dia
+     * UTC dele — manhã em Santiago, o mesmo dia nos dois fusos. A meia-noite
+     * UTC seria a noite anterior em Santiago, e a série de UF, que conta pelo
+     * mês de Santiago, poria a aprovação de 01/07 em junho (review Q-1 do item 29).
+     */
     private function makeQuote(
         Client $client,
         Course $course,
         string $status,
         string $valueUf,
-        ?string $approvedAt,
+        ?string $approvedOn,
     ): Quote {
         $budget = Budget::firstOrCreate(['client_id' => $client->id, 'code' => "Scap {$client->id}"]);
 
@@ -805,7 +811,7 @@ class DashboardEndpointTest extends TestCase
             'student_count' => 10,
             'value_uf' => $valueUf,
             'status' => $status,
-            'approved_at' => $approvedAt,
+            'approved_at' => $approvedOn === null ? null : "{$approvedOn} 12:00:00",
             'planned_start_date' => '2026-09-01',
         ]);
     }
@@ -817,10 +823,10 @@ class DashboardEndpointTest extends TestCase
         string $start,
         string $end,
         string $valueUf,
-        string $approvedAt,
+        string $approvedOn,
     ): Turma {
         return Turma::create([
-            'quote_id' => $this->makeQuote($client, $course, 'approved', $valueUf, $approvedAt)->id,
+            'quote_id' => $this->makeQuote($client, $course, 'approved', $valueUf, $approvedOn)->id,
             'course_id' => $course->id,
             'modalidade' => 'online',
             'local_aplicacao' => null,

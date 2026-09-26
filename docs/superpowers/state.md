@@ -1,7 +1,7 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-a
 active_feature: null
 active_work_item: null
 workflow_state: idle
@@ -19,14 +19,14 @@ lanes:
     workflow_state: idle
     next_owner: joao
     next_action: select_backlog_item
-    tree: ../lotus-harness
-    branch: chore/harness-hooks-de-guarda   # item 28 fechado em 2026-09-20; PR #106 aberta, aguardando o merge do Joao — integracao e serial e e passo proprio
+    tree: main-tree
+    branch: fix/backend-config-e-conteudo-de-documento   # aberta de main@5be61b63 em 2026-09-24; o item 29 fechou nela em 2026-09-25 e ela NAO foi mesclada — integracao e passo proprio, com o Joao. A anterior (chore/harness-hooks-de-guarda, item 28) mesclou na PR #106 (38e08a08)
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: harness-hooks-de-guarda   # item 28, fechado em 2026-09-20
+    last_completed_work_item: backend-config-e-conteudo-de-documento   # item 29, fechado em 2026-09-25; branch ainda nao mesclada
   lane-b:
     active_feature: null
     active_work_item: null
@@ -60,9 +60,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: infra-producao-provisionamento-aws
-state_basis_commit: 25086f5e
-updated_at: 2026-09-20T23:55:00-03:00
+last_completed_work_item: backend-config-e-conteudo-de-documento
+state_basis_commit: 6fe8a80d
+updated_at: 2026-09-25T22:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -162,11 +162,11 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-20
+## Ocupação corrente — 2026-09-25
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — (item 28 **fechado em 2026-09-20**) | — | `../lotus-harness` | `chore/harness-hooks-de-guarda` — `origin/main@cff022d4` (PR #105) mesclada para dentro em 2026-09-20; a **PR #106** está aberta | `idle` |
+| `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
 | `lane-b` | — (item 10 v2 **fechado em 2026-09-20**; o 12 segue **estacionado**, com o gatilho do packet vencido) | — | `../lotus-infra` | `infra/producao-provisionamento-aws` | `idle` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
@@ -176,7 +176,6 @@ disjuntas, colisão mínima de arquivos:
 > linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
-
 
 **O item 12 segue estacionado na `lane-b`, e o gatilho do packet dele venceu.** O
 `cicd-promocao-deploy-e-rollback` continua no `backlog.md` e o packet
@@ -196,11 +195,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-25 | `backend-config-e-conteudo-de-documento` (fecha a **P-59** e a **P-79** por mecanismo e a **P-75** por veredito escrito; abre a **P-85**; dispara sem pagar, pela segunda vez, a **P-53**; nascem `App\Shared\Support\FusoDoNegocio`, `Certification\Services\CertificateValidationUrl` e `ValidacaoDeCertificadoNaoConfigurada`, e as catracas `DataDeCalendarioTest` e `FusoDeArmazenamentoTest`; `config/app.php` fica em `UTC` literal por decisão escrita) | Item 29 da fila |
 | 2026-09-20 | `harness-hooks-de-guarda` (fecha a **P-82**; abre a **P-83** — sete decisões de política dos guardas que só existiam no ledger gitignorado — e a **P-84** — o harness não existe em doc versionado; nascem `.claude/settings.json`, `.claude/hooks/` com os cinco guardas e `.claude/tests/` com sete arquivos) | Item 28 da fila |
 | 2026-09-20 | `infra-producao-provisionamento-aws` (item 10, **v2** — replanejado do zero; a v1 e a R5 foram descartadas para `archive/`). Os sete DoD fecharam, o sétimo pelo **ramo ficha** que a Task 19 prevê. Fecha a **P-58**; abre a **P-77**, a **P-78**, a **P-79** e — no próprio gate de fechamento, por decisão do João de adiar — a **P-80** (custo) e a **P-81** (access key); **dispara a `P-05` sem pagar** (a produção subiu com as 30 migrations não consolidadas). Nascem `deploy/bin/verificar-backup.sh`, `deploy/nginx/tls.conf`, `docker-compose.prod-tls.yml`, `deploy/aws/user-data.sh` e o runbook `deploy/aws/README.md`; o ADR-09 ganha a revisão 2026-09 e a lição 19 é emendada pela terceira ocorrência | Item 10 da fila |
 | 2026-09-04 | `dominio-decisoes-de-rbac-e-semantica` (fecha as quatro fichas de decisão `D-09`, `D-10`, `D-11` e `D-16`; nenhuma pendência nasce ou fecha, mas **dispara sem pagar** os gatilhos da `P-51` e da `P-53`; nascem `RoleOptionData`, `StudentClientOptionData`, `UmContatoPrincipal` e `DeleteClientAddressAction`) | Item 22 da fila |
 | 2026-09-04 | `frontend-arrumacao-de-testes` (fecha a **P-58**; nenhuma pendência nasce; nascem `test.projects` no `vite.config.ts`, `src/shared/testing/providers.tsx` e a catraca `QUERY_CLIENT_A_MAO`) | Item 27 da fila |
-| 2026-09-03 | `backend-envelope-de-erro-e-recusa-de-dominio` (paga a **P-71**, a **P-72** e a metade de comportamento da **P-60**; abre a **P-75** e a **P-76**; nascem `TipoDeRecusa` e `RecusaDeDominio` em `app/Shared/Exceptions/` e a rule `.claude/rules/backend-lang.md`) | Item 26 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com
