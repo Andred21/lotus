@@ -1610,6 +1610,6 @@ nenhum SHA, corporativo ou pessoal, passa das **30** migrations que a produção
    novo (pelo botão, servindo também ao Step 2 da Task 12).
 5. O resto da Task 12.
 
-**DoD 6, metade "deploy com migration pendente":** sem SHA com migration, vira a **P-85** —
+**DoD 6, metade "deploy com migration pendente":** sem SHA com migration, vira a **P-86** —
 provada no primeiro release real que trouxer migration. A metade `"dump": null` já está provada
 (Task 9), e o `verificar-backup.sh` aprovando o dump também (Task 9).

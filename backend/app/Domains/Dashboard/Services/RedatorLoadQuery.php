@@ -8,7 +8,7 @@ use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
-use Carbon\CarbonImmutable;
+use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -28,7 +28,7 @@ class RedatorLoadQuery
     /** @return RedatorLoadData[] */
     public function get(): array
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
         $horizon = DashboardWindows::expiryHorizon();
         $porRedator = $this->turmasEmAndamentoPorRedator();
 
@@ -76,7 +76,7 @@ class RedatorLoadQuery
      */
     private function turmasEmAndamentoPorRedator(): array
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
         $porRedator = [];
 
         /** @var Collection<int, Turma> $turmas */

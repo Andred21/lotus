@@ -18,7 +18,7 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Shared\Files\Models\File;
-use Carbon\CarbonImmutable;
+use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -50,7 +50,7 @@ class RedatorScopeQuery
 
     public function resumo(Redator $redator): RedatorResumoData
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
         $turmas = $this->turmasEmAndamento($redator);
 
         // Os dois primeiros contadores partem o mesmo conjunto em dois, sem
@@ -71,7 +71,7 @@ class RedatorScopeQuery
 
     public function agenda(Redator $redator): RedatorAgendaData
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
         $horizon = DashboardWindows::turmaHorizon();
         $turmas = $this->turmasEmAndamento($redator);
 
@@ -121,7 +121,7 @@ class RedatorScopeQuery
     /** @return AlertData[] */
     public function alertasDocumentos(Redator $redator): array
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
 
         return $redator->documents()
             ->whereIn('type', RedatorDocumentType::values())

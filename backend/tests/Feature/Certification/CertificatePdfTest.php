@@ -3,13 +3,16 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Certification\Enums\CertificateStatus;
+use App\Domains\Certification\Exceptions\ValidacaoDeCertificadoNaoConfigurada;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Identity\Models\User;
 use App\Shared\Pdf\HtmlToPdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\Support\Pdf\FakeHtmlToPdf;
@@ -18,6 +21,8 @@ use Tests\TestCase;
 class CertificatePdfTest extends TestCase
 {
     use RefreshDatabase;
+
+    private const RECUSA_DE_URL = 'La dirección de validación de certificados no está configurada con https. Ningún certificado se emite ni se descarga hasta que el administrador del sistema la configure.';
 
     private Certificate $certificate;
 
@@ -607,7 +612,10 @@ class CertificatePdfTest extends TestCase
     public function test_qr_aponta_para_frontend_url_e_uuid(): void
     {
         $this->actingAsAdmin();
-        config(['app.frontend_url' => 'https://frontend.example.test/base/']);
+        config([
+            'app.frontend_url' => 'https://frontend.example.test/base/',
+            'app.certificate_validation_url' => null,
+        ]);
         $this->fakeGotenberg();
         $expectedUrl = "https://frontend.example.test/base/validar/{$this->certificate->uuid}";
         $expectedQr = base64_encode((string) QrCode::format('svg')
@@ -621,6 +629,64 @@ class CertificatePdfTest extends TestCase
             $html,
             "data:image/svg+xml;base64,{$expectedQr}",
         ));
+    }
+
+    /** P-79: preenchida, a chave própria vence o `frontend_url`. */
+    public function test_qr_aponta_para_a_chave_de_validacao_quando_preenchida(): void
+    {
+        $this->actingAsAdmin();
+        config([
+            'app.frontend_url' => 'https://frontend.example.test',
+            'app.certificate_validation_url' => 'https://valida.example.test/',
+        ]);
+        $this->fakeGotenberg();
+        $expectedQr = base64_encode((string) QrCode::format('svg')
+            ->size(180)
+            ->margin(0)
+            ->generate("https://valida.example.test/validar/{$this->certificate->uuid}"));
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(fn (string $html): bool => str_contains(
+            $html,
+            "data:image/svg+xml;base64,{$expectedQr}",
+        ));
+    }
+
+    /**
+     * P-79: em produção, sem a base https, o documento não é montado — 500 com
+     * a razão no `detail` e registrado no log. O conversor responde 200 de
+     * propósito: o 500 só existe porque a recusa vem antes.
+     */
+    #[DataProvider('chavesQueProducaoRecusa')]
+    public function test_pdf_em_producao_sem_chave_https_recusa_com_500_nomeado(?string $chave): void
+    {
+        // Resolução do controlador: autentica ANTES de trocar para producao —
+        // o seeding do admin pede confirmacao quando o ambiente ja e producao.
+        $this->actingAsAdmin();
+        $this->app->detectEnvironment(fn (): string => 'production');
+        config([
+            'app.frontend_url' => 'https://app.lotusotec.cl',
+            'app.certificate_validation_url' => $chave,
+        ]);
+        Exceptions::fake();
+        Http::fake(['*/forms/chromium/convert/html' => Http::response('%PDF')]);
+
+        $this->getJson($this->pdfUrl())
+            ->assertStatus(500)
+            ->assertJsonPath('detail', self::RECUSA_DE_URL);
+
+        Http::assertNothingSent();
+        Exceptions::assertReported(ValidacaoDeCertificadoNaoConfigurada::class);
+    }
+
+    /** @return array<string, array{?string}> */
+    public static function chavesQueProducaoRecusa(): array
+    {
+        return [
+            'ausente' => [null],
+            'http cru, o EIP da fase sem DNS' => ['http://18.230.53.197'],
+        ];
     }
 
     /**

@@ -8,7 +8,7 @@ use App\Domains\Dashboard\Enums\DashboardSeverity;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Shared\Files\Models\File;
-use Carbon\CarbonImmutable;
+use App\Shared\Support\FusoDoNegocio;
 
 /**
  * O que o dashboard do admin lê do módulo Identity.
@@ -24,7 +24,7 @@ class IdentityMetricsQuery
     /** @return AlertData[] */
     public function alertasDocumentos(): array
     {
-        $today = CarbonImmutable::today();
+        $today = FusoDoNegocio::hoje();
 
         return File::query()
             // Alias do morph map (ADR-10), não literal: o `AppServiceProvider`

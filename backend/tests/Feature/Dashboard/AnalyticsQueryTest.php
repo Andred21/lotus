@@ -8,6 +8,7 @@ use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Dashboard\Data\DashboardFilterData;
 use App\Domains\Dashboard\Services\AnalyticsQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
@@ -287,6 +288,88 @@ class AnalyticsQueryTest extends TestCase
         $rankings = $query->rankings($start, $end, true)->toArray();
         $this->assertSame(1, $rankings['courses'][0]['certificados']);
         $this->assertSame(1, $rankings['clients'][0]['certificados']);
+    }
+
+    /**
+     * O período e os baldes são dias e meses de SANTIAGO (review Q-1 do item
+     * 29). Os limites chegam como dias do cliente; comparados crus com
+     * instantes UTC, o fim do período cortava as últimas horas locais do dia e
+     * o começo puxava as do dia anterior. 31/08 é inverno (UTC-4): 01:30 e
+     * 02:30 UTC de 01/09 são 21:30 e 22:30 de 31/08; 02:00 UTC de 01/08 são
+     * 22:00 de 31/07. Duas turmas dentro contra uma fora, para a troca de lado
+     * não empatar a contagem.
+     */
+    public function test_periodo_e_baldes_sao_dias_e_meses_de_santiago(): void
+    {
+        foreach ([['2026-09-01 01:30:00', '100.0000', '2026-08-20'], ['2026-09-01 02:30:00', '50.0000', '2026-08-21']] as [$instante, $valueUf, $startDate]) {
+            $dentro = $this->createConcludedTurma(
+                approvedAt: $instante,
+                valueUf: $valueUf,
+                startDate: $startDate,
+                endDate: '2026-08-31',
+                concludedAt: $instante,
+            );
+            $this->createCertificate($this->createEnrollment($dentro, $instante), $instante);
+        }
+        $fora = $this->createConcludedTurma(
+            approvedAt: '2026-08-01 02:00:00',
+            valueUf: '999.0000',
+            startDate: '2026-07-20',
+            endDate: '2026-07-31',
+            concludedAt: '2026-08-01 02:00:00',
+        );
+        $this->createCertificate($this->createEnrollment($fora, '2026-08-01 02:00:00'), '2026-08-01 02:00:00');
+
+        $start = CarbonImmutable::parse('2026-08-01')->startOfDay();
+        $end = CarbonImmutable::parse('2026-08-31')->endOfDay();
+        $query = app(AnalyticsQuery::class);
+
+        $agosto = [['month' => '2026-08', 'count' => 2]];
+        $this->assertSame([
+            'turmas_iniciadas' => $agosto,
+            'turmas_concluidas' => $agosto,
+            'certificados_emitidos' => $agosto,
+            'matriculas' => $agosto,
+            'uf_aprovada' => [['month' => '2026-08', 'total_uf' => '150.0000']],
+        ], $this->series($query, $start, $end));
+
+        $rankings = $query->rankings($start, $end, true)->toArray();
+        foreach (['courses', 'clients'] as $ranking) {
+            $this->assertSame(2, $rankings[$ranking][0]['matriculas'], $ranking);
+            $this->assertSame(2, $rankings[$ranking][0]['certificados'], $ranking);
+            $this->assertSame('150.0000', $rankings[$ranking][0]['uf_aprovada'], $ranking);
+        }
+    }
+
+    /**
+     * O período DEFAULT vai até o fim do dia de Santiago (review Q-1). Às 22h
+     * de 24/09 em Santiago (01:00 UTC de 25/09, verão, UTC-3), o que aconteceu
+     * às 21:30 locais já é de hoje e entra nas séries. Com o limite em UTC,
+     * sumia delas das 21h à meia-noite.
+     */
+    public function test_periodo_default_inclui_o_fim_do_dia_de_santiago(): void
+    {
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-25 01:00:00', 'UTC'));
+        $instante = '2026-09-25 00:30:00';
+        $turma = $this->createConcludedTurma(
+            approvedAt: $instante,
+            valueUf: '75.0000',
+            startDate: '2026-09-20',
+            endDate: '2026-09-24',
+            concludedAt: $instante,
+        );
+        $this->createCertificate($this->createEnrollment($turma, $instante), $instante);
+
+        $filtro = new DashboardFilterData;
+        $setembro = [['month' => '2026-09', 'count' => 1]];
+
+        $this->assertSame([
+            'turmas_iniciadas' => $setembro,
+            'turmas_concluidas' => $setembro,
+            'certificados_emitidos' => $setembro,
+            'matriculas' => $setembro,
+            'uf_aprovada' => [['month' => '2026-09', 'total_uf' => '75.0000']],
+        ], $this->series(app(AnalyticsQuery::class), $filtro->start(), $filtro->end()));
     }
 
     /**

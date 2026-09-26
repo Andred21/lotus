@@ -20,4 +20,7 @@ return [
     'snapshot' => [
         'not_presentable' => 'El certificado :codigo no puede presentarse: su documento congelado no tiene los campos :campos.',
     ],
+    'validation_url' => [
+        'not_configured' => 'La dirección de validación de certificados no está configurada con https. Ningún certificado se emite ni se descarga hasta que el administrador del sistema la configure.',
+    ],
 ];

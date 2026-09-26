@@ -15,7 +15,9 @@ use App\Domains\Dashboard\Data\RankingsData;
 use App\Domains\Dashboard\Data\SeriesData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Support\FusoDoNegocio;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 
 class AnalyticsQuery
 {
@@ -23,6 +25,13 @@ class AnalyticsQuery
      * Série que o chamador não vai mostrar não é lida. Os flags dizem O QUE
      * calcular — quem PODE ver segue sendo decisão do assembler (D7); o que
      * muda aqui é não pagar a leitura para depois anular o campo (Q-9).
+     *
+     * `$start` e `$end` são DIAS do cliente (`DashboardFilterData`). Coluna
+     * `date` (`start_date`) compara com eles direto; instante (`created_at`,
+     * `approved_at`, `concluded_at`) compara com os instantes em que esses dias
+     * começam e terminam em Santiago, e cai no balde do mês de Santiago.
+     * Limite e balde mudam juntos — só um dos dois põe linha no mês errado ou
+     * fora do período (review Q-1 do item 29).
      */
     public function series(
         CarbonImmutable $start,
@@ -31,6 +40,9 @@ class AnalyticsQuery
         bool $includeCertification,
         bool $includeUf,
     ): SeriesData {
+        $startInstant = FusoDoNegocio::inicioDoDia($start);
+        $endInstant = FusoDoNegocio::fimDoDia($end);
+
         return new SeriesData(
             turmas_iniciadas: $includeOperation
                 ? $this->monthlyCounts(
@@ -38,43 +50,52 @@ class AnalyticsQuery
                         ->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
                         ->get(['start_date']),
                     'start_date',
+                    instant: false,
                 )
                 : null,
             turmas_concluidas: $includeOperation
                 ? $this->monthlyCounts(
-                    Turma::query()->whereBetween('concluded_at', [$start, $end])->get(['concluded_at']),
+                    Turma::query()->whereBetween('concluded_at', [$startInstant, $endInstant])->get(['concluded_at']),
                     'concluded_at',
+                    instant: true,
                 )
                 : null,
             certificados_emitidos: $includeCertification
                 ? $this->monthlyCounts(
-                    Certificate::query()->emitidos()->whereBetween('created_at', [$start, $end])->get(['created_at']),
+                    Certificate::query()->emitidos()->whereBetween('created_at', [$startInstant, $endInstant])->get(['created_at']),
                     'created_at',
+                    instant: true,
                 )
                 : null,
             matriculas: $includeOperation
                 ? $this->monthlyCounts(
-                    Enrollment::query()->whereBetween('created_at', [$start, $end])->get(['created_at']),
+                    Enrollment::query()->whereBetween('created_at', [$startInstant, $endInstant])->get(['created_at']),
                     'created_at',
+                    instant: true,
                 )
                 : null,
             uf_aprovada: $includeUf
                 ? $this->monthlyAmounts(
                     Quote::query()
                         ->where('status', QuoteStatus::Approved)
-                        ->whereBetween('approved_at', [$start, $end])
+                        ->whereBetween('approved_at', [$startInstant, $endInstant])
                         ->get(['approved_at', 'value_uf']),
                     'approved_at',
+                    instant: true,
                 )
                 : null,
         );
     }
 
+    /** Mesmo período de dias do cliente das `series()`. */
     public function rankings(
         CarbonImmutable $start,
         CarbonImmutable $end,
         bool $includeUf,
     ): RankingsData {
+        $startInstant = FusoDoNegocio::inicioDoDia($start);
+        $endInstant = FusoDoNegocio::fimDoDia($end);
+
         $courseTurmas = Turma::query()
             ->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
             ->selectRaw('course_id AS entity_id, COUNT(*) AS aggregate')
@@ -85,7 +106,7 @@ class AnalyticsQuery
         $courseEnrollments = Enrollment::query()
             ->join('turmas', 'turmas.id', '=', 'enrollments.turma_id')
             ->whereNull('turmas.deleted_at')
-            ->whereBetween('enrollments.created_at', [$start, $end])
+            ->whereBetween('enrollments.created_at', [$startInstant, $endInstant])
             ->selectRaw('turmas.course_id AS entity_id, COUNT(enrollments.id) AS aggregate')
             ->groupBy('turmas.course_id')
             ->pluck('aggregate', 'entity_id')
@@ -93,7 +114,7 @@ class AnalyticsQuery
             ->all();
         $courseCertificates = Certificate::query()
             ->emitidos()
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('created_at', [$startInstant, $endInstant])
             ->selectRaw('course_id AS entity_id, COUNT(*) AS aggregate')
             ->groupBy('course_id')
             ->pluck('aggregate', 'entity_id')
@@ -106,7 +127,7 @@ class AnalyticsQuery
             ? $this->ufTotals(
                 Quote::query()
                     ->where('status', QuoteStatus::Approved)
-                    ->whereBetween('approved_at', [$start, $end])
+                    ->whereBetween('approved_at', [$startInstant, $endInstant])
                     ->get(['course_id AS entity_id', 'value_uf']),
             )
             : [];
@@ -140,7 +161,7 @@ class AnalyticsQuery
             ->whereNull('quotes.deleted_at')
             ->whereNull('turmas.deleted_at')
             ->whereNull('enrollments.deleted_at')
-            ->whereBetween('enrollments.created_at', [$start, $end])
+            ->whereBetween('enrollments.created_at', [$startInstant, $endInstant])
             ->selectRaw('clients.id AS entity_id, COUNT(DISTINCT enrollments.id) AS aggregate')
             ->groupBy('clients.id')
             ->pluck('aggregate', 'entity_id')
@@ -160,7 +181,7 @@ class AnalyticsQuery
             // Mesma definição de "emitido" do `Certificate::scopeEmitidos()` —
             // aqui qualificada pela tabela porque a query nasce em `clients`.
             ->where('certificates.status', CertificateStatus::Emitido)
-            ->whereBetween('certificates.created_at', [$start, $end])
+            ->whereBetween('certificates.created_at', [$startInstant, $endInstant])
             ->selectRaw('clients.id AS entity_id, COUNT(DISTINCT certificates.id) AS aggregate')
             ->groupBy('clients.id')
             ->pluck('aggregate', 'entity_id')
@@ -175,7 +196,7 @@ class AnalyticsQuery
                     ->whereNull('budgets.deleted_at')
                     ->whereNull('quotes.deleted_at')
                     ->where('quotes.status', QuoteStatus::Approved)
-                    ->whereBetween('quotes.approved_at', [$start, $end])
+                    ->whereBetween('quotes.approved_at', [$startInstant, $endInstant])
                     ->get(['clients.id AS entity_id', 'quotes.value_uf']),
             )
             : [];
@@ -222,12 +243,12 @@ class AnalyticsQuery
      * @param  iterable<int, object>  $rows
      * @return MonthlyCountData[]
      */
-    private function monthlyCounts(iterable $rows, string $dateAttribute): array
+    private function monthlyCounts(iterable $rows, string $dateAttribute, bool $instant): array
     {
         $counts = [];
 
         foreach ($rows as $row) {
-            $month = $row->{$dateAttribute}->format('Y-m');
+            $month = $this->month($row->{$dateAttribute}, $instant);
             $counts[$month] = ($counts[$month] ?? 0) + 1;
         }
 
@@ -244,12 +265,12 @@ class AnalyticsQuery
      * @param  iterable<int, object>  $rows
      * @return MonthlyAmountData[]
      */
-    private function monthlyAmounts(iterable $rows, string $dateAttribute): array
+    private function monthlyAmounts(iterable $rows, string $dateAttribute, bool $instant): array
     {
         $totals = [];
 
         foreach ($rows as $row) {
-            $month = $row->{$dateAttribute}->format('Y-m');
+            $month = $this->month($row->{$dateAttribute}, $instant);
             $totals[$month] = bcadd($totals[$month] ?? '0.0000', (string) $row->value_uf, 4);
         }
 
@@ -260,6 +281,18 @@ class AnalyticsQuery
             array_keys($totals),
             array_values($totals),
         );
+    }
+
+    /**
+     * O mês do cliente. Coluna `date` já é o dia local; instante é projetado no
+     * fuso do negócio — senão o certificado das 21:30 de 31/08 em Santiago,
+     * 01:30 UTC de 01/09, cai no balde de setembro.
+     */
+    private function month(CarbonInterface $value, bool $instant): string
+    {
+        return $instant
+            ? substr(FusoDoNegocio::dataDe($value), 0, 7)
+            : $value->format('Y-m');
     }
 
     /**
