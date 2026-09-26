@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-revisao-ui-por-modulo
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: reviewing
+next_owner: claude
+next_action: review_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-09-04-frontend-revisao-ui-por-modulo-f3-design.md
 active_plan: docs/superpowers/plans/2026-09-04-frontend-revisao-ui-por-modulo-f3.md
 context_packet: null
-blocker: "review do item 16 fatia 3 (2026-09-26) devolveu 5 achados aguardando o João — Q-1 🔴 achado C (Personas UI-01, coluna de ações cobre o nome em 390x844) deferido sem aprovação, DoD 2 reescrito para 'zero C sem destino'; Q-2 🟡 D-59 paga e ficha segue aberta no backlog; Q-3 🟡 dois comentários citam audit inexistente e a emenda do item 16 inverte a tupla da régua; Q-4 🟢 roleLabel ao lado de displayRole; Q-5 🟢 piso 42rem copiado em três tabelas. Baixo risco, sem revisão do Codex"
+blocker: null
 lanes:
   lane-a:
     active_feature: null
@@ -47,20 +47,20 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: frontend-revisao-ui-por-modulo
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: reviewing
+    next_owner: claude
+    next_action: review_active_work_item
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui-f3   # aberta de origin/main@9c038cca em 2026-09-04, ja com o item 27 mesclado pela PR #100; a fatia 2 saiu na refactor/frontend-revisao-ui-f2
     active_spec: docs/superpowers/specs/2026-09-04-frontend-revisao-ui-por-modulo-f3-design.md
     active_plan: docs/superpowers/plans/2026-09-04-frontend-revisao-ui-por-modulo-f3.md
     context_packet: null
-    blocker: "review do item 16 fatia 3 (2026-09-26) devolveu 5 achados aguardando o João — Q-1 🔴 achado C (Personas UI-01, coluna de ações cobre o nome em 390x844) deferido sem aprovação, DoD 2 reescrito para 'zero C sem destino'; Q-2 🟡 D-59 paga e ficha segue aberta no backlog; Q-3 🟡 dois comentários citam audit inexistente e a emenda do item 16 inverte a tupla da régua; Q-4 🟢 roleLabel ao lado de displayRole; Q-5 🟢 piso 42rem copiado em três tabelas. Baixo risco, sem revisão do Codex"
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04, mesclado pela PR #100 (9c038cca)
 last_completed_work_item: frontend-arrumacao-de-testes
 state_basis_commit: 9c038cca
-updated_at: 2026-09-26T18:10:00-03:00
+updated_at: 2026-09-26T19:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
 | `lane-b` | — (item 31 `cicd-host-alinhado-ao-sha` **fechado em 2026-09-26**) | — | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`; até `af1526eb` mesclada na PR #112, `fe6077df`; o resto **não mesclado** — integração é passo próprio, com o João) | `idle` |
-| `lane-c` | `frontend-revisao-ui-por-modulo` (item 16, **fatia 3**) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`) | `blocked` (achados do review aguardando o João) |
+| `lane-c` | `frontend-revisao-ui-por-modulo` (item 16, **fatia 3**) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`) | `reviewing` (João aprovou Q-1 a Q-5 do review, Q-1 pela opção de consertar no bloco; correções em curso) |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
