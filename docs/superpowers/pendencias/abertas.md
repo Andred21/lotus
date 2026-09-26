@@ -1155,3 +1155,34 @@ As direções mudam assim:
   por SSM e compara com o SHA promovido.
 - Em (b), os scripts entram no pacote que o SSM entrega, junto com o compose e o `tls.conf`.
 
+
+## P-88 — o `deploy.sh` aceita promover imagem de qualquer dono do GHCR, inclusive do repositório pessoal
+
+**Bloco:** — (fora de bloco) · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
+`deploy/bin/deploy.sh` (o mesmo da **P-87**, para que o host receba as duas correções numa
+reinstalação só), ou o João promover a correção. Revisar em **2026-10-31**.
+
+**A regra:** a produção roda **sempre** imagem de `ghcr.io/gatika-cl/`, nunca de
+`ghcr.io/andred21/`. Decisão do João em 2026-09-26, no fechamento do item 12.
+
+**Hoje ela vale por padrão, não por mecanismo.** O `deploy.sh` monta o nome das três imagens com
+`DONO="${LOTUS_RELEASE_OWNER:-gatika-cl}"`: o dono é uma variável de ambiente com `gatika-cl` como
+padrão. Um `LOTUS_RELEASE_OWNER=andred21 /opt/lotus/bin/deploy.sh <sha do pessoal>` por SSH promove
+o trio do repositório pessoal. As imagens de `andred21` são **públicas** no GHCR, então o pull nem
+precisa de credencial. Nenhuma catraca de `frontend/tests/deploy-sh.test.ts` reprova isso.
+
+**Medido em 2026-09-26, só por leitura, e a produção estava certa:**
+- os quatro containers nossos (`app`, `scheduler`, `nginx`, `clamav`) rodam
+  `ghcr.io/gatika-cl/lotus-*:1142911b…`, e as sete imagens `ghcr.io` em cache no host são todas de
+  `gatika-cl`;
+- `1142911b`, `a5fc92bb` e `683e6221` existem em `Gatika-CL/lotus` como `release: espelho de …`,
+  com `Source-Commit`, e o `1142911b` não existe em `Andred21/lotus` (422);
+- o ledger tem seis deploys, todos para `1142911b` ou `a5fc92bb`;
+- `LOTUS_RELEASE_OWNER` não aparece em `/opt/lotus`, em `/etc/environment` nem no perfil do root,
+  e o `deploy.yml` não a passa no comando do SSM.
+
+**Fecha quando:**
+- o `deploy.sh` tiver `gatika-cl` fixo, sem variável de ambiente;
+- uma catraca em `deploy-sh.test.ts` reprovar qualquer outro dono, e for vista reprovar pela sonda
+  que devolve o `${LOTUS_RELEASE_OWNER:-…}`;
+- o host tiver o `deploy.sh` novo, pela reinstalação do runbook §7.
