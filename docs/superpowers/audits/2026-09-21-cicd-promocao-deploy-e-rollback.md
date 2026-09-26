@@ -262,3 +262,105 @@ produção.** Ele rodou numa sonda local: a função extraída do script, sob `s
 contra um ledger de mentira. Release refeita devolveu o dump mais recente, `x` não casou `x_y` e
 ledger vazio sobreviveu. Esse ramo depende de um deploy com migration e fica na **P-86**, junto
 com o dump pré-deploy.
+
+## Task 11 — integração
+
+**A `main` andou duas vezes durante a task**: o item 28 (hooks do harness, PR #106) e o item 29
+(PR #107). As duas entraram por merge (`d8ab36cb` e `418bc5aa`). Nas duas a pendência nova deste
+bloco colidiu com uma do item mesclado e foi renumerada, de P-82 para P-85 e depois para **P-86**
+(precedente `52187e0f`). No `state.md` mesclado o foco ficou na `lane-b`, com os campos do topo
+espelhando-a; os commits de merge dizem por quê. A suíte da árvore integrada (Step 1) fechou com
+858 testes, lint e build verdes.
+
+| Passo | Onde | Resultado |
+| --- | --- | --- |
+| PR | [#108](https://github.com/Andred21/lotus/pull/108), head `418bc5aa` | gates do `pull_request` verdes no [run 36209218583](https://github.com/Andred21/lotus/actions/runs/36209218583): backend, frontend, types-drift, audit-dev e audit-prod; `procedencia` e `image` pulados, como previsto em PR |
+| merge na `main` | `65d81bc966225c6ea66358f7e770d2285e0bc8d6` (2026-09-26T01:43:01Z) | CI de `push` no [run 36209358167](https://github.com/Andred21/lotus/actions/runs/36209358167): os 7 jobs verdes, `image` incluído |
+| espelho | `1142911b26430466522bab0be2a87b0e32c4952b` em `Gatika-CL/lotus`, trailer `Source-Commit: 65d81bc966225c6ea66358f7e770d2285e0bc8d6` | CI corporativo no [run 36211051513](https://github.com/Gatika-CL/lotus/actions/runs/36211051513): os 7 jobs verdes (02:14:26Z → 03:01:06Z). O `image` publicou `lotus-app` (`sha256:8c009eca…`), `lotus-web` (`sha256:636d68f3…`) e `lotus-clamav` (`sha256:80d2a658…`), e o passo *O conjunto existe no GHCR* confirmou os três. Levou 42 min, 39 deles no alvo `app`, que não reaproveitou nenhuma camada do cache |
+
+**O CI da `main` estava vermelho desde 2026-09-09.** O último `push` verde antes deste bloco era o
+`e9c0850b` (2026-09-02). Do `618f390a` em diante o `audit-dev` reprovava e o `image` era pulado,
+e o espelho recusa commit sem CI verde. O item 29 trouxe o vitest 4.1.11 (`03eff0fd`,
+GHSA-82fw-gwwq-j7x9), e o `9664faf5` foi o primeiro verde. Sem ele, o espelho recusaria o
+`65d81bc9`.
+
+**Espelho.** A simulação (`--simular`) e a publicação deram a mesma árvore,
+`d1bab4c7326ffa80d9494b21d1ec70fcc0be6332` (`upstream/main^{tree}`): 1354 dos 1685 arquivos do
+`65d81bc9`. Conferido na árvore publicada:
+
+- dentro: `.github/workflows/deploy.yml`, `deploy/aws/criar-oidc-e-role.sh`, `deploy/bin/deploy.sh`
+  e as quatro catracas que a PR tocou (`criar-oidc-role`, `workflow-deploy`, `deploy-sh` e
+  `backup-db`);
+- fora: `docs/`, `.claude/`, `.agents/` e `frontend/tests/repo-docs-refs.test.ts`.
+
+As catracas passaram no CI corporativo, porque leem só `deploy/` e `.github/`. O job `frontend`
+fechou 134 arquivos e 842 testes, com `criar-oidc-role` (10), `workflow-deploy` (15), `deploy-sh`
+(22) e `backup-db` (14). A diferença para os 858 daqui é o `repo-docs-refs.test.ts`, o único
+arquivo de teste que o `.espelho-exclusoes` segura: 135 arquivos aqui, 134 lá.
+
+**O botão.** `gh workflow list` mostra *Promover para producao* `active` nos dois repositórios,
+com o mesmo blob (`34ea8f9f`). A guarda de dono, que deixa o job `skipped` no pessoal, se mede
+na Task 12, Step 6.
+
+### Antes do botão — o que o SHA novo leva e o que o host guardava por cópia
+
+**O item 29 vai junto.** O `1142911b` leva para a produção o item 29, além deste. Sem
+`CERTIFICATE_VALIDATION_URL` em https (ela fica vazia até o registro A, P-77), a produção passa a
+recusar emitir e baixar certificado, com 500 e a razão no `detail` (runbook §7). Nenhum
+certificado sai da produção até a §11. **Aceito pelo João em 2026-09-25.**
+
+**Os arquivos que o host guarda por cópia estavam defasados.** O `deploy.sh` promove imagens; os
+arquivos de compose e o `tls.conf` chegam ao host por cópia manual (runbook §7), e três correções
+do review do item 10 nunca tinham chegado lá. Lido por SSH em 2026-09-26T02:30Z:
+
+| Arquivo no host | Hash no host | Versão de | Faltava |
+| --- | --- | --- | --- |
+| `docker-compose.prod.yml` | `bb43533584bdb497…` | `a5fc92bb` = `db8f8736` | `f9b56707`: o healthcheck do clamav pergunta também a idade da base. Sem ele, base congelada seguia verde, e o antivírus falhava aberto (Q-9) |
+| `docker-compose.prod-tls.yml` | `f33411fc6646caed…` | `53ca6ce7` | `74c27652`: webroot do ACME por bind mount do host; sem ele a renovação do certificado não acontece (Q-6) |
+| `nginx/tls.conf` | `fef8107ba8894aca…` | `53ca6ce7` | `83e39132`: o `/up` fica fora do redirect 80→443; sem ele, no dia do registro A, o healthcheck do nginx e o gate pós-deploy do `deploy.sh` quebram no 301 (Q-1) |
+
+O João sincronizou os três na mesma instalação do `deploy.sh` corrigido (02:32:33Z). Os quatro
+hashes batem com a `main` (`65d81bc9`): `ae6686fd…`, `734d2892…`, `f3b1d0b8…` e `4e9a76e8…`.
+
+- Nada foi recriado. O compose novo só vale no próximo `up`, que é o do botão. A sentinela
+  (02:32:49Z) rodou logo depois e parou no gate, com o `compose pull` já lendo o compose novo sem
+  erro.
+- O overlay TLS segue inerte. O `deploy.sh` só o inclui quando `/etc/letsencrypt/live` existe, e
+  a pasta não existe. `/opt/lotus/certbot` (§7) também não existe; a §11 o cria antes da emissão
+  por webroot.
+- O rollback da Task 10 (`1142911b` → `a5fc92bb`) vai rodar a imagem velha sob o compose novo. A
+  imagem clamav dos dois SHAs difere só por um comentário no `docker/clamav/entrypoint.sh`, então
+  o healthcheck novo vale para as duas.
+
+**O `.env` do host também estava atrás do molde.** Antes do botão, conferi o que o SHA novo exige
+no boot, e não há nada novo: `docker/php`, `bootstrap/` e os providers são os mesmos do
+`a5fc92bb`, a URL de validação só é cobrada ao emitir ou baixar, e as migrations são as mesmas 30.
+Mas o `.env` do host, criado em 2026-09-04, não tinha 10 das 40 chaves que o Q-2 do review do item
+10 pôs no molde em 2026-09-20 (`83e39132`). Comparei só os nomes, nunca os valores:
+
+| Chave ausente | Efeito |
+| --- | --- |
+| `APP_LOCALE`, `APP_FALLBACK_LOCALE` | locale `en` por default, e o ADR-15 manda `es-CL`: requisição sem `Accept-Language` (QR público, job, notificação, artisan) responde em inglês |
+| `SESSION_SECURE_COOKIE` | null, que em HTTP equivale a `false`; mas o passo 2 da §11 manda trocar `false` por `true` numa chave que não existia |
+| `SESSION_LIFETIME`, `SESSION_ENCRYPT`, `SESSION_PATH`, `SESSION_SAME_SITE`, `CERTIFICATE_ISSUER_NAME`, `CERTIFICATE_ISSUER_RUT` | defaults que coincidem com o molde, por coincidência e não por decisão |
+| `CERTIFICATE_VALIDATION_URL` | a recusa do item 29, já aceita |
+
+**Decisão do João (2026-09-26): completar antes do botão.** Às 02:43:54Z ele acrescentou, por
+`tee -a`, as 10 chaves com os valores do molde para a fase sem DNS (`APP_LOCALE=es_CL`,
+`SESSION_SECURE_COOKIE=false`, `CERTIFICATE_VALIDATION_URL` vazia). Saída: `permissao 600 root`,
+`duplicadas 0`, `chaves 40`. Conferido em seguida: o conjunto de nomes do host é igual ao do
+molde, sem sobra de nenhum lado. Os containers só leem o `.env` ao nascer, então a mudança entra
+com o `up` do botão.
+
+**O botão vai recriar o `mysql`.** Lido às 02:40Z, antes da mudança acima: com os arquivos de hoje
+e o **mesmo** SHA, o hash de configuração do compose já não batia com o dos containers em quatro
+serviços. Em `app`, `scheduler` e `mysql`, porque os três leem o `.env` por `env_file` e ele mudou
+em 2026-09-25T03:01Z com o ARN do SNS (Task 9); em `clamav`, pelo healthcheck novo. `nginx` e
+`gotenberg` batiam. Então o `up -d` do botão reinicia o `mysql` por alguns segundos, com ou sem as
+chaves do Q-2, e o volume `mysql-data` fica.
+
+A causa comum dos dois desvios fica na **P-87**: o botão promove imagens, e nada compara com o SHA
+promovido o que o host guarda por cópia. A spec não declarava isso entre os limites (§12).
+
+Sobra achada no host: `/opt/lotus/prova-certificado.php` (`ubuntu:ubuntu`, 2026-09-10), que
+nenhum arquivo do repositório cita. Ficou intocado; a decisão é do João.
