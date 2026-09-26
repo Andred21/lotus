@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: harness-estado-por-bloco
-workflow_state: ready_for_planning
+workflow_state: planning
 next_owner: claude
-next_action: plan_active_work_item
+next_action: continue_active_planning
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md
 active_plan: null
@@ -16,11 +16,11 @@ lanes:
   lane-a:
     active_feature: null
     active_work_item: harness-estado-por-bloco   # item 30, promovido pelo Joao em 2026-09-26
-    workflow_state: ready_for_planning
+    workflow_state: planning
     next_owner: claude
-    next_action: plan_active_work_item
+    next_action: continue_active_planning
     tree: ../lotus-harness
-    branch: docs/harness-paridade-eladecora   # aberta de origin/main@65d81bc9 em 2026-09-26; a anterior (fix/backend-config-e-conteudo-de-documento, item 29) mesclou na PR #107 (9664faf5)
+    branch: chore/30-harness-estado-por-bloco   # aberta de origin/main@65d81bc9 em 2026-09-26 como docs/harness-paridade-eladecora e renomeada no planejamento (D5; nunca foi ao remoto); a anterior (fix/backend-config-e-conteudo-de-documento, item 29) mesclou na PR #107 (9664faf5)
     active_spec: docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md   # compartilhada pelos itens 30, 31 e 32
     active_plan: null
     context_packet: null   # Contexto: nao na ficha
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04, mesclado pela PR #100 (9c038cca)
 last_completed_work_item: backend-config-e-conteudo-de-documento
 state_basis_commit: 65d81bc9
-updated_at: 2026-09-26T04:02:00-03:00
+updated_at: 2026-09-26T05:10:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `harness-estado-por-bloco` (item 30) | Harness | `../lotus-harness` | `docs/harness-paridade-eladecora` (de `origin/main@65d81bc9`) | `ready_for_planning` |
+| `lane-a` | `harness-estado-por-bloco` (item 30) | Harness | `../lotus-harness` | `chore/30-harness-estado-por-bloco` (de `origin/main@65d81bc9`) | `planning` |
 | `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `executing` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` (item 16, fatia 3) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`) | `executing` |
 

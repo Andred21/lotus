@@ -19,7 +19,7 @@ superpowers por `Skill()` explícito — `brainstorming`, `writing-plans`,
 **Os hooks já estão em paridade.** Os cinco (`session-start`, `guard-main`, `guard-main-shell`,
 `guard-secrets`, `stop-verify`) foram portados pelo item 28 (PR #106), com suíte própria. Desde
 2026-09-20 o ElaDecora só mudou neles o que é específico do Lovable. Este trabalho toca hooks apenas
-onde o estado novo obriga (§4.3).
+onde o estado novo obriga (§4.3 e §4.4).
 
 ## 2. Decisões do João (2026-09-26)
 
@@ -91,9 +91,15 @@ Os do contrato do ElaDecora — `schema_version` (3), `id`, `slug`, `workflow_st
 - `port` vira **`offset`** (o inteiro de 1 a 3), porque o Lotus publica seis portas por árvore;
 - acrescenta **`executor`** (`claude|codex`), copiado do `## Handoff de execução` do plano.
 
-`updated_by` sai no formato `joao@<host> / <modelo>` **também quando um script grava** — o
+`updated_by` sai no formato `<usuario>@<host> / <modelo>` **também quando um script grava** — o
 ElaDecora perde o modelo quando o `lane.ps1` escreve (divergência aberta em `B-031/revisao.md:21`
-de lá).
+de lá). `<usuario>` é o `id -un`; `<modelo>` é o alias que o command passa (`--modelo opus`), ou
+`terminal` quando o João roda o script à mão.
+
+*Emenda de 2026-09-26 (planejamento do 30):* `id` é o número da ficha como o backlog o escreve
+(`30`, sem zero à esquerda); `slug` segue o ElaDecora e vale o nome da pasta, `<NN>-<resto>`
+(`30-harness-estado-por-bloco`), de modo que a branch é `<tipo>/<slug>`. `next_owner` continua
+`joao|claude|codex`, o vocabulário que o Lotus já usa.
 
 ### 3.4 Estados e invariantes
 
@@ -106,67 +112,144 @@ adaptações:
 - `focused_lane` e o espelho de campos singulares no topo **deixam de existir**, e com eles a
   classe de divergência "estado da `main` × estado da árvore" que o `SessionStart` acusa hoje.
 
+*Emenda de 2026-09-26 (planejamento do 30):* "`next_action` corresponde a `workflow_state`" vira
+regra mecânica — a **primeira palavra** do `next_action` é o token do estado; texto livre pode
+seguir depois de um espaço (`close_active_work_item PR #120 aberto`). Os tokens reaproveitam os que
+o Lotus já grava; só os de `closing`, `blocked` e `closed` são novos:
+
+| Estado | Token |
+|---|---|
+| `idle` | `select_backlog_item` |
+| `context_required` | `generate_context_packet` |
+| `ready_for_planning` | `plan_active_work_item` |
+| `planning` | `continue_active_planning` |
+| `ready_for_execution` | `execute_active_plan` |
+| `executing` | `continue_active_plan` |
+| `ready_for_review` | `request_code_review` |
+| `reviewing` | `approve_review_findings` |
+| `ready_for_closure` | `close_active_work_item` |
+| `closing` | `answer_integration_menu` |
+| `blocked` | `resolve_blocker` |
+| `closed` | `none` |
+
+O mapa vive uma vez em código (`.claude/hooks/lib/estados.sh`) e a tabela do `state.md` o
+espelha; uma catraca reprova a divergência nos dois sentidos (lição 19).
+
 ## 4. Item 30 — fundação: estado por bloco e `lane.sh`
+
+> **Refinado no planejamento do 30 (2026-09-26).** As três decisões novas do João estão marcadas
+> *(João)*; o resto saiu do código medido e foi aprovado com o design.
 
 ### 4.1 `.claude/scripts/lane.sh <verbo>`
 
-Bash. Reusa `.claude/hooks/lib/comum.sh`. O `hooks/lib/ler-estado.py` generaliza para
-`ler-frontmatter.py` (mesmo contrato de separador US, 0x1F, pelo mesmo motivo documentado nele),
-consumido pelo script e pelos hooks.
+Bash. Reusa `.claude/hooks/lib/comum.sh`. `docker` e `pnpm` entram por injeção de comando
+(`LANE_DOCKER`, `LANE_PNPM`; default `docker` e `pnpm`), para a suíte não subir contêiner nem baixar
+pacote. Toda recusa sai como `PORTAO RECUSOU: <motivo>` com `exit 1`.
 
-- **`descobrir`** — lê `git worktree list --porcelain`. Para cada branch que casa o padrão da §3.2,
-  lê o `estado.md` da lane **na árvore dela** e emite uma linha: `id`, `workflow_state`, `branch`,
-  `árvore`, `next_action`. Emite também, em linhas marcadas, (a) árvore órfã — detached ou fora do
-  padrão, exceto o main tree — e (b) branch de lane **sem worktree**, que é a assinatura de
-  fechamento interrompido que o `/finalizar-bloco` usa no modo conserto.
-- **`abrir <NN> <tipo> <slug>`** — só no main tree, na `main`. Portão, antes de criar qualquer
-  coisa, com saída `PORTAO RECUSOU: <motivo>`:
-  1. três lanes vivas;
-  2. a linha `**Depende:**` da ficha `<NN>` cruza com o número de uma lane ativa, direta ou
-     transitivamente.
+- **`descobrir`** — somente leitura, em qualquer árvore. Lê `git worktree list --porcelain` e emite
+  uma linha por achado, campos separados por US (0x1F, o contrato do `ler-estado.py`, pelo motivo
+  documentado nele):
+  - `lane␟NN␟workflow_state␟branch␟árvore␟next_action␟offset` — branch que casa a §3.2, com os
+    campos lidos do `estado.md` **na árvore da lane**;
+  - `orfa␟árvore␟branch` — detached ou fora do padrão, exceto o main tree;
+  - `sem-arvore␟NN␟branch` — branch local que casa o padrão e não tem worktree: a assinatura de
+    fechamento interrompido que o `/finalizar-bloco` usa no modo conserto.
+- **`abrir <NN> <tipo> <slug> [--modelo <alias>]`** — portão inteiro **antes** de criar qualquer
+  coisa. Recusa quando:
+  1. a árvore não é o main tree (primeira entrada do `worktree list`) ou a branch não é `main`;
+  2. a ficha `## <NN>. \`<slug>\`` não existe no `backlog.md`, ou o slug não bate com o dela;
+  3. a linha `**Prioridade:**` da ficha não tem `**Depende:**` — falha fechada; o João declara `—`
+     para "nenhuma". Em 2026-09-26 as fichas 16, 23, 9, 12 e 13 ainda não têm a linha;
+  4. já há três lanes vivas;
+  5. a dependência cruza uma lane ativa **nos dois sentidos**, transitivamente: o fecho de
+     `**Depende:**` do `<NN>` alcança uma lane ativa, ou o de uma lane ativa alcança o `<NN>` — a
+     invariante 1 do ElaDecora ("dois blocos que dependem um do outro"). Ficha que já saiu do
+     backlog (fechou) encerra a cadeia;
+  6. a branch `<tipo>/<NN>-<slug>` ou o caminho `../lotus-<NN>-<slug>` já existem;
+  7. não há offset livre de 1 a 3. *(João)* Ocupado é o que o **`.env` de toda árvore** do
+     `worktree list` publica — lane, órfã ou main —, `LOTUS_DEV_HTTP_PORT − 8080`, e árvore sem
+     `.env` conta 0. É o que o compose lê. Medido em 2026-09-26: `../lotus-infra` está em +1 e
+     `../fix-frontend` em +2, as duas fora do padrão de lane; ler só o `estado.md` reservaria +1 e
+     colidiria.
 
-  Passando: `git worktree add -b <tipo>/<NN>-<slug> ../lotus-<NN>-<slug> main`; reserva o menor
-  offset livre de 1 a 3 (lido do `estado.md` das lanes vivas) e escreve o `.env` da raiz com ele;
-  copia `backend/.env` e `frontend/.env` do main tree e **comenta `VITE_API_URL=` quando ela vier
-  ativa** (passo 3 da receita do `.env.example`); roda `pnpm install --frozen-lockfile` em
-  `frontend/` — o store do pnpm torna isso barato, e um symlink de `node_modules` quebraria no
-  primeiro bloco que mudasse o lockfile; semeia `blocos/<NN>-<slug>/estado.md` com
-  `workflow_state: planning` e `efeito_externo: null`. **Não sobe o stack**: lane de doc ou de
-  harness não precisa dele. A saída imprime `docker compose up -d` como próximo passo.
-- **`conferir <NN>`** — cruza as listas `Files:` do `plano.md` desta lane com as dos planos das
-  outras lanes ativas. Interseção → sai 1 e nomeia os arquivos.
-- **`fechar <NN>`** — no main tree. Recusa árvore suja. Se a lane tem projeto compose com
-  contêiner ou volume, `docker compose down -v` **na árvore da lane**: o banco de dev da lane morre
-  com ela, de propósito. Depois `git worktree remove` e `git branch -d`. Branch não mesclada é
-  recusada; `--force` existe e nenhum command o passa.
+  Passando: `git worktree add -b <tipo>/<NN>-<slug> ../lotus-<NN>-<slug> main`; `.env` da raiz a
+  partir do `.env.example`, com as seis portas pela fórmula da tabela dele (HTTP 8080+o, DB 3307+o,
+  Mailpit 8025+o, MinIO 9000+2o e 9001+2o, Vite 5173+o); copia `backend/.env` e `frontend/.env` do
+  main tree e **comenta `VITE_API_URL=` quando ela vier ativa** (passo 3 da receita do
+  `.env.example`); `pnpm install --frozen-lockfile` em `frontend/` — o store do pnpm torna isso
+  barato, e um symlink de `node_modules` quebraria no primeiro bloco que mudasse o lockfile; semeia
+  `blocos/<NN>-<slug>/estado.md` (`planning`, `efeito_externo: null`, `offset`, `lane_base` = SHA da
+  `main`, `updated_by` da §3.3) e **commita a semente na branch da lane**
+  (`chore(<NN>): abre a lane`) — sem o commit, o `fechar` recusaria a árvore suja pelo próprio
+  `estado.md` não rastreado. **Não sobe o stack**: lane de doc ou de harness não precisa dele; a
+  saída imprime `docker compose up -d` como próximo passo. Falha no meio → a mensagem nomeia o que
+  já foi criado e manda `lane.sh fechar <NN>`.
+- **`conferir <NN>`** — somente leitura. Cruza os caminhos entre crases das linhas
+  `- Create|Modify|Test|Delete:` dos blocos `**Files:**` do `plano.md` desta lane (sem o sufixo
+  `:linha`) com os dos planos das outras lanes vivas. Interseção → `exit 1` nomeando os arquivos.
+  Lane sem plano é pulada.
+- **`fechar <NN> [--force]`** — main tree, na `main`. Recusa árvore suja — arquivo ignorado não
+  conta, então os `.env` e o `node_modules` saem junto. Se o projeto compose da lane tem contêiner
+  ou volume, `docker compose down -v` **na árvore da lane**: o banco de dev da lane morre com ela,
+  de propósito. Depois `git worktree remove` e `git branch -d`. Branch não mesclada é recusada;
+  `--force` troca só o `-d` por `-D` — **árvore suja nunca**, nem com ele —, e nenhum command o
+  passa.
 
-### 4.2 `session-start.sh`
+### 4.2 `hooks/lib/ler-frontmatter.py`
+
+Substitui o `ler-estado.py`, que é apagado no 30: o único consumidor dele é o `session-start`, e as
+`lanes:` que ele lê deixam de existir aqui (ponto aberto da §9, fechado por evidência). Contrato:
+`argv[1]` caminho, `argv[2..]` nomes de campo; emite **uma** linha com os valores na ordem pedida,
+separados por US; `null` e campo ausente viram vazio; arquivo ausente, sem frontmatter ou YAML
+inválido emitem nada, `exit 0`. O docstring do US migra junto. Consumidores: `lane.sh` e
+`session-start.sh`.
+
+### 4.3 `session-start.sh`
 
 Passa a se alimentar de `lane.sh descobrir`. Sai a comparação "`state.md` da `main` × `state.md` da
-árvore". Entra a coerência interna do `estado.md` da lane da sessão: `branch` bate com o git;
-`next_action` corresponde a `workflow_state`; `active_plan` existe a partir de
-`ready_for_execution`; `active_review` existe a partir de `ready_for_closure`; `efeito_externo` não
-é `null` a partir de `ready_for_execution`. Fail-open e `exit 0` continuam como estão.
+árvore". A saída lista as lanes (`*` na da sessão), `ARVORE ORFA`, `FECHAMENTO INTERROMPIDO` (as
+linhas `sem-arvore`) e `ESTADO INCOERENTE`, este só para a lane da sessão: `branch` diverge do git;
+a primeira palavra do `next_action` não é o token do estado (§3.4); falta `active_plan` a partir de
+`ready_for_execution`; falta `active_review` a partir de `ready_for_closure`; `efeito_externo` é
+`null` a partir de `ready_for_execution`. Em `blocked` a régua de "a partir de" é o
+`resume_state`. Fail-open e `exit 0` continuam como estão.
 
-### 4.3 `guard-main-shell.sh`
+### 4.4 `guard-main-shell.sh` — liberação no `classificar-comando.py`
 
-Libera `bash .claude/scripts/lane.sh <verbo> …` na `main`: abrir e fechar lane é escrita legítima do
-main tree. A liberação é por forma exata, com o mesmo cuidado de separadores de shell do item 28.
+Ponto aberto da §9, fechado: nasce `familia_lane(args)`, despachada em `classificar_simples`
+**antes** do teste de `NEGADOS_SEMPRE`, e só quando `nome == "bash"` e `args[0]` é o literal
+`.claude/scripts/lane.sh`. Verbos literais: `descobrir`; `conferir <NN>`; `fechar <NN>`;
+`abrir <NN> <tipo> <slug> [--modelo <alias>]`. `NN` só dígitos; `tipo` no conjunto da D5; `slug`
+casa `^[a-z0-9]+(-[a-z0-9]+)*$`; alias casa `^[a-z0-9.-]+$`. Argumento a mais, flag do `bash` antes
+do script e **`fechar --force`** negam — o `--force` é do terminal do João. Todo o resto de `bash`
+segue negado.
 
-### 4.4 Docs
+### 4.5 Docs
 
-`state.md` reescrito como contrato; `CLAUDE.md` §3 ("primeiro a saída do `SessionStart`, depois o
-`estado.md` da lane e os ponteiros dele"); `.env.example` com a linha +3.
+`state.md` reescrito como contrato: os doze estados com o token de cada um (§3.4), os campos do
+schema 3 (§3.3) e as doze invariantes do ElaDecora adaptadas; `CLAUDE.md` §3 ("primeiro a saída do
+`SessionStart`, depois o `estado.md` da lane e os ponteiros dele"); `.env.example` com a linha +3.
 
-### 4.5 Testes e DoD
+### 4.6 Testes e DoD
 
-`lane-abrir`, `lane-descobrir`, `lane-conferir`, `lane-fechar` e `session-start` em
-`.claude/tests/`, em repositório descartável (`criar_repo` do `_assert.sh`). `docker compose` e
-`pnpm` entram por injeção de comando; a suíte não sobe docker nem baixa pacote.
+Em `.claude/tests/`, em repositório descartável (`criar_repo` do `_assert.sh`): `lane-descobrir`,
+`lane-abrir` (as sete recusas e o caminho feliz com `LANE_PNPM`/`LANE_DOCKER` falsos),
+`lane-conferir`, `lane-fechar`, `ler-frontmatter`, `estados` (a catraca da §3.4), o
+`session-start` reescrito e casos novos no `classificar-comando`. Toda catraca é vista reprovar por
+sonda antes de ser dada como fechada (lição 10).
 
 **DoD:** `run-all.sh` verde; o portão recusa a quarta lane e a dependência transitiva; `abrir` e
 `fechar` **vistos rodar de verdade** uma vez, com uma lane real subindo o stack no offset reservado
 e sumindo sem deixar contêiner, volume, worktree ou branch.
+
+**Onde a prova roda** *(João)*: num **clone descartável** no scratchpad, porque antes do merge o
+`lane.sh` só existe nesta branch e a `main` real não tem `**Depende:**` em ficha nenhuma. Roteiro:
+ponta do 30 mesclada na `main` do clone; duas worktrees irmãs com `.env` em +1 e +2, imitando as
+lanes antigas; `abrir 33 chore harness-sinal-de-contexto-cheio` reserva **+3**;
+`docker compose up -d` e `/up` **200 na 8083**; `fechar` recusado por branch não mesclada; merge da
+lane na `main` do clone, simulando a PR; `fechar` limpo; `docker ps -a`, `docker volume ls`,
+`git worktree list` e `git branch` sem sobra. O repositório real fica intocado; a primeira rodada
+no main tree real acontece no DoD do 31, cujo Passo 6 do `/planejar-bloco` chama o `abrir`.
 
 ## 5. Item 31 — commands de bloco
 
@@ -367,6 +450,29 @@ verdade.
 - O fechamento do 30 é o momento em que o `state.md` deixa de guardar lanes. Se houver lane antiga
   viva nesse momento, o merge espera.
 
+**A ponte manual** *(decisão do João no planejamento do 30, 2026-09-26)*. Na ponta do 30 o
+`state.md` já é contrato, e os comandos antigos leem `lanes:`, `focused_lane` e os campos
+singulares que ele não tem mais — o fluxo antigo, como está escrito, não roda na árvore do 31. Por
+isso:
+
+- **As três branches** vivem na mesma worktree, `../lotus-harness`, e seguem a D5:
+  `chore/30-harness-estado-por-bloco` (renomeada de `docs/harness-paridade-eladecora`, que nunca
+  foi ao remoto), `chore/31-harness-commands-de-bloco` e `chore/32-harness-aceitacao-externa`.
+- **O 30** roda no fluxo antigo, com a lane-a no `state.md`, até a penúltima task. A **última task
+  é a virada**, num commit só: `state.md` vira contrato, `session-start.sh` passa a ler o
+  `descobrir`, `ler-estado.py` sai, `CLAUDE.md` §3 muda, e o registro do 30 migra para
+  `blocos/30-harness-estado-por-bloco/estado.md` em `ready_for_review`. Não existe janela em que o
+  hook novo conviva com o `state.md` velho.
+- **Revisão e fechamento do 30, e o 31 e o 32 inteiros,** seguem os passos dos comandos antigos com
+  o `estado.md` do bloco como fonte de estado, no lugar do `state.md`. O `estado.md` do 31 e do 32
+  é semeado à mão, porque o `abrir` exige a `main`. O `/fechar-sprint` do 30 ainda escreve a linha
+  do `historico/progress.md` e a narrativa do `historico/state-archive.md`, e grava `closed` no
+  `estado.md` dele.
+- **Nas outras árvores, nada muda até o merge.** O hook antigo da `main` lê o `state.md` de
+  `../lotus-harness`, não acha `lanes:` e fica mudo sobre ela — sem alarme falso. A lane-b e a
+  lane-c fecham pelo fluxo antigo e mesclam antes (D6); no merge do 30 o conflito do `state.md` se
+  resolve pelo contrato.
+
 ## 8. Fora de escopo
 
 - `lint-diferencial` (§2).
@@ -378,8 +484,8 @@ verdade.
 
 ## 9. Pontos abertos para cada planejamento
 
-- **30:** a forma exata da liberação de `lane.sh` no `guard-main-shell` (onde ela mora no
-  `classificar-comando.py`); se `ler-frontmatter.py` substitui `ler-estado.py` ou convive até o 31.
+- **30:** ~~a forma exata da liberação de `lane.sh` no `guard-main-shell`; se `ler-frontmatter.py`
+  substitui `ler-estado.py` ou convive até o 31~~ — fechados em 2026-09-26: §4.4 e §4.2.
 - **31:** confirmar que a ferramenta nativa de entrar em worktree aceita caminho de árvore irmã
   (`../lotus-<NN>-<slug>`); se não, o Passo 6 opera por caminho explícito, como o ElaDecora faz na
   sessão nascida dentro da worktree. Confirmar a classificação *spike/bounded/architectural* na
