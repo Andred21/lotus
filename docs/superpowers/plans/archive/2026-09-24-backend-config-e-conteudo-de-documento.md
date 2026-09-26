@@ -8,7 +8,7 @@
 
 **Tech Stack:** Laravel 13 / PHP 8.3, Carbon 3.13 (`setTestNow` é global entre `Carbon` e `CarbonImmutable`), PHPUnit, sqlite `:memory:` na suíte, Poppler + `zxing-cpp` (venv descartável) para decodificar o QR no e2e.
 
-**Spec:** [`specs/2026-09-24-backend-config-e-conteudo-de-documento-design.md`](../specs/2026-09-24-backend-config-e-conteudo-de-documento-design.md)
+**Spec:** [`specs/2026-09-24-backend-config-e-conteudo-de-documento-design.md`](../../specs/archive/2026-09-24-backend-config-e-conteudo-de-documento-design.md)
 
 ## Global Constraints
 

@@ -23,6 +23,65 @@
 
 ---
 
+## Fechado em 2026-09-25 — `backend-config-e-conteudo-de-documento` (item 29)
+
+**A linha da tabela de ocupação, no dia do fechamento:**
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-a` | **29** `backend-config-e-conteudo-de-documento` (`P-79`, `P-75`, `P-59`) | Backend | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`); a anterior, `chore/harness-hooks-de-guarda`, **mesclou** na PR #106 (`38e08a08`) | `ready_for_closure` (Q-1 e Q-2 do review aplicados) |
+
+**O bloco da lane no frontmatter, no dia do fechamento:**
+
+```yaml
+  lane-a:
+    active_feature: null
+    active_work_item: backend-config-e-conteudo-de-documento
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
+    tree: main-tree
+    branch: fix/backend-config-e-conteudo-de-documento   # aberta de main@5be61b63 em 2026-09-24 pelo /executar-bloco. A anterior (chore/harness-hooks-de-guarda, item 28) MESCLOU na PR #106 em 2026-09-20 — merge 38e08a08
+    active_spec: docs/superpowers/specs/2026-09-24-backend-config-e-conteudo-de-documento-design.md
+    active_plan: docs/superpowers/plans/2026-09-24-backend-config-e-conteudo-de-documento.md
+    context_packet: null
+    blocker: null
+    resume_state: null
+    last_completed_work_item: harness-hooks-de-guarda   # item 28, fechado em 2026-09-20, mesclado na PR #106
+```
+
+**A `lane-a` recebeu o item 29 em 2026-09-21, por promoção explícita do João.** O bloco nasce direto
+em `ready_for_planning` — a ficha diz `Contexto: não`, e as três fontes (`P-79`, `P-75`, `P-59`) são
+fichas deste repositório, então não há rota de Context Packet. **Main tree, pelo gate P-03:** o
+escopo é `backend/config/`, e o compose monta o main tree; segue valendo que só há uma lane de
+backend, então a P-03 não é disparada.
+
+**Duas correções de registro entraram no mesmo commit, e vale dizer por quê.** A anotação da `lane-a`
+afirmava que a **PR #106 estava aberta, aguardando o merge do João**; o Git diz que ela **mesclou em
+2026-09-20** (`38e08a08`), e o `state_basis_commit` ainda apontava `25086f5e`. Não era divergência de
+**fase** — a lane estava `idle` pelas duas fontes, então a invariante de PARAR não disparou —, mas
+era divergência de **integração**, e ela custou uma decisão: na leitura de pendências que originou
+este item, o bloco de harness (`P-83` + `P-84`) foi recomendado ao João como *bloqueado à espera do
+merge da #106*, o que já era falso havia um dia. Anotação de integração envelhece sozinha e ninguém
+a relê; é a mesma classe da lição 13. A segunda correção é no `backlog.md`: a tabela *Ordem de
+execução* ainda listava o **item 22** na posição 3, fechado desde 2026-09-04.
+
+
+**Escrito no fechamento, porque a prosa acima só cobre a promoção.** O planejamento (2026-09-24)
+remediu as três fichas contra `main@3ce23023` e duas não descreviam o código: a `P-75` era medição
+na porta errada (fechou por veredito, sem código) e a `P-59` subestimava o alcance — o
+`IssueCertificateAction` congelava no snapshot o dia e o ano **de UTC**. O João escolheu instante em
+UTC e data de calendário no fuso do negócio (D1), `UTC` literal por decisão escrita (D2) e chave
+própria do QR com fallback só fora de produção (D3). Execução em 11 tasks no main tree, com as
+provas de reprovação vistas antes de cada verde e as sondas restauradas por `cp`, nunca por
+`git stash`. O `/revisar-sprint` devolveu dois 🟡 (Q-1: o período do dashboard em dias de Santiago
+contra instante UTC cortava as últimas horas do dia; Q-2: `agora()` não grava instante); a revisão
+independente do Codex travou e foi cancelada sem achados, e o João aprovou os dois sem nova rodada.
+O fechamento provou o critério contra a API real às 21:57 de Santiago (00:57 UTC de 26/09), abriu a
+`P-85` e registrou o segundo disparo não pago da `P-53`, as duas por decisão do João no gate. A
+branch não foi mesclada no fechamento.
+---
+
 ## Fechado em 2026-09-20 — `harness-hooks-de-guarda` (item 28)
 
 **A linha da tabela de ocupação, no dia do fechamento:**

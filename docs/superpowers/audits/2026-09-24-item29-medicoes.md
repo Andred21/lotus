@@ -1,6 +1,6 @@
 # Medições — item 29 `backend-config-e-conteudo-de-documento`
 
-> Task 11 do plano `plans/2026-09-24-backend-config-e-conteudo-de-documento.md`. Cada seção cola a
+> Task 11 do plano `plans/archive/2026-09-24-backend-config-e-conteudo-de-documento.md`. Cada seção cola a
 > saída real do comando; nada é resumido de memória. Branch `fix/backend-config-e-conteudo-de-documento`,
 > main tree (gate P-03), medido em 2026-09-25 sobre `b8ccb588`.
 
@@ -314,3 +314,61 @@ Tests:    5 skipped, 1221 passed (9284 assertions)
 
 +5 em relação à §1: dois do `AnalyticsQueryTest` e três do `FusoDoNegocioTest`. `generated.ts`
 sem diff depois do `typescript:transform`. Pint `passed` nos sete `.php` tocados.
+
+## 9. Prova do fechamento — 2026-09-25, contra a API real, na janela das 21h de Santiago
+
+`/fechar-sprint` §0, sobre `6fe8a80d`. O relógio da prova:
+
+```
+UTC 2026-09-26T00:57:41
+Santiago 2026-09-25T21:57:41
+```
+
+Sessão Sanctum do `admin@lotus.cl` contra `http://localhost:8080`. `GET /api/dashboard/metricas`
+antes da emissão: `period_end: 2026-09-25`, série `certificados_emitidos` sem balde `2026-09`,
+ranking do curso 2 e do cliente Enel com `certificados: 0`.
+
+```
+POST /api/enrollments/23/certificate  {"redator_id":3}
+HTTP 201
+{'id': 6002, 'codigo': 'LOT-2026-1001', 'uuid': '483757bf-0cd2-47be-ae4d-8a57a4fbc155', 'status': 'emitido', 'created_at': '2026-09-26T00:57:41.000000Z', 'valido_ate': '2027-09-25'}
+```
+
+Snapshot lido no container e texto da página 1 do PDF (`GET /api/certificates/6002/pdf` → 200,
+`Skia/PDF m151`, 2 páginas):
+
+```
+{"emitido_em":"2026-09-25","codigo":"LOT-2026-1001","created_at_raw":"2026-09-26 00:57:41"}
+N° LOT-2026-1001
+Emisión: 25-09-2026
+En Santiago a 25-09-2026, OTEC LOTUS SpA [77.510.327-2] certifica que:
+Este certificado es válido hasta el 25-09-2027.
+```
+
+O instante segue em UTC (`created_at` de 26/09), e o dia impresso, a vigência e o ano do código são
+de Santiago. QR decodificado do PNG a 300 dpi (zxing-cpp no `python:3.12-slim`, como na §5), sem
+`CERTIFICATE_VALIDATION_URL` em `local`:
+
+```
+['http://localhost:5174/validar/483757bf-0cd2-47be-ae4d-8a57a4fbc155']
+```
+
+`GET /api/dashboard/metricas` depois da emissão (Q-1 — o certificado de 00:57 UTC do dia 26 entra
+no dia 25 de Santiago):
+
+```
+dash-antes  2025-09-25 2026-09-25 serie 2026-09: []                              curso 2: 0  Enel: 0  a emitir: 12
+dash-depois 2025-09-25 2026-09-25 serie 2026-09: [{'month': '2026-09', 'count': 1}] curso 2: 1  Enel: 1  a emitir: 11
+```
+
+Banco de dev devolvido por revogação:
+
+```
+POST /api/certificates/6002/revoke  {"reason":"prova do fechamento do item 29"}
+HTTP 200
+{'id': 6002, 'codigo': 'LOT-2026-1001', 'status': 'revocado', 'revoked_at': '2026-09-26T00:58:31.000000Z', 'revocation_reason': 'prova do fechamento do item 29'}
+```
+
+O QR **com** a chave não foi refeito no fechamento: o harness nega escrita em `.env`, e nenhum
+arquivo do caminho do QR mudou desde a §5 (`git diff --stat ffe0b5ca..HEAD` toca só Dashboard,
+`FusoDoNegocio`, testes e docs).

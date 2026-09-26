@@ -80,56 +80,6 @@ no lugar que o fatal de 128M apareceu aqui.
 
 # Backend
 
-## P-75 — o `SANCTUM_STATEFUL_DOMAINS` do `.env` não chega ao runtime, e o CSRF a partir do Vite devolve 401 em vez de 419
-
-**Bloco:** 29 `backend-config-e-conteudo-de-documento` · **Gatilho:** bloco que tocar `backend/config/sanctum.php`, o `.env` da árvore ou a
-proteção CSRF, e puder provar `config('sanctum.stateful')` seguindo o `.env` com um teste. Revisar
-em **2026-10-31**.
-
-Medido em 2026-09-02, na sonda do 419 do bloco `backend-envelope-de-erro-e-recusa-de-dominio`
-(`audits/2026-09-02-item26-medicoes.md` §5), e promovido a ficha no review de 2026-09-03 (Q-4):
-`backend/.env` declara
-
-    SANCTUM_STATEFUL_DOMAINS=localhost:5173,localhost:5174,localhost:8080
-
-mas `config('sanctum.stateful')` resolve no runtime para `['localhost:5174', 'localhost:8080']` —
-**sem `localhost:5173`**, que é a porta padrão do Vite dev server no `CLAUDE.md` §6. Confirmado por
-`Str::is()` contra a lista real via tinker.
-
-**O sintoma:** uma escrita vinda do `:5173` sem token CSRF não é reconhecida como requisição de
-frontend por `EnsureFrontendRequestsAreStateful::fromFrontend()`, então ela nunca entra na sessão e
-cai no braço de `auth:sanctum` — **401**, e não o **419** que a proteção CSRF devolveria. A mesma
-sonda, repetida com `Referer: http://localhost:8080/` (presente na lista), devolveu o 419 esperado.
-
-Isso desloca o diagnóstico de quem for testar CSRF a partir do dev server real: o erro que aparece
-é "não autenticado", e a causa é "origem não é stateful". Não é defeito do bloco do envelope — a
-medição não toca `config/sanctum.php` nem `.env` —, mas é divergência de ambiente entre o que o
-`.env` diz e o que o framework lê, e ficha é o único lugar que a `auditar-docs` e o próximo bloco
-releem. Nota de audit datado ninguém relê (é a razão escrita deste Q-4).
-
-**Não confundir com a `P-56`**, que é outro eixo: lá o `XSRF-TOKEN` não é isolado ENTRE árvores e a
-aba parada volta 419. Aqui a origem legítima nem chega ao 419.
-
-### Veredito — 2026-09-24, item 29 (`backend-config-e-conteudo-de-documento`)
-
-**A config não diverge do ambiente; a medição de 2026-09-02 bateu na porta errada.** Desde
-`03127249` (2026-08-24), o `docker-compose.yml:19` injeta no container
-`SANCTUM_STATEFUL_DOMAINS=localhost:${LOTUS_DEV_VITE_PORT},localhost:${LOTUS_DEV_HTTP_PORT}`, e
-variável de ambiente real vence o `backend/.env` por desenho — o próprio `backend/.env.example:5-9`
-avisa que editar ali não tem efeito. O `.env` da raiz do main tree declara `LOTUS_DEV_VITE_PORT=5174`
-com `LOTUS_DEV_HTTP_PORT=8080`, e é exatamente isso que o runtime resolveu
-(`['localhost:5174', 'localhost:8080']`). O Vite desta árvore sobe em `:5174` com `strictPort`. A
-sonda com `Referer: http://localhost:5173/` saiu de uma porta onde nada desta árvore roda, e o 401
-era o comportamento correto para origem não-stateful.
-
-O mecanismo que o gatilho pedia — provar a chave seguindo o ambiente — já existe, no lado que a
-produz: `frontend/tests/compose-dev.test.ts` ("injeta no app toda chave de URL que carrega porta,
-derivada da mesma variável"). Nenhum código, nenhum teste novo. **Fecha por veredito** no
-fechamento do item 29. O offset misto do `.env` local (Vite em +1, HTTP em +0) é arquivo
-gitignorado e escolha do João: é a causa da medição, não um defeito do repositório.
-
----
-
 ## P-76 — seis frases ao usuário seguem literais em `app/`, por três caminhos que nenhuma catraca alcança
 
 **Bloco:** — · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
@@ -163,6 +113,35 @@ mudar locale nenhum.
 quinta para resposta de sucesso — não é dicionário, é mecanismo, e o mecanismo é o que a
 `.claude/rules/backend-lang.md` manda estender junto. O bloco do envelope fechou a lista de quatro
 mudanças que a spec dele declarou; abrir a quarta porta ali seria a quinta.
+
+---
+
+## P-85 — no sqlite da suíte, o último dia do período some do filtro de `start_date` do `AnalyticsQuery`
+
+**Bloco:** — · **Gatilho:** bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de
+período do dashboard; os três filtros de `start_date` passam por `DataSql::literal` e um teste prova
+a turma que começa no **último dia** do período dentro da série e dos dois rankings. Revisar em
+**2026-10-31**.
+
+Achado de passagem no review Q-1 do item 29 (2026-09-25, `audits/2026-09-24-item29-medicoes.md`
+§8), fora do achado, e promovido a ficha no fechamento por decisão do João. O `AnalyticsQuery`
+filtra a coluna `date` `turmas.start_date` com
+`whereBetween('start_date', [$start->toDateString(), $end->toDateString()])` em três lugares
+(`AnalyticsQuery.php:50`, a série `turmas_iniciadas`; `:100`, o ranking de cursos; `:148`, o de
+clientes). No MySQL a coluna é `DATE` e a comparação é de dia com dia — correta. No sqlite da suíte
+o cast `date` grava `Y-m-d 00:00:00` numa coluna texto, e a comparação vira de string:
+`'2026-09-25 00:00:00' <= '2026-09-25'` é falso, então a turma que começa no último dia do período
+cai fora.
+
+**A produção não erra; a suíte não enxerga.** Um teste que cobrisse a borda do último dia
+reprovaria no sqlite com o código certo, e uma regressão que cortasse o último dia no MySQL
+passaria verde. O `AnalyticsQueryTest` do item 29 evita a borda de propósito — contorna, não
+resolve. Já era assim antes do bloco.
+
+O remédio existe no repositório: `App\Shared\Support\DataSql::literal`, que o `display_status` da
+`CertificateQueryBuilder` e a janela do `EmissionPanelQuery` usam exatamente por isso (o docblock
+dele descreve a mesma borda). Não entrou no item 29 porque o Q-1 era sobre os limites de
+**instante**, e a coluna `date` não mudou de comportamento com ele.
 
 ---
 
@@ -274,35 +253,6 @@ repositório prova lock.
   As duas metades de uma vez — o lock bloqueou (senão a matrícula entraria imediatamente) e a
   recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
   desta ficha). Turma 7 restaurada ao fim do gate.
-
-## P-79 — a URL que vai no QR do certificado é a mesma chave de infra, e as duas têm ciclo de vida diferente
-
-**Bloco:** 29 `backend-config-e-conteudo-de-documento` · **Gatilho:** bloco de backend que tocar `CertificatePdfService`, `config/app.php` ou
-a rota pública de validação, e puder provar a chave nova com teste. Fecha quando a URL pública de
-validação sair de `FRONTEND_URL` para chave própria, **ou** quando o João decidir por escrito que a
-regra operacional basta. Revisar em **2026-10-31**.
-
-Aberta no review de 2026-09-20 (Q-3). O QR do certificado é montado assim:
-
-    // backend/app/Domains/Certification/Services/CertificatePdfService.php:27
-    $url = rtrim(config('app.frontend_url'), '/')."/validar/{$certificate->uuid}";
-
-`FRONTEND_URL` é **infra**: muda quando o host muda, quando o DNS chega, quando o TLS entra. O QR é
-**conteúdo de documento legal**: gravado no PDF, ele é imutável depois da emissão. Um certificado
-emitido enquanto o `FRONTEND_URL` apontar para o EIP cru carrega esse IP para sempre — e o EIP é
-descartável por definição.
-
-**O que já foi pago neste bloco** (commit do review, lane-b): a regra operacional. O molde
-`deploy/aws/env.prod.example` e o runbook §7/§11 passaram a dizer, com o motivo, que **nenhum
-certificado real se emite antes de o `FRONTEND_URL` estar no domínio definitivo com https**, e o
-§11 virou os cinco campos de uma vez em vez de só o `SESSION_DOMAIN`.
-
-**O que fica aberto:** a regra é procedimento, não mecanismo — ela depende de quem opera lembrar.
-O remédio estrutural é uma chave própria (`CERTIFICATE_VALIDATION_URL`, com fallback para
-`app.frontend_url` enquanto não for preenchida), que torna explícito que aquele valor é conteúdo de
-documento e não endereço de serviço. É mudança de **backend**, e a lane-b é worktree de infra: o
-gate de árvore do `/executar-bloco` manda backend para o main tree, que é onde o compose monta. Por
-isso vira ficha e não patch aqui.
 
 ---
 
@@ -484,6 +434,14 @@ fechamento: anotar e seguir. **As 12 seguem válidas** — o bloco não tocou `e
 `der-fisico.md`, `adrs.md` nem `CLAUDE.md`, e as coordenadas de linha do `backend-ddd.md` na tabela
 acima (24-26, 12-17, 38) não foram deslocadas pelas três linhas mudadas (que estão na linha 83).
 
+**Gatilho disparado e não pago de novo — 2026-09-25, `backend-config-e-conteudo-de-documento`
+(item 29).** O bloco acrescentou ao `.claude/rules/backend-ddd.md` a seção "Data de calendário sai
+do `FusoDoNegocio`" (a partir da linha 192), por outro motivo: a decisão D1 da spec e o Q-2 do
+review. A metade *"e puder reconciliá-los contra a árvore"* de novo não se cumpriu — o bloco era de
+config e conteúdo de documento. Decisão do João no gate de fechamento: anotar e seguir, como no item
+22. **As 12 seguem válidas**, e as coordenadas do `backend-ddd.md` na tabela (24-26, 12-17, 38)
+seguem as mesmas: a seção nova entrou abaixo de todas. O gatilho não se desarma.
+
 **O padrão é o mesmo que a P-52 nomeia:** doc de estrutura envelhece em silêncio porque nada mede o
 documento contra a árvore. A `auditar-docs` mede — mas só roda no fechamento, e reporta em vez de
 travar. Enquanto não houver catraca executável para `estrutura-monolito.md` (a `D-17` fez isso para
@@ -512,36 +470,6 @@ sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do
 `up()` sem `forgetCachedPermissions()` devolva o estado obsoleto.
 
 ---
-
-## P-59 — `config/app.php` fixa `'timezone' => 'UTC'` como literal, e o `APP_TIMEZONE` do `.env` é ignorado
-
-**Nasceu como `P-55` na branch `feat/certificacao-historico-do-aluno` e foi renumerada no merge da
-`main` (2026-08-24)**, no precedente exato da P-41 e da P-44: a `main` chegou primeiro e já usava
-`P-55` para a invariante do espelho, então quem renumera é a recém-chegada. As menções a "P-55"
-escritas por este bloco no `historico/` foram acertadas junto; a `P-55` da `main` fica onde está.
-
-**Bloco:** 29 `backend-config-e-conteudo-de-documento` · **Gatilho:** bloco que tocar `backend/config/app.php` ou qualquer derivação de data no
-servidor e puder trocar o literal por `env('APP_TIMEZONE', 'UTC')` com prova. Revisar em **2026-10-31**.
-
-Medido no gate de navegador do `certificacao-historico-do-aluno` (2026-08-24):
-`backend/config/app.php:75` escreve `'timezone' => 'UTC'` **sem `env()`**, então o
-`APP_TIMEZONE=America/Santiago` do `backend/.env.example:8` nunca chega ao framework. Toda data
-derivada no servidor — `now()`, `Carbon::now()`, `addMonths()` — roda em UTC, e quem lê o
-`.env.example` acredita no contrário.
-
-O alcance **conhecido hoje é pequeno**: só certificado com prazo é afetado, e prazo é exceção (a
-spec §2.5 registra vigência indeterminada como padrão); além disso o `CertificateDisplayStatus`
-declara o fuso explicitamente em vez de herdar o do config, justamente para não herdar o errado.
-O defeito, porém, é **global** — alcança qualquer derivação de data futura que confie no default,
-e o Chile ainda tem horário de verão, então a diferença não é constante.
-
-O conserto tem forma conhecida: `env('APP_TIMEZONE', 'UTC')` no config e um teste que prove
-`config('app.timezone')` seguindo o `.env`. Não entra neste bloco porque mudar o fuso do servidor
-reinterpreta **toda** data já gravada — decisão de escopo próprio, não efeito colateral de uma
-coluna de certificado.
-
----
-
 
 # Travadas em decisão do João
 
@@ -880,8 +808,8 @@ atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 
 **Bloco:** — · **Gatilho:** fecha quando `app.lotusotec.cl` resolver **exatamente** o EIP
 `18.230.53.197`; a ação é o §11 do `deploy/aws/README.md`, que desde 2026-09-20 tem **quatro**
-passos e não um — emitir o certificado, virar os cinco campos do `.env` para o domínio e para
-HTTPS, redeployar (o `deploy.sh` já sobe o overlay sozinho quando o certificado existe) e passar a
+passos e não um — emitir o certificado, virar os **seis** campos do `.env` para o domínio e para
+HTTPS (o sexto, `CERTIFICATE_VALIDATION_URL`, entrou pelo item 29 em 2026-09-25), redeployar (o `deploy.sh` já sobe o overlay sozinho quando o certificado existe) e passar a
 renovação para webroot, com `certbot renew --dry-run` como gate. Revisar em **2026-10-31**.
 
 Medido em 2026-09-04 e remedido em 2026-09-17, na Task 19 do item 10 v2:
@@ -900,6 +828,12 @@ Enquanto o registro não chega, a produção atende em `http://18.230.53.197` (D
 15) e o bloco fecha sem TLS: o overlay `docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a
 catraca deles já estão no repositório desde a Task 7, prontos e nunca exercidos contra um
 certificado real. **Nada além do registro A separa os dois estados.**
+
+**Desde o item 29 (2026-09-25), a espera também trava certificado.** Em produção o backend recusa
+emitir e baixar certificado enquanto o `CERTIFICATE_VALIDATION_URL` não for https (500 nomeado,
+`ValidacaoDeCertificadoNaoConfigurada`), e a chave só se preenche no passo 2 do §11 — o de prova
+`LOT-2026-1000` inclusive. É a consequência aceita na spec do item 29 (§4): a proibição do runbook
+virou comportamento, e o registro A passou a ser também o que libera a emissão.
 
 ---
 
