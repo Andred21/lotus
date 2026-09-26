@@ -515,15 +515,14 @@ ficam só como ponteiro, e a ficha delas é lá.
   nos 3 locales** → **sem bloco hospedeiro.** UI-04 da run de Administración de 2026-09-26
   (`audits/2026-09-04-lotus-ui-review-administracion.md`), classe `B`. Em `/administracion` >
   "Roles y permisos" > "Ver" em qualquer role, 9 dos 41 rótulos de `perm.*`
-  (`frontend/src/shared/config/locales/es-CL.json:149-190`, conferido vivo nesta leitura — o caminho
-  correto é `shared/config/locales/`, não `shared/i18n/locales/`) carregam referência de
-  especificação ou termo técnico em inglês: `identity_user_delete` diz "Eliminar (soft delete)
+  (`frontend/src/shared/config/locales/es-CL.json:150-190`, conferido vivo nesta leitura) carregam
+  referência de especificação ou termo técnico em inglês: `identity_user_delete` diz "Eliminar (soft delete)
   usuarios", e o botão da mesma ação na lista diz "Archivar" — "Eliminar" contradiz o verbo que a
   própria UI usa; os outros oito citam "Flujo N" ou "RN-02" (`commercial_quote_approve`,
   `operation_enrollment_manage`, `operation_enrollment_record_result`,
   `operation_turma_assign_redator`, `operation_turma_complete`, `operation_turma_submit_docs`,
   `certification_certificate_issue`, `certification_certificate_revoke`). **Conferido que pt-BR e en
-  carregam o mesmo jargão, nas mesmas linhas 149-190 dos respectivos arquivos** — "Fluxo"/"soft
+  carregam o mesmo jargão, nas mesmas linhas 150-190 dos respectivos arquivos** — "Fluxo"/"soft
   delete" em pt-BR, "Flow"/"soft delete" em en, "RN-02" idêntico nos três. Remédio provável: reescrever
   as 9 strings nos 3 locales sem referência interna, alinhando o verbo ao da interface ("Archivar
   usuarios" em vez de "Eliminar (soft delete) usuarios"); só string, nenhuma chave muda. **Quem
@@ -541,8 +540,9 @@ ficam só como ponteiro, e a ficha delas é lá.
   (`backend/app/Domains/Dashboard/Services/DashboardWindows.php:17`) — os dois conferidos vivos
   nesta leitura. Turma que começa em 10 dias entra no KPI e não aparece em janela nenhuma da agenda —
   foi a turma 6 na run de 2026-08-22, e o payload confirmou `starting_soon`, `ending_soon` e
-  `in_progress` vazios. Não se corrige aqui: é backend, e o fence desta fatia proíbe `backend/`
-  (P-03). **Quem decide o hospedeiro é o João** — nenhum item da fila atual toca
+  `in_progress` vazios. Não se corrige aqui: é backend, e o fence desta fatia proíbe `backend/` — a
+  fatia roda em worktree, e tocar backend exige o main tree (P-03). **Quem decide o hospedeiro é o
+  João** — nenhum item da fila atual toca
   `RedatorScopeQuery`/`DashboardWindows` hoje. Gatilho: o próximo bloco que tocar o dashboard do
   redator, ou o redesenho do item 9 se ele alcançar o mesmo assembler. Origem: UI-04 da run
   `ready-redator` de 2026-08-22, classe `B`, herança que a Task 12 da fatia 1 do item 16 prometeu e
