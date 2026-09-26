@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-c
 active_feature: null
 active_work_item: frontend-revisao-ui-por-modulo
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: review_active_work_item
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-04-frontend-revisao-ui-por-modulo-f3-design.md
 active_plan: docs/superpowers/plans/2026-09-04-frontend-revisao-ui-por-modulo-f3.md
@@ -47,9 +47,9 @@ lanes:
   lane-c:
     active_feature: null
     active_work_item: frontend-revisao-ui-por-modulo
-    workflow_state: reviewing
+    workflow_state: ready_for_closure
     next_owner: claude
-    next_action: review_active_work_item
+    next_action: close_active_work_item
     tree: ../fix-frontend
     branch: refactor/frontend-revisao-ui-f3   # aberta de origin/main@9c038cca em 2026-09-04, ja com o item 27 mesclado pela PR #100; a fatia 2 saiu na refactor/frontend-revisao-ui-f2
     active_spec: docs/superpowers/specs/2026-09-04-frontend-revisao-ui-por-modulo-f3-design.md
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04, mesclado pela PR #100 (9c038cca)
 last_completed_work_item: frontend-arrumacao-de-testes
 state_basis_commit: 9c038cca
-updated_at: 2026-09-26T19:00:00-03:00
+updated_at: 2026-09-26T20:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
 | `lane-b` | — (item 31 `cicd-host-alinhado-ao-sha` **fechado em 2026-09-26**) | — | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`; até `af1526eb` mesclada na PR #112, `fe6077df`; o resto **não mesclado** — integração é passo próprio, com o João) | `idle` |
-| `lane-c` | `frontend-revisao-ui-por-modulo` (item 16, **fatia 3**) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`) | `reviewing` (João aprovou Q-1 a Q-5 do review, Q-1 pela opção de consertar no bloco; correções em curso) |
+| `lane-c` | `frontend-revisao-ui-por-modulo` (item 16, **fatia 3**) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`) | `ready_for_closure` (review limpo: Q-1 a Q-5 aplicados, Q-1 consertado no bloco) |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
