@@ -629,3 +629,83 @@ Nesses 90 dias, a região não tem nenhum `RevokeSecurityGroupIngress`, `ModifyS
 nem outro `AuthorizeSecurityGroupIngress`. As regras são as de 2026-09-04, e o bloco, aberto em
 2026-09-21, não mexeu nelas. A outra metade do DoD 7, o `get-caller-identity` com a `lotus-deploy`
 assumida por OIDC, está no Step 1 e se repete nos dois runs do Step 2.
+
+### Steps 3 e 4 — as recusas (DoD 8)
+
+O João disparou as três recusas às 07:07:55Z, 07:08:22Z e 07:08:51Z, uma por vez, para nenhuma
+cair na regra do run único na fila, descrita no Step 2. As três pararam no gate esperado, e todos os
+passos seguintes saíram `skipped`, inclusive *deploy.sh no host, por SSM*:
+
+| Step | Run | Entrada | Parou em |
+|---|---|---|---|
+| 3, sem `PROMOVER` | [36225841401](https://github.com/Gatika-CL/lotus/actions/runs/36225841401) | `1142911b…` e `promover` | *Formato do SHA e confirmacao* |
+| 4a, fora da `main` | [36225864370](https://github.com/Gatika-CL/lotus/actions/runs/36225864370) | `65d81bc9…`, o SHA pessoal do `Source-Commit`, e `PROMOVER` | *O SHA esta na main deste repositorio* |
+| 4b, sem CI verde | [36225886570](https://github.com/Gatika-CL/lotus/actions/runs/36225886570) | `ccaacacf…` e `PROMOVER` | *O CI daquele SHA terminou verde* |
+
+As linhas do passo que falhou, na ordem do log:
+
+```text
+# 36225841401 (env do passo: SHA 1142911b26430466522bab0be2a87b0e32c4952b, CONFIRMAR promover)
+erro: confirmar precisa ser exatamente PROMOVER
+##[error]Process completed with exit code 1.
+
+# 36225864370
+erro: 65d81bc966225c6ea66358f7e770d2285e0bc8d6 nao esta na main (status inacessivel)
+compare main...65d81bc966225c6ea66358f7e770d2285e0bc8d6 =
+##[error]Process completed with exit code 1.
+
+# 36225886570
+erro: o CI de ccaacacf79a62e734ac2b722e34be4ce54ab1e91 nao esta verde (cancelled)
+ci.yml em ccaacacf79a62e734ac2b722e34be4ce54ab1e91 = cancelled
+##[error]Process completed with exit code 1.
+```
+
+- **4a:** o corporativo não tem o SHA pessoal, e o `compare` responde 404. O gate trata isso como
+  `inacessivel` em vez de morrer antes de explicar, que é o caso descrito no comentário do passo.
+- **4b:** a listagem do plano acha um só candidato. O `ci.yml` do corporativo tem 7 runs
+  concluídos, todos de push, e só o do `ccaacacf` não terminou verde: o
+  [run 33907874327](https://github.com/Gatika-CL/lotus/actions/runs/33907874327), `cancelled` na
+  segunda tentativa. O passo anterior respondeu `compare main...ccaacacf… = behind`, então o SHA
+  está na `main`, e quem o recusa é o gate do CI.
+
+**O host não recebeu nada. Conferido por leitura às 07:10Z:** o `list-commands` do SSM para a
+instância traz três comandos, os dos três botões verdes (`325ee162…` às 06:40:42Z, `7a5a8877…` às
+06:52:17Z e `08c82013…` às 06:53:18Z), e nenhum depois. O ledger segue com as mesmas 12 linhas e
+2016 bytes, o `CURRENT_SHA` é `1142911b…`, nenhum container foi recriado, e o `/up` responde 200
+de fora e de dentro.
+
+### Step 6 — a guarda de dono, no repositório público
+
+[Run 36225909713](https://github.com/Andred21/lotus/actions/runs/36225909713), em
+`Andred21/lotus`, disparado às 07:09:19Z com `1142911b…` e `PROMOVER`. O job `promover` saiu
+`skipped`, com zero passos, pela guarda `if: github.repository == 'Gatika-CL/lotus'`. Nenhum passo
+rodou, então nenhum `send-command` saiu do repositório público.
+
+Mesmo sem a guarda, esse run não teria com que promover. O `gh secret list` do pessoal vem vazio, e
+os dois secrets de deploy só existem no corporativo. Só os nomes foram lidos.
+
+### Os runs do botão
+
+| Step | Run | Repositório | Resultado |
+|---|---|---|---|
+| 1, primeiro disparo | `36223231264`, que saiu do histórico | corporativo | `failure` no `configure-aws-credentials` |
+| 1 | [36224456257](https://github.com/Gatika-CL/lotus/actions/runs/36224456257) | corporativo | `success` |
+| 2 | [36225030524](https://github.com/Gatika-CL/lotus/actions/runs/36225030524) | corporativo | `success` |
+| 2 | [36225032217](https://github.com/Gatika-CL/lotus/actions/runs/36225032217) | corporativo | `success`, depois de esperar o anterior |
+| 3 | [36225841401](https://github.com/Gatika-CL/lotus/actions/runs/36225841401) | corporativo | `failure`: confirmação errada |
+| 4a | [36225864370](https://github.com/Gatika-CL/lotus/actions/runs/36225864370) | corporativo | `failure`: SHA fora da `main` |
+| 4b | [36225886570](https://github.com/Gatika-CL/lotus/actions/runs/36225886570) | corporativo | `failure`: CI não verde |
+| 6 | [36225909713](https://github.com/Andred21/lotus/actions/runs/36225909713) | pessoal | `skipped` |
+
+## DoD da spec — onde cada um foi provado
+
+| DoD (spec §13) | Onde | O que ficou provado |
+|---|---|---|
+| 1. o botão promove, e o `/up` responde 200 pelo EIP com os digests puxados | Task 12, Step 1 | tudo; os dois runs verdes do Step 2 repetem |
+| 2. o segundo run espera | Task 12, Step 2 | tudo, com dois disparos; o terceiro disparo é limite anotado, não medido |
+| 3. ledger coerente, e o `CURRENT_SHA` bate com o fecho | Task 9, Step 3; Task 12 | tudo: 12 linhas, 6 pares, ator `manual:root` e `github:<run>:<login>` |
+| 4. rollback limpo | Task 12, *Task 10, DoD 4* | tudo |
+| 5. rollback recusado, com as migrations e a chave do dump | Task 10 | a recusa com código 4 e o nome da migration, em produção, por sentinela; imprimir uma chave real depende de um deploy com migration e fica na **P-86** |
+| 6. dump pré-deploy no S3 e no ledger; `"dump": null` sem migration | Task 9 | as seis linhas `inicio` declaram `"dump": null`, e o `verificar-backup.sh` aprova um dump; o dump de um deploy com migration pendente fica na **P-86** |
+| 7. a `lotus-deploy` assumida por OIDC; o SG com as mesmas três regras | Task 12, Steps 1 e 5 | tudo |
+| 8. recusa sem CI verde e sem `PROMOVER` | Task 12, Steps 3 e 4 | tudo, e também a recusa de SHA fora da `main` |
