@@ -23,6 +23,36 @@
 
 ---
 
+## Fechado em 2026-09-26 — `harness-estado-por-bloco` (item 30)
+
+> A parte do item 30 anterior à virada está na seção congelada logo abaixo, no bloco da `lane-a`.
+> Da virada em diante o registro é a pasta do bloco, `blocos/30-harness-estado-por-bloco/`: o
+> `estado.md` e o `revisao.md`. Esta seção é a última narrativa que o arquivo recebe de bloco do
+> harness novo, pela ponte manual da spec §7.
+
+**Virada em 2026-09-26, `3e07a451`.** O `state.md` virou contrato, o `session-start.sh` passou a
+ler o `lane.sh descobrir`, o `ler-estado.py` saiu e o estado do 30 migrou para
+`blocos/30-harness-estado-por-bloco/estado.md` em `ready_for_review`.
+
+**Review de sprint em 2026-09-26**, intervalo `e5ac01a9..3e07a451`, risco baixo, só a revisão
+Claude (o MCP do Codex estava fora do ar). Cinco achados, Q-1 a Q-5, dois 🟡 e três 🟢; o João
+aprovou os cinco para corrigir no bloco. O Q-1 era reincidência da classe do `50b82a5e` do item
+28: arquivo de teste rodado avulso rodava git contra o repo real, e rodou durante a própria
+revisão. Correções em `046c5edf`, `352a78ab`, `dbf9e4be` e `3cc4e2fd`, cada catraca vista
+reprovar por sonda; o bloco foi a `ready_for_closure` em `419a26fa`.
+
+**Fechamento em 2026-09-26.** Suíte do harness com 14 arquivos e nenhuma falha. O DoD da spec
+§4.6 foi refeito do zero num clone descartável no scratchpad, com a ponta `419a26fa` mesclada
+na `main` do clone e duas órfãs em +1 e +2. O `abrir 33` reservou +3, o stack subiu com `/up`
+200 na 8083, o `fechar` recusou a branch não mesclada com o stack de pé e fechou limpo depois do
+merge simulado, sem contêiner, volume, imagem, rede, worktree ou branch sobrando. O `worktree
+list` do repositório real ficou igual. O João fechou a **P-55** no gate, porque o espelho
+deixou de existir. Plano arquivado em `plans/archive/`. A spec fica ativa, porque o 31 e o 32 a
+usam. O `estado.md` foi a `closed`. A ficha 30 continua no `backlog.md` até o main tree
+removê-la depois do merge (invariante 10). A PR espera o fecho das lanes antigas, pela D6.
+
+---
+
 ## Congelado em 2026-09-26 — o `state.md` do fluxo antigo, na virada do item 30
 
 > Na virada do item 30 o `state.md` deixou de guardar lanes e virou contrato; o estado de

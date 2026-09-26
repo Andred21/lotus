@@ -526,40 +526,6 @@ eles somem junto. Por isso a ficha.
 Nenhuma das sete é fuga conhecida: são escolhas onde o guarda está mais apertado (a, b, d, e) ou
 mais frouxo (c, f, g) do que talvez se queira, e o bloco parou na linha certa ao não decidir sozinho.
 
-## P-55 — a invariante do espelho proíbe o que toda lane precisa fazer
-
-**Gatilho:** fecha quando o João escolher entre (a) reescrever a invariante para descrever o que as
-lanes fazem de fato, ou (b) dar ao espelho um mecanismo próprio que dispense a escrita manual — por
-exemplo `focused_lane` derivada da árvore corrente em vez de campo escrito. Revisar em
-**2026-10-31**.
-
-O `state.md` diz, na lista do que cada lane pode escrever: *"**Nunca os campos singulares do topo**:
-são espelho de `focused_lane`, e trocar o foco é fronteira durável do main tree."* Mas
-`/planejar-bloco` e `/executar-bloco` leem os singulares, não o bloco da lane em `lanes:` — então
-uma lane que não vire o espelho na própria árvore é planejada e executada contra a lane errada.
-
-**Medido em 2026-08-24:** três lanes viraram o espelho na própria branch, fora do main tree — a
-`lane-c` em `ff5c29f6` (`focused_lane: lane-c`), a `lane-a` no commit de promoção do item 2 e a
-`lane-b` no commit que abre esta ficha. Nenhuma das três podia, pela letra. É a mesma classe do
-achado **Q-2** do review de 2026-08-22, em que a regra de dono foi quebrada por 21 commits no mesmo
-dia em que foi escrita: a regra descreve a intenção (nenhuma lane sobrescreve o foco de outra no
-merge) e proíbe o mecanismo que a operação exige.
-
-**Por que fica aberta:** as duas saídas mudam contrato de workflow lido por comando — decisão do
-João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
-apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
-
-**Quarto caso, 2026-08-28:** a promoção do item 18 (`frontend-estilizacao-padronizacao-de-componentes`)
-para a `lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, com o João
-avisado da pendência antes do commit e decidindo por ela. A alternativa oferecida — gravar só o
-bloco da lane aqui e o espelho no main tree — foi recusada por ping-pong entre árvores. A ficha
-segue aberta: quatro precedentes não reescrevem a invariante.
-
-**Quinto caso, 2026-08-29:** a promoção do item 19 (`frontend-triagem-dos-audits-do-item-18`) para a
-`lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, pelo mesmo motivo do
-quarto: `/planejar-bloco` lê os singulares, e a sessão rodou autônoma, sem o João para escolher o
-ping-pong entre árvores. Cinco precedentes, mesma saída pendente.
-
 ## P-56 — o `XSRF-TOKEN` não é isolado entre árvores; a escrita da aba parada dá 419
 
 **Gatilho:** fecha quando o João escolher entre (a) isolar as árvores por HOST em vez de por porta

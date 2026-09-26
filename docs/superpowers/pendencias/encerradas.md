@@ -7,7 +7,49 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-*(nenhuma. A **`P-59`**, a **`P-75`** e a **`P-79`** cumpriram a sprint de rastro e saíram no
+### P-55 — a invariante do espelho proíbe o que toda lane precisa fazer
+
+**Encerrada em 2026-09-26, no fechamento do `harness-estado-por-bloco` (item 30), por decisão do
+João no gate.** O item 30 não escolheu nenhuma das duas saídas do gatilho: extinguiu o espelho. O
+`state.md` virou contrato e não guarda mais `lanes:`, `focused_lane` nem os campos singulares do
+topo; o estado de cada bloco mora em `docs/superpowers/blocos/<NN>-<slug>/estado.md`, na árvore da
+lane (invariante 6 do contrato). Sem espelho, não há o que a lane precise escrever e a regra
+proíba. Até o item 31 mesclar, os commands ainda citam `focused_lane`, e a seção "Transição" do
+`state.md` manda lê-los contra o `estado.md` do bloco.
+
+**Gatilho:** fecha quando o João escolher entre (a) reescrever a invariante para descrever o que as
+lanes fazem de fato, ou (b) dar ao espelho um mecanismo próprio que dispense a escrita manual — por
+exemplo `focused_lane` derivada da árvore corrente em vez de campo escrito. Revisar em
+**2026-10-31**.
+
+O `state.md` diz, na lista do que cada lane pode escrever: *"**Nunca os campos singulares do topo**:
+são espelho de `focused_lane`, e trocar o foco é fronteira durável do main tree."* Mas
+`/planejar-bloco` e `/executar-bloco` leem os singulares, não o bloco da lane em `lanes:` — então
+uma lane que não vire o espelho na própria árvore é planejada e executada contra a lane errada.
+
+**Medido em 2026-08-24:** três lanes viraram o espelho na própria branch, fora do main tree — a
+`lane-c` em `ff5c29f6` (`focused_lane: lane-c`), a `lane-a` no commit de promoção do item 2 e a
+`lane-b` no commit que abre esta ficha. Nenhuma das três podia, pela letra. É a mesma classe do
+achado **Q-2** do review de 2026-08-22, em que a regra de dono foi quebrada por 21 commits no mesmo
+dia em que foi escrita: a regra descreve a intenção (nenhuma lane sobrescreve o foco de outra no
+merge) e proíbe o mecanismo que a operação exige.
+
+**Por que fica aberta:** as duas saídas mudam contrato de workflow lido por comando — decisão do
+João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
+apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
+
+**Quarto caso, 2026-08-28:** a promoção do item 18 (`frontend-estilizacao-padronizacao-de-componentes`)
+para a `lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, com o João
+avisado da pendência antes do commit e decidindo por ela. A alternativa oferecida — gravar só o
+bloco da lane aqui e o espelho no main tree — foi recusada por ping-pong entre árvores. A ficha
+segue aberta: quatro precedentes não reescrevem a invariante.
+
+**Quinto caso, 2026-08-29:** a promoção do item 19 (`frontend-triagem-dos-audits-do-item-18`) para a
+`lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, pelo mesmo motivo do
+quarto: `/planejar-bloco` lê os singulares, e a sessão rodou autônoma, sem o João para escolher o
+ping-pong entre árvores. Cinco precedentes, mesma saída pendente.
+
+*(A **`P-59`**, a **`P-75`** e a **`P-79`** cumpriram a sprint de rastro e saíram no
 fechamento do `cicd-promocao-deploy-e-rollback` (item 12, 2026-09-26); o parágrafo do rastro adiante
 é o delas. O item 12 não encerrou ficha: abriu a **`P-86`** e a **`P-87`**, emendou a **`P-62`** com
 o botão sem Environment e disparou, sem pagar, o gatilho da **`P-87`**.)*
