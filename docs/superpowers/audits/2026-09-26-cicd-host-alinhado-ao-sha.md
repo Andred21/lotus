@@ -138,3 +138,23 @@ estado final: Success
 **P-86, ramo (b).** A linha `inicio` traz `"migrations":[]` e `"dump":null`, como a previsão da Task 6.
 A P-86 fica aberta com nota datada: o release `3abd8136…` não tinha migration nova; o dump segue sem
 deploy real.
+
+## Revisão final da execução (antes do review formal)
+
+Revisão da branch inteira (`e5ac01a9..88faa23d`) no modelo mais capaz: nenhum Critical; código
+fecha em falha, nenhum valor do `.env` sai do host, `inputs.sha` não chega a shell sem validação,
+sem escape. Um Important, corrigido em `f9715829`: o §7 do runbook mandava conferir os scripts
+contra `origin/main` (o pessoal), mas o botão lê a `main` do corporativo — agora
+`git diff --quiet upstream/main -- deploy/bin`.
+
+Aceitos pelo João em 2026-09-26, sem mexer no código provado ao vivo (todos falham fechado), para o
+review formal triar:
+
+- m1: glob sem match em `deploy/bin/*.sh` da `main` vira `bin/*.sh sem referencia`.
+- m2: listagem inexistente é reportada como marcador ausente.
+- m3: `bin/` vazio no host não é sinalizado à parte (sai `bin/<x>.sh ausente` por script).
+- a leitura que termina em `Failed` não mostra o stderr do host (`deploy.yml`, gate da leitura).
+- `.env` ausente no host dá `Success` na leitura e ~40 `chave faltando:`, em vez de `.env ausente`.
+- `--timeout-seconds 60` é prazo de entrega do SSM, não de execução (o orçamento de 90 s limita).
+- o teste de razão de orçamento em `workflow-deploy.test.ts` não soma `ORCAMENTO_LEITURA`.
+- valor multilinha entre aspas no `.env` poderia emitir um nome espúrio (nunca o valor).
