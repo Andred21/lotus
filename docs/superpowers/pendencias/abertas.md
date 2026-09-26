@@ -264,7 +264,7 @@ repositório prova lock.
 a mesma faixa no mesmo dia e mesclou antes, pela PR #105. Ver a nota da colisão em
 [`encerradas.md`](./encerradas.md).)*
 
-**Bloco:** — · **Gatilho:** fecha quando `docs/estrutura-monolito.md` descrever `.claude/hooks/`,
+**Bloco:** 31 (`harness-commands-de-bloco`, desde 2026-09-26) · **Gatilho:** fecha quando `docs/estrutura-monolito.md` descrever `.claude/hooks/`,
 `.claude/tests/` e `.claude/settings.json`, ou quando o `CONTRIBUINDO.md` disser o que os cinco
 hooks negam e como se acrescenta entrada à allowlist. Revisar em **2026-10-31**.
 
