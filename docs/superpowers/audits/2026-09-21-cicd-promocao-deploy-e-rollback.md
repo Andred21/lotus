@@ -219,3 +219,46 @@ recusa *imprima, do ledger, a chave do dump da release que as introduziu*. O pla
 isso por uma dica textual — `procure em /opt/lotus/releases.jsonl` —, e é o que o `deploy.sh`
 faz. A troca não foi declarada como desvio. Com a sentinela, de qualquer modo, não haveria chave a
 imprimir: nenhuma release a introduziu.
+
+**Decisão do João (2026-09-25): corrigir o `deploy.sh`, não emendar a spec.** Commit `3154b6bb`,
+por TDD: três asserções novas em `deploy-sh.test.ts` falharam primeiro; depois a função
+`dump_que_introduziu()` passou a ler do ledger o `dump` da **última** linha `inicio` que registrou
+cada migration à frente, e a recusa lista migration e chave lado a lado. O João reinstalou o script
+no host e repetiu a sentinela (`2026-09-26T02:32Z`):
+
+```text
+# sha256sum /opt/lotus/bin/deploy.sh
+ae6686fd7f139ecdaa48b007f4fbbae93c5da3254877a3e9a1992953a2562ffc  /opt/lotus/bin/deploy.sh
+
+# INSERT ('2099_01_01_000000_sonda_rollback_recusado', 999)
+31
+
+# deploy.sh a5fc92bb7728ea0da6dc16a62958e02556df999b
+==> login ghcr.io
+==> manifestos de a5fc92bb7728ea0da6dc16a62958e02556df999b
+==> pull
+…
+==> gate de schema
+erro: o banco esta A FRENTE de a5fc92bb7728ea0da6dc16a62958e02556df999b — a imagem alvo nao conhece:
+  2099_01_01_000000_sonda_rollback_recusado  (dump anterior: nenhum registrado no ledger)
+restaure o dump da PRIMEIRA linha — a migration mais antiga — e so entao promova.
+codigo=4
+
+# DELETE da sentinela, depois
+30
+200
+a5fc92bb7728ea0da6dc16a62958e02556df999b
+{"ts":"2026-09-25T02:43:41Z","evento":"fim","sha":"a5fc92bb7728ea0da6dc16a62958e02556df999b","resultado":"ok","etapa":"ok"}
+```
+
+Conferido em seguida, só por leitura: 30 migrations e nenhuma `2099%`; o ledger com as mesmas 4
+linhas e 656 bytes; os seis containers ainda no `a5fc92bb`, sem recriação. O hash é o do
+`deploy/bin/deploy.sh` da `main` (`65d81bc9`).
+
+A busca tolera ausência: sem linha `inicio` que registre a migration — o caso da sentinela, que
+nenhuma release introduziu —, a recusa diz `nenhum registrado no ledger` em vez de o `pipefail`
+matar o script antes de ela explicar. **O ramo que acha uma chave de verdade não rodou em
+produção.** Ele rodou numa sonda local: a função extraída do script, sob `set -euo pipefail`,
+contra um ledger de mentira. Release refeita devolveu o dump mais recente, `x` não casou `x_y` e
+ledger vazio sobreviveu. Esse ramo depende de um deploy com migration e fica na **P-86**, junto
+com o dump pré-deploy.
