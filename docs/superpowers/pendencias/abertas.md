@@ -1155,6 +1155,12 @@ As direções mudam assim:
   por SSM e compara com o SHA promovido.
 - Em (b), os scripts entram no pacote que o SSM entrega, junto com o compose e o `tls.conf`.
 
+**Disparo de 2026-09-26, pago à mão.** O review do item 12 mudou `deploy.sh` e `backup-db.sh`
+(`19aeb734`). Depois do merge e do espelho, o João reinstalou os dois pelo runbook §7, às 08:40Z.
+Host, `origin/main` e o corporativo `df30a6bd` ficaram com os mesmos hashes, e o botão promoveu o
+`df30a6bd` com o script novo (audit do item 12, "Depois do fechamento"). **A causa segue aberta:**
+foi de novo sincronização manual, e nada teria avisado se ela não acontecesse.
+
 
 ## P-88 — o `deploy.sh` aceita promover imagem de qualquer dono do GHCR, inclusive do repositório pessoal
 

@@ -792,3 +792,39 @@ passo 1: -- Dump completed on 2026-09-26  7:36:52
 EC2, o `compose stop` do projeto `lotus` e o cadeado contra o botão, não rodaram na produção. A
 escrita remota na produção é do João. O primeiro restore real fica sendo a prova, e a P-86 já
 espera um deploy com migration.
+
+## Depois do fechamento — reinstalação dos scripts e primeiro disparo do `deploy.sh` novo (2026-09-26)
+
+O review mudou `deploy.sh` e `backup-db.sh` (`19aeb734`) e disparou o gatilho da **P-87**. A ordem
+seguida foi: merge (PR #109 e #110), CI verde, espelho, reinstalação no host, botão.
+
+**Os três lados com os mesmos bytes**, conferidos às 08:41Z:
+
+| | `deploy.sh` | `backup-db.sh` |
+|---|---|---|
+| host `/opt/lotus/bin/` (reinstalado pelo João, runbook §7) | `72fb8b358b52…` | `4d28a5273788…` |
+| `origin/main` (`9f9ccb3a`) | igual | igual |
+| `Gatika-CL/lotus` `df30a6bd` (espelho de `f79bf993`, PR #109) | igual | igual |
+
+As permissões ficaram `-rwxr-x--- root root`, como antes. O `backup-db.sh` novo rodou à mão, como o
+cron o chama, sem rótulo, e gravou `s3://lotus-prod-760144413534/backups/lotus-2026-09-26T08-41-18.sql.gz`,
+com a chave até o segundo (Q-5). O `verificar-backup.sh` aprovou: `o mais recente tem 0d (limite 2d)`.
+
+**O botão promoveu o `df30a6bd` com o `deploy.sh` novo.** Run
+[36230831166](https://github.com/Gatika-CL/lotus/actions/runs/36230831166), `success`:
+
+- o job assumiu `arn:aws:sts::760144413534:assumed-role/lotus-deploy/GitHubActions`; o `migrate`
+  saiu `Nothing to migrate.`, e o script terminou em `==> DEPLOY OK: df30a6bdfbbf26f3b9fa9397eaeb9ff6071eb523`;
+- `/up` responde 200 pelo EIP, e o `CURRENT_SHA` é `df30a6bd…`;
+- `app`, `scheduler`, `nginx` e `clamav` rodam `ghcr.io/gatika-cl/lotus-*:df30a6bd…`, com `nginx` e
+  `clamav` `healthy`;
+- o ledger passou de 12 para 14 linhas, e a linha `inicio` já traz o campo `schema_a_frente` (Q-3),
+  vazio no caso normal:
+
+  ```text
+  {"ts":"2026-09-26T08:47:46Z","evento":"inicio","sha":"df30a6bdfbbf26f3b9fa9397eaeb9ff6071eb523","sha_anterior":"1142911b26430466522bab0be2a87b0e32c4952b","migrations":[],"schema_a_frente":[],"dump":null,"ator":"github:36230831166:Andred21"}
+  {"ts":"2026-09-26T08:48:12Z","evento":"fim","sha":"df30a6bdfbbf26f3b9fa9397eaeb9ff6071eb523","resultado":"ok","etapa":"ok"}
+  ```
+
+O release não tinha migration nova, então o dump pré-deploy com o rótulo `pre-deploy-<sha>` ainda
+não rodou em produção. Isso segue na **P-86**.
