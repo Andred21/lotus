@@ -24,4 +24,15 @@ describe('RolesTable', () => {
     expect(screen.queryByText('redator')).toBeNull()
     expect(screen.getByText('auditor')).toBeTruthy()
   })
+
+  it('usa um piso menor que os 48rem default, para não forçar rolagem em 1024x768 (UI-02)', () => {
+    // Mesma raiz do UI-03 de Pessoas (RedatoresTable): o piso default do
+    // AppDataTable (min-w-[48rem] = 768px) é maior que os 718px de moldura em
+    // 1024x768 — o piso vence, força rolagem, e o cabeçalho "Permisos" fica
+    // cortado sob a coluna de ações presa.
+    renderWithProviders(<RolesTable roles={roles} loading={false} onView={() => {}} />)
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).not.toContain('min-w-[48rem]')
+    expect(tabela.className).toContain('min-w-[42rem]')
+  })
 })

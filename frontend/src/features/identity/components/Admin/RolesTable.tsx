@@ -39,6 +39,13 @@ export function RolesTable({
         onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('role.count', { count: roles.length })}
+        // O piso default do AppDataTable (`min-w-[48rem]` = 768px) é maior que
+        // os 718px de moldura em 1024x768: o piso vence, força rolagem, e o
+        // cabeçalho "Permisos" fica cortado sob a coluna de ações presa
+        // (UI-02, `2026-09-26-lotus-ui-review-administracion.md`). 42rem
+        // (672px) é o mesmo piso já provado em `RedatoresTable` (UI-03 da run
+        // de Pessoas) — cabe nos 718px com folga.
+        pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}
       >
         <AppColumn
           field="name"

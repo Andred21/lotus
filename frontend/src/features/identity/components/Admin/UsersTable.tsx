@@ -40,6 +40,13 @@ export function UsersTable({
   return (
     <SearchableTableFrame
       table={table}
+      // O piso default do AppDataTable (`min-w-[48rem]` = 768px) é maior que
+      // os 718px de moldura em 1024x768: o piso vence, força rolagem, e a
+      // coluna de ações presa (`right: 0`) passa a cobrir "Último acceso" com
+      // ~50px de sobreposição (UI-02, `2026-09-26-lotus-ui-review-administracion.md`).
+      // 42rem (672px) é o mesmo piso já provado em `RedatoresTable` (UI-03 da
+      // run de Pessoas) — cabe nos 718px com folga.
+      pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}
       searchPlaceholder={t('admin.searchPlaceholder')}
       emptyState={
         <AppEmptyState

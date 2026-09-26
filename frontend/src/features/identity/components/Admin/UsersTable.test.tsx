@@ -29,4 +29,20 @@ describe('UsersTable', () => {
     expect(screen.getByText('roleName.superadmin')).toBeTruthy()
     expect(screen.queryByText('superadmin')).toBeNull()
   })
+
+  it('usa um piso menor que os 48rem default, para não forçar rolagem em 1024x768 (UI-02)', () => {
+    // Mesma raiz do UI-03 de Pessoas (RedatoresTable): o piso default do
+    // AppDataTable (min-w-[48rem] = 768px) é maior que os 718px de moldura em
+    // 1024x768 — o piso vence, força rolagem, e a coluna de ações presa
+    // (right: 0) cobre "Último acceso" com ~50px de sobreposição.
+    renderWithProviders(
+      <UsersTable
+        users={[user]} loading={false} onView={() => {}} mode="active" onModeChange={() => {}}
+        onArchive={() => {}} onRestore={() => {}} busy={false}
+      />,
+    )
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).not.toContain('min-w-[48rem]')
+    expect(tabela.className).toContain('min-w-[42rem]')
+  })
 })
