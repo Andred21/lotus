@@ -4,25 +4,25 @@ mode: multi-lane
 focused_lane: lane-a
 active_feature: null
 active_work_item: harness-estado-por-bloco
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-09-26-harness-estado-por-bloco.md
 context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
     active_work_item: harness-estado-por-bloco   # item 30, promovido pelo Joao em 2026-09-26
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../lotus-harness
     branch: chore/30-harness-estado-por-bloco   # aberta de origin/main@65d81bc9 em 2026-09-26 como docs/harness-paridade-eladecora e renomeada no planejamento (D5; nunca foi ao remoto); a anterior (fix/backend-config-e-conteudo-de-documento, item 29) mesclou na PR #107 (9664faf5)
     active_spec: docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md   # compartilhada pelos itens 30, 31 e 32
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-09-26-harness-estado-por-bloco.md
     context_packet: null   # Contexto: nao na ficha
     blocker: null
     resume_state: null
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04, mesclado pela PR #100 (9c038cca)
 last_completed_work_item: backend-config-e-conteudo-de-documento
 state_basis_commit: 65d81bc9
-updated_at: 2026-09-26T05:10:00-03:00
+updated_at: 2026-09-26T05:10:09-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -164,7 +164,7 @@ disjuntas, colisão mínima de arquivos:
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | `harness-estado-por-bloco` (item 30) | Harness | `../lotus-harness` | `chore/30-harness-estado-por-bloco` (de `origin/main@65d81bc9`) | `planning` |
+| `lane-a` | `harness-estado-por-bloco` (item 30) | Harness | `../lotus-harness` | `chore/30-harness-estado-por-bloco` (de `origin/main@65d81bc9`) | `ready_for_execution` |
 | `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `executing` |
 | `lane-c` | `frontend-revisao-ui-por-modulo` (item 16, fatia 3) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`) | `executing` |
 
@@ -186,6 +186,14 @@ backend, e a P-03 não dispara. **O foco passou da `lane-b` para a `lane-a` nest
 nesta branch e fora do main tree por decisão do João na sessão — o mesmo arranjo da **P-55**.
 **Integração:** pela D6 da spec, a PR só mescla quando a `lane-b` e a `lane-c` tiverem fechado pelo
 fluxo antigo.
+
+**Planejamento do item 30 fechado em 2026-09-26.** A spec compartilhada recebeu a emenda do §4 (e
+do §3.3, §3.4, §7 e §9) no commit que abriu o planejamento; o plano é
+`plans/2026-09-26-harness-estado-por-bloco.md`, dez tasks, `executor: claude`. O código das Tasks
+1–8 e 10 foi aplicado num clone descartável e a suíte deu o vermelho e o verde que cada task
+promete; a Task 9 (prova com stack real) não entrou nesse ensaio. **A Task 10 é a virada da ponte
+manual (spec §7):** depois dela este arquivo vira contrato e o estado do 30 passa a morar em
+`blocos/30-harness-estado-por-bloco/estado.md`, já em `ready_for_review`.
 
 **Reconciliação no mesmo commit, 2026-09-26.** O `SessionStart` acusou duas divergências, e
 nenhuma promoção podia passar por cima delas. (1) A **`lane-c`** estava `idle` aqui, mas
