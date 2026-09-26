@@ -15,6 +15,19 @@ const semComentarios = YAML.split(/\r?\n/)
   .filter((linha) => !/^\s*#/.test(linha))
   .join('\n')
 
+/** Posição do passo pelo nome, ou -1. */
+const passo = (nome: string) => semComentarios.indexOf(`- name: ${nome}\n`)
+/** Texto do passo até o próximo passo do job. */
+const corpoDoPasso = (nome: string) => {
+  const inicio = passo(nome)
+  if (inicio === -1) return ''
+  const fim = semComentarios.indexOf('\n      - ', inicio + 1)
+  return semComentarios.slice(inicio, fim === -1 ? undefined : fim)
+}
+/** O comando que o host executa na conferência — o heredoc LEITURA. */
+const leitura = semComentarios.match(/<<'LEITURA'\n([\s\S]*?)\n\s*LEITURA\n/)?.[1] ?? ''
+const CONFERENCIA = 'O host esta alinhado ao SHA alvo'
+
 describe('.github/workflows/deploy.yml', () => {
   it('só promove a partir do repositório corporativo', () => {
     expect(semComentarios).toContain("github.repository == 'Gatika-CL/lotus'")
@@ -161,5 +174,76 @@ describe('.github/workflows/deploy.yml', () => {
     // depois de `CONFIRMAR: ` esta fora do bloco `env:` — ou seja, de volta
     // interpolada direto num `run:`.
     expect(semComentarios).not.toMatch(/(?<!CONFIRMAR: )\$\{\{\s*inputs\.confirmar\s*\}\}/)
+  })
+
+  it('confere o host antes do deploy, depois da identidade na AWS (P-87)', () => {
+    const identidade = passo('Quem eu sou na AWS')
+    const conferencia = passo(CONFERENCIA)
+    const deploy = passo('deploy.sh no host, por SSM')
+    expect(identidade).toBeGreaterThan(-1)
+    expect(conferencia).toBeGreaterThan(identidade)
+    expect(deploy).toBeGreaterThan(conferencia)
+  })
+
+  it('compara com o checkout do SHA alvo e com o da main, sem credencial persistida', () => {
+    expect(semComentarios).toMatch(
+      /- name: Checkout do SHA alvo\n\s+uses: actions\/checkout@v4\n\s+with:\n\s+ref: \$\{\{ inputs\.sha \}\}\n\s+path: alvo\n\s+persist-credentials: false\n/,
+    )
+    expect(semComentarios).toMatch(
+      /- name: Checkout da main\n\s+uses: actions\/checkout@v4\n\s+with:\n\s+ref: main\n\s+path: main\n\s+persist-credentials: false\n/,
+    )
+    for (const checkout of ['Checkout do SHA alvo', 'Checkout da main']) {
+      expect(passo(checkout)).toBeGreaterThan(passo('Quem eu sou na AWS'))
+      expect(passo(checkout)).toBeLessThan(passo(CONFERENCIA))
+    }
+  })
+
+  it('a leitura do host não escreve nada', () => {
+    expect(leitura).not.toBe('')
+    expect(leitura).not.toContain('>')
+    expect(leitura).not.toMatch(/\b(mv|cp|rm|install|tee|dd|truncate|chmod|chown)\b/)
+    expect(leitura).not.toMatch(/sed\s+-i/)
+  })
+
+  it('a leitura cobre o runtime, os scripts e as chaves', () => {
+    expect(leitura).toContain('cd /opt/lotus || exit 1')
+    for (const caminho of ['docker-compose.prod.yml', 'docker-compose.prod-tls.yml', 'nginx/tls.conf', 'bin/*.sh']) {
+      expect(leitura).toContain(caminho)
+    }
+    expect(leitura).toContain('sha256sum')
+    expect(leitura).toContain('AUSENTE  ')
+    expect(leitura).toContain("echo '--- chaves'")
+  })
+
+  it('do .env só sai o nome da chave, cortado no =', () => {
+    const comEnv = leitura.split('\n').filter((linha) => linha.includes('.env'))
+    expect(comEnv).toHaveLength(1)
+    expect(comEnv[0].trim()).toBe("grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env | cut -d= -f1")
+  })
+
+  it('a leitura que não termina em Success reprova, antes de o script decidir', () => {
+    const corpo = corpoDoPasso(CONFERENCIA)
+    const gate = corpo.search(
+      /\[\s*"\$ESTADO_LEITURA"\s*=\s*Success\s*\][\s\S]{0,80}\|\|[\s\S]{0,150}exit 1/,
+    )
+    expect(gate).toBeGreaterThan(-1)
+    expect(gate).toBeLessThan(corpo.indexOf('conferir-alinhamento.sh'))
+  })
+
+  it('quem decide é o script da main, chamado sem nada que engula a saída', () => {
+    expect(corpoDoPasso(CONFERENCIA)).toMatch(
+      /^\s*main\/\.github\/scripts\/conferir-alinhamento\.sh saida-host\.txt alvo main\s*$/m,
+    )
+    expect(semComentarios).not.toContain('alvo/.github/scripts/')
+    expect(corpoDoPasso(CONFERENCIA)).not.toMatch(/set \+e/)
+  })
+
+  it('não há escape da conferência', () => {
+    const inputs = semComentarios.slice(semComentarios.indexOf('inputs:'), semComentarios.indexOf('\nconcurrency:'))
+    expect([...inputs.matchAll(/^ {6}(\w+):$/gm)].map((m) => m[1])).toEqual(['sha', 'confirmar'])
+    expect(corpoDoPasso(CONFERENCIA)).not.toMatch(/^\s+if:/m)
+    expect(corpoDoPasso('deploy.sh no host, por SSM')).not.toMatch(/^\s+if:/m)
+    expect(semComentarios).not.toContain('continue-on-error')
+    expect(semComentarios).not.toMatch(/always\(\)|failure\(\)/)
   })
 })

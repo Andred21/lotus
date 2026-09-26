@@ -97,6 +97,71 @@ jobs:
         # usou access key nenhuma.
         run: aws sts get-caller-identity
 
+      - name: Checkout do SHA alvo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha }}
+          path: alvo
+          persist-credentials: false
+
+      - name: Checkout da main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+          persist-credentials: false
+
+      - name: O host esta alinhado ao SHA alvo
+        env:
+          INSTANCIA: ${{ secrets.AWS_INSTANCE_ID }}
+        run: |
+          # Item 31 (P-87). O botao promove imagens; o resto que o SHA
+          # pressupoe (os dois composes, o tls.conf, as chaves do .env e os
+          # scripts de bin/) chega ao host por copia, pelo runbook secao 7, e
+          # nada comparava. Este passo le o host SO PARA LEITURA e compara no
+          # runner, com o script da main. Divergencia reprova e o deploy nao
+          # roda. Nao ha escape: o remedio e' reinstalar pela secao 7.
+          # Do .env so sai o NOME da chave: o `cut -d= -f1` corta no `=`.
+          cat > leitura.sh <<'LEITURA'
+          cd /opt/lotus || exit 1
+          for f in docker-compose.prod.yml docker-compose.prod-tls.yml nginx/tls.conf; do if [ -f "$f" ]; then sha256sum "$f"; else echo "AUSENTE  $f"; fi; done
+          for f in bin/*.sh; do if [ -f "$f" ]; then sha256sum "$f"; fi; done
+          echo '--- chaves'
+          grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env | cut -d= -f1
+          LEITURA
+          # Uma linha do script por item de `commands`; o jq cuida das aspas.
+          jq -Rs '{commands: (split("\n") | map(select(length > 0)))}' leitura.sh > leitura.json
+          COMANDO=$(aws ssm send-command \
+            --instance-ids "$INSTANCIA" \
+            --document-name AWS-RunShellScript \
+            --comment "conferir alinhamento para $SHA" \
+            --timeout-seconds 60 \
+            --parameters "file://leitura.json" \
+            --query Command.CommandId --output text)
+          echo "CommandId=$COMANDO"
+
+          ESTADO_LEITURA=Pending
+          # Mesmo relogio de parede do passo de deploy, com orcamento proprio:
+          # a leitura leva segundos. Nome proprio de proposito -- a catraca da
+          # razao com o timeout do job le a PRIMEIRA ocorrencia do orcamento
+          # do deploy.
+          ORCAMENTO_LEITURA=90
+          FIM_LEITURA=$(( $(date +%s) + ORCAMENTO_LEITURA ))
+          while [ "$(date +%s)" -lt "$FIM_LEITURA" ]; do
+            ESTADO_LEITURA=$(aws ssm get-command-invocation --command-id "$COMANDO" \
+              --instance-id "$INSTANCIA" --query Status --output text 2>/dev/null || echo Pending)
+            case "$ESTADO_LEITURA" in Success|Failed|Cancelled|TimedOut) break ;; esac
+            sleep 3
+          done
+          [ "$ESTADO_LEITURA" = Success ] \
+            || { echo "erro: a leitura do host nao terminou em Success (estado $ESTADO_LEITURA)" >&2; exit 1; }
+
+          aws ssm get-command-invocation --command-id "$COMANDO" --instance-id "$INSTANCIA" \
+            --query StandardOutputContent --output text > saida-host.txt
+          echo "----- listagem do host -----"
+          cat saida-host.txt
+          main/.github/scripts/conferir-alinhamento.sh saida-host.txt alvo main
+
       - name: deploy.sh no host, por SSM
         env:
           INSTANCIA: ${{ secrets.AWS_INSTANCE_ID }}
