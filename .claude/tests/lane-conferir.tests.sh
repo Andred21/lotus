@@ -25,6 +25,9 @@ rodar_lane "$_cm" conferir 41
 assert_igual 0 "$CODIGO_LANE" 'planos disjuntos: sai 0'
 assert_contem "$SAIDA_LANE" 'SEM CONFLITO: lane 41 contra 1 plano(s)' \
   'conta so os planos que existem (a 43 nao tem)'
+assert_contem "$SAIDA_LANE" 'NAO CONFERIDA: lane 43 nao tem plano em' \
+  'a lane sem plano sai nomeada, para o verde nao esconder o vazio'
+assert_nao_contem "$SAIDA_LANE" 'NAO CONFERIDA: lane 42' 'a lane com plano nao sai como nao conferida'
 rodar_lane "$_c42" conferir 41
 assert_igual 0 "$CODIGO_LANE" 'conferir roda de dentro de outra lane (somente leitura)'
 

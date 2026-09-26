@@ -337,20 +337,28 @@ verbo_conferir() {
   [[ $nn =~ $PADRAO_NN ]] || recusar "NN '$nn' nao e numero de ficha"
   raiz_ou_recusa
   local n c b meu=''
-  local -a outros=()
+  local -a outros=() outros_nn=()
   while IFS=$SEP read -r n c b; do
     if [[ $n == "$nn" ]]; then
       meu="$c/docs/superpowers/blocos/${b#*/}/plano.md"
     else
       outros+=("$c/docs/superpowers/blocos/${b#*/}/plano.md")
+      outros_nn+=("$n")
     fi
   done < <(lanes_vivas)
   [[ -n $meu ]] || recusar "nenhuma lane viva com o numero $nn"
   [[ -f $meu ]] || recusar "a lane $nn nao tem plano em $meu"
-  local meus p comuns lidos=0 achou=0
+  local meus p i comuns lidos=0 achou=0
   meus=$(arquivos_do_plano "$meu")
-  for p in "${outros[@]}"; do
-    [[ -f $p ]] || continue
+  for i in "${!outros[@]}"; do
+    p=${outros[$i]}
+    # Lane sem plano na pasta do bloco nao e conferida, e isso sai nomeado:
+    # sem a linha, o SEM CONFLITO do fim valeria tambem para o que nao foi
+    # lido (Q-2 do review do item 30).
+    if [[ ! -f $p ]]; then
+      printf 'NAO CONFERIDA: lane %s nao tem plano em %s\n' "${outros_nn[$i]}" "$p"
+      continue
+    fi
     lidos=$((lidos + 1))
     comuns=$(LC_ALL=C comm -12 <(printf '%s\n' "$meus") <(arquivos_do_plano "$p"))
     [[ -z $comuns ]] && continue
