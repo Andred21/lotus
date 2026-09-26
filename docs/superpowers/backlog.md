@@ -247,11 +247,18 @@ defeito de wrapper que nenhuma leitura de código tinha achado.
 - uma run de `/lotus-ui-review` por superfície ainda não coberta: **Cursos**, **Pessoas**,
   **Administração**;
 - **`scrollable` das réguas de abas (Q-3 do review de 2026-08-24, deferido por falta de medição):**
-  a régua rolável foi medida e ligada só na tela de detalhe da turma; os quatro `ModuleTabs`
-  (Comercial, Administración, Personas, Certificados) seguem sem medição e sem a prop. Cada run
-  acima liga a sua, se a régua transbordar em 1440x900 ou 390x844 — e não por padrão no wrapper,
-  que é o que o review desfez: `p-tabview-scrollable` troca a nav por um contêiner com
-  `overflow: hidden`, e o efeito disso em tela não medida é suposição;
+  a régua rolável foi medida e ligada só na tela de detalhe da turma — e não por padrão no
+  wrapper, que é o que o review desfez: `p-tabview-scrollable` troca a nav por um contêiner com
+  `overflow: hidden`, e o efeito disso em tela não medida é suposição.
+  **Emenda de 2026-09-26 — as quatro réguas restantes foram medidas, zero seguem pendentes:**
+  Comercial e Certificados foram medidas na fatia 2 — `[1134, 1134, false]` em 1440x900 e
+  `[276, 276, false]` em 390x844 — e não receberam a prop. `/cursos` **não usa `ModuleTabs`**:
+  `CatalogPage` é um `AppCard` com `CoursesTable`, sem régua. Personas e Administración foram
+  medidas na fatia 3 (Task 8): Personas deu `[1119, 1119, false]` em 1440x900, `[718, 718, false]`
+  em 1024x768 e `[276, 276, false]` em 390x844 — não transborda em viewport nenhum, sem a prop.
+  Administración deu `[1134, 1134, false]` em 1440x900, `[718, 718, false]` em 1024x768 e
+  `[276, 280, true]` em 390x844 — transborda 4px só no viewport estreito (reconfirmado no
+  navegador nesta fatia, antes de agir), e a prop foi ligada **só nela**;
 - a **`D-59`**, que é composição de UMA tela de Comercial;
 - os achados `C` de cada run se fecham no mesmo bloco, com medida; os `B` viram ficha `D-*` se não
   couberem.
