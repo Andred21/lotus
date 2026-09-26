@@ -1,0 +1,172 @@
+name: Promover para producao
+
+# Nao ha gatilho automatico. Promocao e' decisao humana, e o unico caminho e'
+# este botao.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: SHA de 40 hexadecimais ja publicado no GHCR
+        required: true
+      confirmar:
+        description: Digite PROMOVER para confirmar
+        required: true
+
+# Um deploy por vez, e o segundo ESPERA. `cancel-in-progress: true` mataria um
+# deploy no meio do migrate, que e' como se produz estado inconsistente.
+concurrency:
+  group: producao
+  cancel-in-progress: false
+
+permissions:
+  id-token: write   # OIDC: e' isto que dispensa access key de longa duracao
+  contents: read
+  actions: read     # ler a conclusao do run de CI do SHA alvo
+  packages: read    # GHCR e' privado; imagetools inspect precisa do escopo
+
+jobs:
+  promover:
+    name: promover
+    # `.espelho-exclusoes` NAO exclui `.github/`, entao este arquivo tambem
+    # existe no repositorio PESSOAL, que e' publico. Sem esta guarda, qualquer um
+    # com acesso la teria um botao de deploy para a producao do cliente. E' o
+    # oposto exato do job `image` do ci.yml, que e' dono-agnostico de proposito.
+    if: github.repository == 'Gatika-CL/lotus'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SHA: ${{ inputs.sha }}
+      CONFIRMAR: ${{ inputs.confirmar }}
+      REGIAO: sa-east-1
+    steps:
+      - name: Formato do SHA e confirmacao
+        run: |
+          printf '%s' "$SHA" | grep -qE '^[0-9a-f]{40}$' \
+            || { echo "erro: sha precisa de 40 hexadecimais minusculos" >&2; exit 1; }
+          [ "$CONFIRMAR" = "PROMOVER" ] \
+            || { echo "erro: confirmar precisa ser exatamente PROMOVER" >&2; exit 1; }
+
+      - name: O SHA esta na main deste repositorio
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # `|| ESTADO=""` e nao um `gh api` sem guarda: sob o `bash -e` do
+          # runner, um SHA que nao existe no repositorio (o jeito mais provavel
+          # de cair neste gate) faz a API responder 404, o `gh api` sai com
+          # erro, e a atribuicao mataria o passo antes do `case` abaixo rodar
+          # -- a mensagem "nao esta na main" nunca chegaria a imprimir. O
+          # `2>/dev/null` evita que o corpo do erro do gh vaze para dentro de
+          # $ESTADO. Mesma forma que o ci.yml usa no compare de main do espelho.
+          ESTADO=$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$SHA" --jq .status 2>/dev/null) || ESTADO=""
+          echo "compare main...$SHA = $ESTADO"
+          case "$ESTADO" in
+            identical|behind) ;;
+            *) echo "erro: $SHA nao esta na main (status ${ESTADO:-inacessivel})" >&2; exit 1 ;;
+          esac
+
+      - name: O CI daquele SHA terminou verde
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # A imagem existir no GHCR nao prova CI verde: um `gh run rerun` ou um
+          # push anterior podem ter deixado o artefato. Quem decide e' a conclusao
+          # do run de push daquele head_sha.
+          CONCLUSAO=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$SHA&status=completed" \
+            --jq '[.workflow_runs[] | select(.event=="push")] | first | .conclusion // "nenhum"')
+          echo "ci.yml em $SHA = $CONCLUSAO"
+          [ "$CONCLUSAO" = "success" ] \
+            || { echo "erro: o CI de $SHA nao esta verde ($CONCLUSAO)" >&2; exit 1; }
+
+      - name: O trio existe no GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          LC="${GITHUB_REPOSITORY,,}"
+          for ALVO in app web clamav; do
+            docker buildx imagetools inspect "ghcr.io/$LC-$ALVO:$SHA" >/dev/null
+          done
+          echo "trio presente para $SHA"
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: sa-east-1
+
+      - name: Quem eu sou na AWS
+        # Readback no log: e' esta linha que prova, depois, que a promocao nao
+        # usou access key nenhuma.
+        run: aws sts get-caller-identity
+
+      - name: deploy.sh no host, por SSM
+        env:
+          INSTANCIA: ${{ secrets.AWS_INSTANCE_ID }}
+        run: |
+          # O agente SSM executa como root, entao nao ha `sudo` aqui: /opt/lotus
+          # e' 750 root:root.
+          # O parametro vai por ARQUIVO para nao depender de aspas aninhadas
+          # entre o shell do runner e o JSON da API.
+          cat > parametros.json <<JSON
+          {"commands":["LOTUS_DEPLOY_ATOR=github:$GITHUB_RUN_ID:$GITHUB_ACTOR /opt/lotus/bin/deploy.sh $SHA"]}
+          JSON
+          COMANDO=$(aws ssm send-command \
+            --instance-ids "$INSTANCIA" \
+            --document-name AWS-RunShellScript \
+            --comment "promover $SHA" \
+            --timeout-seconds 600 \
+            --parameters "file://parametros.json" \
+            --query Command.CommandId --output text)
+          echo "CommandId=$COMANDO"
+
+          ESTADO=Pending
+          # Orcamento do polling: relogio de parede, nao contador de
+          # iteracoes. Contar iteracoes so mede o sleep (200 * 5s = 1000s
+          # nominais); cada iteracao TAMBEM chama `aws ssm
+          # get-command-invocation`, e essa chamada custa ~0.6-1.5s no AWS CLI
+          # v2 num runner hospedado. A ~1s por chamada o loop de 200 iteracoes
+          # chegava a ~1200s reais -- igual ao timeout-minutes: 20 do job, e
+          # isso e' ANTES dos quatro passos de gate anteriores (SHA, CI, GHCR,
+          # OIDC) e das duas leituras finais de stdout/stderr. Um deploy
+          # saudavel porem lento era morto pelo timeout do proprio job antes
+          # do ramo de orcamento esgotado (abaixo) conseguir imprimir sua
+          # mensagem -- as duas metades do fix anterior colidiam exatamente
+          # onde as duas fazem falta. Por isso o orcamento agora e' um
+          # deadline absoluto, imune a latencia por chamada:
+          # ORCAMENTO_SEGUNDOS=840 (14min) e' ~70% dos 1200s do
+          # timeout-minutes: 20, com folga real pros passos anteriores e
+          # pelas duas leituras finais de saida.
+          ORCAMENTO_SEGUNDOS=840
+          FIM=$(( $(date +%s) + ORCAMENTO_SEGUNDOS ))
+          while [ "$(date +%s)" -lt "$FIM" ]; do
+            # `get-command-invocation` devolve InvocationDoesNotExist na janela
+            # entre o send e o registro da invocacao; o `|| echo Pending` e' o que
+            # distingue "ainda nao apareceu" de "falhou".
+            ESTADO=$(aws ssm get-command-invocation --command-id "$COMANDO" \
+              --instance-id "$INSTANCIA" --query Status --output text 2>/dev/null || echo Pending)
+            case "$ESTADO" in Success|Failed|Cancelled|TimedOut) break ;; esac
+            sleep 5
+          done
+
+          echo "----- stdout do host -----"
+          aws ssm get-command-invocation --command-id "$COMANDO" --instance-id "$INSTANCIA" \
+            --query StandardOutputContent --output text || true
+          echo "----- stderr do host -----"
+          aws ssm get-command-invocation --command-id "$COMANDO" --instance-id "$INSTANCIA" \
+            --query StandardErrorContent --output text || true
+          echo "estado final: $ESTADO"
+
+          case "$ESTADO" in
+            Success) exit 0 ;;
+            Failed|Cancelled|TimedOut)
+              echo "erro: deploy falhou no host (estado $ESTADO)" >&2
+              exit 1
+              ;;
+            *)
+              # Orcamento esgotado sem estado final NAO e' o mesmo que o deploy
+              # ter falhado: o comando pode continuar rodando no host depois que
+              # este job desiste de esperar. Nao deixar essa mensagem parecer
+              # falha e' o que evita o operador apertar o botao de novo sobre um
+              # deploy que ainda esta em andamento.
+              echo "erro: orcamento de espera esgotado sem estado final do SSM (estado $ESTADO). O comando pode CONTINUAR rodando no host -- NAO acione o botao de novo. Confira /opt/lotus/releases.jsonl no host para ver o que de fato aconteceu." >&2
+              exit 1
+              ;;
+          esac

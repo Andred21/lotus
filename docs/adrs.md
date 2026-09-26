@@ -134,6 +134,20 @@ dependência é registrada com o consumidor nomeado, não só declarada no `comp
 
 **Itens `[FASE 2]` a resolver:** TLS automático (Let's Encrypt + Certbot no Nginx); deploy reproduzível (script git pull → rebuild → restart; GitHub Actions quando incomodar — não montar pipeline no dia 1); backup do banco (snapshot RDS); monitoramento básico (healthcheck + alerta CloudWatch).
 
+**Emenda (2026-09-21, bloco `cicd-promocao-deploy-e-rollback`).** O item `[FASE 2]` *"deploy
+reproduzível (script git pull → rebuild → restart; GitHub Actions quando incomodar — não montar
+pipeline no dia 1)"* está **vencido, e o texto descrevia outra coisa**. O deploy não faz `git pull`
+nem build: promove por SHA um trio de imagens já construído e testado pela CI
+(`lotus-app`, `lotus-web`, `lotus-clamav`), e o host não tem working tree. O "quando incomodar"
+chegou — a promoção passa a ter botão (`workflow_dispatch` no repositório corporativo), transporte
+por SSM com OIDC, cadeado no host, dump pré-deploy e o ledger `releases.jsonl`, que registra SHA
+corrente, anterior, migrations aplicadas e a chave do dump. **Rollback deixa de ser combinado:** o
+`deploy/bin/deploy.sh` recusa alvo cujo schema o banco já ultrapassou e aponta o dump exato.
+O `decisao-stack.md` do Drive — planejamento canônico (`CLAUDE.md` §3) — ainda traz o texto
+original; **quem vence aqui é esta decisão posterior do João**, e o original não se apaga. O outro
+`[FASE 2]` deste ADR, *"backup do banco (snapshot RDS)"*, já tinha sido vencido pela revisão 2026-09
+do **ADR-09** — veja lá, não se repete aqui.
+
 ## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
 
 **Regra:**

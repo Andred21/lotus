@@ -72,17 +72,24 @@ Role `lotus-ec2`, trust policy de `ec2.amazonaws.com`, com política inline (sub
 {"Version": "2012-10-17", "Statement": [
   {"Effect": "Allow", "Action": ["s3:ListBucket"], "Resource": "arn:aws:s3:::<BUCKET>"},
   {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-   "Resource": "arn:aws:s3:::<BUCKET>/*"},
-  {"Effect": "Allow", "Action": ["sns:Publish"], "Resource": "<ARN DO TOPICO DA §10>"}
+   "Resource": "arn:aws:s3:::<BUCKET>/*"}
 ]}
 ```
 
 É esta role que dispensa access key de longa duração no `.env` (§7).
 
-O `sns:Publish` é do `verificar-backup.sh` (§9) e **só existe depois da §10**, que é quem cria o
-tópico. Duas ordens possíveis, nenhuma escondida: ou a §10 vem antes desta política, ou esta
-política volta aqui depois — o que não pode é o script existir sem a permissão, porque aí ele
-recusa rodar e o gatilho do ADR-09 continua sem detecção, que era o defeito original.
+O `sns:Publish` do `verificar-backup.sh` (§9) é uma **segunda** inline, `lotus-alerta`, e **só
+existe depois da §10**, que é quem cria o tópico. Duas ordens possíveis, nenhuma escondida: ou a
+§10 vem antes, ou esta política volta aqui depois — o que não pode é o script existir sem a
+permissão, porque aí ele recusa rodar e o gatilho do ADR-09 continua sem detecção, que era o
+defeito original (e foi o que aconteceu: a produção rodou de 2026-09-17 a 2026-09-24 sem o
+verificador, e o item 12 pagou a dívida).
+
+```bash
+aws iam put-role-policy --role-name lotus-ec2 --policy-name lotus-alerta --policy-document \
+  "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"sns:Publish\",\"Resource\":\"$T\"}]}"
+aws iam get-role-policy --role-name lotus-ec2 --policy-name lotus-alerta --query PolicyDocument
+```
 
 **Pela CLI, a role não basta.** O console cria o *instance profile* junto, escondido; a CLI trata
 os dois como objetos separados e o launch da §6 não acha o profile se ele não existir:
@@ -93,6 +100,22 @@ aws iam add-role-to-instance-profile --instance-profile-name lotus-ec2 --role-na
 aws iam get-instance-profile --instance-profile-name lotus-ec2 \
   --query 'InstanceProfile.Roles[].RoleName' --output text   # tem de imprimir: lotus-ec2
 ```
+
+**A role da EC2 ganha SSM (item 12).** A promoção pela Actions chega ao host por
+`ssm send-command`, e para isso o agente precisa falar com o serviço:
+`AmazonSSMManagedInstanceCore` anexada à `lotus-ec2`. **Nenhuma regra nova de inbound no
+`lotus-web`** — o agente sai pela 443, que o outbound já libera.
+
+**A role que a Actions assume é outra:** `lotus-deploy`, federada por OIDC, sem access key. As duas
+nascem de um script só, idempotente e com readback:
+
+```bash
+LOTUS_INSTANCIA=<i-...> deploy/aws/criar-oidc-e-role.sh
+```
+
+Ele termina imprimindo os dois valores que viram *repository secret* em `Gatika-CL/lotus`:
+`AWS_DEPLOY_ROLE_ARN` e `AWS_INSTANCE_ID`. Eles **não** vão para o YAML: `.github/` atravessa o
+espelho e o repositório pessoal é público.
 
 ## 5. Security Group
 
@@ -198,14 +221,51 @@ manifest list entries`. O `deploy.sh` já exige os três manifestos antes de pux
 
 ## 8. Deploy e admin inicial
 
+**O caminho normal é o botão.** Em `Gatika-CL/lotus`, Actions → *Promover para producao* →
+`Run workflow`, com o SHA de 40 hexadecimais e a palavra `PROMOVER`. O workflow confere que o SHA
+está na `main`, que o CI dele terminou verde e que os três manifestos existem no GHCR; assume a
+role `lotus-deploy` por OIDC; e manda o host rodar **este mesmo script**:
+
 ```bash
 sudo /opt/lotus/bin/deploy.sh <sha de 40 hexadecimais>
 ```
 
-Rollback: o mesmo comando com o SHA anterior (`cat /opt/lotus/CURRENT_SHA` mostra o corrente).
-Migration incompatível é limite declarado — estratégia de rollback de schema é do item 12.
+**O SSH manual é contingência**, não o caminho de todo dia: serve quando a Actions está fora do ar
+ou quando o rollback precisa do escape do §8.1. Os dois caminhos disputam o mesmo `flock` em
+`/opt/lotus/.deploy.lock` — o segundo sai com código **3** em vez de rodar junto.
 
-**Admin inicial.** O `DatabaseSeeder` foi medido: em ambiente que não seja `local`/`demo` ele
+### 8.1 Rollback
+
+`cat /opt/lotus/CURRENT_SHA` mostra o corrente; `/opt/lotus/releases.jsonl` mostra o histórico
+(§8.2). Promover o SHA anterior é o rollback, e o script decide se ele é seguro:
+
+- **o alvo conhece tudo que o banco tem** → roda igual a um deploy normal;
+- **o banco está à frente do alvo** → o script **recusa** com código **4**, lista as migrations que
+  sobram e manda procurar o dump no ledger. Restaure o dump **antes** de promover. Só depois disso,
+  e só por SSH, `LOTUS_ACEITAR_SCHEMA_A_FRENTE=1` pula o gate. O workflow nunca define essa
+  variável: o caminho automatizado não tem como contorná-lo.
+
+### 8.2 O ledger `releases.jsonl`
+
+Append-only, `640 root:root`, duas linhas por tentativa:
+
+```bash
+sudo tail -4 /opt/lotus/releases.jsonl
+```
+
+- `{"evento":"inicio",…}` sai **antes** do `migrate` e traz `sha`, `sha_anterior`, as `migrations`
+  que vão rodar, a chave `dump` (ou `null`, quando não havia migration pendente) e o `ator`.
+- `{"evento":"fim",…}` traz `resultado` e a `etapa` em que parou.
+- **`inicio` sem `fim` significa deploy interrompido no meio.** Não é buraco no registro: é a
+  informação que se quer nessa hora, e é a linha que aponta o dump.
+
+O dump pré-deploy só acontece quando há migration pendente — deploy sem migration se desfaz
+promovendo o SHA anterior, e o gate do §8.1 prova que ele é limpo. **Gatilho para rever:** se o
+dump passar a custar minutos, ele sai do caminho crítico do deploy.
+
+### 8.3 Admin inicial
+
+O `DatabaseSeeder` foi medido: em ambiente que não seja `local`/`demo` ele
 instala **só roles e permissões** (`RolePermissionSeeder`, ADR-07) e avisa que o admin de
 desenvolvimento foi ignorado — a conta `admin@lotus.cl` de senha pública **nunca** nasce em
 produção. Então:
@@ -261,8 +321,8 @@ decisão e não como descoberta.
 
 Duas chaves no `.env` o sustentam: `LOTUS_BACKUP_BUCKET` (já existe) e `LOTUS_ALERT_TOPIC_ARN`, o
 ARN do tópico da §10. **Sem o ARN ele recusa rodar** em vez de degradar para o silêncio, que é
-exatamente o que ele veio consertar. A região do publish sai do próprio ARN: o tópico vive em
-`us-east-1` e a EC2 em `sa-east-1`.
+exatamente o que ele veio consertar. A região do publish sai do próprio ARN — hoje o tópico vive
+em `sa-east-1`, a mesma da EC2, mas o script não depende disso.
 
 Provar as duas pontas à mão, na ordem:
 
@@ -291,22 +351,35 @@ docker exec restore-prova mysql -uroot -pprova -N -e \
 As contagens têm de bater com o mesmo `SELECT` no mysql de produção. Limpar:
 `docker rm -f restore-prova && rm /tmp/dump.sql.gz`.
 
-## 10. Billing alarm
+## 10. Alertas — custo pelo Budgets, backup pelo SNS
 
-O alarme vive em **`us-east-1`** — a métrica `EstimatedCharges` só existe lá. Isso não é engano
-de região a "corrigir" depois.
+**O billing alarm que esta seção descrevia não existe nesta conta.** A métrica
+`AWS/Billing EstimatedCharges` só é publicada na conta pagadora, e a conta do Lotus não é ela
+(`list-metrics` em `us-east-1` devolve vazio). O item 10 trocou o alarme por **AWS Budgets**, e
+foi essa troca que deixou o `verificar-backup.sh` sem canal: o tópico SNS nascia junto com o
+alarme, e sem alarme não nasceu tópico. São dois canais, cada um com o seu motivo:
 
-Console (us-east-1) → CloudWatch → Alarms → Billing → métrica `EstimatedCharges` (USD) →
-condição `> 30` → ação: tópico SNS novo com o e-mail do João → **confirmar a subscription pelo
-e-mail** (sem confirmar, o alarme dispara para ninguém).
+**Custo — AWS Budgets, e-mail direto.** Budget `lotus-prod-teto`, MONTHLY, 30 USD, sem filtro de
+serviço, notificações `ACTUAL > 100%` e `FORECASTED > 100%` com subscriber `EMAIL`. O Budgets
+entrega sem SNS e sem confirmação de subscription.
 
-**Guarde o ARN do tópico**: ele vai para `LOTUS_ALERT_TOPIC_ARN` no `/opt/lotus/.env` e para o
-`sns:Publish` da role da §4. O tópico tem dois consumidores, não um — o alarme de custo e o
-`verificar-backup.sh` da §9.
+**Backup — tópico SNS `lotus-alertas`, em `sa-east-1`.** É o canal do `verificar-backup.sh` (§9).
+Não há mais motivo para `us-east-1`: aquela região só existia por causa do alarme.
 
-Canal definitivo de alerta é decisão do bloco de observabilidade. Reusar este aqui não antecipa
-essa decisão: é a subscription que já existe e já foi confirmada, e trocar de canal depois é
-trocar um ARN no `.env`.
+```bash
+T=$(aws sns create-topic --name lotus-alertas --region sa-east-1 --query TopicArn --output text)
+aws sns subscribe --region sa-east-1 --topic-arn "$T" --protocol email \
+  --notification-endpoint <e-mail do João>
+# confirmar pelo link do e-mail "AWS Notification - Subscription Confirmation", e então:
+aws sns list-subscriptions-by-topic --region sa-east-1 --topic-arn "$T" \
+  --query 'Subscriptions[].SubscriptionArn' --output text   # nao pode dizer PendingConfirmation
+```
+
+Sem confirmar, o tópico publica para ninguém. Depois: o `sns:Publish` da §4 e o ARN em
+`LOTUS_ALERT_TOPIC_ARN` no `/opt/lotus/.env`.
+
+Canal definitivo de alerta é decisão do bloco de observabilidade. Trocar de canal depois é trocar
+um ARN no `.env` e a `Resource` da `lotus-alerta`.
 
 ## 11. TLS — quando o registro A chegar
 

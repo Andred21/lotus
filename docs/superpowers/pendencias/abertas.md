@@ -1073,3 +1073,20 @@ captura e em que chave ela acumula, o que é decisão do João e alimenta direta
   chaveiam em `email|ip`. Uma senha por conta, contra 200 contas, do mesmo IP, nunca cruza limiar
   nenhum: cada chave fica em 1. A D6 definiu as famílias por chave de vítima; não existe família por
   atacante.
+
+## P-86 — o dump pré-deploy nunca rodou num deploy de verdade
+
+**Bloco:** cicd-promocao-deploy-e-rollback (item 12) · **Gatilho:** o primeiro release corporativo
+que trouxer migration nova. Nele, conferir: a linha `inicio` do `releases.jsonl` com `migrations`
+não vazio e `dump` com a chave `s3://…`, esse objeto existindo no S3, e o `verificar-backup.sh`
+aprovando. Se houver rollback recusado depois dele, a recusa tem de imprimir essa mesma chave ao
+lado da migration (o ramo de `dump_que_introduziu` que acha a linha só rodou em sonda local).
+Revisar em **2026-10-31**.
+
+O DoD 6 da spec pede o dump de um deploy com migration pendente. Em 2026-09-25 não havia SHA com
+migration além das 30 que a produção já tem, em nenhum dos dois repositórios, e o João decidiu não
+fabricar um release-sonda (a migration inútil ficaria para sempre na história e no banco). O que já
+está provado: o `backup-db.sh` publica a chave por `LOTUS_BACKUP_SAIDA` (Task 9), o deploy sem
+migration registra `"dump": null`, e o `deploy-sh.test.ts` assere o ramo do dump **por texto**
+(dump antes do `migrate`, só com `PENDENTES`) — não por execução. O ramo nunca rodou.
+
