@@ -72,6 +72,13 @@
   (o próximo commit que mudar `deploy/bin/deploy.sh`), com a `P-86` condicional. **O `30` foi
   saltado**: a branch órfã `chore/30-harness-estado-por-bloco` (`../lotus-harness`) já o usa sem
   ficha aqui, e reusá-lo apontaria duas coisas com o mesmo número. O `31` **fechou em 2026-09-26**.
+  O `32`, o `33` e o `34` nasceram em 2026-09-26, abertos pelo João a partir do levantamento cruzado
+  de infra (`docs/` × GitHub × Notion × Drive) daquele dia: o `32` junta a **P-77** — reescrita,
+  porque a zona `lotusotec.cl` foi delegada ao Route 53 em 2026-09-26 pelo `Andred21/lotus-site` e a
+  causa passou de "painel sem acesso" para "registro nunca criado" — ao runbook §11 que nunca rodou;
+  o `33` e o `34` são os dois blocos que a spec do item 10 v2 prometeu como "bloco próprio, a criar
+  pelo João no main tree" (`specs/archive/2026-09-02-infra-producao-provisionamento-aws-design.md:53-58`)
+  e que nunca entraram nesta fila.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -90,15 +97,23 @@ decisão do João: o **22** saiu da tabela — fechou em 2026-09-04 e a linha fi
 dias —, e o **29** entrou na frente. O **29** saiu em 2026-09-25, fechado; as posições abaixo dele
 subiram uma casa sem mudar a ordem relativa. O **12** saiu em 2026-09-26, fechado, e o **13** subiu
 uma casa. O **31** entrou na posição 0, promovido pelo João, e saiu no mesmo dia, fechado; as
-demais posições não se moveram. **Não promove nada** — promover segue sendo ato explícito no
-`state.md`. A fila abaixo está escrita nesta ordem.
+demais posições não se moveram. **Emendada em 2026-09-26:** o **32** entra na posição 1 — a
+produção roda na "fase sem DNS" do runbook e por isso **recusa emitir certificado**, que é a função
+central; o **33** entra logo atrás, porque produção não entrega e-mail nenhum, nem o alerta de
+segurança; o **34** entra antes do **13**, que é gate de medição e não constrói alarme. Os três são
+da frente Infra (lane-b) e não disputam árvore com os de Frontend (lane-c) — a ordem que vincula é a
+de cada frente. **Não promove nada** — promover segue sendo ato explícito no `state.md`. A fila
+abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
-| 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
-| 3 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
-| 4 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
+| 1 | **32** `infra-producao-dns-e-tls` | Infra | Produção não emite certificado sem domínio HTTPS (`CERTIFICATE_VALIDATION_URL` vazio, P-79). A zona está no Route 53 desde 2026-09-26 — o que faltava de terceiro deixou de faltar |
+| 2 | **33** `infra-producao-email-ses` | Infra | O alerta síncrono de acesso suspeito (ADR-21/D7) e o reset de senha não chegam a ninguém: `MAIL_MAILER=log` em produção |
+| 3 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
+| 4 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
+| 5 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
+| 6 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (alarme de certificado) e, de preferência, do 33 |
+| 7 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
 
 **A colisão 16 × 9, registrada e não resolvida:** o 16 tem uma run de `/lotus-ui-review` de
 **Administração** no escopo e o 9 pode **redesenhar a mesma tela**. Medir antes do veredito do 9 é
@@ -110,6 +125,90 @@ escopo foi movido de ficha.
 ---
 
 # Fila priorizada
+
+## 32. `infra-producao-dns-e-tls`
+
+**Prioridade:** P0 — produção não emite certificado sem ele · **Frente:** Infra · **Contexto:** sim
+**Fonte:** `P-77` (a reescrever no planejamento); `deploy/aws/README.md` §11; `deploy/nginx/tls.conf`;
+`docker-compose.prod-tls.yml`; `deploy/aws/env.prod.example`; spec do item 10 v2 (D7); lotus-site
+`docs/adr/ADR-SITE-006.md`, `docs/infra/zona-dns-lotusotec.md`, `docs/infra/delegacao-2026-09-26.md`,
+`infra/lotus-dns.yaml` e os débitos `D-49`/`D-51`/`D-52` de lá; Notion site `7.2.1` e `8.2.1`; Drive
+`arquitetura-aws-lotus.md` §1.5/§5 (Opção A: Let's Encrypt/Certbot no nginx da EC2).
+
+**Por que existe:** a produção roda na "fase sem DNS" do runbook §11 — `SESSION_DOMAIN=null`,
+`SESSION_SECURE_COOKIE=false`, `CERTIFICATE_VALIDATION_URL` vazio — e por isso **recusa emitir
+certificado** (500 nomeado da P-79). A `P-77` dizia que o registro A dependia da Lotus e de um painel
+sem acesso; em 2026-09-26 a zona `lotusotec.cl` foi delegada ao Route 53 (stack `lotus-dns`, repo
+`Andred21/lotus-site`, PR #18) — a causa passou de "sem acesso" para "registro nunca criado", e o dono
+passou a ser o João. O overlay TLS, o `301` e o certbot existem só como texto e teste de unidade;
+nunca foram exercidos com certificado real.
+
+**Decisão prévia, do João, antes do brainstorming — o nome.** Há quatro grafias sem reconciliação:
+`app.` (todo o código deste repo: `tls.conf:51-54`, `env.prod.example`, runbook §11, packet de
+2026-08-22), `sistema.` (ADR-SITE-006 de 2026-09-09, único registro explícito na zona nova, hoje
+apontando para o WordPress), `intranet.` (V1 real; expectativa do João; zero ocorrências em qualquer
+repo) e `lotus.cl` (placeholder do Drive). **Este bloco não decide** — recebe a decisão escrita
+(emenda datada do ADR-14) e a aplica.
+
+**Escopo:**
+- registro A (e AAAA, se houver) do nome escolhido → EIP `18.230.53.197`, por PR no `lotus-site`
+  (`infra/lotus-dns.yaml`), nunca à mão no console; se o nome for `sistema.`, é retarget do registro
+  existente;
+- security group 80/443 conferido; runbook §11 de ponta a ponta: `certbot --standalone` uma vez,
+  overlay `docker-compose.prod-tls.yml`, os seis campos de env (`APP_URL`, `FRONTEND_URL`,
+  `SESSION_DOMAIN`, `SANCTUM_STATEFUL_DOMAINS`, `SESSION_SECURE_COOKIE=true`,
+  `CERTIFICATE_VALIDATION_URL`), `certbot renew --dry-run` com o hook de reload;
+- `301` HTTP→HTTPS provado em produção; HSTS **decidido** na spec (hoje não existe em doc nenhum);
+- restrição cruzada registrada no runbook e na ficha do site: quando o site publicar CAA (`D-49` de
+  lá), a zona tem de listar `letsencrypt.org` além de `amazon.com`, senão este repo não renova;
+- runbook §11 reescrito — "pedir o registro à Lotus/agência" virou "PR no lotus-site";
+- se o nome não for `app.`, os três arquivos do repo mudam e o packet/ADR registram o porquê.
+
+**Fora:** e-mail (item 33); alarmes (item 34); cutover do site (`B5` do lotus-site); o wildcard
+Let's Encrypt do WordPress (`D-51` do site, prazo 2026-10-11) — só toca a intranet se o nome for
+`sistema.` e ele continuar estacionado no WordPress até lá.
+
+**Paga:** `P-77` (reescrita: dono João, gatilho = registro + §11). **Destrava** a `P-79` em produção.
+
+**DoD:** login real em `https://<nome>.lotusotec.cl` com cookie `Secure`; um certificado emitido em
+produção com QR resolvendo em `https://`; `certbot renew --dry-run` verde; `curl -I http://<nome>`
+devolvendo `301`; medição em `audits/`.
+
+---
+
+## 33. `infra-producao-email-ses`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim
+**Fonte:** spec do item 10 v2 (`specs/archive/2026-09-02-infra-producao-provisionamento-aws-design.md:53-58`
+— "vira bloco próprio; a criação do item na fila é do João"); `deploy/aws/env.prod.example:116`
+(`MAIL_MAILER=log` "até o bloco de SES"); ADR-21/D7 (alerta síncrono); `docs/operacao-segredos.md:48,60-62`;
+Notion admin `10.1.4`; lotus-site `docs/adr/ADR-SITE-005.md` (SES do site: Easy DKIM, MAIL FROM
+`ses.lotusotec.cl`, porque `mail.` já é CNAME do Google) e tasks `7.1.4`/`4.1.7`; Drive
+`arquitetura-aws-lotus.md` (SES, domínio verificado, SPF/DKIM, "sair do sandbox antes de produção" —
+ainda com o placeholder `lotus.cl`).
+
+**Por que existe:** produção não envia e-mail nenhum. O alerta de acesso suspeito (ADR-21, D7) grava no
+canal `seguranca` e não chega a ninguém; reset de senha idem. `docs/operacao-segredos.md` afirma que
+produção usa SMTP — está errado desde o item 10 v2 (falso positivo do levantamento de 2026-09-26). A
+spec do item 10 v2 prometeu este bloco e ele nunca entrou na fila.
+
+**Escopo:**
+- identidade SES de domínio `lotusotec.cl` **compartilhada com o site** (ADR-SITE-005): quem criar
+  primeiro registra DKIM/MAIL FROM na zona `lotus-dns`; o segundo reusa — nunca duas identidades;
+- saída do sandbox do SES; remetente e `MAIL_MAILER` reais no `env.prod.example` e no host; credencial
+  por instance role, não access key;
+- alerta D7 e reset de senha vistos chegar em caixa real; `docs/operacao-segredos.md` corrigido;
+- MX do apex intocado (Google Workspace).
+
+**Fora:** central de notificações (FUT-3); e-mail do formulário do site (Lambda do lotus-site).
+
+**Paga:** a divergência `operacao-segredos.md` × `env.prod.example` (ficha a abrir no planejamento).
+**Depende de:** zona no Route 53 (feito em 2026-09-26); coordenação com o lotus-site `7.1.4`.
+
+**DoD:** um alerta D7 disparado em produção chega a um destinatário real; um reset de senha real
+completa o ciclo; `aws sesv2 get-email-identity` com `DkimStatus: SUCCESS`; conta fora do sandbox.
+
+---
 
 ## 16. `frontend-revisao-ui-por-modulo`
 
@@ -210,6 +309,37 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 
 ---
 
+## 34. `infra-producao-observabilidade`
+
+**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim
+**Fonte:** spec do item 10 v2 (mesmas linhas 53-58 — "CloudWatch agent, alarmes de app; bloco
+próprio"); Notion admin `10.1.8` (healthcheck + alerta de queda, CloudWatch básico); Drive ADR-14
+("healthcheck + alerta de queda `[FASE 2]`"); `deploy/bin/verificar-backup.sh` e o tópico SNS
+`lotus-alertas` (item 12); `docker-compose.prod.yml` (healthchecks de container, sem alerta fora do host).
+
+**Por que existe:** hoje o único alerta que sai do host é o de backup atrasado (SNS). Queda do `app`,
+disco cheio, 5xx sustentado, certificado a vencer — ninguém é avisado. A spec do item 10 v2 prometeu
+este bloco e ele nunca entrou na fila; o item 13 lista "alertas/health", mas é gate de medição, não o
+construtor.
+
+**Escopo:**
+- CloudWatch agent na EC2 (via `user-data.sh`, versionado): disco, memória, logs do nginx/app com
+  retenção decidida;
+- alarmes mínimos → SNS `lotus-alertas` já existente: instância/`/up` fora, disco acima do limiar, 5xx
+  sustentado, certificado a menos de N dias (ou a saída do `certbot renew --dry-run`);
+- destinatário do SNS real (e-mail do item 33 ou o mesmo canal do Budget);
+- custo dos alarmes dentro da conversa da `P-80`.
+
+**Fora:** APM, tracing, dashboards; auditoria de aplicação (já é `owen-it/laravel-auditing`).
+
+**Depende de:** item 32 (alarme de certificado só faz sentido com TLS); item 33 recomendado, não
+obrigatório (SNS entrega e-mail sem SES).
+
+**DoD:** cada alarme visto disparar por sonda (parar o `app`, encher o disco em laboratório, etc.) e
+chegar ao destinatário; `user-data.sh` recria a instância com o agente; medição em `audits/`.
+
+---
+
 ## 13. `go-live-confiabilidade-e-recuperacao`
 
 **Prioridade:** último gate P0 · **Frente:** Cross-cutting/Infra · **Contexto:** sim
@@ -228,6 +358,12 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 Não declarar uma EC2 única como atendimento do RNF. Antes do go-live decidir explicitamente entre:
 - manter ADR-14 e revisar formalmente o requisito para RPO/RTO + restore; ou
 - manter HA/redundância e desenhar a infraestrutura correspondente.
+
+**Emenda 2026-09-26:** o Drive `arquitetura-aws-lotus.md` §4 **já rebaixou** o `RNF-DIS-02` — de
+"redundância com failover instantâneo" para "RTO de minutos via redeploy + restore de snapshot", com
+trilha para HA futura. O gate deixa de ser decidir do zero e passa a ser **confirmar o aceite da
+Lotus** e replicar a decisão no ADR-14. O smoke roda sobre HTTPS (item 32); alertas/health são
+construídos pelo item 34 — aqui só se medem.
 
 **DoD:** release, fluxo crítico, backup e restore têm evidência; a divergência de disponibilidade
 está formalmente resolvida.
