@@ -72,10 +72,26 @@ EXIGIR" e "SE a task toca schema", e parte a lista em duas.
 
 O João aprovou os cinco achados em 2026-09-26, todos para corrigir neste bloco.
 
+## Correções
+
+Todas feitas e provadas em 2026-09-26. A suíte do harness pelo `run-all.sh` fecha com 14 arquivos e
+nenhuma falha.
+
+- **Q-1, `046c5edf`.** Todo `*.tests.sh` começa pela trava que recusa rodar avulso, e o `_assert.sh`
+  registra a regra no cabeçalho. A catraca é o `avulso.tests.sh`: roda cada arquivo avulso num repo
+  e num `TMPDIR` descartáveis e exige exit 1, a mensagem da trava e nenhuma branch criada. Na
+  sonda, a trava saiu de um arquivo e a catraca reprovou com três asserções.
+- **Q-2, `352a78ab`.** O `conferir` imprime `NAO CONFERIDA: lane N nao tem plano em <caminho>` para
+  cada lane sem `plano.md`. O teste viu a linha faltar antes do código.
+- **Q-3, `dbf9e4be`.** Asserção gêmea para o `active_review` inexistente. Na sonda, o ramo saiu de
+  `estados.sh` e a asserção reprovou.
+- **Q-4 e Q-5, `3cc4e2fd`.** A invariante 1 do `state.md` diz "offset repetido" e descreve o que o
+  `conferir` lê. O aviso de transição do `CLAUDE.md` saiu de dentro da lista de leitura.
+
 ## Fora do escopo desta revisão
 
-Registrado para o João e não corrigido aqui. A limpeza dos restos do Q-1 no repo real foi negada
-pelo classificador do auto mode e fica para o terminal do João:
+A limpeza dos restos do Q-1 no repo real foi negada pelo classificador do auto mode. Quando as
+correções terminaram, as sete branches e a `lotus-destacada/` já não existiam. O comando era este:
 
 ```bash
 git worktree remove lotus-destacada

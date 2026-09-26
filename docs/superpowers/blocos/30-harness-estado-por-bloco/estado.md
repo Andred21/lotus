@@ -2,9 +2,9 @@
 schema_version: 3
 id: 30
 slug: 30-harness-estado-por-bloco
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings corrigindo Q-1 a Q-5, aprovados pelo Joao
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md
 active_plan: docs/superpowers/plans/2026-09-26-harness-estado-por-bloco.md
@@ -17,9 +17,9 @@ branch: chore/30-harness-estado-por-bloco
 worktree: ../lotus-harness
 offset: null
 lane_base: 65d81bc9
-commit: b4d3d93e
+commit: 3cc4e2fd
 blocker: null
-updated_at: 2026-09-26T14:51:37-03:00
+updated_at: 2026-09-26T14:56:31-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
