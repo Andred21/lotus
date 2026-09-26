@@ -84,7 +84,8 @@
 Recomendação por dependência e risco, decidida em 2026-09-03 e **emendada em 2026-09-21**, por
 decisão do João: o **22** saiu da tabela — fechou em 2026-09-04 e a linha ficou para trás por 17
 dias —, e o **29** entrou na frente. O **29** saiu em 2026-09-25, fechado; as posições abaixo dele
-subiram uma casa sem mudar a ordem relativa. **Não promove nada** — promover segue sendo ato explícito no
+subiram uma casa sem mudar a ordem relativa. O **12** saiu em 2026-09-26, fechado, e o **13** subiu
+uma casa. **Não promove nada** — promover segue sendo ato explícito no
 `state.md`. A fila abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
@@ -92,8 +93,7 @@ subiram uma casa sem mudar a ordem relativa. **Não promove nada** — promover 
 | 1 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
 | 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
 | 3 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
-| 4 | **12** `cicd-promocao-deploy-e-rollback` | GitHub/Infra | **Destravado em 2026-09-20**: o item 10 provisionou o host e fechou. O packet `status: blocked` de 2026-08-26 teve o gatilho de staleness vencido e **precisa regenerar** antes de qualquer planejamento |
-| 5 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
+| 4 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram |
 
 **A colisão 16 × 9, registrada e não resolvida:** o 16 tem uma run de `/lotus-ui-review` de
 **Administração** no escopo e o 9 pode **redesenhar a mesma tela**. Medir antes do veredito do 9 é
@@ -202,38 +202,6 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 **Candidato a hospedeiro da `D-34`** — é o único que sobrou, e escolher é do João.
 
 **DoD:** referência aprovada e produto convergem sem enfraquecer ADR-07.
-
----
-
-## 12. `cicd-promocao-deploy-e-rollback`
-
-> **Destravado em 2026-09-20, e ainda não promovido.** Ficou estacionado desde 2026-08-26 com o
-> packet em `status: blocked` — não havia host. O item 10 provisionou o host e fechou, então o
-> gatilho de staleness que aquele packet declara (*"um alvo AWS real ser provisionado"*) **venceu**:
-> o packet guardado é evidência de um bloqueio que já passou e **precisa regenerar** antes de
-> qualquer planejamento. `status: blocked` nunca prossegue (§6 do `/planejar-bloco`). Promoção segue
-> sendo do João; ver `state.md`.
-
-**Prioridade:** P0 · **Frente:** GitHub/Infra · **Contexto:** sim
-**Fonte:** decisão atual de CI/CD; ADR-14; Notion `10.1.7`.
-
-**Objetivo:** substituir `git pull → build na VM` por promoção do artefato já testado.
-
-**Fluxo:**
-
-```text
-Gatika/main → CI → GHCR:<sha> → approval production
-            → deploy único → SSH EC2 → compose pull → migrate → up → /up
-```
-
-**Escopo:** GitHub Environment; secrets; aprovação manual; `concurrency=1`; deploy por SHA sem
-rebuild na VM; health pós-deploy; registrar SHA em produção; rollback da aplicação para SHA
-anterior compatível. Migration incompatível exige estratégia própria. DNS não participa do deploy
-normal; TLS é infraestrutura.
-
-**Fora:** Kubernetes, ECS/Fargate, ArgoCD e CodePipeline.
-
-**DoD:** release e rollback de aplicação são reproduzíveis e identificáveis por SHA.
 
 ---
 

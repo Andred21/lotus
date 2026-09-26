@@ -639,6 +639,19 @@ manter como está) e o bloco não mudou visibilidade nem protection. Quando prot
 couber, os required checks são **cinco**: `audit-dev` decide desde 2026-08-29 (D1 da spec do item
 20) — o `image` já depende dele.
 
+**Emenda de 2026-09-26 (bloco `cicd-promocao-deploy-e-rollback`, item 12).** A mesma raiz tira da
+promoção o **Environment**: plano free em repositório privado não oferece Environment, required
+reviewer nem environment secret, e `Gatika-CL/lotus` não tem nenhum (medido no brainstorming do
+item 12). O botão `.github/workflows/deploy.yml` mora no corporativo **sem Environment**, e a
+aprovação é a composição que a spec §4 descreve e a §12.1 declara mais fraca: só quem tem escrita no
+corporativo dispara `workflow_dispatch`; o input `confirmar` tem de ser exatamente `PROMOVER`; a
+`concurrency` é de grupo único e não cancela; o log leva ator e SHA, e o ledger `releases.jsonl` do
+host também. A guarda `if: github.repository == 'Gatika-CL/lotus'` impede o repositório público de
+promover — provada pelo run `36225909713`, `skipped` com zero passos
+([`../audits/2026-09-21-cicd-promocao-deploy-e-rollback.md`](../audits/2026-09-21-cicd-promocao-deploy-e-rollback.md),
+Task 12, Step 6). **Fecha junto com esta ficha:** quando a org virar Team, o job `promover` ganha
+`environment:` com required reviewer, e os dois secrets de deploy passam a ser do Environment.
+
 ## P-28 — o fundo do certificado não reproduz as cunhas nem separa a página 2
 
 **Gatilho:** fecha quando o fundo passar a distinguir página 1 das seguintes **e** as cunhas

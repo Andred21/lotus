@@ -95,15 +95,25 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 | P-55 | A invariante proíbe a lane de escrever os campos singulares do `state.md`, mas cada lane precisa do espelho apontando para si na própria árvore — e três lanes já fizeram isso | João | João escolher entre reescrever a invariante ou dar ao espelho um mecanismo próprio; revisar 2026-10-31 |
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
-| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
+| P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas. Desde o item 12, a mesma raiz deixa o botão de promoção sem Environment | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (3)
+## Encerradas (0)
 
-**Em rastro:** a **P-59**, a **P-75** e a **P-79**, fechadas em **2026-09-25** pelo
-`backend-config-e-conteudo-de-documento` (item 29). As fichas estão em
-[`encerradas.md`](./encerradas.md) e saem no próximo fechamento posterior ao delas.
+**Em rastro:** nenhuma.
+
+**A P-59, a P-75 e a P-79 saíram no fechamento do item 12 (2026-09-26)**, o primeiro posterior ao
+do `backend-config-e-conteudo-de-documento` (item 29), que as encerrou em 2026-09-25 — a P-59 e a
+P-79 por mecanismo, a P-75 por veredito escrito. O rastro durável está nos commits e na linha de
+entrega em [`../historico/progress.md`](../historico/progress.md).
+
+**O item 12 (`cicd-promocao-deploy-e-rollback`) fechou em 2026-09-26 sem encerrar ficha.** Abriu a
+**P-86** (o dump pré-deploy nunca rodou num deploy com migration) e a **P-87** (o host recebe por
+cópia o que o botão não promove), e emendou a **P-62**: o botão mora no corporativo sem Environment,
+que é a mesma raiz do plano free. O próprio review do item disparou o gatilho da **P-87** ao mudar
+`deploy.sh` e `backup-db.sh`, e o gatilho não foi pago: o host roda a versão da `main` de hoje, e as
+correções só chegam lá pela integração seguida da reinstalação do runbook §7, que é do João.
 
 **A P-82 saiu no fechamento do item 29 (2026-09-25)**, o primeiro posterior ao do
 `harness-hooks-de-guarda` (item 28), que a encerrou em 2026-09-20 pelos dois lados do gatilho — a

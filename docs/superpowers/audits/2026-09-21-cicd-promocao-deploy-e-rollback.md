@@ -1,6 +1,6 @@
 # Evidências — `cicd-promocao-deploy-e-rollback` (item 12)
 
-Plano: [`plans/2026-09-21-cicd-promocao-deploy-e-rollback.md`](../plans/2026-09-21-cicd-promocao-deploy-e-rollback.md)
+Plano: [`plans/2026-09-21-cicd-promocao-deploy-e-rollback.md`](../plans/archive/2026-09-21-cicd-promocao-deploy-e-rollback.md)
 
 ## Task 8 — identidade na AWS
 

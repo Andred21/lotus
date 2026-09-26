@@ -23,6 +23,142 @@
 
 ---
 
+## Fechado em 2026-09-26 — `cicd-promocao-deploy-e-rollback` (item 12)
+
+**A linha da tabela de ocupação, no dia do fechamento:**
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `ready_for_closure` (7 achados corrigidos em `19aeb734`; lente Codex dispensada pelo João) |
+
+**O bloco da lane no frontmatter, no dia do fechamento:**
+
+```yaml
+  lane-b:
+    active_feature: null
+    active_work_item: cicd-promocao-deploy-e-rollback
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
+    tree: ../lotus-infra
+    branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; a homonima de 2026-08-26 estava inteira dentro da main (PR #105 mesclou o item 10 v2)
+    active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
+    active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
+    context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
+    blocker: null
+    resume_state: null
+    arquivos_do_descarte:
+      - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
+      - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
+    last_completed_work_item: infra-producao-provisionamento-aws   # item 10 v2, fechado em 2026-09-20
+```
+
+**A `lane-b` recebeu o item 12 em 2026-09-20** — `cicd-promocao-deploy-e-rollback`, promovido
+explicitamente pelo João com a lane em `idle`, na mesma sessão em que o item 10 v2 fechou e mesclou.
+É a continuação direta do 11 e do 20: o 11 constrói o artefato imutável por SHA, o 20 provou que o
+par do GHCR puxa e executa, o 10 provisionou o host — e o 12 promove esse artefato para a produção
+que agora existe, com aprovação, health e rollback. Nasce em **`context_required`** (`Contexto: sim`
+na fila).
+
+**O packet de 2026-08-26 não servia, e por isso a lane passou por `context_required` antes de
+planejar.** `context-packets/2026-08-26-cicd-promocao-deploy-e-rollback.md` estava em
+`status: blocked`, e o gatilho de staleness que ele próprio declara (*"um alvo AWS real ser
+provisionado"*) **venceu em 2026-09-04**: o motivo do bloqueio era não haver destino de deploy, e o
+item 10 criou o destino. `status: blocked` nunca autoriza prosseguir (§6 do `/planejar-bloco`).
+
+**O packet novo é `context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md`**, gerado pelo
+Codex sob a skill `lotus-context-packet` em `base_commit ba22ddce`, `status: partial`,
+`RECOMMENDED_TRANSITION: ready_for_planning`. Validado pelo caller: markers exatos, frontmatter
+completo, 7 key facts (teto 8), 659 palavras de corpo (teto 1.200), as quatro fontes `unavailable`
+com evidência registrada. Ele **desfaz a premissa central da ficha de 2026-08-26**: o release
+deixou de ser o par `app`+`web` e passou a ser o **trio** `lotus-app`, `lotus-web` e
+`lotus-clamav` sob o mesmo SHA corporativo, e o `deploy/bin/deploy.sh` já cobre
+`pull → migrate → up → health → digests → CURRENT_SHA`. O que falta ao 12 é a **promoção remota
+governada** e o **rollback auditável** — hoje só existe `CURRENT_SHA`, sem registro do anterior.
+
+**Duas fontes externas ficaram fora, e as duas estão declaradas como limitação do brainstorming.**
+O `GITHUB-CORP` (`Gatika-CL/lotus`) devolveu **404 medido nesta rodada**, não copiado do packet
+velho — Environment, secrets e branch protection do corporativo seguem ilegíveis pelo conector, e o
+planejamento tem de prever *readback* em vez de presumir proteção. Os **três documentos do Drive**
+(`10eFmpqDTKL4wfWsJW-Rr7dDuBkb1RtaI`, `14Q_wL6G6acSCUaMLIr9BO2blqiGrPMGw`,
+`1L8vq7Pp1xFBSvzyISg5sw6SVVihzSR5l`) falharam com `user cancelled MCP tool call` nas sete
+chamadas: o conector do Drive exige consentimento interativo que a invocação headless do Codex não
+tem. **É limitação do arranjo, não da fonte** — Notion e GitHub responderam na mesma sessão —, e o
+Drive é planejamento canônico (`CLAUDE.md` §3). A lacuna se fecha no brainstorming, com a consulta
+feita pelo lado que tem o conector interativo; o packet, que é o que precede Drive/Notion/Figma, já
+existe.
+
+**As duas lacunas do packet fecharam no brainstorming, e nenhuma virou suposição.** Os três
+documentos do Drive foram lidos pelo conector desta sessão: o `decisao-stack.md` canônico ainda
+manda *"deploy reproduzível: script (git pull → rebuild → restart). Manual via SSH no início;
+GitHub Actions quando incomodar. NÃO montar pipeline completo no dia 1. `[FASE 2]`"* — texto
+**vencido**, e o ADR-14 ganha emenda datada dentro do bloco, sem que o original se apague. O
+`GITHUB-CORP` fechou por medição direta: `Gatika-CL/lotus` é **privado em organização free** e
+`Andred21/lotus` é **público**; **nenhum dos dois tem Environment configurado**, e plano free em
+repositório privado não oferece Environment, protection rule nem environment secret — a mesma raiz
+da **P-62**. É esse fato que decide onde mora o botão de promoção.
+
+**O brainstorming travou quatro decisões e a spec está escrita.** Transporte por **SSM Session
+Manager com OIDC** — a Actions assume role federada e chama `ssm send-command`, sem inbound novo no
+SG e sem chave estática. Botão no **corporativo, sem Environment**, compensado por acesso de escrita,
+input de confirmação, `concurrency` de grupo único sem cancelamento e log com ator e SHA — menos que
+um Environment, e registrado como tal, extensão da **P-62**. Rollback com **dump pré-deploy mais
+delta de migrations num ledger `releases.jsonl` append-only**, e **recusa** do `deploy.sh` quando o
+banco está à frente da imagem alvo, apontando a chave exata do dump. Lado AWS como **script
+versionado e idempotente com readback**, que o João roda e a sessão confere — não console, não IaC.
+
+**Achado de lição 19 que o bloco tem de pagar:** `deploy/bin/deploy.sh` e
+`.github/workflows/ci.yml` **não têm catraca nenhuma hoje**, embora a lição 19 já liste
+`deploy/bin/*.sh` entre os pares guardados. Glob na lição não é asserção no arquivo, e o bloco
+entrega os dois testes junto com o que mexe neles.
+
+**O plano está escrito e a lane vai a `ready_for_execution`.**
+`plans/2026-09-21-cicd-promocao-deploy-e-rollback.md`, **doze tasks**, `executor: claude`. As tasks
+1 a 4 crescem o `deploy/bin/deploy.sh` em quatro camadas, nessa ordem (cadeado e `CURRENT_SHA`
+atômico, gate de schema, chave do dump no `backup-db.sh`, dump e ledger); a 5 e a 6 escrevem o
+workflow e o script de IAM; a 7 é doc. **As tasks 8, 9, 10 e 12 têm execução do João** — escrita na
+conta AWS e no host de produção não passa pela sessão, que lê a saída, confere contra o esperado e
+escreve a evidência em `audits/2026-09-21-cicd-promocao-deploy-e-rollback.md`.
+
+**A task 11 mescla na `main` e espelha ANTES das provas do botão, e isso é imposição de
+plataforma, não preferência:** `workflow_dispatch` só existe quando o arquivo está na branch
+default, e a única via até `Gatika-CL/lotus` é o `scripts/espelhar-corporativo.sh`. Por isso todas as
+provas que dão para fazer por SSH — ledger, cadeado, dump, rollback limpo e rollback recusado —
+ficam nas tasks 9 e 10, antes da integração. Há precedente na mesma lane: o item 20 também mesclou
+e espelhou no meio do bloco.
+
+**A branch e o espelho.** `cicd/promocao-deploy-e-rollback` foi **recriada** de
+`origin/main@cff022d4` — o tip que já traz o item 10 v2 mesclado (PR #105). A homônima de 2026-08-26
+apontava para `10030c65` e estava **inteira dentro da `main`**, então mover o rótulo não descartou
+commit nenhum. O espelho do topo já apontava para `lane-b` e foi escrito **nesta árvore**, fora do
+main tree: é a **P-55**, pelo mesmo precedente de 2026-08-24 e de 2026-08-26 (`655b9796`), e a ficha
+segue aberta aguardando decisão do João.
+
+**Divergências de Git observadas na promoção, nenhuma da `lane-b` e nenhuma tratada aqui:** o `main`
+local (`../lotus`) está 4 commits à frente e 21 atrás de `origin/main`, e o worktree `../fix-frontend`
+está em `refactor/frontend-revisao-ui-f3` enquanto a `lane-c` registra
+`refactor/frontend-arrumacao-de-testes` com o item 27 fechado. As duas ficam registradas para quem
+for mexer nessas lanes.
+
+
+**Escrito no fechamento, porque a prosa acima para no plano.** A execução seguiu as doze tasks. As
+1 a 7 cresceram o `deploy.sh` em quatro camadas, escreveram o workflow, o script de IAM e a doc, e
+cada catraca foi vista reprovar antes do verde. Nas 8, 9, 10 e 12, a escrita na AWS e no host foi
+do João, e a sessão conferiu por leitura. A task 11 mesclou e espelhou no meio do bloco (PR #108),
+e a trust da `lotus-deploy` precisou casar o `sub` imutável do corporativo (`5dee48ab`) antes de o
+botão promover o `1142911b` na segunda tentativa. O rollback recusado foi provado em produção por
+linha-sentinela, com código 4. Imprimir uma chave real de dump depende de um deploy com
+migration e ficou na `P-86`; o host que recebe por cópia o que o botão não promove virou a `P-87`.
+O review saiu com sete achados, todos aprovados pelo João e corrigidos em `19aeb734`, e a lente
+independente do Codex não rodou porque bateu no limite de uso; o João fechou sem ela, como no item
+29. O fechamento conferiu ao vivo o `/up` 200 pelo EIP, o `CURRENT_SHA` `1142911b…`, o ledger com 12
+linhas e os seis runs do botão; registrou que o host roda o `deploy.sh` e o `backup-db.sh` de
+`origin/main` (`ae6686fd…`), sem as correções do review, que chegam pela integração seguida da
+reinstalação do runbook §7; emendou a `P-62` com o botão sem Environment, que a spec §12.1
+prometia e a ficha não tinha; e tirou do rastro a `P-59`, a `P-75` e a `P-79`. A branch não foi
+mesclada no fechamento.
+---
+
 ## Fechado em 2026-09-25 — `backend-config-e-conteudo-de-documento` (item 29)
 
 **A linha da tabela de ocupação, no dia do fechamento:**
