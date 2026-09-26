@@ -125,3 +125,10 @@ linha_com_prefixo() {
   # $1 = texto, $2 = prefixo. Ecoa a primeira linha que comeca com o prefixo.
   printf '%s\n' "$1" | awk -v p="$2" 'index($0, p) == 1 { print; exit }'
 }
+
+assert_recusa() {
+  # $1 = trecho esperado no motivo, $2 = titulo. Le SAIDA_LANE e CODIGO_LANE.
+  assert_igual 1 "$CODIGO_LANE" "$2: sai 1"
+  assert_contem "$SAIDA_LANE" 'PORTAO RECUSOU' "$2: pelo portao"
+  assert_contem "$SAIDA_LANE" "$1" "$2: pelo motivo certo"
+}
