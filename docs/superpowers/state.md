@@ -4,12 +4,12 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: cicd-host-alinhado-ao-sha
 active_work_item: cicd-host-alinhado-ao-sha
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
-active_plan: null
+active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
 context_packet: null
 blocker: null
 lanes:
@@ -30,13 +30,13 @@ lanes:
   lane-b:
     active_feature: cicd-host-alinhado-ao-sha
     active_work_item: cicd-host-alinhado-ao-sha   # item 31, promovido pelo Joao em 2026-09-26 (P-88 + P-87, P-86 condicional); Contexto: nao
-    workflow_state: planning
+    workflow_state: ready_for_execution
     next_owner: claude
-    next_action: continue_active_planning
+    next_action: execute_active_plan
     tree: ../lotus-infra
     branch: cicd/host-alinhado-ao-sha   # aberta de origin/main@e5ac01a9 em 2026-09-26. A anterior (cicd/promocao-deploy-e-rollback, item 12) mesclou inteira pelas PRs #108 a #111 (e5ac01a9)
     active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
-    active_plan: null
+    active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
     context_packet: null
     blocker: null
     resume_state: null
@@ -60,7 +60,7 @@ lanes:
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
 last_completed_work_item: cicd-promocao-deploy-e-rollback
 state_basis_commit: 35784d9f
-updated_at: 2026-09-26T12:00:00-03:00
+updated_at: 2026-09-26T18:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `planning` |
+| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `ready_for_execution` (plano gravado em 2026-09-26) |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
