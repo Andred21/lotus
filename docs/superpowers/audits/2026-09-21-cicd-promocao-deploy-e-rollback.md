@@ -168,3 +168,54 @@ alerta forçado saiu 1 **sem** a linha `erro: o alerta NAO saiu`, isto é, o `sn
 e o e-mail "Lotus: backup do banco de producao" chegou à caixa do João (confirmado por ele em 2026-09-25). O tópico vive em `sa-east-1`, não em `us-east-1`: a
 região só existia por causa do billing alarm. O runbook §4/§9/§10 e o `env.prod.example` foram
 corrigidos no mesmo commit.
+
+## Task 10 — rollback recusado (DoD 5), por linha-sentinela
+
+**Por que sentinela, e não o roteiro do plano.** Medido em 2026-09-25 com `docker manifest inspect`
+contra o GHCR corporativo: o `a5fc92bb` é o **primeiro** SHA com o trio; `683e6221`, `d0d8db50` e
+`3d158773` têm só `app`+`web`, `ccaacacf` não tem nada. E nenhum SHA, em nenhum dos dois
+repositórios, passa das 30 migrations que a produção tem. Não havia como "promover um SHA com
+migration a mais" (Step 3). Decisão do João: provar a recusa com uma linha-sentinela na tabela
+`migrations` — o gate lê a tabela literalmente —, e levar a metade do DoD 6 que exige migration
+real para a **P-82**. Emenda registrada no fim do plano.
+
+Executado pelo João, por SSH, com `docker exec -i lotus-mysql-1 mysql` recebendo o SQL por stdin:
+
+```text
+# antes
+30      1                      <- COUNT(*), MAX(batch) de migrations
+200
+a5fc92bb7728ea0da6dc16a62958e02556df999b
+{"ts":"2026-09-25T02:43:41Z","evento":"fim","sha":"a5fc92bb7728ea0da6dc16a62958e02556df999b","resultado":"ok","etapa":"ok"}
+
+# INSERT ('2099_01_01_000000_sonda_rollback_recusado', 999)
+31
+
+# deploy.sh a5fc92bb7728ea0da6dc16a62958e02556df999b
+==> login ghcr.io
+==> manifestos de a5fc92bb7728ea0da6dc16a62958e02556df999b
+==> pull
+…
+==> gate de schema
+erro: o banco esta A FRENTE de a5fc92bb7728ea0da6dc16a62958e02556df999b — a imagem alvo nao conhece:
+  2099_01_01_000000_sonda_rollback_recusado
+restaure o dump da release que as introduziu (procure em /opt/lotus/releases.jsonl) e so entao promova.
+codigo=4
+
+# DELETE da sentinela, depois
+30
+200
+a5fc92bb7728ea0da6dc16a62958e02556df999b
+{"ts":"2026-09-25T02:43:41Z","evento":"fim","sha":"a5fc92bb7728ea0da6dc16a62958e02556df999b","resultado":"ok","etapa":"ok"}
+```
+
+O que isto prova: a recusa sai com **código 4**, **nomeia** a migration que a imagem alvo não
+conhece, e a produção **não se mexeu** — `/up` 200, `CURRENT_SHA` igual e a última linha do ledger
+idêntica à de antes: o gate recusa antes de escrever o `inicio`, então a tentativa recusada não
+deixa rastro no ledger (só no stdout de quem rodou).
+
+**O que isto NÃO prova — divergência spec × plano achada aqui.** A spec (§6 e DoD 5) pede que a
+recusa *imprima, do ledger, a chave do dump da release que as introduziu*. O plano (Task 2) trocou
+isso por uma dica textual — `procure em /opt/lotus/releases.jsonl` —, e é o que o `deploy.sh`
+faz. A troca não foi declarada como desvio. Com a sentinela, de qualquer modo, não haveria chave a
+imprimir: nenhuma release a introduziu.

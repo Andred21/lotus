@@ -1588,3 +1588,28 @@ Não há delegação ao Codex neste bloco: o valor está na medição contra a p
 **Gates de execução por task:** cada task termina com a suíte do arquivo tocado verde e um commit próprio. O gate inline do `/executar-bloco` vale normalmente; as tasks de host param e esperam o João em vez de simular.
 
 **Sequência obrigatória:** 1 → 2 → 3 → 4 (o `deploy.sh` cresce em quatro camadas, nessa ordem); 5 e 6 podem vir em qualquer ordem depois da 4; 7 depois de 5 e 6 (o runbook cita os dois); 8 antes de 9; 9 antes de 10; **11 antes de 12** — o `workflow_dispatch` não existe até o arquivo estar na branch default do corporativo, e é o espelho que o leva lá.
+
+## Emenda de execução — 2026-09-25 (decisão do João)
+
+**Premissa que falhou, medida:** a Task 10 presumia uma fila de releases corporativos. Não existe.
+`docker manifest inspect` contra o GHCR corporativo: o `a5fc92bb` (em produção) é o **primeiro** SHA
+com o trio; `683e6221`, `d0d8db50` e `3d158773` têm só `app`+`web` (o `ci.yml` deles não constrói
+clamav) e `ccaacacf` não tem nada — o `deploy.sh` para no `manifest inspect` antes do gate. E
+nenhum SHA, corporativo ou pessoal, passa das **30** migrations que a produção já tem.
+
+**Nova ordem:**
+
+1. **Task 10, DoD 5 — agora, por linha-sentinela.** O João insere na tabela `migrations` da
+   produção `2099_01_01_000000_sonda_rollback_recusado`, roda `deploy.sh a5fc92bb…`, a recusa sai
+   com código 4 nomeando a sentinela, e a linha é apagada. O gate lê a tabela literalmente; nenhum
+   dado de negócio é tocado. Os Steps 3 e 4 originais não têm como acontecer.
+2. **Task 11** — integração e espelho, como escrita. Ela produz o primeiro SHA corporativo novo com
+   o trio (mesmas 30 migrations).
+3. **Task 12, Step 1** — o botão promove esse SHA (DoD 1).
+4. **Task 10, DoD 4 — rollback limpo** do SHA novo para o `a5fc92bb`, por SSH, e a volta ao SHA
+   novo (pelo botão, servindo também ao Step 2 da Task 12).
+5. O resto da Task 12.
+
+**DoD 6, metade "deploy com migration pendente":** sem SHA com migration, vira a **P-82** —
+provada no primeiro release real que trouxer migration. A metade `"dump": null` já está provada
+(Task 9), e o `verificar-backup.sh` aprovando o dump também (Task 9).
