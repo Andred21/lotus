@@ -323,10 +323,50 @@ verbo_abrir() {
   printf '  proximo passo, quando o bloco precisar do stack: (cd %s && docker compose up -d)\n' "$arvore"
 }
 
+arquivos_do_plano() {
+  # $1 = plano.md. Os caminhos entre crases das linhas
+  # `- Create|Modify|Test|Delete:` dos blocos **Files:**, sem o sufixo :linha,
+  # um por linha, ordenados e unicos. Crase fora dessas linhas nao conta.
+  grep -E '^[[:space:]]*- (Create|Modify|Test|Delete):' "$1" \
+    | grep -oE '`[^`]+`' | tr -d '`' | sed -E 's/:[0-9]+(-[0-9]+)?$//' | LC_ALL=C sort -u
+}
+
+verbo_conferir() {
+  (( $# == 1 )) || recusar "uso: lane.sh conferir <NN>"
+  local nn=$1
+  [[ $nn =~ $PADRAO_NN ]] || recusar "NN '$nn' nao e numero de ficha"
+  raiz_ou_recusa
+  local n c b meu=''
+  local -a outros=()
+  while IFS=$SEP read -r n c b; do
+    if [[ $n == "$nn" ]]; then
+      meu="$c/docs/superpowers/blocos/${b#*/}/plano.md"
+    else
+      outros+=("$c/docs/superpowers/blocos/${b#*/}/plano.md")
+    fi
+  done < <(lanes_vivas)
+  [[ -n $meu ]] || recusar "nenhuma lane viva com o numero $nn"
+  [[ -f $meu ]] || recusar "a lane $nn nao tem plano em $meu"
+  local meus p comuns lidos=0 achou=0
+  meus=$(arquivos_do_plano "$meu")
+  for p in "${outros[@]}"; do
+    [[ -f $p ]] || continue
+    lidos=$((lidos + 1))
+    comuns=$(LC_ALL=C comm -12 <(printf '%s\n' "$meus") <(arquivos_do_plano "$p"))
+    [[ -z $comuns ]] && continue
+    achou=1
+    printf 'CONFLITO: %s e %s tocam os mesmos arquivos:\n' "$meu" "$p"
+    printf '%s\n' "$comuns" | sed 's/^/  /'
+  done
+  (( achou == 0 )) || exit 1
+  printf 'SEM CONFLITO: lane %s contra %s plano(s)\n' "$nn" "$lidos"
+}
+
 verbo=${1:-}
 (( $# > 0 )) && shift
 case $verbo in
   descobrir) verbo_descobrir "$@" ;;
   abrir)     verbo_abrir "$@" ;;
+  conferir)  verbo_conferir "$@" ;;
   *) recusar "verbo '$verbo' desconhecido; use descobrir, abrir, conferir ou fechar" ;;
 esac
