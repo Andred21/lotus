@@ -4,9 +4,9 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: cicd-host-alinhado-ao-sha
 active_work_item: cicd-host-alinhado-ao-sha
-workflow_state: ready_for_review
+workflow_state: reviewing
 next_owner: claude
-next_action: request_code_review
+next_action: review_active_work_item
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
 active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
@@ -30,9 +30,9 @@ lanes:
   lane-b:
     active_feature: cicd-host-alinhado-ao-sha
     active_work_item: cicd-host-alinhado-ao-sha   # item 31, promovido pelo Joao em 2026-09-26 (P-88 + P-87, P-86 condicional); Contexto: nao
-    workflow_state: ready_for_review
+    workflow_state: reviewing
     next_owner: claude
-    next_action: request_code_review
+    next_action: review_active_work_item
     tree: ../lotus-infra
     branch: cicd/host-alinhado-ao-sha   # aberta de origin/main@e5ac01a9 em 2026-09-26; ate af1526eb mesclada na PR #112 (fe6077df) e espelhada (3abd8136, em producao); os commits de doc seguintes vao com o fechamento. A anterior (cicd/promocao-deploy-e-rollback, item 12) mesclou inteira pelas PRs #108 a #111 (e5ac01a9)
     active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `ready_for_review` (execução concluída em 2026-09-26: Tasks 1–9, DoD provadas ao vivo — runs 36264643022 vermelho e 36265032582 verde; até `af1526eb` mesclada na PR #112, `fe6077df`) |
+| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `reviewing` (execução concluída em 2026-09-26: Tasks 1–9, DoD provadas ao vivo — runs 36264643022 vermelho e 36265032582 verde; até `af1526eb` mesclada na PR #112, `fe6077df`) |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
