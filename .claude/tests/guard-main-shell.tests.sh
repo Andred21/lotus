@@ -64,3 +64,13 @@ for _ok in 'grep -rn "padrao\.txt" backend/app' \
   acionar_hook "$GUARDSH" "$(payload_bash "$_m" "$_ok")"
   assert_igual '' "$SAIDA_HOOK" "libera na main, fim a fim: $_ok"
 done
+
+# --- item 30: lane.sh fim a fim, pela casca, na main
+acionar_hook "$GUARDSH" "$(payload_bash "$_m" 'bash .claude/scripts/lane.sh descobrir')"
+assert_igual '' "$SAIDA_HOOK" 'libera lane.sh descobrir na main'
+acionar_hook "$GUARDSH" "$(payload_bash "$_m" 'bash .claude/scripts/lane.sh abrir 33 chore harness-sinal-de-contexto-cheio --modelo opus')"
+assert_igual '' "$SAIDA_HOOK" 'libera lane.sh abrir na main'
+acionar_hook "$GUARDSH" "$(payload_bash "$_m" 'bash .claude/scripts/lane.sh fechar 33 --force')"
+assert_igual 'deny' "$(decisao_sh "$SAIDA_HOOK")" 'nega fechar --force na main'
+acionar_hook "$GUARDSH" "$(payload_bash "$_m" 'bash .claude/scripts/outro.sh')"
+assert_igual 'deny' "$(decisao_sh "$SAIDA_HOOK")" 'bash com outro script segue negado na main'
