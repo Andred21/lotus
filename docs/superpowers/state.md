@@ -1,32 +1,32 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-a
 active_feature: null
-active_work_item: cicd-promocao-deploy-e-rollback
-workflow_state: executing
+active_work_item: harness-estado-por-bloco
+workflow_state: ready_for_planning
 next_owner: claude
-next_action: continue_active_plan
+next_action: plan_active_work_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
-active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
-context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
+active_spec: docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md
+active_plan: null
+context_packet: null
 blocker: null
 lanes:
   lane-a:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: main-tree
-    branch: fix/backend-config-e-conteudo-de-documento   # aberta de main@5be61b63 em 2026-09-24; o item 29 fechou nela em 2026-09-25 e ela NAO foi mesclada — integracao e passo proprio, com o Joao. A anterior (chore/harness-hooks-de-guarda, item 28) mesclou na PR #106 (38e08a08)
-    active_spec: null
+    active_work_item: harness-estado-por-bloco   # item 30, promovido pelo Joao em 2026-09-26
+    workflow_state: ready_for_planning
+    next_owner: claude
+    next_action: plan_active_work_item
+    tree: ../lotus-harness
+    branch: docs/harness-paridade-eladecora   # aberta de origin/main@65d81bc9 em 2026-09-26; a anterior (fix/backend-config-e-conteudo-de-documento, item 29) mesclou na PR #107 (9664faf5)
+    active_spec: docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md   # compartilhada pelos itens 30, 31 e 32
     active_plan: null
-    context_packet: null
+    context_packet: null   # Contexto: nao na ficha
     blocker: null
     resume_state: null
-    last_completed_work_item: backend-config-e-conteudo-de-documento   # item 29, fechado em 2026-09-25; branch ainda nao mesclada
+    last_completed_work_item: backend-config-e-conteudo-de-documento   # item 29, fechado em 2026-09-25, mesclado pela PR #107 (9664faf5)
   lane-b:
     active_feature: null
     active_work_item: cicd-promocao-deploy-e-rollback
@@ -44,23 +44,23 @@ lanes:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
     last_completed_work_item: infra-producao-provisionamento-aws   # item 10 v2, fechado em 2026-09-20
-  lane-c:
+  lane-c:   # bloco copiado de ../fix-frontend@879b9c12 em 2026-09-26 — a arvore que executa manda
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: frontend-revisao-ui-por-modulo
+    workflow_state: executing
+    next_owner: claude
+    next_action: continue_active_plan
     tree: ../fix-frontend
-    branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
-    active_spec: null
-    active_plan: null
+    branch: refactor/frontend-revisao-ui-f3   # aberta de origin/main@9c038cca em 2026-09-04, ja com o item 27 mesclado pela PR #100; a fatia 2 saiu na refactor/frontend-revisao-ui-f2
+    active_spec: docs/superpowers/specs/2026-09-04-frontend-revisao-ui-por-modulo-f3-design.md
+    active_plan: docs/superpowers/plans/2026-09-04-frontend-revisao-ui-por-modulo-f3.md
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: infra-producao-provisionamento-aws
-state_basis_commit: 9664faf5
-updated_at: 2026-09-25T23:00:00-03:00
+    last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04, mesclado pela PR #100 (9c038cca)
+last_completed_work_item: backend-config-e-conteudo-de-documento
+state_basis_commit: 65d81bc9
+updated_at: 2026-09-26T04:02:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,13 +160,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-25
+## Ocupação corrente — 2026-09-26
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
-| `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
+| `lane-a` | `harness-estado-por-bloco` (item 30) | Harness | `../lotus-harness` | `docs/harness-paridade-eladecora` (de `origin/main@65d81bc9`) | `ready_for_planning` |
 | `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `executing` |
-| `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
+| `lane-c` | `frontend-revisao-ui-por-modulo` (item 16, fatia 3) | Frontend | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`) | `executing` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -175,6 +175,26 @@ disjuntas, colisão mínima de arquivos:
 > invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
 > 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
 
+
+**A `lane-a` recebeu o item 30 em 2026-09-26** — `harness-estado-por-bloco`, promovido
+explicitamente pelo João, com a lane em `idle` depois do item 29 (mesclado na PR #107, `9664faf5`).
+É o primeiro dos três blocos sequenciais da paridade com o ElaDecora-Brain (D8 da spec compartilhada
+`specs/2026-09-26-harness-paridade-eladecora-design.md`); o 31 e o 32 dependem dele. `Contexto: não`
+na ficha, então nasce direto em **`ready_for_planning`**, com a spec compartilhada como
+`active_spec` e `active_plan: null`. Roda no worktree `../lotus-harness`, como o item 28: não toca
+backend, e a P-03 não dispara. **O foco passou da `lane-b` para a `lane-a` neste commit**, escrito
+nesta branch e fora do main tree por decisão do João na sessão — o mesmo arranjo da **P-55**.
+**Integração:** pela D6 da spec, a PR só mescla quando a `lane-b` e a `lane-c` tiverem fechado pelo
+fluxo antigo.
+
+**Reconciliação no mesmo commit, 2026-09-26.** O `SessionStart` acusou duas divergências, e
+nenhuma promoção podia passar por cima delas. (1) A **`lane-c`** estava `idle` aqui, mas
+`../fix-frontend@879b9c12` declara `executing` no item 16, fatia 3 (`frontend-revisao-ui-por-modulo`,
+branch `refactor/frontend-revisao-ui-f3`, 12 commits à frente de `origin/main`). A promoção da fatia
+3 só tinha sido escrita na árvore da lane e nunca chegou à `main`. O bloco da lane foi copiado de lá
+sem edição, porque quem manda é o `state.md` da árvore que executa. (2) A **`lane-a`** dizia que a
+branch do item 29 "não foi mesclada", mas a PR #107 mesclou em `9664faf5`, que já era o
+`state_basis_commit` deste arquivo. A lane passou a registrar a branch nova.
 
 **A `lane-b` recebeu o item 12 em 2026-09-20** — `cicd-promocao-deploy-e-rollback`, promovido
 explicitamente pelo João com a lane em `idle`, na mesma sessão em que o item 10 v2 fechou e mesclou.
@@ -261,7 +281,7 @@ segue aberta aguardando decisão do João.
 local (`../lotus`) está 4 commits à frente e 21 atrás de `origin/main`, e o worktree `../fix-frontend`
 está em `refactor/frontend-revisao-ui-f3` enquanto a `lane-c` registra
 `refactor/frontend-arrumacao-de-testes` com o item 27 fechado. As duas ficam registradas para quem
-for mexer nessas lanes.
+for mexer nessas lanes. A da `lane-c` foi reconciliada em 2026-09-26 (ver acima).
 
 ## Itens fechados — ponteiro, não narrativa
 
