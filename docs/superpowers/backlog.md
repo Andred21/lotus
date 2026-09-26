@@ -451,6 +451,7 @@ ficam só como ponteiro, e a ficha delas é lá.
 > | 2026-08-31 | `D-60` | paga — **não** pelo hospedeiro que ela declarava: a f3 UI-03 do item 19 subiu o motivo do bloqueio para a linha do CTA com `aria-describedby` (`EmissionPanel.tsx:92-105`, `EmissionStudentsTable.tsx:100-101`) | item 19 |
 > | 2026-08-31 | `D-61` | **absorvida pela `D-67`** — mesmo defeito registrado duas vezes; a `D-61` fica como ID queimado | saneamento com o João |
 > | 2026-09-03 | `D-69` | paga — os quatro sítios de utility de paleta em `features/` morreram e a **partição `files: CATRACA_COR` foi removida**; a prova é o `pnpm lint` verde **sem** a lista, não o grep | item 25, Task 1 |
+> | 2026-09-26 | — (herança da Task 12 da fatia 1, nunca escrita) | **morta antes de nascer** — a recusa em espanhol fixo de `Turma.php:200` já virou `__('operation.turma.concluded_locked')` nos três locales; reconfirmado em `Turma.php:201` nesta leitura. Paga em 2026-08-30, junto com `D-07`/`D-18`/`D-36`/`D-38`/`D-58`, antes de a ficha ganhar nome | item 7 (reconfirmado pela Task 10 da fatia 3 do item 16) |
 >
 > **O que aqueles fechamentos deixaram aberto, e que não é débito:** cinco recusas literais fora de
 > `lang/` viraram a **P-71** e o 419 virou a **P-72** — as duas fechadas depois pelo item 26; a
@@ -509,6 +510,43 @@ ficam só como ponteiro, e a ficha delas é lá.
   medição; `RedatorRowActions` + o botão solto de "Reenviar invitación" em `RedatoresTable.tsx` são
   o caso mais severo hoje (3 ícones), candidato natural a entrar primeiro nessa direção quando o
   item 23 (ou um item de design a montante dele) for executado.
+
+- **D-71 · Rótulos `perm.*` do diálogo de Roles expõem jargão interno (Flujo N, RN-02, soft delete),
+  nos 3 locales** → **sem bloco hospedeiro.** UI-04 da run de Administración de 2026-09-26
+  (`audits/2026-09-04-lotus-ui-review-administracion.md`), classe `B`. Em `/administracion` >
+  "Roles y permisos" > "Ver" em qualquer role, 9 dos 41 rótulos de `perm.*`
+  (`frontend/src/shared/config/locales/es-CL.json:149-190`, conferido vivo nesta leitura — o caminho
+  correto é `shared/config/locales/`, não `shared/i18n/locales/`) carregam referência de
+  especificação ou termo técnico em inglês: `identity_user_delete` diz "Eliminar (soft delete)
+  usuarios", e o botão da mesma ação na lista diz "Archivar" — "Eliminar" contradiz o verbo que a
+  própria UI usa; os outros oito citam "Flujo N" ou "RN-02" (`commercial_quote_approve`,
+  `operation_enrollment_manage`, `operation_enrollment_record_result`,
+  `operation_turma_assign_redator`, `operation_turma_complete`, `operation_turma_submit_docs`,
+  `certification_certificate_issue`, `certification_certificate_revoke`). **Conferido que pt-BR e en
+  carregam o mesmo jargão, nas mesmas linhas 149-190 dos respectivos arquivos** — "Fluxo"/"soft
+  delete" em pt-BR, "Flow"/"soft delete" em en, "RN-02" idêntico nos três. Remédio provável: reescrever
+  as 9 strings nos 3 locales sem referência interna, alinhando o verbo ao da interface ("Archivar
+  usuarios" em vez de "Eliminar (soft delete) usuarios"); só string, nenhuma chave muda. **Quem
+  decide o hospedeiro é o João** — candidato natural é o item 9
+  (`administracao-roles-permissoes-redesign`), que pode redesenhar o próprio diálogo de Roles, ou um
+  bloco de copy/i18n à parte. **DoD:** zero rótulo `perm.*` casando `/Flujo|Fluxo|Flow|RN-\d|soft
+  delete/` (uma variante do termo por locale) nos 3 arquivos, e o diálogo de Roles relido no
+  navegador em 1440x900 confirmando o texto novo nos grupos de permissão. Origem: UI-04 da Task 7 da
+  fatia 3 do item 16 (`frontend-revisao-ui-por-modulo`).
+
+- **D-72 · O KPI "Próximas clases" e a agenda do dashboard do redator contam conjuntos diferentes** →
+  **sem bloco hospedeiro.** `RedatorScopeQuery::resumo()` conta `proximas_turmas` com
+  `$turma->start_date->isAfter($today)`, **sem teto**; `RedatorScopeQuery::agenda()` recorta
+  `starting_soon` por `DashboardWindows::turmaHorizon()`, que é `TURMA_WINDOW_DAYS = 7`
+  (`backend/app/Domains/Dashboard/Services/DashboardWindows.php:17`) — os dois conferidos vivos
+  nesta leitura. Turma que começa em 10 dias entra no KPI e não aparece em janela nenhuma da agenda —
+  foi a turma 6 na run de 2026-08-22, e o payload confirmou `starting_soon`, `ending_soon` e
+  `in_progress` vazios. Não se corrige aqui: é backend, e o fence desta fatia proíbe `backend/`
+  (P-03). **Quem decide o hospedeiro é o João** — nenhum item da fila atual toca
+  `RedatorScopeQuery`/`DashboardWindows` hoje. Gatilho: o próximo bloco que tocar o dashboard do
+  redator, ou o redesenho do item 9 se ele alcançar o mesmo assembler. Origem: UI-04 da run
+  `ready-redator` de 2026-08-22, classe `B`, herança que a Task 12 da fatia 1 do item 16 prometeu e
+  nunca escreveu.
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
