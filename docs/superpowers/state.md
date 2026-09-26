@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: null
 active_work_item: cicd-promocao-deploy-e-rollback
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: reviewing
+next_owner: claude
+next_action: review_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
 active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
 context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
-blocker: "review do item 12 (2026-09-26) devolveu 7 achados aguardando o João — Q-1 🔴 runbook §8.1 sem o restore em produção que a spec §11.2 promete (e o escape mal descrito); Q-2 🟡 catracas dos gates CI-verde, SHA-na-main e aborto do dump passam com o mecanismo removido (3 mutações medidas); Q-3 🟡 LOTUS_ACEITAR_SCHEMA_A_FRENTE não deixa rastro no ledger; Q-4 🟡 P-87 omite deploy/bin/*.sh; Q-5/Q-6/Q-7 🟢. Revisão independente do Codex (plugin) falhou por limite de uso, sem achados — pode rodar depois das 06:03"
+blocker: null
 lanes:
   lane-a:
     active_feature: null
@@ -30,16 +30,16 @@ lanes:
   lane-b:
     active_feature: null
     active_work_item: cicd-promocao-deploy-e-rollback
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: reviewing
+    next_owner: claude
+    next_action: review_active_work_item
     tree: ../lotus-infra
     branch: cicd/promocao-deploy-e-rollback   # recriada de origin/main@cff022d4 em 2026-09-20; a homonima de 2026-08-26 estava inteira dentro da main (PR #105 mesclou o item 10 v2)
     active_spec: docs/superpowers/specs/2026-09-21-cicd-promocao-deploy-e-rollback-design.md
     active_plan: docs/superpowers/plans/2026-09-21-cicd-promocao-deploy-e-rollback.md
     context_packet: docs/superpowers/context-packets/2026-09-20-cicd-promocao-deploy-e-rollback.md
-    blocker: "review do item 12 (2026-09-26) devolveu 7 achados aguardando o João — Q-1 🔴 runbook §8.1 sem o restore em produção que a spec §11.2 promete (e o escape mal descrito); Q-2 🟡 catracas dos gates CI-verde, SHA-na-main e aborto do dump passam com o mecanismo removido (3 mutações medidas); Q-3 🟡 LOTUS_ACEITAR_SCHEMA_A_FRENTE não deixa rastro no ledger; Q-4 🟡 P-87 omite deploy/bin/*.sh; Q-5/Q-6/Q-7 🟢. Revisão independente do Codex (plugin) falhou por limite de uso, sem achados — pode rodar depois das 06:03"
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `blocked` (achados do review) |
+| `lane-b` | `cicd-promocao-deploy-e-rollback` (item 12) | CI/CD | `../lotus-infra` | `cicd/promocao-deploy-e-rollback` (de `origin/main@cff022d4`) | `reviewing` (7 achados corrigidos; falta a lente Codex) |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 

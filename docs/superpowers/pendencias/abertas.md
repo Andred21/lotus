@@ -1090,12 +1090,12 @@ está provado: o `backup-db.sh` publica a chave por `LOTUS_BACKUP_SAIDA` (Task 9
 migration registra `"dump": null`, e o `deploy-sh.test.ts` assere o ramo do dump **por texto**
 (dump antes do `migrate`, só com `PENDENTES`) — não por execução. O ramo nunca rodou.
 
-## P-87 — o botão promove imagens, mas o host guarda compose, `tls.conf` e `.env` por cópia, e nada avisa quando eles ficam para trás
+## P-87 — o botão promove imagens, mas o host guarda compose, `tls.conf`, `.env` e os próprios scripts de `deploy/bin/` por cópia, e nada avisa quando eles ficam para trás
 
 **Bloco:** cicd-promocao-deploy-e-rollback (item 12) · **Quem decide:** João · **Gatilho:** o
 próximo commit que mudar `docker-compose.prod.yml`, `docker-compose.prod-tls.yml`,
-`deploy/nginx/tls.conf` ou `deploy/aws/env.prod.example`, ou o João escolher o mecanismo abaixo.
-Revisar em **2026-10-31**.
+`deploy/nginx/tls.conf`, `deploy/aws/env.prod.example` ou `deploy/bin/*.sh`, ou o João escolher o
+mecanismo abaixo. Revisar em **2026-10-31**.
 
 Medido em 2026-09-26, antes do primeiro disparo do botão:
 - o host rodava o compose do `db8f8736`, sem o healthcheck do clamav que olha a idade da base
@@ -1122,4 +1122,23 @@ Direções, para o João escolher:
   vale conferir os nomes.
 - (c) **Procedimento:** a §8 do runbook ganha o passo "antes de promover, confira a §7", e o risco
   fica aceito por escrito.
+
+**Emenda de 2026-09-26 (review do item 12, Q-4).** A ficha nasceu sem `deploy/bin/*.sh`, que é o
+caso mais grave. O botão não leva o `deploy.sh`: ele executa a cópia que está no host. O gate, o
+ledger e o dump deste bloco chegaram lá porque o João reinstalou o script à mão ("Antes do botão"
+no audit). Uma correção desses scripts pode entrar na `main` e nunca rodar em produção.
+
+O gatilho já disparou. As correções do review mudaram o `deploy.sh`: agora ele grava
+`schema_a_frente` e passa o rótulo do dump. Também mudaram o `backup-db.sh`, cuja chave agora vai
+até o segundo e aceita rótulo. **Depois do merge, os dois precisam ser reinstalados pela §7 do
+runbook antes do próximo disparo do botão.** Enquanto isso não acontecer, o host continua com a
+versão anterior. Nada quebra, mas o escape não deixa rastro, e o dump do deploy pode colidir com o
+do cron.
+
+As direções mudam assim:
+
+- Em (a), o `deploy.sh` não consegue conferir a si mesmo. Uma cópia velha não tem a conferência
+  nova. Para os scripts, quem detecta é o workflow: ele pede o `sha256sum` de `/opt/lotus/bin/*.sh`
+  por SSM e compara com o SHA promovido.
+- Em (b), os scripts entram no pacote que o SSM entrega, junto com o compose e o `tls.conf`.
 

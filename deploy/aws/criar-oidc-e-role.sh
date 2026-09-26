@@ -76,10 +76,16 @@ else
   echo "==> role $ROLE criada"
 fi
 
-# Minima de verdade: mandar UM comando, para UMA instancia, com UM documento.
-# Nada de ssm:StartSession — esta role nao abre shell. `GetCommandInvocation` e
-# `ListCommandInvocations` ficam em "*" porque sao leitura e o id do comando so
-# existe depois do send.
+# UMA instancia e UM documento — mas o documento e' o `AWS-RunShellScript`, que
+# roda QUALQUER comando como root. A role nao se limita ao `deploy.sh <sha>`: quem
+# a assume (o workflow da `main` do corporativo, pela trust acima) manda o shell
+# que quiser para o host. Isso nao abre poder novo — quem escreve na `main` ja
+# leva codigo para a producao, e a `main` nao tem protection (P-62) —, mas e' o
+# limite real, declarado na spec §12.6 (Q-6 do review de 2026-09-26). Estreitar e'
+# um documento SSM proprio com o `sha` validado por `allowedPattern`.
+# Nada de ssm:StartSession — esta role nao abre sessao interativa.
+# `GetCommandInvocation` e `ListCommandInvocations` ficam em "*" porque sao
+# leitura e o id do comando so existe depois do send.
 cat > "$TMP/ssm.json" <<JSON
 {"Version":"2012-10-17","Statement":[
  {"Effect":"Allow","Action":"ssm:SendCommand","Resource":[

@@ -76,6 +76,26 @@ describe('.github/workflows/deploy.yml', () => {
     expect(semComentarios).toContain('compare/main...')
   })
 
+  it('o gate de CI verde tem mecanismo: compara com success e sai 1 no caminho de falha', () => {
+    // As duas linhas acima são o mesmo defeito que o PROMOVER teve até a9cedc39:
+    // continuam verdes com o `exit 1` trocado por um aviso, porque as URLs
+    // sobrevivem ao mecanismo apagado. Medido na review de 2026-09-26 (Q-2).
+    expect(semComentarios).toMatch(
+      /\[\s*"\$CONCLUSAO"\s*=\s*"success"\s*\][\s\S]{0,80}\|\|[\s\S]{0,150}exit 1/,
+    )
+    // Só o run de PUSH decide: um pull_request verde do mesmo SHA não é a
+    // conclusão que a procedência do ci.yml assina.
+    expect(semComentarios).toContain('select(.event=="push")')
+  })
+
+  it('o gate de SHA na main aceita só identical e behind, e sai 1 em todo o resto', () => {
+    // Mesma sonda da de cima: com o ramo `*)` virado aviso, o teste antigo
+    // passava. `ahead` e `diverged` são exatamente o SHA fora da main.
+    expect(semComentarios).toMatch(
+      /case "\$ESTADO" in\s*identical\|behind\)\s*;;\s*\*\)[^\n]*exit 1\s*;;\s*esac/,
+    )
+  })
+
   it('tem escopo de leitura do GHCR privado para o imagetools inspect', () => {
     expect(semComentarios).toMatch(/packages:\s*read/)
   })

@@ -709,3 +709,86 @@ os dois secrets de deploy só existem no corporativo. Só os nomes foram lidos.
 | 6. dump pré-deploy no S3 e no ledger; `"dump": null` sem migration | Task 9 | as seis linhas `inicio` declaram `"dump": null`, e o `verificar-backup.sh` aprova um dump; o dump de um deploy com migration pendente fica na **P-86** |
 | 7. a `lotus-deploy` assumida por OIDC; o SG com as mesmas três regras | Task 12, Steps 1 e 5 | tudo |
 | 8. recusa sem CI verde e sem `PROMOVER` | Task 12, Steps 3 e 4 | tudo, e também a recusa de SHA fora da `main` |
+| 9. catracas vistas reprovar por sonda | Step 2 de cada task (RED nos `task-N-report.md` do ledger local); *Review de 2026-09-26* | o RED de cada task, que mostra a asserção falhando **sem o código novo**. Três delas **não** falhavam com o mecanismo desligado (Q-2 do review). Foram corrigidas, e as sondas estão abaixo |
+
+## Review de 2026-09-26: correções dos sete achados
+
+O João aprovou os sete. A revisão independente do Codex, pelo plugin, não rodou: bateu no limite
+de uso (`You've hit your usage limit`).
+
+### Q-2 e Q-3/Q-5: as sondas das catracas
+
+Cada catraca nova ou reforçada foi rodada nos dois sentidos: verde no script corrigido e vermelha
+sob a mutação que ela diz guardar. As mutações foram feitas numa cópia no scratchpad, e os scripts
+foram restaurados em seguida. O `git status` saiu limpo nos scripts.
+
+| Sonda | Antes do review | Depois |
+|---|---|---|
+| `exit 1` do gate de CI verde trocado por `echo aviso` | verde | vermelha: *o gate de CI verde tem mecanismo* |
+| ramo `*)` do compare com a `main` trocado por aviso | verde | vermelha: *o gate de SHA na main aceita só identical e behind* |
+| `compare` aceitando também `ahead` | verde | vermelha: mesma asserção |
+| `\|\| true` na chamada do `backup-db.sh` | verde | vermelha: *tira o dump antes do migrate e aborta o deploy se ele falhar* |
+| `set +e` antes da chamada do `backup-db.sh` | verde | vermelha: mesma asserção |
+| `schema_a_frente` removido da linha `inicio` | (não existia) | vermelha: *o escape do gate fica no ledger* |
+| busca do dump sem cortar `schema_a_frente` | (não existia) | vermelha: *a busca do dump ignora a lista schema_a_frente* |
+| chave do dump de volta ao minuto | (não existia) | vermelha: *duas execuções no mesmo minuto não gravam na mesma chave* |
+| `deploy.sh` sem o rótulo `pre-deploy-<sha>` | (não existia) | vermelha: *o dump do deploy leva o SHA na chave* |
+
+**Q-3 também foi provado por comportamento, fora da catraca.** Extraí do script as funções
+`json_lista` e `dump_que_introduziu` e a linha `ledger` do `inicio`, e rodei as três contra um
+ledger falso:
+
+```
+antes do escape: [s3://b/backups/lotus-2026-09-30T10-00-00-pre-deploy-xxx.sql.gz]
+{"ts":"2026-09-26T00:00:00Z","evento":"inicio","sha":"www","sha_anterior":"xxx","migrations":[],"schema_a_frente":["2026_09_30_000000_cria_coisa"],"dump":null,"ator":"manual:root"}
+depois do escape: [s3://b/backups/lotus-2026-09-30T10-00-00-pre-deploy-xxx.sql.gz]
+{"schema_a_frente":[]}
+```
+
+A mesma sonda, sem o `sed` que tira a lista antes da busca, imprime `depois do escape: []`. A linha
+do escape, com `"dump": null`, virava a última e apagava a chave certa. Esse defeito nasceu da
+própria correção do Q-3 e foi pego antes do commit.
+
+A guarda do rótulo do `backup-db.sh` foi rodada em bash:
+
+- aceita o rótulo vazio (cron), `pre-deploy-1142911b2643` e `antes-do-restore`;
+- recusa `a/b`, `ABC`, `a b` e um rótulo com quebra de linha no meio.
+
+O primeiro rascunho usava `printf | grep -qE`, e grep sem linha nenhuma sai 1. Ele recusaria o
+cron.
+
+### Q-1: ensaio do restore, na imagem da produção
+
+`mysql:8.0@sha256:7dcddc01…` é o mesmo digest do `docker-compose.prod.yml`. O dump foi tirado com o
+comando exato do `backup-db.sh`. O passo 4 do runbook §8.1.1 foi rodado literal. Depois do dump, a
+release X criou a tabela `coisas`, registrou a migration e emitiu `LOT-2`:
+
+```
+passo 1: -- Dump completed on 2026-09-26  7:36:52
+== banco a frente (release X aplicada, LOT-2 emitido depois do dump)
+  tabelas: certificates coisas migrations
+  migrations: 2026_01_01_000000_create_certificates 2026_09_30_000000_create_coisas
+== restore INGENUO: gunzip | mysql por cima
+  tabelas: certificates coisas migrations
+  migrations: 2026_01_01_000000_create_certificates
+  proximo migrate de X: ERROR 1050 (42S01) at line 1: Table 'coisas' already exists
+== depois do DROP/CREATE + load
+  tabelas: certificates migrations
+  migrations: 2026_01_01_000000_create_certificates
+  certificates: LOT-1
+== passo 5
+2026_01_01_000000_create_certificates
+  proximo migrate de X: passa
+  charset do database recriado: utf8mb4	utf8mb4_0900_ai_ci
+== linha restore
+{"ts":"2026-09-26T07:36:57Z","evento":"restore","dump":"s3://b/…-pre-deploy-….sql.gz","antes":"s3://b/…-antes-do-restore.sql.gz","ator":"manual:jvbat"}
+```
+
+- O restore por cima deixa a tabela órfã, e a tabela `migrations` passa a dizer que ela não existe.
+  A próxima promoção para frente morre no `migrate`. Esse era o buraco do §8.1 anterior.
+- O `LOT-2` sumiu. É a perda de dado que o §8.1.1 manda pesar antes de restaurar.
+
+**O que o ensaio não prova:** os passos que dependem do host, como o `aws s3 cp` com a role da
+EC2, o `compose stop` do projeto `lotus` e o cadeado contra o botão, não rodaram na produção. A
+escrita remota na produção é do João. O primeiro restore real fica sendo a prova, e a P-86 já
+espera um deploy com migration.
