@@ -49,3 +49,43 @@ reinstalou no fechamento do item 12, e a única divergência contra a branch é 
 - Previsão da P-86: nenhuma migration nova desde `f79bf993`
   (`git diff --name-only --diff-filter=A f79bf993 origin/main -- backend/database/migrations/` vazio).
   A promoção da Task 8 não faz dump; ramo (b), nota datada.
+
+## Task 7 — vermelho ao vivo (DoD 4)
+
+O João apertou o botão com `3abd81364ac6946d9bfea38725a9f53f578c5068` e `PROMOVER`, sem reinstalar
+nada antes: [run 36264643022](https://github.com/Gatika-CL/lotus/actions/runs/36264643022),
+2026-09-26T19:02:19Z, conclusão `failure`.
+
+| Passo | Conclusão |
+|---|---|
+| Formato do SHA e confirmacao | success |
+| O SHA esta na main deste repositorio | success |
+| O CI daquele SHA terminou verde | success |
+| O trio existe no GHCR | success |
+| configure-aws-credentials | success |
+| Quem eu sou na AWS | success |
+| Checkout do SHA alvo | success |
+| Checkout da main | success |
+| O host esta alinhado ao SHA alvo | **failure** |
+| deploy.sh no host, por SSM | **skipped** |
+
+Linhas de divergência no log (`--log-failed`), sem nenhuma chave nem valor do `.env`:
+
+```
+bin/deploy.sh diferente
+erro: o host diverge do que o SHA alvo pressupoe. Instale pelo runbook (deploy/aws/README.md, secao 7) e promova de novo.
+```
+
+A leitura do host terminou em `Success` (o gate da leitura passou). A única divergência é a mesma
+do ensaio da Task 4.
+
+Linha de base do host, lida pelo João com `-i ~/.ssh/lotus-prod.pem` (o auto mode barra o SSH da
+sessão), antes e depois do run — idênticas:
+
+| | Antes | Depois |
+|---|---|---|
+| `wc -l releases.jsonl` | 14 | 14 |
+| última linha | `{"ts":"2026-09-26T08:48:12Z","evento":"fim","sha":"df30a6bd…","resultado":"ok","etapa":"ok"}` | idem |
+| `CURRENT_SHA` | `df30a6bdfbbf26f3b9fa9397eaeb9ff6071eb523` | idem |
+
+O botão recusou sem tocar o host: nenhuma linha nova no ledger, o release no ar é o mesmo.
