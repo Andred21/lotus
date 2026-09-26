@@ -362,11 +362,62 @@ verbo_conferir() {
   printf 'SEM CONFLITO: lane %s contra %s plano(s)\n' "$nn" "$lidos"
 }
 
+verbo_fechar() {
+  local forca=0
+  if (( $# == 2 )) && [[ $2 == --force ]]; then
+    forca=1
+  elif (( $# != 1 )); then
+    recusar "uso: lane.sh fechar <NN> [--force]"
+  fi
+  local nn=$1
+  [[ $nn =~ $PADRAO_NN ]] || recusar "NN '$nn' nao e numero de ficha"
+  raiz_ou_recusa
+  exigir_main_tree fechar
+  local n c b cam='' br=''
+  while IFS=$SEP read -r n c b; do
+    [[ $n == "$nn" ]] && { cam=$c; br=$b; }
+  done < <(lanes_vivas)
+  [[ -n $cam ]] || recusar "nenhuma lane viva com o numero $nn"
+  # Arquivo ignorado nao conta: os .env e o node_modules saem junto com a
+  # arvore. O resto e trabalho que o fechar apagaria.
+  [[ -z $(git -C "$cam" status --porcelain 2>/dev/null) ]] \
+    || recusar "a arvore $cam tem mudanca nao commitada; nem --force passa por cima disso"
+  if (( forca == 0 )); then
+    git -C "$RAIZ" merge-base --is-ancestor "$br" main \
+      || recusar "a branch $br nao esta mesclada na main; fechar agora apagaria commits"
+  fi
+
+  # Daqui para baixo destroi. O banco de dev da lane morre com ela, de
+  # proposito: volume (-v) e a imagem do app construida para esta arvore
+  # (--rmi local). Sem teste de "o projeto tem conteiner?" antes: down num
+  # projeto vazio e no-op, e o teste seria so mais um jeito de errar.
+  if command -v "$DOCKER" >/dev/null 2>&1; then
+    (cd "$cam" && "$DOCKER" compose down -v --rmi local) || {
+      printf 'FECHAMENTO PELA METADE: docker compose down falhou em %s; a arvore e a branch ficaram\n' "$cam" >&2
+      exit 1
+    }
+  else
+    printf 'aviso: %s ausente, nenhum stack para derrubar\n' "$DOCKER"
+  fi
+  git -C "$RAIZ" worktree remove "$cam" || {
+    printf 'FECHAMENTO PELA METADE: git worktree remove falhou em %s; o stack ja caiu\n' "$cam" >&2
+    exit 1
+  }
+  local flag=-d
+  (( forca == 1 )) && flag=-D
+  git -C "$RAIZ" branch -q "$flag" "$br" || {
+    printf 'FECHAMENTO PELA METADE: git branch %s %s falhou; a arvore ja foi removida\n' "$flag" "$br" >&2
+    exit 1
+  }
+  printf 'LANE FECHADA: %s, arvore %s removida\n' "$br" "$cam"
+}
+
 verbo=${1:-}
 (( $# > 0 )) && shift
 case $verbo in
   descobrir) verbo_descobrir "$@" ;;
   abrir)     verbo_abrir "$@" ;;
   conferir)  verbo_conferir "$@" ;;
+  fechar)    verbo_fechar "$@" ;;
   *) recusar "verbo '$verbo' desconhecido; use descobrir, abrir, conferir ou fechar" ;;
 esac
