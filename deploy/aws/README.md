@@ -193,10 +193,20 @@ promovido**, e os scripts contra a **`main`**. Arquivo diferente ou ausente, ou 
 falta no `.env`, reprovam o botão antes do deploy, uma linha por item. Script ou chave **a mais**
 no host não reprovam.
 
-Duas consequências. **Todo merge que mudar `deploy/bin/*.sh` trava o botão até a reinstalação** —
-os scripts vêm sempre de uma árvore na `main` atual (`git diff --quiet origin/main -- deploy/bin`
-antes do `scp`). E o script de conferência **não vai para o host**: ele roda no runner a partir do
-checkout da `main`, então não entra no `scp` acima.
+Dois limites declarados (review do item 31). A conferência compara **conteúdo, não permissão**: é o
+`chmod +x` acima que torna os scripts executáveis, e um esquecido só aparece quando o passo de
+deploy tenta rodá-lo. E do `.env` saem os nomes por um corte no `=` feito linha a linha, o que só
+garante que valor nenhum sai porque o `.env` de produção **não tem valor multilinha** — não
+acrescente um.
+
+Duas consequências. **Todo merge que mudar ou acrescentar um `deploy/bin/*.sh` trava o botão até a
+reinstalação**; um script **removido** da `main` não trava, porque no host ele vira sobra — apague-o
+à mão (`sudo rm /opt/lotus/bin/<script>.sh`) na mesma reinstalação —
+os scripts vêm sempre de uma árvore igual à `main` do corporativo, que é a que o botão lê
+(`git fetch upstream && git diff --quiet upstream/main -- deploy/bin` antes do `scp`; a
+`origin/main` do pessoal pode estar à frente do espelho, e o botão recusaria o que ela tem a
+mais). E o script de conferência **não vai para o host**: ele roda no runner a partir do checkout
+da `main`, então não entra no `scp` acima.
 
 `.env`: copie `deploy/aws/env.prod.example` para `/opt/lotus/.env`, preencha os `<...>` e
 proteja (`sudo chmod 600 /opt/lotus/.env`, dono root). **Sem o registro A ainda**, os quatro
@@ -269,10 +279,17 @@ origem vem do trailer `Source-Commit:`:
 
 ```bash
 ORIGEM=$(gh api repos/Gatika-CL/lotus/commits/<sha alvo> --jq .commit.message | sed -n 's/^Source-Commit: //p')
-git show "$ORIGEM:docker-compose.prod.yml"     > /tmp/docker-compose.prod.yml
-git show "$ORIGEM:docker-compose.prod-tls.yml" > /tmp/docker-compose.prod-tls.yml
-git show "$ORIGEM:deploy/nginx/tls.conf"       > /tmp/tls.conf
+[ -n "$ORIGEM" ] && git cat-file -e "$ORIGEM^{commit}" \
+  && git show "$ORIGEM:docker-compose.prod.yml"     > /tmp/docker-compose.prod.yml \
+  && git show "$ORIGEM:docker-compose.prod-tls.yml" > /tmp/docker-compose.prod-tls.yml \
+  && git show "$ORIGEM:deploy/nginx/tls.conf"       > /tmp/tls.conf \
+  && echo "runtime de $ORIGEM extraído" \
+  || echo "PARE: Source-Commit vazio, fora deste clone ('$ORIGEM') ou arquivo faltando; não instale nada de /tmp" >&2
 ```
+
+A guarda não é enfeite: com `ORIGEM` vazio, `git show ":docker-compose.prod.yml"` **não falha** — lê o
+index e devolve o arquivo da árvore atual, que é justamente o runtime errado (Q-4 do review do item
+31). O botão ainda recusaria por hash, mas um rollback por SSH instalaria e subiria com ele.
 
 Depois, `scp` e `mv` como na §7. **Os scripts de `bin/` não voltam**: a referência deles é sempre
 a `main`, e o `deploy.sh` atual promove um SHA antigo.

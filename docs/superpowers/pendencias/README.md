@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (34)
+## Abertas (32)
 
 ### Agrupadas em bloco de execução
 
@@ -29,9 +29,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-85 | No sqlite da suíte o `whereBetween` de `start_date` do `AnalyticsQuery` (série e dois rankings) deixa de fora o último dia do período — a produção (MySQL) acerta, a suíte não enxerga a borda; `DataSql::literal` já resolve isso em outro lugar | — | bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de período do dashboard; revisar 2026-10-31 |
-| P-88 | O `deploy.sh` aceita promover imagem de qualquer dono do GHCR: `LOTUS_RELEASE_OWNER=andred21` por SSH puxa o trio público do repositório pessoal, e a regra "produção é sempre `gatika-cl`" vale por padrão, não por mecanismo | `cicd-host-alinhado-ao-sha` (item 31) | próximo commit que mudar `deploy/bin/deploy.sh` (junto com a P-87), ou o João promover; revisar 2026-10-31 |
-| P-87 | O botão promove imagens, mas o compose, o `tls.conf`, o `.env` e os scripts de `deploy/bin/` (o próprio `deploy.sh` que o botão executa) chegam ao host por cópia manual e nada compara o host com o SHA — em 2026-09-26 os quatro primeiros estavam atrás da `main` (Q-1, Q-2, Q-6 e Q-9 do review do item 10 nunca tinham chegado lá); o review do item 12 mudou `deploy.sh` e `backup-db.sh` e disparou o gatilho | `cicd-host-alinhado-ao-sha` (item 31) | João escolher entre detectar (o workflow compara o host com o SHA), entregar pelo SSM do botão ou aceitar o risco no runbook; ou o próximo commit que mudar esses arquivos; revisar 2026-10-31 |
-| P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade) | `cicd-host-alinhado-ao-sha` (item 31; condicional) | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
+| P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade); o `cicd-host-alinhado-ao-sha` (item 31) fechou em 2026-09-26 sem pagar o gatilho | — | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | — | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
@@ -100,9 +98,10 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (0)
+## Encerradas (2)
 
-**Em rastro:** nenhuma.
+**Em rastro:** a **P-87** e a **P-88**, encerradas pelo `cicd-host-alinhado-ao-sha` (item 31) em
+2026-09-26. Fichas completas em [`encerradas.md`](./encerradas.md).
 
 **A P-59, a P-75 e a P-79 saíram no fechamento do item 12 (2026-09-26)**, o primeiro posterior ao
 do `backend-config-e-conteudo-de-documento` (item 29), que as encerrou em 2026-09-25 — a P-59 e a

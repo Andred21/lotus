@@ -146,6 +146,19 @@ describe('.github/workflows/deploy.yml', () => {
     expect(fracao).toBeGreaterThanOrEqual(0.55)
     expect(fracao).toBeLessThanOrEqual(0.8)
 
+    // A conferência do item 31 espera no MESMO job, antes do deploy: o
+    // orçamento dela sai dos mesmos 1200s. Prender só o do deploy deixava a
+    // leitura crescer até o job morrer no meio do polling do deploy (Q-1 do
+    // review do item 31: 90→600 passava verde, com 1440s de espera somada).
+    const leituraMatch = semComentarios.match(/ORCAMENTO_LEITURA=(\d+)/)
+    expect(leituraMatch).not.toBeNull()
+    const somados = orcamentoSegundos + Number(leituraMatch![1])
+    expect(somados / timeoutSegundos).toBeLessThanOrEqual(0.8)
+    expect(semComentarios).toMatch(
+      /FIM_LEITURA=\$\(\(\s*\$\(date \+%s\)\s*\+\s*ORCAMENTO_LEITURA\s*\)\)/,
+    )
+    expect(semComentarios).toMatch(/while \[ "\$\(date \+%s\)" -lt "\$FIM_LEITURA" \]; do/)
+
     // O mecanismo importa tanto quanto a razão entre os números: um
     // contador de iterações que somasse os mesmos 840s não seria imune à
     // latência por chamada que motivou a troca. Ancora que o loop calcula
