@@ -23,6 +23,56 @@
 
 ---
 
+## Fechado em 2026-09-26 — `cicd-host-alinhado-ao-sha` (item 31)
+
+**A linha da tabela de ocupação, no dia do fechamento:**
+
+| Lane | Bloco | Frente | Árvore | Branch | Estado |
+|---|---|---|---|---|---|
+| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `ready_for_closure` (review com lente Claude + Codex: seis achados, Q-1/Q-3/Q-4/Q-6 corrigidos em `ea53e790`, Q-2/Q-5 declarados no runbook; desvio parcial — o sandbox local do Codex recusou o bind-mount do Docker Desktop e ele revisou `af1526eb` pelo GitHub; execução concluída em 2026-09-26: Tasks 1–9, DoD provadas ao vivo — runs 36264643022 vermelho e 36265032582 verde; até `af1526eb` mesclada na PR #112, `fe6077df`) |
+
+**O bloco da lane no frontmatter, no dia do fechamento:**
+
+```yaml
+  lane-b:
+    active_feature: cicd-host-alinhado-ao-sha
+    active_work_item: cicd-host-alinhado-ao-sha   # item 31, promovido pelo Joao em 2026-09-26 (P-88 + P-87, P-86 condicional); Contexto: nao
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
+    tree: ../lotus-infra
+    branch: cicd/host-alinhado-ao-sha   # aberta de origin/main@e5ac01a9 em 2026-09-26; ate af1526eb mesclada na PR #112 (fe6077df) e espelhada (3abd8136, em producao); os commits de doc seguintes vao com o fechamento. A anterior (cicd/promocao-deploy-e-rollback, item 12) mesclou inteira pelas PRs #108 a #111 (e5ac01a9)
+    active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
+    active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
+    context_packet: null
+    blocker: null
+    resume_state: null
+    arquivos_do_descarte:
+      - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
+      - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
+    last_completed_work_item: cicd-promocao-deploy-e-rollback   # item 12, fechado em 2026-09-26; mesclado ate a PR #111 (e5ac01a9)
+```
+
+**Escrito no fechamento, porque o `state.md` deste bloco não teve seção de trabalho ativo.** O João
+promoveu o item 31 em 2026-09-26, na mesma sessão em que o item 12 fechou, com a P-88 e a P-87 pelo
+gatilho comum e a P-86 condicional; o número 30 foi saltado porque a branch órfã
+`chore/30-harness-estado-por-bloco` já o usa. A execução seguiu as nove tasks. As 1 a 3 fixaram o
+dono literal e escreveram o script de conferência e o passo no botão, cada catraca vista reprovar
+por sonda no scratchpad. A 4 ensaiou a leitura contra o host real, e o SSH foi do João porque o auto
+mode o barra. A 6 mesclou até `af1526eb` pela PR #112 (`fe6077df`) e espelhou como `3abd8136`. Na 7 o
+botão recusou o host desalinhado nomeando o `deploy.sh`. Na 8 o João reinstalou pelo §7 e o botão
+promoveu o mesmo SHA. A P-86 ficou aberta com nota, porque o release não tinha migration. A revisão
+final achou um Important, pago em `f9715829`: os scripts do host se conferem contra a `main` do
+corporativo, não contra a do pessoal. O review formal teve duas lentes. A do Codex rodou em desvio
+consciente parcial: o sandbox dele recusou o bind-mount do Docker Desktop, e ele revisou `af1526eb`
+pelo GitHub. Dos seis achados, Q-1, Q-3, Q-4 e Q-6 foram corrigidos em `ea53e790`, e Q-2 e Q-5
+ficaram como limites declarados no runbook §7. Depois do merge, `deploy/bin` e o runtime não mudaram
+(o `deploy.yml` só mudou em comentário), e por isso o host continua alinhado à `main`. O fechamento
+reconferiu no corporativo os dois runs e leu `/up` 200. A branch não foi mesclada no fechamento:
+os commits depois de `af1526eb` entram na integração, que é passo próprio do João.
+
+---
+
 ## Fechado em 2026-09-26 — `cicd-promocao-deploy-e-rollback` (item 12)
 
 **A linha da tabela de ocupação, no dia do fechamento:**

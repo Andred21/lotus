@@ -1,7 +1,7 @@
 # Audit — `cicd-host-alinhado-ao-sha` (item 31) — 2026-09-26
 
 > Evidência das DoD da spec
-> [`2026-09-26-cicd-host-alinhado-ao-sha-design.md`](../specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md).
+> [`2026-09-26-cicd-host-alinhado-ao-sha-design.md`](../specs/archive/2026-09-26-cicd-host-alinhado-ao-sha-design.md).
 > Do `.env` só se registra contagem de chaves, nunca nome nem valor.
 
 ## Task 4 — ensaio só de leitura

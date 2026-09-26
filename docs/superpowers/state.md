@@ -2,14 +2,14 @@
 schema_version: 2
 mode: multi-lane
 focused_lane: lane-b
-active_feature: cicd-host-alinhado-ao-sha
-active_work_item: cicd-host-alinhado-ao-sha
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+active_feature: null
+active_work_item: null
+workflow_state: idle
+next_owner: joao
+next_action: select_backlog_item
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
-active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
+active_spec: null
+active_plan: null
 context_packet: null
 blocker: null
 lanes:
@@ -28,22 +28,22 @@ lanes:
     resume_state: null
     last_completed_work_item: backend-config-e-conteudo-de-documento   # item 29, fechado em 2026-09-25; branch ainda nao mesclada
   lane-b:
-    active_feature: cicd-host-alinhado-ao-sha
-    active_work_item: cicd-host-alinhado-ao-sha   # item 31, promovido pelo Joao em 2026-09-26 (P-88 + P-87, P-86 condicional); Contexto: nao
-    workflow_state: ready_for_closure
-    next_owner: claude
-    next_action: close_active_work_item
+    active_feature: null
+    active_work_item: null
+    workflow_state: idle
+    next_owner: joao
+    next_action: select_backlog_item
     tree: ../lotus-infra
-    branch: cicd/host-alinhado-ao-sha   # aberta de origin/main@e5ac01a9 em 2026-09-26; ate af1526eb mesclada na PR #112 (fe6077df) e espelhada (3abd8136, em producao); os commits de doc seguintes vao com o fechamento. A anterior (cicd/promocao-deploy-e-rollback, item 12) mesclou inteira pelas PRs #108 a #111 (e5ac01a9)
-    active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
-    active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
+    branch: cicd/host-alinhado-ao-sha   # aberta de origin/main@e5ac01a9 em 2026-09-26; ate af1526eb mesclada na PR #112 (fe6077df) e espelhada (3abd8136, em producao); o item 31 fechou nela em 2026-09-26 e o resto (review ea53e790 e os commits de doc) NAO foi mesclado — integracao e passo proprio, com o Joao. A anterior (cicd/promocao-deploy-e-rollback, item 12) mesclou inteira pelas PRs #108 a #111 (e5ac01a9)
+    active_spec: null
+    active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
-    last_completed_work_item: cicd-promocao-deploy-e-rollback   # item 12, fechado em 2026-09-26; mesclado ate a PR #111 (e5ac01a9)
+    last_completed_work_item: cicd-host-alinhado-ao-sha   # item 31, fechado em 2026-09-26; mesclado ate af1526eb (PR #112, fe6077df), o resto nao
   lane-c:
     active_feature: null
     active_work_item: null
@@ -58,9 +58,9 @@ lanes:
     blocker: null
     resume_state: null
     last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: cicd-promocao-deploy-e-rollback
-state_basis_commit: 35784d9f
-updated_at: 2026-09-26T16:40:00-03:00
+last_completed_work_item: cicd-host-alinhado-ao-sha
+state_basis_commit: 12d82315
+updated_at: 2026-09-26T17:30:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `ready_for_closure` (review com lente Claude + Codex: seis achados, Q-1/Q-3/Q-4/Q-6 corrigidos em `ea53e790`, Q-2/Q-5 declarados no runbook; desvio parcial — o sandbox local do Codex recusou o bind-mount do Docker Desktop e ele revisou `af1526eb` pelo GitHub; execução concluída em 2026-09-26: Tasks 1–9, DoD provadas ao vivo — runs 36264643022 vermelho e 36265032582 verde; até `af1526eb` mesclada na PR #112, `fe6077df`) |
+| `lane-b` | — (item 31 `cicd-host-alinhado-ao-sha` **fechado em 2026-09-26**) | — | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`; até `af1526eb` mesclada na PR #112, `fe6077df`; o resto **não mesclado** — integração é passo próprio, com o João) | `idle` |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
@@ -184,11 +184,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-26 | `cicd-host-alinhado-ao-sha` (encerra a **P-87** e a **P-88**; a **P-86** segue aberta com nota — o release não tinha migration; nasce `.github/scripts/conferir-alinhamento.sh` e o passo de conferência do `deploy.yml`, sem escape, e a catraca `conferir-alinhamento`; o `deploy.sh` promove só `ghcr.io/gatika-cl/`; runbook §7, §8 e §8.1 e o par novo na lição 19) | Item 31 da fila |
 | 2026-09-26 | `cicd-promocao-deploy-e-rollback` (abre a **P-86** e a **P-87**, esta com o gatilho disparado pelo próprio review e não pago; emenda a **P-62** com o botão sem Environment; nascem `.github/workflows/deploy.yml`, `deploy/aws/criar-oidc-e-role.sh`, o ledger `releases.jsonl`, o gate de schema e o cadeado do `deploy.sh`, e as catracas `workflow-deploy`, `deploy-sh`, `backup-db` e `criar-oidc-role`; ADR-14 ganha emenda datada e a lição 19 a regra da sonda que apaga o exit) | Item 12 da fila |
 | 2026-09-25 | `backend-config-e-conteudo-de-documento` (fecha a **P-59** e a **P-79** por mecanismo e a **P-75** por veredito escrito; abre a **P-85**; dispara sem pagar, pela segunda vez, a **P-53**; nascem `App\Shared\Support\FusoDoNegocio`, `Certification\Services\CertificateValidationUrl` e `ValidacaoDeCertificadoNaoConfigurada`, e as catracas `DataDeCalendarioTest` e `FusoDeArmazenamentoTest`; `config/app.php` fica em `UTC` literal por decisão escrita) | Item 29 da fila |
 | 2026-09-20 | `harness-hooks-de-guarda` (fecha a **P-82**; abre a **P-83** — sete decisões de política dos guardas que só existiam no ledger gitignorado — e a **P-84** — o harness não existe em doc versionado; nascem `.claude/settings.json`, `.claude/hooks/` com os cinco guardas e `.claude/tests/` com sete arquivos) | Item 28 da fila |
 | 2026-09-20 | `infra-producao-provisionamento-aws` (item 10, **v2** — replanejado do zero; a v1 e a R5 foram descartadas para `archive/`). Os sete DoD fecharam, o sétimo pelo **ramo ficha** que a Task 19 prevê. Fecha a **P-58**; abre a **P-77**, a **P-78**, a **P-79** e — no próprio gate de fechamento, por decisão do João de adiar — a **P-80** (custo) e a **P-81** (access key); **dispara a `P-05` sem pagar** (a produção subiu com as 30 migrations não consolidadas). Nascem `deploy/bin/verificar-backup.sh`, `deploy/nginx/tls.conf`, `docker-compose.prod-tls.yml`, `deploy/aws/user-data.sh` e o runbook `deploy/aws/README.md`; o ADR-09 ganha a revisão 2026-09 e a lição 19 é emendada pela terceira ocorrência | Item 10 da fila |
-| 2026-09-04 | `dominio-decisoes-de-rbac-e-semantica` (fecha as quatro fichas de decisão `D-09`, `D-10`, `D-11` e `D-16`; nenhuma pendência nasce ou fecha, mas **dispara sem pagar** os gatilhos da `P-51` e da `P-53`; nascem `RoleOptionData`, `StudentClientOptionData`, `UmContatoPrincipal` e `DeleteClientAddressAction`) | Item 22 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com

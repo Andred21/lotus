@@ -8,7 +8,7 @@
 
 **Tech Stack:** bash, GitHub Actions (`workflow_dispatch`, `actions/checkout@v4`, OIDC), AWS SSM `AWS-RunShellScript`, `jq`, vitest (projeto `repo`, ambiente node).
 
-**Spec:** [`docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md`](../specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md). `Contexto: não` — as fontes estão todas no repositório.
+**Spec:** [`docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md`](../../specs/archive/2026-09-26-cicd-host-alinhado-ao-sha-design.md). `Contexto: não` — as fontes estão todas no repositório.
 
 ## Global Constraints
 
