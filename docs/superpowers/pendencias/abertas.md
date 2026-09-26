@@ -1090,3 +1090,36 @@ está provado: o `backup-db.sh` publica a chave por `LOTUS_BACKUP_SAIDA` (Task 9
 migration registra `"dump": null`, e o `deploy-sh.test.ts` assere o ramo do dump **por texto**
 (dump antes do `migrate`, só com `PENDENTES`) — não por execução. O ramo nunca rodou.
 
+## P-87 — o botão promove imagens, mas o host guarda compose, `tls.conf` e `.env` por cópia, e nada avisa quando eles ficam para trás
+
+**Bloco:** cicd-promocao-deploy-e-rollback (item 12) · **Quem decide:** João · **Gatilho:** o
+próximo commit que mudar `docker-compose.prod.yml`, `docker-compose.prod-tls.yml`,
+`deploy/nginx/tls.conf` ou `deploy/aws/env.prod.example`, ou o João escolher o mecanismo abaixo.
+Revisar em **2026-10-31**.
+
+Medido em 2026-09-26, antes do primeiro disparo do botão:
+- o host rodava o compose do `db8f8736`, sem o healthcheck do clamav que olha a idade da base
+  (`f9b56707`, Q-9);
+- o overlay e o `tls.conf` eram os do `53ca6ce7`, sem a renovação (Q-6) e sem a isenção do `/up`
+  (Q-1);
+- o `.env` não tinha 10 das 40 chaves do molde (Q-2). Sem `APP_LOCALE`, a produção respondia em
+  `en`.
+
+As três correções vieram do review do item 10, em 2026-09-20, e nenhuma chegou ao host em seis
+dias. O runbook §7 só instala esses arquivos quando o host nasce, e o `deploy.sh` — que o botão
+invoca — promove **imagens** por SHA. Nada compara o que o host guarda com o que o SHA promovido
+espera, e um rollback herda os arquivos do host, não os do SHA alvo. Nesta execução o João
+sincronizou tudo à mão (audit do item 12, "Antes do botão"), mas a causa segue aberta: o próximo
+desvio passa do mesmo jeito.
+
+Direções, para o João escolher:
+
+- (a) **Detectar:** a imagem `app` carrega os hashes dos arquivos de compose e do `tls.conf`, e os
+  nomes das chaves do molde. O gate do `deploy.sh` compara com o host, como já faz com as
+  migrations. O host continua sendo a fonte.
+- (b) **Entregar:** o botão manda os arquivos de compose e o `tls.conf` pelo próprio SSM antes do
+  `deploy.sh`, e o SHA vira a fonte. O `.env` não tem como ir assim, porque tem segredo; dele só
+  vale conferir os nomes.
+- (c) **Procedimento:** a §8 do runbook ganha o passo "antes de promover, confira a §7", e o risco
+  fica aceito por escrito.
+
