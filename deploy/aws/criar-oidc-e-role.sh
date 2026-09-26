@@ -9,7 +9,13 @@
 # Uso:  LOTUS_INSTANCIA=i-0123456789abcdef0 deploy/aws/criar-oidc-e-role.sh
 set -euo pipefail
 
-REPO="${LOTUS_REPO:-Gatika-CL/lotus}"
+# Com os IDs do dono e do repositorio, e nao so os nomes: repositorio criado
+# depois de 2026-07-15 emite o `sub` imutavel do GitHub (`repo:DONO@ID/REPO@ID:`),
+# e o corporativo nasceu em 2026-08-25. Um `sub` so com nomes nunca casa, e o
+# AssumeRole volta AccessDenied. Os IDs sao `.owner.id` e `.id` de
+# `gh api repos/Gatika-CL/lotus`. E' o ID que impede um repositorio recriado com
+# o mesmo nome de herdar esta trust.
+REPO="${LOTUS_REPO:-Gatika-CL@310231788/lotus@1345572200}"
 REGIAO="${LOTUS_REGIAO:-sa-east-1}"
 INSTANCIA="${LOTUS_INSTANCIA:-}"
 [ -n "$INSTANCIA" ] || { echo "erro: defina LOTUS_INSTANCIA=i-..." >&2; exit 2; }
