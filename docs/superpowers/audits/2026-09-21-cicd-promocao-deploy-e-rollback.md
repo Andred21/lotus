@@ -364,3 +364,102 @@ promovido o que o host guarda por cópia. A spec não declarava isso entre os li
 
 Sobra achada no host: `/opt/lotus/prova-certificado.php` (`ubuntu:ubuntu`, 2026-09-10), que
 nenhum arquivo do repositório cita. Ficou intocado; a decisão é do João.
+
+## Task 12 — o botão ao vivo
+
+### Step 1 — a promoção do `1142911b` (DoD 1)
+
+**O primeiro disparo parou na AWS, antes de qualquer `send-command`.** Foi o run `36223231264`
+(2026-09-26T06:15:56Z), que depois saiu do histórico da Actions (a API responde 404); o trecho
+abaixo foi lido antes disso. Os três gates passaram, e o `configure-aws-credentials` falhou nas 12
+tentativas:
+
+```text
+compare main...1142911b26430466522bab0be2a87b0e32c4952b = identical
+ci.yml em 1142911b26430466522bab0be2a87b0e32c4952b = success
+trio presente para 1142911b26430466522bab0be2a87b0e32c4952b
+Assuming role with OIDC
+(… a mesma linha, 12 vezes no total …)
+##[error]Could not assume role with OIDC: Request ARN is invalid
+```
+
+*Quem eu sou na AWS* e *deploy.sh no host, por SSM* foram pulados. O host não recebeu nada:
+`CURRENT_SHA` seguiu em `a5fc92bb`, o ledger ficou sem linha nova e `aws ssm list-commands` veio
+vazio.
+
+**Defeito 1: o secret `AWS_DEPLOY_ROLE_ARN` não era um ARN válido.** A action só chega ao STS
+quando o valor começa com `arn:aws`, e o STS recusou o formato. O valor gravado na Task 8
+(2026-09-25T00:18:04Z) não é legível, então a causa exata fica desconhecida. O João regravou os
+dois secrets com `--body` e o literal do readback da Task 8: `AWS_DEPLOY_ROLE_ARN` às 06:36:47Z e
+`AWS_INSTANCE_ID` às 06:36:48Z. O segundo foi por precaução, porque tinha sido gravado do mesmo
+jeito.
+
+**Defeito 2: a trust nunca aceitaria um token do corporativo.** Foi achado por leitura, não pelo
+run, que parou antes. Repositório criado depois de 2026-07-15 emite o `sub` imutável do GitHub,
+com os IDs do dono e do repositório, e o `Gatika-CL/lotus` nasceu em 2026-08-25. A API de OIDC do
+repositório confirma:
+
+```text
+gh api repos/Gatika-CL/lotus/actions/oidc/customization/sub
+{"use_default":true,"use_immutable_subject":true,"sub_claim_prefix":"repo:Gatika-CL@310231788/lotus@1345572200"}
+```
+
+O job não declara `environment:`, então o `sub` é
+`repo:Gatika-CL@310231788/lotus@1345572200:ref:refs/heads/main`, e a trust exigia
+`repo:Gatika-CL/lotus:ref:refs/heads/main`. O `5dee48ab` pôs os IDs no default de `LOTUS_REPO`,
+com a catraca `criar-oidc-role` cobrando o literal (vermelha antes, verde depois). O João
+reexecutou o script, e o readback trouxe o `sub` novo, `lotus-deploy-ssm`,
+`AmazonSSMManagedInstanceCore` e `PingStatus … Online`. Lida às 06:34Z, a trust já exigia o `sub`
+novo.
+
+A intenção da spec (§9) continua a mesma: igualdade, `main` e nenhum curinga. Só o literal muda.
+O ID ainda fecha o que o nome deixava aberto, porque um repositório recriado com o mesmo nome não
+herda a trust. Até esta branch entrar na `main`, o script da `main` (`65d81bc9`) grava o `sub`
+antigo, e reexecutá-lo de lá desfaria a correção.
+
+**O segundo disparo passou.** [Run 36224456257](https://github.com/Gatika-CL/lotus/actions/runs/36224456257),
+às 06:40:20Z, levou 1 min 38 s, e o passo do `deploy.sh` levou 74 s:
+
+```text
+compare main...1142911b26430466522bab0be2a87b0e32c4952b = identical
+ci.yml em 1142911b26430466522bab0be2a87b0e32c4952b = success
+trio presente para 1142911b26430466522bab0be2a87b0e32c4952b
+{
+    "UserId": "AROA3B7BDINPDTPIY4QR5:GitHubActions",
+    "Account": "760144413534",
+    "Arn": "arn:aws:sts::760144413534:assumed-role/lotus-deploy/GitHubActions"
+}
+CommandId=325ee162-2502-420d-8b4f-896cb179ffff
+----- stdout do host -----
+==> login ghcr.io
+==> manifestos de 1142911b26430466522bab0be2a87b0e32c4952b
+==> pull
+==> gate de schema
+==> migrate
+   (… os três caches do entrypoint …)
+   INFO  Nothing to migrate.
+==> up
+==> esperando o nginx ficar healthy (até 150 s)
+==> DEPLOY OK: 1142911b26430466522bab0be2a87b0e32c4952b
+estado final: Success
+```
+
+**Conferido por leitura às 06:43Z:**
+
+- `/up` responde 200 de fora (`http://18.230.53.197/up`) e de dentro, e o `CURRENT_SHA` é
+  `1142911b…`.
+- O ledger registra o ator do botão:
+
+  ```text
+  {"ts":"2026-09-26T06:41:04Z","evento":"inicio","sha":"1142911b26430466522bab0be2a87b0e32c4952b","sha_anterior":"a5fc92bb7728ea0da6dc16a62958e02556df999b","migrations":[],"dump":null,"ator":"github:36224456257:Andred21"}
+  {"ts":"2026-09-26T06:41:45Z","evento":"fim","sha":"1142911b26430466522bab0be2a87b0e32c4952b","resultado":"ok","etapa":"ok"}
+  ```
+
+- A imagem de cada container é o digest que o CI corporativo publicou: `app` e `scheduler` em
+  `8c009eca…`, `nginx` em `636d68f3…` e `clamav` em `80d2a658…`. `nginx` e `clamav` estão
+  `healthy`, o `clamav` já com o healthcheck novo (Q-9).
+- A recriação saiu como a Task 11 previu. O `compose run` do migrate recriou `mysql` e `clamav`, o
+  `up` recriou `app`, `nginx` e `scheduler`, e o `gotenberg` seguiu `Running`. O `mysql` voltou
+  `healthy` na mesma imagem (`7dcddc01…`, a única no host, MySQL 8.0.46), cujo digest já estava
+  fixado no compose do `a5fc92bb`.
+- O `app.locale` efetivo é `es_CL` (Q-2).
