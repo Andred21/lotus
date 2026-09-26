@@ -146,6 +146,99 @@ descrever_offsets() {
   done
 }
 
+portas_do_offset() {
+  # A formula da tabela do .env.example. O MinIO anda de dois em dois porque
+  # publica duas portas (API e console).
+  local o=$1
+  printf '%s %s %s %s %s %s\n' "$((8080 + o))" "$((3307 + o))" "$((8025 + o))" \
+    "$((9000 + 2 * o))" "$((9001 + 2 * o))" "$((5173 + o))"
+}
+
+escrever_env() {
+  # $1 = arvore, $2 = offset. Parte do .env.example da propria arvore e troca
+  # so as seis portas; confere que as seis sairam, para uma chave renomeada no
+  # molde nao virar lane na porta do offset zero em silencio.
+  local http db mail minio console vite
+  read -r http db mail minio console vite <<<"$(portas_do_offset "$2")"
+  local esperadas
+  esperadas=$(printf '%s\n' \
+    "LOTUS_DEV_HTTP_PORT=$http" "LOTUS_DEV_DB_PORT=$db" \
+    "LOTUS_DEV_MAILPIT_PORT=$mail" "LOTUS_DEV_MINIO_PORT=$minio" \
+    "LOTUS_DEV_MINIO_CONSOLE_PORT=$console" "LOTUS_DEV_VITE_PORT=$vite")
+  local -a sed_args=()
+  local linha
+  while IFS= read -r linha; do
+    sed_args+=(-e "s/^[[:space:]]*#?[[:space:]]*${linha%%=*}=.*/$linha/")
+  done <<<"$esperadas"
+  sed -E "${sed_args[@]}" "$1/.env.example" > "$1/.env" || return 1
+  [[ $(grep -cxFf <(printf '%s\n' "$esperadas") "$1/.env") == 6 ]]
+}
+
+copiar_envs() {
+  # $1 = arvore. backend/.env e frontend/.env nao sao versionados: vem do main
+  # tree. VITE_API_URL ativa amarraria o dev server da lane a API do offset
+  # zero, entao sai comentada (passo 3 da receita do .env.example).
+  local f
+  for f in backend/.env frontend/.env; do
+    if [[ -f $PRINCIPAL/$f ]]; then
+      cp "$PRINCIPAL/$f" "$1/$f" || return 1
+    else
+      printf 'aviso: o main tree nao tem %s; a lane fica sem ele\n' "$f"
+    fi
+  done
+  if [[ -f $1/frontend/.env ]]; then
+    sed -i -E 's/^([[:space:]]*VITE_API_URL=)/# \1/' "$1/frontend/.env" || return 1
+  fi
+  return 0
+}
+
+semear_estado() {
+  # $1 arvore, $2 NN, $3 pasta (NN-slug), $4 branch, $5 offset, $6 SHA da
+  # main, $7 alias do modelo. Campos da secao 3.3 da spec; o contrato de
+  # cada um esta em docs/superpowers/state.md.
+  local pasta="$1/docs/superpowers/blocos/$3"
+  mkdir -p "$pasta" || return 1
+  cat > "$pasta/estado.md" <<ESTADO
+---
+schema_version: 3
+id: $2
+slug: $3
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
+resume_state: null
+active_spec: null
+active_plan: null
+active_review: null
+active_acceptance: null
+context_packet: null
+efeito_externo: null
+executor: null
+branch: $4
+worktree: ../lotus-$3
+offset: $5
+lane_base: $6
+commit: $6
+blocker: null
+updated_at: $(date -Iseconds)
+updated_by: $(id -un)@$(hostname -s) / $7
+---
+
+# Bloco $2 — estado
+
+Aberto por lane.sh abrir. O contrato dos campos esta em docs/superpowers/state.md.
+ESTADO
+}
+
+falhar_no_meio() {
+  # $1 = NN, $2 = o passo que falhou. CRIADO lista o que ja existe no disco.
+  local ja='nada'
+  (( ${#CRIADO[@]} > 0 )) && ja=$(printf '%s; ' "${CRIADO[@]}")
+  printf 'LANE PELA METADE: %s falhou. Ja existe: %s Desfaca com: bash .claude/scripts/lane.sh fechar %s\n' \
+    "$2" "$ja" "$1" >&2
+  exit 1
+}
+
 verbo_abrir() {
   local nn=${1:-} tipo=${2:-} slug=${3:-} modelo=terminal
   if (( $# == 5 )) && [[ $4 == --modelo ]]; then
@@ -204,6 +297,30 @@ verbo_abrir() {
   offset=$(offset_livre) || recusar "nenhum offset livre de 1 a 3: $(descrever_offsets)"
 
   printf 'PORTAO OK: %s pode abrir em %s, offset +%s\n' "$branch" "$arvore" "$offset"
+
+  local base pasta="$nn-$slug"
+  base=$(git -C "$RAIZ" rev-parse --short main)
+  CRIADO=()
+  git -C "$RAIZ" worktree add -q -b "$branch" "$arvore" main \
+    || falhar_no_meio "$nn" 'git worktree add'
+  CRIADO+=("a branch $branch" "a arvore $arvore")
+  escrever_env "$arvore" "$offset" || falhar_no_meio "$nn" 'o .env da raiz'
+  copiar_envs "$arvore" || falhar_no_meio "$nn" 'a copia de backend/.env e frontend/.env'
+  (cd "$arvore/frontend" && "$PNPM" install --frozen-lockfile) \
+    || falhar_no_meio "$nn" "$PNPM install --frozen-lockfile"
+  semear_estado "$arvore" "$nn" "$pasta" "$branch" "$offset" "$base" "$modelo" \
+    || falhar_no_meio "$nn" 'a semente do estado.md'
+  # Sem este commit o fechar recusaria a arvore suja pelo proprio estado.md.
+  { git -C "$arvore" add "docs/superpowers/blocos/$pasta/estado.md" \
+      && git -C "$arvore" commit -q -m "chore($nn): abre a lane $slug"; } \
+    || falhar_no_meio "$nn" 'o commit da semente'
+
+  local http db mail minio console vite
+  read -r http db mail minio console vite <<<"$(portas_do_offset "$offset")"
+  printf 'LANE ABERTA: %s em %s\n' "$branch" "$arvore"
+  printf '  portas: HTTP %s, DB %s, Mailpit %s, MinIO %s/%s, Vite %s\n' \
+    "$http" "$db" "$mail" "$minio" "$console" "$vite"
+  printf '  proximo passo, quando o bloco precisar do stack: (cd %s && docker compose up -d)\n' "$arvore"
 }
 
 verbo=${1:-}

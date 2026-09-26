@@ -138,3 +138,70 @@ assert_igual 0 "$CODIGO_LANE" 'portao limpo sai 0'
 assert_contem "$SAIDA_LANE" \
   "PORTAO OK: $_ab33 pode abrir em $(dirname "$_abok")/lotus-33-harness-sinal-de-contexto-cheio, offset +1" \
   'portao limpo: branch, arvore irma e offset +1'
+
+# --- caminho feliz: cria tudo, e so o que deve
+_hm=$(criar_main_lane); registrar_descarte "$(dirname "$_hm")"
+_hpai=$(dirname "$_hm")
+_hbase=$(git -C "$_hm" rev-parse --short main)
+_hpnpm=$(criar_falso "$_hpai" pnpm)
+_hdocker=$(criar_falso "$_hpai" docker)
+_harv="$_hpai/lotus-33-harness-sinal-de-contexto-cheio"
+_hest="$_harv/docs/superpowers/blocos/33-harness-sinal-de-contexto-cheio/estado.md"
+FAKE_PNPM=$_hpnpm FAKE_DOCKER=$_hdocker \
+  rodar_lane "$_hm" abrir 33 chore harness-sinal-de-contexto-cheio --modelo opus
+assert_igual 0 "$CODIGO_LANE" 'abrir feliz sai 0'
+assert_contem "$SAIDA_LANE" "LANE ABERTA: $_ab33 em $_harv" 'anuncia a lane aberta'
+assert_contem "$SAIDA_LANE" 'HTTP 8081' 'anuncia as portas'
+assert_contem "$SAIDA_LANE" "(cd $_harv && docker compose up -d)" 'da o proximo passo sem subir o stack'
+assert_igual "$_ab33" "$(git -C "$_harv" rev-parse --abbrev-ref HEAD)" 'a arvore esta na branch da lane'
+assert_igual '8081 / 3308 / 8026 / 9002 / 9003 / 5174' "$(portas_do_env "$_harv/.env")" \
+  '.env da raiz com as seis portas do offset +1'
+assert_igual "$(linha_da_tabela 1)" "$(portas_do_env "$_harv/.env")" \
+  'as portas batem com a linha +1 da tabela do .env.example'
+assert_igual "$(cat "$_hm/backend/.env")" "$(cat "$_harv/backend/.env")" 'backend/.env copiado do main tree'
+assert_contem "$(cat "$_harv/frontend/.env")" '# VITE_API_URL=http://localhost:8080' \
+  'VITE_API_URL ativa sai comentada'
+assert_igual 0 "$(grep -c '^VITE_API_URL=' "$_harv/frontend/.env")" 'nenhuma VITE_API_URL ativa na lane'
+assert_contem "$(cat "$_harv/frontend/.env")" 'VITE_ALGO=1' 'o resto do frontend/.env fica'
+assert_igual "$_harv/frontend|install --frozen-lockfile" "$(cat "$_hpnpm.log")" \
+  'pnpm install --frozen-lockfile em frontend/ da lane'
+assert_igual '' "$(cat "$_hdocker.log")" 'abrir nao chama o docker'
+assert_igual \
+  "3${US}33${US}33-harness-sinal-de-contexto-cheio${US}planning${US}claude${US}continue_active_planning${US}${US}${US}${_ab33}${US}../lotus-33-harness-sinal-de-contexto-cheio${US}1${US}${_hbase}${US}${_hbase}${US}$(id -un)@$(hostname -s) / opus" \
+  "$(python3 "$LER_FM_TESTE" "$_hest" schema_version id slug workflow_state next_owner next_action \
+      efeito_externo executor branch worktree offset lane_base commit updated_by)" \
+  'estado.md semeado com os campos da secao 3.3'
+if [[ $(python3 "$LER_FM_TESTE" "$_hest" updated_at) =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]+[-+][0-9:]+$ ]]; then
+  printf '  ok    updated_at em ISO-8601 com offset\n'
+else
+  FALHAS_TESTE=$((FALHAS_TESTE + 1)); printf '  FALHA updated_at em ISO-8601 com offset\n'
+fi
+assert_igual 'chore(33): abre a lane harness-sinal-de-contexto-cheio' "$(git -C "$_harv" log -1 --format=%s)" \
+  'a semente e commitada na branch da lane'
+assert_igual '' "$(git -C "$_harv" status --porcelain)" 'a arvore da lane fica limpa'
+assert_igual "$_hbase" "$(git -C "$_hm" rev-parse --short main)" 'a main nao anda'
+assert_igual '' "$(git -C "$_hm" status --porcelain)" 'o main tree fica limpo'
+
+# --- +3: orfas em +1 e +2; a linha +3 da tabela e a catraca da formula
+_tm=$(criar_main_lane); registrar_descarte "$(dirname "$_tm")"
+_t1=$(lane_manual "$_tm" infra/antiga-1); printf 'LOTUS_DEV_HTTP_PORT=8081\n' > "$_t1/.env"
+_t2=$(lane_manual "$_tm" refactor/antiga-2); printf 'LOTUS_DEV_HTTP_PORT=8082\n' > "$_t2/.env"
+rodar_lane "$_tm" abrir 33 chore harness-sinal-de-contexto-cheio
+_t3="$(dirname "$_tm")/lotus-33-harness-sinal-de-contexto-cheio"
+assert_contem "$SAIDA_LANE" 'offset +3' 'orfas em +1 e +2: reserva +3'
+assert_igual '8083 / 3310 / 8028 / 9006 / 9007 / 5176' "$(portas_do_env "$_t3/.env")" \
+  'o +3 e 8083 / 3310 / 8028 / 9006 / 9007 / 5176'
+assert_igual "$(linha_da_tabela 3)" "$(portas_do_env "$_t3/.env")" \
+  'as portas do +3 batem com a linha +3 da tabela do .env.example'
+assert_contem "$(python3 "$LER_FM_TESTE" "$_t3/docs/superpowers/blocos/33-harness-sinal-de-contexto-cheio/estado.md" updated_by)" \
+  '/ terminal' 'sem --modelo, updated_by diz terminal'
+
+# --- falha no meio: diz o que ja existe e manda fechar
+_fm=$(criar_main_lane); registrar_descarte "$(dirname "$_fm")"
+_fpnpm=$(criar_falso "$(dirname "$_fm")" pnpm 1)
+FAKE_PNPM=$_fpnpm rodar_lane "$_fm" abrir 33 chore harness-sinal-de-contexto-cheio
+assert_igual 1 "$CODIGO_LANE" 'pnpm falhando: sai 1'
+assert_contem "$SAIDA_LANE" 'LANE PELA METADE' 'diz que ficou pela metade'
+assert_contem "$SAIDA_LANE" "a branch $_ab33" 'nomeia a branch criada'
+assert_contem "$SAIDA_LANE" "a arvore $(dirname "$_fm")/lotus-33-harness-sinal-de-contexto-cheio" 'nomeia a arvore criada'
+assert_contem "$SAIDA_LANE" 'lane.sh fechar 33' 'manda fechar'

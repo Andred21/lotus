@@ -132,3 +132,33 @@ assert_recusa() {
   assert_contem "$SAIDA_LANE" 'PORTAO RECUSOU' "$2: pelo portao"
   assert_contem "$SAIDA_LANE" "$1" "$2: pelo motivo certo"
 }
+
+criar_falso() {
+  # $1 = diretorio, $2 = nome, $3 = codigo de saida (default 0). Ecoa o
+  # caminho do falso, que anota "$PWD|$*" em <caminho>.log a cada chamada.
+  local f="$1/$2"
+  cat > "$f" <<FALSO
+#!/usr/bin/env bash
+printf '%s|%s\n' "\$PWD" "\$*" >> '$f.log'
+exit ${3:-0}
+FALSO
+  chmod +x "$f"
+  : > "$f.log"
+  printf '%s\n' "$f"
+}
+
+portas_do_env() {
+  # $1 = .env. As seis portas no formato da tabela do .env.example.
+  local k
+  local -a v=()
+  for k in HTTP DB MAILPIT MINIO MINIO_CONSOLE VITE; do
+    v+=("$(sed -nE "s/^LOTUS_DEV_${k}_PORT=([0-9]+)\$/\1/p" "$1")")
+  done
+  printf '%s / %s / %s / %s / %s / %s' "${v[@]}"
+}
+
+linha_da_tabela() {
+  # $1 = offset. As seis portas da linha "offset +N" da tabela do
+  # .env.example REAL — e o que amarra a formula do lane.sh a documentacao.
+  sed -nE "s/^#.*offset \\+$1[[:space:]]+([0-9].*[0-9])[[:space:]]*\$/\\1/p" "$REAL_ENV_EXAMPLE"
+}
