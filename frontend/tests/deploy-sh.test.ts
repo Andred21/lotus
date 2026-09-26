@@ -78,6 +78,32 @@ describe('deploy/bin/deploy.sh', () => {
     expect(semComentarios).toContain('LOTUS_ACEITAR_SCHEMA_A_FRENTE')
   })
 
+  it('a recusa imprime, do ledger, o dump que precede cada migration à frente', () => {
+    // Spec §6. Até 2026-09-25 a recusa só dizia "procure em releases.jsonl" — o
+    // plano trocou a chave por uma dica sem declarar o desvio, e catar JSON à mão
+    // no meio de um rollback é o jeito de restaurar o dump errado.
+    expect(semComentarios).toMatch(/^dump_que_introduziu\(\) \{$/m)
+    const recusa = indiceDe('o banco esta A FRENTE')
+    const busca = indiceDe('dump_que_introduziu "$')
+    expect(busca).toBeGreaterThan(recusa)
+    expect(busca).toBeLessThan(indiceDe('|| exit 4'))
+    expect(semComentarios).not.toContain('procure em')
+  })
+
+  it('a busca do dump casa o nome inteiro, só em linha `inicio`, e fica com a última', () => {
+    // Aspas em volta do nome: "x" não casa "x_y". Última, porque release refeita
+    // registra a migration de novo, e o dump mais recente é o que perde menos.
+    const corpo = semComentarios.match(/^dump_que_introduziu\(\) \{\n([\s\S]*?)^\}$/m)?.[1] ?? ''
+    expect(corpo).toContain(`grep -F '"evento":"inicio"' "$LEDGER"`)
+    expect(corpo).toContain('grep -F "\\"$1\\""')
+    expect(corpo).toContain('tail -n 1')
+  })
+
+  it('a busca do dump tolera ausência — senão `set -e` mata antes da recusa', () => {
+    const corpo = semComentarios.match(/^dump_que_introduziu\(\) \{\n([\s\S]*?)^\}$/m)?.[1] ?? ''
+    expect(corpo).toMatch(/\|\|\s*true\s*$/m)
+  })
+
   it('abre o ledger antes do migrate e o fecha no fim', () => {
     expect(semComentarios).toContain('"evento":"inicio"')
     expect(semComentarios).toContain('"evento":"fim"')

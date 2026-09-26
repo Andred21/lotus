@@ -58,6 +58,19 @@ json_lista() {
   printf '[%s]' "${saida#,}"
 }
 
+# A chave do dump que precede a migration $1: o `dump` da ULTIMA linha `inicio`
+# cuja lista a contem. Ultima, e nao primeira: release refeita (deploy morto
+# depois do dump, ou volta e nova promocao) registra a migration de novo, e o
+# dump mais recente e' o banco mais novo ANTES dela — o que perde menos dado.
+# O nome vai entre aspas: json_lista so admite [A-Za-z0-9_]+, entao "x" casa o
+# elemento inteiro e nunca o prefixo de "x_y". Sem linha, ou com "dump": null,
+# a saida e' vazia. O `|| true` nao e' enfeite: com pipefail, grep sem match
+# mataria o script aqui, antes de a recusa dizer o que fazer.
+dump_que_introduziu() {
+  grep -F '"evento":"inicio"' "$LEDGER" | grep -F "\"$1\"" | tail -n 1 \
+    | sed -n 's/.*"dump":"\([^"]*\)".*/\1/p' || true
+}
+
 # Tentativa interrompida deixa `inicio` sem `fim`. Isso nao e' buraco: e' a
 # informacao que se quer quando o deploy morreu no meio, e e' ela que aponta o
 # dump. O trap fecha o que der para fechar.
@@ -122,8 +135,13 @@ PENDENTES=$(comm -13 <(printf '%s\n' "$APLICADAS") <(printf '%s\n' "$CONHECIDAS"
 
 if [ -n "$A_FRENTE" ]; then
   echo "erro: o banco esta A FRENTE de $SHA — a imagem alvo nao conhece:" >&2
-  printf '  %s\n' $A_FRENTE >&2
-  echo "restaure o dump da release que as introduziu (procure em $BASE/releases.jsonl) e so entao promova." >&2
+  # A lista sai do `comm`, ja ordenada — e nome de migration comeca pela data,
+  # entao a primeira linha e' a mais antiga, e o dump dela e' o que desfaz todas.
+  for M in $A_FRENTE; do
+    CHAVE=$(dump_que_introduziu "$M")
+    echo "  $M  (dump anterior: ${CHAVE:-nenhum registrado no ledger})" >&2
+  done
+  echo "restaure o dump da PRIMEIRA linha — a migration mais antiga — e so entao promova." >&2
   # O escape existe para o operador com o dump na mao. O WORKFLOW nunca define
   # esta variavel (catraca em workflow-deploy.test.ts), entao o caminho
   # automatizado nao tem como contornar o gate.

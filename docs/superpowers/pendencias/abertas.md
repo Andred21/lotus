@@ -1073,7 +1073,9 @@ captura e em que chave ela acumula, o que é decisão do João e alimenta direta
 **Bloco:** cicd-promocao-deploy-e-rollback (item 12) · **Gatilho:** o primeiro release corporativo
 que trouxer migration nova. Nele, conferir: a linha `inicio` do `releases.jsonl` com `migrations`
 não vazio e `dump` com a chave `s3://…`, esse objeto existindo no S3, e o `verificar-backup.sh`
-aprovando. Revisar em **2026-10-31**.
+aprovando. Se houver rollback recusado depois dele, a recusa tem de imprimir essa mesma chave ao
+lado da migration (o ramo de `dump_que_introduziu` que acha a linha só rodou em sonda local).
+Revisar em **2026-10-31**.
 
 O DoD 6 da spec pede o dump de um deploy com migration pendente. Em 2026-09-25 não havia SHA com
 migration além das 30 que a produção já tem, em nenhum dos dois repositórios, e o João decidiu não
