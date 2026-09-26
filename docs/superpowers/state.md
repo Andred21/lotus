@@ -11,7 +11,7 @@ resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
 active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
 context_packet: null
-blocker: "review do item 31 (2026-09-26) devolveu 2 achados aguardando o João — Q-1 🟡 catraca da razão orçamento/timeout ignora o ORCAMENTO_LEITURA novo (sonda 90→600, soma 1440s > 1200s do job, suíte verde); Q-2 🟢 filtro de chaves do .env imprime o prefixo de linha de continuação de valor multilinha. Risco baixo (CI/CD fora dos domínios §5, executor claude); Codex MCP fora do ar, sem revisão independente"
+blocker: "review do item 31 (2026-09-26) devolveu 2 achados aguardando o João — Q-1 🟡 catraca da razão orçamento/timeout ignora o ORCAMENTO_LEITURA novo (sonda 90→600, soma 1440s > 1200s do job, suíte verde); Q-2 🟢 filtro de chaves do .env imprime o prefixo de linha de continuação de valor multilinha. Risco baixo (CI/CD fora dos domínios §5, executor claude); DESVIO CONSCIENTE (decisão do João, 2026-09-26): segunda revisão pelo plugin do Codex não executada — task-muisq6pj-kl233s abortou antes de ler o intervalo e5ac01a9..53438cc2 (bubblewrap: app-server socket directory has an unsupported host mount; o Docker Desktop monta o /tmp inteiro em /mnt/wsl/docker-desktop-bind-mounts e o socket do broker nasce em /tmp); remover o mount exige reiniciar o Docker Desktop, o que derruba os containers da lane-c, e o contorno por TMPDIR foi barrado pelo auto mode; o review segue só com a lente Claude"
 lanes:
   lane-a:
     active_feature: null
@@ -38,7 +38,7 @@ lanes:
     active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
     active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
     context_packet: null
-    blocker: "review do item 31 (2026-09-26) devolveu 2 achados aguardando o João — Q-1 🟡 catraca da razão orçamento/timeout ignora o ORCAMENTO_LEITURA novo (sonda 90→600, soma 1440s > 1200s do job, suíte verde); Q-2 🟢 filtro de chaves do .env imprime o prefixo de linha de continuação de valor multilinha. Risco baixo (CI/CD fora dos domínios §5, executor claude); Codex MCP fora do ar, sem revisão independente"
+    blocker: "review do item 31 (2026-09-26) devolveu 2 achados aguardando o João — Q-1 🟡 catraca da razão orçamento/timeout ignora o ORCAMENTO_LEITURA novo (sonda 90→600, soma 1440s > 1200s do job, suíte verde); Q-2 🟢 filtro de chaves do .env imprime o prefixo de linha de continuação de valor multilinha. Risco baixo (CI/CD fora dos domínios §5, executor claude); DESVIO CONSCIENTE (decisão do João, 2026-09-26): segunda revisão pelo plugin do Codex não executada — task-muisq6pj-kl233s abortou antes de ler o intervalo e5ac01a9..53438cc2 (bubblewrap: app-server socket directory has an unsupported host mount; o Docker Desktop monta o /tmp inteiro em /mnt/wsl/docker-desktop-bind-mounts e o socket do broker nasce em /tmp); remover o mount exige reiniciar o Docker Desktop, o que derruba os containers da lane-c, e o contorno por TMPDIR foi barrado pelo auto mode; o review segue só com a lente Claude"
     resume_state: reviewing
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
