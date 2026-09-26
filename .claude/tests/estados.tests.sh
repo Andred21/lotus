@@ -61,3 +61,37 @@ co_estado blocked resolve_blocker 'resume_state: executing' 'efeito_externo: nao
 assert_contem "$(co)" 'active_plan' 'blocked vindo de executing: a regua e o resume_state'
 rm -f "$_coe"
 assert_contem "$(co)" 'sem estado.md' 'estado.md ausente'
+
+# --- catraca: a tabela "Estados validos" do state.md espelha o mapa, nos
+# dois sentidos (licao 19)
+_ctr="$DIR_TESTES/../../docs/superpowers/state.md"
+
+tabela_do_contrato() {
+  awk '/^## Estados válidos/ {dentro=1; next} /^## / {dentro=0} dentro && /^\| `/' "$1" \
+    | awk -F'|' '{e=$2; t=$3; gsub(/[` ]/, "", e); gsub(/[` ]/, "", t); print e, t}' \
+    | LC_ALL=C sort
+}
+mapa_do_codigo() {
+  local e
+  for e in "${!TOKEN_DO_ESTADO[@]}"; do
+    printf '%s %s\n' "$e" "${TOKEN_DO_ESTADO[$e]}"
+  done | LC_ALL=C sort
+}
+
+assert_igual "$(mapa_do_codigo)" "$(tabela_do_contrato "$_ctr")" 'a tabela do state.md espelha estados.sh'
+assert_igual 12 "$(tabela_do_contrato "$_ctr" | wc -l)" 'a tabela do state.md tem os doze estados'
+
+# O comparador tem de conseguir reprovar (licao 10). Copia estragada nao faz
+# o teste passar: se o sed nao mudar nada, a comparacao fica igual e reprova.
+_ctrs=$(mktemp -d "${TMPDIR:-/tmp}/lotus-contrato.XXXXXX"); registrar_descarte "$_ctrs"
+sed '/^| `closed`/d' "$_ctr" > "$_ctrs/falta.md"
+sed 's/^| `closed` | `none`/| `closed` | `nada`/' "$_ctr" > "$_ctrs/token.md"
+sed '/^| `blocked`/a | `zumbi` | `x` | nada |' "$_ctr" > "$_ctrs/sobra.md"
+for _ctrc in falta token sobra; do
+  if [[ "$(mapa_do_codigo)" != "$(tabela_do_contrato "$_ctrs/$_ctrc.md")" ]]; then
+    printf '  ok    a catraca reprova a tabela com estado %s\n' "$_ctrc"
+  else
+    FALHAS_TESTE=$((FALHAS_TESTE + 1))
+    printf '  FALHA a catraca nao viu a tabela com estado %s\n' "$_ctrc"
+  fi
+done

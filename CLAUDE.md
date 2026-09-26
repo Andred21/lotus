@@ -27,16 +27,23 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 
 **Pós `/clear`, reconstrua contexto SELETIVAMENTE — não carregue tudo indiscriminadamente:**
 
-- **SEMPRE, PRIMEIRO:** `docs/superpowers/state.md` — fonte única da etapa atual, do trabalho
-  ativo e da próxima ação permitida. Não deduza fase por commits, existência de arquivos, ordem do
-  backlog ou texto do `progress.md`.
+- **SEMPRE, PRIMEIRO:** a saída do `SessionStart` — quais lanes existem, em que estado e qual é a
+  desta sessão (marcada com `*`); a qualquer momento, `bash .claude/scripts/lane.sh descobrir` dá o
+  mesmo inventário. **Depois, o `estado.md` da lane**, em `docs/superpowers/blocos/<NN>-<slug>/` —
+  fonte única da etapa do bloco e da próxima ação permitida. O contrato dos estados, dos campos e
+  das invariantes é `docs/superpowers/state.md`. Não deduza fase por commits, existência de
+  arquivos, ordem do backlog ou texto do `progress.md`.
 - **DEPOIS:** `docs/superpowers/historico/progress.md` — histórico curto e resultado das entregas recentes.
   Ele não controla o workflow.
-- **EM SEGUIDA, PELOS PONTEIROS DO ESTADO:** leia `context_packet` (quando não for `null`),
+- **EM SEGUIDA, PELOS PONTEIROS DO `estado.md`:** leia `context_packet` (quando não for `null`),
   `active_spec` e `active_plan` (quando não forem `null`). O packet vem antes de qualquer consulta
   a Drive, Notion ou Figma e não substitui spec, plano, rules, ADRs ou código.
-- **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada apenas em
-  `idle`, planejamento, fechamento ou por solicitação explícita do João.
+- **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada no main tree:
+  para abrir lane, no planejamento, no fechamento ou por solicitação explícita do João.
+
+> **Transição até o item 31 mesclar:** os commands e skills ainda dizem `state.md`, `lanes:` e
+> `focused_lane`. Leia "o `estado.md` do bloco" onde eles dizem `state.md` (`state.md`,
+> seção Transição).
 - **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
 - **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task a task. Serve
   somente para retomar detalhe fino da execução; nunca decide a fase.
@@ -51,20 +58,23 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 | `docs/superpowers/context-packets/` | antes de consultar Drive/Notion/Figma para o bloco ativo        |
 
 > **Layout de `docs/superpowers/`:** na raiz vivem só os dois arquivos que decidem — `state.md`
-> (etapa atual) e `backlog.md` (fila). O resto mora em pasta: `pendencias/` (`README.md` é o índice,
-> `abertas.md` a ficha de cada uma, `encerradas.md` o rastro de 1 sprint), `historico/`
-> (`progress.md`, `progress-archive.md` e `state-archive.md` — a narrativa dos blocos já fechados,
-> que sai do `state.md` no fechamento), `plans/`, `specs/`, `context-packets/` e `audits/`.
-> **O `state.md` guarda o bloco ativo e ponteiro de uma linha para os cinco últimos fechados.**
+> (o contrato dos estados) e `backlog.md` (a fila, escrita só pelo main tree). Cada bloco aberto
+> pelo `lane.sh` tem a pasta `blocos/<NN>-<slug>/`, com o `estado.md` e os artefatos dele. O resto
+> mora em pasta: `pendencias/` (`README.md` é o índice, `abertas.md` a ficha de cada uma,
+> `encerradas.md` o rastro de 1 sprint), `historico/` (`progress.md`, `progress-archive.md` e
+> `state-archive.md` — a narrativa dos blocos do fluxo antigo, congelada na virada do item 30),
+> `plans/`, `specs/`, `context-packets/` e `audits/` (legado: bloco novo escreve na própria pasta).
+> **Nenhum arquivo guarda o estado de todas as lanes:** o inventário sai do `git worktree list`.
 > Ler narrativa de bloco encerrado é escolha explícita, não custo fixo de toda sessão.
 
 > Planejamento canônico: Google Drive (`Viagem Chile/Projetos/Lotus.cl/V2`).
 > Tasks: Notion (`Lotus/Lotus-Desenvolvimento/Tasks-Lotus Fase 2`).
 > Os `/docs` são snapshots datados;
 > Se divergirem do Drive, **o Drive vence.**
-> **Conflito de estado:** se `state.md`, packet, spec, plano, Git ou `progress.md` divergirem sobre
-> a etapa atual, PARE. Não escolha por heurística. Mostre a divergência e corrija o estado antes de
-> continuar.
+> **Conflito de estado:** se o `estado.md` da lane, packet, spec, plano, Git ou `progress.md`
+> divergirem sobre a etapa atual, PARE. Não escolha por heurística. Mostre a divergência e corrija o
+> estado antes de continuar. A incoerência mecânica o `SessionStart` já acusa, como
+> `ESTADO INCOERENTE`.
 
 ## 4. Fluxo de trabalho (superpowers)
 
@@ -92,7 +102,7 @@ Planos/specs ativos em `docs/superpowers/`; concluídos em `plans/archive/` e `s
 Histórico curto: `docs/superpowers/historico/progress.md` (§3).
 
 Delegação ao Codex (Context Packet, execução delegada, revisão independente) é roteada pelos
-próprios comandos conforme `state.md`; os contratos vivem em `.agents/skills/`.
+próprios comandos conforme o `estado.md` do bloco; os contratos vivem em `.agents/skills/`.
 
 **Planejamento just-in-time:** escreva o plano/spec detalhado de um bloco só imediatamente antes
 de executá-lo. O roadmap adiante vive como títulos em `docs/superpowers/backlog.md`, não como planos
@@ -161,7 +171,7 @@ Gere somente as páginas necessárias e sempre em `/tmp`, sem materializar deriv
 documento fonte. Claude lê os PNGs gerados com `Read`; Codex os abre com `view_image`.
 
 Backend via nginx: http://localhost:8080 · Frontend: http://localhost:5173 — **defaults do offset
-zero**. Cada árvore de trabalho escolhe o seu offset no `.env` da raiz (molde em `.env.example`),
+zero**. Cada árvore de trabalho tem o seu offset no `.env` da raiz (molde em `.env.example`; o `lane.sh abrir` reserva e escreve o de cada lane),
 porque o Compose isola projeto e volume por diretório mas não isola porta host (ADR-13, emenda de
 2026-08-24). Compose: `app` (PHP-FPM Alpine), `nginx`, `mysql` (host :3307 no offset zero), `gotenberg` (PDF),
 `minio` (S3 dev) e `createbuckets` (job de bootstrap do bucket do MinIO; sobe, cria e sai).
