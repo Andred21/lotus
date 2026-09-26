@@ -194,9 +194,11 @@ falta no `.env`, reprovam o botão antes do deploy, uma linha por item. Script o
 no host não reprovam.
 
 Duas consequências. **Todo merge que mudar `deploy/bin/*.sh` trava o botão até a reinstalação** —
-os scripts vêm sempre de uma árvore na `main` atual (`git diff --quiet origin/main -- deploy/bin`
-antes do `scp`). E o script de conferência **não vai para o host**: ele roda no runner a partir do
-checkout da `main`, então não entra no `scp` acima.
+os scripts vêm sempre de uma árvore igual à `main` do corporativo, que é a que o botão lê
+(`git fetch upstream && git diff --quiet upstream/main -- deploy/bin` antes do `scp`; a
+`origin/main` do pessoal pode estar à frente do espelho, e o botão recusaria o que ela tem a
+mais). E o script de conferência **não vai para o host**: ele roda no runner a partir do checkout
+da `main`, então não entra no `scp` acima.
 
 `.env`: copie `deploy/aws/env.prod.example` para `/opt/lotus/.env`, preencha os `<...>` e
 proteja (`sudo chmod 600 /opt/lotus/.env`, dono root). **Sem o registro A ainda**, os quatro
