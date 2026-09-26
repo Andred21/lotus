@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, identifierClass } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, identifierClass, reducedFloorTablePt } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime, type ArchivableRow } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
@@ -51,13 +51,9 @@ export function RedatoresTable({
   return (
     <SearchableTableFrame
       table={table}
-      // O piso default do AppDataTable (`min-w-[48rem]` = 768px) é maior que
-      // os 718px de moldura em 1024x768: o piso vence, força rolagem, e a
-      // coluna de ações presa (`right: 0`) passa a cobrir "Último acceso" com
-      // 50px de sobreposição — a tabela rolaria sem precisar (UI-03,
-      // `2026-09-04-lotus-ui-review-personas.md`). 42rem (672px) cabe nos
-      // 718px com folga e ainda dá espaço de sobra às 5 colunas de dado.
-      pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}
+      // UI-03 de `2026-09-04-lotus-ui-review-personas.md`: o piso default
+      // rolava em 1024x768 e a coluna presa cobria "Último acceso".
+      pt={reducedFloorTablePt}
       searchPlaceholder={t('redator.searchPlaceholder')}
       emptyState={
         <AppEmptyState

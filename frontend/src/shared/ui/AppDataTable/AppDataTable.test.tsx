@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
 import { AppColumn, AppDataTable } from './AppDataTable'
-import { stickyActionsColumn } from './style'
+import { appDataTablePt, reducedFloorTablePt, stickyActionsColumn } from './style'
 
 const ISO = '2026-08-19T13:00:00Z'
 const LINHAS = [{ id: 1, archived_at: ISO }]
@@ -182,9 +182,9 @@ describe('detalhe do servidor no estado de erro (P-70)', () => {
 
 /**
  * Regressão do passe de correção do UI-02 (Administración) e do UI-03 de
- * Pessoas (RedatoresTable, d07aa877): três tabelas passaram a escrever
- * `pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}` para caber em
- * 1024x768 sem rolar. O `widthPt` deste wrapper zera `table.className` sem
+ * Pessoas (RedatoresTable, d07aa877): três tabelas passaram a reduzir o piso
+ * para `min-w-[42rem]` (`reducedFloorTablePt`) para caber em 1024x768 sem
+ * rolar. O `widthPt` deste wrapper zera `table.className` sem
  * linha (erro ou vazio) para não empurrar `AppErrorState`/`AppEmptyState` para
  * fora da faixa visível em 390x844 (docblock de `hasRows` acima) — mas a
  * fusão antiga deixava o `pt` do CHAMADOR vencer por último, e o `min-w`
@@ -192,7 +192,7 @@ describe('detalhe do servidor no estado de erro (P-70)', () => {
  * é o estado que o guard existe para proteger.
  */
 describe('AppDataTable — largura mínima cede ao guard de "sem linha" mesmo com pt do chamador', () => {
-  const CALLER_PT = { table: { className: 'min-w-[42rem] table-fixed' } }
+  const CALLER_PT = reducedFloorTablePt
 
   it('vazio: o pt do chamador NÃO sobrevive — a tabela some (thead hidden, sem min-w)', () => {
     render(
@@ -227,5 +227,28 @@ describe('AppDataTable — largura mínima cede ao guard de "sem linha" mesmo co
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('min-w-[42rem]')
     expect(tabela.className).not.toContain('min-w-[48rem]')
+  })
+})
+
+/**
+ * Q-5 do review de 2026-09-26: as três tabelas do piso reduzido escreviam a
+ * string `'min-w-[42rem] table-fixed'` cada uma. O `mergePt` SUBSTITUI a folha
+ * `table.className`, então cada cópia recravava também o `table-fixed`, que é
+ * decisão do wrapper — mudar o layout da tabela aqui deixaria as três para trás
+ * sem nenhum teste reprovar.
+ */
+describe('reducedFloorTablePt — o piso reduzido troca só a largura mínima', () => {
+  const semPiso = (classes: string) =>
+    classes.split(' ').filter((classe) => !classe.startsWith('min-w-')).join(' ')
+  const classeDaTabela = (pt: typeof appDataTablePt) =>
+    (pt.table as { className: string }).className
+
+  it('fora o min-w, a classe da tabela é a mesma do default', () => {
+    expect(semPiso(classeDaTabela(reducedFloorTablePt))).toBe(semPiso(classeDaTabela(appDataTablePt)))
+  })
+
+  it('o piso é menor que o default — 42rem contra 48rem', () => {
+    expect(classeDaTabela(reducedFloorTablePt)).toContain('min-w-[42rem]')
+    expect(classeDaTabela(appDataTablePt)).toContain('min-w-[48rem]')
   })
 })

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, reducedFloorTablePt } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 import { formatDateTime, roleLabel, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
@@ -40,13 +40,9 @@ export function UsersTable({
   return (
     <SearchableTableFrame
       table={table}
-      // O piso default do AppDataTable (`min-w-[48rem]` = 768px) é maior que
-      // os 718px de moldura em 1024x768: o piso vence, força rolagem, e a
-      // coluna de ações presa (`right: 0`) passa a cobrir "Último acceso" com
-      // ~50px de sobreposição (UI-02, `2026-09-26-lotus-ui-review-administracion.md`).
-      // 42rem (672px) é o mesmo piso já provado em `RedatoresTable` (UI-03 da
-      // run de Pessoas) — cabe nos 718px com folga.
-      pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}
+      // UI-02 de `2026-09-04-lotus-ui-review-administracion.md`: o piso
+      // default rolava em 1024x768 e a coluna presa cobria "Último acceso".
+      pt={reducedFloorTablePt}
       searchPlaceholder={t('admin.searchPlaceholder')}
       emptyState={
         <AppEmptyState

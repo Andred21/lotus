@@ -85,10 +85,9 @@ interface SearchableTableFrameBaseProps<T> {
   onRetry?: () => void | Promise<unknown>
   /** Repassa ao `AppDataTable` por baixo — mesmo `mergePt` dele, então uma
    * folha como `table.className` SUBSTITUI a do wrapper (nunca concatena).
-   * Existe para a tabela com coluna de ações larga (3+ ícones) poder reduzir
-   * o piso `min-w-[48rem]` default, que força rolagem (e a coluna presa
-   * cobrindo dado) em viewport onde caberia sem rolar (UI-03,
-   * `RedatoresTable`). */
+   * Existe para a tabela poder reduzir o piso `min-w-[48rem]` default, que
+   * força rolagem (e a coluna presa cobrindo dado) em viewport onde caberia
+   * sem rolar — o valor é `reducedFloorTablePt`, nunca a string copiada. */
   pt?: DataTablePassThroughOptions
   /** As `<AppColumn/>`. */
   children: ReactNode
