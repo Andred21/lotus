@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (33)
+## Abertas (34)
 
 ### Agrupadas em bloco de execução
 
@@ -29,6 +29,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-85 | No sqlite da suíte o `whereBetween` de `start_date` do `AnalyticsQuery` (série e dois rankings) deixa de fora o último dia do período — a produção (MySQL) acerta, a suíte não enxerga a borda; `DataSql::literal` já resolve isso em outro lugar | — | bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de período do dashboard; revisar 2026-10-31 |
+| P-88 | O `deploy.sh` aceita promover imagem de qualquer dono do GHCR: `LOTUS_RELEASE_OWNER=andred21` por SSH puxa o trio público do repositório pessoal, e a regra "produção é sempre `gatika-cl`" vale por padrão, não por mecanismo | — | próximo commit que mudar `deploy/bin/deploy.sh` (junto com a P-87), ou o João promover; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | — | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
@@ -114,6 +115,11 @@ cópia o que o botão não promove), e emendou a **P-62**: o botão mora no corp
 que é a mesma raiz do plano free. O próprio review do item disparou o gatilho da **P-87** ao mudar
 `deploy.sh` e `backup-db.sh`, e o gatilho não foi pago: o host roda a versão da `main` de hoje, e as
 correções só chegam lá pela integração seguida da reinstalação do runbook §7, que é do João.
+
+**A P-88 nasceu depois do fechamento do item 12, no mesmo dia, por pedido do João.** A regra
+"produção roda sempre imagem de `gatika-cl`, nunca do repositório pessoal" foi conferida em
+produção e estava certa, mas o `deploy.sh` aceita trocar o dono por variável de ambiente. O João
+escolheu registrar em vez de corrigir antes do merge.
 
 **A P-82 saiu no fechamento do item 29 (2026-09-25)**, o primeiro posterior ao do
 `harness-hooks-de-guarda` (item 28), que a encerrou em 2026-09-20 pelos dois lados do gatilho — a
