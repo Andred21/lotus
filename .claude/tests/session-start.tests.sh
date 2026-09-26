@@ -1,3 +1,4 @@
+[[ -n ${DIR_TESTES:-} ]] || { printf 'rode pelo run-all.sh: %s nao roda avulso\n' "${BASH_SOURCE[0]}" >&2; exit 1; }
 INICIO="$DIR_HOOKS/session-start.sh"
 # shellcheck source=/dev/null
 source "$DIR_TESTES/_lane.sh"

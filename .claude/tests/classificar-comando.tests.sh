@@ -1,3 +1,4 @@
+[[ -n ${DIR_TESTES:-} ]] || { printf 'rode pelo run-all.sh: %s nao roda avulso\n' "${BASH_SOURCE[0]}" >&2; exit 1; }
 # Unitario puro: o classificador nao toca git nem stdin.
 CLASSIF="$DIR_HOOKS/lib/classificar-comando.py"
 

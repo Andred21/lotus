@@ -1,3 +1,4 @@
+[[ -n ${DIR_TESTES:-} ]] || { printf 'rode pelo run-all.sh: %s nao roda avulso\n' "${BASH_SOURCE[0]}" >&2; exit 1; }
 LER_FM="$DIR_HOOKS/lib/ler-frontmatter.py"
 _lfus=$'\x1f'
 
