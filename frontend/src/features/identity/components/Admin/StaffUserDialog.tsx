@@ -11,7 +11,7 @@ import {
   useFormField,
 } from "@shared/ui";
 import type { UserData } from "@shared/types/generated";
-import type { DialogMode } from "@shared/lib";
+import { roleLabel, type DialogMode } from "@shared/lib";
 import { useStaffUserForm } from "../../hooks/useStaffUserForm";
 import { useStaffRoleOptions } from "../../hooks/useStaffRoleOptions";
 import { StaffIdentityFields } from "./StaffIdentifyFields";
@@ -100,7 +100,7 @@ export function StaffUserDialog({
           <campo.Field
             name="role"
             label={t("admin.role")}
-            value={roleOptions.find((o) => o.value === form.role)?.label ?? form.role}
+            value={roleLabel(form.role, t)}
           >
             <AppDropdown
               options={roleOptions}

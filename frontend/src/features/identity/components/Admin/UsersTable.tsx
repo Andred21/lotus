@@ -4,7 +4,7 @@ import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
 import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
-import { formatDateTime, type ArchivableRow } from '@shared/lib'
+import { formatDateTime, roleLabel, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
 import { userWidths } from './userColumns'
 
@@ -65,7 +65,7 @@ export function UsersTable({
         )}
         style={largura.name}
       />
-      <AppColumn header={t('admin.role')} body={(u: UserData) => u.role} style={largura.role} />
+      <AppColumn header={t('admin.role')} body={(u: UserData) => roleLabel(u.role, t)} style={largura.role} />
       <AppColumn
         header={t('admin.state')}
         body={(u: UserData) => (

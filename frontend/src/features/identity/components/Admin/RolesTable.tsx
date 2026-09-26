@@ -4,6 +4,7 @@ import {
   AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, stickyActionsColumn,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
+import { roleLabel } from '@shared/lib'
 import { roleWidths } from './roleColumns'
 
 export function RolesTable({
@@ -39,7 +40,13 @@ export function RolesTable({
         emptyMessage={empty}
         footerCount={t('role.count', { count: roles.length })}
       >
-        <AppColumn field="name" header={t('role.name')} sortable style={largura.name} />
+        <AppColumn
+          field="name"
+          header={t('role.name')}
+          sortable
+          body={(r: RoleData) => roleLabel(r.name, t)}
+          style={largura.name}
+        />
         <AppColumn
           header={t('role.kind')}
           style={largura.kind}
