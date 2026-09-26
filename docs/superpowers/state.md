@@ -4,14 +4,14 @@ mode: multi-lane
 focused_lane: lane-b
 active_feature: cicd-host-alinhado-ao-sha
 active_work_item: cicd-host-alinhado-ao-sha
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
 active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
 context_packet: null
-blocker: "review do item 31 (2026-09-26), lente Claude + Codex (plugin), 6 achados aguardando o João — Q-1 🟡 catraca da razão orçamento/timeout ignora ORCAMENTO_LEITURA (sonda 90→600 verde); Q-2 🟢 filtro de chaves do .env imprime prefixo de continuação de valor multilinha; Q-3 🟡 [Codex, confirmado por sonda] conferir-alinhamento.test não reprova sem a conferência do prod-tls nem com o glob de bin/ trocado por lista fixa; Q-4 🟡 [Codex, confirmado e agravado] snippet do runbook §8.1 com ORIGEM vazio faz git show :path devolver a árvore atual, sem erro; Q-5 🟢 [Codex] conferência ignora o bit executável de bin/*.sh; Q-6 🟢 [Codex] runbook §7 diz que todo merge em deploy/bin trava o botão, mas script removido da main não trava. DESVIO CONSCIENTE PARCIAL: o Codex rodou com TMPDIR fora do /tmp (decisão do João), mas o sandbox local dele ainda recusou o bind-mount do Docker Desktop; revisou pelo GitHub a branch publicada af1526eb, cujo código é idêntico ao de 53438cc2 (só deploy/aws/README.md difere, 8 linhas, e os achados dele foram conferidos no local). Sem divergência entre os revisores"
+blocker: null
 lanes:
   lane-a:
     active_feature: null
@@ -30,16 +30,16 @@ lanes:
   lane-b:
     active_feature: cicd-host-alinhado-ao-sha
     active_work_item: cicd-host-alinhado-ao-sha   # item 31, promovido pelo Joao em 2026-09-26 (P-88 + P-87, P-86 condicional); Contexto: nao
-    workflow_state: blocked
-    next_owner: joao
-    next_action: approve_review_findings
+    workflow_state: ready_for_closure
+    next_owner: claude
+    next_action: close_active_work_item
     tree: ../lotus-infra
     branch: cicd/host-alinhado-ao-sha   # aberta de origin/main@e5ac01a9 em 2026-09-26; ate af1526eb mesclada na PR #112 (fe6077df) e espelhada (3abd8136, em producao); os commits de doc seguintes vao com o fechamento. A anterior (cicd/promocao-deploy-e-rollback, item 12) mesclou inteira pelas PRs #108 a #111 (e5ac01a9)
     active_spec: docs/superpowers/specs/2026-09-26-cicd-host-alinhado-ao-sha-design.md
     active_plan: docs/superpowers/plans/2026-09-26-cicd-host-alinhado-ao-sha.md
     context_packet: null
-    blocker: "review do item 31 (2026-09-26), lente Claude + Codex (plugin), 6 achados aguardando o João — Q-1 🟡 catraca da razão orçamento/timeout ignora ORCAMENTO_LEITURA (sonda 90→600 verde); Q-2 🟢 filtro de chaves do .env imprime prefixo de continuação de valor multilinha; Q-3 🟡 [Codex, confirmado por sonda] conferir-alinhamento.test não reprova sem a conferência do prod-tls nem com o glob de bin/ trocado por lista fixa; Q-4 🟡 [Codex, confirmado e agravado] snippet do runbook §8.1 com ORIGEM vazio faz git show :path devolver a árvore atual, sem erro; Q-5 🟢 [Codex] conferência ignora o bit executável de bin/*.sh; Q-6 🟢 [Codex] runbook §7 diz que todo merge em deploy/bin trava o botão, mas script removido da main não trava. DESVIO CONSCIENTE PARCIAL: o Codex rodou com TMPDIR fora do /tmp (decisão do João), mas o sandbox local dele ainda recusou o bind-mount do Docker Desktop; revisou pelo GitHub a branch publicada af1526eb, cujo código é idêntico ao de 53438cc2 (só deploy/aws/README.md difere, 8 linhas, e os achados dele foram conferidos no local). Sem divergência entre os revisores"
-    resume_state: reviewing
+    blocker: null
+    resume_state: null
     arquivos_do_descarte:
       - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
       - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
@@ -165,7 +165,7 @@ disjuntas, colisão mínima de arquivos:
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `blocked` (achados do review; execução concluída em 2026-09-26: Tasks 1–9, DoD provadas ao vivo — runs 36264643022 vermelho e 36265032582 verde; até `af1526eb` mesclada na PR #112, `fe6077df`) |
+| `lane-b` | **31** `cicd-host-alinhado-ao-sha` (promovido em 2026-09-26; o item 12 anterior mesclou até a PR #111, `e5ac01a9`) | Infra/CI-CD | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`) | `ready_for_closure` (review com lente Claude + Codex: seis achados, Q-1/Q-3/Q-4/Q-6 corrigidos em `ea53e790`, Q-2/Q-5 declarados no runbook; desvio parcial — o sandbox local do Codex recusou o bind-mount do Docker Desktop e ele revisou `af1526eb` pelo GitHub; execução concluída em 2026-09-26: Tasks 1–9, DoD provadas ao vivo — runs 36264643022 vermelho e 36265032582 verde; até `af1526eb` mesclada na PR #112, `fe6077df`) |
 | `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
 
 
