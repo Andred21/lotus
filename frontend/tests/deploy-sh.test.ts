@@ -26,6 +26,20 @@ describe('deploy/bin/deploy.sh', () => {
     expect(statSync(CAMINHO).mode & 0o111).not.toBe(0)
   })
 
+  it('o dono das imagens é gatika-cl fixo, sem variável que o troque (P-88)', () => {
+    // Até o item 31 era `${LOTUS_RELEASE_OWNER:-gatika-cl}`: por SSH, a variável
+    // promovia o trio do repositório PESSOAL, que é público. A regra "produção
+    // roda sempre ghcr.io/gatika-cl/" valia por padrão, não por mecanismo.
+    expect(semComentarios.match(/^\s*DONO=.*$/gm)).toEqual(['DONO=gatika-cl'])
+    expect(SCRIPT).not.toContain('LOTUS_RELEASE_OWNER')
+    // Toda imagem do código passa pelo mesmo dono — nenhuma com dono próprio.
+    const donos = [...semComentarios.matchAll(/ghcr\.io\/([^/\s"']+)\//g)].map((m) => m[1])
+    expect(donos.length).toBeGreaterThanOrEqual(3)
+    for (const dono of donos) expect(['gatika-cl', '$DONO']).toContain(dono)
+    // E o login usa o mesmo dono das imagens.
+    expect(semComentarios).toMatch(/^docker login ghcr\.io -u "\$DONO" /m)
+  })
+
   it('falha alto em erro, variável indefinida e pipe quebrado', () => {
     expect(semComentarios).toMatch(/^set -euo pipefail$/m)
   })
