@@ -3,12 +3,12 @@ schema_version: 2
 mode: multi-lane
 focused_lane: lane-c
 active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
+active_work_item: frontend-tabelas-reserva-e-rolagem
+workflow_state: planning
+next_owner: claude
+next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/specs/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
 active_plan: null
 context_packet: null
 blocker: null
@@ -46,21 +46,21 @@ lanes:
     last_completed_work_item: cicd-host-alinhado-ao-sha   # item 31, fechado em 2026-09-26; mesclado ate af1526eb (PR #112, fe6077df), o resto nao
   lane-c:
     active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
+    active_work_item: frontend-tabelas-reserva-e-rolagem
+    workflow_state: planning
+    next_owner: claude
+    next_action: continue_active_planning
     tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui-f3   # aberta de origin/main@9c038cca em 2026-09-04 e rebaseada sobre main@5d1250c3 em 2026-09-27; o item 16 fechou nela em 2026-09-27 e ela NAO foi mesclada — integracao e passo proprio, com o Joao
-    active_spec: null
+    branch: refactor/frontend-tabelas-reserva-e-rolagem   # aberta de origin/main@162cbaa7 em 2026-09-27; a anterior (refactor/frontend-revisao-ui-f3, item 16 fatia 3) mesclou na PR #115 (162cbaa7)
+    active_spec: docs/superpowers/specs/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-revisao-ui-por-modulo   # item 16 (fatia 3, a ultima), fechado em 2026-09-27; branch ainda nao mesclada
+    last_completed_work_item: frontend-revisao-ui-por-modulo   # item 16 (fatia 3, a ultima), fechado em 2026-09-27, mesclado pela PR #115 (162cbaa7)
 last_completed_work_item: frontend-revisao-ui-por-modulo
-state_basis_commit: 2ab1204f
-updated_at: 2026-09-27T21:00:00-03:00
+state_basis_commit: 162cbaa7
+updated_at: 2026-09-27T21:15:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -166,7 +166,7 @@ disjuntas, colisão mínima de arquivos:
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
 | `lane-b` | — (item 31 `cicd-host-alinhado-ao-sha` **fechado em 2026-09-26**) | — | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`; até `af1526eb` mesclada na PR #112, `fe6077df`; o resto **não mesclado** — integração é passo próprio, com o João) | `idle` |
-| `lane-c` | — (item 16 `frontend-revisao-ui-por-modulo` **fechado em 2026-09-27**, fatia 3) | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`, rebaseada sobre `main@5d1250c3`; **não mesclada** — integração é passo próprio, com o João) | `idle` |
+| `lane-c` | `frontend-tabelas-reserva-e-rolagem` (item 23, paga a **`D-65`**) | Frontend | `../fix-frontend` | `refactor/frontend-tabelas-reserva-e-rolagem` (de `origin/main@162cbaa7`, com o item 16 mesclado pela PR #115) | `planning` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
