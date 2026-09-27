@@ -44,7 +44,7 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 - **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task a task. Serve
   somente para retomar detalhe fino da execução; nunca decide a fase.
 
-> **Transição até o item 31 mesclar:** os commands e skills ainda dizem `state.md`, `lanes:` e
+> **Transição até o item 35 mesclar:** os commands e skills ainda dizem `state.md`, `lanes:` e
 > `focused_lane`. Leia "o `estado.md` do bloco" onde eles dizem `state.md` (`state.md`,
 > seção Transição).
 

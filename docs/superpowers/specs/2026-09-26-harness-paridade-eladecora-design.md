@@ -1,10 +1,15 @@
 # Harness — paridade com o ElaDecora-Brain (design)
 
-**Data:** 2026-09-26 · **Autor do pedido:** João Victor · **Consumidores:** itens 30, 31 e 32 do
+**Data:** 2026-09-26 · **Autor do pedido:** João Victor · **Consumidores:** itens 30, 35 e 36 do
 `backlog.md` · **Referência:** `Ela-Decora/ElaDecora-Brain@5eb74c0` (`.claude/commands/`,
 `.claude/scripts/`, `.claude/prompts/`, `.claude/tests/`, `docs/state.md`)
 
-> Spec compartilhada. Cada `/planejar-bloco 30|31|32` refina **a sua parte** e escreve o próprio
+> **Renumerada em 2026-09-27.** Os itens do harness depois do 30 nasceram `31`, `32` e `33`, e a
+> `main` publicou antes o `31` a `34` de infra; viraram `35` (commands), `36` (aceitação) e `37`
+> (sinal de contexto cheio). A prova do §4.6 rodou com o número antigo e abriu a lane `33`, como o
+> audit dela registra.
+>
+> Spec compartilhada. Cada `/planejar-bloco 30|35|36` refina **a sua parte** e escreve o próprio
 > plano; nenhum dos três reabre as decisões da §2 sem o João.
 
 ## 1. Objetivo
@@ -32,7 +37,7 @@ onde o estado novo obriga (§4.3 e §4.4).
 | D5 | Branch de lane **`<tipo>/<NN>-<slug>`**, com o número do backlog | `feat/B-NNN-slug`; nome livre casado por campo |
 | D6 | **Transição por espera**: o harness novo só entra na `main` quando as lanes em voo (b e c) tiverem fechado pelo fluxo antigo. Sem modo duplo | modo duplo temporário; migrar tudo no merge |
 | D7 | **Superpowers pelo plugin oficial** ligado no `.claude/settings.json` do projeto; commands chamam `superpowers:<skill>` | atualizar o clone manual em `~/.claude/plugins/superpowers` |
-| D8 | **Recorte em três blocos sequenciais**: 30 estado → 31 commands → 32 aceitação | um bloco só; commands antes do estado |
+| D8 | **Recorte em três blocos sequenciais**: 30 estado → 35 commands → 36 aceitação | um bloco só; commands antes do estado |
 
 Decididas por evidência, sem pergunta:
 
@@ -61,7 +66,7 @@ docs/superpowers/
     context.md              quando a ficha diz Contexto: sim
     revisao.md              ## Em aberto no topo; rodadas acumulam abaixo
     rulings.md              decisões tomadas em nome do João durante a execução
-    aceitacao.md            quando efeito_externo: sim (item 32)
+    aceitacao.md            quando efeito_externo: sim (item 36)
   historico/progress.md     continua: uma linha por bloco fechado
   historico/state-archive.md  congelado; o registro de bloco novo é a pasta dele
   specs/ plans/ context-packets/   legado; bloco novo escreve na própria pasta
@@ -249,9 +254,9 @@ lanes antigas; `abrir 33 chore harness-sinal-de-contexto-cheio` reserva **+3**;
 `docker compose up -d` e `/up` **200 na 8083**; `fechar` recusado por branch não mesclada; merge da
 lane na `main` do clone, simulando a PR; `fechar` limpo; `docker ps -a`, `docker volume ls`,
 `git worktree list` e `git branch` sem sobra. O repositório real fica intocado; a primeira rodada
-no main tree real acontece no DoD do 31, cujo Passo 6 do `/planejar-bloco` chama o `abrir`.
+no main tree real acontece no DoD do 35, cujo Passo 6 do `/planejar-bloco` chama o `abrir`.
 
-## 5. Item 31 — commands de bloco
+## 5. Item 35 — commands de bloco
 
 ### 5.1 Papéis como agentes
 
@@ -357,7 +362,7 @@ sinal do erro, não uma dispensa). Passo 1 de todos: `Skill(caveman, "ultra")`.
 Modos, decididos no Passo 2: **normal** (lane viva, `ready_for_closure`, HEAD não ancestral de
 `origin/main`); **pós-PR** (mesma assinatura, HEAD já ancestral de `origin/main` depois de
 `git fetch` — vence o normal); **conserto** (na `main`, branch da lane sem worktree, estado
-`ready_for_closure` → reanexa a worktree e refaz a verificação); **aceitação** (item 32).
+`ready_for_closure` → reanexa a worktree e refaz a verificação); **aceitação** (item 36).
 
 1. Caveman.
 2. Descobre o modo.
@@ -409,7 +414,7 @@ ou `effort`; `papeis.md` e `.claude/agents/` divergem em qualquer sentido; apare
 `model:` (provado nos dois sentidos); os quatro commands **vistos rodar** de ponta a ponta num bloco
 real pequeno, com a Skill tool de fato invocada em cada passo que a cita.
 
-## 6. Item 32 — aceitação externa
+## 6. Item 36 — aceitação externa
 
 `.claude/scripts/aceitacao.sh <gerar|conferir> <NN>`:
 
@@ -422,7 +427,7 @@ real pequeno, com a Skill tool de fato invocada em cada passo que a cita.
 - **Prova declarativa**, `<alias> <GET|HEAD> <caminho> -> <código>`. O que não casa é recusado e
   nunca executado como shell. O `curl` sai **sem credencial**.
 - **Aliases** em `.claude/aceitacao-aliases.conf`, versionado e sem segredo: `producao` (URL
-  definida no planejamento do 32, a partir do que os itens 10 e 12 provisionaram) e `local`
+  definida no planejamento do 36, a partir do que os itens 10 e 12 provisionaram) e `local`
   (`http://localhost:<8080 + offset>`). O `/up` do Laravel (`bootstrap/app.php`) é a prova barata.
 
 No `/finalizar-bloco`: `efeito_externo` ausente ou `null` para o command — `null` nunca vale
@@ -444,7 +449,7 @@ verdade.
 
 - Os três blocos são planejados e executados pelo **fluxo antigo**, que é o que está na `main`
   enquanto eles não mesclarem.
-- Branches empilhadas numa lane só: 31 sai da ponta do 30, 32 da ponta do 31. As PRs mesclam em
+- Branches empilhadas numa lane só: 35 sai da ponta do 30, 36 da ponta do 35. As PRs mesclam em
   ordem, **só quando as lanes em voo tiverem fechado** (D6). Em 2026-09-26 a lane-b (item 12) já
   mesclou a PR #108; a lane-c (item 16) segue.
 - O fechamento do 30 é o momento em que o `state.md` deixa de guardar lanes. Se houver lane antiga
@@ -452,19 +457,19 @@ verdade.
 
 **A ponte manual** *(decisão do João no planejamento do 30, 2026-09-26)*. Na ponta do 30 o
 `state.md` já é contrato, e os comandos antigos leem `lanes:`, `focused_lane` e os campos
-singulares que ele não tem mais — o fluxo antigo, como está escrito, não roda na árvore do 31. Por
+singulares que ele não tem mais — o fluxo antigo, como está escrito, não roda na árvore do 35. Por
 isso:
 
 - **As três branches** vivem na mesma worktree, `../lotus-harness`, e seguem a D5:
   `chore/30-harness-estado-por-bloco` (renomeada de `docs/harness-paridade-eladecora`, que nunca
-  foi ao remoto), `chore/31-harness-commands-de-bloco` e `chore/32-harness-aceitacao-externa`.
+  foi ao remoto), `chore/35-harness-commands-de-bloco` e `chore/36-harness-aceitacao-externa`.
 - **O 30** roda no fluxo antigo, com a lane-a no `state.md`, até a penúltima task. A **última task
   é a virada**, num commit só: `state.md` vira contrato, `session-start.sh` passa a ler o
   `descobrir`, `ler-estado.py` sai, `CLAUDE.md` §3 muda, e o registro do 30 migra para
   `blocos/30-harness-estado-por-bloco/estado.md` em `ready_for_review`. Não existe janela em que o
   hook novo conviva com o `state.md` velho.
-- **Revisão e fechamento do 30, e o 31 e o 32 inteiros,** seguem os passos dos comandos antigos com
-  o `estado.md` do bloco como fonte de estado, no lugar do `state.md`. O `estado.md` do 31 e do 32
+- **Revisão e fechamento do 30, e o 35 e o 36 inteiros,** seguem os passos dos comandos antigos com
+  o `estado.md` do bloco como fonte de estado, no lugar do `state.md`. O `estado.md` do 35 e do 36
   é semeado à mão, porque o `abrir` exige a `main`. O `/fechar-sprint` do 30 ainda escreve a linha
   do `historico/progress.md` e a narrativa do `historico/state-archive.md`, e grava `closed` no
   `estado.md` dele.
@@ -479,13 +484,13 @@ isso:
 - `sincronizar-lovable` e `lovable.ps1`: específicos do ElaDecora.
 - Troca de modelo em tempo de execução e `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` (anula o frontmatter
   de todo subagente, o oposto do §5.1).
-- O sinal de contexto cheio aos 150k: item 33, esperando decisão.
+- O sinal de contexto cheio aos 150k: item 37, esperando decisão.
 - Espelho corporativo e release.
 
 ## 9. Pontos abertos para cada planejamento
 
 - **30:** ~~a forma exata da liberação de `lane.sh` no `guard-main-shell`; se `ler-frontmatter.py`
-  substitui `ler-estado.py` ou convive até o 31~~ — fechados em 2026-09-26: §4.4 e §4.2.
+  substitui `ler-estado.py` ou convive até o 35~~ — fechados em 2026-09-26: §4.4 e §4.2.
 - **31:** confirmar que a ferramenta nativa de entrar em worktree aceita caminho de árvore irmã
   (`../lotus-<NN>-<slug>`); se não, o Passo 6 opera por caminho explícito, como o ElaDecora faz na
   sessão nascida dentro da worktree. Confirmar a classificação *spike/bounded/architectural* na

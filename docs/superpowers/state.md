@@ -49,7 +49,7 @@ o estado de onde se está saindo, `blocker` com uma linha que descreve o impedim
 `blocker` foi resolvido, copie `resume_state` de volta para `workflow_state`, zere `blocker` e
 `resume_state` e troque o `next_action` pelo token do estado retomado. Nos dois sentidos vale a
 invariante 9. Enquanto o bloco está em `blocked`, as regras de "a partir de" (invariantes 3, 4 e
-12) usam o `resume_state` como régua. O item 32 acrescenta um caminho automático: aceitação externa
+12) usam o `resume_state` como régua. O item 36 acrescenta um caminho automático: aceitação externa
 pendente depois do merge.
 
 ## Campos (`schema_version: 3`)
@@ -66,7 +66,7 @@ pendente depois do merge.
 | `active_spec` | caminho da spec, relativo à raiz da árvore |
 | `active_plan` | caminho do plano; obrigatório a partir de `ready_for_execution` |
 | `active_review` | caminho do `revisao.md`; obrigatório a partir de `ready_for_closure` |
-| `active_acceptance` | caminho do `aceitacao.md` (item 32); `null` quando `efeito_externo` é `nao` |
+| `active_acceptance` | caminho do `aceitacao.md` (item 36); `null` quando `efeito_externo` é `nao` |
 | `context_packet` | caminho do Context Packet, quando o bloco exige contexto externo |
 | `efeito_externo` | `sim` quando o resultado depende de ação fora do repositório, `nao` caso contrário. `null` é a semente do `lane.sh abrir` e **nunca** vale `nao` |
 | `executor` | quem executa o plano, copiado do `## Handoff de execução` dele: `claude` ou `codex` |
@@ -110,7 +110,7 @@ pendente depois do merge.
     entre lanes, e a regra o mantém livre de conflito.
 11. **Bloco com `efeito_externo: sim` não vai a `closed` sem a prova do efeito externo
     registrada.** `closed` significa resultado verificado, não código na `main`. O registro é o
-    `aceitacao.md` que o item 32 introduz; até ele, a prova vai no fechamento.
+    `aceitacao.md` que o item 36 introduz; até ele, a prova vai no fechamento.
 12. **`efeito_externo` é obrigatório a partir de `ready_for_execution`.** Quem grava `sim` ou `nao`
     é o planejamento; o `lane.sh abrir` só semeia `null`. `null` num bloco que já passou dali é
     divergência pela invariante 7, e o `SessionStart` a acusa. Ler `null` como `nao` desligaria a
@@ -125,8 +125,8 @@ linha dele no fechamento.
 
 ## Transição
 
-Até o item 31 mesclar, os commands e skills (`/planejar-bloco`, `/executar-bloco`,
+Até o item 35 mesclar, os commands e skills (`/planejar-bloco`, `/executar-bloco`,
 `revisar-sprint`, `fechar-sprint` e `.agents/skills/`) ainda citam `state.md`, `lanes:`,
 `focused_lane` e os campos singulares do topo. Leia "o `estado.md` do bloco" onde eles dizem
-`state.md`, e "o bloco" onde dizem lane em foco ou `active_work_item`. O `estado.md` do 31 e o do
-32 são semeados à mão, porque o `lane.sh abrir` exige o main tree na `main` (spec 2026-09-26, §7).
+`state.md`, e "o bloco" onde dizem lane em foco ou `active_work_item`. O `estado.md` do 35 e o do
+36 são semeados à mão, porque o `lane.sh abrir` exige o main tree na `main` (spec 2026-09-26, §7).

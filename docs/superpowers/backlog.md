@@ -67,11 +67,13 @@
   harness do `Ela-Decora/ElaDecora-Brain` — **fechado em 2026-09-20**; e o `29` em 2026-09-21,
   aberto pelo João a partir do agrupamento das 33 fichas de `pendencias/abertas.md` por "lado" —
   três chaves de `backend/config/` que nenhum bloco hospedava (`P-79`, `P-75`, `P-59`) — **fechado em
-  2026-09-25**; e o `30`, o `31`, o `32` e o `33` em 2026-09-26, abertos pelo João a partir da
-  comparação do harness do Lotus com o do `Ela-Decora/ElaDecora-Brain@5eb74c0`. **A ficha que uma
+  2026-09-25**; e o `30`, o `35`, o `36` e o `37` em 2026-09-26, abertos pelo João a partir da
+  comparação do harness do Lotus com o do `Ela-Decora/ElaDecora-Brain@5eb74c0`. **Os três últimos
+  nasceram `31`, `32` e `33` na branch do `30` e foram renumerados em 2026-09-27**, porque a `main`
+  publicou antes o `31` a `34` de infra; renumera quem chega depois. **A ficha que uma
   sessão de 2026-09-21 rascunhou como "29 `harness-politica-de-modelo-e-esforco`" nunca foi
-  commitada e colidia com o `29` real**: a parte A dela foi absorvida pelo `31`, e a parte B virou o
-  `33`.
+  commitada e colidia com o `29` real**: a parte A dela foi absorvida pelo `35`, e a parte B virou o
+  `37`.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -250,7 +252,7 @@ automatizada; `session-start.sh` alimentado pelo `lane.sh`; liberação do `lane
 `guard-main-shell.sh`; `state.md` reescrito como contrato; `CLAUDE.md` §3; `.env.example` com a
 linha +3; suíte em `.claude/tests/`.
 
-**Fora:** commands (item 31) e aceitação externa (item 32).
+**Fora:** commands (item 35) e aceitação externa (item 36).
 
 **Integração:** a PR só mescla quando nenhuma lane do fluxo antigo estiver viva (decisão D6 da
 spec).
@@ -261,7 +263,7 @@ volume, worktree ou branch.
 
 ---
 
-## 31. `harness-commands-de-bloco`
+## 35. `harness-commands-de-bloco`
 
 **Prioridade:** P2 · **Frente:** Harness · **Contexto:** não · **Depende:** 30
 **Fonte:** a mesma spec, §5; absorve a parte A do rascunho de política de modelo e esforço de
@@ -280,7 +282,7 @@ e `fechar-sprint`; `model`/`effort` nas demais entradas; caminhos novos nos cont
 agents, hooks, scripts, prompts, tests, `settings.json`) e a régua da allowlist do
 `guard-main-shell`; catraca `commands.tests.sh`.
 
-**Fora:** aceitação externa (item 32); sinal de contexto cheio (item 33).
+**Fora:** aceitação externa (item 36); sinal de contexto cheio (item 37).
 
 **Integração:** branch empilhada na ponta do 30; mescla depois dele. Fecha a **P-84**.
 
@@ -290,9 +292,9 @@ pequeno.
 
 ---
 
-## 32. `harness-aceitacao-externa`
+## 36. `harness-aceitacao-externa`
 
-**Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** 31
+**Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** 35
 **Fonte:** a mesma spec, §6.
 
 **Objetivo:** bloco cujo resultado depende de ação fora do repositório não fecha sem a prova dessa
@@ -304,13 +306,13 @@ ação, e espera por ela em `blocked` sem ocupar lane.
 no `/finalizar-bloco`; tabela `## Aguardando aceitação` neste arquivo; suíte contra servidor HTTP
 local.
 
-**Integração:** branch empilhada na ponta do 31; mescla depois dele.
+**Integração:** branch empilhada na ponta do 35; mescla depois dele.
 
 **DoD:** um bloco com um item automático e um manual percorre `PENDENTE` → `OK` de verdade.
 
 ---
 
-## 33. `harness-sinal-de-contexto-cheio`
+## 37. `harness-sinal-de-contexto-cheio`
 
 **Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** —
 **Fonte:** parte B do rascunho de 2026-09-21, conferida contra a documentação do Claude Code
@@ -334,10 +336,10 @@ independente do modelo — não existe como hook:
    `hookSpecificOutput.additionalContext` ao passar de 150k — limiar absoluto, **não** compacta;
    se entrar, nasce com a trava anti-laço do `stop-verify.sh` e `exit 0` sempre;
 3. não deixar o contexto chegar lá: `context: fork` nas fases pesadas e diff sempre por caminho de
-   arquivo, nunca colado no controlador — o `/revisar-bloco` do item 31 já faz a segunda metade.
+   arquivo, nunca colado no controlador — o `/revisar-bloco` do item 35 já faz a segunda metade.
 
 **Fora:** trocar de modelo em tempo de execução (`PreModelSwitch` só bloqueia troca em curso) e
-`CLAUDE_CODE_SUBAGENT_MODEL_FORCE` (anula o frontmatter de todo subagente, que o item 31 constrói).
+`CLAUDE_CODE_SUBAGENT_MODEL_FORCE` (anula o frontmatter de todo subagente, que o item 35 constrói).
 
 **DoD:** o caminho escolhido implementado e **visto disparar**.
 

@@ -14,7 +14,7 @@ João no gate.** O item 30 não escolheu nenhuma das duas saídas do gatilho: ex
 `state.md` virou contrato e não guarda mais `lanes:`, `focused_lane` nem os campos singulares do
 topo; o estado de cada bloco mora em `docs/superpowers/blocos/<NN>-<slug>/estado.md`, na árvore da
 lane (invariante 6 do contrato). Sem espelho, não há o que a lane precise escrever e a regra
-proíba. Até o item 31 mesclar, os commands ainda citam `focused_lane`, e a seção "Transição" do
+proíba. Até o item 35 mesclar, os commands ainda citam `focused_lane`, e a seção "Transição" do
 `state.md` manda lê-los contra o `estado.md` do bloco.
 
 **Gatilho:** fecha quando o João escolher entre (a) reescrever a invariante para descrever o que as

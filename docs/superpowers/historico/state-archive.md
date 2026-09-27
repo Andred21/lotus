@@ -47,7 +47,7 @@ na `main` do clone e duas órfãs em +1 e +2. O `abrir 33` reservou +3, o stack 
 200 na 8083, o `fechar` recusou a branch não mesclada com o stack de pé e fechou limpo depois do
 merge simulado, sem contêiner, volume, imagem, rede, worktree ou branch sobrando. O `worktree
 list` do repositório real ficou igual. O João fechou a **P-55** no gate, porque o espelho
-deixou de existir. Plano arquivado em `plans/archive/`. A spec fica ativa, porque o 31 e o 32 a
+deixou de existir. Plano arquivado em `plans/archive/`. A spec fica ativa, porque o 35 e o 36 a
 usam. O `estado.md` foi a `closed`. A ficha 30 continua no `backlog.md` até o main tree
 removê-la depois do merge (invariante 10). A PR espera o fecho das lanes antigas, pela D6.
 

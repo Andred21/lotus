@@ -32,7 +32,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-88 | O `deploy.sh` aceita promover imagem de qualquer dono do GHCR: `LOTUS_RELEASE_OWNER=andred21` por SSH puxa o trio público do repositório pessoal, e a regra "produção é sempre `gatika-cl`" vale por padrão, não por mecanismo | — | próximo commit que mudar `deploy/bin/deploy.sh` (junto com a P-87), ou o João promover; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
-| P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | 31 | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
+| P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | 35 | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
@@ -106,7 +106,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 **O item 30 (`harness-estado-por-bloco`) fechou em 2026-09-26 a P-55**, por decisão do João no
 gate: o espelho dos campos singulares deixou de existir, porque o `state.md` virou contrato e o
 estado de cada bloco mora na pasta dele. O bloco não abriu ficha nova, e agrupou a **P-84** no
-item 31, que paga o gatilho dela.
+item 35, que paga o gatilho dela.
 
 **A P-59, a P-75 e a P-79 saíram no fechamento do item 12 (2026-09-26)**, o primeiro posterior ao
 do `backend-config-e-conteudo-de-documento` (item 29), que as encerrou em 2026-09-25 — a P-59 e a
