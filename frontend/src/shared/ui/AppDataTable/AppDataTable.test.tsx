@@ -182,7 +182,7 @@ describe('detalhe do servidor no estado de erro (P-70)', () => {
 
 /**
  * Regressão do passe de correção do UI-02 (Administración) e do UI-03 de
- * Pessoas (RedatoresTable, d07aa877): três tabelas passaram a reduzir o piso
+ * Pessoas (RedatoresTable, 19a616fb): três tabelas passaram a reduzir o piso
  * para `min-w-[42rem]` (`reducedFloorTablePt`) para caber em 1024x768 sem
  * rolar. O `widthPt` deste wrapper zera `table.className` sem
  * linha (erro ou vazio) para não empurrar `AppErrorState`/`AppEmptyState` para

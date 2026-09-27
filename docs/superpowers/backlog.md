@@ -25,6 +25,9 @@
 > O **27** (`frontend-arrumacao-de-testes`), item novo da passada de 2026-09-03, **fechou em
 > 2026-09-04** e saiu desta fila. Entrega em `historico/progress.md`; a `P-58`, que ele pagou,
 > está em `pendencias/encerradas.md`.
+> O **16** (`frontend-revisao-ui-por-modulo`) **fechou em 2026-09-27** com a fatia 3 (Cursos, Pessoas
+> e Administración) e saiu desta fila. Entrega em `historico/progress.md`; a `D-59`, que ele pagou,
+> está na tabela de fichas que saíram, e os achados que não couberam viraram `D-71` e `D-72`.
 > Histórico entregue → `historico/progress.md` · fichas `P-*` → `pendencias/abertas.md` ·
 > specs/planos → `specs/archive/` e `plans/archive/`. Não duplicar esses conteúdos aqui.
 > O registro canônico dos débitos `D-*` segue neste arquivo, na seção `# Débitos técnicos` —
@@ -49,7 +52,7 @@
   2026-08-23, o `2` e o `17` em 2026-08-24, o `4` em 2026-08-25, o `11` em 2026-08-26, o `8` em
   2026-08-27, o `5` em 2026-08-28, o `6` e o `18` em 2026-08-29, o `7` e o `19` em 2026-08-30, o
   `20` em 2026-08-31, o `21` em 2026-09-01, o `24` em 2026-09-02, o `25` e o `26` em 2026-09-03, o
-  `22` e o `27` em 2026-09-04, o `10` e o `28` em 2026-09-20 e o `29` em 2026-09-25. O `10` é o único que **encolheu antes de
+  `22` e o `27` em 2026-09-04, o `10` e o `28` em 2026-09-20, o `29` em 2026-09-25 e o `16` em 2026-09-27. O `10` é o único que **encolheu antes de
   sair**: o runtime foi entregue em 2026-08-22 e a ficha ficou só com o provisionamento, que fechou
   agora. A fila salta os números que já fecharam, de propósito.
 - **Item novo entra com número novo, e o lugar dele na fila é o da dependência, não o do número.** O
@@ -97,7 +100,8 @@ decisão do João: o **22** saiu da tabela — fechou em 2026-09-04 e a linha fi
 dias —, e o **29** entrou na frente. O **29** saiu em 2026-09-25, fechado; as posições abaixo dele
 subiram uma casa sem mudar a ordem relativa. O **12** saiu em 2026-09-26, fechado, e o **13** subiu
 uma casa. O **31** entrou na posição 0, promovido pelo João, e saiu no mesmo dia, fechado; as
-demais posições não se moveram. **Emendada em 2026-09-26:** o **32** entra na posição 1 — a
+demais posições não se moveram. O **16** saiu em 2026-09-27, fechado; as posições abaixo dele subiram
+uma casa sem mudar a ordem relativa. **Emendada em 2026-09-26:** o **32** entra na posição 1 — a
 produção roda na "fase sem DNS" do runbook e por isso **recusa emitir certificado**, que é a função
 central; o **33** entra logo atrás, porque produção não entrega e-mail nenhum, nem o alerta de
 segurança; o **34** entra antes do **13**, que é gate de medição e não constrói alarme. Os três são
@@ -109,18 +113,15 @@ abaixo está escrita nesta ordem.
 |---|---|---|---|
 | 1 | **32** `infra-producao-dns-e-tls` | Infra | Produção não emite certificado sem domínio HTTPS (`CERTIFICATE_VALIDATION_URL` vazio, P-79). A zona está no Route 53 desde 2026-09-26 — o que faltava de terceiro deixou de faltar |
 | 2 | **33** `infra-producao-email-ses` | Infra | O alerta síncrono de acesso suspeito (ADR-21/D7) e o reset de senha não chegam a ninguém: `MAIL_MAILER=log` em produção |
-| 3 | **16** `frontend-revisao-ui-por-modulo` (fatia 3) | Frontend | Cada passada anterior achou defeito de wrapper `shared/ui` que nenhuma leitura de código tinha achado; achado de wrapper corrigido cedo não precisa ser corrigido tela a tela depois |
-| 4 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 — sai barato encostado nelas, e é P2 |
-| 5 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. **Colide com o 16** — ver a nota abaixo |
-| 6 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (alarme de certificado) e, de preferência, do 33 |
-| 7 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
+| 3 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 (fechado em 2026-09-27), que já aplicou (b) e (c) em quatro das 12 tabelas, e é P2 |
+| 4 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
+| 5 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (alarme de certificado) e, de preferência, do 33 |
+| 6 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
 
-**A colisão 16 × 9, registrada e não resolvida:** o 16 tem uma run de `/lotus-ui-review` de
-**Administração** no escopo e o 9 pode **redesenhar a mesma tela**. Medir antes do veredito do 9 é
-medir o que talvez seja substituído. Recomendação: dentro do 16, rodar **Cursos** e **Pessoas**, e
-deixar a run de Administração para depois do veredito do 9 — se ele mantiver o protótipo atual, a
-run acontece como escrita; se redesenhar, ela mede o redesenho. **Escolher é do João**; nenhum
-escopo foi movido de ficha.
+**A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
+Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
+`audits/2026-09-04-lotus-ui-review-administracion.md` mede a tela **atual**. Se o 9 redesenhar, a
+tela nova pede run própria dentro dele.
 
 ---
 
@@ -210,71 +211,6 @@ completa o ciclo; `aws sesv2 get-email-identity` com `DkimStatus: SUCCESS`; cont
 
 ---
 
-## 16. `frontend-revisao-ui-por-modulo`
-
-**Prioridade:** P1 antes do go-live · **Frente:** Frontend · **Contexto:** não por padrão
-**Fonte:** `audits/2026-08-17-lotus-ui-review-dashboard.md`,
-`audits/2026-08-17-lotus-ui-review-dashboard-analitico-redator.md`,
-`audits/2026-08-22-lotus-ui-review-dashboard.md`.
-
-**Objetivo:** estender ao resto da aplicação a revisão de UI que só o Dashboard e o `/perfil`
-receberam, tela a tela, sem abrir redesenho estético.
-
-**Fatias fechadas:** a **1** em 2026-08-24 (Dashboard `ready-redator` e Operação; 14 achados
-corrigidos, zero `C` aberto, `D-39` paga pela fábrica `shared/testing/i18n.ts`) e a **2** em
-2026-08-25 (Comercial e Certificados; 7 achados, 4 corrigidos — um `C` no wrapper `AppCardToolbar` —,
-nenhum `C` aberto, 3 viraram ficha, `D-57` paga e `D-38` decidida). As réguas de aba de Comercial e
-Certificados foram medidas e **não transbordam** (`[1134, 1134, false]` em 1440x900 e
-`[276, 276, false]` em 390x844), então `scrollable` não foi ligado em nenhuma das duas. Narrativa das
-duas em `historico/state-archive.md`.
-
-**O que sobra — fatia 3:** as runs de **Cursos**, **Pessoas** e **Administração**, as réguas de aba
-dessas telas ainda sem medição, e os `B` que virarem ficha.
-
-**Ordem interna, pela colisão com o item 9:** rodar **Cursos** e **Pessoas** primeiro; a run de
-**Administração** espera o veredito do 9, que pode redesenhar a mesma tela. Ver a nota da seção
-*Ordem de execução*.
-
-**Evidência medida (2026-08-22) de por que o bloco continua valendo:** a terceira passada no
-Dashboard admin achou 8 itens, e **6 moravam em `shared/ui`** — `AppBarChart` nomeava a série pelo
-`dataKey` (`value : 2` no tooltip), `AppDatePicker` fixava `dateFormat` e `locale="es"`,
-`AppDropdown` congelava o nome acessível no idioma anterior, `AppCardHeader` não tinha onde declarar
-a grandeza do card. Corrigidos em `ac4eef8a`, valem para toda tela que use esses wrappers; o que
-sobra é **descobrir onde mais os mesmos padrões aparecem** — e cada revisão anterior encontrou
-defeito de wrapper que nenhuma leitura de código tinha achado.
-
-**Escopo:**
-- uma run de `/lotus-ui-review` por superfície ainda não coberta: **Cursos**, **Pessoas**,
-  **Administração**;
-- **`scrollable` das réguas de abas (Q-3 do review de 2026-08-24, deferido por falta de medição):**
-  a régua rolável foi medida e ligada só na tela de detalhe da turma — e não por padrão no
-  wrapper, que é o que o review desfez: `p-tabview-scrollable` troca a nav por um contêiner com
-  `overflow: hidden`, e o efeito disso em tela não medida é suposição.
-  **Emenda de 2026-09-26 — as quatro réguas restantes foram medidas, zero seguem pendentes:**
-  Comercial e Certificados foram medidas na fatia 2 — `[1134, 1134, false]` em 1440x900 e
-  `[276, 276, false]` em 390x844 — e não receberam a prop. `/cursos` **não usa `ModuleTabs`**:
-  `CatalogPage` é um `AppCard` com `CoursesTable`, sem régua. Personas e Administración foram
-  medidas na fatia 3 (Task 8): Personas deu `[1119, 1119, false]` em 1440x900, `[718, 718, false]`
-  em 1024x768 e `[276, 276, false]` em 390x844 — não transborda em viewport nenhum, sem a prop.
-  Administración deu `[1134, 1134, false]` em 1440x900, `[718, 718, false]` em 1024x768 e
-  `[280, 276, true]` em 390x844 — transborda 4px só no viewport estreito (reconfirmado no
-  navegador nesta fatia, antes de agir), e a prop foi ligada **só nela**;
-- a **`D-59`**, que é composição de UMA tela de Comercial;
-- os achados `C` de cada run se fecham no mesmo bloco, com medida; os `B` viram ficha `D-*` se não
-  couberem.
-
-**Fora:** acessibilidade, foco e overflow — eram do `frontend-hardening-final` (item 8), fechado em
-2026-08-27. Redesenho de tela também fica fora: Administração é o item 9, e a lente `frontend-design`
-é complementar — **quem classifica é `references/review-rubric.md`, e a rule de `.claude/rules/`
-vence a lente**.
-
-**Herança das fatias anteriores:** as fichas `D-*` que a Task 12 da fatia 1 nunca escreveu — a UI-04
-da run 1 (janela da agenda, backend) e a recusa em espanhol fixo de `Turma.php:200`.
-
-**DoD:** cada superfície com relatório datado em `audits/` e nenhum achado `C` aberto.
-
----
-
 ## 23. `frontend-tabelas-reserva-e-rolagem`
 
 **Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não
@@ -293,7 +229,7 @@ cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não
 nomeado `reducedFloorTablePt` (`AppDataTable/style.ts`). A ficha `D-65` registra ainda uma TERCEIRA
 direção, (c) colapsar as ações da linha num menu abaixo de `sm`, que (a) e (b) não cobrem em
 390x844 — **já aplicada** em Redactores, Alumnos, Usuarios e Roles pelo Q-1 do review daquela
-fatia (`b5d3e5be`). Nas outras oito, (c) é medição, não suposição.
+fatia (`8b40d176`). Nas outras oito, (c) é medição, não suposição.
 
 ---
 
@@ -308,9 +244,9 @@ fatia (`b5d3e5be`). Nas outras oito, (c) é medição, não suposição.
 redesign é trabalho novo e precisa de nova task/EAP se for mantido. Exige brainstorming — é
 redesenho de tela, não refinamento visual.
 
-**Colisão com o item 16:** a fatia 3 do 16 tem uma run de UI de Administração no escopo. O veredito
-deste bloco — redesenhar ou manter — decide se aquela run mede a tela atual ou a nova. Ver a nota da
-seção *Ordem de execução*.
+**Colisão com o item 16, resolvida em 2026-09-27:** o 16 fechou com a run de Administración feita
+sobre a tela atual (`audits/2026-09-04-lotus-ui-review-administracion.md`). Se este bloco
+redesenhar, a tela nova pede run própria aqui; se mantiver, aquele relatório vale.
 
 **Escopo:** lista de roles + detalhe + matriz de permissões; permissões essenciais protegidas;
 criação/edição de role customizada; nunca criar permissions arbitrárias pela UI.
@@ -452,7 +388,7 @@ ficam só como ponteiro, e a ficha delas é lá.
 > | 2026-08-31 | `D-60` | paga — **não** pelo hospedeiro que ela declarava: a f3 UI-03 do item 19 subiu o motivo do bloqueio para a linha do CTA com `aria-describedby` (`EmissionPanel.tsx:92-105`, `EmissionStudentsTable.tsx:100-101`) | item 19 |
 > | 2026-08-31 | `D-61` | **absorvida pela `D-67`** — mesmo defeito registrado duas vezes; a `D-61` fica como ID queimado | saneamento com o João |
 > | 2026-09-03 | `D-69` | paga — os quatro sítios de utility de paleta em `features/` morreram e a **partição `files: CATRACA_COR` foi removida**; a prova é o `pnpm lint` verde **sem** a lista, não o grep | item 25, Task 1 |
-> | 2026-09-26 | `D-59` | paga — o alternador Activos/Archivados de "Cotizaciones" subiu para o slot `actions` do `AppCardHeader` (`BudgetQuotesCard`) e a régua própria de 56px sumiu, medido nos três viewports (`f1220b1d`, teste em `eafd1aec`). A ficha seguiu aberta aqui até o Q-2 do review | fatia 3 do item 16 |
+> | 2026-09-26 | `D-59` | paga — o alternador Activos/Archivados de "Cotizaciones" subiu para o slot `actions` do `AppCardHeader` (`BudgetQuotesCard`) e a régua própria de 56px sumiu, medido nos três viewports (`180bfa1a`, teste em `a3439596`). A ficha seguiu aberta aqui até o Q-2 do review | fatia 3 do item 16 |
 > | 2026-09-26 | — (herança da Task 12 da fatia 1, nunca escrita) | **morta antes de nascer** — a recusa em espanhol fixo de `Turma.php:200` já virou `__('operation.turma.concluded_locked')` nos três locales; reconfirmado em `Turma.php:201` nesta leitura. Paga em 2026-08-30, junto com `D-07`/`D-18`/`D-36`/`D-38`/`D-58`, antes de a ficha ganhar nome | item 7 (reconfirmado pela Task 10 da fatia 3 do item 16) |
 >
 > **O que aqueles fechamentos deixaram aberto, e que não é débito:** cinco recusas literais fora de
@@ -487,13 +423,13 @@ ficam só como ponteiro, e a ficha delas é lá.
   (wrapper/scrollWidth/tabela, com rolagem forçada e sobreposição) para 718/718/718 — "Último
   acceso" e "PERMISOS" saem inteiros. Sem regressão em 1440x900 (1134/1134/1134 nas duas). Quem
   fizer a varredura do item 23: `UsersTable` e `RolesTable`, como `RedatoresTable`, já estão no piso
-  reduzido — não repita as três. **Desde o Q-5 do review da fatia 3 (`6a2c2f53`) o piso é o valor
+  reduzido — não repita as três. **Desde o Q-5 do review da fatia 3 (`d1141a0c`) o piso é o valor
   nomeado `reducedFloorTablePt`**, que compõe o mesmo `table-fixed` do default: quem varrer as
   outras nove importa a constante, nunca a string — `mergePt` substitui a folha
   `table.className`, e a cópia literal divergiria em silêncio do wrapper.
 
   **Terceira direção, APLICADA em 2026-09-26 nas quatro tabelas da fatia 3 do item 16** (Q-1 do
-  review, `b5d3e5be`). Em 390x844 (276px de moldura) nenhum `min-width` fecha: `RedatoresTable`
+  review, `8b40d176`). Em 390x844 (276px de moldura) nenhum `min-width` fecha: `RedatoresTable`
   ativo precisaria reservar ~70% da tabela para a coluna de 3 ícones. A UI-01 de Pessoas (classe
   `C`) tinha sido deferida para cá sem aprovação; o review a reabriu e o João decidiu consertar no
   bloco. Abaixo de `sm` a linha carrega UM controle: `RowActions` (`shared/ui`) colapsa duas ou

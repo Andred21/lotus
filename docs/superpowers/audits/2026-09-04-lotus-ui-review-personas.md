@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-20/21 · **Skill:** `lotus-ui-review` (`.agents/skills/lotus-ui-review/SKILL.md`)
 **Superfície:** `frontend/src/features/identity/components/` (abas Redactores e Alumnos) ·
-**Base:** `refactor/frontend-revisao-ui-f3` @ `88af3e4c`
+**Base:** `refactor/frontend-revisao-ui-f3` @ `e1c2b63e`
 **Evidência bruta:** `.artifacts/ui-review/20260920-204038-personas/` (11 capturas + `report.txt`,
 coberta pelo `.gitignore`)
 
@@ -21,7 +21,7 @@ coberta pelo `.gitignore`)
 - Alvo medido: SPA em `http://localhost:5175` e API em `http://localhost:8082`, portas do offset +2
   desta árvore.
 - Read-only: nenhuma mutação além do login. `git status --short` vazio antes e depois, mesmo branch
-  e mesmo commit (`88af3e4c`) nas duas pontas.
+  e mesmo commit (`e1c2b63e`) nas duas pontas.
 - **Queda de stack durante a run:** Docker (daemon) e o `pnpm dev` desta árvore caíram entre a
   abertura do diálogo de visualização de um redator e a busca na aba Alumnos — mesma classe de
   interrupção já registrada na run de Cursos. Religados os dois (`docker compose up -d`, `pnpm dev`
@@ -63,12 +63,12 @@ BEGIN LOTUS UI REVIEW REPORT
 ## Run
 Surface: /personas (papel superadmin) — abas Redactores e Alumnos, busca em cada uma, alternador Activos/Archivados (só existe em Redactores), abrir um registro em modo view, fechar
 Local URL: http://localhost:5175/personas (nginx: http://localhost:8082)
-Branch/commit: refactor/frontend-revisao-ui-f3 @ 88af3e4c
+Branch/commit: refactor/frontend-revisao-ui-f3 @ e1c2b63e
 Date/time: 2026-09-20 20:40 — 2026-09-21 00:30 (queda de Docker/Vite entre os dois trechos; religados, sessão relogada, commit sem drift)
 Agent: Claude Sonnet 5 (Claude Code)
 Playwright CLI: @playwright/cli 0.1.18, sessão nomeada lotus-personas, browser chromium (canal "chrome" indisponível no ambiente; fallback documentado)
 Chrome DevTools: not-needed
-Git working tree before/after: limpo / limpo (mesmo commit 88af3e4c nas duas pontas — nenhuma mutação de código nesta run)
+Git working tree before/after: limpo / limpo (mesmo commit e1c2b63e nas duas pontas — nenhuma mutação de código nesta run)
 
 ## Coverage
 | Journey step | Desktop (1440x900) | Tablet (1024x768) | Mobile (390x844) | Evidence |
@@ -151,10 +151,10 @@ END LOTUS UI REVIEW REPORT
 
 | Achado | Classe | Destino | Commit |
 |---|---|---|---|
-| UI-01 — coluna de identidade some atrás da coluna de ações fixa em 390x844 | `C` | corrige aqui — pelo review (Q-1), depois de deferida sem aprovação; ver nota | `b5d3e5be` |
-| UI-02 — RUT sobrepõe "Cursos habilitados" em 1024x768 | `C` | corrige aqui | `a8b1564d` |
-| UI-03 — "Último acceso" cortado pela coluna de ações fixa em 1024x768 | `C` | corrige aqui | `d07aa877` |
-| UI-04 — `dataKey` inexistente na tabela de turmas do Alumno | `C` | corrige aqui | `39f0bc8f` |
+| UI-01 — coluna de identidade some atrás da coluna de ações fixa em 390x844 | `C` | corrige aqui — pelo review (Q-1), depois de deferida sem aprovação; ver nota | `8b40d176` |
+| UI-02 — RUT sobrepõe "Cursos habilitados" em 1024x768 | `C` | corrige aqui | `dbc65044` |
+| UI-03 — "Último acceso" cortado pela coluna de ações fixa em 1024x768 | `C` | corrige aqui | `19a616fb` |
+| UI-04 — `dataKey` inexistente na tabela de turmas do Alumno | `C` | corrige aqui | `d00c7301` |
 
 **UI-02** — `redatorColumns.ts` trocou o peso de `rut` de `COL.rut` (9) para `COL.short` (13): em
 1024x768, com as 5 colunas de dado da tabela, o peso original reservava 92,5px contra um RUT de
@@ -195,7 +195,7 @@ na ficha `D-65`, e fechou dizendo "zero `C` aberto sem destino" — mas a spec (
 dizem "`C` corrige aqui, sempre" e "zero `C` aberto", e quem aceita adiar um `C` é o João, não o
 executor. O review do bloco (2026-09-26, Q-1) reabriu o achado e o João decidiu consertar aqui.
 
-**Correção (`b5d3e5be`).** Abaixo de `sm` a linha carrega UM controle: `RowActions` (`shared/ui`)
+**Correção (`8b40d176`).** Abaixo de `sm` a linha carrega UM controle: `RowActions` (`shared/ui`)
 colapsa duas ou mais ações num menu (`AppMenu`), e `useCollapsibleActionsColumn(width)` encolhe a
 coluna presa para 4.5rem no mesmo render. `ArchiveRowActions` compõe `RowActions` e ganha
 `collapsed` e `leading` — o "Reenviar invitación" entra no mesmo menu que arquivar e ver; restaurar

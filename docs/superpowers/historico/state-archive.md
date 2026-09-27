@@ -23,6 +23,25 @@
 
 ---
 
+## Fechado em 2026-09-27 — `frontend-revisao-ui-por-modulo`, fatia 3 (item 16)
+
+**A `lane-c` recebeu o item 16 em 2026-09-04** — `frontend-revisao-ui-por-modulo`, promovido
+explicitamente pelo João com a lane em `idle`, logo depois de a PR #100 mesclar o item 27. É a
+**fatia 3**, a última: as fatias 1 (2026-08-24, Dashboard `ready-redator` e Operação) e 2
+(2026-08-25, Comercial e Certificados) já fecharam, e a narrativa das duas vive em
+`historico/state-archive.md`. O item é `Contexto: não por padrão`, então **nasce direto em
+`ready_for_planning`** — não há Context Packet a gerar, as fontes são os três audits que a ficha
+nomeia e o próprio código.
+
+**O João escolheu o 16 INTEIRO, com a run de Administração dentro, e o risco é explícito.** A ficha
+manda rodar Cursos e Pessoas primeiro porque a run de Administração colide com o item 9
+(`administracao-roles-permissoes-redesign`), que pode redesenhar a mesma tela e invalidar a medição.
+Oferecidas as duas saídas — recortar a fatia ou levá-la inteira —, a decisão foi **inteira**,
+aceitando que a run de Administração possa medir uma tela que o item 9 refaça depois. A ordem
+interna continua valendo dentro do bloco: **Cursos e Pessoas primeiro**, Administração por último.
+
+---
+
 ## Fechado em 2026-09-26 — `cicd-host-alinhado-ao-sha` (item 31)
 
 **A linha da tabela de ocupação, no dia do fechamento:**

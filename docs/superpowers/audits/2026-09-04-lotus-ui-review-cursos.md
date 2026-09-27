@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-09/10 · **Skill:** `lotus-ui-review` (`.agents/skills/lotus-ui-review/SKILL.md`)
 **Superfície:** `frontend/src/features/catalog/components/` (lista de cursos + diálogo de curso) ·
-**Base:** `refactor/frontend-revisao-ui-f3` @ `1d78793b`
+**Base:** `refactor/frontend-revisao-ui-f3` @ `88bc9d81`
 **Evidência bruta:** `.artifacts/ui-review/20260909-184334-cursos/` (14 capturas + `report.txt`,
 coberta pelo `.gitignore`)
 
@@ -23,7 +23,7 @@ coberta pelo `.gitignore`)
 - Alvo medido: SPA em `http://localhost:5175` e API em `http://localhost:8082`, portas do offset +2
   desta árvore (Task 1 do plano).
 - Read-only: nenhuma mutação além do login. `git status --short` vazio antes e depois, mesmo branch
-  e mesmo commit (`1d78793b`) nas duas pontas — a run foi interrompida entre a captura das telas e o
+  e mesmo commit (`88bc9d81`) nas duas pontas — a run foi interrompida entre a captura das telas e o
   passe de teclado por uma queda do stack local (Docker + Vite caíram), e retomada depois de
   religar os dois; o commit não mudou no intervalo.
 - Viewports percorridos: `1440x900`, `1024x768`, `390x844`.
@@ -55,12 +55,12 @@ BEGIN LOTUS UI REVIEW REPORT
 ## Run
 Surface: /cursos (papel superadmin) — lista de cursos, busca, alternador Activos/Archivados, abrir curso em modo view, fechar
 Local URL: http://localhost:5175/cursos (nginx: http://localhost:8082)
-Branch/commit: refactor/frontend-revisao-ui-f3 @ 1d78793b
+Branch/commit: refactor/frontend-revisao-ui-f3 @ 88bc9d81
 Date/time: 2026-09-09 18:43 — 2026-09-10 16:37 (run interrompida por queda de stack entre os dois trechos; retomada no mesmo commit, sem drift)
 Agent: Claude Sonnet 5 (Claude Code)
 Playwright CLI: @playwright/cli 0.1.18, sessão nomeada lotus-cursos, browser chromium (canal "chrome" indisponível no ambiente; fallback documentado)
 Chrome DevTools: not-needed
-Git working tree before/after: limpo / limpo (mesmo commit 1d78793b nas duas pontas — nenhuma mutação de código nesta run)
+Git working tree before/after: limpo / limpo (mesmo commit 88bc9d81 nas duas pontas — nenhuma mutação de código nesta run)
 
 ## Coverage
 | Journey step | Desktop (1440x900) | Tablet (1024x768) | Mobile (390x844) | Evidence |
@@ -105,7 +105,7 @@ END LOTUS UI REVIEW REPORT
 
 | Achado | Classe | Destino | Commit |
 |---|---|---|---|
-| UI-01 — cabeçalho "Redactores" trunca para "RED" em 1024x768 | `C` | corrige aqui | `7f3dddf4` |
+| UI-01 — cabeçalho "Redactores" trunca para "RED" em 1024x768 | `C` | corrige aqui | `0bdb2e7a` |
 
 `redatorCount` trocou de `COL.count` (peso 7) para `COL.short` em `courseColumns.ts`: o cabeçalho é
 uma palavra de uma peça só, não um numeral, e a faixa estreita deixava o texto sumir atrás da coluna

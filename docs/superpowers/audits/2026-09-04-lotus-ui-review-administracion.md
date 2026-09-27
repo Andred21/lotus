@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-26 · **Skill:** `lotus-ui-review` (`.agents/skills/lotus-ui-review/SKILL.md`)
 **Superfície:** `frontend/src/features/identity/components/AdministracionPage.tsx` e `Admin/` (abas
-Usuarios e Roles y permisos) · **Base:** `refactor/frontend-revisao-ui-f3` @ `879b9c12`
+Usuarios e Roles y permisos) · **Base:** `refactor/frontend-revisao-ui-f3` @ `53dffd4d`
 **Evidência bruta:** `.artifacts/ui-review/20260926-150940-administracion/` (15 capturas +
 `report.txt`, coberta pelo `.gitignore`)
 
@@ -27,7 +27,7 @@ Usuarios e Roles y permisos) · **Base:** `refactor/frontend-revisao-ui-f3` @ `8
   desta árvore. A stack estava parada no início da sessão; `docker compose up -d` e `pnpm dev`
   religados antes do preflight (`PREFLIGHT_OK`).
 - Read-only: nenhuma mutação além do login. `git status --short` vazio antes e depois, mesmo branch
-  e mesmo commit (`879b9c12`) nas duas pontas. Rede: só GETs, todos 200.
+  e mesmo commit (`53dffd4d`) nas duas pontas. Rede: só GETs, todos 200.
 - Viewports percorridos: `1440x900`, `1024x768`, `390x844`, tema claro; amostra adicional em
   `1440x900` no **escuro** (Usuarios e Roles) — sem defeito novo, tags e cor de marca seguem o token
   do tema.
@@ -44,7 +44,7 @@ Usuarios e Roles y permisos) · **Base:** `refactor/frontend-revisao-ui-f3` @ `8
     `fix-frontend`) tem um usuário só, `admin@lotus.cl`.
   - **`D-65`** (coluna de ações presa cobre a coluna de identidade em `390x844`) — reproduz nas duas
     tabelas desta tela (screens/10 e 11). É a mesma ficha que recebeu o UI-01 de Pessoas como
-    deferido; não vira achado novo. **Corrigido depois, pelo review do bloco (Q-1, `b5d3e5be`)** —
+    deferido; não vira achado novo. **Corrigido depois, pelo review do bloco (Q-1, `8b40d176`)** —
     ver a última nota da §3.
   - **`P-74`** (severidade reprova AA no claro) — nenhum botão de severidade na jornada além dos
     primários; não avaliada aqui.
@@ -60,12 +60,12 @@ BEGIN LOTUS UI REVIEW REPORT
 ## Run
 Surface: /administracion (papel superadmin) — aba Usuarios, busca, alternador Activos/Archivados, abrir um usuário em modo view, aba Roles y permisos, abrir um role em modo view, fechar
 Local URL: http://localhost:5175/administracion (API: http://localhost:8082)
-Branch/commit: refactor/frontend-revisao-ui-f3 @ 879b9c12
+Branch/commit: refactor/frontend-revisao-ui-f3 @ 53dffd4d
 Date/time: 2026-09-26 15:09 — 15:20 (-03:00)
 Agent: Claude Opus 5.5 (Claude Code)
 Playwright CLI: @playwright/cli 0.1.18, sessão nomeada adm-f3, headed, browser chromium empacotado (canal "chrome" indisponível no ambiente; limitação documentada no plano)
 Chrome DevTools: not-needed
-Git working tree before/after: limpo / limpo (mesmo branch, mesmo commit 879b9c12 nas duas pontas)
+Git working tree before/after: limpo / limpo (mesmo branch, mesmo commit 53dffd4d nas duas pontas)
 
 ## Coverage
 | Journey step | Desktop | Tablet | Mobile | Evidence |
@@ -148,9 +148,9 @@ END LOTUS UI REVIEW REPORT
 
 | Achado | Classe | Destino | Commit |
 |---|---|---|---|
-| UI-01 — nome de role aparece como slug cru ("redator" em português numa tela es-CL) | `C` | corrige aqui | `e3f09648` |
-| UI-02 — Usuarios e Roles rolam em 1024x768, coluna de ações cobre a última coluna de dado | `C` | corrige aqui | `db7a0920` |
-| UI-03 — régua de abas transborda 4px em 390x844 | `B` | corrige aqui (Task 8) | `f80b62de` |
+| UI-01 — nome de role aparece como slug cru ("redator" em português numa tela es-CL) | `C` | corrige aqui | `11499007` |
+| UI-02 — Usuarios e Roles rolam em 1024x768, coluna de ações cobre a última coluna de dado | `C` | corrige aqui | `566e46b6` |
+| UI-03 — régua de abas transborda 4px em 390x844 | `B` | corrige aqui (Task 8) | `53306647` |
 | UI-04 — rótulos de permissão expõem jargão interno (Flujo N, RN-02, soft delete) | `B` | ficha `D-71` | — |
 
 **UI-01** — `roleLabel(name, t)` (novo, `shared/lib/roles.ts`, ao lado de `displayRole`) devolve
@@ -165,7 +165,7 @@ es-CL: coluna Rol mostra "SuperAdmin"; aba Roles y permisos mostra "Administrado
 "SuperAdmin"; diálogo do role "redator" abre com título "Redactor" (antes: "redator").
 
 **UI-02** — mesma raiz e mesmo remédio já provados em `RedatoresTable` (UI-03 da run de Pessoas,
-commit `d07aa877`): o piso default do `AppDataTable` (`min-w-[48rem]` = 768px,
+commit `19a616fb`): o piso default do `AppDataTable` (`min-w-[48rem]` = 768px,
 `AppDataTable/style.ts:73`) é maior que os 718px de moldura em 1024x768, força rolagem, e a coluna
 de ações presa cobre a última coluna de dado. `UsersTable` repassa
 `pt={{ table: { className: 'min-w-[42rem] table-fixed' } }}` pelo passthrough do
@@ -189,20 +189,20 @@ autoriza corrigir aqui. Nota deixada na ficha `D-65` para o item 23 não repetir
 `RolesTable` na varredura.
 
 **UI-03 — corrigido pela Task 8, não por esta run:** o item 16 ligou `scrollable` na régua de abas de
-`AdministracionPage` com estes números (`f80b62de`). A tabela desta seção listava, por erro, "ficha
+`AdministracionPage` com estes números (`53306647`). A tabela desta seção listava, por erro, "ficha
 `D-*` (Task 10)" como destino — corrigido acima; nenhuma ficha nasce daqui.
 
 **UI-04 — não corrigido nesta run**, por triagem `B`/composição de UMA tela sem forma provada num
 irmão: destino é a ficha `D-71` (`docs/superpowers/backlog.md`), escrita pela Task 10.
 
 **Dois follow-ups de review da Task 7, registrados aqui para o rastro ficar num lugar só:**
-`1b26b070` fez o guard de largura mínima da tabela vazia voltar a vencer o `pt` do chamador, e
-`b4102fd1` cobriu com teste o título do `RoleDialog` e as opções de role do `StaffUserDialog` — os
+`8cde4da3` fez o guard de largura mínima da tabela vazia voltar a vencer o `pt` do chamador, e
+`3cc37da6` cobriu com teste o título do `RoleDialog` e as opções de role do `StaffUserDialog` — os
 dois nascidos da correção do UI-01 e do UI-02 acima.
 
 Zero `C` aberto ao fim desta run: 2 corrigidos (UI-01, UI-02).
 
-**Mobile de Usuarios e Roles — corrigido pelo review do bloco (Q-1, `b5d3e5be`).** O relatório
+**Mobile de Usuarios e Roles — corrigido pelo review do bloco (Q-1, `8b40d176`).** O relatório
 marcou as duas tabelas em 390x844 como "Conhecido (D-65)", apoiado numa nota que o próprio bloco
 escreveu na `D-65` ao deferir o UI-01 de Pessoas — um `C` virando conhecido sem passar pelo João. O
 review de 2026-09-26 reabriu os dois e o João decidiu consertar aqui, junto com Pessoas: abaixo de
