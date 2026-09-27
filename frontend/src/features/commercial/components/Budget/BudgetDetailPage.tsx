@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
-import { AppButton, AppTag, DetailHeader, IdentityCell, AppCard, AppCardHeader, AppDetailSkeleton, AppErrorState, identifierClass } from '@shared/ui'
+import { AppButton, AppTag, DetailHeader, IdentityCell, AppDetailSkeleton, AppErrorState, identifierClass } from '@shared/ui'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { useBudgetDetail } from '../../hooks/useBudgetDetail'
 import { useBudgetQuotesArchived } from '../../hooks/useBudgetQuotesArchived'
-import { QuotesList } from './QuotesList'
+import { BudgetQuotesCard } from './BudgetQuotesCard'
 import { BudgetDocumentsCard } from './BudgetDocumentsCard'
 import { BudgetOverlays } from './BudgetOverlays'
 import { BudgetStatCard } from './BudgetStatCard'
@@ -110,26 +110,16 @@ export function BudgetDetailPage() {
           <BudgetStatCard label={t('budget.totalRejected')} value={budget.total_rejected_uf} tone="danger" />
         </div>
 
-        <AppCard>
-          <AppCardHeader title={t('budget.quotes')} count={budget.quotes.length} />
-          <QuotesList
-            quotes={budget.quotes}
-            onEdit={(q) => d.openWizard(q)}
-            onRemove={(q) => d.askConfirm('remove', q)}
-            onApprove={d.canApprove ? (q) => d.askConfirm('approve', q) : undefined}
-            onReject={d.canApprove ? (q) => d.askConfirm('reject', q) : undefined}
-            mode={quotesArchived.mode}
-            onModeChange={quotesArchived.setMode}
-            archived={{
-              items: quotesArchived.items,
-              loading: quotesArchived.loading,
-              error: quotesArchived.error,
-              refetch: quotesArchived.refetch,
-              restoring: quotesArchived.restoring,
-            }}
-            onRestore={quotesArchived.restore}
-          />
-        </AppCard>
+        <BudgetQuotesCard
+          title={t('budget.quotes')}
+          count={budget.quotes.length}
+          quotes={budget.quotes}
+          quotesArchived={quotesArchived}
+          onEdit={(q) => d.openWizard(q)}
+          onRemove={(q) => d.askConfirm('remove', q)}
+          onApprove={d.canApprove ? (q) => d.askConfirm('approve', q) : undefined}
+          onReject={d.canApprove ? (q) => d.askConfirm('reject', q) : undefined}
+        />
 
         <BudgetDocumentsCard
           files={budget.files ?? []}

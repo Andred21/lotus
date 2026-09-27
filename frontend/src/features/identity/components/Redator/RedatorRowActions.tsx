@@ -1,5 +1,5 @@
 import { usePermissions } from '@shared/hooks'
-import { ArchiveRowActions } from '@shared/ui'
+import { ArchiveRowActions, type RowAction } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 
 /** Adaptador de redator para o `ArchiveRowActions` de `shared/ui` (Q-3 do review
@@ -12,6 +12,8 @@ export function RedatorRowActions({
   onView,
   onArchive,
   onRestore,
+  collapsed,
+  leading,
 }: {
   redator: RedatorData
   archived: boolean
@@ -19,6 +21,8 @@ export function RedatorRowActions({
   onView: (r: RedatorData) => void
   onArchive: (r: RedatorData) => void
   onRestore: (r: RedatorData) => void
+  collapsed?: boolean
+  leading?: RowAction[]
 }) {
   const { can } = usePermissions()
 
@@ -31,6 +35,8 @@ export function RedatorRowActions({
       onRestore={() => onRestore(redator)}
       onArchive={() => onArchive(redator)}
       onView={() => onView(redator)}
+      collapsed={collapsed}
+      leading={leading}
     />
   )
 }

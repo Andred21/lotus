@@ -24,7 +24,7 @@ export function AdministracionPage() {
   return (
     <ModulePage title={t('module.administracion.title')} description={t('module.administracion.description')}>
       <AppCard>
-        <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
+        <ModuleTabs scrollable activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('admin.tabUsers')}>
             <UsersTable
               users={fonte.items}

@@ -1,7 +1,7 @@
 ---
 schema_version: 2
 mode: multi-lane
-focused_lane: lane-b
+focused_lane: lane-c
 active_feature: null
 active_work_item: null
 workflow_state: idle
@@ -51,16 +51,16 @@ lanes:
     next_owner: joao
     next_action: select_backlog_item
     tree: ../fix-frontend
-    branch: refactor/frontend-arrumacao-de-testes   # aberta de origin/main@182be2ab em 2026-09-03; a anterior (fix/frontend-dividas-de-mecanismo, item 25) mesclou na PR #98 (24bf770c). O commit 3833810c reorganizou o backlog e abriu a ficha do 27; a promocao veio depois, no mesmo dia
+    branch: refactor/frontend-revisao-ui-f3   # aberta de origin/main@9c038cca em 2026-09-04 e rebaseada sobre main@5d1250c3 em 2026-09-27; o item 16 fechou nela em 2026-09-27 e ela NAO foi mesclada — integracao e passo proprio, com o Joao
     active_spec: null
     active_plan: null
     context_packet: null
     blocker: null
     resume_state: null
-    last_completed_work_item: frontend-arrumacao-de-testes   # item 27, fechado em 2026-09-04
-last_completed_work_item: cicd-host-alinhado-ao-sha
-state_basis_commit: 12d82315
-updated_at: 2026-09-26T17:30:00-03:00
+    last_completed_work_item: frontend-revisao-ui-por-modulo   # item 16 (fatia 3, a ultima), fechado em 2026-09-27; branch ainda nao mesclada
+last_completed_work_item: frontend-revisao-ui-por-modulo
+state_basis_commit: 2ab1204f
+updated_at: 2026-09-27T21:00:00-03:00
 ---
 
 # Estado operacional — Lotus v2
@@ -160,13 +160,13 @@ disjuntas, colisão mínima de arquivos:
 > 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
 > está na seção abaixo.
 
-## Ocupação corrente — 2026-09-26
+## Ocupação corrente — 2026-09-27
 
 | Lane | Bloco | Frente | Árvore | Branch | Estado |
 |---|---|---|---|---|---|
 | `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
 | `lane-b` | — (item 31 `cicd-host-alinhado-ao-sha` **fechado em 2026-09-26**) | — | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`; até `af1526eb` mesclada na PR #112, `fe6077df`; o resto **não mesclado** — integração é passo próprio, com o João) | `idle` |
-| `lane-c` | — (item 27 **fechado em 2026-09-04**) | — | `../fix-frontend` | `refactor/frontend-arrumacao-de-testes` (mesclada na `main` em `9c038cca`) | `idle` |
+| `lane-c` | — (item 16 `frontend-revisao-ui-por-modulo` **fechado em 2026-09-27**, fatia 3) | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`, rebaseada sobre `main@5d1250c3`; **não mesclada** — integração é passo próprio, com o João) | `idle` |
 
 
 > **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
@@ -184,11 +184,11 @@ merge — está em `historico/state-archive.md`, na ordem abaixo.
 
 | Fechado | Bloco | Fila de origem |
 |---|---|---|
+| 2026-09-27 | `frontend-revisao-ui-por-modulo` fatia 3 — **fecha o item 16** (paga a **`D-59`**; nenhuma pendência nasce ou fecha; nascem `D-71`, `D-72`, `shared/ui/RowActions` e `reducedFloorTablePt`) | Item 16 da fila |
 | 2026-09-26 | `cicd-host-alinhado-ao-sha` (encerra a **P-87** e a **P-88**; a **P-86** segue aberta com nota — o release não tinha migration; nasce `.github/scripts/conferir-alinhamento.sh` e o passo de conferência do `deploy.yml`, sem escape, e a catraca `conferir-alinhamento`; o `deploy.sh` promove só `ghcr.io/gatika-cl/`; runbook §7, §8 e §8.1 e o par novo na lição 19) | Item 31 da fila |
 | 2026-09-26 | `cicd-promocao-deploy-e-rollback` (abre a **P-86** e a **P-87**, esta com o gatilho disparado pelo próprio review e não pago; emenda a **P-62** com o botão sem Environment; nascem `.github/workflows/deploy.yml`, `deploy/aws/criar-oidc-e-role.sh`, o ledger `releases.jsonl`, o gate de schema e o cadeado do `deploy.sh`, e as catracas `workflow-deploy`, `deploy-sh`, `backup-db` e `criar-oidc-role`; ADR-14 ganha emenda datada e a lição 19 a regra da sonda que apaga o exit) | Item 12 da fila |
 | 2026-09-25 | `backend-config-e-conteudo-de-documento` (fecha a **P-59** e a **P-79** por mecanismo e a **P-75** por veredito escrito; abre a **P-85**; dispara sem pagar, pela segunda vez, a **P-53**; nascem `App\Shared\Support\FusoDoNegocio`, `Certification\Services\CertificateValidationUrl` e `ValidacaoDeCertificadoNaoConfigurada`, e as catracas `DataDeCalendarioTest` e `FusoDeArmazenamentoTest`; `config/app.php` fica em `UTC` literal por decisão escrita) | Item 29 da fila |
 | 2026-09-20 | `harness-hooks-de-guarda` (fecha a **P-82**; abre a **P-83** — sete decisões de política dos guardas que só existiam no ledger gitignorado — e a **P-84** — o harness não existe em doc versionado; nascem `.claude/settings.json`, `.claude/hooks/` com os cinco guardas e `.claude/tests/` com sete arquivos) | Item 28 da fila |
-| 2026-09-20 | `infra-producao-provisionamento-aws` (item 10, **v2** — replanejado do zero; a v1 e a R5 foram descartadas para `archive/`). Os sete DoD fecharam, o sétimo pelo **ramo ficha** que a Task 19 prevê. Fecha a **P-58**; abre a **P-77**, a **P-78**, a **P-79** e — no próprio gate de fechamento, por decisão do João de adiar — a **P-80** (custo) e a **P-81** (access key); **dispara a `P-05` sem pagar** (a produção subiu com as 30 migrations não consolidadas). Nascem `deploy/bin/verificar-backup.sh`, `deploy/nginx/tls.conf`, `docker-compose.prod-tls.yml`, `deploy/aws/user-data.sh` e o runbook `deploy/aws/README.md`; o ADR-09 ganha a revisão 2026-09 e a lição 19 é emendada pela terceira ocorrência | Item 10 da fila |
 
 > **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
 > "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com

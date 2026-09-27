@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppInputText, AppCheckbox, FormSection, FormErrorSummary, FormErrorBanner, useFormField } from '@shared/ui'
 import type { RoleData, PermissionData } from '@shared/types/generated'
-import type { DialogMode } from '@shared/lib'
+import { roleLabel, type DialogMode } from '@shared/lib'
 import { usePermissionCatalog } from '../../api/usePermissionCatalog'
 import { useRoleForm } from '../../hooks/useRoleForm'
 
@@ -44,7 +44,7 @@ export function RoleDialog({
     <CrudDialog
       visible={visible}
       mode={mode}
-      title={mode === 'create' ? t('role.new') : form.name}
+      title={mode === 'create' ? t('role.new') : roleLabel(form.name, t)}
       onHide={onHide}
       onEdit={canManage && !isSystem ? onEdit : undefined}
       onSubmit={submit}

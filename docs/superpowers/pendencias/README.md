@@ -39,6 +39,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
+> **O item 16 (`frontend-revisao-ui-por-modulo`) fechou em 2026-09-27 com a fatia 3** e não abriu
+> nem fechou pendência: os achados que não couberam no bloco viraram débito `D-71` e `D-72` no
+> `backlog.md`, e a `P-16`, a `P-10`, a `P-74` e a `P-44` apareceram nas runs como **conhecidas**,
+> sem virar achado novo. A **P-87** e a **P-88**, em rastro, são da `lane-b` e ficam para o
+> fechamento dela — a `lane-c` escreve só as fichas que ela abre ou fecha.
+>
 > **O item 29 (`backend-config-e-conteudo-de-documento`) fechou em 2026-09-25 as três fichas que
 > hospedava:** a **P-59** e a **P-79** por mecanismo (`FusoDoNegocio` + catraca; chave própria do QR,
 > obrigatória e https em produção) e a **P-75** por veredito escrito. As três estão em

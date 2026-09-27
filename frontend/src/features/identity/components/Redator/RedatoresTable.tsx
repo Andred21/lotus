@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, identifierClass } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass, reducedFloorTablePt } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime, type ArchivableRow } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
@@ -39,6 +39,9 @@ export function RedatoresTable({
   const table = useTableFilter(redatores, (r) => [r.name, r.rut])
   const toast = useToast()
   const invitation = useRedatorInvitation()
+  // Em 390x844 os três ícones deixavam só a inicial do nome à vista (UI-01 de
+  // Pessoas): abaixo de `sm` a linha colapsa num menu e a coluna encolhe junto.
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : '12rem')
 
   // O convite é o ÚNICO caminho de credencial: quem foi cadastrado antes deste
   // bloco nasceu com senha aleatória que ninguém recebeu.
@@ -51,6 +54,9 @@ export function RedatoresTable({
   return (
     <SearchableTableFrame
       table={table}
+      // UI-03 de `2026-09-04-lotus-ui-review-personas.md`: o piso default
+      // rolava em 1024x768 e a coluna presa cobria "Último acceso".
+      pt={reducedFloorTablePt}
       searchPlaceholder={t('redator.searchPlaceholder')}
       emptyState={
         <AppEmptyState
@@ -104,32 +110,29 @@ export function RedatoresTable({
       {archived && archivedColumns(t)}
       <AppColumn
         body={(r: RedatorRow) => (
-          <div className="flex justify-end">
-            {/* Reenviar convite é ação de acesso, e acesso arquivado não existe:
-              * o `User` do redator desce com a cascata, então o botão só aparece
-              * na lista ativa. */}
-            {!archived && (
-              <AppButton
-                icon="pi pi-envelope"
-                text
-                rounded
-                aria-label={t('redator.resendInvitation')}
-                tooltip={t('redator.resendInvitation')}
-                disabled={invitation.isPending}
-                onClick={() => reenviar(r.id!)}
-              />
-            )}
-            <RedatorRowActions
-              redator={r}
-              archived={archived}
-              busy={busy}
-              onView={onView}
-              onArchive={onArchive}
-              onRestore={onRestore}
-            />
-          </div>
+          <RedatorRowActions
+            redator={r}
+            archived={archived}
+            busy={busy}
+            onView={onView}
+            onArchive={onArchive}
+            onRestore={onRestore}
+            collapsed={colunaDeAcoes.collapsed}
+            // Reenviar convite é ação de acesso, e acesso arquivado não existe:
+            // o `User` do redator desce com a cascata, então a ação só vale na
+            // lista ativa — e é lá que `leading` entra.
+            leading={[
+              {
+                label: t('redator.resendInvitation'),
+                icon: 'pi pi-envelope',
+                tooltip: true,
+                disabled: invitation.isPending,
+                onClick: () => reenviar(r.id!),
+              },
+            ]}
+          />
         )}
-        style={stickyActionsColumn(archived ? '10rem' : '12rem')}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   )

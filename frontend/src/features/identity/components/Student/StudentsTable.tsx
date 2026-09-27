@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ServerTable } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, stickyActionsColumn, identifierClass } from '@shared/ui'
+import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass } from '@shared/ui'
 import type { StudentData } from '@shared/types/generated'
 import { studentWidths } from './studentColumns'
 
@@ -17,6 +17,9 @@ export function StudentsTable({
 }) {
   const { t } = useTranslation()
   const largura = studentWidths()
+  // Uma ação só, nada a colapsar: no telefone a coluna encolhe para o botão e
+  // devolve ao nome a cauda que os 6rem cobriam (UI-01 de Pessoas).
+  const colunaDeAcoes = useCollapsibleActionsColumn('6rem')
 
   return (
     <SearchableTableFrame
@@ -69,7 +72,7 @@ export function StudentsTable({
         body={(s: StudentData) => (
           <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(s)} />
         )}
-        style={stickyActionsColumn('6rem')}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   )

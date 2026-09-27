@@ -1,5 +1,6 @@
 import { afterEach } from 'vitest'
 import { cleanup } from '@testing-library/react'
+import { matchMediaStub, resetViewport } from '@shared/testing/viewport'
 
 /**
  * O ÚNICO desmonte do repositório (P-69). Era escrito à mão em 62 dos 127
@@ -11,3 +12,7 @@ import { cleanup } from '@testing-library/react'
  * deixaria a catraca `CLEANUP_A_MAO` do eslint de pé sobre nada.
  */
 afterEach(cleanup)
+
+/** O `matchMedia` que o jsdom não tem — o porquê está em `shared/testing/viewport.ts`. */
+window.matchMedia = matchMediaStub
+afterEach(resetViewport)
