@@ -14,6 +14,7 @@ export function UserRowActions({
   onView,
   onArchive,
   onRestore,
+  collapsed,
 }: {
   user: UserData
   archived: boolean
@@ -21,6 +22,7 @@ export function UserRowActions({
   onView: (u: UserData) => void
   onArchive: (u: UserData) => void
   onRestore: (u: UserData) => void
+  collapsed?: boolean
 }) {
   const { can } = usePermissions()
   const canManage = can('identity.access.manage')
@@ -34,6 +36,7 @@ export function UserRowActions({
       onRestore={() => onRestore(user)}
       onArchive={() => onArchive(user)}
       onView={() => onView(user)}
+      collapsed={collapsed}
     />
   )
 }

@@ -12,7 +12,6 @@
 #   LOTUS_DEPLOY_ATOR               quem promove, no ledger (default manual:<usuário>)
 #   LOTUS_ACEITAR_SCHEMA_A_FRENTE=1 pula a recusa do gate; só por SSH, e fica no
 #                                   ledger como `schema_a_frente`
-#   LOTUS_RELEASE_OWNER             dono das imagens no GHCR (default gatika-cl)
 # Saída: 0 ok, 1 falha, 2 uso, 3 outro deploy rodando, 4 banco à frente do alvo.
 # Pré:  /opt/lotus/.env, /opt/lotus/ghcr.token (PAT read:packages),
 #       /opt/lotus/docker-compose.prod.yml (e o overlay TLS, se ativo).
@@ -98,8 +97,10 @@ ao_sair() {
   exit "$codigo"
 }
 trap ao_sair EXIT
-
-DONO="${LOTUS_RELEASE_OWNER:-gatika-cl}"
+# Dono fixo (P-88): produção roda sempre imagem de ghcr.io/gatika-cl/. Até o
+# item 31, um SSH com variável promovia o trio PÚBLICO do repositório pessoal;
+# agora o literal bloqueia isso.
+DONO=gatika-cl
 APP="ghcr.io/$DONO/lotus-app:$SHA"
 WEB="ghcr.io/$DONO/lotus-web:$SHA"
 # O antivirus tambem e imagem NOSSA desde 2026-09-04: clamav/clamav so publica

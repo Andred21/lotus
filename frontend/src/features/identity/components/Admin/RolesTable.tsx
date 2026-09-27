@@ -2,8 +2,10 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, stickyActionsColumn,
+  useCollapsibleActionsColumn, reducedFloorTablePt,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
+import { roleLabel } from '@shared/lib'
 import { roleWidths } from './roleColumns'
 
 export function RolesTable({
@@ -21,6 +23,9 @@ export function RolesTable({
 }) {
   const { t } = useTranslation()
   const largura = roleWidths()
+  // Uma ação só, nada a colapsar: no telefone a coluna encolhe para o botão e
+  // devolve ao nome a faixa que os 6rem comiam (Q-1 do review de 2026-09-26).
+  const colunaDeAcoes = useCollapsibleActionsColumn('6rem')
 
   // Sem busca nesta aba: só um vazio possível, o de "sem dado".
   const empty = (
@@ -38,8 +43,17 @@ export function RolesTable({
         onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('role.count', { count: roles.length })}
+        // UI-02 de `2026-09-04-lotus-ui-review-administracion.md`: o piso
+        // default rolava em 1024x768 e a coluna presa cortava "Permisos".
+        pt={reducedFloorTablePt}
       >
-        <AppColumn field="name" header={t('role.name')} sortable style={largura.name} />
+        <AppColumn
+          field="name"
+          header={t('role.name')}
+          sortable
+          body={(r: RoleData) => roleLabel(r.name, t)}
+          style={largura.name}
+        />
         <AppColumn
           header={t('role.kind')}
           style={largura.kind}
@@ -54,7 +68,7 @@ export function RolesTable({
         />
         <AppColumn
           body={(r: RoleData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
-          style={stickyActionsColumn('6rem')}
+          style={stickyActionsColumn(colunaDeAcoes.width)}
         />
       </AppDataTable>
     </>

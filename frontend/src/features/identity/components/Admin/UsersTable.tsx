@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, reducedFloorTablePt } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
-import { formatDateTime, type ArchivableRow } from '@shared/lib'
+import { formatDateTime, roleLabel, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
 import { userWidths } from './userColumns'
 
@@ -36,10 +36,16 @@ export function UsersTable({
   const archived = mode === 'archived'
   const largura = userWidths(archived)
   const table = useTableFilter(users, (u) => [u.name, u.email])
+  // Abaixo de `sm` arquivar e ver colapsam num menu e a coluna encolhe junto —
+  // em 390x844 ela cobria o nome (Q-1 do review de 2026-09-26).
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : '9rem')
 
   return (
     <SearchableTableFrame
       table={table}
+      // UI-02 de `2026-09-04-lotus-ui-review-administracion.md`: o piso
+      // default rolava em 1024x768 e a coluna presa cobria "Último acceso".
+      pt={reducedFloorTablePt}
       searchPlaceholder={t('admin.searchPlaceholder')}
       emptyState={
         <AppEmptyState
@@ -65,7 +71,7 @@ export function UsersTable({
         )}
         style={largura.name}
       />
-      <AppColumn header={t('admin.role')} body={(u: UserData) => u.role} style={largura.role} />
+      <AppColumn header={t('admin.role')} body={(u: UserData) => roleLabel(u.role, t)} style={largura.role} />
       <AppColumn
         header={t('admin.state')}
         body={(u: UserData) => (
@@ -93,9 +99,10 @@ export function UsersTable({
             onView={onView}
             onArchive={onArchive}
             onRestore={onRestore}
+            collapsed={colunaDeAcoes.collapsed}
           />
         )}
-        style={stickyActionsColumn(archived ? '10rem' : '9rem')}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   )
