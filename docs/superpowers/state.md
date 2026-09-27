@@ -1,204 +1,132 @@
----
-schema_version: 2
-mode: multi-lane
-focused_lane: lane-c
-active_feature: null
-active_work_item: null
-workflow_state: idle
-next_owner: joao
-next_action: select_backlog_item
-resume_state: null
-active_spec: null
-active_plan: null
-context_packet: null
-blocker: null
-lanes:
-  lane-a:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: main-tree
-    branch: fix/backend-config-e-conteudo-de-documento   # aberta de main@5be61b63 em 2026-09-24; o item 29 fechou nela em 2026-09-25 e ela NAO foi mesclada — integracao e passo proprio, com o Joao. A anterior (chore/harness-hooks-de-guarda, item 28) mesclou na PR #106 (38e08a08)
-    active_spec: null
-    active_plan: null
-    context_packet: null
-    blocker: null
-    resume_state: null
-    last_completed_work_item: backend-config-e-conteudo-de-documento   # item 29, fechado em 2026-09-25; branch ainda nao mesclada
-  lane-b:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: ../lotus-infra
-    branch: cicd/host-alinhado-ao-sha   # aberta de origin/main@e5ac01a9 em 2026-09-26; ate af1526eb mesclada na PR #112 (fe6077df) e espelhada (3abd8136, em producao); o item 31 fechou nela em 2026-09-26 e o resto (review ea53e790 e os commits de doc) NAO foi mesclado — integracao e passo proprio, com o Joao. A anterior (cicd/promocao-deploy-e-rollback, item 12) mesclou inteira pelas PRs #108 a #111 (e5ac01a9)
-    active_spec: null
-    active_plan: null
-    context_packet: null
-    blocker: null
-    resume_state: null
-    arquivos_do_descarte:
-      - archive/infra-producao-provisionamento-aws-v1   # 305b6ca4 — spec, plano, gates, R1-R4 e toda a medicao
-      - archive/site-contact-form-v1                    # 6b643710 — a R5 (POST /api/public/contact), provada e descartada junto
-    last_completed_work_item: cicd-host-alinhado-ao-sha   # item 31, fechado em 2026-09-26; mesclado ate af1526eb (PR #112, fe6077df), o resto nao
-  lane-c:
-    active_feature: null
-    active_work_item: null
-    workflow_state: idle
-    next_owner: joao
-    next_action: select_backlog_item
-    tree: ../fix-frontend
-    branch: refactor/frontend-revisao-ui-f3   # aberta de origin/main@9c038cca em 2026-09-04 e rebaseada sobre main@5d1250c3 em 2026-09-27; o item 16 fechou nela em 2026-09-27 e ela NAO foi mesclada — integracao e passo proprio, com o Joao
-    active_spec: null
-    active_plan: null
-    context_packet: null
-    blocker: null
-    resume_state: null
-    last_completed_work_item: frontend-revisao-ui-por-modulo   # item 16 (fatia 3, a ultima), fechado em 2026-09-27; branch ainda nao mesclada
-last_completed_work_item: frontend-revisao-ui-por-modulo
-state_basis_commit: 2ab1204f
-updated_at: 2026-09-27T21:00:00-03:00
----
+# Estado — contrato
 
-# Estado operacional — Lotus v2
+Este arquivo é o **contrato** dos estados válidos, dos campos e das invariantes do `estado.md` de
+cada bloco. Ele não guarda o estado de bloco nenhum: o de cada um vive em
+`docs/superpowers/blocos/<NN>-<slug>/estado.md`, na pasta do bloco, na árvore da lane. A lista de
+lanes vivas agora mesmo sai de `bash .claude/scripts/lane.sh descobrir` — que é o que o
+`SessionStart` mostra no início de toda sessão.
 
-> Fonte única para descobrir a etapa atual e a próxima ação. `progress.md` registra histórico;
-> `backlog.md` registra a fila. Nenhum dos dois autoriza iniciar uma fase.
->
-> **Só o trabalho ATIVO mora aqui.** Bloco fechado deixa uma linha em `## Itens fechados`; a
-> narrativa dele vive em `historico/state-archive.md`. Este é o arquivo que toda sessão lê
-> primeiro (`CLAUDE.md` §3), e ele só se mantém legível se encolher a cada fechamento.
+## Lane
+
+Uma lane é uma worktree irmã, `../lotus-<NN>-<slug>`, numa branch que casa
+`^(feat|fix|chore|refactor|infra|cicd|docs)/([0-9]+)-(.+)$`. O número é o da ficha do
+`backlog.md`; a pasta do bloco é `blocos/<NN>-<slug>/`. Branch fora do padrão não é lane.
+
+- **O main tree fica sempre na `main` e nunca é lane.** Ele planeja, abre e fecha lane
+  (`lane.sh abrir` e `lane.sh fechar`) e escreve o `backlog.md`.
+- **No máximo três lanes.** Cada uma publica as portas do offset que o `abrir` reservou no `.env`
+  da raiz dela: +1, +2 ou +3, pela tabela do `.env.example`. O `abrir` conta como ocupado o
+  offset de toda árvore do `git worktree list`, lane ou não.
 
 ## Estados válidos
 
-| Estado | Próxima ação permitida |
+| Estado | Token do `next_action` | Próxima ação permitida |
+|---|---|---|
+| `idle` | `select_backlog_item` | escolher explicitamente um item do `backlog.md` |
+| `context_required` | `generate_context_packet` | gerar o Context Packet com `lotus-context-packet` |
+| `ready_for_planning` | `plan_active_work_item` | executar `/planejar-bloco` para o bloco |
+| `planning` | `continue_active_planning` | continuar brainstorming, spec e plano; **não implementar** |
+| `ready_for_execution` | `execute_active_plan` | executar `/executar-bloco` para o bloco |
+| `executing` | `continue_active_plan` | retomar a task pendente do plano; **não replanejar** |
+| `ready_for_review` | `request_code_review` | pedir o code review do bloco |
+| `reviewing` | `approve_review_findings` | tratar só os achados aprovados e repetir o review |
+| `ready_for_closure` | `close_active_work_item` | fechar o bloco |
+| `closing` | `answer_integration_menu` | responder ao menu de integração e verificar o merge |
+| `blocked` | `resolve_blocker` | resolver o `blocker`; depois voltar a `resume_state` |
+| `closed` | `none` | nenhuma: o bloco terminou e o `estado.md` é só o registro dele |
+
+A **primeira palavra** do `next_action` é o token do estado; texto livre pode seguir depois de um
+espaço. Texto com `#` vai entre aspas, porque o YAML lê ` #` como início de comentário:
+`next_action: "close_active_work_item PR #120 aberto"`. O mapa estado → token vive uma vez em
+código, em `.claude/hooks/lib/estados.sh`, e esta tabela o espelha: `.claude/tests/estados.tests.sh`
+reprova a divergência nos dois sentidos.
+
+### Entrar e sair de `blocked`
+
+Quando um impedimento externo para o trabalho, grave `workflow_state: blocked`, `resume_state` com
+o estado de onde se está saindo, `blocker` com uma linha que descreve o impedimento,
+`next_owner: joao` e `next_action: resolve_blocker`, seguido do que falta. Para sair, confirme que o
+`blocker` foi resolvido, copie `resume_state` de volta para `workflow_state`, zere `blocker` e
+`resume_state` e troque o `next_action` pelo token do estado retomado. Nos dois sentidos vale a
+invariante 9. Enquanto o bloco está em `blocked`, as regras de "a partir de" (invariantes 3, 4 e
+12) usam o `resume_state` como régua. O item 36 acrescenta um caminho automático: aceitação externa
+pendente depois do merge.
+
+## Campos (`schema_version: 3`)
+
+| Campo | Significado |
 |---|---|
-| `idle` | escolher explicitamente um item do `backlog.md` |
-| `context_required` | gerar/atualizar Context Packet com `lotus-context-packet` |
-| `ready_for_planning` | executar `/planejar-bloco` para `active_work_item` |
-| `planning` | continuar brainstorming/spec/plano; não implementar |
-| `ready_for_execution` | executar `/executar-bloco` para `active_work_item` |
-| `executing` | retomar a task pendente do plano; não replanejar |
-| `ready_for_review` | solicitar code review do bloco |
-| `reviewing` | tratar somente achados aprovados e repetir o review |
-| `ready_for_closure` | executar `/fechar-sprint` |
-| `blocked` | resolver `blocker`; depois retornar a `resume_state` |
+| `schema_version` | `3` nesta versão |
+| `id` | número da ficha no `backlog.md`, como ela o escreve (`30`, sem zero à esquerda) |
+| `slug` | nome da pasta do bloco, `<NN>-<resto>` (`30-harness-estado-por-bloco`); a branch é `<tipo>/<slug>` |
+| `workflow_state` | um dos doze estados acima |
+| `next_owner` | quem tem a bola: `joao`, `claude` ou `codex` |
+| `next_action` | começa pelo token do estado; texto livre depois de um espaço |
+| `resume_state` | estado para onde voltar ao sair de `blocked`; `null` fora dele |
+| `active_spec` | caminho da spec, relativo à raiz da árvore |
+| `active_plan` | caminho do plano; obrigatório a partir de `ready_for_execution` |
+| `active_review` | caminho do `revisao.md`; obrigatório a partir de `ready_for_closure` |
+| `active_acceptance` | caminho do `aceitacao.md` (item 36); `null` quando `efeito_externo` é `nao` |
+| `context_packet` | caminho do Context Packet, quando o bloco exige contexto externo |
+| `efeito_externo` | `sim` quando o resultado depende de ação fora do repositório, `nao` caso contrário. `null` é a semente do `lane.sh abrir` e **nunca** vale `nao` |
+| `executor` | quem executa o plano, copiado do `## Handoff de execução` dele: `claude` ou `codex` |
+| `branch` | branch da lane |
+| `worktree` | caminho da árvore da lane, relativo ao main tree |
+| `offset` | offset de porta da lane, de 1 a 3; `null` em lane aberta antes do `lane.sh` |
+| `lane_base` | SHA curto da `main` de onde a lane saiu |
+| `commit` | `git rev-parse --short HEAD` no momento em que o arquivo foi escrito |
+| `blocker` | uma linha que descreve o impedimento; `null` fora de `blocked` |
+| `updated_at` | ISO-8601 com offset |
+| `updated_by` | `<usuario>@<host> / <modelo>`: `id -un`, `hostname -s` e o alias do modelo, ou `terminal` quando o João roda o script à mão |
 
 ## Invariantes
 
-- **Modo multi-lane (desde 2026-08-22):** existe no máximo um `active_work_item` **por lane**; as
-  lanes ativas vivem em `lanes:` no frontmatter. Os estados da tabela acima valem por lane.
-- Os campos singulares do topo **espelham** a lane apontada por `focused_lane` — é o que
-  `/planejar-bloco` e `/executar-bloco` leem; eles operam sempre sobre a lane em foco. Trocar o
-  foco é fronteira durável: espelho + `lanes:` mudam no mesmo commit.
-- `next_action` deve corresponder a `workflow_state` (em cada lane).
-- `active_plan` é obrigatório a partir de `ready_for_execution` (em cada lane).
-- Quando o trabalho depender de contexto externo, `context_packet` deve permanecer `null` em
-  `context_required` e tornar-se obrigatório antes da transição para `ready_for_planning`.
-- **Gate de árvore por lane:** bloco que toca backend roda no main tree (o compose monta o main
-  tree — P-03). Só há uma lane de backend, então a P-03 não é disparada. Worktree é para lane que
-  não depende do compose; se precisar subir stack no worktree, vale o precedente de override de
-  portas + projeto compose próprio (2026-08-19), decidido no planejamento da lane.
-- **`docs/superpowers/**` se divide por DONO, não por árvore.** A regra anterior — *"muda somente
-  pelo main tree; branch de lane em worktree não toca esses arquivos"* — foi quebrada por 21
-  commits da lane-c no mesmo dia em que foi escrita, e a exceção redigida não cobria o que a lane
-  realmente escreveu (Q-2 do review de 2026-08-22). Regra vigente, cada lane escreve **só o que é
-  dela**, na árvore em que estiver:
-  - **O bloco dela em `lanes:`** — nunca o de outra lane.
-  - **Spec, plano e context packet dela**, e o arquivamento deles no fechamento.
-  - **Fichas de `pendencias/`** que ela abre ou fecha, com a linha do índice que as acompanha.
-  - **A linha dela** em `historico/progress.md`, a narrativa dela em `historico/state-archive.md`
-    e a linha dela na tabela `## Itens fechados` — tudo no commit de fechamento.
-  - **A remoção do próprio item** de `backlog.md`. Promover, reordenar ou acrescentar item ali é
-    do main tree, com o João.
-  - **Entregáveis de doc** que o plano dela autorizar, nos paths que o plano nomeia.
-  - **Nunca os campos singulares do topo**: são espelho de `focused_lane`, e trocar o foco é
-    fronteira durável do main tree.
+1. **No máximo três lanes vivas.** Cada lane é um bloco, uma branch `<tipo>/<NN>-<slug>` e uma
+   worktree irmã, conduzida por uma sessão própria. Abrir lane passa pelo portão do
+   `lane.sh abrir`: nada de quarta lane, nada de dois blocos que dependem um do outro (pela linha
+   `**Depende:**` das fichas, transitivamente, nos dois sentidos) e nada de offset repetido. O
+   portão compara o offset, lido do `LOTUS_DEV_HTTP_PORT` do `.env` de cada árvore; porta avulsa
+   fora da tabela do `.env.example` fica com o `docker compose up`, que falha alto. O
+   `lane.sh conferir` acusa dois planos vivos que tocam os mesmos arquivos, lendo o `plano.md` da
+   pasta de cada bloco; a lane que não tem um sai nomeada como `NAO CONFERIDA`.
+2. **`next_action` começa pelo token do `workflow_state`.** Se não começar, o arquivo está
+   corrompido: pare, relate e reconstrua a partir do git e dos artefatos do bloco. O `SessionStart`
+   acusa isso como `ESTADO INCOERENTE`.
+3. `active_plan` é obrigatório a partir de `ready_for_execution`.
+4. `active_review` é obrigatório a partir de `ready_for_closure`.
+5. Quando o bloco depende de contexto externo ao repositório, ele entra em `context_required`, com
+   `context_packet: null`, e o packet se torna obrigatório antes da transição para
+   `ready_for_planning`.
+6. **Mudanças de estado ocorrem somente em fronteiras duráveis** e entram no mesmo commit do
+   artefato que prova a transição. O estado mora na pasta do bloco, e é essa localização que impede
+   duas lanes de colidirem no mesmo arquivo de estado.
+7. **Divergência bloqueia a sessão.** Quando o `estado.md`, o plano, a spec, o Git ou o
+   `backlog.md` discordarem, pare e relate. Não escolha fonte por heurística e não "conserte" o
+   arquivo para o que parece mais provável.
+8. **O backlog nunca promove trabalho automaticamente.** Abrir lane para uma ficha é sempre escolha
+   explícita do João.
+9. Quem altera um `estado.md` atualiza, no mesmo arquivo, `updated_at`, `updated_by` e `commit`.
+10. **`backlog.md` é escrito somente pelo main tree, na `main`.** É o último arquivo compartilhado
+    entre lanes, e a regra o mantém livre de conflito.
+11. **Bloco com `efeito_externo: sim` não vai a `closed` sem a prova do efeito externo
+    registrada.** `closed` significa resultado verificado, não código na `main`. O registro é o
+    `aceitacao.md` que o item 36 introduz; até ele, a prova vai no fechamento.
+12. **`efeito_externo` é obrigatório a partir de `ready_for_execution`.** Quem grava `sim` ou `nao`
+    é o planejamento; o `lane.sh abrir` só semeia `null`. `null` num bloco que já passou dali é
+    divergência pela invariante 7, e o `SessionStart` a acusa. Ler `null` como `nao` desligaria a
+    invariante 11 sem ninguém ter decidido isso.
 
-  Colisão que sobrar é resolvida pela integração serial, que já é invariante logo abaixo: uma lane
-  mescla por vez, as demais rebasam antes de continuar.
-- **Planejamento é serial** (brainstorming com o João, um bloco por vez) e **integração é serial**
-  (uma lane faz merge por vez; após cada merge as demais rebasam antes de continuar). Só a
-  execução sobrepõe.
-- Mudanças de estado ocorrem somente em fronteiras duráveis e entram no mesmo commit do artefato
-  que prova a transição.
-- Divergência entre este arquivo, plano, spec, Git ou `progress.md` bloqueia a sessão; não escolha
-  por heurística. Divergência **entre lanes** (mesmo arquivo, mesma decisão) bloqueia as lanes
-  envolvidas.
-- O backlog nunca promove trabalho automaticamente.
+## Histórico
 
-## Seleção multi-lane — 2026-08-22: três blocos promovidos em paralelo
+Os blocos do fluxo antigo têm uma linha cada em `historico/progress.md` e a narrativa em
+`historico/state-archive.md`, que recebeu o `state.md` antigo inteiro na virada do item 30 e depois
+dele congela. Bloco novo: a pasta `blocos/<NN>-<slug>/` é o registro, e o `progress.md` ganha a
+linha dele no fechamento.
 
-Decisão explícita do João (sessão 2026-08-22): desenvolver blocos em paralelo com worktrees.
-Três itens da fila consolidada (`backlog.md@ba59dbd9`) promovidos de uma vez — frentes
-disjuntas, colisão mínima de arquivos:
+## Transição
 
-| Lane | Bloco (item da fila) | Frente | Árvore | Branch |
-|---|---|---|---|---|
-| `lane-a` | ~~`feedbacks-resolver-escopo` (1)~~ — **fechado em 2026-08-22** | Backend | main tree (gate P-03) | `feat/feedbacks-resolver-escopo` (não mesclada) |
-| `lane-b` | `infra-producao-runtime-e-aws` (10) | Infra | `../lotus-infra` | `infra/producao-runtime-e-aws` |
-| `lane-c` | `BD-15-docs-guardrails-e-sincronizacao` (14) | Docs | `../lotus-bd15` | `docs/bd15-guardrails-e-sincronizacao` |
-
-- As três lanes nascem em `context_required` — os três blocos exigem Context Packet.
-- O gate main-tree/worktree do `/executar-bloco` fica satisfeito sem reabrir a P-03: uma única
-  lane de backend, e ela no main tree. O override de portas de 2026-08-19 não é necessário aqui;
-  se a lane-b precisar subir o stack do worktree para provar imagem/compose, o planejamento dela
-  decide o arranjo (projeto compose próprio + portas próprias, como no precedente).
-- Worktrees criados a partir de `main@c8480ee`; **rebase obrigatório** antes de a execução da
-  lane começar e antes de cada merge.
-- Ordem de planejamento (serial): `lane-a` → `lane-b` → `lane-c`. Execuções sobrepõem depois que
-  cada plano fica pronto.
-- Interseções conhecidas a vigiar: `lane-c` (BD-15/D-17) e a futura CI (item 11) tocam
-  `.github/workflows`; `generated.ts` só regenera na lane-a. Nada disso colide entre as três
-  lanes ativas.
-
-> A tabela acima é **registro da seleção de 2026-08-22**, não a lista do que está ativo. Os três
-> itens que ela promoveu fecharam: o 1 e o 14 em 2026-08-22 (PR #65 e PR #66, merge `61acc0c3`) e o
-> 10 em 2026-08-22 (PR #67, merge `31f91987`). As lanes foram reatribuídas. O que está vivo agora
-> está na seção abaixo.
-
-## Ocupação corrente — 2026-09-27
-
-| Lane | Bloco | Frente | Árvore | Branch | Estado |
-|---|---|---|---|---|---|
-| `lane-a` | — (item 29 `backend-config-e-conteudo-de-documento` **fechado em 2026-09-25**) | — | main tree (gate P-03) | `fix/backend-config-e-conteudo-de-documento` (de `main@5be61b63`, **não mesclada** — integração é passo próprio, com o João) | `idle` |
-| `lane-b` | — (item 31 `cicd-host-alinhado-ao-sha` **fechado em 2026-09-26**) | — | `../lotus-infra` | `cicd/host-alinhado-ao-sha` (de `origin/main@e5ac01a9`; até `af1526eb` mesclada na PR #112, `fe6077df`; o resto **não mesclado** — integração é passo próprio, com o João) | `idle` |
-| `lane-c` | — (item 16 `frontend-revisao-ui-por-modulo` **fechado em 2026-09-27**, fatia 3) | — | `../fix-frontend` | `refactor/frontend-revisao-ui-f3` (de `origin/main@9c038cca`, rebaseada sobre `main@5d1250c3`; **não mesclada** — integração é passo próprio, com o João) | `idle` |
-
-
-> **Esta tabela é estado corrente, e por isso acompanha o frontmatter.** A linha da `lane-c` ficou
-> em `ready_for_execution` enquanto o frontmatter andava até `ready_for_review` — as outras duas
-> linhas batiam, então quem lesse a tabela concluiria que a lane ainda tinha bloco por executar, e a
-> invariante manda PARAR diante de divergência de fase, não escolher fonte (Q-4 do review de
-> 2026-08-27). Lane que muda `workflow_state` muda a própria linha aqui no mesmo commit.
-
-
-## Itens fechados — ponteiro, não narrativa
-
-O que cada bloco **entregou** está em `historico/progress.md`, uma linha com plano, spec, packet e
-commits. A narrativa integral — seleção, planejamento, execução, review, correções, fechamento e
-merge — está em `historico/state-archive.md`, na ordem abaixo.
-
-| Fechado | Bloco | Fila de origem |
-|---|---|---|
-| 2026-09-27 | `frontend-revisao-ui-por-modulo` fatia 3 — **fecha o item 16** (paga a **`D-59`**; nenhuma pendência nasce ou fecha; nascem `D-71`, `D-72`, `shared/ui/RowActions` e `reducedFloorTablePt`) | Item 16 da fila |
-| 2026-09-26 | `cicd-host-alinhado-ao-sha` (encerra a **P-87** e a **P-88**; a **P-86** segue aberta com nota — o release não tinha migration; nasce `.github/scripts/conferir-alinhamento.sh` e o passo de conferência do `deploy.yml`, sem escape, e a catraca `conferir-alinhamento`; o `deploy.sh` promove só `ghcr.io/gatika-cl/`; runbook §7, §8 e §8.1 e o par novo na lição 19) | Item 31 da fila |
-| 2026-09-26 | `cicd-promocao-deploy-e-rollback` (abre a **P-86** e a **P-87**, esta com o gatilho disparado pelo próprio review e não pago; emenda a **P-62** com o botão sem Environment; nascem `.github/workflows/deploy.yml`, `deploy/aws/criar-oidc-e-role.sh`, o ledger `releases.jsonl`, o gate de schema e o cadeado do `deploy.sh`, e as catracas `workflow-deploy`, `deploy-sh`, `backup-db` e `criar-oidc-role`; ADR-14 ganha emenda datada e a lição 19 a regra da sonda que apaga o exit) | Item 12 da fila |
-| 2026-09-25 | `backend-config-e-conteudo-de-documento` (fecha a **P-59** e a **P-79** por mecanismo e a **P-75** por veredito escrito; abre a **P-85**; dispara sem pagar, pela segunda vez, a **P-53**; nascem `App\Shared\Support\FusoDoNegocio`, `Certification\Services\CertificateValidationUrl` e `ValidacaoDeCertificadoNaoConfigurada`, e as catracas `DataDeCalendarioTest` e `FusoDeArmazenamentoTest`; `config/app.php` fica em `UTC` literal por decisão escrita) | Item 29 da fila |
-| 2026-09-20 | `harness-hooks-de-guarda` (fecha a **P-82**; abre a **P-83** — sete decisões de política dos guardas que só existiam no ledger gitignorado — e a **P-84** — o harness não existe em doc versionado; nascem `.claude/settings.json`, `.claude/hooks/` com os cinco guardas e `.claude/tests/` com sete arquivos) | Item 28 da fila |
-
-> **Colisão de rótulo, 2026-09-02.** Os dois blocos que fecharam neste dia foram registrados como
-> "item 24" em lanes diferentes. O `24` do `backlog.md` é o `backend-projecao-de-arquivados`, com
-> ficha na fila desde `14b25b6c`; o `frontend-campo-de-formulario-liga-no-form` nunca teve ficha —
-> nasceu do §3 do review de arquitetura de 2026-09-01 e tomou o rótulo por engano. Decisão do João
-> em 2026-09-02, no fechamento da lane-a: **o 24 é o bloco de backend**, e o registro da lane-c passa
-> a dizer "sem ficha na fila". Nenhum número é reusado nem renumerado.
-
-**Esta seção não cresce.** Bloco que fecha entra no topo da tabela e a narrativa dele desce
-**inteira** para o `state-archive.md` no mesmo commit do fechamento (`/fechar-sprint` §9); passando
-de cinco linhas, a mais antiga sai daqui — ela continua no arquivo, que é onde ela vive. Foi o
-achado Q-1 do review de 2026-08-22: este arquivo é o primeiro que toda sessão lê (`CLAUDE.md` §3) e
-tinha 1499 linhas, 81% delas narrativa de bloco que já acabou.
+Até o item 35 mesclar, os commands e skills (`/planejar-bloco`, `/executar-bloco`,
+`revisar-sprint`, `fechar-sprint` e `.agents/skills/`) ainda citam `state.md`, `lanes:`,
+`focused_lane` e os campos singulares do topo. Leia "o `estado.md` do bloco" onde eles dizem
+`state.md`, e "o bloco" onde dizem lane em foco ou `active_work_item`. O `estado.md` do 35 e o do
+36 são semeados à mão, porque o `lane.sh abrir` exige o main tree na `main` (spec 2026-09-26, §7).
