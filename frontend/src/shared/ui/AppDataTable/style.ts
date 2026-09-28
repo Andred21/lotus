@@ -2,11 +2,11 @@ import type { CSSProperties } from 'react'
 import type { DataTablePassThroughOptions } from 'primereact/datatable'
 import { fieldLabelClass } from '../typography'
 
-/** O `table-layout` mora num lugar só, e o piso default e o reduzido o compõem:
- * o `mergePt` SUBSTITUI a folha `table.className` (nunca concatena), então quem
- * reduz o piso reescreve a classe inteira — e uma cópia literal do
- * `table-fixed` em cada tabela divergiria em silêncio do default (Q-5 do review
- * de 2026-09-26). O porquê do `table-fixed` está no docblock de `table` abaixo. */
+/** O `table-layout` mora num lugar só, e todo piso o compõe: o `mergePt`
+ * SUBSTITUI a folha `table.className` (nunca concatena), então quem troca o
+ * piso reescreve a classe inteira — e uma cópia literal do `table-fixed` em
+ * cada tabela divergiria em silêncio do default (Q-5 do review de 2026-09-26).
+ * O porquê do `table-fixed` está no docblock de `table` abaixo. */
 const TABLE_LAYOUT = 'table-fixed'
 
 /** Passthrough do DataTable (ADR-16). Cores por CSS var do tema Lara.
@@ -65,8 +65,13 @@ export const appDataTablePt: DataTablePassThroughOptions = {
    * bloco promete. O porquê está em `columnWidth.ts`; as leituras, na §4 do
    * registro de medição do item 17.
    *
-   * A largura mínima continua: abaixo de 48rem o wrapper rola, e a coluna de
-   * ações fica presa (`stickyActionsColumn`) para continuar alcançável.
+   * A largura mínima continua: abaixo de 42rem o wrapper rola, e a coluna de
+   * ações fica presa (`stickyActionsColumn`) para continuar alcançável. **42rem
+   * (672px) e não 48rem** desde o item 23 (`D-65`): a sobreposição da coluna
+   * presa é `larguraDaTabela - larguraDaMoldura` por inteiro, e em 1024x768 as
+   * molduras são 718px e 684px (Emisión) — 768px rolava nas nove tabelas do
+   * piso antigo, 672px cabe em todas. Era a exceção de Redactores, Usuarios e
+   * Roles (fatia 3 do item 16), e virou a regra.
    *
    * **O raio desta linha é o sistema inteiro, e ela é ligada no MEIO da
    * migração.** Toda tabela que ainda não declarou largura passa a repartir o
@@ -77,7 +82,7 @@ export const appDataTablePt: DataTablePassThroughOptions = {
    * árvore inteira atrás de coluna sem largura antes de qualquer merge. Nenhum
    * teste pega isto: o jsdom não calcula caixa, então `table-layout` não tem
    * efeito observável na suíte. */
-  table: { className: `min-w-[48rem] ${TABLE_LAYOUT}` },
+  table: { className: `min-w-[42rem] ${TABLE_LAYOUT}` },
   headerRow: { className: fieldLabelClass },
   // headerCell/bodyCell pertencem a ColumnPassThroughOptions, não a
   // DataTablePassThroughOptions — cascatam via `column` (tipagem do PrimeReact 10.9.8).
@@ -89,23 +94,6 @@ export const appDataTablePt: DataTablePassThroughOptions = {
     bodyCell: { className: 'px-4 py-3' },
   },
   bodyRow: { className: 'transition-colors' },
-}
-
-/** Piso reduzido: `min-w-[42rem]` (672px) no lugar dos 48rem (768px) do default.
- *
- * O default é maior que os 718px de moldura em 1024x768; o piso vence, força
- * rolagem, e a coluna de ações presa (`right: 0`) passa a cobrir a última
- * coluna de dado — "Último acceso" em Redactores e Usuarios, "Permisos" em
- * Roles (UI-03 de Personas e UI-02 de Administración, item 16 fatia 3). A
- * sobreposição é `larguraDaTabela - larguraDaMoldura` por inteiro e não depende
- * dos pesos de `tableWidths()` (medido; `D-65` no backlog), por isso a correção
- * é o piso, e não a coluna.
- *
- * É opt-in por tabela, via `pt` (direto no `AppDataTable` ou pelo
- * `SearchableTableFrame`), porque 42rem só serve a quem tem colunas de dado
- * que cabem nele: a varredura das 12 tabelas é o item 23. */
-export const reducedFloorTablePt: DataTablePassThroughOptions = {
-  table: { className: `min-w-[42rem] ${TABLE_LAYOUT}` },
 }
 
 /** Faixa de rodapé da tabela (spec D12): o paginador do DataTable É o rodapé —

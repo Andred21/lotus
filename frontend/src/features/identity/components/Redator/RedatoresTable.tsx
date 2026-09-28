@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass, reducedFloorTablePt, Timestamp } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass, Timestamp } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, type ArchivableRow } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
@@ -54,9 +54,6 @@ export function RedatoresTable({
   return (
     <SearchableTableFrame
       table={table}
-      // UI-03 de `2026-09-04-lotus-ui-review-personas.md`: o piso default
-      // rolava em 1024x768 e a coluna presa cobria "Último acceso".
-      pt={reducedFloorTablePt}
       searchPlaceholder={t('redator.searchPlaceholder')}
       emptyState={
         <AppEmptyState

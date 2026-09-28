@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, reducedFloorTablePt, Timestamp } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, Timestamp } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 import { roleLabel, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
@@ -43,9 +43,6 @@ export function UsersTable({
   return (
     <SearchableTableFrame
       table={table}
-      // UI-02 de `2026-09-04-lotus-ui-review-administracion.md`: o piso
-      // default rolava em 1024x768 e a coluna presa cobria "Último acceso".
-      pt={reducedFloorTablePt}
       searchPlaceholder={t('admin.searchPlaceholder')}
       emptyState={
         <AppEmptyState

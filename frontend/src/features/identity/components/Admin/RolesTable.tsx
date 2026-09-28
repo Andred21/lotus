@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, stickyActionsColumn,
-  useCollapsibleActionsColumn, reducedFloorTablePt,
+  useCollapsibleActionsColumn,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
 import { roleLabel } from '@shared/lib'
@@ -43,9 +43,6 @@ export function RolesTable({
         onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('role.count', { count: roles.length })}
-        // UI-02 de `2026-09-04-lotus-ui-review-administracion.md`: o piso
-        // default rolava em 1024x768 e a coluna presa cortava "Permisos".
-        pt={reducedFloorTablePt}
       >
         <AppColumn
           field="name"
