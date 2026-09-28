@@ -39,7 +39,8 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
   `active_spec` e `active_plan` (quando não forem `null`). O packet vem antes de qualquer consulta
   a Drive, Notion ou Figma e não substitui spec, plano, rules, ADRs ou código.
 - **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada no main tree:
-  para abrir lane, no planejamento, no fechamento ou por solicitação explícita do João.
+  para abrir lane e no planejamento, ou por solicitação explícita do João; no fechamento, é a
+  lane que remove a própria ficha (`state.md`, invariante 10).
 - **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
 - **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task a task. Serve
   somente para retomar detalhe fino da execução; nunca decide a fase.
@@ -54,7 +55,7 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 | `docs/superpowers/context-packets/` | antes de consultar Drive/Notion/Figma para o bloco ativo        |
 
 > **Layout de `docs/superpowers/`:** na raiz vivem só os dois arquivos que decidem — `state.md`
-> (o contrato dos estados) e `backlog.md` (a fila, escrita só pelo main tree). Cada bloco aberto
+> (o contrato dos estados) e `backlog.md` (a fila; entra na `main` só por PR). Cada bloco aberto
 > pelo `lane.sh` tem a pasta `blocos/<NN>-<slug>/`, com o `estado.md` e os artefatos dele. O resto
 > mora em pasta: `pendencias/` (`README.md` é o índice, `abertas.md` a ficha de cada uma,
 > `encerradas.md` o rastro de 1 sprint), `historico/` (`progress.md`, `progress-archive.md` e

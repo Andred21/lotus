@@ -199,7 +199,8 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 │                                #   dois sentidos (catraca em `commands.tests.sh`); lista não repetida
 │                                #   aqui de propósito — doc que copia lista envelhece calado (lição 13)
 │
-├── hooks/                      # PreToolUse/Stop; contrato comum: `exit 0` sempre, JSON no stdout
+├── hooks/                      # SessionStart/PreToolUse/Stop; `exit 0` sempre — JSON no stdout,
+│                               #   exceto `session-start.sh` (texto puro)
 │   ├── guard-main-shell.sh     # restringe Bash só quando a branch é `main`: falha ABERTA sem saber
 │   │                           #   a branch (infra), FECHADA sem saber classificar o comando
 │   ├── guard-main.sh           # nega escrita cruzada entre árvores e escrita na `main` fora da allowlist
@@ -210,7 +211,7 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 │
 ├── scripts/
 │   ├── lane.sh                 # portão de toda lane — verbos `descobrir`, `abrir`, `conferir`, `fechar`
-│   └── lib/backlog.py          # leitura/escrita do `backlog.md`, usada pelo `lane.sh`
+│   └── lib/backlog.py          # só leitura: fichas e conflitos de `Depende`, para o portão do `lane.sh abrir`
 │
 ├── prompts/                    # texto longo consumido por um agente despachado, não command direto
 │   ├── gabarito-lotus.md       # lente 1 do `/revisar-bloco` — destilado da ex-skill `revisar-sprint`
@@ -237,8 +238,7 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
   na `main`, e cada um ganha sua própria régua de argumento (`branch`/`tag` negam a flag que
   altera, `push`/`commit` negam force e `--no-verify`, `worktree` nega `remove`/`move`/`prune`/
   `lock`/`unlock`/`repair`, `remote` nega alterar o remoto, `pull`/`fetch` negam URL solta); e
-  `NEGADOS_SEMPRE` lista os binários de execução ou escrita arbitrária, negados sob qualquer forma,
-  mesmo fora da `main`.
+  `NEGADOS_SEMPRE` lista os binários de execução ou escrita arbitrária, negados sob qualquer forma.
 - **O que ela libera na `main`:** leitura e verificação, dentro da régua de cada família — em
   `git`, os subcomandos de `GIT_SUB` (item acima); em `gh`, só `pr view/list/diff/checks`,
   `run view/list`, `repo view` e `gh api` sem verbo de escrita; e o `lane.sh` nas quatro formas
