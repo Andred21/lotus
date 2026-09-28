@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass, Timestamp } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass, Timestamp } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
 import { idoneidade, IDONEIDADE_SEVERITY, type ArchivableRow } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
@@ -69,6 +69,8 @@ export function RedatoresTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
+      // Piso de 390 medido (item 23, audit §5): 132px de 1ª coluna contra 204px livres.
+      pt={archived ? narrowFloorTablePt('57.5rem') : undefined}
     >
       <AppColumn
         field="name"

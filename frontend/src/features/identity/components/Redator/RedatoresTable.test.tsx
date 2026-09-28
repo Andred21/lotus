@@ -65,6 +65,16 @@ describe('RedatoresTable — ações colapsam no telefone (UI-01)', () => {
   })
 })
 
+describe('RedatoresTable — piso estreito abaixo de sm (item 23, audit §5)', () => {
+  it('em arquivados, o piso é o medido para esta visão', () => {
+    montar('archived')
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('57.5rem')
+  })
+})
+
 describe('RedatoresTable — Último acceso (item 23)', () => {
   it('sai no Timestamp, com o instante do backend no dateTime', () => {
     renderWithProviders(
