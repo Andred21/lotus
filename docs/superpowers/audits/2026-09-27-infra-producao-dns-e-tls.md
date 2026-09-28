@@ -38,3 +38,24 @@ Espelho rodado pelo João (`--simular`, depois de verdade). A `main` do corporat
 
 `gh run list -R Gatika-CL/lotus --commit X`: run `CI` `completed / success`, criado em
 2026-09-28T00:53:58Z.
+
+## Task 9 — DNS
+
+Stack `lotus-dns` (us-east-1), repo `Andred21/lotus-site`, PR #21 (merge `581f6c16`, mesclada em
+2026-09-28T00:52:58Z). Desvio de ordem: o plano previa o merge depois do deploy; a PR entrou antes.
+Sem efeito na zona — o CI do site não publica o stack (o job `deploy` só sobe o site, e foi pulado),
+e antes do change set o stack seguia com a última alteração em 2026-09-26 e `app` em NXDOMAIN. O
+template executado é o da `main` do site, idêntico ao da PR.
+
+- Proteção ligada pelo João. `describe-stacks`: `UPDATE_COMPLETE	True`.
+- Drift: `DETECTION_COMPLETE	IN_SYNC` (2026-09-28T01:10:18Z).
+- Portão de base, template vivo contra a `main` do site, sem comentários nem linhas vazias: 15 linhas
+  `>`, 0 linhas `<` — o parâmetro `IpDaIntranet`, as duas linhas de `Retain` em `Registros` e o
+  RecordSet de `app`.
+- Change set criado sem executar: `Registros	Modify	False`, linha única.
+- Executado pelo João. `wait stack-update-complete`: `UPDATE_COMPLETE`, `LastUpdatedTime`
+  2026-09-28T01:11:31Z; proteção segue `True`.
+- `pnpm infra:conferir-zona --pos-delegacao`: `rc=0`, "Nenhuma divergência fora das esperadas";
+  `app.lotusotec.cl. A 18.230.53.197` nos dois lados, `sim`; os seis do SES e o `_dmarc` `sim`.
+- DoH em 2026-09-27T22:15:15-03:00: `dns.google` A `['18.230.53.197']`, AAAA `[]`;
+  `cloudflare-dns.com` A `['18.230.53.197']`.
