@@ -636,6 +636,63 @@ Task 9 aplica os `X` abaixo por visão.
    própria, já com `col1` ≥ ativa) — resolvido por analogia com a fórmula das ativas, mas fica
    como nota de método, não como número incerto (o resultado bateu exatamente com o `X` da ativa).
 
+### Step 4 — remedição real no Chromium
+
+A 1ª rodada (`piso.txt`, fixture ativa, `VPS=390x844,1024x768`) reprovou DUAS linhas que a fórmula
+tinha dado como corretas:
+
+| Visão | `X` calculado | `table` | `sticky` | `col1` | `free` | `box` |
+|---|---|---|---|---|---|---|
+| Cursos (arquivada) | 54.0rem | 864px | 86px | 222 | 190 | **16** |
+| Usuarios (arquivada) | 57.75rem | 924px | 92px | 207 | 184 | **8** |
+
+Causa: a fórmula da seção acima assume `free` constante em 204px (172px na Emisión) — a mesma
+`stickyW` de 72px (o `4.5rem` colapsado) em qualquer piso. Isso vale enquanto o piso não passa do
+"ponto de equilíbrio" em que a soma das larguras das colunas (as % de dado mais o par fixo de
+`ARCHIVED_COLUMN` mais os 72px da presa) já fecha exatamente com os 42rem default (672px) — é onde
+TODAS as sete visões de arquivados nasceram, porque o piso antigo era uniforme. Acima disso, o
+`table-layout: fixed` do Chromium não mantém a presa fixa em 72px: com min-width forçando a tabela
+a crescer além da soma natural das colunas, o espaço extra se distribui PROPORCIONALMENTE a todas as
+colunas que já declaram largura — inclusive a presa (`style.width`, um valor absoluto). Medido:
+`sticky` foi de 72px em 672px de tabela para 86–93px em 816–928px — e como `free = frame − sticky`
+(276 − sticky em 390×844), o `free` ENCOLHE conforme o piso cresce, ao contrário do que a fórmula
+original supôs. Nas cinco visões cujo `X` calculado ficava mais perto do equilíbrio (Clientes,
+Presupuestos, Turmas, Redactores, e a Matrícula arquivada com piso pequeno) a margem sobreviveu; nas
+duas com a MAIOR razão entre `X` calculado e a fração `share_a` (Cursos e Usuarios — as duas com o
+`col1` ativo mais alto exigindo o maior salto), o encolhimento do `free` superou o ganho de `col1` e
+a caixa reabriu.
+
+Correção: bisseccionado no navegador real (`VPS=390x844 PAGES=/cursos` e `PAGES=/administracion`,
+sem fixture nova — a mesma sessão arquivada), medindo `box = max(0, col1 − 16 − free)` (os 16px são
+o `padding-right` de `px-4` da célula, que a fórmula original já assumia via o termo `− 16`, mas a
+conta de qual `X` usar não recalculava o `free` reduzido):
+
+| Visão | `X` novo | `table` | `sticky` | `col1` | `free` | `box` | margem (`free+16−col1`) |
+|---|---|---|---|---|---|---|---|
+| Cursos (arquivada) | **47.0rem** (era 54.0rem) | 752px | 75px | 193 | 201 | 0 | 24px |
+| Usuarios (arquivada) | **51.0rem** (era 57.75rem) | 816px | 82px | 183 | 194 | 0 | 27px |
+
+Nenhum dos dois alcança o `col1` da ativa (Cursos: 193 < 218; Usuarios: 183 < 204) — o mesmo
+trade-off que a Preocupação #2 já previa como aceitável ("arquivada < ativa" é cosmético, o `free`
+nunca é invadido). Testado que NÃO há `X` que satisfaça as duas pernas da régua para estas duas
+tabelas: com os pontos medidos (672px↔piso calculado, e os dois pontos bisseccionados), a reta de
+`col1(T)` cruza a reta de `free(T)+16` num `col1` abaixo do `col1` da ativa em ambos os casos — ou
+seja, a régua "arquivada ≥ ativa" e a régua "`box = 0`" são matematicamente incompatíveis aqui,
+_dado_ este comportamento do `table-fixed`, e não só por escolha de `X`.
+
+A 2ª rodada (`piso2.txt`, mesma fixture, sem novo archive — o `archive` repetido falhou tentando
+recriar `fixture.item23@lotus.cl` já arquivado, erro inofensivo que não tocou `fixture-ids.json`;
+a fixture usada era a mesma da 1ª rodada) confirma:
+
+- **Todas as 15 linhas `390x844` com presa fecham em `box 0`**, incluindo as duas corrigidas.
+- **`col1` arquivada ≥ `col1` ativa em 5 das 7 visões** (Clientes 191≥189, Presupuestos 92≥91,
+  Turmas 53≥52, Matrícula 211≥210, Redactores 182≥180); Cursos (193<218) e Usuarios (183<204) ficam
+  do lado cosmético, documentado acima.
+- **As linhas `1024x768` são IDÊNTICAS a `meio.txt`** em `table`, `scroll` e `overlap` (`diff` vazio,
+  exit 0) — o piso abaixo de `sm` não vaza para 1024 por construção (`sm:min-w-[42rem]` é uma classe
+  literal, não parametrizada pelo `X`).
+- Fixture restaurada ao fim (`fixture-ids.json` ausente); nenhum registro ficou arquivado.
+
 ## Apêndice A — `medir.cjs`
 
 Texto idêntico ao do brief (Step 2), sem alteração.
