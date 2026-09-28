@@ -2,9 +2,9 @@
 schema_version: 3
 id: 23
 slug: 23-frontend-tabelas-reserva-e-rolagem
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan Task 2 (Timestamp) em WIP, Task 1 em 179ff608
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
 active_plan: docs/superpowers/plans/2026-09-27-frontend-tabelas-reserva-e-rolagem.md
@@ -17,9 +17,9 @@ branch: refactor/23-frontend-tabelas-reserva-e-rolagem
 worktree: ../fix-frontend
 offset: 2
 lane_base: 162cbaa7
-commit: 179ff608
+commit: e2c27efb
 blocker: null
-updated_at: 2026-09-27T21:43:08-03:00
+updated_at: 2026-09-28T00:54:30-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -40,3 +40,20 @@ este arquivo **sem rebasear agora**.
 - Spec e plano ficam nos caminhos legados (`specs/` e `plans/`), porque nasceram antes da pasta do
   bloco.
 - O `efeito_externo` é `nao`: o bloco é só frontend e não depende de ação fora do repositório.
+
+## Handoff para review (2026-09-28)
+
+As Tasks 1 a 10 do plano estão completas, e cada uma passou pela revisão de task. A evidência de
+medição e os gates estão no audit `docs/superpowers/audits/2026-09-27-item23-medicoes.md` (§6 a §8).
+O review do bloco não foi iniciado.
+
+Notas para o João no fechamento:
+
+- **Cursos e Usuarios arquivados** ficam abaixo do `col1` da ativa em 390 (209 contra 218 e 201
+  contra 204). A varredura do §5 Step 4 prova que nenhum piso fecha as duas pernas da régua.
+- **Seis visões de arquivados** pedem piso de 51 a 58rem abaixo de `sm` (§5).
+- **Alumnos e Roles** ficam cerca de 11% acima da referência da spec (§5, Preocupações para o João).
+- **O transbordo de conteúdo do Dashboard** persiste em 1024: 31 e 29px, contra 25 e 21px antes. A
+  tabela cabe na moldura. A spec §1 manda abrir ficha nova, e ela ainda não foi aberta (§6, Observação 1).
+- **O certificado `LOT-2026-1001`** do banco de dev foi emitido por navegador Windows às 23:58 (-03)
+  de 27/09, não pelos scripts. Por isso o Historial mede 2 linhas (§6, Observação 2).
