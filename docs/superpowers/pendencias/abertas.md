@@ -254,6 +254,30 @@ repositório prova lock.
   recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
   desta ficha). Turma 7 restaurada ao fim do gate.
 
+## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** bloco que tocar `backend/bootstrap/app.php`
+(`withMiddleware` ou `withExceptions`) ou o middleware de autenticação; revisar em **2026-10-31**.
+
+**Medido em produção pelo item 32, em 2026-09-27 e de novo no fechamento (2026-09-28T02:35Z):**
+`GET https://app.lotusotec.cl/api/courses/archived` sem sessão devolve **401** com
+`Accept: application/json` e **500** sem ele. Anterior ao item 32 e alheio a ele.
+
+**Causa:** o `Authenticate` do Laravel só pula o redirecionamento quando o pedido `expectsJson()`
+(`vendor/.../Auth/Middleware/Authenticate.php:104`). Sem `Accept`, ele monta o destino do
+redirecionamento pelo callback padrão que o `ApplicationBuilder` registra,
+`redirectGuestsTo(fn () => route('login'))` — rota que o Lotus não tem, porque o login é da SPA. A `RouteNotFoundException` nasce antes da `AuthenticationException`, e o
+`shouldRenderJsonWhen` de `api/*` renderiza o que chega: um 500 RFC 7807 no lugar do 401.
+
+**Por que ficou aberta:** o front sempre manda o `Accept`, então nenhum usuário vê o 500; quem o
+provoca é cliente sem o cabeçalho (curl, robô, sonda). Mas ele fere a §5.4 (401 RFC 7807 esperado
+para não autenticado) e, como 500, conta como defeito no registro de erro. O `/fechar-sprint` já
+documenta o sintoma como armadilha de curl, e não como falha do código.
+
+**Fecha quando:** `/api/*` sem sessão e sem `Accept` devolver 401 RFC 7807 — por exemplo
+`redirectGuestsTo` sem rota nomeada para `api/*` —, com teste de feature que faça o pedido sem o
+cabeçalho, visto reprovar antes da correção.
+
 ---
 
 # Documentação e mecanismo
@@ -783,33 +807,23 @@ bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variá
 Bloco alunos (2026-07-27, spec D11): divergência aceita por decisão do João no mesmo dia — a ordem
 atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 
-## P-77 — `app.lotusotec.cl` não tem registro A; sem ele a produção fica em HTTP, sem cookie `Secure` e sem emitir certificado
+## P-89 — o QR em `https://app.lotusotec.cl/validar/…` não foi decodificado de um PDF de produção
 
-**Bloco:** `infra-producao-dns-e-tls` (item 32, promovido em 2026-09-27) · **Quem decide:** João ·
-**Gatilho:** `app.lotusotec.cl` resolver **exatamente** o EIP `18.230.53.197`, sem AAAA, **e** o §11
-do `deploy/aws/README.md` executado de ponta a ponta — certificado, seis campos do `.env`, promoção
-pelo botão com HSTS, renovação por webroot com o hook, `certbot renew --dry-run` verde. Revisar em
-**2026-10-31**.
+**Bloco:** `infra-producao-dns-e-tls` (item 32) · **Quem decide:** João · **Gatilho:** o primeiro
+certificado real emitido em produção ter o QR decodificado (`pdftoppm` + `zbarimg`) para
+`https://app.lotusotec.cl/validar/<uuid>`, a página responder 200 e
+`/api/publico/certificados/<uuid>` devolver o `codigo` dele. Revisar em **2026-10-31**.
 
-**Reescrita em 2026-09-27 (planejamento do item 32).** A ficha original dizia que o registro era
-pedido à Lotus/agência, que a zona vivia em `ns1–ns4.stackdns.com` sem acesso ao painel e que um
-curinga `*.lotusotec.cl` fazia qualquer nome resolver para o WordPress. Nada disso vale mais: desde
-2026-09-26 a zona está no Route 53 (stack `lotus-dns`, repo `Andred21/lotus-site`), **sem
-wildcard**, e o registro nasce por PR em `infra/lotus-dns.yaml` de lá — nunca à mão no console.
-Medido em 2026-09-27: `app.lotusotec.cl` **não resolve** (não há registro). O nome que a ficha
-antiga media, `sistema.`, é hoje registro explícito para o WordPress e não muda neste bloco.
-
-| Registro | Valor em 2026-09-27 | |
-|---|---|---|
-| `A app` | — (não existe) | nasce pela PR do item 32 no `lotus-site` |
-| `AAAA app` | — | não nasce: o EIP não tem IPv6 |
-| EIP da produção | `18.230.53.197` | — |
-
-Enquanto o registro não existe, a produção atende em `http://18.230.53.197` e **recusa emitir e
-baixar certificado** — `CERTIFICATE_VALIDATION_URL` vazio, 500 nomeado da P-79 (item 29). O overlay
-`docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a catraca deles estão no repositório
-desde 2026-09-20 e nunca foram exercidos com certificado real. **A prova continua sendo a
-igualdade**: o audit do item 32 registra o valor devolvido, não o fato de haver resposta.
+A spec do item 32 (D4, DoD 7) mandava emitir e revogar um certificado sobre dado marcado como teste.
+Em 2026-09-28 a produção não tinha turma elegível (histórico de certificados vazio), e o João decidiu
+não criar em produção a cadeia de curso, turma, aluno e matrícula de teste, que ficaria para sempre
+no banco e na auditoria de um sistema com peso legal. Provado no lugar (review do item 32, Q-1): no
+contêiner `app` de produção, `CertificateValidationUrl::base()` devolve `https://app.lotusotec.cl`,
+com `APP_ENV=production` e a config em cache; o `CertificatePdfTest` prova que o QR do PDF carrega
+`<essa base>/validar/<uuid>`; `/api/publico/certificados/<uuid inexistente>` devolve 404 RFC 7807.
+O 200 de `/validar/<uuid>` só prova que a SPA é servida em https — o fallback do nginx responde 200 a
+qualquer caminho. Falta a igualdade num PDF de produção: a URL lida do QR de um documento que o
+Gotenberg de produção renderizou, não da configuração nem do teste.
 ---
 
 # Travadas em escrita fora do repositório
@@ -1070,3 +1084,26 @@ migration registra `"dump": null`, e o `deploy-sh.test.ts` assere o ramo do dump
 no [run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582), não tinha
 migration nova (`inicio` com `"migrations":[]` e `"dump":null`); o dump segue sem deploy real, e o
 bloco fechou sem pagar o gatilho.
+
+## P-90 — o gate `/up` do `deploy.sh` corre contra o php-fpm quando o deploy recria só o `app`
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
+`deploy/bin/deploy.sh`, ou o próximo botão que sair `erro: /up respondeu 502`; revisar em
+**2026-10-31**.
+
+**Medido no item 32, botão 2 (run
+[36366375279](https://github.com/Gatika-CL/lotus/actions/runs/36366375279), 01:34:00Z):** o `.env`
+novo fez o compose recriar `app`, `scheduler` e `mysql`, e o nginx seguiu de pé. O laço de saúde
+(`deploy.sh:205-211`) espera **só o nginx** ficar `healthy` — e ele já estava, então o laço saiu na
+primeira volta. O `curl` único de `deploy.sh:213` bateu em `/up` antes de o php-fpm novo escutar e
+recebeu 502. O botão saiu `Failed`; o botão 3, sem mudar nada, saiu verde. Sem queda vista de fora.
+
+**Por que importa:** a corrida existe em todo deploy que recria o `app` sem recriar o nginx — mudar
+`.env`, ou promover SHA com imagem de `app` nova e a do nginx igual. O `exit 1` do gate vem depois
+do `up`, com os contêineres novos já de pé, e antes de gravar o `CURRENT_SHA`: o botão fica vermelho
+por um motivo que não é da release, e quem o lê pode recuar o que estava certo.
+
+**Fecha quando:** o gate do `/up` tolerar a subida do php-fpm — várias tentativas com prazo, ou um
+healthcheck do `app` esperado junto com o do nginx —, com catraca em `deploy-sh.test.ts` vista
+reprovar pela sonda que devolve o `curl` único. Pela **P-87**, a correção só chega ao host pela
+reinstalação do runbook §7.

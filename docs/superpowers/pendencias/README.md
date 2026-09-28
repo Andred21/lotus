@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (31)
+## Abertas (33)
 
 ### Agrupadas em bloco de execução
 
@@ -30,6 +30,8 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-85 | No sqlite da suíte o `whereBetween` de `start_date` do `AnalyticsQuery` (série e dois rankings) deixa de fora o último dia do período — a produção (MySQL) acerta, a suíte não enxerga a borda; `DataSql::literal` já resolve isso em outro lugar | — | bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de período do dashboard; revisar 2026-10-31 |
 | P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade); o `cicd-host-alinhado-ao-sha` (item 31) fechou em 2026-09-26 sem pagar o gatilho | — | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
+| P-90 | O gate `/up` do `deploy.sh` faz um `curl` só depois de o nginx ficar `healthy`; num deploy que recria o `app` e não o nginx, ele bate antes do php-fpm novo escutar e o botão sai 502 (botão 2 do item 32) | — | próximo commit em `deploy/bin/deploy.sh`, ou o próximo botão com `erro: /up respondeu 502`; revisar 2026-10-31 |
+| P-91 | `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401: o `Authenticate` monta o redirecionamento por `route('login')`, que não existe (medido em produção pelo item 32) | — | bloco que tocar `backend/bootstrap/app.php` ou o middleware de autenticação; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | 35 | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
@@ -38,6 +40,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
+>
+> **O item 32 (`infra-producao-dns-e-tls`) fechou em 2026-09-27 a P-77**, pelo gatilho pago e
+> reprovado de fora no fechamento: `app.lotusotec.cl` resolve o EIP, sem AAAA, e o §11 do runbook
+> rodou inteiro. Abriu a **P-89** na execução (o QR num PDF de produção) e, no fechamento, a
+> **P-90** e a **P-91**, os dois achados de passagem do audit que o review deixou para cá. Tirou do
+> rastro a **P-55**, a **P-87** e a **P-88**, que o item 16 deixou para a `lane-b`.
 >
 > **O item 16 (`frontend-revisao-ui-por-modulo`) fechou em 2026-09-27 com a fatia 3** e não abriu
 > nem fechou pendência: os achados que não couberam no bloco viraram débito `D-71` e `D-72` no
@@ -89,7 +97,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
-| P-77 | `app.lotusotec.cl` não tem registro A (medido 2026-09-27: não resolve); sem ele a produção fica em HTTP, sem cookie `Secure` e sem emitir certificado | João | item 32: registro por PR no `lotus-site` + §11 do runbook de ponta a ponta; revisar 2026-10-31 |
+| P-89 | O QR em `https://app.lotusotec.cl/validar/…` não foi decodificado de um PDF de produção — a produção não tinha turma elegível, e o João não quis cadeia de teste no banco | João | o primeiro certificado real ter o QR decodificado para `https://app.lotusotec.cl/validar/<uuid>`; revisar 2026-10-31 |
 | P-78 | A assinatura do relator e o aviso legal caem para uma página própria quando a folha 1 do certificado cresce — medido no `LOT-2026-1000` de produção, PDF com 3 páginas | João | decidir o corte (clamp por comprimento) e implementá-lo, ou um certificado com dado real da Lotus fechar o rodapé na página 1; revisar 2026-10-31 |
 | P-80 | A previsão de custo do mês é **35,74 USD** contra o teto de **30** da decisão D8, e o critério de resize da EC2 (`t4g.medium`, +9 USD/mês) está satisfeito — as duas decisões são a mesma conversa | João | decidir teto **e** resize juntos, com a decisão escrita na spec/ADR que a carrega; revisar 2026-10-31 |
 | P-81 | A access key `AKIA3B7BDINPPYESZA6T` do usuário `lotus-infra`, que provisionou toda a Fase B, continua ativa — a produção não a usa (instance profile), mas é credencial de longa duração sem uso corrente | João | `aws iam list-access-keys --user-name lotus-infra` não devolver mais a chave; revisar 2026-10-31 |
@@ -103,16 +111,16 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (3)
+## Encerradas (1)
 
-**Em rastro:** a **P-55**, encerrada pelo `harness-estado-por-bloco` (item 30), e a **P-87** e a
-**P-88**, encerradas pelo `cicd-host-alinhado-ao-sha` (item 31), todas em 2026-09-26. Fichas
-completas em [`encerradas.md`](./encerradas.md).
+**Em rastro:** a **P-77**, encerrada pelo `infra-producao-dns-e-tls` (item 32) em 2026-09-27.
+Ficha completa em [`encerradas.md`](./encerradas.md).
 
-**O item 30 (`harness-estado-por-bloco`) fechou em 2026-09-26 a P-55**, por decisão do João no
-gate: o espelho dos campos singulares deixou de existir, porque o `state.md` virou contrato e o
-estado de cada bloco mora na pasta dele. O bloco não abriu ficha nova, e agrupou a **P-84** no
-item 35, que paga o gatilho dela.
+**A P-55, a P-87 e a P-88 saíram no fechamento do item 32 (2026-09-27)**, o primeiro da `lane-b`
+depois dos que as encerraram: a P-55 no item 30 (o espelho do `state.md` deixou de existir) e a P-87
+e a P-88 no item 31 (o botão confere o host e o `deploy.sh` fixa `gatika-cl`), todas em 2026-09-26.
+O item 16 as deixou para a lane que as abriu. O rastro durável está nos commits e nas linhas de
+entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-59, a P-75 e a P-79 saíram no fechamento do item 12 (2026-09-26)**, o primeiro posterior ao
 do `backend-config-e-conteudo-de-documento` (item 29), que as encerrou em 2026-09-25 — a P-59 e a

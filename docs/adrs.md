@@ -161,6 +161,21 @@ e o ADR-SITE-006 segue com `sistema.`: **quem vence aqui é esta decisão poster
 que fazer com o registro `sistema.` e com o ADR do site é do planejamento do item 32, não desta
 emenda.
 
+**Emenda (2026-09-27, bloco `infra-producao-dns-e-tls`).** O item `[FASE 2]` *"TLS
+automático (Let's Encrypt + Certbot no Nginx)"* está **vencido, e de outro jeito**: o certbot roda
+no **host**, não no contêiner do nginx. A emissão foi uma vez só, `--standalone`, com o nginx parado
+(minutos de queda). A renovação é por webroot: o `/.well-known/acme-challenge/` do
+`deploy/nginx/tls.conf` serve `/opt/lotus/certbot`, sem derrubar nada. O `certbot.timer` do sistema
+renova, e o deploy hook versionado `deploy/bin/recarregar-nginx.sh`, ligado por symlink em
+`/etc/letsencrypt/renewal-hooks/deploy/`, faz `nginx -t && nginx -s reload` no contêiner. O
+`deploy.sh` liga o overlay `docker-compose.prod-tls.yml` (443 e `/etc/letsencrypt` montado só para
+leitura) quando o host tem o `tls.conf` e o `/etc/letsencrypt/live`. HSTS de um ano, sem
+`includeSubDomains` nem `preload` (D3 da spec do item 32). **Não há alarme de expiração** até o
+item 34: uma renovação que falhe deixa ~30 dias em silêncio. Runbook em `deploy/aws/README.md` §11.
+Se o `decisao-stack.md` do Drive ainda trouxer o texto original, **quem vence aqui é esta decisão
+posterior do João**, e o original não se apaga. O último `[FASE 2]` deste ADR, *"monitoramento
+básico"*, continua aberto e é o item 34.
+
 ## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
 
 **Regra:**
