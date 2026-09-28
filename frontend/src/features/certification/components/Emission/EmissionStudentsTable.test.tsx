@@ -77,4 +77,12 @@ describe('EmissionStudentsTable — ação da linha', () => {
     expect(screen.getByRole('button', { name: 'certificate.emit' })).toBeTruthy()
     expect(larguraDaColunaDeAcoes()).toBe('4.5rem')
   })
+
+  it('abaixo de sm, o piso é o medido para esta visão (item 23, audit §5)', () => {
+    montar()
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('39.75rem')
+  })
 })

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, AppTag, AppEmptyState, IdentityCell, stickyActionsColumn, identifierClass, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppDataTable, AppColumn, AppTag, AppEmptyState, IdentityCell, narrowFloorTablePt, stickyActionsColumn, identifierClass, useCollapsibleActionsColumn } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { EmissionPanelEnrollmentData, EnrollmentApprovalStatus } from '@shared/types/generated'
 import { rowCertKind } from '../../lib/certStatus'
@@ -47,6 +47,8 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, b
       loading={loading}
       first={table.first}
       onPage={table.onPage}
+      // Piso de 390 medido (item 23, audit §5): 196px de 1ª coluna contra 170px livres.
+      pt={narrowFloorTablePt('39.75rem')}
       footerCount={t('certificate.studentsCount', { total: counts.total, approved: counts.aprobados })}
       emptyMessage={<AppEmptyState icon="pi pi-users" title={t('certificate.emptyStudents')} />}
     >
