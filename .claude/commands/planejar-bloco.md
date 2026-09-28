@@ -66,7 +66,8 @@ o repositório no Passo 6. Nada de `mktemp` aqui: o `guard-main-shell` nega `mkt
 ferramenta `Write` para fora de qualquer árvore git passa. Resolva `<tmp>` e o timestamp com
 `echo "${TMPDIR:-/tmp}"` e `date +%Y%m%d-%H%M%S`, os dois liberados na `main`.
 
-**Rota Codex** — porta os itens 1, 2, 3 e 6 da rota Codex do command anterior:
+**Rota Codex** — porta os itens 1, 2, 3 e 6 da rota Codex do command anterior (renumerados 1–4
+aqui):
 
 1. Carregue o Codex pelo MCP: `ToolSearch "select:mcp__codex__codex"`. O fallback `codex-companion`
    por Bash (`node ...`) não roda aqui: o `guard-main-shell` nega `node` na `main`, e este passo
@@ -103,8 +104,12 @@ A skill anuncia a classificação antes da primeira pergunta:
 
 - ***spike*** → encerre aqui, sem lane: não crie branch, reporte a recomendação, e a ficha fica
   como está no backlog.
-- ***bounded*** → siga curto, mas **produza spec e plano** — o contrato deste harness é que todo
-  bloco sai em `ready_for_execution` com `active_plan` preenchido.
+- ***bounded*** → siga curto — o caminho `bounded` da skill termina mandando implementar direto,
+  sem documento, e **não faça isso aqui** — mas **produza spec e plano**: neste harness `bounded`
+  economiza cerimônia, não artefato (menos perguntas, design curto, plano de poucas tasks). O
+  contrato deste harness é que todo bloco sai em `ready_for_execution` com `active_plan`
+  preenchido — invariante 3 —, e o Passo 10 diz que este command nunca implementa.
+  O contrato dos estados é `docs/superpowers/state.md`.
 - ***architectural*** → siga o caminho inteiro da skill.
 
 **Assim que a classificação sair e não for *spike*, pare e execute o Passo 6 antes de a skill
