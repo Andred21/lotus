@@ -662,36 +662,81 @@ duas com a MAIOR razão entre `X` calculado e a fração `share_a` (Cursos e Usu
 `col1` ativo mais alto exigindo o maior salto), o encolhimento do `free` superou o ganho de `col1` e
 a caixa reabriu.
 
-Correção: bisseccionado no navegador real (`VPS=390x844 PAGES=/cursos` e `PAGES=/administracion`,
-sem fixture nova — a mesma sessão arquivada), medindo `box = max(0, col1 − 16 − free)` (os 16px são
-o `padding-right` de `px-4` da célula, que a fórmula original já assumia via o termo `− 16`, mas a
-conta de qual `X` usar não recalculava o `free` reduzido):
+Correção, em duas voltas. A 1ª bisseccionou no navegador real (`VPS=390x844 PAGES=/cursos` e
+`PAGES=/administracion`, mesma sessão arquivada), medindo `box = max(0, col1 − 16 − free)` (os 16px
+são o `padding-right` de `px-4` da célula), e parou no primeiro `X` aprovado: 47rem em Cursos e 51rem
+em Usuarios, com margem de 24px e 27px. Esses valores fecham a régua, mas não são o teto. A revisão
+da task interpolou os próprios pontos acima e achou o zero perto de 51rem e 56rem. As visões ativas do
+bloco já ficam no teto (Cursos ativa e Alumnos com margem 2px, Emisión com 1px), então a arquivada
+tem que seguir a mesma convenção.
 
-| Visão | `X` novo | `table` | `sticky` | `col1` | `free` | `box` | margem (`free+16−col1`) |
+A 2ª volta varreu cada visão em passos de 0.25rem, injetando `--table-narrow-floor` direto na
+`<table>` pelo navegador. É o mesmo lugar onde o `narrowFloorTablePt` grava a variável. Fixture
+arquivada, `390x844`, uma linha por visão. Critério: o maior `X` com `box 0` e margem (`free+16−col1`)
+de pelo menos 1px.
+
+```
+Cursos (arquivada)                                Usuarios (arquivada)
+X        table sticky col1 free box margem        X        table sticky col1 free box margem
+47.00rem  752    75   193  201   0    24          51.00rem  816    82   183  194   0    27
+47.25rem  756    76   194  200   0    22          51.25rem  820    82   184  194   0    26
+47.50rem  760    76   195  200   0    21          51.50rem  824    82   185  194   0    25
+47.75rem  764    76   196  200   0    20          51.75rem  828    83   186  193   0    23
+48.00rem  768    77   197  199   0    18          52.00rem  832    83   187  193   0    22
+48.25rem  772    77   198  199   0    17          52.25rem  836    84   187  192   0    21
+48.50rem  776    78   199  198   0    15          52.50rem  840    84   188  192   0    20
+48.75rem  780    78   200  198   0    14          52.75rem  844    84   189  192   0    19
+49.00rem  784    78   201  198   0    13          53.00rem  848    85   190  191   0    17
+49.25rem  788    79   202  197   0    11          53.25rem  852    85   191  191   0    16
+49.50rem  792    79   203  197   0    10          53.50rem  856    86   192  190   0    14
+49.75rem  796    80   204  196   0     8          53.75rem  860    86   193  190   0    13
+50.00rem  800    80   205  196   0     7          54.00rem  864    86   194  190   0    12
+50.25rem  804    80   206  196   0     6          54.25rem  868    87   195  189   0    10
+50.50rem  808    81   207  195   0     4          54.50rem  872    87   196  189   0     9
+50.75rem  812    81   208  195   0     3          54.75rem  876    88   196  188   0     8
+51.00rem  816    82   209  194   0     1  <-      55.00rem  880    88   197  188   0     7
+51.25rem  820    82   210  194   1     0          55.25rem  884    88   198  188   0     6
+51.50rem  824    82   212  194   2    -2          55.50rem  888    89   199  187   0     4
+51.75rem  828    83   213  193   3    -4          55.75rem  892    89   200  187   0     3
+52.00rem  832    83   214  193   5    -5          56.00rem  896    90   201  186   0     1  <-
+52.25rem  836    84   215  192   6    -7          56.25rem  900    90   202  186   0     0
+52.50rem  840    84   216  192   8    -8          56.50rem  904    90   203  186   1    -1
+52.75rem  844    84   217  192   9    -9          56.75rem  908    91   204  185   2    -3
+53.00rem  848    85   218  191  11   -11          57.00rem  912    91   204  185   4    -3
+53.25rem  852    85   219  191  12   -12          57.25rem  916    92   205  184   5    -5
+53.50rem  856    86   220  190  13   -14          57.50rem  920    92   206  184   6    -6
+53.75rem  860    86   221  190  15   -15          57.75rem  924    92   207  184   8    -7
+54.00rem  864    86   222  190  16   -16
+```
+
+| Visão | `X` final | `table` | `sticky` | `col1` | `free` | `box` | margem |
 |---|---|---|---|---|---|---|---|
-| Cursos (arquivada) | **47.0rem** (era 54.0rem) | 752px | 75px | 193 | 201 | 0 | 24px |
-| Usuarios (arquivada) | **51.0rem** (era 57.75rem) | 816px | 82px | 183 | 194 | 0 | 27px |
+| Cursos (arquivada) | **51.0rem** (1ª volta 47.0, fórmula 54.0) | 816px | 82px | 209 | 194 | 0 | 1px |
+| Usuarios (arquivada) | **56.0rem** (1ª volta 51.0, fórmula 57.75) | 896px | 90px | 201 | 186 | 0 | 1px |
 
-Nenhum dos dois alcança o `col1` da ativa (Cursos: 193 < 218; Usuarios: 183 < 204) — o mesmo
-trade-off que a Preocupação #2 já previa como aceitável ("arquivada < ativa" é cosmético, o `free`
-nunca é invadido). Testado que NÃO há `X` que satisfaça as duas pernas da régua para estas duas
-tabelas: com os pontos medidos (672px↔piso calculado, e os dois pontos bisseccionados), a reta de
-`col1(T)` cruza a reta de `free(T)+16` num `col1` abaixo do `col1` da ativa em ambos os casos — ou
-seja, a régua "arquivada ≥ ativa" e a régua "`box = 0`" são matematicamente incompatíveis aqui,
-_dado_ este comportamento do `table-fixed`, e não só por escolha de `X`.
+Mesmo no teto, nenhum dos dois alcança o `col1` da ativa: Cursos fica em 209 contra 218 e Usuarios em
+201 contra 204. A varredura prova que não existe `X` que feche as duas pernas da régua nessas duas
+tabelas. Todo passo com `col1` ≥ ao da ativa já tem `box > 0`, porque o `free` encolhe junto com a
+presa. É o trade-off que a Preocupação #2 já previa como aceitável: arquivada menor que a ativa é só
+cosmético, e o `free` nunca é invadido.
 
-A 2ª rodada (`piso2.txt`, mesma fixture, sem novo archive — o `archive` repetido falhou tentando
-recriar `fixture.item23@lotus.cl` já arquivado, erro inofensivo que não tocou `fixture-ids.json`;
-a fixture usada era a mesma da 1ª rodada) confirma:
+A 2ª rodada (`piso2.txt`, com 47/51rem, mesma fixture) já tinha fechado as 15 linhas `390x844` com
+presa em `box 0`, e a 1024 idêntica a `meio.txt`. Na época, o `archive` repetido falhou ao recriar
+`fixture.item23@lotus.cl`, que já estava arquivado. O erro foi inofensivo e não tocou
+`fixture-ids.json`. A 3ª rodada confirma os valores finais com o código real
+(`VPS=390x844,1024x768 PAGES=/cursos,/administracion`, fixture arquivada de novo):
 
-- **Todas as 15 linhas `390x844` com presa fecham em `box 0`**, incluindo as duas corrigidas.
-- **`col1` arquivada ≥ `col1` ativa em 5 das 7 visões** (Clientes 191≥189, Presupuestos 92≥91,
-  Turmas 53≥52, Matrícula 211≥210, Redactores 182≥180); Cursos (193<218) e Usuarios (183<204) ficam
-  do lado cosmético, documentado acima.
-- **As linhas `1024x768` são IDÊNTICAS a `meio.txt`** em `table`, `scroll` e `overlap` (`diff` vazio,
-  exit 0) — o piso abaixo de `sm` não vaza para 1024 por construção (`sm:min-w-[42rem]` é uma classe
-  literal, não parametrizada pelo `X`).
-- Fixture restaurada ao fim (`fixture-ids.json` ausente); nenhum registro ficou arquivado.
+- **As cinco linhas `390x844` fecham em `box 0`.** Cursos arquivada: 816px, `col1` 209, `free` 194.
+  Usuarios arquivada: 896px, `col1` 201, `free` 186. As ativas de Cursos, Usuarios e Roles ficam como
+  na 2ª rodada.
+- **O `col1` arquivado fica ≥ ao ativo em 5 das 7 visões** (Clientes 191≥189, Presupuestos 92≥91,
+  Turmas 53≥52, Matrícula 211≥210, Redactores 182≥180). Cursos (209<218) e Usuarios (201<204) ficam do
+  lado cosmético, como mostrado acima.
+- **As linhas `1024x768` são IDÊNTICAS a `meio.txt`** em `table`, `scroll` e `overlap`. O piso abaixo
+  de `sm` não vaza para 1024 por construção: `sm:min-w-[42rem]` é uma classe literal, e o `X` não a
+  parametriza.
+- A fixture foi restaurada ao fim de cada rodada (`fixture-ids.json` ausente), e nenhum registro
+  ficou arquivado.
 
 ## Apêndice A — `medir.cjs`
 
