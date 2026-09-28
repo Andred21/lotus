@@ -62,5 +62,6 @@ estão na `main`: falta a PR nova, o merge e o espelho. Depois do merge, o main 
 do `backlog.md` (invariante 10) e o bloco vai a `closed`.
 
 Integrado em 2026-09-27: a PR #118 levou os 16 commits à `main` (`229994bb`), e o espelho publicou
-`93dc2faa` no corporativo com `Source-Commit: 229994bb`. O bloco vai a `closed`. Pela invariante 10,
-a ficha 32 sai do `backlog.md` pelo main tree.
+`93dc2faa` no corporativo com `Source-Commit: 229994bb`. O bloco vai a `closed`. A ficha 32 fica
+no `backlog.md`, como a 30: a invariante 10 manda o main tree tirá-la na `main`, e nada deixa. O
+João entregou a lacuna ao item 35, na **P-92**.
