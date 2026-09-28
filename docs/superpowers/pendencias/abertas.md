@@ -331,6 +331,12 @@ e entregar a lacuna ao item 35, que reescreve os comandos de bloco. As saídas q
 branch curta aberta do main tree só para o `backlog.md`, ou a lane remover a própria ficha no PR de
 fechamento, com a invariante reescrita para dizer isso.
 
+**Exceção de 2026-09-28, decidida pelo João:** a ficha 32 saiu do `backlog.md` por commit direto na
+`main`, do main tree, com `LOTUS_FORCA_MAIN=1` no push — sem branch nem PR. O mesmo commit deu à
+ficha 33 a linha `**Depende:** —` que o portão do `lane.sh abrir` exige. É a saída de emergência do
+`CONTRIBUINDO.md`, usada uma vez e registrada aqui; não é o caminho que fecha a pendência. A ficha 30
+continua no `backlog.md`.
+
 ## P-32 — a guarda da lição 13 confere path, não classe
 
 **Bloco:** BD-15 · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a

@@ -118,12 +118,11 @@ abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **32** `infra-producao-dns-e-tls` | Infra | Produção não emite certificado sem domínio HTTPS (`CERTIFICATE_VALIDATION_URL` vazio, P-79). A zona está no Route 53 desde 2026-09-26 — o que faltava de terceiro deixou de faltar |
-| 2 | **33** `infra-producao-email-ses` | Infra | O alerta síncrono de acesso suspeito (ADR-21/D7) e o reset de senha não chegam a ninguém: `MAIL_MAILER=log` em produção |
-| 3 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 (fechado em 2026-09-27), que já aplicou (b) e (c) em quatro das 12 tabelas, e é P2 |
-| 4 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
-| 5 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (alarme de certificado) e, de preferência, do 33 |
-| 6 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
+| 1 | **33** `infra-producao-email-ses` | Infra | O alerta síncrono de acesso suspeito (ADR-21/D7) e o reset de senha não chegam a ninguém: `MAIL_MAILER=log` em produção |
+| 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 (fechado em 2026-09-27), que já aplicou (b) e (c) em quatro das 12 tabelas, e é P2 |
+| 3 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
+| 4 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (fechado em 2026-09-27, alarme de certificado) e, de preferência, do 33 |
+| 5 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
 Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
@@ -134,59 +133,9 @@ tela nova pede run própria dentro dele.
 
 # Fila priorizada
 
-## 32. `infra-producao-dns-e-tls`
-
-**Prioridade:** P0 — produção não emite certificado sem ele · **Frente:** Infra · **Contexto:** sim
-**Fonte:** `P-77` (a reescrever no planejamento); `deploy/aws/README.md` §11; `deploy/nginx/tls.conf`;
-`docker-compose.prod-tls.yml`; `deploy/aws/env.prod.example`; spec do item 10 v2 (D7); lotus-site
-`docs/adr/ADR-SITE-006.md`, `docs/infra/zona-dns-lotusotec.md`, `docs/infra/delegacao-2026-09-26.md`,
-`infra/lotus-dns.yaml` e os débitos `D-49`/`D-51`/`D-52` de lá; Notion site `7.2.1` e `8.2.1`; Drive
-`arquitetura-aws-lotus.md` §1.5/§5 (Opção A: Let's Encrypt/Certbot no nginx da EC2).
-
-**Por que existe:** a produção roda na "fase sem DNS" do runbook §11 — `SESSION_DOMAIN=null`,
-`SESSION_SECURE_COOKIE=false`, `CERTIFICATE_VALIDATION_URL` vazio — e por isso **recusa emitir
-certificado** (500 nomeado da P-79). A `P-77` dizia que o registro A dependia da Lotus e de um painel
-sem acesso; em 2026-09-26 a zona `lotusotec.cl` foi delegada ao Route 53 (stack `lotus-dns`, repo
-`Andred21/lotus-site`, PR #18) — a causa passou de "sem acesso" para "registro nunca criado", e o dono
-passou a ser o João. O overlay TLS, o `301` e o certbot existem só como texto e teste de unidade;
-nunca foram exercidos com certificado real.
-
-**Decisão prévia, do João, antes do brainstorming — o nome.** Há quatro grafias sem reconciliação:
-`app.` (todo o código deste repo: `tls.conf:51-54`, `env.prod.example`, runbook §11, packet de
-2026-08-22), `sistema.` (ADR-SITE-006 de 2026-09-09, único registro explícito na zona nova, hoje
-apontando para o WordPress), `intranet.` (V1 real; expectativa do João; zero ocorrências em qualquer
-repo) e `lotus.cl` (placeholder do Drive). **Este bloco não decide** — recebe a decisão escrita
-(emenda datada do ADR-14) e a aplica.
-
-**Escopo:**
-- registro A (e AAAA, se houver) do nome escolhido → EIP `18.230.53.197`, por PR no `lotus-site`
-  (`infra/lotus-dns.yaml`), nunca à mão no console; se o nome for `sistema.`, é retarget do registro
-  existente;
-- security group 80/443 conferido; runbook §11 de ponta a ponta: `certbot --standalone` uma vez,
-  overlay `docker-compose.prod-tls.yml`, os seis campos de env (`APP_URL`, `FRONTEND_URL`,
-  `SESSION_DOMAIN`, `SANCTUM_STATEFUL_DOMAINS`, `SESSION_SECURE_COOKIE=true`,
-  `CERTIFICATE_VALIDATION_URL`), `certbot renew --dry-run` com o hook de reload;
-- `301` HTTP→HTTPS provado em produção; HSTS **decidido** na spec (hoje não existe em doc nenhum);
-- restrição cruzada registrada no runbook e na ficha do site: quando o site publicar CAA (`D-49` de
-  lá), a zona tem de listar `letsencrypt.org` além de `amazon.com`, senão este repo não renova;
-- runbook §11 reescrito — "pedir o registro à Lotus/agência" virou "PR no lotus-site";
-- se o nome não for `app.`, os três arquivos do repo mudam e o packet/ADR registram o porquê.
-
-**Fora:** e-mail (item 33); alarmes (item 34); cutover do site (`B5` do lotus-site); o wildcard
-Let's Encrypt do WordPress (`D-51` do site, prazo 2026-10-11) — só toca a intranet se o nome for
-`sistema.` e ele continuar estacionado no WordPress até lá.
-
-**Paga:** `P-77` (reescrita: dono João, gatilho = registro + §11). **Destrava** a `P-79` em produção.
-
-**DoD:** login real em `https://<nome>.lotusotec.cl` com cookie `Secure`; um certificado emitido em
-produção com QR resolvendo em `https://`; `certbot renew --dry-run` verde; `curl -I http://<nome>`
-devolvendo `301`; medição em `audits/`.
-
----
-
 ## 33. `infra-producao-email-ses`
 
-**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim
+**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim · **Depende:** —
 **Fonte:** spec do item 10 v2 (`specs/archive/2026-09-02-infra-producao-provisionamento-aws-design.md:53-58`
 — "vira bloco próprio; a criação do item na fila é do João"); `deploy/aws/env.prod.example:116`
 (`MAIL_MAILER=log` "até o bloco de SES"); ADR-21/D7 (alerta síncrono); `docs/operacao-segredos.md:48,60-62`;
