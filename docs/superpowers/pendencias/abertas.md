@@ -810,6 +810,30 @@ baixar certificado** — `CERTIFICATE_VALIDATION_URL` vazio, 500 nomeado da P-79
 `docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a catraca deles estão no repositório
 desde 2026-09-20 e nunca foram exercidos com certificado real. **A prova continua sendo a
 igualdade**: o audit do item 32 registra o valor devolvido, não o fato de haver resposta.
+
+**Medição de 2026-09-28 (item 32).** `A app.lotusotec.cl` = `18.230.53.197` por DoH (`dns.google` e
+`cloudflare-dns.com`) e direto nos NS da zona (`pnpm infra:conferir-zona --pos-delegacao`, `rc=0`);
+`AAAA` vazio. §11 executado de ponta a ponta: certificado Let's Encrypt emitido (validade
+2026-12-27), seis campos virados (contagem `6` no host), promoção pelo botão (run `36366650213`),
+HSTS servido, cookies com `secure` e `domain=app.lotusotec.cl`, renovação por webroot com o hook
+executado sem queda, `renew --dry-run` verde. A prova do QR em https, que o gatilho desta ficha não
+pede, ficou para a **P-89**. Evidência em `audits/2026-09-27-infra-producao-dns-e-tls.md`.
+**Gatilho pago; encerra no `/fechar-sprint`.**
+
+## P-89 — o QR em `https://app.lotusotec.cl/validar/…` não foi decodificado de um PDF de produção
+
+**Bloco:** `infra-producao-dns-e-tls` (item 32) · **Quem decide:** João · **Gatilho:** o primeiro
+certificado real emitido em produção ter o QR decodificado (`pdftoppm` + `zbarimg`) para
+`https://app.lotusotec.cl/validar/<uuid>`, a página responder 200 e
+`/api/publico/certificados/<uuid>` devolver o `codigo` dele. Revisar em **2026-10-31**.
+
+A spec do item 32 (D4, DoD 7) mandava emitir e revogar um certificado sobre dado marcado como teste.
+Em 2026-09-28 a produção não tinha turma elegível (histórico de certificados vazio), e o João decidiu
+não criar em produção a cadeia de curso, turma, aluno e matrícula de teste, que ficaria para sempre
+no banco e na auditoria de um sistema com peso legal. Provado de fora no lugar: `/validar/<uuid>`
+responde 200 em https; `/api/publico/certificados/<uuid inexistente>` devolve 404 RFC 7807; o
+`CERTIFICATE_VALIDATION_URL` está entre os seis campos contados no host. Falta a igualdade no PDF —
+a URL que o QR carrega, lida do QR, não da configuração.
 ---
 
 # Travadas em escrita fora do repositório

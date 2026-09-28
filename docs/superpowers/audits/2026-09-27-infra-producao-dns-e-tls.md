@@ -99,8 +99,39 @@ template executado é o da `main` do site, idêntico ao da PR.
   `webroot_path = /opt/lotus/certbot,`.
 - Hook por symlink em `/etc/letsencrypt/renewal-hooks/deploy/recarregar-nginx.sh`, executado pelo
   João às 2026-09-28T01:42:02Z: `syntax is ok`, `test is successful`, `signal process started`,
-  `rc=0`. Sonda de fora, um `curl` por segundo em `https://app.lotusotec.cl/up`: 30 de 30 `200`
-  entre 01:41:41Z e 01:42:20Z; 18 de 18 `200` na janela de 10 s antes e depois do reload.
+  `rc=0`. Sonda de fora, um `curl` por segundo em `https://app.lotusotec.cl/up`: 180 de 180 `200`
+  entre 01:41:41Z e 01:45:06Z; 18 de 18 `200` na janela de 10 s antes e depois do reload.
 - `certbot renew --dry-run`: `Congratulations, all simulated renewals succeeded:` —
   `/etc/letsencrypt/live/app.lotusotec.cl/fullchain.pem (success)`.
 - `systemctl is-active certbot.timer`: `active`.
+
+## Task 12 — provas
+
+De fora, em 2026-09-27T22:43:27-03:00:
+
+| Pedido | Resultado |
+|---|---|
+| `http://app.lotusotec.cl/inicio` | `HTTP/1.1 301`, `Location: https://app.lotusotec.cl/inicio` |
+| `http://app.lotusotec.cl/up` | 200 |
+| `https://…/up` | 200, `strict-transport-security: max-age=31536000` |
+| `https://…/` | 200, idem |
+| `https://…/assets/index-zQmZSrwq.js` | 200, idem |
+| `https://…/api/courses/archived` com `Accept: application/json` | 401, idem |
+| `https://…/api/courses/archived` sem `Accept` | 500, idem |
+
+Desvio do plano: sem `Accept: application/json`, a rota autenticada devolve 500, não 401 — o
+middleware de autenticação tenta redirecionar para a rota `login`, que não existe. É anterior ao
+item 32 e alheio a ele (o front sempre manda o `Accept`); o 500 também sai com HSTS, o que prova o
+`always` de novo. Proposta de pendência no fechamento.
+
+- Certificado servido: `issuer=C = US, O = Let's Encrypt, CN = YE2`, `subject=CN = app.lotusotec.cl`,
+  `DNS:app.lotusotec.cl`, `notBefore=Sep 28 00:27:09 2026 GMT`, `notAfter=Dec 27 00:27:08 2026 GMT`.
+- `GET /sanctum/csrf-cookie`, sem os valores:
+  `XSRF-TOKEN=…; expires=…; Max-Age=7200; path=/; domain=app.lotusotec.cl; secure; samesite=lax` e
+  `lotus-session=…; expires=…; Max-Age=7200; path=/; domain=app.lotusotec.cl; secure; httponly; samesite=lax`.
+- Login real do João com o admin, tela autenticada recarregada: ok, 2026-09-27T22:45-03:00.
+- QR (D4, DoD 7): **não provado.** A produção não tem turma elegível e o histórico de certificados
+  está vazio; o João decidiu não criar a cadeia de teste em produção. Provado no lugar:
+  `https://…/validar/00000000-0000-4000-8000-000000000000` 200 (a SPA serve a página) e
+  `/api/publico/certificados/<o mesmo>` 404 RFC 7807 (`type` `…/errors/not-found`). A decodificação
+  do QR fica para o primeiro certificado real: **P-89**.
