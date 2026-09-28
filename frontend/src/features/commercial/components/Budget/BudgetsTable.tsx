@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AppColumn, AppTag, IdentityCell, stickyActionsColumn,
-  AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, useCollapsibleActionsColumn,
+  AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt, useCollapsibleActionsColumn,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
@@ -94,6 +94,8 @@ export function BudgetsTable({
       loading={carregando}
       error={loadError}
       onRetry={retry}
+      // Piso de 390 medido (item 23, audit §5): 66px de 1ª coluna contra 204px livres.
+      pt={archived ? narrowFloorTablePt('58rem') : undefined}
     >
       <AppColumn
         header={t('budget.code')}
