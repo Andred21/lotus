@@ -18,7 +18,8 @@ The request must provide:
 2. the task range to execute (default: all unchecked tasks, in order);
 3. base branch and commit.
 
-Read `docs/superpowers/state.md` and require `workflow_state: executing` (or
+Read the block's `docs/superpowers/blocos/<NN>-<slug>/estado.md` — `<NN>-<slug>` named by the
+caller, or derived from `plan_path`'s directory — and require `workflow_state: executing` (or
 `ready_for_execution` when Claude states it will commit the transition with the first artifact) and
 `active_plan == plan_path`. Mismatch → return `BLOCKED`.
 
@@ -27,9 +28,10 @@ The plan must contain a `## Handoff de execução` section with `executor: codex
 
 ## Bootstrap
 
-Read only: `AGENTS.md`, `CLAUDE.md`, `docs/superpowers/state.md`, the plan, the spec and the
-context packet pointed by `state.md` (ignore null pointers), and the `.claude/rules/*` matching the
-authorized paths (per AGENTS.md §4).
+Read only: `AGENTS.md`, `CLAUDE.md`, the block's `docs/superpowers/blocos/<NN>-<slug>/estado.md`
+(`docs/superpowers/state.md` is only the contract), the plan, the spec and the context packet
+pointed by it (ignore null pointers), and the `.claude/rules/*` matching the authorized paths (per
+AGENTS.md §4).
 
 ## Execution rules
 
@@ -42,7 +44,7 @@ authorized paths (per AGENTS.md §4).
 - Deviation needed from a plan step → stop that task, record the reason, continue only independent
   tasks, and report.
 
-Codex may commit implementation artifacts and update `state.md`/`progress.md`
+Codex may commit implementation artifacts and update the block's `estado.md`/`progress.md`
 when the active plan names Codex as executor or João Victor explicitly delegates
 execution/closure. Never alter `backlog.md` unless explicitly requested.
 State transitions must be committed with their proving artifact.

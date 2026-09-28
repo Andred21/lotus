@@ -16,9 +16,13 @@ code, advance Superpowers, update external systems, or resolve an unsupported am
 
 ## Input
 
-The request must identify a `block_id`, plan path, or the active block. When none is supplied, read
-`docs/superpowers/state.md` and use `active_work_item`. If `active_work_item` is null or
-`workflow_state` is not `context_required`, return `BLOCKED` and state what must be identified.
+The request must identify the block (`NN` and `slug`), a plan path, or the active block. When the
+block already has a lane, read its `docs/superpowers/blocos/<NN>-<slug>/estado.md`
+(`docs/superpowers/state.md` is only the contract) and require `workflow_state: context_required`.
+Before the lane exists — the packet born during `/planejar-bloco`, per the backlog's
+`Contexto: sim` — there is no `estado.md` yet, and the caller's `NN`/`slug` (plus base branch and
+commit) identify the block directly. Either way, a mismatch or an unidentifiable block → return
+`BLOCKED` and state what must be identified.
 
 An optional existing packet path means refresh that packet instead of starting from zero.
 
@@ -29,9 +33,10 @@ Read only:
 1. `AGENTS.md`;
 2. `CLAUDE.md`;
 3. `INSTRUÇÕES-DO-PROJETO.md`;
-4. `docs/superpowers/state.md`;
-5. `docs/superpowers/historico/progress.md` (history only; it never resolves the active block);
-6. the active plan and spec pointed by `state.md`, ignoring null pointers.
+4. `docs/superpowers/historico/progress.md` (history only; it never resolves the active block);
+5. when the block already has a lane: its `docs/superpowers/blocos/<NN>-<slug>/estado.md`
+   (`docs/superpowers/state.md` is only the contract), and the active plan and spec it points to,
+   ignoring null pointers. None of these exist yet before the lane.
 
 Read additional repository documents only when the active plan/spec explicitly points to them.
 Run read-only commands to capture:
@@ -40,28 +45,28 @@ Run read-only commands to capture:
 git status --short
 git rev-parse --abbrev-ref HEAD
 git rev-parse HEAD
-git hash-object docs/superpowers/state.md
+git hash-object docs/superpowers/blocos/<NN>-<slug>/estado.md   # only when the lane exists
 git hash-object <progress-path>
-git hash-object <plan-path>
-git hash-object <spec-path>
+git hash-object <plan-path>   # only when the lane exists
+git hash-object <spec-path>   # only when the lane exists
 ```
 
 Capture:
 
 - current branch or requested ref;
 - current commit;
-- blob SHA of `state.md`;
+- blob SHA of the block's `estado.md`, when the lane exists;
 - blob SHA of `progress.md`;
-- blob SHA of the active plan;
-- blob SHA of the active spec;
+- blob SHA of the active plan, when the lane exists;
+- blob SHA of the active spec, when the lane exists;
 - existing working-tree changes.
 
 Preserve WIP. Do not install dependencies or run mutating commands.
 
 ## External retrieval
 
-1. Derive the smallest source list from the plan/spec Fontes, the pointers in `state.md`,
-and explicit source references in the request.
+1. Derive the smallest source list from the plan/spec Fontes (when they exist), the pointers in the
+block's `estado.md` (when the lane exists), and explicit source references in the request.
 2. Query sources in the Lotus priority order:
    - current explicit instruction from João Victor;
    - canonical Google Drive planning documents;
@@ -149,7 +154,7 @@ update the packet file — the caller stores it. Return
 exactly one suggested path followed by one packet between these markers:
 
 ```text
-SUGGESTED_PATH: docs/superpowers/context-packets/<plan-slug>.md
+SUGGESTED_PATH: docs/superpowers/blocos/<NN>-<slug>/context.md
 BEGIN LOTUS CONTEXT PACKET
 <packet>
 END LOTUS CONTEXT PACKET
@@ -167,22 +172,24 @@ The caller reviews and stores the returned packet.
 **provenance**: they record what was read at generation time so a reviewer can reproduce the
 packet. They are not staleness keys, and a bare hash mismatch never invalidates a packet.
 
-This distinction is mandatory because `state.md` requires the transition to be committed together
-with the artifact that proves it. The commit that stores the packet therefore also rewrites
-`state.md` (`workflow_state`, `context_packet`, `blocker`). A packet whose staleness triggered on
-its own `state_blob_sha` would be stale the instant it was promoted — the packet must never be
-authored that way.
+This distinction is mandatory because, once the block has a lane, its `estado.md` requires the
+transition to be committed together with the artifact that proves it, and that commit may rewrite
+`estado.md` (`workflow_state`, `context_packet`, `blocker`) in the same step. Before the lane
+exists, there is no `estado.md` yet: the packet commits together with the spec, and the block's
+`estado.md` is only written later, at the plan commit. Either way, a packet whose staleness
+triggered on its own `state_blob_sha` would be stale the instant it was promoted — the packet must
+never be authored that way.
 
 Staleness triggers must name **semantic** changes that would alter the packet's content, such as:
 
-- `active_work_item` or `active_spec` changing to a different item or file;
+- the block (`NN`/`slug`) or `active_spec` changing to a different item or file;
 - an edit to the spec, plan, or referenced code that changes scope, acceptance, or a constraint;
 - a canonical external source becoming available, or contradicting a recorded decision;
 - a decision recorded in the divergence table being reopened.
 
 Never list as a trigger: the promoting transition itself, the commit that stores the packet, or any
-`state.md` edit that only moves `workflow_state`, `next_owner`, `next_action`, `context_packet`,
-`blocker` or `resume_state`.
+edit to the block's `estado.md` that only moves `workflow_state`, `next_owner`, `next_action`,
+`context_packet`, `blocker` or `resume_state`.
 
 ## Packet schema
 
@@ -195,7 +202,7 @@ status: ready|partial|blocked
 generated_at: <ISO-8601 date or datetime>
 base_ref: <branch-or-ref>
 base_commit: <git-sha>
-state_path: docs/superpowers/state.md
+state_path: <path>
 state_blob_sha: <blob-sha>
 progress_path: <path>
 progress_blob_sha: <blob-sha>
@@ -255,7 +262,9 @@ word_budget: 1200
 Confirm all of the following:
 
 - required frontmatter fields are populated (`plan_path`/`plan_blob_sha`/`spec_path`/`spec_blob_sha`
-  record `null` when the corresponding `state.md` pointer is null — never invent them);
+  record `null` when the corresponding pointer in the block's `estado.md` is null — never invent
+  them; `state_path`/`state_blob_sha` record `null` before the block has a lane, and the block's
+  `estado.md` path/blob once it does);
 - base_commit and all repository blob hashes were obtained, not guessed;
 - every external fact cites a source-registry key;
 - material conflicts appear in the divergence table;
@@ -266,6 +275,6 @@ Confirm all of the following:
   its error line, or absence from tool discovery with the expected namespace named);
 - every row in the divergence table cites a resolution basis that actually decides that topic —
   a decision record may only be cited for the subject it covers;
-- no staleness trigger references a provenance hash, the promoting transition, or a `state.md` edit
-  that only moves workflow fields;
+- no staleness trigger references a provenance hash, the promoting transition, or an edit to the
+  block's `estado.md` that only moves workflow fields;
 - the result contains only the suggested path and the marked packet.
