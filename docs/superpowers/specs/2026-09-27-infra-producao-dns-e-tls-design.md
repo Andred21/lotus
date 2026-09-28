@@ -280,10 +280,10 @@ SHA `X` no GHCR; PR do `lotus-site` mesclada e stack em `UPDATE_COMPLETE`.
 5. **`.env`**: os seis campos do §11, valores iguais aos do molde (§4.4).
 6. **Botão promove `X`**: a conferência de alinhamento passa; o `deploy.sh` vê `live/` e liga o
    overlay; o nginx sobe em 80 e 443 já com HSTS. **A queda termina.** Janela estimada: minutos.
-7. **Webroot**: `certbot certonly --webroot -w /opt/lotus/certbot -d app.lotusotec.cl
-   --keep-until-expiring`. Portão: `grep 'authenticator = webroot'
-   /etc/letsencrypt/renewal/app.lotusotec.cl.conf`. Ainda `standalone` → repete com
-   `--force-renewal` (uma emissão a mais, dentro do limite).
+7. **Webroot**: `certbot reconfigure --cert-name app.lotusotec.cl --webroot -w /opt/lotus/certbot`
+   (sem `-d`; ensaia em dry-run pelo webroot e só grava se passar). Portão: `grep 'authenticator =
+   webroot' /etc/letsencrypt/renewal/app.lotusotec.cl.conf`. Emenda do review final: o `certonly
+   --keep-until-expiring` com o certificado longe do vencimento não reescreve a configuração.
 8. **Hook**: symlink (§4.3); prova é **executar o symlink** — saída 0, `nginx -t` ok, e um `curl`
    em `https://…/up` durante e depois responde 200. `renew --dry-run` não roda deploy hook.
 9. **Renovação**: `certbot renew --dry-run` com o nginx de pé, saída 0; `systemctl status

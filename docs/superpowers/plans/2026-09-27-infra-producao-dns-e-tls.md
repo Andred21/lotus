@@ -805,7 +805,7 @@ quebrado a 443 pode ter respondido mesmo assim (um 502, por exemplo) e o header 
 ```bash
 sudo mv /opt/lotus/nginx/tls.conf /opt/lotus/nginx/tls.conf.off
 # os seis campos de volta aos valores da coluna "Fase sem DNS" da tabela acima
-sudo /opt/lotus/bin/deploy.sh X
+sudo /opt/lotus/bin/deploy.sh <X — o sha de 40 hexadecimais do 11.4>
 ```
 
 O botão passa a recusar (`nginx/tls.conf ausente`) até o conserto — é o esperado, não um defeito.
@@ -824,13 +824,13 @@ sudo certbot reconfigure --cert-name app.lotusotec.cl --webroot -w /opt/lotus/ce
 grep -E '^(authenticator|webroot_path)' /etc/letsencrypt/renewal/app.lotusotec.cl.conf
 ```
 
-Sem `-d`: o `reconfigure` recusa mudar o authenticator se receber domínios junto (existe desde o
+Sem `-d`: o `reconfigure` recusa qualquer `-d` (existe desde o
 certbot 2.3; o noble tem 2.9.0). Ele ensaia por conta própria uma renovação em dry-run pelo webroot
 e só grava a configuração se o ensaio passar — é a prova antecipada de que o challenge está sendo
 servido pelo nginx, sem gastar uma emissão real. Por isso `certonly --keep-until-expiring` não serve
 aqui: com o certificado ainda longe do vencimento ele sai "Certificate not yet due for renewal; no
 action taken." e **nunca chega a reescrever** `/etc/letsencrypt/renewal/app.lotusotec.cl.conf`
-(certbot 2.9.0, `main.py:1592-1598`) — o `grep` abaixo mostraria `standalone` para sempre.
+(certbot 2.9.0, `main.py:1592-1598`) — o `grep` acima mostraria `standalone` para sempre.
 
 O `grep` tem de imprimir `authenticator = webroot`. **Se o `reconfigure` falhar**, foi o dry-run que
 reprovou: confira o `755` do diretório e se o nginx está de fato servindo
