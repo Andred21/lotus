@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest'
 import i18n from '@shared/config/i18n'
-import { formatDate, formatTime, formatDateTime, formatIsoDate } from './datetime'
+import { formatDate, formatTime, formatIsoDate } from './datetime'
 
 /**
  * O `hourCycle` de `formatTime` é explícito por decisão de produto, não
@@ -27,29 +27,6 @@ describe('formatTime', () => {
 
     await i18n.changeLanguage('en')
     expect(formatTime(QUANDO)).toMatch(/^02:05\sPM$/)
-  })
-})
-
-describe('formatDateTime', () => {
-  const d = new Date(2026, 7, 12, 14, 32)
-
-  it('compõe data e hora do idioma ativo, nesta ordem', () => {
-    expect(formatDateTime(d)).toBe(`${formatDate(d)} ${formatTime(d)}`)
-  })
-
-  it('inclui a hora — não é formatDate disfarçado', () => {
-    expect(formatDateTime(d)).not.toBe(formatDate(d))
-    expect(formatDateTime(d)).toContain(formatTime(d))
-  })
-
-  it('preserva a data de um horário de meia-noite', () => {
-    const meiaNoite = new Date(2026, 7, 12, 0, 0)
-    expect(formatDateTime(meiaNoite)).toContain(formatDate(meiaNoite))
-  })
-
-  it('formata ISO vindo do backend sem perder o dia', () => {
-    const doBackend = new Date('2026-08-12T14:32:00.000Z')
-    expect(formatDateTime(doBackend)).toBe(`${formatDate(doBackend)} ${formatTime(doBackend)}`)
   })
 })
 

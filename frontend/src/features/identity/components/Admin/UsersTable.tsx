@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, reducedFloorTablePt } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, reducedFloorTablePt, Timestamp } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
-import { formatDateTime, roleLabel, type ArchivableRow } from '@shared/lib'
+import { roleLabel, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
 import { userWidths } from './userColumns'
 
@@ -86,7 +86,7 @@ export function UsersTable({
         field="last_login"
         header={t('common.lastLogin')}
         sortable
-        body={(u: UserData) => (u.last_login ? formatDateTime(new Date(u.last_login)) : '—')}
+        body={(u: UserData) => (u.last_login ? <Timestamp value={new Date(u.last_login)} /> : '—')}
         style={largura.lastLogin}
       />
       {archived && archivedColumns(t)}

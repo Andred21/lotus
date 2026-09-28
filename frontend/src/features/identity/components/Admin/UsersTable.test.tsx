@@ -47,6 +47,27 @@ describe('UsersTable', () => {
     expect(tabela.className).not.toContain('min-w-[48rem]')
     expect(tabela.className).toContain('min-w-[42rem]')
   })
+
+  it('Último acceso sai no Timestamp: um <time> com o instante do backend (item 23)', () => {
+    renderWithProviders(
+      <UsersTable
+        users={[{ ...user, last_login: '2026-09-27T23:24:00Z' }]} loading={false} onView={() => {}}
+        mode="active" onModeChange={() => {}} onArchive={() => {}} onRestore={() => {}} busy={false}
+      />,
+    )
+    expect(document.querySelector('td time')?.getAttribute('dateTime')).toBe('2026-09-27T23:24:00.000Z')
+  })
+
+  it('sem acesso registrado, a célula segue com travessão e sem <time>', () => {
+    renderWithProviders(
+      <UsersTable
+        users={[user]} loading={false} onView={() => {}} mode="active" onModeChange={() => {}}
+        onArchive={() => {}} onRestore={() => {}} busy={false}
+      />,
+    )
+    expect(screen.getByText('—')).toBeTruthy()
+    expect(document.querySelector('td time')).toBeNull()
+  })
 })
 
 /** Q-1 do review de 2026-09-26: Administración em 390x844 tinha a mesma coluna

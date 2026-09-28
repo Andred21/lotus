@@ -3,9 +3,10 @@ import { COL, tableWidths } from '@shared/ui'
 /**
  * Classificação das colunas da `RedatoresTable`.
  *
- * `last_login` é `dateTime` e não `date`: `formatDateTime` imprime dia E hora, e
- * a hora é o que distingue dois acessos do mesmo dia — a coluna precisa da fatia
- * maior para não quebrar o carimbo no meio.
+ * `last_login` é `dateTime` e não `date`: o `Timestamp` imprime hora E data, e
+ * a hora é o que distingue dois acessos do mesmo dia. Desde o item 23 as duas
+ * saem em linhas separadas; o peso `dateTime` é de quando o carimbo era uma
+ * linha só, e os pesos de `COL` ficaram fora daquele bloco.
  *
  * `rut` usa `COL.short`, não `COL.rut`: com 5 colunas de dado competindo pelo
  * orçamento (a mais desta tabela entre as que mostram RUT), o peso original

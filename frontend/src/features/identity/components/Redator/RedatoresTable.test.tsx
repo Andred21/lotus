@@ -87,3 +87,21 @@ describe('RedatoresTable — ações colapsam no telefone (UI-01)', () => {
     expect(larguraDaColunaDeAcoes()).toBe('12rem')
   })
 })
+
+describe('RedatoresTable — Último acceso (item 23)', () => {
+  it('sai no Timestamp, com o instante do backend no dateTime', () => {
+    renderWithProviders(
+      <RedatoresTable
+        redatores={[{ ...REDATOR, last_login: '2026-09-27T23:24:00Z' } as RedatorRow]}
+        loading={false}
+        onView={() => {}}
+        mode="active"
+        onModeChange={() => {}}
+        onArchive={() => {}}
+        onRestore={() => {}}
+        busy={false}
+      />,
+    )
+    expect(document.querySelector('td time')?.getAttribute('dateTime')).toBe('2026-09-27T23:24:00.000Z')
+  })
+})

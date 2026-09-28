@@ -35,17 +35,6 @@ export function formatDate(date: Date): string {
 }
 
 /**
- * Data + hora no formato curto do idioma ativo ("12-08-2026 14:32" em es-CL).
- * Usado no "último acesso" das tabelas de Usuários e Redatores.
- *
- * Compõe os dois formatters acima em vez de chamar `Intl` de novo: o locale
- * ativo já é resolvido por eles, num lugar só.
- */
-export function formatDateTime(date: Date): string {
-  return `${formatDate(date)} ${formatTime(date)}`
-}
-
-/**
  * Data-only (`YYYY-MM-DD`) do backend ancorada ao meio-dia LOCAL.
  *
  * `new Date('2026-03-01')` é interpretado como UTC e, num fuso a oeste, volta
