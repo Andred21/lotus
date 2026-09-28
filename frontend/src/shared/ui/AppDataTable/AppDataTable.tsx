@@ -118,13 +118,14 @@ export function AppDataTable<T extends DataTableValueArray>({
       paginatorLeft={loading ? t('common.loading') : footerCount}
       paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
       // `widthPt` funde por ÚLTIMO, e não o `pt` do chamador: o guard "sem
-      // linha, sem largura mínima" (comentário acima) tem que vencer até uma
-      // tabela cujo CHAMADOR também escreve `table.className` (UsersTable,
-      // RolesTable, RedatoresTable — UI-02 desta run e UI-03 de Pessoas), ou o
-      // vazio/erro dessas telas volta a forçar `min-w-[42rem]` (672px) dentro
-      // de uma moldura de 276px em 390x844 — a MESMA classe de rolagem
-      // indevida que o guard existe para prevenir. Com linha (`widthPt = {}`),
-      // a fusão não muda nada e o `pt` do chamador segue vencendo, como antes.
+      // linha, sem largura mínima" (comentário acima) tem que vencer o piso
+      // default de `appDataTablePt` e também qualquer `pt` de CHAMADOR que
+      // escreva `table.className`. Senão o vazio/erro de QUALQUER tabela volta
+      // a forçar o piso (672px no default) dentro de uma moldura de 276px em
+      // 390x844 — a MESMA rolagem indevida que o guard existe para prevenir.
+      // O caso nasceu no UI-02/UI-03, com o piso reduzido de três tabelas que
+      // o item 23 tornou default. Com linha (`widthPt = {}`), a fusão não muda
+      // nada e o `pt` do chamador segue vencendo.
       pt={mergePt<DataTableProps<DataTableValueArray>['pt']>(
         mergePt<DataTablePassThroughOptions>(
           { ...appDataTablePt, paginator: appPaginatorPt },

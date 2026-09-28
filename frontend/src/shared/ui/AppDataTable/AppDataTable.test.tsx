@@ -182,14 +182,12 @@ describe('detalhe do servidor no estado de erro (P-70)', () => {
 
 /**
  * Regressão do passe de correção do UI-02 (Administración) e do UI-03 de
- * Pessoas (RedatoresTable, 19a616fb): o piso do chamador voltava a forçar
- * rolagem justamente no vazio/erro. O `widthPt` deste wrapper zera
+ * Pessoas (RedatoresTable, 19a616fb). O `widthPt` deste wrapper zera
  * `table.className` sem linha (erro ou vazio) para não empurrar
  * `AppErrorState`/`AppEmptyState` para fora da faixa visível em 390x844
- * (docblock de `hasRows` acima) — mas a fusão antiga deixava o `pt` do
- * CHAMADOR vencer por último, e o `min-w` dessas três tabelas voltava a
- * forçar rolagem justamente no vazio/erro, que é o estado que o guard existe
- * para proteger.
+ * (docblock de `hasRows` acima). A fusão antiga deixava o `pt` do CHAMADOR
+ * vencer por último, e o piso dele voltava a forçar rolagem justamente no
+ * vazio/erro, que é o estado que o guard existe para proteger.
  */
 describe('AppDataTable — largura mínima cede ao guard de "sem linha" mesmo com pt do chamador', () => {
   // Um piso qualquer do CHAMADOR — o que se mede é quem vence a fusão.
