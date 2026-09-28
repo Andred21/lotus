@@ -2,7 +2,7 @@
 
 > Divergências e dívidas **já registradas**. A skill `auditar-docs` lê esta pasta e **não reporta
 > nada daqui como achado novo**. Toda pendência tem gatilho — pendência sem prazo vira mentira
-> permanente (lição 13). Revisada a cada `/fechar-sprint`.
+> permanente (lição 13). Revisada a cada `/finalizar-bloco`.
 >
 > Isto NÃO é backlog de produto — item de código/feature vai para `docs/superpowers/backlog.md`.
 > Aqui mora só o que faz um doc ou um mecanismo divergir da realidade.
