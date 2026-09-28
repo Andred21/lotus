@@ -2,9 +2,9 @@
 schema_version: 3
 id: 32
 slug: 32-infra-producao-dns-e-tls
-workflow_state: ready_for_review
+workflow_state: reviewing
 next_owner: claude
-next_action: request_code_review
+next_action: approve_review_findings revisao em curso, sem achado ainda
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-27-infra-producao-dns-e-tls-design.md
 active_plan: docs/superpowers/plans/2026-09-27-infra-producao-dns-e-tls.md
@@ -17,9 +17,9 @@ branch: infra/32-infra-producao-dns-e-tls
 worktree: ../lotus-infra
 offset: null
 lane_base: 0c2c3d57
-commit: d0e16e81
+commit: 4e38b990
 blocker: null
-updated_at: 2026-09-27T23:04:21-03:00
+updated_at: 2026-09-27T23:06:55-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
