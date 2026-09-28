@@ -129,4 +129,12 @@ describe('TurmasTable — coluna de ações', () => {
     expect(screen.getByRole('button', { name: 'archive.restoreAction' }).textContent?.trim()).toBe('')
     expect(larguraDaColunaDeAcoes()).toBe('4.5rem')
   })
+
+  it('em arquivados abaixo de sm, o piso é o medido para esta visão (item 23, audit §5)', () => {
+    montar('archived')
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('57.5rem')
+  })
 })

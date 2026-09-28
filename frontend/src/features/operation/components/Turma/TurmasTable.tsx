@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn,
-  useCollapsibleActionsColumn,
+  AppColumn, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt,
+  stickyActionsColumn, useCollapsibleActionsColumn,
 } from '@shared/ui'
 import type { ArchiveMode, ServerTable } from '@shared/hooks'
 import type { TurmaData } from '@shared/types/generated'
@@ -64,6 +64,8 @@ export function TurmasTable({
       loading={table.loading}
       error={table.error}
       onRetry={table.refetch}
+      // Piso de 390 medido (item 23, audit §5): 38px de 1ª coluna contra 204px livres.
+      pt={archived ? narrowFloorTablePt('57.5rem') : undefined}
     >
       {/* Largura das colunas: `turmaWidths` (o porquê e as três medições estão
         * lá). Em PORCENTAGEM, normalizada por `tableWidths` para o orçamento —
