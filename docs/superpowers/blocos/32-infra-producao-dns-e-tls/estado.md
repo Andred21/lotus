@@ -2,13 +2,13 @@
 schema_version: 3
 id: 32
 slug: 32-infra-producao-dns-e-tls
-workflow_state: reviewing
-next_owner: claude
-next_action: approve_review_findings revisao em curso, sem achado ainda
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: resolve_blocker aprovar os achados Q-1 a Q-4 do revisao.md e decidir a divergencia do DoD 7
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-09-27-infra-producao-dns-e-tls-design.md
 active_plan: docs/superpowers/plans/2026-09-27-infra-producao-dns-e-tls.md
-active_review: null
+active_review: docs/superpowers/blocos/32-infra-producao-dns-e-tls/revisao.md
 active_acceptance: null
 context_packet: docs/superpowers/context-packets/2026-09-27-infra-producao-dns-e-tls.md
 efeito_externo: sim
@@ -17,9 +17,9 @@ branch: infra/32-infra-producao-dns-e-tls
 worktree: ../lotus-infra
 offset: null
 lane_base: 0c2c3d57
-commit: 4e38b990
-blocker: null
-updated_at: 2026-09-27T23:06:55-03:00
+commit: 569f902d
+blocker: review do bloco 32 saiu com 4 achados (2 amarelos, 2 verdes) e divergencia Claude/Codex sobre o DoD 7 aguardando o Joao
+updated_at: 2026-09-27T23:21:39-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
