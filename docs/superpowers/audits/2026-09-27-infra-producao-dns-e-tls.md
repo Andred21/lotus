@@ -59,6 +59,10 @@ template executado é o da `main` do site, idêntico ao da PR.
   `app.lotusotec.cl. A 18.230.53.197` nos dois lados, `sim`; os seis do SES e o `_dmarc` `sim`.
 - DoH em 2026-09-27T22:15:15-03:00: `dns.google` A `['18.230.53.197']`, AAAA `[]`;
   `cloudflare-dns.com` A `['18.230.53.197']`.
+- Conferência e D-52 fechada no `lotus-site` pela PR #23 (merge `ec1b4172`, 2026-09-28T02:03:40Z):
+  `docs/infra/conferencia-zona-2026-09-28.md` e a D-52 em `## Fechados` do backlog de lá. O patch
+  saiu desta sessão e o João aplicou e commitou: o hook do harness barra a escrita desta lane na
+  árvore `lotus-site-dns`.
 
 ## Task 10 — reinstalação, certificado e promoção
 
