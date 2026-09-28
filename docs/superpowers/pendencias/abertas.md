@@ -783,37 +783,33 @@ bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variá
 Bloco alunos (2026-07-27, spec D11): divergência aceita por decisão do João no mesmo dia — a ordem
 atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 
-## P-77 — o registro A de `app.lotusotec.cl` ainda aponta para a hospedagem antiga, e sem ele não há TLS
+## P-77 — `app.lotusotec.cl` não tem registro A; sem ele a produção fica em HTTP, sem cookie `Secure` e sem emitir certificado
 
-**Bloco:** — · **Gatilho:** fecha quando `app.lotusotec.cl` resolver **exatamente** o EIP
-`18.230.53.197`; a ação é o §11 do `deploy/aws/README.md`, que desde 2026-09-20 tem **quatro**
-passos e não um — emitir o certificado, virar os **seis** campos do `.env` para o domínio e para
-HTTPS (o sexto, `CERTIFICATE_VALIDATION_URL`, entrou pelo item 29 em 2026-09-25), redeployar (o `deploy.sh` já sobe o overlay sozinho quando o certificado existe) e passar a
-renovação para webroot, com `certbot renew --dry-run` como gate. Revisar em **2026-10-31**.
+**Bloco:** `infra-producao-dns-e-tls` (item 32, promovido em 2026-09-27) · **Quem decide:** João ·
+**Gatilho:** `app.lotusotec.cl` resolver **exatamente** o EIP `18.230.53.197`, sem AAAA, **e** o §11
+do `deploy/aws/README.md` executado de ponta a ponta — certificado, seis campos do `.env`, promoção
+pelo botão com HSTS, renovação por webroot com o hook, `certbot renew --dry-run` verde. Revisar em
+**2026-10-31**.
 
-Medido em 2026-09-04 e remedido em 2026-09-17, na Task 19 do item 10 v2:
+**Reescrita em 2026-09-27 (planejamento do item 32).** A ficha original dizia que o registro era
+pedido à Lotus/agência, que a zona vivia em `ns1–ns4.stackdns.com` sem acesso ao painel e que um
+curinga `*.lotusotec.cl` fazia qualquer nome resolver para o WordPress. Nada disso vale mais: desde
+2026-09-26 a zona está no Route 53 (stack `lotus-dns`, repo `Andred21/lotus-site`), **sem
+wildcard**, e o registro nasce por PR em `infra/lotus-dns.yaml` de lá — nunca à mão no console.
+Medido em 2026-09-27: `app.lotusotec.cl` **não resolve** (não há registro). O nome que a ficha
+antiga media, `sistema.`, é hoje registro explícito para o WordPress e não muda neste bloco.
 
-| Registro | Valor | |
+| Registro | Valor em 2026-09-27 | |
 |---|---|---|
-| `A` | `185.146.167.195` | hospedagem antiga (WordPress) |
-| `AAAA` | `2a07:7800::195` | hospedagem antiga |
+| `A app` | — (não existe) | nasce pela PR do item 32 no `lotus-site` |
+| `AAAA app` | — | não nasce: o EIP não tem IPv6 |
 | EIP da produção | `18.230.53.197` | — |
 
-O pedido do registro foi disparado à Lotus/agência na Task 1; a zona vive em `ns1–ns4.stackdns.com`
-e não temos acesso ao painel. **A prova é a igualdade, nunca "o nome resolve"** — existe curinga
-`*.lotusotec.cl` apontando para o WordPress, então qualquer nome responde.
-
-Enquanto o registro não chega, a produção atende em `http://18.230.53.197` (DoD 2, provado na Task
-15) e o bloco fecha sem TLS: o overlay `docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a
-catraca deles já estão no repositório desde a Task 7, prontos e nunca exercidos contra um
-certificado real. **Nada além do registro A separa os dois estados.**
-
-**Desde o item 29 (2026-09-25), a espera também trava certificado.** Em produção o backend recusa
-emitir e baixar certificado enquanto o `CERTIFICATE_VALIDATION_URL` não for https (500 nomeado,
-`ValidacaoDeCertificadoNaoConfigurada`), e a chave só se preenche no passo 2 do §11 — o de prova
-`LOT-2026-1000` inclusive. É a consequência aceita na spec do item 29 (§4): a proibição do runbook
-virou comportamento, e o registro A passou a ser também o que libera a emissão.
-
+Enquanto o registro não existe, a produção atende em `http://18.230.53.197` e **recusa emitir e
+baixar certificado** — `CERTIFICATE_VALIDATION_URL` vazio, 500 nomeado da P-79 (item 29). O overlay
+`docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a catraca deles estão no repositório
+desde 2026-09-20 e nunca foram exercidos com certificado real. **A prova continua sendo a
+igualdade**: o audit do item 32 registra o valor devolvido, não o fato de haver resposta.
 ---
 
 # Travadas em escrita fora do repositório
