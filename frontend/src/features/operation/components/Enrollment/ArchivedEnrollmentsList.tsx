@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { usePermissions, useTableFilter } from '@shared/hooks'
 import {
-  ArchiveRowActions, AppColumn, AppDataTable, AppEmptyState, IdentityCell, archivedColumns, stickyActionsColumn,
-  useCollapsibleActionsColumn,
+  ArchiveRowActions, AppColumn, AppDataTable, AppEmptyState, IdentityCell, archivedColumns, narrowFloorTablePt,
+  stickyActionsColumn, useCollapsibleActionsColumn,
 } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { EnrollmentData } from '@shared/types/generated'
@@ -63,6 +63,8 @@ export function ArchivedEnrollmentsList({
       onRetry={onRetry}
       first={table.first}
       onPage={table.onPage}
+      // Piso de 390 medido (item 23, audit §5): 293px de 1ª coluna contra 204px livres.
+      pt={narrowFloorTablePt('31.5rem')}
       footerCount={t('operation.enrollment.footerCount', { count: table.rows.length })}
       emptyMessage={
         <AppEmptyState icon="pi pi-inbox" title={t('archive.empty')} description={t('archive.emptyHint')} />
