@@ -1,5 +1,34 @@
-import { describe, it, expect } from 'vitest'
+import { afterAll, describe, expect, it } from 'vitest'
+import i18n from '@shared/config/i18n'
 import { formatDate, formatTime, formatDateTime, formatIsoDate } from './datetime'
+
+/**
+ * O `hourCycle` de `formatTime` é explícito por decisão de produto, não
+ * default do `Intl`: o CLDR do ICU 78 (Node 22) e do Chromium 152 passou a
+ * resolver `es-CL` para `h12` (era `h23`) sem nenhuma troca de código — o
+ * relógio do cabeçalho passaria a mostrar "02:05 p. m." em vez de "14:05".
+ * O produto quer 24h em es-CL e pt-BR, e mantém 12h com AM/PM em en.
+ */
+const idiomaOriginal = i18n.language
+
+afterAll(async () => {
+  await i18n.changeLanguage(idiomaOriginal)
+})
+
+describe('formatTime', () => {
+  const QUANDO = new Date(2026, 7, 11, 14, 5)
+
+  it('força 24h em es-CL e pt-BR, mantém 12h com AM/PM em en', async () => {
+    await i18n.changeLanguage('es-CL')
+    expect(formatTime(QUANDO)).toBe('14:05')
+
+    await i18n.changeLanguage('pt-BR')
+    expect(formatTime(QUANDO)).toBe('14:05')
+
+    await i18n.changeLanguage('en')
+    expect(formatTime(QUANDO)).toMatch(/^02:05\sPM$/)
+  })
+})
 
 describe('formatDateTime', () => {
   const d = new Date(2026, 7, 12, 14, 32)
