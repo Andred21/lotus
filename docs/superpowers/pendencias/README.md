@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (34)
+## Abertas (35)
 
 ### Agrupadas em bloco de execução
 
@@ -85,6 +85,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > vivas sem pagá-las, por decisão do João no gate: a **P-51** (tocou `UpdateClientAction` e
 > `ClientData`, casa do campo 2) e a **P-53** (tocou `.claude/rules/backend-ddd.md` por outro
 > motivo). As duas fichas registram o disparo; o gatilho **não se desarma** por isso.
+| P-93 | `docs/operacao-segredos.md` §3/§4/§6 descrevem `MAIL_PASSWORD` de um relay SMTP como o segredo de e-mail em uso e citam `backend/.env.production.example:106`; produção está em `MAIL_MAILER=log` desde o item 10 v2 e o item 33 a leva a `ses` pela instance role | 33 | commit da Fase A do item 33 que reescreve o doc e alinha o molde legado; revisar 2026-10-31 |
 
 ### Travadas em decisão — não entram em bloco
 

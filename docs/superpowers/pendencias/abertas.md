@@ -1136,3 +1136,20 @@ por um motivo que não é da release, e quem o lê pode recuar o que estava cert
 healthcheck do `app` esperado junto com o do nginx —, com catraca em `deploy-sh.test.ts` vista
 reprovar pela sonda que devolve o `curl` único. Pela **P-87**, a correção só chega ao host pela
 reinstalação do runbook §7.
+
+## P-93 — `operacao-segredos.md` descreve um relay SMTP que a produção nunca teve
+
+**Bloco:** 33 (`infra-producao-email-ses`) · **Quem decide:** — · **Gatilho:** fecha no commit da
+Fase A do item 33 que reescreve `docs/operacao-segredos.md` §3, §4 e §6 e alinha
+`backend/.env.production.example` ao mailer `ses` (spec do bloco, §4.5 e §4.2). Revisar em
+**2026-10-31**.
+
+`docs/operacao-segredos.md:47-49` afirma que o segredo de e-mail em uso é `MAIL_PASSWORD` de um
+relay SMTP selecionado por `MAIL_MAILER=smtp` em `backend/.env.production.example:106`, e o §4
+(linhas 60-79) escreve o procedimento de rotação dessa senha. Nada disso existe: desde o item 10 v2
+o molde real é `deploy/aws/env.prod.example`, que fixa `MAIL_MAILER=log` "até o bloco de SES"
+(linha 115-116), e o host de produção não tem `MAIL_HOST`, `MAIL_USERNAME` nem `MAIL_PASSWORD`.
+O levantamento de 2026-09-26 leu o molde legado do `backend/` e tomou o `smtp` dele por realidade —
+falso positivo registrado na ficha 33 do backlog. O item 33 troca `log` por `ses` com credencial
+pela instance role, então a correção do doc sai junto com o mecanismo que ele passa a descrever:
+e-mail sem segredo de longa duração, e a policy `lotus-ses` como o que se revoga.
