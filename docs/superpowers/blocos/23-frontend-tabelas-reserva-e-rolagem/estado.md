@@ -2,10 +2,10 @@
 schema_version: 3
 id: 23
 slug: 23-frontend-tabelas-reserva-e-rolagem
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: approve_review_findings
+resume_state: reviewing
 active_spec: docs/superpowers/specs/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
 active_plan: docs/superpowers/plans/2026-09-27-frontend-tabelas-reserva-e-rolagem.md
 active_review: null
@@ -17,9 +17,9 @@ branch: refactor/23-frontend-tabelas-reserva-e-rolagem
 worktree: ../fix-frontend
 offset: 2
 lane_base: 162cbaa7
-commit: e2c27efb
-blocker: null
-updated_at: 2026-09-28T00:54:30-03:00
+commit: fa7dc6cc
+blocker: review do bloco com 3 achados 🟡 aguardando o João (Q-1 dica do Emitir apagado, Q-2 collapsed opcional nos adaptadores, Q-3 ficha do transbordo do Dashboard)
+updated_at: 2026-09-28T10:00:00-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -57,3 +57,26 @@ Notas para o João no fechamento:
   tabela cabe na moldura. A spec §1 manda abrir ficha nova, e ela ainda não foi aberta (§6, Observação 1).
 - **O certificado `LOT-2026-1001`** do banco de dev foi emitido por navegador Windows às 23:58 (-03)
   de 27/09, não pelos scripts. Por isso o Historial mede 2 linhas (§6, Observação 2).
+
+## Review do bloco (2026-09-28)
+
+Risco baixo: só frontend visual, sem regra de negócio, executor claude. A revisão foi só do Claude,
+sem Codex. Intervalo `162cbaa7..fa7dc6cc`. Gates rodados de novo: `pnpm lint` ok, `pnpm build` ok,
+`pnpm test` com 158 arquivos e 987 testes verdes. A catraca `ACAO_SEM_COLAPSO` foi sondada por
+`--stdin`: reprova a largura literal e aceita `.width`. Nenhuma lei do §5 foi ferida e não há órfão:
+`reducedFloorTablePt` e `formatDateTime` saíram sem sobra de referência.
+
+Achados aguardando o João:
+
+- **Q-1 🟡 P — o "Emitir" apagado da Emisión perde a dica.** `RowActions.tsx` passa `tooltip` sem
+  `tooltipOptions.showOnDisabled`, e o `Button` do PrimeReact não mostra dica em botão desabilitado
+  (`showTooltip = !disabled || showOnDisabled`). Com a turma bloqueada, o que se vê é um ícone
+  cinza sem rótulo e sem hover, onde antes aparecia o texto "Emitir". Correção: `showOnDisabled`
+  quando `acao.disabled`.
+- **Q-2 🟡 P — `collapsed?: boolean` opcional nos seis adaptadores `*RowActions`** (Course, Client,
+  Budget, Turma, e User e Redator da fatia 3). É o buraco que o próprio comentário da
+  `ACAO_SEM_COLAPSO` nomeia e empurra para os testes de 390. Os três adaptadores novos já exigem a
+  prop. Tornar obrigatória faz o `tsc` pegar o esquecimento.
+- **Q-3 🟡 P — a ficha do transbordo do Dashboard não foi aberta.** A spec §1 diz que o transbordo
+  que persistir vira ficha nova. Ele persiste (31 e 29px em 1024). A lane não acrescenta item ao
+  `backlog.md`, então o destino (pendência ou item de fila) é decisão do João.
