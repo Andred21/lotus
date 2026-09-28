@@ -91,11 +91,11 @@ describe('CoursesTable — coluna de ações', () => {
     expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('39.5rem')
   })
 
-  it('abaixo de sm, o piso arquivado é o medido para esta visão (item 23, audit §5)', () => {
+  it('abaixo de sm, o piso arquivado é o corrigido no Step 4 (a presa também escala com a tabela)', () => {
     montar('archived')
 
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('sm:min-w-[42rem]')
-    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('54rem')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('47rem')
   })
 })

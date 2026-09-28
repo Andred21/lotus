@@ -57,8 +57,13 @@ export function CoursesTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
-      // Piso de 390 medido (item 23, audit §5): ativa 233px de 1ª coluna contra 204px livres; arquivada 171px contra 204px.
-      pt={narrowFloorTablePt(archived ? '54rem' : '39.5rem')}
+      // Piso de 390 medido (item 23, audit §5): ativa 233px de 1ª coluna contra 204px livres.
+      // Arquivada corrigida no Step 4: a presa TAMBÉM escala com `table-fixed` quando o piso
+      // passa de ~42rem (a razão da coluna presa não fica fixa), e o 54rem calculado por fórmula
+      // media box 16px reais no Chromium — 47rem foi o maior valor bissectado com box 0 (col1
+      // 193px, livre 201px); não alcança o col1 da ativa (219px), aceito como o Preocupação #2/#3
+      // do audit já previa (não há X que satisfaça as duas pernas da régua para esta tabela).
+      pt={narrowFloorTablePt(archived ? '47rem' : '39.5rem')}
     >
       <AppColumn
         field="name"
