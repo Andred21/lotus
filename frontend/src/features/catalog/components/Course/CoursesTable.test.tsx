@@ -96,6 +96,6 @@ describe('CoursesTable — coluna de ações', () => {
 
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('sm:min-w-[42rem]')
-    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('47rem')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('51rem')
   })
 })

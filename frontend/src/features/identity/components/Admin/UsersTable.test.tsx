@@ -97,6 +97,6 @@ describe('UsersTable — piso estreito abaixo de sm (item 23, audit §5)', () =>
 
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('sm:min-w-[42rem]')
-    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('51rem')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('56rem')
   })
 })

@@ -59,11 +59,10 @@ export function UsersTable({
       error={error}
       onRetry={onRetry}
       // Piso de 390 medido (item 23, audit §5): 149px de 1ª coluna contra 204px livres.
-      // Corrigido no Step 4: a presa TAMBÉM escala com `table-fixed` acima de ~42rem, e o
-      // 57.75rem calculado por fórmula media box 8px reais no Chromium — 51rem foi o valor
-      // bissectado com margem segura (col1 183px, livre 194px); não alcança o col1 da ativa
-      // (204px), mesmo trade-off do Cursos (audit, Preocupação #2).
-      pt={archived ? narrowFloorTablePt('51rem') : undefined}
+      // Varrido no navegador (audit §5, Step 4): acima de 42rem a presa também cresce com
+      // `table-fixed` e o livre encolhe; 56rem é o teto com box 0 (col1 201px, livre 186px,
+      // margem 1px). Não alcança o col1 da ativa (204px): nenhum piso fecha as duas pernas.
+      pt={archived ? narrowFloorTablePt('56rem') : undefined}
     >
       <AppColumn
         field="name"
