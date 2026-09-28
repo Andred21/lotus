@@ -60,18 +60,19 @@ blocos não se conferem aqui — quem confere é o portão do `lane.sh abrir`, n
 
 ## Passo 4 — Context Packet, se `Contexto: sim`
 
-Ainda não há lane: o packet vai para um arquivo temporário,
-`mktemp "${TMPDIR:-/tmp}/lotus-packet-<NN>.XXXXXX.md"`, e só entra no repositório no Passo 6.
+Ainda não há lane: grave o packet com a ferramenta `Write`, num caminho fora de qualquer árvore
+git sob `${TMPDIR:-/tmp}` — ex. `<tmp>/lotus-packet-<NN>-<AAAAMMDD-HHMMSS>.md` — e só o traga para
+o repositório no Passo 6. Nada de `mktemp` aqui: o `guard-main-shell` nega `mktemp` na `main`, e a
+ferramenta `Write` para fora de qualquer árvore git passa. Resolva `<tmp>` e o timestamp com
+`echo "${TMPDIR:-/tmp}"` e `date +%Y%m%d-%H%M%S`, os dois liberados na `main`.
 
 **Rota Codex** — porta os itens 1, 2, 3 e 6 da rota Codex do command anterior:
 
-1. Carregue o Codex. Primeiro o MCP: `ToolSearch "select:mcp__codex__codex"`. Se a ferramenta não
-   existir na sessão, use o plugin `codex-companion` por Bash, em background e **sem `--write`**
-   (sandbox `read-only`, que é o que o packet exige):
-   `node "$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)" task --fresh "<prompt>"`.
-   O prompt é o mesmo nos dois caminhos, e o contrato de saída (markers, `RECOMMENDED_TRANSITION`)
-   também; quem valida é você. **Não** use o agente `codex:codex-rescue` como fallback: em
-   background ele pede permissão de Bash que ninguém responde.
+1. Carregue o Codex pelo MCP: `ToolSearch "select:mcp__codex__codex"`. O fallback `codex-companion`
+   por Bash (`node ...`) não roda aqui: o `guard-main-shell` nega `node` na `main`, e este passo
+   sempre roda no main tree. Sem `mcp__codex__codex` na sessão, vá direto para a rota **Codex
+   indisponível**, abaixo. **Não** use o agente `codex:codex-rescue` como fallback: em background
+   ele pede permissão de Bash que ninguém responde.
 2. Invoque o Codex (sandbox read-only) com prompt que exija a skill `lotus-context-packet` de
    `.agents/skills/`, informando `NN`, slug, branch `main` e o commit atuais — não o item de
    trabalho da lane, que ainda não existe. O Codex não altera arquivos nem estado.
@@ -123,8 +124,10 @@ bash .claude/scripts/lane.sh abrir <NN> <tipo> <slug> --modelo <alias da sessão
 Deu certo: `EnterWorktree(path: "<caminho absoluto impresso pelo LANE ABERTA>")`. Da sessão no
 main tree o caminho da árvore irmã é aceito (E2).
 
-Havendo Context Packet do Passo 4, copie-o para
-`docs/superpowers/blocos/<NN>-<slug>/context.md`; ele é commitado junto com a spec.
+Havendo Context Packet do Passo 4: já na lane, onde o Bash não tem mais a restrição do
+`guard-main-shell` da `main`, copie o temporário para
+`docs/superpowers/blocos/<NN>-<slug>/context.md` e apague-o; o `context.md` é commitado junto com
+a spec.
 
 O stack não sobe aqui — a saída do `abrir` já diz como subir, quando o bloco precisar dele.
 
@@ -159,8 +162,6 @@ Quando não houver ação externa nenhuma, a seção diz isso em uma linha, **se
 
 Nenhuma. <o que o bloco cobre>. `efeito_externo: nao`.
 ```
-
-A spec é commitada na lane.
 
 ## Passo 8 — Plano
 
