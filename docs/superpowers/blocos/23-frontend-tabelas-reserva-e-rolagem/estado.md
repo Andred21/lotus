@@ -4,11 +4,11 @@ id: 23
 slug: 23-frontend-tabelas-reserva-e-rolagem
 workflow_state: closing
 next_owner: joao
-next_action: "answer_integration_menu rebase sobre a main, PR e remocao da ficha 23 e da D-65 pelo main tree"
+next_action: "answer_integration_menu PR da branch e remocao da ficha 23 e da D-65 pelo main tree"
 resume_state: null
 active_spec: docs/superpowers/specs/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
 active_plan: docs/superpowers/plans/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem.md
-active_review: null
+active_review: docs/superpowers/blocos/23-frontend-tabelas-reserva-e-rolagem/revisao.md
 active_acceptance: null
 context_packet: null
 efeito_externo: nao
@@ -17,9 +17,9 @@ branch: refactor/23-frontend-tabelas-reserva-e-rolagem
 worktree: ../fix-frontend
 offset: 2
 lane_base: 162cbaa7
-commit: 7f829137
+commit: ed7baf3f
 blocker: null
-updated_at: 2026-09-28T01:28:13-03:00
+updated_at: 2026-09-28T01:35:42-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -60,50 +60,7 @@ Notas para o João no fechamento:
 
 ## Review do bloco (2026-09-28)
 
-Risco baixo: só frontend visual, sem regra de negócio, executor claude. A revisão foi só do Claude,
-sem Codex. Intervalo `162cbaa7..fa7dc6cc`. Gates rodados de novo: `pnpm lint` ok, `pnpm build` ok,
-`pnpm test` com 158 arquivos e 987 testes verdes. A catraca `ACAO_SEM_COLAPSO` foi sondada por
-`--stdin`: reprova a largura literal e aceita `.width`. Nenhuma lei do §5 foi ferida e não há órfão:
-`reducedFloorTablePt` e `formatDateTime` saíram sem sobra de referência.
-
-Achados aguardando o João:
-
-- **Q-1 🟡 P — o "Emitir" apagado da Emisión perde a dica.** `RowActions.tsx` passa `tooltip` sem
-  `tooltipOptions.showOnDisabled`, e o `Button` do PrimeReact não mostra dica em botão desabilitado
-  (`showTooltip = !disabled || showOnDisabled`). Com a turma bloqueada, o que se vê é um ícone
-  cinza sem rótulo e sem hover, onde antes aparecia o texto "Emitir". Correção: `showOnDisabled`
-  quando `acao.disabled`.
-- **Q-2 🟡 P — `collapsed?: boolean` opcional nos seis adaptadores `*RowActions`** (Course, Client,
-  Budget, Turma, e User e Redator da fatia 3). É o buraco que o próprio comentário da
-  `ACAO_SEM_COLAPSO` nomeia e empurra para os testes de 390. Os três adaptadores novos já exigem a
-  prop. Tornar obrigatória faz o `tsc` pegar o esquecimento.
-- **Q-3 🟡 P — a ficha do transbordo do Dashboard não foi aberta.** A spec §1 diz que o transbordo
-  que persistir vira ficha nova. Ele persiste (31 e 29px em 1024). A lane não acrescenta item ao
-  `backlog.md`, então o destino (pendência ou item de fila) é decisão do João.
-
-### Correções aprovadas (2026-09-28)
-
-O João aprovou os três achados e acrescentou um: a dica do "Revocar" no Historial abria à direita,
-passava da moldura e criava rolagem horizontal na página. Mandou pôr as dicas dos botões das
-tabelas à esquerda do ícone. No caminho apareceu o Q-4, que o review tinha deixado passar.
-
-- **Achado do João + Q-1** (`167fb7ac`): a dica do `RowActions` abre à esquerda (`position: 'left'`).
-  No botão desabilitado, o alvo da dica é um `span` do próprio React, porque o `showOnDisabled` do
-  Prime embrulha o botão num `div` fora da reconciliação. Dois testes novos. No navegador, em
-  1024x768, com o mouse sobre "Revoke" no Historial: a dica sai com `p-tooltip-left`, de 848 a
-  935px, com o botão começando em 935px, e a página não rola (`scrollWidth` 1024 = `clientWidth`
-  1024). O "Emitir" desabilitado não foi visto no navegador: o banco de dev não tem turma concluída
-  dentro da janela da Emisión. Ele fica provado só pelo teste unitário.
-- **Q-2** (`4634f76c`): `collapsed` passa a ser obrigatório nos seis `*RowActions` de feature. O
-  `tsc` apontou os três testes que montavam sem a prop.
-- **Q-4** (`4e32b66d`): a `ACAO_SEM_COLAPSO` passa a medir os mesmos cinco arrays da
-  `ACAO_SEM_ANCORA`, `src/app/**` incluído, como pede a regra do `frontend-estilizacao.md`. Uma sonda
-  em `src/app/pages` é reprovada.
-- **Q-3** (`861d28dc`): o transbordo virou a ficha `D-73`, em `# Débitos técnicos` do `backlog.md`,
-  sem hospedeiro.
-
-Gates depois das correções: `pnpm lint` ok, `pnpm build` ok, `pnpm test` com 158 arquivos e 989
-testes verdes. Review limpo.
+Achados, correções aprovadas e gates depois delas: [`revisao.md`](./revisao.md).
 
 ## Fechamento (2026-09-28)
 
@@ -136,3 +93,15 @@ O bloco fica em `closing`, e não em `closed`, porque nada dele está na `main`.
 João: rebase sobre a `main`, PR e merge. O rebase vai pedir resolução no `state.md`, nas pendências
 e no `progress.md`, que a `main` também mexeu. A P-94 é o próximo número livre, e a P-93 é do bloco
 33, ainda não mesclado.
+
+## Integração (2026-09-28)
+
+A `main@6be051de` entrou na branch por merge (`ed7baf3f`), e não por rebase, para preservar os SHAs
+citados no audit, neste arquivo e no `progress.md`. Os três conflitos eram de doc. O `state.md`
+ficou o da `main`, que é o contrato do schema 3. O `pendencias/README.md` somou as duas partes e
+fechou em 35 abertas. O `progress.md` manteve os itens 32 e 23, e a linha do item 27 desceu para o
+arquivo. Gates no resultado: harness com 14 arquivos sem falha, lint 0, build verde e vitest com 160
+arquivos e 1007 testes. A `main` não tocou `backend/`.
+
+Com o contrato novo na árvore, o `SessionStart` passou a reconhecer a lane e acusou `active_review`
+vazio. O review, que estava neste arquivo, foi movido verbatim para `revisao.md`.
