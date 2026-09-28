@@ -212,12 +212,13 @@ limitations` do report do Codex, somado a qualquer decisão que a sessão tomou 
 (gate do Passo 3, itens 2 a 4). Copie o que houver para
 `docs/superpowers/blocos/<NN>-<slug>/rulings.md`, uma decisão por linha, com o que custa se
 estiver errada — é o que permite ao João desfazer uma decisão tomada em nome dele. Sem rulings,
-grave a linha `Nenhuma decisão foi tomada em nome do João.` Commit.
+grave a linha `Nenhuma decisão foi tomada em nome do João.` Não commite agora: o arquivo entra no
+commit do Passo 7.
 
 ## Passo 7 — Parar antes da revisão
 
-A skill do Passo 5 termina apontando para `finishing-a-development-branch`. **Não siga esse
-ponteiro.** Neste harness a revisão de duas lentes vem antes do fechamento.
+Na rota `claude`, a skill do Passo 5 termina apontando para `finishing-a-development-branch`.
+**Não siga esse ponteiro.** Neste harness a revisão de duas lentes vem antes do fechamento.
 
 Grave, no `estado.md`:
 
@@ -230,8 +231,10 @@ updated_at: <date -Iseconds>
 updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
 ```
 
-Commit. Reporte: as tasks concluídas, o intervalo de commits, as rulings tomadas e que o próximo
-passo é `/revisar-bloco <NN>`.
+Commit com `docs/superpowers/blocos/<NN>-<slug>/rulings.md` e
+`docs/superpowers/blocos/<NN>-<slug>/estado.md` juntos: o `rulings.md` é o artefato que fecha a
+execução, e a transição viaja com ele. Reporte: as tasks concluídas, o intervalo de commits, as
+rulings tomadas e que o próximo passo é `/revisar-bloco <NN>`.
 
 ## `--max`
 
