@@ -308,6 +308,29 @@ não escreveu nada disso porque o plano não listou entregável de doc; a spec �
 consequência de versionar os hooks, mas a spec agora está em `specs/archive/`, que ninguém lê por
 rotina.
 
+## P-92 — a invariante 10 manda o main tree escrever o `backlog.md` na `main`, e nenhum caminho deixa
+
+**Bloco:** 35 (`harness-commands-de-bloco`) · **Quem decide:** João · **Gatilho:** fecha quando o
+fluxo de fechamento tiver um caminho escrito, e exercido uma vez, para a ficha de um bloco fechado
+sair do `backlog.md` — ou quando a invariante 10 for reescrita para o caminho que existe. Revisar em
+**2026-10-31**.
+
+A invariante 10 do `state.md` diz: *"`backlog.md` é escrito somente pelo main tree, na `main`."*
+Mas o main tree não tem como escrever na `main`: o `guard-main` e o `guard-main-shell` negam
+escrita com a árvore na `main`, e o `pre-push` recusa push direto nela (`CONTRIBUINDO.md`). Toda
+mudança chega à `main` por PR, e PR sai de branch, que não é o main tree.
+
+**Medido em 2026-09-27, no fechamento do item 32:** a ficha 30 segue em `backlog.md:328` da
+`origin/main@229994bb`, um dia depois de o item 30 fechar e mesclar (PR #116); a ficha 32 segue em
+`backlog.md:137`, com o bloco em `closed` e mesclado (PR #118). Os dois fechamentos disseram "o
+main tree remove a ficha depois do merge", e nenhum dos dois tinha como. As mudanças do backlog que
+entraram até aqui vieram de branch de lane (`7b14e817`, na do item 30), contra a letra da regra.
+
+**Por que fica aberta:** o João escolheu, no fechamento do item 32, não quebrar a regra por atalho
+e entregar a lacuna ao item 35, que reescreve os comandos de bloco. As saídas que se veem: uma
+branch curta aberta do main tree só para o `backlog.md`, ou a lane remover a própria ficha no PR de
+fechamento, com a invariante reescrita para dizer isso.
+
 ## P-32 — a guarda da lição 13 confere path, não classe
 
 **Bloco:** BD-15 · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a

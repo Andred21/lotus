@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (33)
+## Abertas (34)
 
 ### Agrupadas em bloco de execução
 
@@ -35,6 +35,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | 35 | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
+| P-92 | A invariante 10 manda o main tree escrever o `backlog.md` na `main`, mas os guardas e o `pre-push` não deixam: as fichas 30 e 32 seguem no backlog depois de fechadas e mescladas | 35 | o fechamento ter caminho escrito e exercido para tirar a ficha do backlog, ou a invariante 10 reescrita; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
@@ -45,7 +46,8 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > reprovado de fora no fechamento: `app.lotusotec.cl` resolve o EIP, sem AAAA, e o §11 do runbook
 > rodou inteiro. Abriu a **P-89** na execução (o QR num PDF de produção) e, no fechamento, a
 > **P-90** e a **P-91**, os dois achados de passagem do audit que o review deixou para cá. Tirou do
-> rastro a **P-55**, a **P-87** e a **P-88**, que o item 16 deixou para a `lane-b`.
+> rastro a **P-55**, a **P-87** e a **P-88**, que o item 16 deixou para a `lane-b`. Depois do merge
+> (PR #118) nasceu a **P-92**: a ficha 32 não tinha como sair do `backlog.md`, e fica com o item 35.
 >
 > **O item 16 (`frontend-revisao-ui-por-modulo`) fechou em 2026-09-27 com a fatia 3** e não abriu
 > nem fechou pendência: os achados que não couberam no bloco viraram débito `D-71` e `D-72` no
