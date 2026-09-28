@@ -2,10 +2,10 @@
 schema_version: 3
 id: 23
 slug: 23-frontend-tabelas-reserva-e-rolagem
-workflow_state: blocked
-next_owner: joao
-next_action: approve_review_findings
-resume_state: reviewing
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item
+resume_state: null
 active_spec: docs/superpowers/specs/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
 active_plan: docs/superpowers/plans/2026-09-27-frontend-tabelas-reserva-e-rolagem.md
 active_review: null
@@ -17,9 +17,9 @@ branch: refactor/23-frontend-tabelas-reserva-e-rolagem
 worktree: ../fix-frontend
 offset: 2
 lane_base: 162cbaa7
-commit: fa7dc6cc
-blocker: review do bloco com 3 achados 🟡 aguardando o João (Q-1 dica do Emitir apagado, Q-2 collapsed opcional nos adaptadores, Q-3 ficha do transbordo do Dashboard)
-updated_at: 2026-09-28T10:00:00-03:00
+commit: 861d28dc
+blocker: null
+updated_at: 2026-09-28T11:30:00-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -80,3 +80,27 @@ Achados aguardando o João:
 - **Q-3 🟡 P — a ficha do transbordo do Dashboard não foi aberta.** A spec §1 diz que o transbordo
   que persistir vira ficha nova. Ele persiste (31 e 29px em 1024). A lane não acrescenta item ao
   `backlog.md`, então o destino (pendência ou item de fila) é decisão do João.
+
+### Correções aprovadas (2026-09-28)
+
+O João aprovou os três achados e acrescentou um: a dica do "Revocar" no Historial abria à direita,
+passava da moldura e criava rolagem horizontal na página. Mandou pôr as dicas dos botões das
+tabelas à esquerda do ícone. No caminho apareceu o Q-4, que o review tinha deixado passar.
+
+- **Achado do João + Q-1** (`167fb7ac`): a dica do `RowActions` abre à esquerda (`position: 'left'`).
+  No botão desabilitado, o alvo da dica é um `span` do próprio React, porque o `showOnDisabled` do
+  Prime embrulha o botão num `div` fora da reconciliação. Dois testes novos. No navegador, em
+  1024x768, com o mouse sobre "Revoke" no Historial: a dica sai com `p-tooltip-left`, de 848 a
+  935px, com o botão começando em 935px, e a página não rola (`scrollWidth` 1024 = `clientWidth`
+  1024). O "Emitir" desabilitado não foi visto no navegador: o banco de dev não tem turma concluída
+  dentro da janela da Emisión. Ele fica provado só pelo teste unitário.
+- **Q-2** (`4634f76c`): `collapsed` passa a ser obrigatório nos seis `*RowActions` de feature. O
+  `tsc` apontou os três testes que montavam sem a prop.
+- **Q-4** (`4e32b66d`): a `ACAO_SEM_COLAPSO` passa a medir os mesmos cinco arrays da
+  `ACAO_SEM_ANCORA`, `src/app/**` incluído, como pede a regra do `frontend-estilizacao.md`. Uma sonda
+  em `src/app/pages` é reprovada.
+- **Q-3** (`861d28dc`): o transbordo virou a ficha `D-73`, em `# Débitos técnicos` do `backlog.md`,
+  sem hospedeiro.
+
+Gates depois das correções: `pnpm lint` ok, `pnpm build` ok, `pnpm test` com 158 arquivos e 989
+testes verdes. Review limpo.
