@@ -8,7 +8,7 @@
 
 **Tech Stack:** nginx (`add_header … always`), certbot (`--standalone` → `--webroot`, deploy hook), Docker Compose (`exec -T nginx sh -c 'nginx -t && nginx -s reload'`), CloudFormation (`lotus-dns`, `us-east-1`), Route 53, vitest (projeto `repo`) no `lotus-infra`, vitest + prettier no `lotus-site`, `gh`, `aws`, `curl`, `openssl`, `pdftoppm`, `zbarimg`.
 
-**Spec:** [`docs/superpowers/specs/2026-09-27-infra-producao-dns-e-tls-design.md`](../specs/2026-09-27-infra-producao-dns-e-tls-design.md). Packet: [`2026-09-27-infra-producao-dns-e-tls.md`](../context-packets/2026-09-27-infra-producao-dns-e-tls.md).
+**Spec:** [`docs/superpowers/specs/archive/2026-09-27-infra-producao-dns-e-tls-design.md`](../../specs/archive/2026-09-27-infra-producao-dns-e-tls-design.md). Packet: [`2026-09-27-infra-producao-dns-e-tls.md`](../../context-packets/2026-09-27-infra-producao-dns-e-tls.md).
 
 ## Global Constraints
 
@@ -383,7 +383,7 @@ Crie `docs/superpowers/audits/2026-09-27-infra-producao-dns-e-tls.md`:
 # Audit — `infra-producao-dns-e-tls` (item 32) — 2026-09-27
 
 > Evidência das DoD da spec
-> [`2026-09-27-infra-producao-dns-e-tls-design.md`](../specs/2026-09-27-infra-producao-dns-e-tls-design.md).
+> [`2026-09-27-infra-producao-dns-e-tls-design.md`](../../specs/archive/2026-09-27-infra-producao-dns-e-tls-design.md).
 > Do `.env` de produção só se registra nome de chave, nunca valor. Escritas na AWS e no host são do
 > João; a sessão lê e confere.
 

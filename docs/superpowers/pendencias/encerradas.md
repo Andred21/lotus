@@ -7,157 +7,55 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-55 — a invariante do espelho proíbe o que toda lane precisa fazer
+## P-77 — `app.lotusotec.cl` não tem registro A; sem ele a produção fica em HTTP, sem cookie `Secure` e sem emitir certificado
 
-**Encerrada em 2026-09-26, no fechamento do `harness-estado-por-bloco` (item 30), por decisão do
-João no gate.** O item 30 não escolheu nenhuma das duas saídas do gatilho: extinguiu o espelho. O
-`state.md` virou contrato e não guarda mais `lanes:`, `focused_lane` nem os campos singulares do
-topo; o estado de cada bloco mora em `docs/superpowers/blocos/<NN>-<slug>/estado.md`, na árvore da
-lane (invariante 6 do contrato). Sem espelho, não há o que a lane precise escrever e a regra
-proíba. Até o item 35 mesclar, os commands ainda citam `focused_lane`, e a seção "Transição" do
-`state.md` manda lê-los contra o `estado.md` do bloco.
+**Encerrada em 2026-09-27, no fechamento do `infra-producao-dns-e-tls` (item 32), pelo gatilho
+pago.** O registro A nasceu por PR no `lotus-site` e resolve exatamente `18.230.53.197`, sem AAAA;
+o §11 do runbook rodou inteiro, com o 11.4 antes do 11.3 (desvio registrado no audit). Reprovado de
+fora no fechamento, em 2026-09-28T02:35:18Z: `A` = `18.230.53.197` e `AAAA` vazio por DoH,
+`http://…/inicio` 301 para https, `https://…/up` 200 com `strict-transport-security:
+max-age=31536000`, certificado `CN = app.lotusotec.cl` do Let's Encrypt `YE2` até
+`Dec 27 00:27:08 2026 GMT`, e `XSRF-TOKEN` e `lotus-session` com `domain=app.lotusotec.cl; secure`.
+A prova do QR num PDF de produção, que o gatilho não pede, segue aberta na **P-89**.
 
-**Gatilho:** fecha quando o João escolher entre (a) reescrever a invariante para descrever o que as
-lanes fazem de fato, ou (b) dar ao espelho um mecanismo próprio que dispense a escrita manual — por
-exemplo `focused_lane` derivada da árvore corrente em vez de campo escrito. Revisar em
+**Bloco:** `infra-producao-dns-e-tls` (item 32, promovido em 2026-09-27) · **Quem decide:** João ·
+**Gatilho:** `app.lotusotec.cl` resolver **exatamente** o EIP `18.230.53.197`, sem AAAA, **e** o §11
+do `deploy/aws/README.md` executado de ponta a ponta — certificado, seis campos do `.env`, promoção
+pelo botão com HSTS, renovação por webroot com o hook, `certbot renew --dry-run` verde. Revisar em
 **2026-10-31**.
 
-O `state.md` diz, na lista do que cada lane pode escrever: *"**Nunca os campos singulares do topo**:
-são espelho de `focused_lane`, e trocar o foco é fronteira durável do main tree."* Mas
-`/planejar-bloco` e `/executar-bloco` leem os singulares, não o bloco da lane em `lanes:` — então
-uma lane que não vire o espelho na própria árvore é planejada e executada contra a lane errada.
+**Reescrita em 2026-09-27 (planejamento do item 32).** A ficha original dizia que o registro era
+pedido à Lotus/agência, que a zona vivia em `ns1–ns4.stackdns.com` sem acesso ao painel e que um
+curinga `*.lotusotec.cl` fazia qualquer nome resolver para o WordPress. Nada disso vale mais: desde
+2026-09-26 a zona está no Route 53 (stack `lotus-dns`, repo `Andred21/lotus-site`), **sem
+wildcard**, e o registro nasce por PR em `infra/lotus-dns.yaml` de lá — nunca à mão no console.
+Medido em 2026-09-27: `app.lotusotec.cl` **não resolve** (não há registro). O nome que a ficha
+antiga media, `sistema.`, é hoje registro explícito para o WordPress e não muda neste bloco.
 
-**Medido em 2026-08-24:** três lanes viraram o espelho na própria branch, fora do main tree — a
-`lane-c` em `ff5c29f6` (`focused_lane: lane-c`), a `lane-a` no commit de promoção do item 2 e a
-`lane-b` no commit que abre esta ficha. Nenhuma das três podia, pela letra. É a mesma classe do
-achado **Q-2** do review de 2026-08-22, em que a regra de dono foi quebrada por 21 commits no mesmo
-dia em que foi escrita: a regra descreve a intenção (nenhuma lane sobrescreve o foco de outra no
-merge) e proíbe o mecanismo que a operação exige.
+| Registro | Valor em 2026-09-27 | |
+|---|---|---|
+| `A app` | — (não existe) | nasce pela PR do item 32 no `lotus-site` |
+| `AAAA app` | — | não nasce: o EIP não tem IPv6 |
+| EIP da produção | `18.230.53.197` | — |
 
-**Por que fica aberta:** as duas saídas mudam contrato de workflow lido por comando — decisão do
-João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
-apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
+Enquanto o registro não existe, a produção atende em `http://18.230.53.197` e **recusa emitir e
+baixar certificado** — `CERTIFICATE_VALIDATION_URL` vazio, 500 nomeado da P-79 (item 29). O overlay
+`docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a catraca deles estão no repositório
+desde 2026-09-20 e nunca foram exercidos com certificado real. **A prova continua sendo a
+igualdade**: o audit do item 32 registra o valor devolvido, não o fato de haver resposta.
 
-**Quarto caso, 2026-08-28:** a promoção do item 18 (`frontend-estilizacao-padronizacao-de-componentes`)
-para a `lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, com o João
-avisado da pendência antes do commit e decidindo por ela. A alternativa oferecida — gravar só o
-bloco da lane aqui e o espelho no main tree — foi recusada por ping-pong entre árvores. A ficha
-segue aberta: quatro precedentes não reescrevem a invariante.
+**Medição de 2026-09-28 (item 32).** `A app.lotusotec.cl` = `18.230.53.197` por DoH (`dns.google` e
+`cloudflare-dns.com`) e direto nos NS da zona (`pnpm infra:conferir-zona --pos-delegacao`, `rc=0`);
+`AAAA` vazio. §11 executado de ponta a ponta, com o 11.4 antes do 11.3 (desvio registrado no
+audit): certificado Let's Encrypt emitido (validade
+2026-12-27), seis campos virados (contagem `6` no host), promoção pelo botão (run `36366650213`),
+HSTS servido, cookies com `secure` e `domain=app.lotusotec.cl`, renovação por webroot com o hook
+executado sem queda, `renew --dry-run` verde. A prova do QR em https, que o gatilho desta ficha não
+pede, ficou para a **P-89**. Evidência em `audits/2026-09-27-infra-producao-dns-e-tls.md`.
+**Gatilho pago; encerra no `/fechar-sprint`.**
 
-**Quinto caso, 2026-08-29:** a promoção do item 19 (`frontend-triagem-dos-audits-do-item-18`) para a
-`lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, pelo mesmo motivo do
-quarto: `/planejar-bloco` lê os singulares, e a sessão rodou autônoma, sem o João para escolher o
-ping-pong entre árvores. Cinco precedentes, mesma saída pendente.
-
-## P-87 — o botão promove imagens, mas o host guarda compose, `tls.conf`, `.env` e os próprios scripts de `deploy/bin/` por cópia, e nada avisa quando eles ficam para trás
-
-**Encerrada em 2026-09-26 (item 31), pela direção (a), detectar.** O botão confere o
-host antes de promover (`.github/scripts/conferir-alinhamento.sh`, runtime e chaves
-contra o SHA alvo, `bin/*.sh` contra a `main`), sem escape. Recusou ao vivo com
-`bin/deploy.sh diferente`
-([run 36264643022](https://github.com/Gatika-CL/lotus/actions/runs/36264643022)) e
-promoveu depois da reinstalação
-([run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582)). O SSH
-segue sem conferência, declarado no runbook §8.
-
-**Bloco:** cicd-promocao-deploy-e-rollback (item 12); hospedada por `cicd-host-alinhado-ao-sha`
-(item 31) desde 2026-09-26, que escolheu a direção (a) · **Quem decide:** João · **Gatilho:** o
-próximo commit que mudar `docker-compose.prod.yml`, `docker-compose.prod-tls.yml`,
-`deploy/nginx/tls.conf`, `deploy/aws/env.prod.example` ou `deploy/bin/*.sh`, ou o João escolher o
-mecanismo abaixo. Revisar em **2026-10-31**.
-
-Medido em 2026-09-26, antes do primeiro disparo do botão:
-- o host rodava o compose do `db8f8736`, sem o healthcheck do clamav que olha a idade da base
-  (`f9b56707`, Q-9);
-- o overlay e o `tls.conf` eram os do `53ca6ce7`, sem a renovação (Q-6) e sem a isenção do `/up`
-  (Q-1);
-- o `.env` não tinha 10 das 40 chaves do molde (Q-2). Sem `APP_LOCALE`, a produção respondia em
-  `en`.
-
-As três correções vieram do review do item 10, em 2026-09-20, e nenhuma chegou ao host em seis
-dias. O runbook §7 só instala esses arquivos quando o host nasce, e o `deploy.sh` — que o botão
-invoca — promove **imagens** por SHA. Nada compara o que o host guarda com o que o SHA promovido
-espera, e um rollback herda os arquivos do host, não os do SHA alvo. Nesta execução o João
-sincronizou tudo à mão (audit do item 12, "Antes do botão"), mas a causa segue aberta: o próximo
-desvio passa do mesmo jeito.
-
-Direções, para o João escolher:
-
-- (a) **Detectar:** a imagem `app` carrega os hashes dos arquivos de compose e do `tls.conf`, e os
-  nomes das chaves do molde. O gate do `deploy.sh` compara com o host, como já faz com as
-  migrations. O host continua sendo a fonte.
-- (b) **Entregar:** o botão manda os arquivos de compose e o `tls.conf` pelo próprio SSM antes do
-  `deploy.sh`, e o SHA vira a fonte. O `.env` não tem como ir assim, porque tem segredo; dele só
-  vale conferir os nomes.
-- (c) **Procedimento:** a §8 do runbook ganha o passo "antes de promover, confira a §7", e o risco
-  fica aceito por escrito.
-
-**Emenda de 2026-09-26 (review do item 12, Q-4).** A ficha nasceu sem `deploy/bin/*.sh`, que é o
-caso mais grave. O botão não leva o `deploy.sh`: ele executa a cópia que está no host. O gate, o
-ledger e o dump deste bloco chegaram lá porque o João reinstalou o script à mão ("Antes do botão"
-no audit). Uma correção desses scripts pode entrar na `main` e nunca rodar em produção.
-
-O gatilho já disparou. As correções do review mudaram o `deploy.sh`: agora ele grava
-`schema_a_frente` e passa o rótulo do dump. Também mudaram o `backup-db.sh`, cuja chave agora vai
-até o segundo e aceita rótulo. **Depois do merge, os dois precisam ser reinstalados pela §7 do
-runbook antes do próximo disparo do botão.** Enquanto isso não acontecer, o host continua com a
-versão anterior. Nada quebra, mas o escape não deixa rastro, e o dump do deploy pode colidir com o
-do cron.
-
-As direções mudam assim:
-
-- Em (a), o `deploy.sh` não consegue conferir a si mesmo. Uma cópia velha não tem a conferência
-  nova. Para os scripts, quem detecta é o workflow: ele pede o `sha256sum` de `/opt/lotus/bin/*.sh`
-  por SSM e compara com o SHA promovido.
-- Em (b), os scripts entram no pacote que o SSM entrega, junto com o compose e o `tls.conf`.
-
-**Disparo de 2026-09-26, pago à mão.** O review do item 12 mudou `deploy.sh` e `backup-db.sh`
-(`19aeb734`). Depois do merge e do espelho, o João reinstalou os dois pelo runbook §7, às 08:40Z.
-Host, `origin/main` e o corporativo `df30a6bd` ficaram com os mesmos hashes, e o botão promoveu o
-`df30a6bd` com o script novo (audit do item 12, "Depois do fechamento"). **A causa segue aberta:**
-foi de novo sincronização manual, e nada teria avisado se ela não acontecesse.
-
-## P-88 — o `deploy.sh` aceita promover imagem de qualquer dono do GHCR, inclusive do repositório pessoal
-
-**Encerrada em 2026-09-26 (item 31).** `DONO=gatika-cl` literal no `deploy.sh`, com o
-`docker login -u` pelo mesmo dono; a catraca de `deploy-sh.test.ts` foi vista reprovar
-com `${LOTUS_RELEASE_OWNER:-gatika-cl}` devolvido e com `DONO=andred21`; o host roda o
-script novo desde o
-[run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582) (`grep -c
-LOTUS_RELEASE_OWNER` = 0).
-
-**Bloco:** `cicd-host-alinhado-ao-sha` (item 31), desde 2026-09-26 · **Quem decide:** João ·
-**Gatilho:** o próximo commit que mudar
-`deploy/bin/deploy.sh` (o mesmo da **P-87**, para que o host receba as duas correções numa
-reinstalação só), ou o João promover a correção. Revisar em **2026-10-31**.
-
-**A regra:** a produção roda **sempre** imagem de `ghcr.io/gatika-cl/`, nunca de
-`ghcr.io/andred21/`. Decisão do João em 2026-09-26, no fechamento do item 12.
-
-**Hoje ela vale por padrão, não por mecanismo.** O `deploy.sh` monta o nome das três imagens com
-`DONO="${LOTUS_RELEASE_OWNER:-gatika-cl}"`: o dono é uma variável de ambiente com `gatika-cl` como
-padrão. Um `LOTUS_RELEASE_OWNER=andred21 /opt/lotus/bin/deploy.sh <sha do pessoal>` por SSH promove
-o trio do repositório pessoal. As imagens de `andred21` são **públicas** no GHCR, então o pull nem
-precisa de credencial. Nenhuma catraca de `frontend/tests/deploy-sh.test.ts` reprova isso.
-
-**Medido em 2026-09-26, só por leitura, e a produção estava certa:**
-- os quatro containers nossos (`app`, `scheduler`, `nginx`, `clamav`) rodam
-  `ghcr.io/gatika-cl/lotus-*:1142911b…`, e as sete imagens `ghcr.io` em cache no host são todas de
-  `gatika-cl`;
-- `1142911b`, `a5fc92bb` e `683e6221` existem em `Gatika-CL/lotus` como `release: espelho de …`,
-  com `Source-Commit`, e o `1142911b` não existe em `Andred21/lotus` (422);
-- o ledger tem seis deploys, todos para `1142911b` ou `a5fc92bb`;
-- `LOTUS_RELEASE_OWNER` não aparece em `/opt/lotus`, em `/etc/environment` nem no perfil do root,
-  e o `deploy.yml` não a passa no comando do SSM.
-
-**Fecha quando:**
-- o `deploy.sh` tiver `gatika-cl` fixo, sem variável de ambiente;
-- uma catraca em `deploy-sh.test.ts` reprovar qualquer outro dono, e for vista reprovar pela sonda
-  que devolve o `${LOTUS_RELEASE_OWNER:-…}`;
-- o host tiver o `deploy.sh` novo, pela reinstalação do runbook §7.
-
-*(P-55, encerrada pelo item 30, e P-87 e P-88, encerradas pelo item 31, todas em 2026-09-26. A
-**`P-59`**, a **`P-75`** e a **`P-79`** saíram no fechamento do item 12.)*
+*(P-77, encerrada pelo item 32 em 2026-09-27. A **`P-55`**, a **`P-87`** e a **`P-88`** saíram
+no mesmo fechamento.)*
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -178,6 +76,13 @@ precisa de credencial. Nenhuma catraca de `frontend/tests/deploy-sh.test.ts` rep
 > **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
 ## Rastro anterior, já removido
+
+**A P-55, a P-87 e a P-88 saíram no fechamento do `infra-producao-dns-e-tls` (item 32,
+2026-09-27)**. A P-55 fechou no item 30 (o espelho do `state.md` deixou de existir) e a P-87 e a
+P-88 no item 31 (o botão confere o host antes de promover, e o `deploy.sh` fixa `gatika-cl`), todas
+em 2026-09-26. O fechamento do item 16 (2026-09-27) as deixou para a lane que as abriu; este é o
+primeiro da `lane-b` depois deles. O rastro durável está nos commits e nas linhas de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-59, a P-75 e a P-79 saíram no fechamento do `cicd-promocao-deploy-e-rollback` (item 12,
 2026-09-26)**, o primeiro posterior ao do `backend-config-e-conteudo-de-documento` (item 29), que as

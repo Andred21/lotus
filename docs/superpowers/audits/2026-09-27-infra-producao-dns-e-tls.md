@@ -1,7 +1,7 @@
 # Audit — `infra-producao-dns-e-tls` (item 32) — 2026-09-27
 
 > Evidência das DoD da spec
-> [`2026-09-27-infra-producao-dns-e-tls-design.md`](../specs/2026-09-27-infra-producao-dns-e-tls-design.md).
+> [`2026-09-27-infra-producao-dns-e-tls-design.md`](../specs/archive/2026-09-27-infra-producao-dns-e-tls-design.md).
 > Do `.env` de produção só se registra nome de chave, nunca valor. Escritas na AWS e no host são do
 > João; a sessão lê e confere.
 
