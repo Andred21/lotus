@@ -558,7 +558,12 @@ const ACAO_SEM_ANCORA = {
 //
 // O que ela NÃO pega: uma tabela que chame o hook e passe `.width` mas esqueça
 // o `collapsed` no `*RowActions` — aí a coluna encolhe e os ícones transbordam.
-// Isso é dos testes de 390px de cada tabela, não desta regra.
+// Isso é do tipo: `collapsed` é obrigatório em todo `*RowActions` de feature
+// (Q-2 do review do item 23), e o esquecimento não compila.
+//
+// Mora nos mesmos cinco arrays da `ACAO_SEM_ANCORA`, `src/app/**` incluído (Q-4
+// do mesmo review): nasceu só nos dois de `components/`, e uma coluna presa
+// literal no shell passava verde.
 const ACAO_SEM_COLAPSO = {
   selector:
     "CallExpression[callee.name='stickyActionsColumn']" +
@@ -674,7 +679,7 @@ export default defineConfig([
       'src/features/identity/hooks/useRedatorForm.ts',
     ],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, FORMDATA_FORA_DO_HELPER, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, ACAO_SEM_COLAPSO, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // A régua de tamanho vira mecanismo (lição 14). Ela era citada como se
@@ -904,7 +909,7 @@ export default defineConfig([
     files: ['src/app/**/*.tsx'],
     ignores: [...CONSTROEM_QUERY_CLIENT],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, ACAO_SEM_COLAPSO, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // O `.ts` de `shared/` e `app/`, que NENHUM bloco de `no-restricted-syntax`
@@ -929,7 +934,7 @@ export default defineConfig([
   {
     files: ['src/app/providers/AppProviders.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, ACAO_SEM_COLAPSO, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO],
     },
   },
 ])
