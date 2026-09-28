@@ -85,3 +85,18 @@ describe('UsersTable — ações colapsam no telefone', () => {
     expect(coluna.style.width).toBe('4.5rem')
   })
 })
+
+describe('UsersTable — piso estreito abaixo de sm (item 23, audit §5)', () => {
+  it('em arquivados, o piso é o medido para esta visão', () => {
+    renderWithProviders(
+      <UsersTable
+        users={[user]} loading={false} onView={() => {}} mode="archived" onModeChange={() => {}}
+        onArchive={() => {}} onRestore={() => {}} busy={false}
+      />,
+    )
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('57.75rem')
+  })
+})

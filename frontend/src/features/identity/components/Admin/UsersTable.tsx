@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, Timestamp } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn, Timestamp } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
 import { roleLabel, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
@@ -58,6 +58,8 @@ export function UsersTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
+      // Piso de 390 medido (item 23, audit §5): 149px de 1ª coluna contra 204px livres.
+      pt={archived ? narrowFloorTablePt('57.75rem') : undefined}
     >
       <AppColumn
         field="name"
