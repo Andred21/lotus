@@ -11,6 +11,13 @@ export type RowAction = {
   disabled?: boolean
   /** Dica no hover do botão solto. O item de menu já mostra o rótulo. */
   tooltip?: boolean
+  /** Ação destrutiva (remover matrícula): tinge o botão solto de perigo. No
+   * menu o rótulo já diz o que a ação faz. */
+  severity?: 'danger'
+  /** `id` do texto que explica o `disabled` — o "Emitir" apagado da Emisión
+   * aponta para a tag do bloqueio (f3 UI-03). Vale no botão solto; a tabela
+   * que usa é de ação única e nunca abre menu. */
+  describedBy?: string
 }
 
 /**
@@ -46,7 +53,9 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
             icon={acao.icon}
             text
             rounded
+            severity={acao.severity}
             aria-label={acao.label}
+            aria-describedby={acao.describedBy}
             tooltip={acao.tooltip ? acao.label : undefined}
             disabled={acao.disabled}
             onClick={acao.onClick}

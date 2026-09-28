@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { usePermissions, useTableFilter } from '@shared/hooks'
 import {
-  AppButton, AppColumn, AppDataTable, AppEmptyState, IdentityCell, archivedColumns, stickyActionsColumn,
+  ArchiveRowActions, AppColumn, AppDataTable, AppEmptyState, IdentityCell, archivedColumns, stickyActionsColumn,
+  useCollapsibleActionsColumn,
 } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { EnrollmentData } from '@shared/types/generated'
@@ -50,6 +51,9 @@ export function ArchivedEnrollmentsList({
   // saber disso: sem o parâmetro os 10% dela ficariam sem dono e reescalariam o
   // par de `ARCHIVED_COLUMN`, que existe para render igual nas 7 arquivadas.
   const largura = archivedEnrollmentWidths(!registroBloqueado)
+  // A mesma peça das outras seis visões de arquivados: rótulo de `sm` para
+  // cima, ícone com nome acessível abaixo (item 23).
+  const colunaDeAcoes = useCollapsibleActionsColumn('10rem')
 
   return (
     <AppDataTable
@@ -85,19 +89,18 @@ export function ArchivedEnrollmentsList({
           histórico é justamente o que se faz depois de fechar o registro. */}
       {!registroBloqueado && (
         <AppColumn
-          body={(e: ArchivedEnrollmentRow) =>
-            can('operation.enrollment.restore') ? (
-              <AppButton
-                label={t('archive.restoreAction')}
-                icon="pi pi-undo"
-                text
-                size="small"
-                disabled={restoring}
-                onClick={() => e.id != null && onRestore(e.id)}
-              />
-            ) : null
-          }
-          style={stickyActionsColumn('10rem')}
+          body={(e: ArchivedEnrollmentRow) => (
+            <ArchiveRowActions
+              archived
+              busy={restoring}
+              canRestore={can('operation.enrollment.restore')}
+              onRestore={() => {
+                if (e.id != null) onRestore(e.id)
+              }}
+              collapsed={colunaDeAcoes.collapsed}
+            />
+          )}
+          style={stickyActionsColumn(colunaDeAcoes.width)}
         />
       )}
     </AppDataTable>

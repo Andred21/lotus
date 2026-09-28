@@ -67,6 +67,19 @@ describe('RowActions', () => {
     expect(screen.getByRole('button', { name: 'Ver' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'common.moreActions' })).toBeNull()
   })
+
+  it('ação destrutiva tinge o botão solto, e o describedBy aponta o motivo do disabled', () => {
+    render(
+      <RowActions
+        collapsed={false}
+        actions={[acao('Quitar', { severity: 'danger', disabled: true, describedBy: 'motivo' })]}
+      />,
+    )
+
+    const botao = screen.getByRole('button', { name: 'Quitar' })
+    expect(botao.className).toContain('p-button-danger')
+    expect(botao.getAttribute('aria-describedby')).toBe('motivo')
+  })
 })
 
 describe('ArchiveRowActions colapsada', () => {
