@@ -1,94 +1,71 @@
 ---
-description: Executa o plano do trabalho ativo sem redescobrir a fase
-argument-hint: [active_work_item]
-allowed-tools: Bash(git status:*), Bash(git log:*), Bash(git diff:*)
+description: Executa o plano do bloco da lane atual, com revisão por task. Não replaneja.
+argument-hint: "[NN] [--simples] [--max]"
 disable-model-invocation: true
+model: sonnet
+effort: medium
 ---
 
-> Fonte da mecânica de execução do Lotus: gate de estado, main tree/worktree, TDD, disciplina Git
-> e Definition of Done.
+# /executar-bloco
 
-## Gate de estado
+Fase 2 de 4 do harness de blocos. Desenho: spec compartilhada
+`docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md` §5.4, com as emendas da
+spec do bloco 35.
 
-@docs/superpowers/state.md
+Argumento: `$ARGUMENTS`
 
-Leia `state.md` primeiro. Este comando aceita somente:
+## Regra de invocação de skill — leia antes de tudo
 
-- `ready_for_execution` → valide todas as âncoras e transicione para `executing`;
-- `executing` → retome a primeira task comprovadamente pendente do plano.
+Toda skill citada abaixo é invocada pela ferramenta `Skill`, e a invocação é confirmada antes
+do passo seguinte. **Nunca execute o processo de uma skill de cabeça.**
 
-Qualquer outro estado → PARE e informe `workflow_state`, `next_owner` e `next_action`.
+Se você pensar *"eu já conheço essa skill"* ou *"o conteúdo dela já está no meu contexto"*,
+esse é o sinal de que o erro está prestes a acontecer — não uma dispensa. Este modo de falha
+já se repetiu neste projeto: o agente lê "use a skill Y", reconhece o processo, e executa uma
+versão de cabeça, pulando exatamente os gates que justificam a skill.
 
-O argumento é obrigatório e deve corresponder exatamente a `active_work_item`. Nunca selecione
-trabalho por `progress.md`, `backlog.md`, commits ou existência de arquivos.
+## Passo 1 — Caveman
 
-Antes de começar, exija:
+Invoque `Skill(caveman, "ultra")`. Confirme em uma linha que carregou.
 
-- `active_spec`, `active_plan` e seus paths existentes;
-- `context_packet` existente quando não for `null` ou quando a spec declarar dependência externa;
-- coerência entre estado, spec, packet, plano, Git e work item;
-- `active_plan` cobrindo o work item pedido.
+## Passo 2 — Validar o estado
 
-Divergência → PARE e transicione para `blocked`; não reconstrua a fase por heurística.
+Descubra a branch atual (`git rev-parse --abbrev-ref HEAD`) e confira contra o regex de lane das
+Global Constraints: `^(feat|fix|chore|refactor|infra|cicd|docs)/([0-9]+)-(.+)$`. Fora desse padrão,
+pare: execução acontece dentro da worktree do bloco, nunca no main tree. `bash
+.claude/scripts/lane.sh descobrir` dá o inventário, se precisar confirmar qual lane é esta.
 
-Ao iniciar a partir de `ready_for_execution`, atualize `state.md` no mesmo commit da primeira task
-durável:
+A pasta do bloco sai da branch — é a branch sem o `<tipo>/`: `docs/superpowers/blocos/<NN>-<slug>/`.
+Se o argumento trouxer `NN` e ele divergir do `<NN>` da branch, pare: é a invariante 7, e o motivo
+mais provável é ter esquecido de trocar de lane.
 
-```yaml
-workflow_state: executing
-next_owner: claude
-next_action: continue_active_plan
-```
+Leia o `estado.md` dessa pasta e confira, nesta ordem. Divergência em qualquer item para a
+sessão — **não conserte o arquivo**, relate:
 
-## Reconstrução de contexto
+0. `workflow_state` não é `blocked`. Se for, pare: relate `blocker` e `resume_state`. Sair de
+   `blocked` é decisão do João, não deste command.
+1. `workflow_state` é `ready_for_execution` ou `executing`. Se não for, pare e diga qual é o
+   command certo para o estado atual.
+2. `active_plan` está preenchido e o arquivo existe.
+3. `branch` do estado é igual à branch atual.
+4. `context_packet` existe no disco, quando o campo não é `null`.
+5. `efeito_externo` e `executor` estão preenchidos.
 
-Carregue, nesta ordem:
+## Passo 3 — Rota pelo `executor`
 
-1. `active_spec`;
-2. `context_packet`, quando não for `null`;
-3. `active_plan`;
-4. `.superpowers/sdd/progress.md`, se existir, apenas para localizar a task atual;
-5. arquivos exigidos pela task atual;
-6. rules correspondentes aos paths tocados.
+O campo `executor` do `estado.md` diz a rota. Para `codex`, os `paths_autorizados` exatos vêm da
+seção `## Handoff de execução` do `active_plan` — o `estado.md` só copia `claude`/`codex`.
 
-O ledger local registra task a task, mas não decide a fase. Lacuna de contexto → consulte a próxima
-fonte oficial de `CLAUDE.md` §3 incrementalmente. Nunca carregue tudo por precaução.
+- **`executor: codex`.** Carregue o Codex — primeiro `mcp__codex__codex` via `ToolSearch`; ausente,
+  o plugin `codex-companion` por Bash, em segundo plano e **com `--write`** (a execução delegada
+  escreve):
 
-## Workflow da execução
+  ```bash
+  node "$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)" task --fresh --write "<prompt>"
+  ```
 
-O estado escolhe a fase; as skills de Superpowers conduzem a técnica dentro dela. Preserve o ciclo
-de execução aplicável: `using-git-worktrees` quando permitido, `subagent-driven-development` ou
-`executing-plans`, `test-driven-development` e verificação do plano. Não inicie review ou fechamento
-dentro deste comando.
-
-### Gate main tree/worktree
-
-- Bloco frontend-only → `using-git-worktrees` normalmente.
-- Bloco que toca backend → main tree + disciplina Git abaixo. O compose monta o main tree; testar
-  backend em worktree produziria um verde contra código diferente (pendência P-03).
-
-### Classificação inline
-
-Priorize `subagent-driven-development`. Execução inline só quando todos forem verdade:
-
-1. envolve um arquivo;
-2. não altera regra de negócio;
-3. não exige reconstrução significativa de contexto;
-4. é validável localmente sem impactar outras camadas;
-5. não toca lei inviolável do §5: migration, `generated.ts`, auth/Sanctum, auditoria ou RBAC.
-
-Declare a classificação em uma linha. Se qualquer critério falhar, use o fluxo completo.
-
-### Gate de delegação (handoff)
-
-Leia `## Handoff de execução` do `active_plan`:
-
-- `executor: claude` ou seção ausente → execute com o ciclo Superpowers normal.
-- `executor: codex` → carregue o Codex — primeiro `mcp__codex__codex` via ToolSearch; ausente, o
-  plugin `codex-companion` por Bash, em background e **com `--write`** (a execução delegada
-  escreve): `node "$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)" task --fresh --write "<prompt>"`
-  — e invoque a skill `lotus-execute-block` com `plan_path`, intervalo de tasks e commit base.
-  O gate abaixo vale igual nos dois caminhos. Depois do report:
+  Invoque a skill `lotus-execute-block` com `plan_path` (o `active_plan` do estado), o intervalo
+  de tasks a executar e o commit base. Depois do report:
   1. valide os markers e o contrato;
   2. revise o diff real (`git status` + `git diff`) contra o plano — o report não substitui o diff;
   3. rode a verificação do plano você mesmo antes de aceitar;
@@ -96,9 +73,95 @@ Leia `## Handoff de execução` do `active_plan`:
   5. `RECOMMENDED_TRANSITION: blocked` ou diff fora de `paths_autorizados` → `workflow_state:
      blocked` com `blocker`, sem aceitar o diff.
 
-Estado, transições e commits permanecem com Claude em ambos os casos.
+  Estado, transições e commits permanecem com Claude, mesmo nesta rota.
 
-## TDD e disciplina Git
+- **`executor: claude`.** Conte as tasks do plano e os arquivos distintos que elas tocam:
+
+  ```bash
+  grep -cE '^### Task' <plano>
+  grep -E '^[[:space:]]*- (Create|Modify|Test|Delete):' <plano> | grep -o '`[^`]*`' | sed -E 's/:[0-9]+(-[0-9]+)?`$/`/' | sort -u | wc -l
+  ```
+
+  Com `--simples` no argumento, ou com até 3 tasks **e** até 2 arquivos, a escolha é
+  `executing-plans`; no resto, `subagent-driven-development`. Declare a escolha e as duas
+  contagens antes de seguir.
+
+## Passo 4 — Gravar `executing`
+
+Vindo de `ready_for_execution`, edite o `estado.md` do bloco agora — **sem commitar**:
+
+```yaml
+workflow_state: executing
+next_owner: claude
+next_action: continue_active_plan
+commit: <git rev-parse --short HEAD antes desta edição>
+updated_at: <date -Iseconds>
+updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
+```
+
+A invariante 6 proíbe um commit que só mude o `estado.md`: a mudança de estado tem de entrar no
+mesmo commit do artefato que prova a transição. Deixe a edição no working tree, sem `git add`.
+Quando o Passo 5 despachar o primeiro implementador do plano, o prompt do despacho manda ele dar
+`git add` nos paths da própria task **e** em `docs/superpowers/blocos/<NN>-<slug>/estado.md`
+juntos — assim a transição para `executing` entra no commit que prova a primeira task, não num
+commit à parte. Retomando de `executing`, pule este passo: a transição já está commitada.
+
+## Passo 5 — Executar
+
+Conforme a escolha do Passo 3, invoque **uma** das duas — nunca as duas:
+
+- Escolha padrão: `Skill(superpowers:subagent-driven-development)`.
+- Escolha `--simples` ou bloco pequeno: `Skill(superpowers:executing-plans)`.
+
+Confirme em uma linha que carregou. Deixe que ela conduza o loop.
+
+- **Despacho.** Cada subagente é despachado pelo `subagent_type`, pela tabela de
+  `.claude/papeis.md`: `implementador-mecanico`, `implementador-integracao`, `revisor-task`,
+  `re-revisor`, `corretor-tardio`, `revisor-branch`. Task sem papel que bata na tabela → declare
+  isso em uma linha e use o mais próximo. Com `--max` no argumento, todo `Agent` desta execução
+  leva `model: "opus"`.
+- O prompt de **todo** implementador leva a linha: "Invoque
+  `Skill(superpowers:test-driven-development)` antes de escrever código."
+- **Stack.** Quando o bloco toca `backend/`, suba o stack antes da primeira task:
+  `cd <lane> && docker compose up -d` (`<lane>` é a raiz desta worktree, a mesma da sessão). As
+  portas saem do `.env` da lane, pelo offset dela.
+
+  A P-03 caiu (spec §3.2): backend não roda mais no main tree.
+
+### Passo 5.1 — Pipeline de profundidade 1
+
+A SDD descreve o loop estritamente sequencial. Este harness roda uma variação, e ela é um desvio
+declarado: registre-o no `rulings.md` do bloco.
+
+Quando o implementador de uma task termina e o revisor dela é despachado, o implementador da
+**task seguinte** pode começar, com o revisor rodando em segundo plano. Os demais papéis
+trabalham na árvore da lane, a mesma desta sessão. Três amarras, nenhuma opcional:
+
+1. **Profundidade 1.** No máximo uma revisão em segundo plano por vez. Nunca implemente a task
+   seguinte enquanto duas revisões correm — a correção da primeira encontraria duas tasks
+   empilhadas por cima dela.
+2. **Só entre tasks independentes**, pela tabela `## Grupos paralelos` do plano: as duas tasks
+   precisam estar no mesmo grupo. Não estando, espere o revisor.
+3. **O revisor não olha a árvore da lane.** Ele recebe uma worktree efêmera destacada no commit
+   exato da task dele, despachada como `revisor-task` (`subagent_type`):
+
+```bash
+sha=$(git rev-parse --short HEAD)
+rev="$(dirname "$(git rev-parse --show-toplevel)")/lotus-rev-$sha"
+git worktree add --detach "$rev" "$sha"
+ln -s "$(git rev-parse --show-toplevel)/frontend/node_modules" "$rev/frontend/node_modules"
+# ... revisor-task trabalha em $rev, sem subir stack ...
+rm "$rev/frontend/node_modules"   # so o link; nunca rm -r: atravessaria para o node_modules real
+git worktree remove "$rev"
+```
+
+Sem isso o revisor leria arquivos que o implementador seguinte está editando e reportaria achado
+fantasma, e qualquer suíte que ele rodasse mediria uma árvore intermediária. Worktree de revisão
+não conta no teto de três lanes e não casa o padrão de lane.
+
+**Correções continuam sequenciais.** Corrigir é escrever, e escrever nunca é paralelo.
+
+### TDD e disciplina Git
 
 - Siga o plano task a task e preserve red → green → refactor quando houver comportamento testável.
 - Antes de tocar arquivo: `git status`. Arquivo sujo: `git diff <arquivo>` e leitura fresca
@@ -106,26 +169,42 @@ Estado, transições e commits permanecem com Claude em ambos os casos.
 - O WIP do João é intocável; em conflito, o working tree existente vence.
 - `git add` somente nos paths exatos da task. Commits devem manter escopo e prova coerentes.
 - Registre progresso fino em `.superpowers/sdd/progress.md` quando a técnica de execução exigir.
-- Desvio de convenção deve ser justificado no ledger; desvio de lei exige decisão explícita do João.
+- Desvio de convenção deve ser justificado no ledger; desvio de lei exige decisão explícita do
+  João.
 
-## Definition of Done
+### Definition of Done
 
 DoD é o comportamento previsto no plano provado end-to-end contra a API real, além dos testes,
-build, lint, Pint e tipos aplicáveis. Não marque task ou plano concluído apenas porque uma ferramenta
-ficou verde. Implemente somente `active_work_item`.
+build, lint, Pint e tipos aplicáveis. Não marque task ou plano concluído apenas porque uma
+ferramenta ficou verde. Implemente somente o que o `active_plan` deste bloco pede.
 
-## Ao concluir
+## Passo 6 — Preservar as decisões
 
-Depois de executar e provar todas as tasks do `active_plan`:
+Ao final, a skill do Passo 5 apresenta a lista **"Rulings I made"**. Copie-a para
+`docs/superpowers/blocos/<NN>-<slug>/rulings.md`, uma decisão por linha, com o que custa se
+estiver errada — é o que permite ao João desfazer uma decisão tomada em nome dele. Sem rulings,
+grave a linha `Nenhuma decisão foi tomada em nome do João.` Commit.
 
-1. registre a evidência final no ledger;
-2. confirme working tree/commits coerentes com o plano;
-3. atualize `state.md` no commit documental de handoff:
+## Passo 7 — Parar antes da revisão
+
+A skill do Passo 5 termina apontando para `finishing-a-development-branch`. **Não siga esse
+ponteiro.** Neste harness a revisão de duas lentes vem antes do fechamento.
+
+Grave, no `estado.md`:
 
 ```yaml
 workflow_state: ready_for_review
 next_owner: claude
 next_action: request_code_review
+commit: <git rev-parse --short HEAD antes deste commit>
+updated_at: <date -Iseconds>
+updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
 ```
 
-4. não inicie review automaticamente. A próxima instrução deve acionar a revisão do trabalho ativo.
+Commit. Reporte: as tasks concluídas, o intervalo de commits, as rulings tomadas e que o próximo
+passo é `/revisar-bloco <NN>`.
+
+## `--max`
+
+`--max` sobe `sonnet` para `opus` em todo despacho deste command, pelo parâmetro `model: "opus"`
+da ferramenta `Agent`, conforme `.claude/papeis.md`. O esforço da sessão não muda.
