@@ -481,6 +481,19 @@ ficam só como ponteiro, e a ficha delas é lá.
   `ready-redator` de 2026-08-22, classe `B`, herança que a Task 12 da fatia 1 do item 16 prometeu e
   nunca escreveu.
 
+- **D-73 · Os dois painéis de tabela do Dashboard transbordam por conteúdo, não por piso** →
+  **sem bloco hospedeiro.** `app/pages/Dashboard/admin/CompliancePanel.tsx` e
+  `RedatorLoadPanel.tsx` têm `scrollWidth` maior que a tabela: em 1024x768, 749 e 747px sobre
+  moldura e tabela de 718, ou seja, 31 e 29px a mais. Antes do item 23 eram 25 e 21px sobre 768. Em
+  390x844, 708 e 707 sobre 672. A tabela cabe na moldura (`table` ≤ `frame`, régua do item 23), então
+  o que passa é conteúdo de célula, e o piso não mexe nisso. A spec do item 23 (§1, "Fora") mandou
+  abrir ficha se o transbordo persistisse depois do piso novo. Ele persistiu, medido no audit
+  `audits/2026-09-27-item23-medicoes.md` §6, Observação 1. Não há coluna presa nesses painéis. O
+  remédio provável é achar a célula que força a largura (grafia sem quebra ou `min-width` de
+  conteúdo) e deixá-la quebrar ou truncar. **Quem decide o hospedeiro é o João.** **DoD:**
+  `scrollWidth == clientWidth` no invólucro dos dois painéis em 1024x768 e 390x844, medido no
+  navegador. Origem: Q-3 do review do item 23 (`frontend-tabelas-reserva-e-rolagem`).
+
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
   **Feito** (`BD-15-docs-guardrails-e-sincronizacao`,
