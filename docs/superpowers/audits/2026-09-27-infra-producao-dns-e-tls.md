@@ -76,7 +76,7 @@ template executado é o da `main` do site, idêntico ao da PR.
   `host alinhado ao SHA alvo` (01:26:54Z), `DEPLOY OK: a8ba3361…` (01:27:47Z). **Janela de queda:
   01:23:22Z a 01:27:47Z, 4 min 25 s.** O `.env` não tinha sido editado: os cookies saíam sem `secure`
   e sem `domain`.
-- `.env` editado pelo João (seis chaves do §11.3, por script `sed`, com backup).
+- `.env` editado pelo João (seis chaves do §11.3, por script `sed`, com backup). Conferência do João no host: `grep -c` = `6`. Backup apagado: `ls -la /opt/lotus/ | grep -c env.antes-item32` = `0`.
 - Botão 2, [run 36366375279](https://github.com/Gatika-CL/lotus/actions/runs/36366375279):
   `Failed`, `erro: /up respondeu 502` (01:34:00Z). O `.env` novo fez o compose recriar `app`,
   `scheduler` e `mysql`; o nginx seguiu `Running` e já `healthy`, então o laço de saúde do `deploy.sh`
@@ -91,3 +91,16 @@ template executado é o da `main` do site, idêntico ao da PR.
   sem HSTS; `http://…/up` 200 (isenção da sonda). Certificado servido: `CN = app.lotusotec.cl`,
   emissor `Let's Encrypt` `YE2`, `notAfter=Dec 27 00:27:08 2026 GMT`. `GET /sanctum/csrf-cookie`:
   `XSRF-TOKEN` e `lotus-session` com `domain=app.lotusotec.cl; secure`, a sessão também `httponly`.
+
+## Task 11 — renovação
+
+- `certbot reconfigure --cert-name app.lotusotec.cl --webroot -w /opt/lotus/certbot`:
+  `Successfully updated configuration.` O `grep` da config de renovação: `authenticator = webroot` e
+  `webroot_path = /opt/lotus/certbot,`.
+- Hook por symlink em `/etc/letsencrypt/renewal-hooks/deploy/recarregar-nginx.sh`, executado pelo
+  João às 2026-09-28T01:42:02Z: `syntax is ok`, `test is successful`, `signal process started`,
+  `rc=0`. Sonda de fora, um `curl` por segundo em `https://app.lotusotec.cl/up`: 30 de 30 `200`
+  entre 01:41:41Z e 01:42:20Z; 18 de 18 `200` na janela de 10 s antes e depois do reload.
+- `certbot renew --dry-run`: `Congratulations, all simulated renewals succeeded:` —
+  `/etc/letsencrypt/live/app.lotusotec.cl/fullchain.pem (success)`.
+- `systemctl is-active certbot.timer`: `active`.
