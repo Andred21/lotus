@@ -47,7 +47,13 @@ next_action: continue_active_planning
 Pré-condições: `next_owner: codex`, `next_action: generate_context_packet`, `context_packet: null`.
 Divergência → `blocked`.
 
-1. Carregue as ferramentas do plugin Codex (`ToolSearch "select:mcp__codex__codex"`).
+1. Carregue o Codex. Primeiro o MCP: `ToolSearch "select:mcp__codex__codex"`. Se a ferramenta não
+   existir na sessão (foi o caso em 2026-09-27), use o plugin `codex-companion` por Bash, em
+   background e **sem `--write`** (sandbox `read-only`, que é o que o packet exige):
+   `node "$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)" task --fresh "<prompt>"`.
+   O prompt é o mesmo nos dois caminhos e o contrato de saída (markers, `RECOMMENDED_TRANSITION`)
+   também; quem valida é você. **Não** use o agente `codex:codex-rescue` como fallback: em
+   background ele pede permissão de Bash que ninguém responde.
 2. Invoque o Codex (sandbox read-only) com prompt que exija a skill `lotus-context-packet` de
    `.agents/skills/`, informando `active_work_item`, `active_spec`, branch e commit atuais. O Codex
    não altera arquivos nem estado.

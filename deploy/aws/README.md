@@ -172,7 +172,7 @@ Do WSL, com o `.pem` da §6:
 
 ```bash
 scp docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
-scp deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh ubuntu@<EIP>:/tmp/
+scp deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@<EIP>:/tmp/
 scp deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
 ```
 
@@ -180,7 +180,7 @@ No host:
 
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
@@ -530,33 +530,67 @@ Sem confirmar, o tópico publica para ninguém. Depois: o `sns:Publish` da §4 e
 Canal definitivo de alerta é decisão do bloco de observabilidade. Trocar de canal depois é trocar
 um ARN no `.env` e a `Resource` da `lotus-alerta`.
 
-## 11. TLS — quando o registro A chegar
+## 11. TLS — o registro A, o certificado e a renovação
 
-O registro `app.lotusotec.cl` → EIP é pedido à Lotus/agência (a zona está em
-`ns1–ns4.stackdns.com` e não temos acesso ao painel). **A prova é a igualdade**, nunca "o nome
-resolve": existe curinga `*.lotusotec.cl` apontando para o WordPress, então qualquer nome
-resolve.
+O nome público da intranet é **`app.lotusotec.cl`** (ADR-14, emenda de 2026-09-27). A zona
+`lotusotec.cl` vive no Route 53 desde 2026-09-26 e é um stack do repositório `Andred21/lotus-site`
+(`infra/lotus-dns.yaml`, stack `lotus-dns` em `us-east-1`). **O registro nasce por PR lá**, nunca à
+mão no console: registro fora do template é drift, e o próximo deploy do stack não o corrige. A zona
+não tem wildcard, então "o nome resolve" e "o nome resolve o EIP" passaram a ser a mesma coisa —
+mas a prova registrada é o valor, não a resposta.
+
+Não há `dig` no WSL; a leitura de fora é por DNS-over-HTTPS:
 
 ```bash
-dig +short app.lotusotec.cl   # tem de ser exatamente o EIP
+curl -s 'https://dns.google/resolve?name=app.lotusotec.cl&type=A' | python3 -m json.tool | grep '"data"'      # "18.230.53.197", e só ele
+curl -s 'https://dns.google/resolve?name=app.lotusotec.cl&type=AAAA' | python3 -m json.tool | grep -c '"data"' # 0 — o EIP não tem IPv6
 ```
 
-**Passo 1 — emitir o certificado** (uma vez, com o nginx parado):
+**Restrição cruzada com a CAA do site.** A zona não publica `CAA` hoje (`D-49` do lotus-site). Quando
+publicar, ela tem de listar **`letsencrypt.org` além de `amazon.com`** — e continuar listando depois
+que o certificado wildcard do WordPress (`D-51` de lá) deixar de existir —, porque `app` é emitido e
+renovado pelo Let's Encrypt, por HTTP-01, a cada ~60 dias. Uma `CAA` só com `amazon.com` não derruba
+nada na hora: a renovação falha em silêncio e o certificado expira até 90 dias depois.
+
+A ordem abaixo é a da spec do item 32 (§6). Tudo que escreve no host é do João; os portões são
+leituras.
+
+### 11.1 Antes de parar o nginx — dois portões e uma reinstalação
+
+1. **DNS de fora igual ao EIP** (os dois `curl` acima). Sem isto o `--standalone` falha na
+   validação e consome uma das 5 tentativas por hora que o Let's Encrypt concede ao nome.
+2. **Security group** `lotus-web` com 80 e 443 abertos ao mundo (§5). Confere; não alarga:
+
+   ```bash
+   aws ec2 describe-security-groups --region sa-east-1 --filters Name=group-name,Values=lotus-web \
+     --query 'SecurityGroups[0].IpPermissions[].[FromPort,IpRanges[0].CidrIp]' --output text
+   ```
+
+E o host tem de estar **reinstalado pelo §7** a partir de uma árvore igual à `main` do corporativo
+— inclusive `bin/recarregar-nginx.sh` e o `tls.conf` com HSTS —, senão o botão do 11.4 recusa.
+
+### 11.2 Emitir o certificado (uma vez, com o nginx parado)
 
 ```bash
 sudo apt-get install -y certbot
-docker compose -p lotus --project-directory /opt/lotus -f /opt/lotus/docker-compose.prod.yml stop nginx
-sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m <email>
+sudo docker compose -p lotus --project-directory /opt/lotus -f /opt/lotus/docker-compose.prod.yml stop nginx
+sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m <e-mail> --non-interactive
+sudo test -f /etc/letsencrypt/live/app.lotusotec.cl/fullchain.pem && echo certificado ok
 ```
 
-**Passo 2 — virar o `.env` para o domínio e para HTTPS.** Este passo é do TLS tanto quanto o
-certificado, e é o que a fase sem DNS deixou pendurado. São **seis** campos, não um:
+A partir do `stop nginx` a produção está fora do ar, até o fim do 11.4 — minutos. O último comando é
+portão: o `deploy.sh` liga o overlay quando `/etc/letsencrypt/live` **é diretório**, e um `live/`
+vazio (emissão que morreu no meio) subiria o nginx apontando para um certificado que não existe.
+Falhou? `sudo docker compose -p lotus --project-directory /opt/lotus -f /opt/lotus/docker-compose.prod.yml start nginx`
+e nada mudou.
+
+### 11.3 Os seis campos do `.env`
 
 ```bash
 sudo -e /opt/lotus/.env
 ```
 
-| Campo | Fase sem DNS | Agora |
+| Campo | Fase sem DNS (§7) | Agora |
 |---|---|---|
 | `APP_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
 | `FRONTEND_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
@@ -565,25 +599,34 @@ sudo -e /opt/lotus/.env
 | `SESSION_DOMAIN` | `null` (literal) | `app.lotusotec.cl` |
 | `SESSION_SECURE_COOKIE` | `false` | `true` |
 
-Os dois últimos são os que mordem em silêncio. `SESSION_SECURE_COOKIE` ausente **não** equivale a
-`false`: `session.php:172` lê `env('SESSION_SECURE_COOKIE')` sem default, a ausência vira null, e o
-cookie de sessão do Sanctum passa a viajar em claro sob TLS sem aparecer em diff nenhum (lei §5.4).
-E o `CERTIFICATE_VALIDATION_URL` não é infra: é a base do QR do certificado, que a cópia
-distribuída do PDF carrega para sempre — **só com ele preenchido em https o backend volta a emitir e
-a entregar PDF**. Não herda o `FRONTEND_URL`, de propósito (P-79).
+São os valores do molde `deploy/aws/env.prod.example`, guardados pela catraca
+`frontend/tests/env-prod-example.test.ts`. Os dois últimos são os que mordem em silêncio.
+`SESSION_SECURE_COOKIE` ausente **não** equivale a `false`: `session.php:172` lê
+`env('SESSION_SECURE_COOKIE')` sem default, a ausência vira null, e o cookie de sessão do Sanctum
+passa a viajar em claro sob TLS sem aparecer em diff nenhum (lei §5.4). E o
+`CERTIFICATE_VALIDATION_URL` não é infra: é a base do QR do certificado, que a cópia distribuída do
+PDF carrega para sempre — **só com ele preenchido em https o backend volta a emitir e a entregar
+PDF**. Não herda o `FRONTEND_URL`, de propósito (P-79).
 
-**Passo 3 — subir com o overlay:**
+### 11.4 Subir com o overlay — pelo botão
+
+Promova pelo botão do corporativo (§8) o SHA `X` da `main` do corporativo — o mesmo da árvore
+reinstalada no 11.1 (§7). `CURRENT_SHA` só serve se já for ele: promover outro SHA compara um
+`nginx/tls.conf` diferente do host, e o botão recusa (`.github/scripts/conferir-alinhamento.sh:59`).
+A conferência de alinhamento passa porque o §7 foi refeito; o `deploy.sh` vê o `live/` e sobe com o
+overlay; o nginx volta em 80 e 443, **já com HSTS de um ano** (`Strict-Transport-Security:
+max-age=31536000`, sem `includeSubDomains` nem `preload` — decidido na spec do item 32). Fim da
+queda.
+
+Provas, de fora, nesta ordem:
 
 ```bash
-sudo /opt/lotus/bin/deploy.sh "$(cat /opt/lotus/CURRENT_SHA)"
-```
-
-O `deploy.sh` detecta o certificado e sobe com o overlay TLS sozinho. Prova, nesta ordem:
-
-```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://app.lotusotec.cl/up      # 200
-curl -s -o /dev/null -w '%{http_code}\n' http://app.lotusotec.cl/inicio   # 301
-curl -sI https://app.lotusotec.cl/api/... | grep -i '^set-cookie'          # tem `Secure`
+curl -s -o /dev/null -w '%{http_code}\n' https://app.lotusotec.cl/up               # 200
+curl -sI http://app.lotusotec.cl/inicio | grep -iE '^(HTTP|location)'             # 301 … Location: https://app.lotusotec.cl/inicio
+curl -s -o /dev/null -w '%{http_code}\n' http://app.lotusotec.cl/up                # 200 — isento do redirect
+curl -sI https://app.lotusotec.cl/up | grep -i '^strict-transport-security'        # max-age=31536000
+curl -sI https://app.lotusotec.cl/ | grep -i '^strict-transport-security'          # idem — a location repete
+curl -si https://app.lotusotec.cl/sanctum/csrf-cookie | grep -i '^set-cookie'      # … secure; … domain=app.lotusotec.cl
 ```
 
 O `/up` na 80 responde **200**, e não 301: o `tls.conf` isenta esse caminho do redirect de
@@ -591,51 +634,87 @@ propósito, porque o healthcheck do nginx e o gate pós-deploy do `deploy.sh` fa
 127.0.0.1 (Q-1 do review de 2026-09-20). Se ele voltar a redirecionar, o deploy morre logo após o
 `up -d` — e a catraca `frontend/tests/nginx-conf.test.ts` existe para que isso não chegue ao host.
 
-**Passo 4 — passar a renovação para webroot.** Este passo não é burocracia: sem ele o certificado
-expira em 90 dias, calado.
+**HSTS é compromisso.** Depois que um navegador viu o header, ele recusa `http://app.lotusotec.cl`
+por um ano. Não existe "voltar para HTTP"; o recuo de um TLS quebrado é consertar o TLS.
 
-O certbot grava em `/etc/letsencrypt/renewal/<dominio>.conf` o **authenticator da emissão**, e o
-`renew` repete o que está lá. Emitido em `--standalone`, o `renew` tentaria ligar na porta 80 — que
-agora é do nginx, de pé — e falharia. A emissão foi `--standalone` porque naquele momento não havia
-nginx servindo challenge nenhum; agora há, e o `tls.conf` serve
-`/.well-known/acme-challenge/` a partir de `/opt/lotus/certbot`, montado no container pelo overlay.
-(Era o Q-6 do review de 2026-09-20, junto com o webroot que antes era um volume nomeado `:ro` — sem
-caminho no host, ninguém escrevia nele.)
+**Recuo de emergência do deploy** — só serve **antes** de qualquer navegador ter visto o HSTS, isto
+é, quando o `deploy.sh` abortou com o nginx `unhealthy` e a 443 nunca respondeu. Cuidado: com o app
+quebrado a 443 pode ter respondido mesmo assim (um 502, por exemplo) e o header sai igual, porque o
+`add_header ... always` do `tls.conf` não depende do upstream estar de pé — o teste real não é "a
+443 respondeu", é "nenhum navegador chegou a ver o HSTS":
 
 ```bash
-sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
-sudo certbot certonly --webroot -w /opt/lotus/certbot -d app.lotusotec.cl \
-  --cert-name app.lotusotec.cl --keep-until-expiring
+sudo mv /opt/lotus/nginx/tls.conf /opt/lotus/nginx/tls.conf.off
+# os seis campos de volta aos valores da coluna "Fase sem DNS" da tabela acima
+sudo /opt/lotus/bin/deploy.sh <X — o sha de 40 hexadecimais do 11.4>
+```
+
+O botão passa a recusar (`nginx/tls.conf ausente`) até o conserto — é o esperado, não um defeito.
+
+### 11.5 Passar a renovação para webroot
+
+Sem isto o certificado expira em 90 dias, calado. O certbot grava em
+`/etc/letsencrypt/renewal/app.lotusotec.cl.conf` o **authenticator da emissão**, e o `renew` repete
+o que está lá. Emitido em `--standalone`, o `renew` tentaria ligar na porta 80 — que agora é do
+nginx, de pé — e falharia. O `tls.conf` serve `/.well-known/acme-challenge/` a partir de
+`/opt/lotus/certbot`, montado `:ro` no container pelo overlay; quem escreve lá é o certbot do host.
+
+```bash
+sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot     # já existe pelo §7; o 755 é o que importa
+sudo certbot reconfigure --cert-name app.lotusotec.cl --webroot -w /opt/lotus/certbot
 grep -E '^(authenticator|webroot_path)' /etc/letsencrypt/renewal/app.lotusotec.cl.conf
 ```
 
-O `grep` tem de imprimir `authenticator = webroot`. **Se ainda disser `standalone`**, o certbot
-manteve o certificado sem reescrever a configuração; então se edita o arquivo à mão — `authenticator
-= webroot` e, na seção `[[webroot_map]]`, `app.lotusotec.cl = /opt/lotus/certbot`.
+Sem `-d`: o `reconfigure` recusa qualquer `-d` (existe desde o
+certbot 2.3; o noble tem 2.9.0). Ele ensaia por conta própria uma renovação em dry-run pelo webroot
+e só grava a configuração se o ensaio passar — é a prova antecipada de que o challenge está sendo
+servido pelo nginx, sem gastar uma emissão real. Por isso `certonly --keep-until-expiring` não serve
+aqui: com o certificado ainda longe do vencimento ele sai "Certificate not yet due for renewal; no
+action taken." e **nunca chega a reescrever** `/etc/letsencrypt/renewal/app.lotusotec.cl.conf`
+(certbot 2.9.0, `main.py:1592-1598`) — o `grep` acima mostraria `standalone` para sempre.
+
+O `grep` tem de imprimir `authenticator = webroot`. **Se o `reconfigure` falhar**, foi o dry-run que
+reprovou: confira o `755` do diretório e se o nginx está de fato servindo
+`/.well-known/acme-challenge/` a partir dele — a configuração antiga fica intacta, nada foi
+sobrescrito.
 
 O 755 do diretório não é detalhe: quem lê o challenge é o **worker** do nginx (uid 101), não o
 master, e `/opt/lotus` é `750 root:root`. O bind mount não carrega a permissão do pai, mas carrega a
 do próprio diretório.
 
-O hook de recarga vive em `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh`:
+### 11.6 O hook de recarga
+
+O hook é `deploy/bin/recarregar-nginx.sh` — versionado, instalado em `/opt/lotus/bin/` pelo §7 e
+conferido pelo botão como os outros scripts. Faz `nginx -t && nginx -s reload` dentro do container:
+reload, nunca `restart` (que derruba a 443 a cada renovação), e o `-t` barra a troca se o
+certificado ou a conf estiverem quebrados — o nginx segue com o anterior, que ainda tem ~30 dias. O
+certbot o encontra por symlink:
 
 ```bash
-#!/usr/bin/env bash
-docker compose -p lotus --project-directory /opt/lotus \
-  -f /opt/lotus/docker-compose.prod.yml -f /opt/lotus/docker-compose.prod-tls.yml restart nginx
+sudo ln -sfn /opt/lotus/bin/recarregar-nginx.sh /etc/letsencrypt/renewal-hooks/deploy/recarregar-nginx.sh
+sudo /etc/letsencrypt/renewal-hooks/deploy/recarregar-nginx.sh; echo "rc=$?"
 ```
 
-**O gate, e ele é gate e não formalidade:**
+Esperado: `nginx: configuration file /etc/nginx/nginx.conf test is successful` e `rc=0`, e um
+`curl -s -o /dev/null -w '%{http_code}' https://app.lotusotec.cl/up` rodando de fora durante e depois
+segue 200. **Executar o symlink é a prova**, porque `certbot renew --dry-run` não roda deploy hook.
+Dois limites: o symlink **não** entra na conferência do botão (só o arquivo em `bin/`), então um
+symlink apagado só aparece na renovação; e o `chmod +x` do §7 é passo humano — a conferência compara
+conteúdo, não permissão.
+
+### 11.7 O gate — e ele é gate, não formalidade
 
 ```bash
 sudo certbot renew --dry-run
+systemctl is-active certbot.timer     # active
 ```
 
-Isto tem de passar **com o nginx de pé** — é o ensaio da renovação real, e é a única prova de que a
+Tem de passar **com o nginx de pé** — é o ensaio da renovação real, e é a única prova de que a
 cadeia toda funciona: authenticator certo, diretório com a permissão certa, e o `tls.conf` servindo
 o challenge sem redirecionar. Reprovando aqui, o certificado morre em 90 dias sem uma linha de
 aviso. Backup que nunca restaurou não é backup; renovação que nunca ensaiou não é renovação
-(lição 1).
+(lição 1). **Não há alarme de expiração** até o item 34: entre uma renovação falhada e o vencimento
+há ~30 dias que ninguém mede.
 
 ## 12. Critério de resize
 

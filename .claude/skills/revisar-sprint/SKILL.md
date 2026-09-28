@@ -55,8 +55,11 @@ Classifique `active_work_item` antes de revisar:
 **Baixo risco** → revisão Claude com o gabarito abaixo, como sempre.
 
 **Alto risco** → além da revisão Claude, acione uma revisão independente do Codex: carregue
-`mcp__codex__codex` (read-only) e peça revisão do intervalo Git do work item contra plano, spec e
-leis §5, retornando achados como `arquivo:linha — problema — impacto`. Depois:
+`mcp__codex__codex` via ToolSearch; ausente, use o plugin `codex-companion` por Bash, em background
+e **sem `--write`** (read-only):
+`node "$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)" task --fresh "<prompt>"`.
+Peça revisão do intervalo Git do work item contra plano, spec e leis §5, retornando achados como
+`arquivo:linha — problema — impacto`. Depois:
 
 1. deduplique e funda os achados das duas revisões;
 2. achado que só o Codex viu não se aceita sem verificação própria no código;
