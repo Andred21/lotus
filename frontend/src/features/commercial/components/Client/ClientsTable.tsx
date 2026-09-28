@@ -10,6 +10,7 @@ import {
   AppEmptyState,
   SearchableTableFrame,
   archivedColumns,
+  narrowFloorTablePt,
   stickyActionsColumn,
   useCollapsibleActionsColumn,
 } from "@shared/ui";
@@ -77,6 +78,8 @@ export function ClientsTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
+      // Piso de 390 medido (item 23, audit §5): 139px de 1ª coluna contra 204px livres.
+      pt={archived ? narrowFloorTablePt("57.25rem") : undefined}
     >
       <AppColumn
         field="legal_name"
