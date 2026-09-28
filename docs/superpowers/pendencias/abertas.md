@@ -813,7 +813,8 @@ igualdade**: o audit do item 32 registra o valor devolvido, não o fato de haver
 
 **Medição de 2026-09-28 (item 32).** `A app.lotusotec.cl` = `18.230.53.197` por DoH (`dns.google` e
 `cloudflare-dns.com`) e direto nos NS da zona (`pnpm infra:conferir-zona --pos-delegacao`, `rc=0`);
-`AAAA` vazio. §11 executado de ponta a ponta: certificado Let's Encrypt emitido (validade
+`AAAA` vazio. §11 executado de ponta a ponta, com o 11.4 antes do 11.3 (desvio registrado no
+audit): certificado Let's Encrypt emitido (validade
 2026-12-27), seis campos virados (contagem `6` no host), promoção pelo botão (run `36366650213`),
 HSTS servido, cookies com `secure` e `domain=app.lotusotec.cl`, renovação por webroot com o hook
 executado sem queda, `renew --dry-run` verde. A prova do QR em https, que o gatilho desta ficha não

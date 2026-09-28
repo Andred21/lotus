@@ -96,6 +96,13 @@ template executado é o da `main` do site, idêntico ao da PR.
   emissor `Let's Encrypt` `YE2`, `notAfter=Dec 27 00:27:08 2026 GMT`. `GET /sanctum/csrf-cookie`:
   `XSRF-TOKEN` e `lotus-session` com `domain=app.lotusotec.cl; secure`, a sessão também `httponly`.
 
+Desvio do plano (registrado no review, Q-4): o §11 não rodou na ordem do runbook. O botão 1 promoveu
+com o `.env` ainda na fase sem DNS, e só depois vieram os seis campos: o 11.4 rodou antes do 11.3. De
+01:27:47Z (botão 1) até a recriação do `app` pelo botão 2 (~01:34Z), a produção serviu HTTPS com HSTS
+e com os cookies sem `Secure` e sem `Domain`. O estado
+final é o do runbook e está provado acima; a ordem 11.3 antes do 11.4, a que o runbook manda, não foi
+exercida junta.
+
 ## Task 11 — renovação
 
 - `certbot reconfigure --cert-name app.lotusotec.cl --webroot -w /opt/lotus/certbot`:
