@@ -82,4 +82,20 @@ describe('CoursesTable — coluna de ações', () => {
     expect(screen.getByRole('button', { name: 'archive.restoreAction' }).textContent).toContain('archive.restoreAction')
     expect(larguraDaColunaDeAcoes()).toBe('10rem')
   })
+
+  it('abaixo de sm, o piso ativo é o medido para esta visão (item 23, audit §5)', () => {
+    montar('active')
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('39.5rem')
+  })
+
+  it('abaixo de sm, o piso arquivado é o medido para esta visão (item 23, audit §5)', () => {
+    montar('archived')
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('54rem')
+  })
 })

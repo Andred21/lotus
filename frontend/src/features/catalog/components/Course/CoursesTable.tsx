@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
@@ -57,6 +57,8 @@ export function CoursesTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
+      // Piso de 390 medido (item 23, audit §5): ativa 233px de 1ª coluna contra 204px livres; arquivada 171px contra 204px.
+      pt={narrowFloorTablePt(archived ? '54rem' : '39.5rem')}
     >
       <AppColumn
         field="name"
