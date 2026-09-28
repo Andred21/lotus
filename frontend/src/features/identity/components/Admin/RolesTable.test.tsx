@@ -44,4 +44,12 @@ describe('RolesTable — coluna de ações no telefone', () => {
     renderWithProviders(<RolesTable roles={roles} loading={false} onView={() => {}} />)
     expect(larguraDaColunaDeAcoes()).toBe('6rem')
   })
+
+  it('abaixo de sm, o piso é o medido para esta visão (item 23, audit §5)', () => {
+    renderWithProviders(<RolesTable roles={roles} loading={false} onView={() => {}} />)
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('27.75rem')
+  })
 })

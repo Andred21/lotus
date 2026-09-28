@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, stickyActionsColumn,
-  useCollapsibleActionsColumn,
+  AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, narrowFloorTablePt,
+  stickyActionsColumn, useCollapsibleActionsColumn,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
 import { roleLabel } from '@shared/lib'
@@ -43,6 +43,8 @@ export function RolesTable({
         onRetry={onRetry}
         emptyMessage={empty}
         footerCount={t('role.count', { count: roles.length })}
+        // Piso de 390 medido (item 23, audit §5): 332px de 1ª coluna contra 204px livres.
+        pt={narrowFloorTablePt('27.75rem')}
       >
         <AppColumn
           field="name"
