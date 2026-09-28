@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AppColumn, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn,
+  useCollapsibleActionsColumn,
 } from '@shared/ui'
 import type { ArchiveMode, ServerTable } from '@shared/hooks'
 import type { TurmaData } from '@shared/types/generated'
@@ -35,6 +36,9 @@ export function TurmasTable({
   const navigate = useNavigate()
   const archived = mode === 'archived'
   const largura = turmaWidths(archived)
+  // Abaixo de `sm` a linha carrega um controle só e a presa encolhe junto
+  // (item 23, `D-65`).
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : '9rem')
 
   return (
     <SearchableTableFrame
@@ -116,9 +120,10 @@ export function TurmasTable({
             onView={(x) => navigate(`/operacion/turmas/${x.id}`)}
             onArchive={onArchive}
             onRestore={onRestore}
+            collapsed={colunaDeAcoes.collapsed}
           />
         )}
-        style={stickyActionsColumn(archived ? '10rem' : '9rem')}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   )

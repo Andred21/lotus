@@ -11,6 +11,7 @@ import {
   SearchableTableFrame,
   archivedColumns,
   stickyActionsColumn,
+  useCollapsibleActionsColumn,
 } from "@shared/ui";
 import type { ArchivableRow } from "@shared/lib";
 import type { ClientData } from "@shared/types/generated";
@@ -54,6 +55,9 @@ export function ClientsTable({
   const archived = mode === "archived";
   const largura = clientWidths(archived);
   const table = useTableFilter(clients, (c) => [c.legal_name, c.rut]);
+  // Abaixo de `sm` a linha carrega um controle só e a presa encolhe junto
+  // (item 23, `D-65`).
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? "10rem" : "9rem");
 
   return (
     <SearchableTableFrame
@@ -119,9 +123,10 @@ export function ClientsTable({
             onView={onView}
             onArchive={onArchive}
             onRestore={onRestore}
+            collapsed={colunaDeAcoes.collapsed}
           />
         )}
-        style={stickyActionsColumn(archived ? "10rem" : "9rem")}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   );

@@ -11,6 +11,7 @@ export function ClientRowActions({
   onView,
   onArchive,
   onRestore,
+  collapsed,
 }: {
   client: ClientData
   archived: boolean
@@ -18,6 +19,7 @@ export function ClientRowActions({
   onView: (c: ClientData) => void
   onArchive: (c: ClientData) => void
   onRestore: (c: ClientData) => void
+  collapsed?: boolean
 }) {
   const { can } = usePermissions()
 
@@ -30,6 +32,7 @@ export function ClientRowActions({
       onRestore={() => onRestore(client)}
       onArchive={() => onArchive(client)}
       onView={() => onView(client)}
+      collapsed={collapsed}
     />
   )
 }

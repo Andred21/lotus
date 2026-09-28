@@ -13,6 +13,7 @@ export function TurmaRowActions({
   onView,
   onArchive,
   onRestore,
+  collapsed,
 }: {
   turma: TurmaData
   archived: boolean
@@ -20,6 +21,7 @@ export function TurmaRowActions({
   onView: (t: TurmaData) => void
   onArchive: (t: TurmaData) => void
   onRestore: (t: TurmaData) => void
+  collapsed?: boolean
 }) {
   const { can } = usePermissions()
 
@@ -32,6 +34,7 @@ export function TurmaRowActions({
       onRestore={() => onRestore(turma)}
       onArchive={() => onArchive(turma)}
       onView={() => onView(turma)}
+      collapsed={collapsed}
     />
   )
 }

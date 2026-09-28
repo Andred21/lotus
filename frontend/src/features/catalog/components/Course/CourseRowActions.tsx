@@ -12,6 +12,7 @@ export function CourseRowActions({
   onView,
   onArchive,
   onRestore,
+  collapsed,
 }: {
   course: CourseData
   archived: boolean
@@ -19,6 +20,7 @@ export function CourseRowActions({
   onView: (c: CourseData) => void
   onArchive: (c: CourseData) => void
   onRestore: (c: CourseData) => void
+  collapsed?: boolean
 }) {
   const { can } = usePermissions()
 
@@ -31,6 +33,7 @@ export function CourseRowActions({
       onRestore={() => onRestore(course)}
       onArchive={() => onArchive(course)}
       onView={() => onView(course)}
+      collapsed={collapsed}
     />
   )
 }

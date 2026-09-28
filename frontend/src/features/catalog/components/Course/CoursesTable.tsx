@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, stickyActionsColumn, technicalDataClass } from '@shared/ui'
+import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
@@ -35,6 +35,9 @@ export function CoursesTable({
   const archived = mode === 'archived'
   const largura = courseWidths(archived)
   const table = useTableFilter(courses, (c) => [c.name, c.technical_name])
+  // Abaixo de `sm` a linha carrega um controle só e a presa encolhe junto
+  // (item 23, `D-65`).
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : '9rem')
 
   return (
     <SearchableTableFrame
@@ -99,9 +102,10 @@ export function CoursesTable({
             onView={onView}
             onArchive={onArchive}
             onRestore={onRestore}
+            collapsed={colunaDeAcoes.collapsed}
           />
         )}
-        style={stickyActionsColumn(archived ? '10rem' : '9rem')}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   )
