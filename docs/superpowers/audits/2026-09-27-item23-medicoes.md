@@ -302,6 +302,340 @@ um bug do script. Fica como nota para as Tasks 8/10: se quiserem medir a régua 
 desse diálogo com linhas reais, precisam escolher (ou fabricar via fixture) um alumno com
 certificado emitido antes de clicar "Ver".
 
+## 4. Depois do piso, das ações e do colapso — `44fce239`
+
+Medição read-only com o script do Apêndice A, offset +2 (SPA `:5175`, API `:8082`), es-CL, tema
+claro, `admin@lotus.cl`. Turma medida: 1. As 7 visões de arquivados foram medidas com a fixture da
+seção 2 (rearquivada para este passo — mesmos 7 ids, `fixture.cjs archive` → `medir.cjs` →
+`fixture.cjs restore`). Saída bruta completa em `meio.txt` no fim desta seção.
+
+### 1024x768 — piso de 42rem uniforme, sem sobreposição
+
+| Tabela | Moldura | Tabela | Presa | Sobreposição | TRUNC |
+|---|---|---|---|---|---|
+| Dashboard painel 1 (Curso) | 718 | 718 (`scrollWidth` 749) | — | — | não |
+| Dashboard painel 2 (Relator) | 718 | 718 (`scrollWidth` 747) | — | — | não |
+| Clientes | 718 | 718 | 144 | 0 | não |
+| Clientes (arquivados) | 718 | 718 | 160 | 0 | não |
+| Presupuestos | 718 | 718 | 96 | 0 | não |
+| Presupuestos (arquivados) | 718 | 718 | 160 | 0 | não |
+| Turmas | 718 | 718 | 144 | 0 | não |
+| Turmas (arquivados) | 718 | 718 | 160 | 0 | não |
+| Matrícula (turma 1) | 718 | 718 | 144 | 0 | não |
+| Matrícula (arquivados) | 718 | 718 | 160 | 0 | não |
+| Cursos | 718 | 718 | 144 | 0 | não |
+| Cursos (arquivados) | 718 | 718 | 160 | 0 | não |
+| Emisión | 684 | 684 | 96 | 0 | não |
+| Historial | 718 | 718 | 144 | 0 | não |
+| Redactores | 718 | 718 | 192 | 0 | não |
+| Redactores (arquivados) | 718 | 718 | 160 | 0 | não |
+| Alumnos | 718 | 718 | 96 | 0 | não |
+| Alumnos → diálogo do alumno | 669 | 669 | — | 0 | não |
+| Usuarios | 718 | 718 | 144 | 0 | não |
+| Usuarios (arquivados) | 718 | 718 | 160 | 0 | não |
+| Roles y permisos | 718 | 718 | 96 | 0 | não |
+
+**A régua de 1024 fecha (Step 2 do brief, sem STOP):** as 18 linhas com presa medem
+`table == frame == scroll` (718, ou 684 na Emisión — o mesmo frame menor do baseline) — `min-width`
+uniforme de 672px (42rem) em todas as 12 tabelas, não só nas 3 que já tinham piso reduzido antes do
+item 23. Sobreposição 0 nas 18. Nenhum `TRUNC`. Dashboard: `scrollWidth` (749/747) > `table` 718,
+mas o invólucro (`frame` 718) não estica — mesmo comportamento do "antes" (§3), `table` (718) ≤
+`frame` (718).
+
+### 390x844 — presa vs. caixa/texto da 1ª coluna
+
+| Tabela | Presa | 1ª coluna (`col1`) | `free` | `box` coberto | `text` coberto |
+|---|---|---|---|---|---|
+| Clientes | 72 | 189 | 204 | 0 | 0 |
+| Clientes (arquivados) | 72 | 139 | 204 | 0 | 0 |
+| Presupuestos | 72 | 91 | 204 | 0 | 0 |
+| Presupuestos (arquivados) | 72 | 66 | 204 | 0 | 0 |
+| Turmas | 72 | 52 | 204 | 0 | 0 |
+| Turmas (arquivados) | 72 | 38 | 204 | 0 | 0 |
+| Matrícula | 72 | 292 | 204 | **72** | 72 |
+| Matrícula (arquivados) | 72 | 293 | 204 | **73** | 73 |
+| Cursos | 72 | 233 | 204 | **13** | 13 |
+| Cursos (arquivados) | 72 | 171 | 204 | 0 | 0 |
+| Emisión | 72 | 196 | 170 | **10** | 10 |
+| Historial | 72 | 62 | 204 | 0 | 0 |
+| Redactores | 72 | 180 | 204 | 0 | 0 |
+| Redactores (arquivados) | 72 | 132 | 204 | 0 | 0 |
+| Alumnos | 72 | 230 | 204 | **10** | 10 |
+| Alumnos → diálogo do alumno | — | — | — | 0 | 0 |
+| Usuarios | 72 | 204 | 204 | 0 | 0 |
+| Usuarios (arquivados) | 72 | 149 | 204 | 0 | 0 |
+| Roles y permisos | 72 | 332 | 204 | **112** | 0 |
+
+O colapso de ações uniformizou a presa em 72px em quase todas as 18 linhas (era 96–256 no
+"antes"). 6 das 18 visões já fecham `box == 0` hoje (Clientes, Presupuestos, Turmas — ativa e
+arquivada das três; Historial; Redactores e Usuarios ativas): o piso de 42rem já basta pra elas.
+As outras 12 ainda reprovam — 5 ativas por `box > 0` (Matrícula 72, Cursos 13, Emisión 10, Alumnos
+10, Roles 112) e 7 arquivadas (Clientes, Presupuestos, Turmas, Matrícula, Cursos, Redactores,
+Usuarios), a maioria com `box == 0` mas reprovando pela outra perna da régua: `col1` já fica abaixo
+do `col1` da ativa correspondente **mesmo no piso uniforme atual** (Clientes 139<189, Presupuestos
+66<91, Turmas 38<52, Cursos 171<233, Redactores 132<180, Usuarios 149<204) — só Matrícula já vem
+com arquivada ≥ ativa hoje (293>292), embora as duas tenham `box > 0`. Isso é o que a seção 5
+resolve.
+
+### 1440x900 — sem regressão
+
+| Tabela | Moldura | Tabela | Sobreposição |
+|---|---|---|---|
+| Dashboard painel 1 | 1134 | 1134 | 0 |
+| Dashboard painel 2 | 1134 | 1134 | 0 |
+| Clientes / Clientes (arq.) | 1134 | 1134 | 0 |
+| Presupuestos / (arq.) | 1134 | 1134 | 0 |
+| Turmas / (arq.) | 1134 | 1134 | 0 |
+| Matrícula / (arq.) | 1134 | 1134 | 0 |
+| Cursos / (arq.) | 1134 | 1134 | 0 |
+| Emisión | 1100 | 1100 | 0 |
+| Historial | 1134 | 1134 | 0 |
+| Redactores / (arq.) | 1134 | 1134 | 0 |
+| Alumnos / diálogo do alumno | 1134 / 960 | 1134 / 960 | 0 |
+| Usuarios / (arq.) | 1134 | 1134 | 0 |
+| Roles y permisos | 1134 | 1134 | 0 |
+
+Sem regressão: `frame == scroll == table`, sobreposição 0 nas 21 linhas — igual ao "antes" (§3) e ao
+baseline do spec §2. A régua de 1440 fecha (Step 2 do brief, sem STOP).
+
+<details>
+<summary>Saída bruta de <code>meio.txt</code> (126 linhas, <code>OUT=meio.json node medir.cjs</code>, fixture da seção 2 ativa nas 7 linhas <code>ARCH</code>)</summary>
+
+```
+1024x768 / [] | frame 718 scroll 749 table 718 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 2
+    CURSO:180 | RELATORES:111 | PERÍODO:103 | DOCUMENTOS PRESENTES:60 | DOCUMENTOS FALTANTES:180 | HABILITADA:85
+1024x768 / [] | frame 718 scroll 747 table 718 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 6
+    RELATOR:308 | CLASES EN CURSO:103 | PRÓXIMAS CLASES:103 | DOCUMENTOS VENCIDOS:103 | DOCUMENTOS POR VENCER:102
+1024x768 /comercial [Clientes] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 181 free 574 box 0 text 0 rows 3
+    RAZÓN SOCIAL:181 | RUT:91 | TIPO:101 | COMUNA:131 | CONTACTOS:71 | ·:144
+1024x768 /comercial [Clientes] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 129 free 558 box 0 text 0 rows 1
+    RAZÓN SOCIAL:129 | RUT:65 | TIPO:72 | COMUNA:93 | CONTACTOS:50 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /comercial [Presupuestos] | frame 718 scroll 718 table 718 (672px) sticky 96 overlap 0 col1 94 free 622 box 0 text 0 rows 5
+    CÓDIGO:94 | CLIENTE:211 | COTIZACIONES:82 | VALOR TOTAL:117 | ESTADO:117 | ·:96
+1024x768 /comercial [Presupuestos] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 62 free 558 box 0 text 0 rows 1
+    CÓDIGO:62 | CLIENTE:139 | COTIZACIONES:54 | VALOR TOTAL:77 | ESTADO:77 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /operacion [] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 50 free 574 box 0 text 0 rows 3
+    CÓDIGO:50 | CURSO:131 | CLIENTE:112 | MODALIDAD:62 | REDACTOR:112 | ALUMNOS:44 | ESTADO:62 | ·:144
+1024x768 /operacion [] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 36 free 558 box 0 text 0 rows 1
+    CÓDIGO:36 | CURSO:93 | CLIENTE:80 | MODALIDAD:44 | REDACTOR:80 | ALUMNOS:31 | ESTADO:45 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /operacion/turmas/1 [Alumnos] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 279 free 574 box 0 text 0 rows 10
+    NOMBRE:279 | RUT:140 | ESTADO MATRÍCULA:155 | ·:144
+1024x768 /operacion/turmas/1 [Alumnos] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 273 free 558 box 0 text 0 rows 1
+    NOMBRE:273 | RUT:136 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /cursos [] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 223 free 574 box 0 text 0 rows 2
+    NOMBRE:223 | NOMBRE TÉCNICO:138 | CARGA HORARIA (H):74 | REDACTORES:138 | ·:144
+1024x768 /cursos [] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 159 free 558 box 0 text 0 rows 1
+    NOMBRE:159 | NOMBRE TÉCNICO:99 | CARGA HORARIA (H):53 | REDACTORES:98 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /certificados [Emisión] | frame 684 scroll 684 table 684 (672px) sticky 96 overlap 0 col1 192 free 588 box 0 text 0 rows 10
+    NOMBRE:192 | NOTA FINAL:75 | ASISTENCIA:75 | ESTADO ACAD.:107 | CERTIFICADO:139 | ·:96
+1024x768 /certificados [Historial] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 60 free 574 box 0 text 0 rows 1
+    CÓDIGO:60 | ALUMNO:134 | CURSO:157 | FECHA EMISIÓN:75 | VIGENCIA HASTA:75 | ESTADO:75 | ·:144
+1024x768 /personas [Redactores] | frame 718 scroll 718 table 718 (672px) sticky 192 overlap 0 col1 158 free 526 box 0 text 0 rows 6
+    NOMBRE COMPLETO:158 | RUT:114 | CURSOS HABILITADOS:61 | IDONEIDAD:88 | ÚLTIMO ACCESO:105 | ·:192
+1024x768 /personas [Redactores] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 123 free 558 box 0 text 0 rows 1
+    NOMBRE COMPLETO:123 | RUT:89 | CURSOS HABILITADOS:48 | IDONEIDAD:68 | ÚLTIMO ACCESO:82 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /personas [Alumnos] | frame 718 scroll 718 table 718 (672px) sticky 96 overlap 0 col1 238 free 622 box 0 text 0 rows 10
+    NOMBRE COMPLETO:238 | RUT:119 | CLIENTE ACTUAL:172 | TURMAS:93 | ·:96
+1024x768 /personas [Alumnos] DIALOGO (dialogo) | frame 669 scroll 669 table 669 (0px) sticky null overlap 0 col1 null free null box 0 text 0 rows 0
+    Código:0 | Curso:0 | Fecha:0 | Estado:0 | Certificado:0
+1024x768 /administracion [Usuarios] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 195 free 574 box 0 text 0 rows 1
+    NOMBRE:195 | ROL:141 | ESTADO:108 | ÚLTIMO ACCESO:130 | ·:144
+1024x768 /administracion [Usuarios] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 139 free 558 box 0 text 0 rows 1
+    NOMBRE:139 | ROL:100 | ESTADO:77 | ÚLTIMO ACCESO:93 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /administracion [Roles y permisos] | frame 718 scroll 718 table 718 (672px) sticky 96 overlap 0 col1 344 free 622 box 0 text 0 rows 3
+    NOMBRE:344 | TIPO:164 | PERMISOS:115 | ·:96
+390x844 / [] | frame 276 scroll 708 table 672 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 2
+    CURSO:168 | RELATORES:104 | PERÍODO:96 | DOCUMENTOS PRESENTES:56 | DOCUMENTOS FALTANTES:168 | HABILITADA:80
+390x844 / [] | frame 276 scroll 707 table 672 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 6
+    RELATOR:288 | CLASES EN CURSO:96 | PRÓXIMAS CLASES:96 | DOCUMENTOS VENCIDOS:96 | DOCUMENTOS POR VENCER:96
+390x844 /comercial [Clientes] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "RUT" col1 189 free 204 box 0 text 0 rows 3
+    RAZÓN SOCIAL:189 | RUT:95 | TIPO:105 | COMUNA:137 | CONTACTOS:74 | ·:72
+390x844 /comercial [Clientes] ARCH | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 68 on "TIPO" col1 139 free 204 box 0 text 0 rows 1
+    RAZÓN SOCIAL:139 | RUT:69 | TIPO:77 | COMUNA:100 | CONTACTOS:54 | ARCHIVADO EL:67 | ARCHIVADO POR:93 | ·:72
+390x844 /comercial [Presupuestos] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "CLIENTE" col1 91 free 204 box 0 text 0 rows 5
+    CÓDIGO:91 | CLIENTE:204 | COTIZACIONES:79 | VALOR TOTAL:113 | ESTADO:113 | ·:72
+390x844 /comercial [Presupuestos] ARCH | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 58 on "COTIZACIONES" col1 66 free 204 box 0 text 0 rows 1
+    CÓDIGO:66 | CLIENTE:149 | COTIZACIONES:58 | VALOR TOTAL:83 | ESTADO:83 | ARCHIVADO EL:67 | ARCHIVADO POR:93 | ·:72
+390x844 /operacion [] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "CLIENTE" col1 52 free 204 box 0 text 0 rows 3
+    CÓDIGO:52 | CURSO:137 | CLIENTE:117 | MODALIDAD:65 | REDACTOR:117 | ALUMNOS:46 | ESTADO:65 | ·:72
+390x844 /operacion [] ARCH | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 48 on "MODALIDAD" col1 38 free 204 box 0 text 0 rows 1
+    CÓDIGO:38 | CURSO:100 | CLIENTE:86 | MODALIDAD:48 | REDACTOR:86 | ALUMNOS:33 | ESTADO:48 | ARCHIVADO EL:67 | ARCHIVADO POR:93 | ·:72
+390x844 /operacion/turmas/1 [Alumnos] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "NOMBRE" col1 292 free 204 box 72 text 72 rows 10
+    NOMBRE:292 | RUT:146 | ESTADO MATRÍCULA:162 | ·:72
+390x844 /operacion/turmas/1 [Alumnos] ARCH | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "NOMBRE" col1 293 free 204 box 73 text 73 rows 1
+    NOMBRE:293 | RUT:147 | ARCHIVADO EL:67 | ARCHIVADO POR:93 | ·:72
+390x844 /cursos [] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 43 on "NOMBRE TÉCNICO" col1 233 free 204 box 13 text 13 rows 2
+    NOMBRE:233 | NOMBRE TÉCNICO:144 | CARGA HORARIA (H):78 | REDACTORES:144 | ·:72
+390x844 /cursos [] ARCH | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "NOMBRE TÉCNICO" col1 171 free 204 box 0 text 0 rows 1
+    NOMBRE:171 | NOMBRE TÉCNICO:106 | CARGA HORARIA (H):57 | REDACTORES:106 | ARCHIVADO EL:67 | ARCHIVADO POR:93 | ·:72
+390x844 /certificados [Emisión] | frame 242 scroll 672 table 672 (672px) sticky 72 overlap 46 on "NOTA FINAL" col1 196 free 170 box 10 text 10 rows 10
+    NOMBRE:196 | NOTA FINAL:76 | ASISTENCIA:76 | ESTADO ACAD.:109 | CERTIFICADO:142 | ·:72
+390x844 /certificados [Historial] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "CURSO" col1 62 free 204 box 0 text 0 rows 1
+    CÓDIGO:62 | ALUMNO:140 | CURSO:164 | FECHA EMISIÓN:78 | VIGENCIA HASTA:78 | ESTADO:78 | ·:72
+390x844 /personas [Redactores] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "RUT" col1 180 free 204 box 0 text 0 rows 6
+    NOMBRE COMPLETO:180 | RUT:130 | CURSOS HABILITADOS:70 | IDONEIDAD:100 | ÚLTIMO ACCESO:120 | ·:72
+390x844 /personas [Redactores] ARCH | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 49 on "CURSOS HABILITADOS" col1 132 free 204 box 0 text 0 rows 1
+    NOMBRE COMPLETO:132 | RUT:95 | CURSOS HABILITADOS:51 | IDONEIDAD:73 | ÚLTIMO ACCESO:88 | ARCHIVADO EL:67 | ARCHIVADO POR:93 | ·:72
+390x844 /personas [Alumnos] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 46 on "RUT" col1 230 free 204 box 10 text 10 rows 10
+    NOMBRE COMPLETO:230 | RUT:115 | CLIENTE ACTUAL:166 | TURMAS:89 | ·:72
+390x844 /personas [Alumnos] DIALOGO (dialogo) | frame 323 scroll 323 table 323 (0px) sticky null overlap 0 col1 null free null box 0 text 0 rows 0
+    Código:0 | Curso:0 | Fecha:0 | Estado:0 | Certificado:0
+390x844 /administracion [Usuarios] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "ROL" col1 204 free 204 box 0 text 0 rows 1
+    NOMBRE:204 | ROL:147 | ESTADO:113 | ÚLTIMO ACCESO:136 | ·:72
+390x844 /administracion [Usuarios] ARCH | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 53 on "ROL" col1 149 free 204 box 0 text 0 rows 1
+    NOMBRE:149 | ROL:108 | ESTADO:83 | ÚLTIMO ACCESO:100 | ARCHIVADO EL:67 | ARCHIVADO POR:93 | ·:72
+390x844 /administracion [Roles y permisos] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "NOMBRE" col1 332 free 204 box 112 text 0 rows 3
+    NOMBRE:332 | TIPO:158 | PERMISOS:111 | ·:72
+1440x900 / [] | frame 1134 scroll 1134 table 1134 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 2
+    CURSO:284 | RELATORES:176 | PERÍODO:162 | DOCUMENTOS PRESENTES:94 | DOCUMENTOS FALTANTES:284 | HABILITADA:135
+1440x900 / [] | frame 1134 scroll 1134 table 1134 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 6
+    RELATOR:486 | CLASES EN CURSO:162 | PRÓXIMAS CLASES:162 | DOCUMENTOS VENCIDOS:162 | DOCUMENTOS POR VENCER:162
+1440x900 /comercial [Clientes] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 313 free 990 box 0 text 0 rows 3
+    RAZÓN SOCIAL:313 | RUT:156 | TIPO:174 | COMUNA:226 | CONTACTOS:122 | ·:144
+1440x900 /comercial [Clientes] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 226 free 974 box 0 text 0 rows 1
+    RAZÓN SOCIAL:226 | RUT:113 | TIPO:125 | COMUNA:163 | CONTACTOS:88 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /comercial [Presupuestos] | frame 1134 scroll 1134 table 1134 (672px) sticky 113 overlap 0 col1 154 free 1021 box 0 text 0 rows 5
+    CÓDIGO:154 | CLIENTE:347 | COTIZACIONES:135 | VALOR TOTAL:193 | ESTADO:193 | ·:113
+1440x900 /comercial [Presupuestos] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 108 free 974 box 0 text 0 rows 1
+    CÓDIGO:108 | CLIENTE:243 | COTIZACIONES:94 | VALOR TOTAL:135 | ESTADO:135 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /operacion [] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 86 free 990 box 0 text 0 rows 3
+    CÓDIGO:86 | CURSO:226 | CLIENTE:194 | MODALIDAD:108 | REDACTOR:194 | ALUMNOS:75 | ESTADO:108 | ·:144
+1440x900 /operacion [] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 62 free 974 box 0 text 0 rows 1
+    CÓDIGO:62 | CURSO:163 | CLIENTE:140 | MODALIDAD:78 | REDACTOR:140 | ALUMNOS:54 | ESTADO:78 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /operacion/turmas/1 [Alumnos] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 482 free 990 box 0 text 0 rows 10
+    NOMBRE:482 | RUT:241 | ESTADO MATRÍCULA:268 | ·:144
+1440x900 /operacion/turmas/1 [Alumnos] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 476 free 974 box 0 text 0 rows 1
+    NOMBRE:476 | RUT:238 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /cursos [] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 385 free 990 box 0 text 0 rows 2
+    NOMBRE:385 | NOMBRE TÉCNICO:238 | CARGA HORARIA (H):128 | REDACTORES:238 | ·:144
+1440x900 /cursos [] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 278 free 974 box 0 text 0 rows 1
+    NOMBRE:278 | NOMBRE TÉCNICO:172 | CARGA HORARIA (H):93 | REDACTORES:172 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /certificados [Emisión] | frame 1100 scroll 1100 table 1100 (672px) sticky 110 overlap 0 col1 324 free 990 box 0 text 0 rows 10
+    NOMBRE:324 | NOTA FINAL:126 | ASISTENCIA:126 | ESTADO ACAD.:180 | CERTIFICADO:234 | ·:110
+1440x900 /certificados [Historial] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 103 free 990 box 0 text 0 rows 1
+    CÓDIGO:103 | ALUMNO:231 | CURSO:270 | FECHA EMISIÓN:129 | VIGENCIA HASTA:129 | ESTADO:129 | ·:144
+1440x900 /personas [Redactores] | frame 1134 scroll 1134 table 1134 (672px) sticky 192 overlap 0 col1 283 free 942 box 0 text 0 rows 6
+    NOMBRE COMPLETO:283 | RUT:204 | CURSOS HABILITADOS:110 | IDONEIDAD:157 | ÚLTIMO ACCESO:188 | ·:192
+1440x900 /personas [Redactores] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 214 free 974 box 0 text 0 rows 1
+    NOMBRE COMPLETO:214 | RUT:155 | CURSOS HABILITADOS:83 | IDONEIDAD:119 | ÚLTIMO ACCESO:143 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /personas [Alumnos] | frame 1134 scroll 1134 table 1134 (672px) sticky 113 overlap 0 col1 391 free 1021 box 0 text 0 rows 10
+    NOMBRE COMPLETO:391 | RUT:195 | CLIENTE ACTUAL:282 | TURMAS:152 | ·:113
+1440x900 /personas [Alumnos] DIALOGO (dialogo) | frame 960 scroll 960 table 960 (0px) sticky null overlap 0 col1 null free null box 0 text 0 rows 0
+    Código:0 | Curso:0 | Fecha:0 | Estado:0 | Certificado:0
+1440x900 /administracion [Usuarios] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 336 free 990 box 0 text 0 rows 1
+    NOMBRE:336 | ROL:243 | ESTADO:187 | ÚLTIMO ACCESO:224 | ·:144
+1440x900 /administracion [Usuarios] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 243 free 974 box 0 text 0 rows 1
+    NOMBRE:243 | ROL:175 | ESTADO:135 | ÚLTIMO ACCESO:162 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /administracion [Roles y permisos] | frame 1134 scroll 1134 table 1134 (672px) sticky 113 overlap 0 col1 564 free 1021 box 0 text 0 rows 3
+    NOMBRE:564 | TIPO:269 | PERMISOS:188 | ·:113
+```
+
+</details>
+
+## 5. Piso estreito (spec §4.2)
+
+12 das 18 visões (excluído Dashboard e o diálogo, que não têm presa) ainda reprovam a régua de 390
+com o piso uniforme de 42rem: 5 ativas por `box > 0` e 7 arquivadas — a maioria por `col1` abaixo do
+`col1` final da ativa, e Matrícula (arquivada) também por `box > 0`. O `narrowFloorTablePt` nasce; a
+Task 9 aplica os `X` abaixo por visão.
+
+| Visão | box | col1 | free | table | share | X |
+|---|---|---|---|---|---|---|
+| Matrícula (ativa) | 72 | 292 | 204 | 672 | 292/672 ≈ 0.4345 | **31.5rem** |
+| Cursos (ativa) | 13 | 233 | 204 | 672 | 233/672 ≈ 0.3467 | **39.5rem** |
+| Emisión (ativa) | 10 | 196 | 170 | 672 | 196/672 ≈ 0.2917 | **39.75rem** |
+| Alumnos (ativa, `/personas`) | 10 | 230 | 204 | 672 | 230/672 ≈ 0.3423 | **40.0rem** |
+| Roles y permisos (ativa) | 112 | 332 | 204 | 672 | 332/672 ≈ 0.4940 | **27.75rem** |
+| Clientes (arquivada) | 0 | 139 | 204 | 672 | 139/672 ≈ 0.2068 | **57.25rem** |
+| Presupuestos (arquivada) | 0 | 66 | 204 | 672 | 66/672 ≈ 0.0982 | **58.0rem** |
+| Turmas (arquivada) | 0 | 38 | 204 | 672 | 38/672 ≈ 0.0565 | **57.5rem** |
+| Matrícula (arquivada) | 73 | 293 | 204 | 672 | 293/672 ≈ 0.4360 | **31.5rem** † |
+| Cursos (arquivada) | 0 | 171 | 204 | 672 | 171/672 ≈ 0.2545 | **54.0rem** ‡ |
+| Redactores (arquivada) | 0 | 132 | 204 | 672 | 132/672 ≈ 0.1964 | **57.5rem** |
+| Usuarios (arquivada) | 0 | 149 | 204 | 672 | 149/672 ≈ 0.2217 | **57.75rem** |
+
+### Conta de cada `X`
+
+**Ativas** (`share = w1/T`; `Xpx = (L + 16)/share`; `X = Xpx/16` arredondado para BAIXO em 0.25rem):
+
+- **Matrícula:** `share = 292/672 = 0.43452`; `Xpx = 220×672/292 = 506.301px`;
+  `X = 506.301/16 = 31.6438rem` → **31.5rem**. Referência da spec ~32rem — diferença 0.5rem (~1,6%),
+  dentro do esperado.
+- **Cursos:** `share = 233/672 = 0.34673`; `Xpx = 220/0.34673 = 634.506px`;
+  `X = 634.506/16 = 39.6567rem` → **39.5rem**. Referência ~40rem — diferença 0.5rem (~1,25%).
+- **Emisión:** `share = 196/672 = 0.29167`; `Xpx = (170+16)/0.29167 = 186/0.29167 = 637.714px`;
+  `X = 637.714/16 = 39.8571rem` → **39.75rem**. Referência ~39rem — diferença 0.75rem (~1,9%).
+- **Alumnos (`/personas`):** `share = 230/672 = 0.34226`; `Xpx = 220/0.34226 = 642.783px`;
+  `X = 642.783/16 = 40.1739rem` → **40.0rem**. Referência ~36rem — diferença 4rem (~11%), a maior do
+  lote. Remedido isoladamente (`VPS=390x844 PAGES=/personas node medir.cjs`, sem fixture): `col1
+  230`, `free 204`, `box 10` — idênticos ao `meio.txt`. Valor mantido, registrado como **preocupação**
+  abaixo.
+- **Roles y permisos:** `share = 332/672 = 0.49405`; `Xpx = 220/0.49405 = 445.301px`;
+  `X = 445.301/16 = 27.8313rem` → **27.75rem**. Referência ~25rem — diferença 2.75rem (~11%).
+  Remedido isoladamente (`VPS=390x844 PAGES=/administracion node medir.cjs`): `col1 332`, `free
+  204`, `box 112` — idênticos ao `meio.txt`. Valor mantido, registrado como **preocupação** abaixo.
+
+**Arquivadas** (`share_a = col1_a/table_a`; `X = col1_ativa/share_a/16` arredondado para CIMA em
+0.25rem; teste `share_a × X × 16 − 16 ≤ free_a`; `col1_ativa` = o `col1` final da ativa —
+`share_ativa × X_ativa × 16` se a ativa reprovou, ou o medido se passou):
+
+- **Clientes:** ativa passou, `col1_ativa = 189`. `share_a = 139/672 = 0.20685`;
+  `X = 189×672/139/16 = 127008/139/16 = 913.727/16 = 57.1079rem` → **57.25rem**. Teste:
+  `139/672×57.25×16 − 16 = 189.470 − 16 = 173.470 ≤ 204` ✓.
+- **Presupuestos:** ativa passou, `col1_ativa = 91`. `share_a = 66/672 = 0.09821`;
+  `X = 91×672/66/16 = 61152/66/16 = 926.545/16 = 57.9091rem` → **58.0rem**. Teste:
+  `66/672×58×16 − 16 = 91.143 − 16 = 75.143 ≤ 204` ✓.
+- **Turmas:** ativa passou, `col1_ativa = 52`. `share_a = 38/672 = 0.05655`;
+  `X = 52×672/38/16 = 34944/38/16 = 919.579/16 = 57.4737rem` → **57.5rem**. Teste:
+  `38/672×57.5×16 − 16 = 52.024 − 16 = 36.024 ≤ 204` ✓.
+- **Matrícula †:** aqui a arquivada reprova só por `box = 73 > 0` — `col1` dela (293) já é ≥ o
+  `col1` final da ativa (219 = `292/672×31.5×16`), então a perna "`col1` < ativa" da régua **não**
+  é a que falha, e a fórmula do brief (pensada pro caso em que falha por `col1` menor) devolveria um
+  `X` menor que o piso atual (`219×672/293/16 = 31.39 → 31.5rem`, abaixo dos 672px de hoje — não
+  faz sentido reduzir a tabela que já está larga o bastante). Tratei este caso pela mesma fórmula que
+  as ativas usam (limpar a própria caixa): `share_a = 293/672 = 0.43601`;
+  `Xpx = 220×672/293 = 504.573px`; `X = 504.573/16 = 31.5358rem` arredondado para
+  BAIXO → **31.5rem** — coincide com o `X` da ativa. Confirmação: em 31.5rem, `col1` da arquivada
+  sobe pra `293/672×31.5×16 = 219.75px`, ainda ≥ `219` da ativa, e a caixa fecha
+  (`219.75 − 16 = 203.75 ≤ 204`, margem de 0.25px). **Divergência de método registrada — a fórmula do
+  brief não cobre esse ramo (reprova por caixa própria com `col1` já ≥ ativa); usei a fórmula das
+  ativas por analogia.** Levar ao João.
+- **Cursos ‡:** ativa reprovou, `X_ativa = 39.5rem`, `col1_ativa = 233/672×39.5×16 = 219.131`.
+  `share_a = 171/672 = 0.25446`; `X = 219.131×672/171/16 = 147256/171/16 = 861.146/16 = 53.8216rem`
+  → **54.0rem**. Teste: `171/672×54×16 − 16 = 219.857 − 16 = 203.857 ≤ 204` ✓ — **margem de só
+  0.14px**. Conferi o teto da própria caixa (`floor((204+16)/0.25446/16 em 0.25rem)`) e ele também
+  cai em **54.0rem** — ou seja, o `X` que faz `col1` alcançar a ativa e o `X` máximo que ainda deixa
+  a caixa da própria arquivada livre **coincidem**; não há folga entre as duas condições. **Registrado
+  como preocupação:** esta é a linha mais frágil do lote — 1px de diferença no `col1` medido (ruído
+  normal de `Math.round` em fonte/renderização) e o teto passaria a ser o valor final em vez do alvo
+  de paridade com a ativa, ou a caixa reabriria.
+- **Redactores:** ativa passou, `col1_ativa = 180`. `share_a = 132/672 = 0.19643`;
+  `X = 180×672/132/16 = 120960/132/16 = 916.364/16 = 57.2727rem` → **57.5rem**. Teste:
+  `132/672×57.5×16 − 16 = 180.714 − 16 = 164.714 ≤ 204` ✓.
+- **Usuarios:** ativa passou, `col1_ativa = 204`. `share_a = 149/672 = 0.22173`;
+  `X = 204×672/149/16 = 137088/149/16 = 920.054/16 = 57.5034rem` → **57.75rem**. Teste:
+  `149/672×57.75×16 − 16 = 204.875 − 16 = 188.875 ≤ 204` ✓.
+
+### Preocupações para o João
+
+1. **Alumnos (`/personas`) e Roles y permisos** divergem ~11% da referência da spec §4.2 (40.0rem
+   vs. ~36rem; 27.75rem vs. ~25rem) — remedidos isoladamente e estáveis (mesmos `col1`/`free`/`box`).
+   Não é erro de medição; a referência da spec provavelmente somou sobre números de uma fase
+   intermediária do mecanismo, não sobre o "depois" final das Tasks 2-7. Uso o valor medido.
+2. **As 6 arquivadas que precisam "alcançar" a ativa** (Clientes, Presupuestos, Turmas, Cursos,
+   Redactores, Usuarios) pedem pisos de 54–58rem — bem mais largos que os 42rem atuais, porque o
+   `col1` delas é uma fração pequena da tabela (2 colunas extras de auditoria disputando espaço), e
+   a régua "arquivada ≥ ativa" amplifica isso por proporcionalidade. Vale o João decidir se a Task 9
+   aplica esses pisos largos por-visão mesmo, ou se skip via outra saída (ex.: aceitar
+   "arquivada < ativa" nessas 6, já que é só cosmético e a informação nunca se perde — o `free` de
+   204px nunca é invadido, só o texto da 1ª coluna trunca mais na arquivada).
+3. **Cursos (arquivada)** fecha a caixa por só 0.14px de margem no `X` calculado (54.0rem) — o
+   teto da própria caixa também cai em 54.0rem, ou seja, o alvo de paridade com a ativa e o limite
+   de "não reabrir a caixa" coincidem; é a linha mais frágil do lote a 1px de diferença na medição.
+4. **Matrícula (arquivada)** caiu num ramo que a fórmula do brief não cobre (reprova só por caixa
+   própria, já com `col1` ≥ ativa) — resolvido por analogia com a fórmula das ativas, mas fica
+   como nota de método, não como número incerto (o resultado bateu exatamente com o `X` da ativa).
+
 ## Apêndice A — `medir.cjs`
 
 Texto idêntico ao do brief (Step 2), sem alteração.
