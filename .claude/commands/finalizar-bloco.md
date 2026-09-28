@@ -94,7 +94,7 @@ devolveu — e use-os **literalmente** dali para frente, nos passos seguintes.
   chega com o item 36".
 
 - **Nada casa.** Relate `workflow_state`, `next_owner` e `next_action` do `estado.md` que deu para
-  ler, e pare — invariante 8, nada se promove sozinho.
+  ler, e pare.
 
 **Normal segue para o Passo 3. Pós-PR, com o merge-base já confirmado, pula direto para o
 Passo 8. Conserto e Aceitação terminam aqui mesmo, nos dois ramos acima.**
@@ -176,7 +176,9 @@ commits que deixariam de existir.
 
 - Sem rede (o `fetch` falha) → pare e diga isso; mergear a `main` local no lugar da `origin/main`
   é exatamente o defeito que este passo existe para evitar.
-- Conflito → resolva aqui mesmo, na lane, e commite o resultado antes de seguir.
+- Conflito → pare e relate: liste os arquivos em conflito com `git diff --name-only
+  --diff-filter=U`. Não resolva os conflitos nem aborte o merge sozinho — `git merge --abort` ou a
+  resolução são decisão do João.
 
 Depois do merge — ou mesmo sem novidade nenhuma — refaça o Passo 3 inteiro contra o HEAD novo.
 Vermelho aqui para o command: a lane estava verde contra uma `origin/main` que já ficou velha.
@@ -191,7 +193,7 @@ esse commit que o Passo 7 empurra. É ele quem carrega os registros até o PR.
   assim parado ali diz que o `/planejar-bloco` não gravou a decisão.
 - `sim` → até o item 36 trazer o `aceitacao.md`, a prova do efeito externo vai escrita no corpo em
   markdown do `estado.md` (abaixo do frontmatter — invariante 11); sem essa prova por escrito,
-  pare: o bloco não vai a `closed` sem ela.
+  pare: o bloco não vai a `closed` sem ela. Com a prova escrita, siga para o item b.
 - `nao` → siga para o item b.
 
 **b. Pendências.** O item 7 do antigo `fechar-sprint`, verbatim: em
@@ -247,6 +249,19 @@ Caminho do PR:
 
 ```bash
 git push -u origin HEAD:refs/heads/<branch>
+```
+
+Antes de criar, confira se a branch já tem PR aberta — é o caminho de uma segunda passagem, quando
+um PR volta com correção e a cadeia chega de novo até aqui (regra do fim do Passo 6):
+
+```bash
+gh pr view <branch> --json url,state
+```
+
+PR aberta encontrada → o `git push` acima já a atualizou; não rode `gh pr create` — vá direto para
+a consulta de status, abaixo. Nenhuma PR encontrada → crie:
+
+```bash
 gh pr create --base main --head <branch> --title "<tipo>(<NN>): <resumo>" --body "…"
 ```
 
