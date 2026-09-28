@@ -113,3 +113,25 @@ O audit já os propõe como pendência do fechamento; ficam aqui para não se pe
 O João aprovou os quatro achados em 2026-09-27, todos para corrigir neste bloco. Na divergência do
 DoD 7, escolheu a saída (a): a P-89 fica, e a leitura do `CertificateValidationUrl::base()` no
 contêiner de produção entra como a prova do efeito externo que falta.
+
+## Correções
+
+Todas feitas e provadas em 2026-09-27. A suíte do projeto `repo` do vitest fecha com 298 de 298,
+incluindo `repo-docs-refs` e `conferir-alinhamento`, que leem os documentos tocados.
+
+- **Q-1, `86743182`.** Leitura sem escrita no contêiner `app` de produção, pela sessão, por SSH:
+  `CertificateValidationUrl::base()` devolveu `https://app.lotusotec.cl` (2026-09-28T02:27:14Z), com
+  `app()->environment()` = `production` e `configurationIsCached()` verdadeiro (02:27:57Z). O
+  `CertificatePdfService` monta o QR com `para()`, e o
+  `CertificatePdfTest::test_qr_aponta_para_a_chave_de_validacao_quando_preenchida` prova que o QR
+  carrega `<base>/validar/<uuid>`. O audit (Task 12) e a P-89 registram isso, e a frase do 200 passa
+  a dizer que ele só prova a SPA servida em https. A P-89 fica só com o QR lido de um PDF de produção.
+- **Q-2, `d2572936`.** `EMAIL` e `X` nascem no 11.1, antes do `stop nginx`, com o portão
+  `[[ $X =~ ^[0-9a-f]{40}$ ]]`. O 11.2 usa `"${EMAIL:?defina no 11.1}"` e o recuo
+  `"${X:?defina no 11.1}"`. Provado em bash: o portão recusa o texto do molde e aceita o `X` do
+  item 32; com a variável vazia, `${…:?}` aborta a linha antes de o comando rodar, em shell
+  interativo e não interativo. O `deploy.sh:21` já recusava SHA fora de 40 hexadecimais.
+- **Q-3, `0b77fc0d`.** Emenda datada ao ADR-14, no molde da de 2026-09-21. O item `[FASE 2]` do TLS
+  fica vencido, com a forma como ficou. O texto original não sai.
+- **Q-4, `29ea8066`.** "Desvio do plano" no audit, na Task 10. A P-77 diz "de ponta a ponta, com o
+  11.4 antes do 11.3".

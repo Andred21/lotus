@@ -2,9 +2,9 @@
 schema_version: 3
 id: 32
 slug: 32-infra-producao-dns-e-tls
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings corrigindo Q-1 a Q-4, aprovados pelo Joao, com a saida (a) no DoD 7
+next_action: close_active_work_item review limpo, Q-1 a Q-4 corrigidos e provados
 resume_state: null
 active_spec: docs/superpowers/specs/2026-09-27-infra-producao-dns-e-tls-design.md
 active_plan: docs/superpowers/plans/2026-09-27-infra-producao-dns-e-tls.md
@@ -17,9 +17,9 @@ branch: infra/32-infra-producao-dns-e-tls
 worktree: ../lotus-infra
 offset: null
 lane_base: 0c2c3d57
-commit: 72d9de80
+commit: 29ea8066
 blocker: null
-updated_at: 2026-09-27T23:26:37-03:00
+updated_at: 2026-09-27T23:31:48-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -44,3 +44,8 @@ de um PDF de produção) não foi provado: não havia turma elegível e o João 
 teste em produção — fica na P-89. O `efeito_externo: sim` pede prova externa antes de `closed`; o
 review decide se a P-89 basta. Os commits depois da PR #117 (audits, P-77/P-89, §7) ainda não
 entraram na `main`.
+
+Review de 2026-09-27 (`revisao.md`): quatro achados, todos aprovados e corrigidos. No DoD 7 o João
+escolheu a saída (a): a P-89 basta, e a prova do efeito externo do QR é a leitura de
+`CertificateValidationUrl::base()` no contêiner de produção, `https://app.lotusotec.cl`, registrada
+no audit (Task 12).
