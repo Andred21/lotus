@@ -110,4 +110,6 @@ O audit já os propõe como pendência do fechamento; ficam aqui para não se pe
 
 ## Decisão
 
-Aguardando o João.
+O João aprovou os quatro achados em 2026-09-27, todos para corrigir neste bloco. Na divergência do
+DoD 7, escolheu a saída (a): a P-89 fica, e a leitura do `CertificateValidationUrl::base()` no
+contêiner de produção entra como a prova do efeito externo que falta.
