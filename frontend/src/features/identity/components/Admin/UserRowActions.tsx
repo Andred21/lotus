@@ -22,7 +22,7 @@ export function UserRowActions({
   onView: (u: UserData) => void
   onArchive: (u: UserData) => void
   onRestore: (u: UserData) => void
-  collapsed?: boolean
+  collapsed: boolean
 }) {
   const { can } = usePermissions()
   const canManage = can('identity.access.manage')

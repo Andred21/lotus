@@ -19,7 +19,7 @@ export function ClientRowActions({
   onView: (c: ClientData) => void
   onArchive: (c: ClientData) => void
   onRestore: (c: ClientData) => void
-  collapsed?: boolean
+  collapsed: boolean
 }) {
   const { can } = usePermissions()
 

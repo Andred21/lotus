@@ -21,7 +21,7 @@ export function RedatorRowActions({
   onView: (r: RedatorData) => void
   onArchive: (r: RedatorData) => void
   onRestore: (r: RedatorData) => void
-  collapsed?: boolean
+  collapsed: boolean
   leading?: RowAction[]
 }) {
   const { can } = usePermissions()

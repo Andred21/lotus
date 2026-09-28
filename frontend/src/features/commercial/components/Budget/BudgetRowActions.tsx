@@ -20,7 +20,7 @@ export function BudgetRowActions({
   busy: boolean
   onView: (b: BudgetData) => void
   onRestore: (b: BudgetData) => void
-  collapsed?: boolean
+  collapsed: boolean
 }) {
   const { can } = usePermissions()
 

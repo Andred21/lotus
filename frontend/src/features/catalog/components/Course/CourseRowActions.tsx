@@ -20,7 +20,7 @@ export function CourseRowActions({
   onView: (c: CourseData) => void
   onArchive: (c: CourseData) => void
   onRestore: (c: CourseData) => void
-  collapsed?: boolean
+  collapsed: boolean
 }) {
   const { can } = usePermissions()
 
