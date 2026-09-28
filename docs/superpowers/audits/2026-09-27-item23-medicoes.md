@@ -64,6 +64,53 @@ sondagem manual sem essa espera (fora do script) chegou a mostrar 0 botões "Ver
 entre o clique na aba e o preenchimento assíncrono da tabela, mas o script como está no brief já
 absorve isso.
 
+### Rodadas da fixture — conferência da Task 10
+
+As quatro rodadas arquivaram os mesmos ids: `cliente 1`, `presupuesto 1` (com a cotação 1
+rejeitada e reaprovada), `turma 4`, `curso 1`, `redactor 3`, `usuario 59` e `matricula 1`. Os logs
+de `archive` da 3ª e da 4ª rodadas repetem o mesmo `arquivados:` da 1ª.
+
+| Rodada | Passo | Arquivou | Restaurou | Evidência do `restore` |
+|---|---|---|---|---|
+| 1ª | Task 1, `antes` (§3) | 27/09 ~21:16 | 27/09 ~21:20 | 7 × `restore 200` + `approve 200` (tabela acima); 5 visões de arquivados em `count: 0` |
+| 2ª | Task 8, `meio` (§4) | 27/09, antes de `meio.txt` (22:53) | logo depois | 7 × `restore 200` + `approve 200`; `fixture-ids.json` ausente; `verify_clean.cjs` com as 5 visões em `count: 0` e a cotação 1 `approved` |
+| 3ª | Task 9, piso estreito (§5 Step 4) | 27/09 ~23:42 (`piso.txt`) e 28/09 00:17 (`archive3.log`) | ao fim da 2ª rodada interna da Task 9 (~23:55) e da 3ª (~00:18) | 8 linhas `200` ao fim da 2ª rodada interna, pelo relatório da Task 9. O `archive` de 00:17 recomeçou do zero: tentou `redactor 1` e `2`, e achou `fixture.item23@lotus.cl` ativo. Isso só acontece com o ciclo anterior já restaurado. `fixture-ids.json` ausente ao fim da 3ª rodada interna |
+| 4ª | Task 10, `depois` (§6) | 28/09 00:22 | 28/09 00:26 | a saída abaixo |
+
+```
+$ node fixture.cjs restore        # 4ª rodada, 28/09 00:26
+cliente 1: restore 200
+presupuesto 1: restore 200
+presupuesto_quote 1: approve 200
+turma 4: restore 200
+curso 1: restore 200
+redactor 3: restore 200
+usuario 59: restore 200
+matricula 1: restore 200
+restore exit 0
+$ ls fixture-ids.json
+ls: cannot access 'fixture-ids.json': No such file or directory
+```
+
+A prova final é o estado do banco depois da 4ª rodada. Ela vale pelas quatro, porque os ids são os
+mesmos. Rodei o `verify_clean.cjs` da Task 1 com as duas visões que ele não lia (`users/archived` e
+`turmas/1/alunos/archived`):
+
+```
+/api/clients/archived 200 count= 0
+/api/budgets/archived 200 count= 0
+/api/turmas/archived 200 count= 0
+/api/courses/archived 200 count= 0
+/api/redatores/archived 200 count= 0
+/api/users/archived 200 count= 0
+/api/turmas/1/alunos/archived 200 count= 0
+fixture user: {"id":59,...,"email":"fixture.item23@lotus.cl",...,"role":"admin","is_active":true,...,"last_login":null}
+budget1 quotes: [{"id":1,"status":"approved"},{"id":2,"status":"rejected"},{"id":3,"status":"pending"}]
+```
+
+Nenhum registro ficou arquivado. A cotação 1 voltou a `approved`, e `admin@lotus.cl` nunca foi
+arquivado.
+
 ## 3. Antes — `4d172d3f`
 
 Medição read-only com o script do Apêndice A, offset +2 (SPA `:5175`, API `:8082`), es-CL, tema
@@ -738,9 +785,507 @@ presa em `box 0`, e a 1024 idêntica a `meio.txt`. Na época, o `archive` repeti
 - A fixture foi restaurada ao fim de cada rodada (`fixture-ids.json` ausente), e nenhum registro
   ficou arquivado.
 
+## 6. Depois — `dcda46e3`
+
+Medição read-only com o script do Apêndice A (conferido idêntico ao que rodou), offset +2 (SPA
+`:5175`, API `:8082`), es-CL, tema claro, `admin@lotus.cl`. Turma medida: 1. As 7 visões de
+arquivados foram medidas com a fixture da seção 2, na 4ª rodada: `fixture.cjs archive` às 00:22,
+`OUT=depois.json node medir.cjs` com `medir exit 0`, e `fixture.cjs restore` às 00:26, com
+`fixture-ids.json` ausente no fim. A saída bruta completa de `depois.txt` fica no fim desta seção.
+
+Conferi a coluna "Régua" duas vezes. A primeira foi à mão, linha a linha. A segunda usou o
+`regua.cjs` (Apêndice E), que lê `depois.json` e compara a 1440 com `antes.json`, coluna a coluna.
+Ele só aceita `col1` arquivado menor que o ativo nas duas linhas da exceção do §5 Step 4, e só com
+os números exatos dela: `col1` 209 com `free` 194, e `col1` 201 com `free` 186. Resultado:
+`linhas 63, reprovações 0`.
+
+### 1024x768 — piso de 42rem, sem rolagem nem sobreposição
+
+| Tabela | Moldura | `scroll` | Tabela | Presa | Sobreposição | TRUNC | Régua |
+|---|---|---|---|---|---|---|---|
+| Dashboard painel 1 (Curso) | 718 | 749 | 718 | — | — | não | passa (`table` ≤ `frame`) |
+| Dashboard painel 2 (Relator) | 718 | 747 | 718 | — | — | não | passa (`table` ≤ `frame`) |
+| Clientes | 718 | 718 | 718 | 144 | 0 | não | passa |
+| Clientes (arquivados) | 718 | 718 | 718 | 160 | 0 | não | passa |
+| Presupuestos | 718 | 718 | 718 | 96 | 0 | não | passa |
+| Presupuestos (arquivados) | 718 | 718 | 718 | 160 | 0 | não | passa |
+| Turmas | 718 | 718 | 718 | 144 | 0 | não | passa |
+| Turmas (arquivados) | 718 | 718 | 718 | 160 | 0 | não | passa |
+| Matrícula (turma 1) | 718 | 718 | 718 | 144 | 0 | não | passa |
+| Matrícula (arquivados) | 718 | 718 | 718 | 160 | 0 | não | passa |
+| Cursos | 718 | 718 | 718 | 144 | 0 | não | passa |
+| Cursos (arquivados) | 718 | 718 | 718 | 160 | 0 | não | passa |
+| Emisión | 684 | 684 | 684 | 96 | 0 | não | passa |
+| Historial | 718 | 718 | 718 | 144 | 0 | não | passa |
+| Redactores | 718 | 718 | 718 | 192 | 0 | não | passa |
+| Redactores (arquivados) | 718 | 718 | 718 | 160 | 0 | não | passa |
+| Alumnos | 718 | 718 | 718 | 96 | 0 | não | passa |
+| Alumnos → diálogo do alumno | 669 | 669 | 669 | — | 0 | não | passa |
+| Usuarios | 718 | 718 | 718 | 144 | 0 | não | passa |
+| Usuarios (arquivados) | 718 | 718 | 718 | 160 | 0 | não | passa |
+| Roles y permisos | 718 | 718 | 718 | 96 | 0 | não | passa |
+
+As 18 linhas com presa e o diálogo medem `scroll` = `frame`. Os dois painéis do Dashboard medem
+`table` = `frame`, e o `scrollWidth` a mais deles é conteúdo (Observação 1). Sobreposição 0 e
+nenhum `TRUNC` em todas. As 21 linhas são idênticas às de `meio.txt`, exceto Historial, que passou
+de `rows 1` para `rows 2` (Observação 2). O piso estreito da Task 9 não vazou para 1024.
+
+### 390x844 — caixa da 1ª coluna fora da presa
+
+| Tabela | Piso (`table`) | Presa | `col1` | `free` | `box` | `text` | `col1` da ativa | Régua |
+|---|---|---|---|---|---|---|---|---|
+| Clientes | 672 (42rem) | 72 | 189 | 204 | 0 | 0 | — | passa |
+| Clientes (arquivados) | 916 (57.25rem) | 92 | 191 | 184 | 0 | 0 | 189 | passa |
+| Presupuestos | 672 (42rem) | 72 | 91 | 204 | 0 | 0 | — | passa |
+| Presupuestos (arquivados) | 928 (58rem) | 93 | 92 | 183 | 0 | 0 | 91 | passa |
+| Turmas | 672 (42rem) | 72 | 52 | 204 | 0 | 0 | — | passa |
+| Turmas (arquivados) | 920 (57.5rem) | 92 | 53 | 184 | 0 | 0 | 52 | passa |
+| Matrícula | 504 (31.5rem) | 72 | 210 | 204 | 0 | 0 | — | passa |
+| Matrícula (arquivados) | 504 (31.5rem) | 72 | 211 | 204 | 0 | 0 | 210 | passa |
+| Cursos | 632 (39.5rem) | 72 | 218 | 204 | 0 | 0 | — | passa |
+| Cursos (arquivados) | 816 (51rem) | 82 | 209 | 194 | 0 | 0 | 218 | `box` 0: passa. `col1` 209 < 218: passa (exceção comprovada, §5 Step 4) |
+| Emisión | 636 (39.75rem) | 72 | 185 | 170 | 0 | 0 | — | passa |
+| Historial | 672 (42rem) | 72 | 62 | 204 | 0 | 0 | — | passa |
+| Redactores | 672 (42rem) | 72 | 180 | 204 | 0 | 0 | — | passa |
+| Redactores (arquivados) | 920 (57.5rem) | 92 | 182 | 184 | 0 | 0 | 180 | passa |
+| Alumnos | 640 (40rem) | 72 | 218 | 204 | 0 | 0 | — | passa |
+| Alumnos → diálogo do alumno | 323 (sem piso) | — | — | — | 0 | 0 | — | passa (sem presa) |
+| Usuarios | 672 (42rem) | 72 | 204 | 204 | 0 | 0 | — | passa |
+| Usuarios (arquivados) | 896 (56rem) | 90 | 201 | 186 | 0 | 0 | 204 | `box` 0: passa. `col1` 201 < 204: passa (exceção comprovada, §5 Step 4) |
+| Roles y permisos | 444 (27.75rem) | 72 | 206 | 204 | 0 | 0 | — | passa |
+
+Os dois painéis do Dashboard não têm presa: tabela de 672, com `scroll` 708 e 707 numa moldura de
+276. A régua de 390 não se aplica a eles, porque não há presa para cobrir a 1ª coluna.
+
+**As 18 linhas com presa fecham em `box 0`.** No "antes" (§3) eram 10 com `box > 0`, e no §4, 12
+reprovando. O texto coberto também é 0 em todas, inclusive Roles, que no §4 tinha `text 0` com
+`box 112`. Cada `table` medido bate com o piso que o código grava: os 11 `narrowFloorTablePt` da
+Task 9 aparecem aqui em px, um a um. O `col1` arquivado fica ≥ ao da ativa em 5 das 7 visões:
+Clientes 191≥189, Presupuestos 92≥91, Turmas 53≥52, Matrícula 211≥210 e Redactores 182≥180. As
+outras duas são a exceção aceita, com os números exatos da varredura do §5 Step 4: Cursos 209/`free`
+194 e Usuarios 201/`free` 186. Lá está provado que nenhum piso fecha as duas pernas nessas duas
+tabelas.
+
+#### Um controle por linha (390x844)
+
+O `medir.cjs` não mede isto. A conferência usou o `umcontrole.cjs` (Apêndice D), read-only, em
+390x844 e es-CL, na visão ativa de cada tabela com 2 ou mais ações. Para cada linha de dado, o
+script:
+
+- acha a célula presa (`position: sticky`);
+- conta os controles visíveis nela (`button`, `a[href]`, `[role=button]`, `input` e `select` com
+  `offsetParent`), e a linha passa com exatamente 1;
+- registra o ícone, o `aria-label` e o `aria-haspopup` desse controle.
+
+Depois, abre o menu da 1ª linha, sem clicar em nenhum item, e lista o que colapsou nele. O `Escape`
+fecha o menu. O script rodou depois do `restore` da 4ª rodada. Por isso as visões ativas têm 1 linha
+a mais que no `depois.txt`: o registro da fixture voltou para a visão ativa.
+
+| Tabela | Linhas | Controle na presa, em cada linha | Menu da 1ª linha | Régua |
+|---|---|---|---|---|
+| Clientes | 4 | 1: `pi-ellipsis-v` "Más acciones", `aria-haspopup` | Archivar, Ver | passa |
+| Turmas | 4 | idem | Archivar, Ver | passa |
+| Matrícula (turma 1) | 10 | idem | Registrar resultado, Quitar | passa |
+| Cursos | 3 | idem | Archivar, Ver | passa |
+| Historial | 2 (`LOT-2026-1000` e `LOT-2026-1001`, as duas Vigente) | idem | Ver, Revocar | passa |
+| Redactores | 7 | idem | Reenviar invitación, Archivar, Ver | passa |
+| Usuarios | 2 | idem | Archivar, Ver | passa |
+
+São 32 linhas, todas com um `⋮` só, e o script terminou em `tudo OK`. O Historial foi conferido com
+dado real: o banco de dev tem 2 certificados vigentes, e os dois mostram o `⋮` com "Ver" e "Revocar"
+dentro. O banco de dev não tem certificado revocado, que teria Ver + Reemitir. Esse ramo fica coberto
+pelo `HistorialTableRowActions.test.tsx` ("revocado com permissão: reemitir aparece, revogar não"),
+e o colapso de 2 ações passa pelo mesmo `RowActions` que as linhas vigentes provaram aqui.
+
+<details>
+<summary>Saída bruta de <code>umcontrole.txt</code> (<code>node umcontrole.cjs</code>)</summary>
+
+```
+OK     Clientes | SS | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Clientes | TR | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Clientes | ED | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Clientes | CG | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+       Clientes: 4 linha(s) | menu da 1ª linha: [Archivar, Ver]
+OK     Turmas | Scap 6 - Cot 1 [En curso] | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Turmas | Scap 5 - Cot 1 [Concluida] | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Turmas | Scap 4 - Cot 1 [Habilitada] | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Turmas | Scap 3 - Cot 1 [En curso] | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+       Turmas: 4 linha(s) | menu da 1ª linha: [Archivar, Ver]
+OK     Matrícula | CA | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | MB | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | VC | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | SD | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | JE | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | DF | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | AG | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | CH | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | FI | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Matrícula | NJ | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+       Matrícula: 10 linha(s) | menu da 1ª linha: [Registrar resultado, Quitar]
+OK     Cursos | Trabajos en líneas energizad | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Cursos | Seguridad en alta tensión | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Cursos | Mantenimiento de subestacion | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+       Cursos: 3 linha(s) | menu da 1ª linha: [Archivar, Ver]
+OK     Historial | LOT-2026-1001 [Vigente] | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Historial | LOT-2026-1000 [Vigente] | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+       Historial: 2 linha(s) | menu da 1ª linha: [Ver, Revocar]
+OK     Redactores | JM | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Redactores | PS | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Redactores | AR | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Redactores | CF | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Redactores | MR | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Redactores | RV | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Redactores | IP | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+       Redactores: 7 linha(s) | menu da 1ª linha: [Reenviar invitación, Archivar, Ver]
+OK     Usuarios | AL [Activo] | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+OK     Usuarios | F2 [Activo] | presa 72 | 1 controle(s): pi-ellipsis-v "Más acciones" haspopup
+       Usuarios: 2 linha(s) | menu da 1ª linha: [Archivar, Ver]
+tudo OK
+```
+
+</details>
+
+### 1440x900 — sem regressão
+
+| Tabela | Moldura | `scroll` | Sobreposição | Colunas de dado contra `antes.txt` | Régua |
+|---|---|---|---|---|---|
+| Dashboard painel 1 / 2 | 1134 | 1134 | 0 | iguais | passa |
+| Clientes / (arq.) | 1134 | 1134 | 0 | iguais | passa |
+| Presupuestos / (arq.) | 1134 | 1134 | 0 | iguais | passa |
+| Turmas / (arq.) | 1134 | 1134 | 0 | iguais | passa |
+| Matrícula / (arq.) | 1134 | 1134 | 0 | iguais | passa |
+| Cursos / (arq.) | 1134 | 1134 | 0 | iguais | passa |
+| Emisión | 1100 | 1100 | 0 | mais largas: presa 128 → 110, NOMBRE 318 → 324, NOTA FINAL e ASISTENCIA 124 → 126, ESTADO ACAD. 177 → 180, CERTIFICADO 230 → 234 | passa |
+| Historial | 1134 | 1134 | 0 | mais largas: presa 256 → 144, CÓDIGO 91 → 103, ALUMNO 205 → 231, CURSO 240 → 270, FECHA EMISIÓN, VIGENCIA HASTA e ESTADO 114 → 129 | passa |
+| Redactores / (arq.) | 1134 | 1134 | 0 | iguais | passa |
+| Alumnos / diálogo do alumno | 1134 / 960 | 1134 / 960 | 0 | iguais | passa |
+| Usuarios / (arq.) | 1134 | 1134 | 0 | iguais | passa |
+| Roles y permisos | 1134 | 1134 | 0 | iguais | passa |
+
+Nenhuma coluna de dado ficou mais estreita que no "antes". Só mudaram as colunas da Emisión e do
+Historial, e as duas para mais: ganharam a largura que a presa menor devolveu. No resto, a única
+diferença de texto contra `antes.txt` é o `min-width` (768px → 672px), um piso que em 1440 não age.
+As 21 linhas são idênticas às de `meio.txt`, exceto Historial (`rows 2`).
+
+### Diálogo do alumno
+
+O `scroll` mede 669, 323 e 960 em 1024, 390 e 1440. É igual ao "antes" nos três (régua: ≤), então
+passa. A tabela do diálogo não tem presa e não tem piso (`min-width` 0px), e a régua dela se reduz
+a isso. Ela segue com `rows 0`, como no §3 e no §4, porque o 1º alumno da lista não tem certificado.
+
+### Observações
+
+1. **O transbordo de conteúdo do Dashboard persiste.** Em 1024, o `scrollWidth` dos dois painéis é
+   749 e 747 sobre moldura e tabela de 718: sobram 31 e 29px. No "antes" eram 25 e 21px sobre 768.
+   Em 390, 708 e 707 sobre 672. A régua do Dashboard é `table` ≤ `frame`, e passa. Mas o spec §1
+   diz deste transbordo: "Se ele persistir depois do piso novo, vira ficha nova e não se corrige
+   aqui". Ele persistiu. A ficha fica para o fechamento do bloco, porque este passo só escreve o
+   audit.
+2. **O Historial tem agora 2 linhas.** O "antes" e o "meio" mediram `rows 1`. O banco de dev ganhou o
+   `LOT-2026-1001`, vigente, criado em 27/09 às 23:58 (-03), durante a Task 9. Não veio da fixture,
+   que não emite certificado, nem deste passo. A régua passa com as duas linhas (`box` 0, `col1` 62
+   em 390), e elas deram ao `⋮` do Historial um caso real de 2 ações.
+
+### Gates (Step 5)
+
+Rodados sobre `dcda46e3`, antes do commit deste audit, que só toca este arquivo.
+
+```
+$ cd frontend && pnpm lint
+$ eslint .
+(exit 0 — 0 problemas)
+
+$ pnpm build
+✓ 1091 modules transformed.
+(!) Some chunks are larger than 500 kB after minification.   ← aviso pré-existente
+✓ built in 1.72s
+(exit 0)
+
+$ pnpm test
+ Test Files  158 passed (158)
+      Tests  987 passed (987)
+(exit 0)
+
+$ git diff --stat main...HEAD -- backend/ frontend/src/shared/types/generated.ts; echo "diff exit $?"
+diff exit 0
+(sem linhas: `pint` e `typescript:transform` ficam N/A por escopo provado)
+
+$ git diff main...HEAD --name-only | grep -v '^frontend/\|^docs/superpowers/' ; echo "fora do escopo exit $?"
+fora do escopo exit 1
+(sem linhas)
+```
+
+<details>
+<summary>Saída bruta de <code>depois.txt</code> (126 linhas, <code>OUT=depois.json node medir.cjs</code>, fixture da seção 2 ativa nas 7 linhas <code>ARCH</code>)</summary>
+
+```
+1024x768 / [] | frame 718 scroll 749 table 718 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 2
+    CURSO:180 | RELATORES:111 | PERÍODO:103 | DOCUMENTOS PRESENTES:60 | DOCUMENTOS FALTANTES:180 | HABILITADA:85
+1024x768 / [] | frame 718 scroll 747 table 718 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 6
+    RELATOR:308 | CLASES EN CURSO:103 | PRÓXIMAS CLASES:103 | DOCUMENTOS VENCIDOS:103 | DOCUMENTOS POR VENCER:102
+1024x768 /comercial [Clientes] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 181 free 574 box 0 text 0 rows 3
+    RAZÓN SOCIAL:181 | RUT:91 | TIPO:101 | COMUNA:131 | CONTACTOS:71 | ·:144
+1024x768 /comercial [Clientes] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 129 free 558 box 0 text 0 rows 1
+    RAZÓN SOCIAL:129 | RUT:65 | TIPO:72 | COMUNA:93 | CONTACTOS:50 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /comercial [Presupuestos] | frame 718 scroll 718 table 718 (672px) sticky 96 overlap 0 col1 94 free 622 box 0 text 0 rows 5
+    CÓDIGO:94 | CLIENTE:211 | COTIZACIONES:82 | VALOR TOTAL:117 | ESTADO:117 | ·:96
+1024x768 /comercial [Presupuestos] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 62 free 558 box 0 text 0 rows 1
+    CÓDIGO:62 | CLIENTE:139 | COTIZACIONES:54 | VALOR TOTAL:77 | ESTADO:77 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /operacion [] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 50 free 574 box 0 text 0 rows 3
+    CÓDIGO:50 | CURSO:131 | CLIENTE:112 | MODALIDAD:62 | REDACTOR:112 | ALUMNOS:44 | ESTADO:62 | ·:144
+1024x768 /operacion [] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 36 free 558 box 0 text 0 rows 1
+    CÓDIGO:36 | CURSO:93 | CLIENTE:80 | MODALIDAD:44 | REDACTOR:80 | ALUMNOS:31 | ESTADO:45 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /operacion/turmas/1 [Alumnos] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 279 free 574 box 0 text 0 rows 10
+    NOMBRE:279 | RUT:140 | ESTADO MATRÍCULA:155 | ·:144
+1024x768 /operacion/turmas/1 [Alumnos] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 273 free 558 box 0 text 0 rows 1
+    NOMBRE:273 | RUT:136 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /cursos [] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 223 free 574 box 0 text 0 rows 2
+    NOMBRE:223 | NOMBRE TÉCNICO:138 | CARGA HORARIA (H):74 | REDACTORES:138 | ·:144
+1024x768 /cursos [] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 159 free 558 box 0 text 0 rows 1
+    NOMBRE:159 | NOMBRE TÉCNICO:99 | CARGA HORARIA (H):53 | REDACTORES:98 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /certificados [Emisión] | frame 684 scroll 684 table 684 (672px) sticky 96 overlap 0 col1 192 free 588 box 0 text 0 rows 10
+    NOMBRE:192 | NOTA FINAL:75 | ASISTENCIA:75 | ESTADO ACAD.:107 | CERTIFICADO:139 | ·:96
+1024x768 /certificados [Historial] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 60 free 574 box 0 text 0 rows 2
+    CÓDIGO:60 | ALUMNO:134 | CURSO:157 | FECHA EMISIÓN:75 | VIGENCIA HASTA:75 | ESTADO:75 | ·:144
+1024x768 /personas [Redactores] | frame 718 scroll 718 table 718 (672px) sticky 192 overlap 0 col1 158 free 526 box 0 text 0 rows 6
+    NOMBRE COMPLETO:158 | RUT:114 | CURSOS HABILITADOS:61 | IDONEIDAD:88 | ÚLTIMO ACCESO:105 | ·:192
+1024x768 /personas [Redactores] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 123 free 558 box 0 text 0 rows 1
+    NOMBRE COMPLETO:123 | RUT:89 | CURSOS HABILITADOS:48 | IDONEIDAD:68 | ÚLTIMO ACCESO:82 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /personas [Alumnos] | frame 718 scroll 718 table 718 (672px) sticky 96 overlap 0 col1 238 free 622 box 0 text 0 rows 10
+    NOMBRE COMPLETO:238 | RUT:119 | CLIENTE ACTUAL:172 | TURMAS:93 | ·:96
+1024x768 /personas [Alumnos] DIALOGO (dialogo) | frame 669 scroll 669 table 669 (0px) sticky null overlap 0 col1 null free null box 0 text 0 rows 0
+    Código:0 | Curso:0 | Fecha:0 | Estado:0 | Certificado:0
+1024x768 /administracion [Usuarios] | frame 718 scroll 718 table 718 (672px) sticky 144 overlap 0 col1 195 free 574 box 0 text 0 rows 1
+    NOMBRE:195 | ROL:141 | ESTADO:108 | ÚLTIMO ACCESO:130 | ·:144
+1024x768 /administracion [Usuarios] ARCH | frame 718 scroll 718 table 718 (672px) sticky 160 overlap 0 col1 139 free 558 box 0 text 0 rows 1
+    NOMBRE:139 | ROL:100 | ESTADO:77 | ÚLTIMO ACCESO:93 | ARCHIVADO EL:62 | ARCHIVADO POR:87 | ·:160
+1024x768 /administracion [Roles y permisos] | frame 718 scroll 718 table 718 (672px) sticky 96 overlap 0 col1 344 free 622 box 0 text 0 rows 3
+    NOMBRE:344 | TIPO:164 | PERMISOS:115 | ·:96
+390x844 / [] | frame 276 scroll 708 table 672 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 2
+    CURSO:168 | RELATORES:104 | PERÍODO:96 | DOCUMENTOS PRESENTES:56 | DOCUMENTOS FALTANTES:168 | HABILITADA:80
+390x844 / [] | frame 276 scroll 707 table 672 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 6
+    RELATOR:288 | CLASES EN CURSO:96 | PRÓXIMAS CLASES:96 | DOCUMENTOS VENCIDOS:96 | DOCUMENTOS POR VENCER:96
+390x844 /comercial [Clientes] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "RUT" col1 189 free 204 box 0 text 0 rows 3
+    RAZÓN SOCIAL:189 | RUT:95 | TIPO:105 | COMUNA:137 | CONTACTOS:74 | ·:72
+390x844 /comercial [Clientes] ARCH | frame 276 scroll 916 table 916 (916px) sticky 92 overlap 85 on "RUT" col1 191 free 184 box 0 text 0 rows 1
+    RAZÓN SOCIAL:191 | RUT:95 | TIPO:106 | COMUNA:138 | CONTACTOS:74 | ARCHIVADO EL:92 | ARCHIVADO POR:128 | ·:92
+390x844 /comercial [Presupuestos] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "CLIENTE" col1 91 free 204 box 0 text 0 rows 5
+    CÓDIGO:91 | CLIENTE:204 | COTIZACIONES:79 | VALOR TOTAL:113 | ESTADO:113 | ·:72
+390x844 /comercial [Presupuestos] ARCH | frame 276 scroll 928 table 928 (928px) sticky 93 overlap 93 on "CLIENTE" col1 92 free 183 box 0 text 0 rows 1
+    CÓDIGO:92 | CLIENTE:208 | COTIZACIONES:81 | VALOR TOTAL:116 | ESTADO:116 | ARCHIVADO EL:93 | ARCHIVADO POR:130 | ·:93
+390x844 /operacion [] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "CLIENTE" col1 52 free 204 box 0 text 0 rows 3
+    CÓDIGO:52 | CURSO:137 | CLIENTE:117 | MODALIDAD:65 | REDACTOR:117 | ALUMNOS:46 | ESTADO:65 | ·:72
+390x844 /operacion [] ARCH | frame 276 scroll 920 table 920 (920px) sticky 92 overlap 85 on "CLIENTE" col1 53 free 184 box 0 text 0 rows 1
+    CÓDIGO:53 | CURSO:139 | CLIENTE:119 | MODALIDAD:66 | REDACTOR:119 | ALUMNOS:46 | ESTADO:66 | ARCHIVADO EL:92 | ARCHIVADO POR:129 | ·:92
+390x844 /operacion/turmas/1 [Alumnos] | frame 276 scroll 504 table 504 (504px) sticky 72 overlap 66 on "RUT" col1 210 free 204 box 0 text 0 rows 10
+    NOMBRE:210 | RUT:105 | ESTADO MATRÍCULA:117 | ·:72
+390x844 /operacion/turmas/1 [Alumnos] ARCH | frame 276 scroll 504 table 504 (504px) sticky 72 overlap 65 on "RUT" col1 211 free 204 box 0 text 0 rows 1
+    NOMBRE:211 | RUT:106 | ARCHIVADO EL:48 | ARCHIVADO POR:67 | ·:72
+390x844 /cursos [] | frame 276 scroll 632 table 632 (632px) sticky 72 overlap 58 on "NOMBRE TÉCNICO" col1 218 free 204 box 0 text 0 rows 2
+    NOMBRE:218 | NOMBRE TÉCNICO:135 | CARGA HORARIA (H):73 | REDACTORES:135 | ·:72
+390x844 /cursos [] ARCH | frame 276 scroll 816 table 816 (816px) sticky 82 overlap 67 on "NOMBRE TÉCNICO" col1 209 free 194 box 0 text 0 rows 1
+    NOMBRE:209 | NOMBRE TÉCNICO:130 | CARGA HORARIA (H):70 | REDACTORES:130 | ARCHIVADO EL:82 | ARCHIVADO POR:114 | ·:82
+390x844 /certificados [Emisión] | frame 242 scroll 636 table 636 (636px) sticky 72 overlap 57 on "NOTA FINAL" col1 185 free 170 box 0 text 0 rows 10
+    NOMBRE:185 | NOTA FINAL:72 | ASISTENCIA:72 | ESTADO ACAD.:103 | CERTIFICADO:133 | ·:72
+390x844 /certificados [Historial] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "CURSO" col1 62 free 204 box 0 text 0 rows 2
+    CÓDIGO:62 | ALUMNO:140 | CURSO:164 | FECHA EMISIÓN:78 | VIGENCIA HASTA:78 | ESTADO:78 | ·:72
+390x844 /personas [Redactores] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "RUT" col1 180 free 204 box 0 text 0 rows 6
+    NOMBRE COMPLETO:180 | RUT:130 | CURSOS HABILITADOS:70 | IDONEIDAD:100 | ÚLTIMO ACCESO:120 | ·:72
+390x844 /personas [Redactores] ARCH | frame 276 scroll 920 table 920 (920px) sticky 92 overlap 92 on "RUT" col1 182 free 184 box 0 text 0 rows 1
+    NOMBRE COMPLETO:182 | RUT:132 | CURSOS HABILITADOS:71 | IDONEIDAD:101 | ÚLTIMO ACCESO:121 | ARCHIVADO EL:92 | ARCHIVADO POR:129 | ·:92
+390x844 /personas [Alumnos] | frame 276 scroll 640 table 640 (640px) sticky 72 overlap 58 on "RUT" col1 218 free 204 box 0 text 0 rows 10
+    NOMBRE COMPLETO:218 | RUT:109 | CLIENTE ACTUAL:157 | TURMAS:85 | ·:72
+390x844 /personas [Alumnos] DIALOGO (dialogo) | frame 323 scroll 323 table 323 (0px) sticky null overlap 0 col1 null free null box 0 text 0 rows 0
+    Código:0 | Curso:0 | Fecha:0 | Estado:0 | Certificado:0
+390x844 /administracion [Usuarios] | frame 276 scroll 672 table 672 (672px) sticky 72 overlap 72 on "ROL" col1 204 free 204 box 0 text 0 rows 1
+    NOMBRE:204 | ROL:147 | ESTADO:113 | ÚLTIMO ACCESO:136 | ·:72
+390x844 /administracion [Usuarios] ARCH | frame 276 scroll 896 table 896 (896px) sticky 90 overlap 75 on "ROL" col1 201 free 186 box 0 text 0 rows 1
+    NOMBRE:201 | ROL:145 | ESTADO:112 | ÚLTIMO ACCESO:134 | ARCHIVADO EL:90 | ARCHIVADO POR:125 | ·:90
+390x844 /administracion [Roles y permisos] | frame 276 scroll 444 table 444 (444px) sticky 72 overlap 70 on "TIPO" col1 206 free 204 box 0 text 0 rows 3
+    NOMBRE:206 | TIPO:98 | PERMISOS:69 | ·:72
+1440x900 / [] | frame 1134 scroll 1134 table 1134 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 2
+    CURSO:284 | RELATORES:176 | PERÍODO:162 | DOCUMENTOS PRESENTES:94 | DOCUMENTOS FALTANTES:284 | HABILITADA:135
+1440x900 / [] | frame 1134 scroll 1134 table 1134 (672px) sticky null overlap 0 col1 null free null box 0 text 0 rows 6
+    RELATOR:486 | CLASES EN CURSO:162 | PRÓXIMAS CLASES:162 | DOCUMENTOS VENCIDOS:162 | DOCUMENTOS POR VENCER:162
+1440x900 /comercial [Clientes] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 313 free 990 box 0 text 0 rows 3
+    RAZÓN SOCIAL:313 | RUT:156 | TIPO:174 | COMUNA:226 | CONTACTOS:122 | ·:144
+1440x900 /comercial [Clientes] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 226 free 974 box 0 text 0 rows 1
+    RAZÓN SOCIAL:226 | RUT:113 | TIPO:125 | COMUNA:163 | CONTACTOS:88 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /comercial [Presupuestos] | frame 1134 scroll 1134 table 1134 (672px) sticky 113 overlap 0 col1 154 free 1021 box 0 text 0 rows 5
+    CÓDIGO:154 | CLIENTE:347 | COTIZACIONES:135 | VALOR TOTAL:193 | ESTADO:193 | ·:113
+1440x900 /comercial [Presupuestos] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 108 free 974 box 0 text 0 rows 1
+    CÓDIGO:108 | CLIENTE:243 | COTIZACIONES:94 | VALOR TOTAL:135 | ESTADO:135 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /operacion [] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 86 free 990 box 0 text 0 rows 3
+    CÓDIGO:86 | CURSO:226 | CLIENTE:194 | MODALIDAD:108 | REDACTOR:194 | ALUMNOS:75 | ESTADO:108 | ·:144
+1440x900 /operacion [] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 62 free 974 box 0 text 0 rows 1
+    CÓDIGO:62 | CURSO:163 | CLIENTE:140 | MODALIDAD:78 | REDACTOR:140 | ALUMNOS:54 | ESTADO:78 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /operacion/turmas/1 [Alumnos] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 482 free 990 box 0 text 0 rows 10
+    NOMBRE:482 | RUT:241 | ESTADO MATRÍCULA:268 | ·:144
+1440x900 /operacion/turmas/1 [Alumnos] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 476 free 974 box 0 text 0 rows 1
+    NOMBRE:476 | RUT:238 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /cursos [] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 385 free 990 box 0 text 0 rows 2
+    NOMBRE:385 | NOMBRE TÉCNICO:238 | CARGA HORARIA (H):128 | REDACTORES:238 | ·:144
+1440x900 /cursos [] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 278 free 974 box 0 text 0 rows 1
+    NOMBRE:278 | NOMBRE TÉCNICO:172 | CARGA HORARIA (H):93 | REDACTORES:172 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /certificados [Emisión] | frame 1100 scroll 1100 table 1100 (672px) sticky 110 overlap 0 col1 324 free 990 box 0 text 0 rows 10
+    NOMBRE:324 | NOTA FINAL:126 | ASISTENCIA:126 | ESTADO ACAD.:180 | CERTIFICADO:234 | ·:110
+1440x900 /certificados [Historial] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 103 free 990 box 0 text 0 rows 2
+    CÓDIGO:103 | ALUMNO:231 | CURSO:270 | FECHA EMISIÓN:129 | VIGENCIA HASTA:129 | ESTADO:129 | ·:144
+1440x900 /personas [Redactores] | frame 1134 scroll 1134 table 1134 (672px) sticky 192 overlap 0 col1 283 free 942 box 0 text 0 rows 6
+    NOMBRE COMPLETO:283 | RUT:204 | CURSOS HABILITADOS:110 | IDONEIDAD:157 | ÚLTIMO ACCESO:188 | ·:192
+1440x900 /personas [Redactores] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 214 free 974 box 0 text 0 rows 1
+    NOMBRE COMPLETO:214 | RUT:155 | CURSOS HABILITADOS:83 | IDONEIDAD:119 | ÚLTIMO ACCESO:143 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /personas [Alumnos] | frame 1134 scroll 1134 table 1134 (672px) sticky 113 overlap 0 col1 391 free 1021 box 0 text 0 rows 10
+    NOMBRE COMPLETO:391 | RUT:195 | CLIENTE ACTUAL:282 | TURMAS:152 | ·:113
+1440x900 /personas [Alumnos] DIALOGO (dialogo) | frame 960 scroll 960 table 960 (0px) sticky null overlap 0 col1 null free null box 0 text 0 rows 0
+    Código:0 | Curso:0 | Fecha:0 | Estado:0 | Certificado:0
+1440x900 /administracion [Usuarios] | frame 1134 scroll 1134 table 1134 (672px) sticky 144 overlap 0 col1 336 free 990 box 0 text 0 rows 1
+    NOMBRE:336 | ROL:243 | ESTADO:187 | ÚLTIMO ACCESO:224 | ·:144
+1440x900 /administracion [Usuarios] ARCH | frame 1134 scroll 1134 table 1134 (672px) sticky 160 overlap 0 col1 243 free 974 box 0 text 0 rows 1
+    NOMBRE:243 | ROL:175 | ESTADO:135 | ÚLTIMO ACCESO:162 | ARCHIVADO EL:108 | ARCHIVADO POR:152 | ·:160
+1440x900 /administracion [Roles y permisos] | frame 1134 scroll 1134 table 1134 (672px) sticky 113 overlap 0 col1 564 free 1021 box 0 text 0 rows 3
+    NOMBRE:564 | TIPO:269 | PERMISOS:188 | ·:113
+```
+
+</details>
+
+## 7. Timestamp no navegador
+
+O `timestamp.cjs` (Apêndice C) roda em 1440x900, nos 3 idiomas × 2 temas. Em `/administracion` e
+`/personas`, lê cada `<time>` da página: a hora, a data, a cor computada dos dois ícones e o
+`aria-hidden` deles. Cada leitura passa se a hora e a data casam com a máscara do idioma, os dois
+ícones medem `rgb(37, 165, 228)` (a `--primary-color`, `#25a5e4`) e os dois têm `aria-hidden`. O
+script também conta os `<time>` em célula e as células com travessão. Em es-CL, recorta as capturas
+do cabeçalho e da 1ª célula com `<time>`.
+
+**Desvio do script.** O texto do brief faz um login por contexto: 6 logins em menos de um minuto. O
+login é limitado a 5 por minuto por `email|ip` (`RateLimits::LOGIN`, `backend/app/Shared/RateLimiting/RateLimits.php`).
+Na 1ª rodada, os 5 primeiros pares passaram, e o 6º (en/dark) tomou 429 e ficou em `/login`
+(`page.waitForURL: Timeout 15000ms exceeded`). O script que valeu entra uma vez e passa só os
+cookies da sessão aos outros 5 contextos. Idioma e tema continuam vindo do `addInitScript`, que roda
+antes do SPA em toda carga.
+
+Acrescentei também uma prova de que o tema pedido entrou. A cor dos ícones é a mesma nos dois temas
+por desenho, então sozinha não distingue claro de escuro. Por isso cada página registra `html.dark`
+(ligado pelo `useApplyTheme`) e o `lang` do `<html>`, e conta falha se o tema divergir. Nos 12
+registros, o tema e o idioma bateram com o par pedido.
+
+**Resultado: `tudo OK`.** Hora e data casaram com a máscara nos 6 pares, e os dois ícones
+mediram a primária com `aria hidden` em todas as leituras. O relógio do cabeçalho aparece nas duas
+páginas, e a célula do admin em Usuarios também.
+
+| Idioma | Hora | Data | Exemplo (cabeçalho · célula de Redactores) |
+|---|---|---|---|
+| es-CL | 24h | `dd-mm-aaaa` | `00:30 · 28-09-2026` · `15:15 · 19-08-2026` |
+| pt-BR | 24h | `dd/mm/aaaa` | `00:31 · 28/09/2026` · `15:15 · 19/08/2026` |
+| en | 12h com AM/PM | `m/d/aaaa` | `12:31 AM · 9/28/2026` · `03:15 PM · 8/19/2026` |
+
+Esses são os ciclos que o João decidiu em 2026-09-27 (`h23` em es-CL e pt-BR, `h12` em en).
+
+**Células.** Usuarios tem 1 `<time>` em célula, o admin, e 1 travessão: o
+`fixture.item23@lotus.cl` nunca entrou (`last_login: null`). Redactores tem 2 `<time>`, os dois
+redatores com `last_login`, e 5 travessões. A coluna fica provada no navegador nas duas tabelas,
+não só pelo teste de unidade da Task 3.
+
+**Capturas.** Os 6 PNG estão no scratchpad da sessão
+(`/tmp/claude-1000/-home-jvbat-projetos-fix-frontend/9b6388eb-a992-40cb-8b76-e86315f4d9ce/scratchpad/`):
+`timestamp-cabecalho-light.png`, `timestamp-cabecalho-dark.png`,
+`timestamp-administracion-light.png`, `timestamp-administracion-dark.png`,
+`timestamp-personas-light.png` e `timestamp-personas-dark.png`. Cada um tem cerca de 109x36px, e
+foram lidos também ampliados 5x (`zoom-timestamp.png`). O que se vê neles:
+
+- **Cabeçalho, claro e escuro:** fundo navy nos dois temas. O relógio e o calendário ficam azuis e
+  empilhados numa coluna própria, à esquerda. A hora (`00:30` / `00:31`) fica em cima, em branco e
+  negrito. A data (`28-09-2026`) fica embaixo, em branco mais apagado (`opacity-75`). As duas linhas
+  de texto começam na mesma borda esquerda.
+- **Célula de Usuarios, claro:** fundo branco, ícones azuis, hora `00:30` em slate escuro negrito e
+  data `28-09-2026` em slate apagado, na mesma grade.
+- **Célula de Usuarios, escuro:** fundo slate escuro, ícones no mesmo azul, hora em branco negrito e
+  data em branco apagado.
+- **Célula de Redactores, claro e escuro:** `15:15` sobre `19-08-2026`, com o mesmo arranjo e as
+  mesmas cores de cada tema.
+
+Nas 6 capturas, os dois ícones ficam alinhados em coluna, com a hora em cima e a data embaixo. O
+texto é branco no cabeçalho e herda a cor da célula na tabela.
+
+<details>
+<summary>Saída bruta de <code>timestamp.txt</code> (<code>node timestamp.cjs | tee timestamp.txt</code>, a rodada que valeu)</summary>
+
+```
+       es-CL light /administracion: html.dark false, html lang es-CL
+OK     es-CL light /administracion cabecalho: 00:30 | 28-09-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     es-CL light /administracion tabela: 00:30 | 28-09-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       es-CL light /administracion: 1 <time> em célula, 1 célula(s) com travessão
+       es-CL light /personas: html.dark false, html lang es-CL
+OK     es-CL light /personas cabecalho: 00:30 | 28-09-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     es-CL light /personas tabela: 15:15 | 19-08-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     es-CL light /personas tabela: 10:55 | 19-08-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       es-CL light /personas: 2 <time> em célula, 5 célula(s) com travessão
+       es-CL dark /administracion: html.dark true, html lang es-CL
+OK     es-CL dark /administracion cabecalho: 00:31 | 28-09-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     es-CL dark /administracion tabela: 00:30 | 28-09-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       es-CL dark /administracion: 1 <time> em célula, 1 célula(s) com travessão
+       es-CL dark /personas: html.dark true, html lang es-CL
+OK     es-CL dark /personas cabecalho: 00:31 | 28-09-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     es-CL dark /personas tabela: 15:15 | 19-08-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     es-CL dark /personas tabela: 10:55 | 19-08-2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       es-CL dark /personas: 2 <time> em célula, 5 célula(s) com travessão
+       pt-BR light /administracion: html.dark false, html lang pt-BR
+OK     pt-BR light /administracion cabecalho: 00:31 | 28/09/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     pt-BR light /administracion tabela: 00:30 | 28/09/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       pt-BR light /administracion: 1 <time> em célula, 1 célula(s) com travessão
+       pt-BR light /personas: html.dark false, html lang pt-BR
+OK     pt-BR light /personas cabecalho: 00:31 | 28/09/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     pt-BR light /personas tabela: 15:15 | 19/08/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     pt-BR light /personas tabela: 10:55 | 19/08/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       pt-BR light /personas: 2 <time> em célula, 5 célula(s) com travessão
+       pt-BR dark /administracion: html.dark true, html lang pt-BR
+OK     pt-BR dark /administracion cabecalho: 00:31 | 28/09/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     pt-BR dark /administracion tabela: 00:30 | 28/09/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       pt-BR dark /administracion: 1 <time> em célula, 1 célula(s) com travessão
+       pt-BR dark /personas: html.dark true, html lang pt-BR
+OK     pt-BR dark /personas cabecalho: 00:31 | 28/09/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     pt-BR dark /personas tabela: 15:15 | 19/08/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     pt-BR dark /personas tabela: 10:55 | 19/08/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       pt-BR dark /personas: 2 <time> em célula, 5 célula(s) com travessão
+       en light /administracion: html.dark false, html lang en
+OK     en light /administracion cabecalho: 12:31 AM | 9/28/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     en light /administracion tabela: 12:30 AM | 9/28/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       en light /administracion: 1 <time> em célula, 1 célula(s) com travessão
+       en light /personas: html.dark false, html lang en
+OK     en light /personas cabecalho: 12:31 AM | 9/28/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     en light /personas tabela: 03:15 PM | 8/19/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     en light /personas tabela: 10:55 AM | 8/19/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       en light /personas: 2 <time> em célula, 5 célula(s) com travessão
+       en dark /administracion: html.dark true, html lang en
+OK     en dark /administracion cabecalho: 12:31 AM | 9/28/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     en dark /administracion tabela: 12:30 AM | 9/28/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       en dark /administracion: 1 <time> em célula, 1 célula(s) com travessão
+       en dark /personas: html.dark true, html lang en
+OK     en dark /personas cabecalho: 12:31 AM | 9/28/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     en dark /personas tabela: 03:15 PM | 8/19/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+OK     en dark /personas tabela: 10:55 AM | 8/19/2026 | rgb(37, 165, 228) rgb(37, 165, 228) | aria true,true
+       en dark /personas: 2 <time> em célula, 5 célula(s) com travessão
+tudo OK
+```
+
+</details>
+
+## 8. Veredito da direção (a)
+
+A `D-65` pedia medir um sinal de rolagem no invólucro. **Não se implementa.** Em 1024x768, o piso
+de 42rem zera a rolagem que vinha do piso em toda tabela. Na seção 6, `scroll` = `frame` nas 12
+consumidoras com presa (as 18 linhas, com as visões de arquivados) e no diálogo do alumno. Nos dois
+painéis do Dashboard, `table` = `frame`, e o transbordo de 29–31px deles é conteúdo e fica fora do
+bloco (Observação 1). Então não sobra rolagem a anunciar. Em 390x844, o invólucro já se anuncia pelas
+sombras da UI-10 (`background-attachment: local/scroll`, `AppDataTable/style.ts`), e a coluna presa
+tem sombra própria permanente. A 1ª coluna, agora fora da presa (seção 6, `box 0`), deixa à vista
+que a linha continua. Fecha a direção (a) da `D-65` no `/fechar-sprint`.
+
 ## Apêndice A — `medir.cjs`
 
-Texto idêntico ao do brief (Step 2), sem alteração.
+Texto idêntico ao do brief (Step 2), sem alteração. Conferido de novo na Task 10: idêntico ao
+`medir.cjs` do scratchpad que produziu o `depois.txt` da seção 6.
 
 ```js
 // medir.cjs — medição read-only das tabelas do item 23 (D-65).
@@ -915,6 +1460,7 @@ async function snap(page, label, results, onlyDialog = false) {
 
 Texto **com** o desvio da seção 2 (hooks `pre`/`pos` na entrada `presupuesto` de `ENTIDADES`, e
 `password` no `USUARIO`) — este é o texto que efetivamente rodou e produziu a fixture da seção 2.
+Conferido de novo na Task 10: idêntico ao `fixture.cjs` do scratchpad que rodou as quatro rodadas.
 
 ```js
 // fixture.cjs — cada visão de arquivados com 1 linha, para a régua do item 23.
@@ -1069,4 +1615,279 @@ async function restaurar(page) {
   console.error(e)
   process.exit(1)
 })
+```
+
+## Apêndice C — `timestamp.cjs`
+
+Texto do brief (Step 2) **com** os dois desvios da seção 7: um login só, com os cookies
+repassados aos outros contextos, e a leitura de `html.dark` e do `lang` do `<html>`. É o texto que
+produziu o `timestamp.txt` da seção 7.
+
+```js
+// timestamp.cjs — o Timestamp no navegador: máscara por idioma e cor dos ícones
+// nos dois temas (item 23, spec §6.2).
+const { chromium } = require(
+  process.env.PW ||
+    '/home/jvbat/.nvm/versions/node/v22.23.1/lib/node_modules/@playwright/cli/node_modules/playwright-core',
+)
+
+const BASE = process.env.BASE || 'http://localhost:5175'
+const OUT = process.env.OUTDIR || __dirname
+const PRIMARIA = 'rgb(37, 165, 228)'
+const DATA = { 'es-CL': /^\d{2}-\d{2}-\d{4}$/, 'pt-BR': /^\d{2}\/\d{2}\/\d{4}$/, en: /^\d{1,2}\/\d{1,2}\/\d{4}$/ }
+const HORA = { 'es-CL': /^\d{2}:\d{2}$/, 'pt-BR': /^\d{2}:\d{2}$/, en: /^\d{2}:\d{2}\s[AP]M$/ }
+
+;(async () => {
+  const browser = await chromium.launch()
+  let falhas = 0
+  // DESVIO do brief: o login é limitado a 5 por minuto por `email|ip`
+  // (`RateLimits::LOGIN`), e 3 idiomas × 2 temas pediam 6 logins em menos de um
+  // minuto — o 6º (en/dark) tomou 429 e ficou em /login. Entra-se UMA vez; os
+  // outros contextos herdam só os cookies da sessão. Idioma e tema continuam
+  // vindo do addInitScript, que roda antes do SPA em toda carga.
+  let cookies = null
+  for (const lang of Object.keys(DATA)) {
+    for (const theme of ['light', 'dark']) {
+      const ctx = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        ...(cookies ? { storageState: { cookies, origins: [] } } : {}),
+      })
+      await ctx.addInitScript(
+        ({ lang, theme }) => {
+          localStorage.setItem('lotus-lang', lang)
+          localStorage.setItem('lotus-ui', JSON.stringify({ state: { theme }, version: 0 }))
+        },
+        { lang, theme },
+      )
+      const page = await ctx.newPage()
+      if (!cookies) {
+        await page.goto(`${BASE}/login`)
+        await page.fill('input[type=email], input[name=email]', 'admin@lotus.cl')
+        await page.fill('input[type=password]', 'senha123')
+        await page.keyboard.press('Enter')
+        await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 15000 })
+        cookies = (await ctx.storageState()).cookies
+      }
+      for (const path of ['/administracion', '/personas']) {
+        await page.goto(`${BASE}${path}`)
+        await page.waitForLoadState('networkidle')
+        await page.waitForTimeout(1200)
+        if (new URL(page.url()).pathname !== path) throw new Error(`${lang} ${theme}: esperava ${path}, ficou em ${page.url()}`)
+        // Acréscimo: a cor dos ícones é a mesma nos dois temas por desenho, então
+        // ela sozinha não prova que o tema escuro entrou. `useApplyTheme` liga
+        // `html.dark`; o idioma ativo sai do `lang` do <html>.
+        const html = await page.evaluate(() => ({
+          dark: document.documentElement.classList.contains('dark'),
+          lang: document.documentElement.lang,
+        }))
+        if (html.dark !== (theme === 'dark')) falhas++
+        console.log(`       ${lang} ${theme} ${path}: html.dark ${html.dark}, html lang ${html.lang}`)
+        const achados = await page.evaluate(() =>
+          [...document.querySelectorAll('time')].map((t) => ({
+            onde: t.closest('header') ? 'cabecalho' : t.closest('td') ? 'tabela' : 'outro',
+            hora: t.children[1]?.textContent,
+            data: t.children[3]?.textContent,
+            icone1: getComputedStyle(t.children[0]).color,
+            icone2: getComputedStyle(t.children[2]).color,
+            aria: [t.children[0].getAttribute('aria-hidden'), t.children[2].getAttribute('aria-hidden')].join(','),
+          })),
+        )
+        const tracos = await page.evaluate(
+          () => [...document.querySelectorAll('td')].filter((td) => td.textContent.trim() === '—').length,
+        )
+        for (const a of achados) {
+          const ok =
+            HORA[lang].test(a.hora) &&
+            DATA[lang].test(a.data) &&
+            a.icone1 === PRIMARIA &&
+            a.icone2 === PRIMARIA &&
+            a.aria === 'true,true'
+          if (!ok) falhas++
+          console.log(`${ok ? 'OK    ' : 'FALHA '} ${lang} ${theme} ${path} ${a.onde}: ${a.hora} | ${a.data} | ${a.icone1} ${a.icone2} | aria ${a.aria}`)
+        }
+        console.log(`       ${lang} ${theme} ${path}: ${achados.filter((a) => a.onde === 'tabela').length} <time> em célula, ${tracos} célula(s) com travessão`)
+        if (lang === 'es-CL') {
+          await page.locator('header time').first().screenshot({ path: `${OUT}/timestamp-cabecalho-${theme}.png` })
+          const celula = page.locator('td time').first()
+          if (await celula.count()) await celula.screenshot({ path: `${OUT}/timestamp-${path.slice(1)}-${theme}.png` })
+        }
+      }
+      await ctx.close()
+    }
+  }
+  await browser.close()
+  console.log(falhas ? `${falhas} FALHA(S)` : 'tudo OK')
+  process.exit(falhas ? 1 : 0)
+})().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})
+```
+
+## Apêndice D — `umcontrole.cjs`
+
+Script próprio da Task 10 para a conferência "um controle por linha" em 390x844 (seção 6). É
+read-only: abre o menu da 1ª linha para listar os itens, mas não clica em nenhum.
+
+```js
+// umcontrole.cjs — "um controle por linha" em 390x844 (régua do item 23, spec §3).
+// Read-only: conta os controles visíveis na célula presa de CADA linha de dado e
+// abre (sem clicar item nenhum) o menu da 1ª linha para listar o que colapsou nele.
+const { chromium } = require(
+  process.env.PW ||
+    '/home/jvbat/.nvm/versions/node/v22.23.1/lib/node_modules/@playwright/cli/node_modules/playwright-core',
+)
+
+const BASE = process.env.BASE || 'http://localhost:5175'
+const VISOES = [
+  { nome: 'Clientes', path: '/comercial', tab: /^Clientes$/ },
+  { nome: 'Turmas', path: '/operacion' },
+  { nome: 'Matrícula', path: '/operacion/turmas/1', tab: /^Alumnos/ },
+  { nome: 'Cursos', path: '/cursos' },
+  { nome: 'Historial', path: '/certificados', tab: /^Historial/ },
+  { nome: 'Redactores', path: '/personas', tab: /^Redactores/ },
+  { nome: 'Usuarios', path: '/administracion', tab: /^Usuarios/ },
+]
+
+;(async () => {
+  const browser = await chromium.launch()
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'es-CL' })
+  await ctx.addInitScript(() => localStorage.setItem('lotus-lang', 'es-CL'))
+  const page = await ctx.newPage()
+  await page.goto(`${BASE}/login`)
+  await page.fill('input[type=email], input[name=email]', 'admin@lotus.cl')
+  await page.fill('input[type=password]', 'senha123')
+  await page.keyboard.press('Enter')
+  await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 15000 })
+  let falhas = 0
+  for (const v of VISOES) {
+    await page.goto(`${BASE}${v.path}`)
+    await page.waitForLoadState('networkidle')
+    if (v.tab) {
+      await page.getByRole('tab', { name: v.tab }).first().click()
+      await page.waitForLoadState('networkidle')
+    }
+    await page.waitForTimeout(1800)
+    const linhas = await page.evaluate(() => {
+      const w = [...document.querySelectorAll('.p-datatable-wrapper')].find((x) => x.offsetParent)
+      const table = w.querySelector('table')
+      const ths = [...table.querySelectorAll('thead th')]
+      const estadoIdx = ths.findIndex((th) => /^ESTADO$/i.test(th.innerText.trim()))
+      return [...table.querySelectorAll('tbody tr')]
+        .filter((tr) => tr.children.length === ths.length)
+        .map((tr) => {
+          const presa = [...tr.children].find((c) => getComputedStyle(c).position === 'sticky')
+          const controles = presa
+            ? [...presa.querySelectorAll('button, a[href], [role=button], input, select')].filter(
+                (b) => b.offsetParent !== null && getComputedStyle(b).visibility !== 'hidden',
+              )
+            : []
+          return {
+            linha: tr.children[0].innerText.trim().split('\n')[0].slice(0, 28),
+            estado: estadoIdx >= 0 ? tr.children[estadoIdx].innerText.trim() : null,
+            presa: presa ? Math.round(presa.getBoundingClientRect().width) : null,
+            controles: controles.map((b) => ({
+              aria: b.getAttribute('aria-label'),
+              popup: b.getAttribute('aria-haspopup'),
+              icone: b.querySelector('.p-button-icon')?.className.match(/pi-[\w-]+/g)?.pop() ?? null,
+            })),
+          }
+        })
+    })
+    let resumoMenu = ''
+    const gatilho = page.locator('tbody').getByRole('button', { name: 'Más acciones' }).first()
+    if (await gatilho.count()) {
+      await gatilho.click()
+      await page.waitForTimeout(400)
+      const itens = await page.evaluate(() =>
+        [...document.querySelectorAll('.p-menu .p-menuitem')]
+          .filter((i) => i.offsetParent)
+          .map((i) => i.innerText.trim()),
+      )
+      resumoMenu = ` | menu da 1ª linha: [${itens.join(', ')}]`
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(200)
+    }
+    for (const l of linhas) {
+      const umSo = l.controles.length === 1
+      const eMenu = umSo && l.controles[0].icone === 'pi-ellipsis-v' && l.controles[0].popup === 'true'
+      // Uma ação só (Historial fora de vigente/por vencer/revocado) não abre menu:
+      // um botão solto também é "um controle".
+      const ok = umSo
+      if (!ok) falhas++
+      const c = l.controles.map((x) => `${x.icone}${x.aria ? ` "${x.aria}"` : ''}${x.popup ? ' haspopup' : ''}`)
+      console.log(
+        `${ok ? 'OK    ' : 'FALHA '} ${v.nome} | ${l.linha}${l.estado ? ` [${l.estado}]` : ''} | presa ${l.presa} | ` +
+          `${l.controles.length} controle(s): ${c.join(', ')}${eMenu ? '' : umSo ? ' (ação única, sem menu)' : ''}`,
+      )
+    }
+    console.log(`       ${v.nome}: ${linhas.length} linha(s)${resumoMenu}`)
+  }
+  await browser.close()
+  console.log(falhas ? `${falhas} FALHA(S)` : 'tudo OK')
+  process.exit(falhas ? 1 : 0)
+})().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})
+```
+
+## Apêndice E — `regua.cjs`
+
+Script próprio da Task 10, que confere `depois.json` contra a régua (spec §3) e compara a 1440 com
+`antes.json` (seção 6). A exceção do §5 Step 4 entra com os números exatos, e qualquer outro
+`col1` arquivado menor que o ativo reprova.
+
+```js
+// regua.cjs — confere depois.json contra a régua do item 23 e contra antes.json (1440).
+const fs = require('fs')
+const d = JSON.parse(fs.readFileSync('depois.json', 'utf8'))
+const a = JSON.parse(fs.readFileSync('antes.json', 'utf8'))
+const key = (r, i) => `${r.label}${r.inDialog ? ' D' : ''}#${i}`
+const idx = (arr) => { const m = {}; const c = {}; arr.forEach((r) => { const k = r.label + (r.inDialog ? ' D' : ''); c[k] = (c[k] || 0) + 1; m[`${k}#${c[k]}`] = r }); return m }
+const A = idx(a), D = idx(d)
+const EXC = { '/cursos []': [209, 194], '/administracion [Usuarios]': [201, 186] }
+let falhas = 0
+const out = []
+for (const [k, r] of Object.entries(D)) {
+  const vp = r.label.split(' ')[0]
+  const view = r.label.slice(vp.length + 1).replace(/ ARCH$/, '').replace(/ DIALOGO$/, '')
+  const isArch = / ARCH$/.test(r.label)
+  const isDash = / \/ \[\]/.test(' ' + r.label.slice(vp.length))
+  const msgs = []
+  if (vp === '1024x768') {
+    if (isDash) { if (r.table > r.frame) msgs.push(`dash table ${r.table} > frame ${r.frame}`) }
+    else if (r.scrollW !== r.frame) msgs.push(`scroll ${r.scrollW} != frame ${r.frame}`)
+    if (r.overlap !== 0) msgs.push(`overlap ${r.overlap}`)
+    if (r.truncHeaders.length) msgs.push(`TRUNC ${r.truncHeaders}`)
+  }
+  if (vp === '390x844' && r.stickyW !== null) {
+    if (r.firstBoxCovered !== 0) msgs.push(`box ${r.firstBoxCovered}`)
+    if (isArch) {
+      const ativa = d.find((x) => x.label === r.label.replace(/ ARCH$/, '') && !x.inDialog)
+      if (r.firstColW < ativa.firstColW) {
+        const e = EXC[view]
+        if (e && e[0] === r.firstColW && e[1] === r.free) msgs.push(`EXCECAO col1 ${r.firstColW}<${ativa.firstColW} (free ${r.free})`)
+        else msgs.push(`col1 ${r.firstColW} < ativa ${ativa.firstColW}`)
+      }
+    }
+  }
+  if (vp === '1440x900') {
+    if (r.scrollW !== r.frame) msgs.push(`scroll ${r.scrollW} != frame ${r.frame}`)
+    if (r.overlap !== 0) msgs.push(`overlap ${r.overlap}`)
+    const b = A[k]
+    if (!b) msgs.push('sem par em antes')
+    else {
+      const hd = r.headers.split(' | ').map((h) => h.split(':')), hb = b.headers.split(' | ').map((h) => h.split(':'))
+      hd.forEach(([n, w], i) => { if (n === '·') return; const wb = hb[i] && hb[i][0] === n ? +hb[i][1] : null; if (wb === null) msgs.push(`col ${n} sem par`); else if (+w < wb) msgs.push(`col ${n} ${w} < antes ${wb}`) })
+    }
+  }
+  if (r.inDialog) { const b = A[k]; if (r.scrollW > b.scrollW) msgs.push(`dialogo scroll ${r.scrollW} > antes ${b.scrollW}`) }
+  const real = msgs.filter((m) => !m.startsWith('EXCECAO'))
+  if (real.length) falhas++
+  out.push(`${real.length ? 'REPROVA' : 'passa  '} ${r.label}${r.inDialog ? ' (dialogo)' : ''}${msgs.length ? ' — ' + msgs.join('; ') : ''}`)
+}
+console.log(out.join('\n'))
+console.log(`linhas ${out.length}, reprovações ${falhas}`)
+process.exit(falhas ? 1 : 0)
 ```
