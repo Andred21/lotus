@@ -82,6 +82,36 @@ Os dois arquivos em `.claude/commands/` mantêm o nome e trocam o conteúdo pelo
 §5.4. A rota do Codex de hoje (packet no planejar, `executor: codex` no executar) sobrevive encaixada,
 como a D2 manda. `/revisar-bloco` e `/finalizar-bloco` nascem.
 
+### E8 — os registros de fechamento andam na branch da lane
+
+A §5.6 (Passo 7) e a invariante 10 mandam o main tree tirar a ficha do `backlog.md`, escrever a
+linha do `progress.md` e gravar `closed` **depois** do merge. O main tree não publica esses commits:
+o `pre-push` recusa `git push origin main` e a `main` só recebe PR mesclado (`CONTRIBUINDO.md`). Tudo
+que entrou no backlog até hoje veio pela branch de alguma lane (o `7b14e817` veio pela do 30), o 30
+gravou `closed` na própria branch antes do merge, e a ficha 30 segue no backlog porque o passo
+"o main tree remove depois do merge" não tem por onde chegar à `main`. Decisão do João
+(2026-09-27):
+
+- **Modo normal do `/finalizar-bloco`:** no último commit da lane, antes do push, entram as
+  pendências (o checklist 7 do antigo `/fechar-sprint`), a linha do `historico/progress.md`, a
+  remoção **da própria ficha** do `backlog.md` e o `estado.md` em `closed` (`next_owner: joao`,
+  `next_action: none`). O PR carrega os registros.
+- **PR que volta com correção:** o commit que corrige reescreve o `estado.md` para o estado onde o
+  trabalho recomeça (`executing` ou `reviewing`), porque `closed` deixou de ser verdade.
+- **Modo pós-PR:** no main tree, `git merge --ff-only origin/main` e `lane.sh fechar <NN>`. Nada
+  mais é escrito.
+- **Modo conserto:** a linha `sem-arvore` do `descobrir` é o `fechar` que morreu entre o
+  `git worktree remove` e o `git branch -d`. Branch já mesclada → o command pede ao João o
+  `git branch -d <branch>` no terminal dele, porque a allowlist da `main` nega `git branch -d`
+  (medido em 2026-09-27). Branch não mesclada → para e relata. Nunca `-D`.
+- **Invariante 10 reescrita:** o `backlog.md` entra na `main` só por PR. Ficha nova vem numa PR
+  de docs; a lane remove só a própria ficha, no commit de fechamento. O main tree lê o backlog
+  para abrir lane, e não publica commit.
+- **`/planejar-bloco` com texto livre** propõe a ficha e para. O João a publica por PR de docs,
+  e o command volta com o `NN`.
+
+A §5.3 (Passo 3) e a §5.6 (Passos 2 e 7) valem lidas com esta emenda.
+
 ## Verificação externa
 
 Nenhuma. Este bloco é inteiramente interno ao repositório: commands, agentes, prompts,
