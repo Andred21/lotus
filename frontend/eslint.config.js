@@ -548,7 +548,23 @@ const ACAO_SEM_ANCORA = {
     ":has(JSXElement[openingElement.name.name=/RowActions$|^AppButton$/])" +
     ":not(:has(CallExpression[callee.name='stickyActionsColumn']))",
   message:
-    'Coluna de ação fica presa à direita do invólucro que rola: style={stickyActionsColumn(<rem>)} (item 17).',
+    'Coluna de ação fica presa à direita do invólucro que rola: style={stickyActionsColumn(colunaDeAcoes.width)} (itens 17 e 23).',
+}
+// Item 23 (`D-65`): a coluna presa só encolhe no telefone se a linha colapsar
+// junto, e as duas coisas saem do MESMO booleano de
+// `useCollapsibleActionsColumn`. Com largura literal a tabela volta a cobrir o
+// nome em 390x844 — foi o que a medição achou em oito tabelas (172px do aluno
+// na matrícula). O argumento tem de ser o `.width` que o hook devolve.
+//
+// O que ela NÃO pega: uma tabela que chame o hook e passe `.width` mas esqueça
+// o `collapsed` no `*RowActions` — aí a coluna encolhe e os ícones transbordam.
+// Isso é dos testes de 390px de cada tabela, não desta regra.
+const ACAO_SEM_COLAPSO = {
+  selector:
+    "CallExpression[callee.name='stickyActionsColumn']" +
+    ":not(:has(> MemberExpression[property.name='width']))",
+  message:
+    'A largura da coluna presa vem de useCollapsibleActionsColumn: style={stickyActionsColumn(colunaDeAcoes.width)} (item 23).',
 }
 // Q-6 do review de 2026-08-27. O mini-reset da P-46 crava `list-style: none`
 // em TODO `ul`/`ol` da aplicação, e o WebKit tira a semântica de lista do
@@ -626,7 +642,7 @@ export default defineConfig([
     files: ['src/features/*/components/**/*.{ts,tsx}'],
     ignores: [...FORA_DO_CAMPO_LIGADO],
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, ACAO_SEM_COLAPSO, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, ERRO_DE_CAMPO_A_MAO, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // Gêmeo do bloco acima para os arquivos fora do item 24: MESMO array, menos
@@ -637,7 +653,7 @@ export default defineConfig([
   {
     files: FORA_DO_CAMPO_LIGADO,
     rules: {
-      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
+      'no-restricted-syntax': ['error', ...LISTA_SEM_SEMANTICA, ...REGRAS_COMPONENTE_FEATURE, COR_HARDCODED, ...COR_LITERAL_EM_STYLE, DISABLED_READONLY, DISABLED_READONLY_ESTATICO, ...COLUNA_SEM_LARGURA, ACAO_SEM_ANCORA, ACAO_SEM_COLAPSO, DROPDOWN_SEM_NOME, BOTAO_SEM_PAPEL, ...GRAFIA_LITERAL, ...MONO_LITERAL, ...RAIO_LITERAL, CLEANUP_A_MAO, QUERY_CLIENT_A_MAO],
     },
   },
   // O resto da feature: `api/`, `hooks/`, `pages/` — onde os 6 pontos adotantes
