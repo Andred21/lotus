@@ -148,6 +148,34 @@ original; **quem vence aqui é esta decisão posterior do João**, e o original 
 `[FASE 2]` deste ADR, *"backup do banco (snapshot RDS)"*, já tinha sido vencido pela revisão 2026-09
 do **ADR-09** — veja lá, não se repete aqui.
 
+**Emenda (2026-09-27, promoção do bloco `infra-producao-dns-e-tls`).** O nome público da intranet
+é **`app.lotusotec.cl`**, por decisão do João tomada antes do brainstorming do item 32. Havia quatro
+grafias sem reconciliação: `app.` (a de todo o código deste repo — `deploy/nginx/tls.conf`,
+`deploy/aws/env.prod.example`, runbook `deploy/aws/README.md` §11), `sistema.` (ADR-SITE-006 do
+`lotus-site`, de 2026-09-09, o único registro explícito na zona, hoje apontando para o WordPress),
+`intranet.` (o nome da V1, sem ocorrência em repo nenhum) e `lotus.cl` (placeholder do
+`arquitetura-aws-lotus.md` do Drive). Vence `app.`, e por isso nenhum arquivo deste repo muda por
+causa do nome. A zona `lotusotec.cl` está no Route 53 desde 2026-09-26 (stack `lotus-dns`, repo
+`lotus-site`); o registro nasce por PR lá, nunca à mão no console. O Drive segue com o placeholder
+e o ADR-SITE-006 segue com `sistema.`: **quem vence aqui é esta decisão posterior do João**, e o
+que fazer com o registro `sistema.` e com o ADR do site é do planejamento do item 32, não desta
+emenda.
+
+**Emenda (2026-09-27, bloco `infra-producao-dns-e-tls`).** O item `[FASE 2]` *"TLS
+automático (Let's Encrypt + Certbot no Nginx)"* está **vencido, e de outro jeito**: o certbot roda
+no **host**, não no contêiner do nginx. A emissão foi uma vez só, `--standalone`, com o nginx parado
+(minutos de queda). A renovação é por webroot: o `/.well-known/acme-challenge/` do
+`deploy/nginx/tls.conf` serve `/opt/lotus/certbot`, sem derrubar nada. O `certbot.timer` do sistema
+renova, e o deploy hook versionado `deploy/bin/recarregar-nginx.sh`, ligado por symlink em
+`/etc/letsencrypt/renewal-hooks/deploy/`, faz `nginx -t && nginx -s reload` no contêiner. O
+`deploy.sh` liga o overlay `docker-compose.prod-tls.yml` (443 e `/etc/letsencrypt` montado só para
+leitura) quando o host tem o `tls.conf` e o `/etc/letsencrypt/live`. HSTS de um ano, sem
+`includeSubDomains` nem `preload` (D3 da spec do item 32). **Não há alarme de expiração** até o
+item 34: uma renovação que falhe deixa ~30 dias em silêncio. Runbook em `deploy/aws/README.md` §11.
+Se o `decisao-stack.md` do Drive ainda trouxer o texto original, **quem vence aqui é esta decisão
+posterior do João**, e o original não se apaga. O último `[FASE 2]` deste ADR, *"monitoramento
+básico"*, continua aberto e é o item 34.
+
 ## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
 
 **Regra:**

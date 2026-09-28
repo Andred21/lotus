@@ -274,6 +274,30 @@ repositório prova lock.
   recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
   desta ficha). Turma 7 restaurada ao fim do gate.
 
+## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** bloco que tocar `backend/bootstrap/app.php`
+(`withMiddleware` ou `withExceptions`) ou o middleware de autenticação; revisar em **2026-10-31**.
+
+**Medido em produção pelo item 32, em 2026-09-27 e de novo no fechamento (2026-09-28T02:35Z):**
+`GET https://app.lotusotec.cl/api/courses/archived` sem sessão devolve **401** com
+`Accept: application/json` e **500** sem ele. Anterior ao item 32 e alheio a ele.
+
+**Causa:** o `Authenticate` do Laravel só pula o redirecionamento quando o pedido `expectsJson()`
+(`vendor/.../Auth/Middleware/Authenticate.php:104`). Sem `Accept`, ele monta o destino do
+redirecionamento pelo callback padrão que o `ApplicationBuilder` registra,
+`redirectGuestsTo(fn () => route('login'))` — rota que o Lotus não tem, porque o login é da SPA. A `RouteNotFoundException` nasce antes da `AuthenticationException`, e o
+`shouldRenderJsonWhen` de `api/*` renderiza o que chega: um 500 RFC 7807 no lugar do 401.
+
+**Por que ficou aberta:** o front sempre manda o `Accept`, então nenhum usuário vê o 500; quem o
+provoca é cliente sem o cabeçalho (curl, robô, sonda). Mas ele fere a §5.4 (401 RFC 7807 esperado
+para não autenticado) e, como 500, conta como defeito no registro de erro. O `/fechar-sprint` já
+documenta o sintoma como armadilha de curl, e não como falha do código.
+
+**Fecha quando:** `/api/*` sem sessão e sem `Accept` devolver 401 RFC 7807 — por exemplo
+`redirectGuestsTo` sem rota nomeada para `api/*` —, com teste de feature que faça o pedido sem o
+cabeçalho, visto reprovar antes da correção.
+
 ---
 
 # Documentação e mecanismo
@@ -284,7 +308,7 @@ repositório prova lock.
 a mesma faixa no mesmo dia e mesclou antes, pela PR #105. Ver a nota da colisão em
 [`encerradas.md`](./encerradas.md).)*
 
-**Bloco:** — · **Gatilho:** fecha quando `docs/estrutura-monolito.md` descrever `.claude/hooks/`,
+**Bloco:** 35 (`harness-commands-de-bloco`, desde 2026-09-26; nasceu `31` e foi renumerado em 2026-09-27) · **Gatilho:** fecha quando `docs/estrutura-monolito.md` descrever `.claude/hooks/`,
 `.claude/tests/` e `.claude/settings.json`, ou quando o `CONTRIBUINDO.md` disser o que os cinco
 hooks negam e como se acrescenta entrada à allowlist. Revisar em **2026-10-31**.
 
@@ -303,6 +327,35 @@ recusa diz isso —, e não há doc que explique a régua da allowlist nem por q
 não escreveu nada disso porque o plano não listou entregável de doc; a spec §3.4 cobre a
 consequência de versionar os hooks, mas a spec agora está em `specs/archive/`, que ninguém lê por
 rotina.
+
+## P-92 — a invariante 10 manda o main tree escrever o `backlog.md` na `main`, e nenhum caminho deixa
+
+**Bloco:** 35 (`harness-commands-de-bloco`) · **Quem decide:** João · **Gatilho:** fecha quando o
+fluxo de fechamento tiver um caminho escrito, e exercido uma vez, para a ficha de um bloco fechado
+sair do `backlog.md` — ou quando a invariante 10 for reescrita para o caminho que existe. Revisar em
+**2026-10-31**.
+
+A invariante 10 do `state.md` diz: *"`backlog.md` é escrito somente pelo main tree, na `main`."*
+Mas o main tree não tem como escrever na `main`: o `guard-main` e o `guard-main-shell` negam
+escrita com a árvore na `main`, e o `pre-push` recusa push direto nela (`CONTRIBUINDO.md`). Toda
+mudança chega à `main` por PR, e PR sai de branch, que não é o main tree.
+
+**Medido em 2026-09-27, no fechamento do item 32:** a ficha 30 segue em `backlog.md:328` da
+`origin/main@229994bb`, um dia depois de o item 30 fechar e mesclar (PR #116); a ficha 32 segue em
+`backlog.md:137`, com o bloco em `closed` e mesclado (PR #118). Os dois fechamentos disseram "o
+main tree remove a ficha depois do merge", e nenhum dos dois tinha como. As mudanças do backlog que
+entraram até aqui vieram de branch de lane (`7b14e817`, na do item 30), contra a letra da regra.
+
+**Por que fica aberta:** o João escolheu, no fechamento do item 32, não quebrar a regra por atalho
+e entregar a lacuna ao item 35, que reescreve os comandos de bloco. As saídas que se veem: uma
+branch curta aberta do main tree só para o `backlog.md`, ou a lane remover a própria ficha no PR de
+fechamento, com a invariante reescrita para dizer isso.
+
+**Exceção de 2026-09-28, decidida pelo João:** a ficha 32 saiu do `backlog.md` por commit direto na
+`main`, do main tree, com `LOTUS_FORCA_MAIN=1` no push — sem branch nem PR. O mesmo commit deu à
+ficha 33 a linha `**Depende:** —` que o portão do `lane.sh abrir` exige. É a saída de emergência do
+`CONTRIBUINDO.md`, usada uma vez e registrada aqui; não é o caminho que fecha a pendência. A ficha 30
+continua no `backlog.md`.
 
 ## P-32 — a guarda da lição 13 confere path, não classe
 
@@ -545,40 +598,6 @@ eles somem junto. Por isso a ficha.
 
 Nenhuma das sete é fuga conhecida: são escolhas onde o guarda está mais apertado (a, b, d, e) ou
 mais frouxo (c, f, g) do que talvez se queira, e o bloco parou na linha certa ao não decidir sozinho.
-
-## P-55 — a invariante do espelho proíbe o que toda lane precisa fazer
-
-**Gatilho:** fecha quando o João escolher entre (a) reescrever a invariante para descrever o que as
-lanes fazem de fato, ou (b) dar ao espelho um mecanismo próprio que dispense a escrita manual — por
-exemplo `focused_lane` derivada da árvore corrente em vez de campo escrito. Revisar em
-**2026-10-31**.
-
-O `state.md` diz, na lista do que cada lane pode escrever: *"**Nunca os campos singulares do topo**:
-são espelho de `focused_lane`, e trocar o foco é fronteira durável do main tree."* Mas
-`/planejar-bloco` e `/executar-bloco` leem os singulares, não o bloco da lane em `lanes:` — então
-uma lane que não vire o espelho na própria árvore é planejada e executada contra a lane errada.
-
-**Medido em 2026-08-24:** três lanes viraram o espelho na própria branch, fora do main tree — a
-`lane-c` em `ff5c29f6` (`focused_lane: lane-c`), a `lane-a` no commit de promoção do item 2 e a
-`lane-b` no commit que abre esta ficha. Nenhuma das três podia, pela letra. É a mesma classe do
-achado **Q-2** do review de 2026-08-22, em que a regra de dono foi quebrada por 21 commits no mesmo
-dia em que foi escrita: a regra descreve a intenção (nenhuma lane sobrescreve o foco de outra no
-merge) e proíbe o mecanismo que a operação exige.
-
-**Por que fica aberta:** as duas saídas mudam contrato de workflow lido por comando — decisão do
-João, não de lane em execução. Até lá vale o precedente executado: cada árvore mantém o espelho
-apontando para a lane que a ocupa, e a colisão de merge se resolve na integração serial.
-
-**Quarto caso, 2026-08-28:** a promoção do item 18 (`frontend-estilizacao-padronizacao-de-componentes`)
-para a `lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, com o João
-avisado da pendência antes do commit e decidindo por ela. A alternativa oferecida — gravar só o
-bloco da lane aqui e o espelho no main tree — foi recusada por ping-pong entre árvores. A ficha
-segue aberta: quatro precedentes não reescrevem a invariante.
-
-**Quinto caso, 2026-08-29:** a promoção do item 19 (`frontend-triagem-dos-audits-do-item-18`) para a
-`lane-c` foi escrita da worktree `../fix-frontend`, espelho singular incluído, pelo mesmo motivo do
-quarto: `/planejar-bloco` lê os singulares, e a sessão rodou autônoma, sem o João para escolher o
-ping-pong entre árvores. Cinco precedentes, mesma saída pendente.
 
 ## P-56 — o `XSRF-TOKEN` não é isolado entre árvores; a escrita da aba parada dá 419
 
@@ -837,37 +856,23 @@ bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variá
 Bloco alunos (2026-07-27, spec D11): divergência aceita por decisão do João no mesmo dia — a ordem
 atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 
-## P-77 — o registro A de `app.lotusotec.cl` ainda aponta para a hospedagem antiga, e sem ele não há TLS
+## P-89 — o QR em `https://app.lotusotec.cl/validar/…` não foi decodificado de um PDF de produção
 
-**Bloco:** — · **Gatilho:** fecha quando `app.lotusotec.cl` resolver **exatamente** o EIP
-`18.230.53.197`; a ação é o §11 do `deploy/aws/README.md`, que desde 2026-09-20 tem **quatro**
-passos e não um — emitir o certificado, virar os **seis** campos do `.env` para o domínio e para
-HTTPS (o sexto, `CERTIFICATE_VALIDATION_URL`, entrou pelo item 29 em 2026-09-25), redeployar (o `deploy.sh` já sobe o overlay sozinho quando o certificado existe) e passar a
-renovação para webroot, com `certbot renew --dry-run` como gate. Revisar em **2026-10-31**.
+**Bloco:** `infra-producao-dns-e-tls` (item 32) · **Quem decide:** João · **Gatilho:** o primeiro
+certificado real emitido em produção ter o QR decodificado (`pdftoppm` + `zbarimg`) para
+`https://app.lotusotec.cl/validar/<uuid>`, a página responder 200 e
+`/api/publico/certificados/<uuid>` devolver o `codigo` dele. Revisar em **2026-10-31**.
 
-Medido em 2026-09-04 e remedido em 2026-09-17, na Task 19 do item 10 v2:
-
-| Registro | Valor | |
-|---|---|---|
-| `A` | `185.146.167.195` | hospedagem antiga (WordPress) |
-| `AAAA` | `2a07:7800::195` | hospedagem antiga |
-| EIP da produção | `18.230.53.197` | — |
-
-O pedido do registro foi disparado à Lotus/agência na Task 1; a zona vive em `ns1–ns4.stackdns.com`
-e não temos acesso ao painel. **A prova é a igualdade, nunca "o nome resolve"** — existe curinga
-`*.lotusotec.cl` apontando para o WordPress, então qualquer nome responde.
-
-Enquanto o registro não chega, a produção atende em `http://18.230.53.197` (DoD 2, provado na Task
-15) e o bloco fecha sem TLS: o overlay `docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a
-catraca deles já estão no repositório desde a Task 7, prontos e nunca exercidos contra um
-certificado real. **Nada além do registro A separa os dois estados.**
-
-**Desde o item 29 (2026-09-25), a espera também trava certificado.** Em produção o backend recusa
-emitir e baixar certificado enquanto o `CERTIFICATE_VALIDATION_URL` não for https (500 nomeado,
-`ValidacaoDeCertificadoNaoConfigurada`), e a chave só se preenche no passo 2 do §11 — o de prova
-`LOT-2026-1000` inclusive. É a consequência aceita na spec do item 29 (§4): a proibição do runbook
-virou comportamento, e o registro A passou a ser também o que libera a emissão.
-
+A spec do item 32 (D4, DoD 7) mandava emitir e revogar um certificado sobre dado marcado como teste.
+Em 2026-09-28 a produção não tinha turma elegível (histórico de certificados vazio), e o João decidiu
+não criar em produção a cadeia de curso, turma, aluno e matrícula de teste, que ficaria para sempre
+no banco e na auditoria de um sistema com peso legal. Provado no lugar (review do item 32, Q-1): no
+contêiner `app` de produção, `CertificateValidationUrl::base()` devolve `https://app.lotusotec.cl`,
+com `APP_ENV=production` e a config em cache; o `CertificatePdfTest` prova que o QR do PDF carrega
+`<essa base>/validar/<uuid>`; `/api/publico/certificados/<uuid inexistente>` devolve 404 RFC 7807.
+O 200 de `/validar/<uuid>` só prova que a SPA é servida em https — o fallback do nginx responde 200 a
+qualquer caminho. Falta a igualdade num PDF de produção: a URL lida do QR de um documento que o
+Gotenberg de produção renderizou, não da configuração nem do teste.
 ---
 
 # Travadas em escrita fora do repositório
@@ -1128,3 +1133,26 @@ migration registra `"dump": null`, e o `deploy-sh.test.ts` assere o ramo do dump
 no [run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582), não tinha
 migration nova (`inicio` com `"migrations":[]` e `"dump":null`); o dump segue sem deploy real, e o
 bloco fechou sem pagar o gatilho.
+
+## P-90 — o gate `/up` do `deploy.sh` corre contra o php-fpm quando o deploy recria só o `app`
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
+`deploy/bin/deploy.sh`, ou o próximo botão que sair `erro: /up respondeu 502`; revisar em
+**2026-10-31**.
+
+**Medido no item 32, botão 2 (run
+[36366375279](https://github.com/Gatika-CL/lotus/actions/runs/36366375279), 01:34:00Z):** o `.env`
+novo fez o compose recriar `app`, `scheduler` e `mysql`, e o nginx seguiu de pé. O laço de saúde
+(`deploy.sh:205-211`) espera **só o nginx** ficar `healthy` — e ele já estava, então o laço saiu na
+primeira volta. O `curl` único de `deploy.sh:213` bateu em `/up` antes de o php-fpm novo escutar e
+recebeu 502. O botão saiu `Failed`; o botão 3, sem mudar nada, saiu verde. Sem queda vista de fora.
+
+**Por que importa:** a corrida existe em todo deploy que recria o `app` sem recriar o nginx — mudar
+`.env`, ou promover SHA com imagem de `app` nova e a do nginx igual. O `exit 1` do gate vem depois
+do `up`, com os contêineres novos já de pé, e antes de gravar o `CURRENT_SHA`: o botão fica vermelho
+por um motivo que não é da release, e quem o lê pode recuar o que estava certo.
+
+**Fecha quando:** o gate do `/up` tolerar a subida do php-fpm — várias tentativas com prazo, ou um
+healthcheck do `app` esperado junto com o do nginx —, com catraca em `deploy-sh.test.ts` vista
+reprovar pela sonda que devolve o `curl` único. Pela **P-87**, a correção só chega ao host pela
+reinstalação do runbook §7.

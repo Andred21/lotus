@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (33)
+## Abertas (35)
 
 ### Agrupadas em bloco de execução
 
@@ -30,10 +30,13 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-85 | No sqlite da suíte o `whereBetween` de `start_date` do `AnalyticsQuery` (série e dois rankings) deixa de fora o último dia do período — a produção (MySQL) acerta, a suíte não enxerga a borda; `DataSql::literal` já resolve isso em outro lugar | — | bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de período do dashboard; revisar 2026-10-31 |
 | P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade); o `cicd-host-alinhado-ao-sha` (item 31) fechou em 2026-09-26 sem pagar o gatilho | — | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
+| P-90 | O gate `/up` do `deploy.sh` faz um `curl` só depois de o nginx ficar `healthy`; num deploy que recria o `app` e não o nginx, ele bate antes do php-fpm novo escutar e o botão sai 502 (botão 2 do item 32) | — | próximo commit em `deploy/bin/deploy.sh`, ou o próximo botão com `erro: /up respondeu 502`; revisar 2026-10-31 |
+| P-91 | `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401: o `Authenticate` monta o redirecionamento por `route('login')`, que não existe (medido em produção pelo item 32) | — | bloco que tocar `backend/bootstrap/app.php` ou o middleware de autenticação; revisar 2026-10-31 |
 | P-94 | O diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha (`frame 669 · scroll 672`): herda o piso default de 42rem, e o audit do item 23 só o mediu vazio | — | `medir.cjs` do item 23 medir `scroll` = `frame` na linha `DIALOGO` em 1024 com alumno que tenha turma, ou bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo ou o piso default do `AppDataTable`; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
-| P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | — | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
+| P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | 35 | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
+| P-92 | A invariante 10 manda o main tree escrever o `backlog.md` na `main`, mas os guardas e o `pre-push` não deixam: as fichas 30 e 32 seguem no backlog depois de fechadas e mescladas | 35 | o fechamento ter caminho escrito e exercido para tirar a ficha do backlog, ou a invariante 10 reescrita; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
@@ -44,6 +47,13 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > remedição do fechamento achou o diálogo do Alumno rolando 3px em 1024 quando a tabela tem linha.
 > O João decidiu fechar e registrar. O bloco pagou a `D-65`, que é débito do `backlog.md` e não
 > ficha desta pasta, e não encerrou pendência nenhuma.
+>
+> **O item 32 (`infra-producao-dns-e-tls`) fechou em 2026-09-27 a P-77**, pelo gatilho pago e
+> reprovado de fora no fechamento: `app.lotusotec.cl` resolve o EIP, sem AAAA, e o §11 do runbook
+> rodou inteiro. Abriu a **P-89** na execução (o QR num PDF de produção) e, no fechamento, a
+> **P-90** e a **P-91**, os dois achados de passagem do audit que o review deixou para cá. Tirou do
+> rastro a **P-55**, a **P-87** e a **P-88**, que o item 16 deixou para a `lane-b`. Depois do merge
+> (PR #118) nasceu a **P-92**: a ficha 32 não tinha como sair do `backlog.md`, e fica com o item 35.
 >
 > **O item 16 (`frontend-revisao-ui-por-modulo`) fechou em 2026-09-27 com a fatia 3** e não abriu
 > nem fechou pendência: os achados que não couberam no bloco viraram débito `D-71` e `D-72` no
@@ -95,7 +105,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
-| P-77 | O registro A de `app.lotusotec.cl` aponta para a hospedagem antiga (`185.146.167.195`), não para o EIP `18.230.53.197` — sem ele a produção fica em HTTP e o overlay TLS da Task 7 nunca é exercido | Lotus | `app.lotusotec.cl` resolver exatamente o EIP; depois, §11 do `deploy/aws/README.md`; revisar 2026-10-31 |
+| P-89 | O QR em `https://app.lotusotec.cl/validar/…` não foi decodificado de um PDF de produção — a produção não tinha turma elegível, e o João não quis cadeia de teste no banco | João | o primeiro certificado real ter o QR decodificado para `https://app.lotusotec.cl/validar/<uuid>`; revisar 2026-10-31 |
 | P-78 | A assinatura do relator e o aviso legal caem para uma página própria quando a folha 1 do certificado cresce — medido no `LOT-2026-1000` de produção, PDF com 3 páginas | João | decidir o corte (clamp por comprimento) e implementá-lo, ou um certificado com dado real da Lotus fechar o rodapé na página 1; revisar 2026-10-31 |
 | P-80 | A previsão de custo do mês é **35,74 USD** contra o teto de **30** da decisão D8, e o critério de resize da EC2 (`t4g.medium`, +9 USD/mês) está satisfeito — as duas decisões são a mesma conversa | João | decidir teto **e** resize juntos, com a decisão escrita na spec/ADR que a carrega; revisar 2026-10-31 |
 | P-81 | A access key `AKIA3B7BDINPPYESZA6T` do usuário `lotus-infra`, que provisionou toda a Fase B, continua ativa — a produção não a usa (instance profile), mas é credencial de longa duração sem uso corrente | João | `aws iam list-access-keys --user-name lotus-infra` não devolver mais a chave; revisar 2026-10-31 |
@@ -104,16 +114,21 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo — **disparado em 2026-09-04 e em 2026-09-25, não pago**; revisar 2026-10-31 |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
-| P-55 | A invariante proíbe a lane de escrever os campos singulares do `state.md`, mas cada lane precisa do espelho apontando para si na própria árvore — e três lanes já fizeram isso | João | João escolher entre reescrever a invariante ou dar ao espelho um mecanismo próprio; revisar 2026-10-31 |
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas. Desde o item 12, a mesma raiz deixa o botão de promoção sem Environment | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (1)
 
-**Em rastro:** a **P-87** e a **P-88**, encerradas pelo `cicd-host-alinhado-ao-sha` (item 31) em
-2026-09-26. Fichas completas em [`encerradas.md`](./encerradas.md).
+**Em rastro:** a **P-77**, encerrada pelo `infra-producao-dns-e-tls` (item 32) em 2026-09-27.
+Ficha completa em [`encerradas.md`](./encerradas.md).
+
+**A P-55, a P-87 e a P-88 saíram no fechamento do item 32 (2026-09-27)**, o primeiro da `lane-b`
+depois dos que as encerraram: a P-55 no item 30 (o espelho do `state.md` deixou de existir) e a P-87
+e a P-88 no item 31 (o botão confere o host e o `deploy.sh` fixa `gatika-cl`), todas em 2026-09-26.
+O item 16 as deixou para a lane que as abriu. O rastro durável está nos commits e nas linhas de
+entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-59, a P-75 e a P-79 saíram no fechamento do item 12 (2026-09-26)**, o primeiro posterior ao
 do `backend-config-e-conteudo-de-documento` (item 29), que as encerrou em 2026-09-25 — a P-59 e a

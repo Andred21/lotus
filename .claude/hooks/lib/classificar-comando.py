@@ -538,6 +538,16 @@ GH_LEITURA = {("pr", "view"), ("pr", "list"), ("pr", "diff"), ("pr", "checks"),
 GH_API_ESCRITA = {"-X", "--method", "-f", "--field", "-F", "--raw-field",
                   "--input"}
 
+# `lane.sh` e a unica porta de `bash` na main (spec 2026-09-26, 4.4). O
+# script cria e remove worktree e branch, entao a liberacao e por FORMA
+# EXATA: verbo literal e cada argumento validado. `fechar --force` troca o
+# `git branch -d` por `-D` e fica no terminal do Joao.
+LANE_SCRIPT = ".claude/scripts/lane.sh"
+LANE_TIPOS = {"feat", "fix", "chore", "refactor", "infra", "cicd", "docs"}
+LANE_NN = re.compile(r"[1-9][0-9]*")
+LANE_SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+LANE_ALIAS = re.compile(r"[a-z0-9.-]+")
+
 
 def familia_docker(args):
     if not args:
@@ -646,6 +656,31 @@ def familia_gh(args):
               " ".join(args[:2]))
 
 
+def familia_lane(args):
+    """args[0] ja e LANE_SCRIPT. Libera so as quatro formas da spec."""
+    resto = args[1:]
+    if not resto:
+        negar("`lane.sh` sem verbo.")
+    verbo, params = resto[0], resto[1:]
+    if verbo == "descobrir" and not params:
+        return
+    if verbo in ("conferir", "fechar") and len(params) == 1 \
+            and LANE_NN.fullmatch(params[0]):
+        return
+    if verbo == "abrir" and len(params) in (3, 5):
+        nn, tipo, slug = params[:3]
+        if LANE_NN.fullmatch(nn) and tipo in LANE_TIPOS \
+                and LANE_SLUG.fullmatch(slug):
+            if len(params) == 3:
+                return
+            if params[3] == "--modelo" and LANE_ALIAS.fullmatch(params[4]):
+                return
+    negar("`lane.sh %s` fora das formas liberadas na main: `descobrir`, "
+          "`conferir <NN>`, `fechar <NN>` e `abrir <NN> <tipo> <slug> "
+          "[--modelo <alias>]`. `fechar --force` e do terminal do Joao."
+          % " ".join(resto))
+
+
 def classificar_simples(tokens):
     # Antes de desasparar: em posicao de flag, aspas e barra invertida sao
     # ambiguidade, e ambiguidade nega. O nome do comando (tokens[0]) ja e
@@ -671,6 +706,8 @@ def classificar_simples(tokens):
     if base == "pint":
         negar("`pint` reformata, logo escreve. Rode no seu terminal, de "
               "dentro de backend/ e sempre com argumento.")
+    if nome == "bash" and args and args[0] == LANE_SCRIPT:
+        return familia_lane(args)
     if base in NEGADOS_SEMPRE:
         negar("`%s` executa codigo arbitrario ou escreve arquivo." % base)
     if base == "git":

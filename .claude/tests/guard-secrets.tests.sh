@@ -1,3 +1,4 @@
+[[ -n ${DIR_TESTES:-} ]] || { printf 'rode pelo run-all.sh: %s nao roda avulso\n' "${BASH_SOURCE[0]}" >&2; exit 1; }
 SEGREDOS="$DIR_HOOKS/guard-secrets.sh"
 
 decisao_seg() { campo_json "$1" '.hookSpecificOutput.permissionDecision'; }

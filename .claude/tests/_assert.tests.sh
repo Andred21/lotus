@@ -1,3 +1,4 @@
+[[ -n ${DIR_TESTES:-} ]] || { printf 'rode pelo run-all.sh: %s nao roda avulso\n' "${BASH_SOURCE[0]}" >&2; exit 1; }
 # Prova o proprio arcabouco. O bug que o harness original apanhou mora aqui:
 # contencao tratada como glob faz a crase virar escape, e nenhum trecho com
 # crase casa por mais que o texto o contenha.

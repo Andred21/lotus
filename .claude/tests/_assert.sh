@@ -1,6 +1,12 @@
 # Asserter minimo da suite do harness. Sem dependencia externa.
 # O contador e global porque run-all.sh faz `source` de cada arquivo de teste,
 # e nao um subshell: variavel setada dentro do teste sobrevive.
+#
+# REGRA: todo *.tests.sh comeca pela trava de uma linha que recusa rodar avulso
+# (`[[ -n ${DIR_TESTES:-} ]] || { ...; exit 1; }`). Avulso, este arquivo nao
+# carrega, os caminhos descartaveis saem vazios e `git -C ""` cai no repo real
+# (Q-1 do review do item 30, reincidencia do 50b82a5e do item 28). O
+# avulso.tests.sh reprova arquivo novo sem a trava.
 
 DIR_TESTES=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 DIR_HOOKS=$(cd -- "$DIR_TESTES/../hooks" && pwd)

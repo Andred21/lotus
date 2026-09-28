@@ -84,8 +84,11 @@ Declare a classificação em uma linha. Se qualquer critério falhar, use o flux
 Leia `## Handoff de execução` do `active_plan`:
 
 - `executor: claude` ou seção ausente → execute com o ciclo Superpowers normal.
-- `executor: codex` → carregue `mcp__codex__codex` via ToolSearch e invoque a skill
-  `lotus-execute-block` com `plan_path`, intervalo de tasks e commit base. Depois do report:
+- `executor: codex` → carregue o Codex — primeiro `mcp__codex__codex` via ToolSearch; ausente, o
+  plugin `codex-companion` por Bash, em background e **com `--write`** (a execução delegada
+  escreve): `node "$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)" task --fresh --write "<prompt>"`
+  — e invoque a skill `lotus-execute-block` com `plan_path`, intervalo de tasks e commit base.
+  O gate abaixo vale igual nos dois caminhos. Depois do report:
   1. valide os markers e o contrato;
   2. revise o diff real (`git status` + `git diff`) contra o plano — o report não substitui o diff;
   3. rode a verificação do plano você mesmo antes de aceitar;

@@ -71,6 +71,13 @@
   aberto pelo João a partir do agrupamento das 33 fichas de `pendencias/abertas.md` por "lado" —
   três chaves de `backend/config/` que nenhum bloco hospedava (`P-79`, `P-75`, `P-59`) — **fechado em
   2026-09-25**.
+  O `30`, o `35`, o `36` e o `37` nasceram em 2026-09-26, abertos pelo João a partir da comparação
+  do harness do Lotus com o do `Ela-Decora/ElaDecora-Brain@5eb74c0`; o `30` **fechou em
+  2026-09-26**. **Os três últimos nasceram `31`, `32` e `33` na branch do `30`, sem chegar aqui, e
+  foram renumerados em 2026-09-27** na integração do `30`, porque esta fila publicou antes o `31` a
+  `34` de infra: renumera quem chega depois. **A ficha que uma sessão de 2026-09-21 rascunhou como
+  "29 `harness-politica-de-modelo-e-esforco`" nunca foi commitada e colidia com o `29` real**: a
+  parte A dela foi absorvida pelo `35`, e a parte B virou o `37`.
   O `31` nasceu em 2026-09-26, aberto pelo João juntando a `P-88` e a `P-87` pelo gatilho comum
   (o próximo commit que mudar `deploy/bin/deploy.sh`), com a `P-86` condicional. **O `30` foi
   saltado**: a branch órfã `chore/30-harness-estado-por-bloco` (`../lotus-harness`) já o usa sem
@@ -111,12 +118,11 @@ abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **32** `infra-producao-dns-e-tls` | Infra | Produção não emite certificado sem domínio HTTPS (`CERTIFICATE_VALIDATION_URL` vazio, P-79). A zona está no Route 53 desde 2026-09-26 — o que faltava de terceiro deixou de faltar |
-| 2 | **33** `infra-producao-email-ses` | Infra | O alerta síncrono de acesso suspeito (ADR-21/D7) e o reset de senha não chegam a ninguém: `MAIL_MAILER=log` em produção |
-| 3 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 (fechado em 2026-09-27), que já aplicou (b) e (c) em quatro das 12 tabelas, e é P2 |
-| 4 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
-| 5 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (alarme de certificado) e, de preferência, do 33 |
-| 6 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
+| 1 | **33** `infra-producao-email-ses` | Infra | O alerta síncrono de acesso suspeito (ADR-21/D7) e o reset de senha não chegam a ninguém: `MAIL_MAILER=log` em produção |
+| 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 (fechado em 2026-09-27), que já aplicou (b) e (c) em quatro das 12 tabelas, e é P2 |
+| 3 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
+| 4 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (fechado em 2026-09-27, alarme de certificado) e, de preferência, do 33 |
+| 5 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
 Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
@@ -127,59 +133,9 @@ tela nova pede run própria dentro dele.
 
 # Fila priorizada
 
-## 32. `infra-producao-dns-e-tls`
-
-**Prioridade:** P0 — produção não emite certificado sem ele · **Frente:** Infra · **Contexto:** sim
-**Fonte:** `P-77` (a reescrever no planejamento); `deploy/aws/README.md` §11; `deploy/nginx/tls.conf`;
-`docker-compose.prod-tls.yml`; `deploy/aws/env.prod.example`; spec do item 10 v2 (D7); lotus-site
-`docs/adr/ADR-SITE-006.md`, `docs/infra/zona-dns-lotusotec.md`, `docs/infra/delegacao-2026-09-26.md`,
-`infra/lotus-dns.yaml` e os débitos `D-49`/`D-51`/`D-52` de lá; Notion site `7.2.1` e `8.2.1`; Drive
-`arquitetura-aws-lotus.md` §1.5/§5 (Opção A: Let's Encrypt/Certbot no nginx da EC2).
-
-**Por que existe:** a produção roda na "fase sem DNS" do runbook §11 — `SESSION_DOMAIN=null`,
-`SESSION_SECURE_COOKIE=false`, `CERTIFICATE_VALIDATION_URL` vazio — e por isso **recusa emitir
-certificado** (500 nomeado da P-79). A `P-77` dizia que o registro A dependia da Lotus e de um painel
-sem acesso; em 2026-09-26 a zona `lotusotec.cl` foi delegada ao Route 53 (stack `lotus-dns`, repo
-`Andred21/lotus-site`, PR #18) — a causa passou de "sem acesso" para "registro nunca criado", e o dono
-passou a ser o João. O overlay TLS, o `301` e o certbot existem só como texto e teste de unidade;
-nunca foram exercidos com certificado real.
-
-**Decisão prévia, do João, antes do brainstorming — o nome.** Há quatro grafias sem reconciliação:
-`app.` (todo o código deste repo: `tls.conf:51-54`, `env.prod.example`, runbook §11, packet de
-2026-08-22), `sistema.` (ADR-SITE-006 de 2026-09-09, único registro explícito na zona nova, hoje
-apontando para o WordPress), `intranet.` (V1 real; expectativa do João; zero ocorrências em qualquer
-repo) e `lotus.cl` (placeholder do Drive). **Este bloco não decide** — recebe a decisão escrita
-(emenda datada do ADR-14) e a aplica.
-
-**Escopo:**
-- registro A (e AAAA, se houver) do nome escolhido → EIP `18.230.53.197`, por PR no `lotus-site`
-  (`infra/lotus-dns.yaml`), nunca à mão no console; se o nome for `sistema.`, é retarget do registro
-  existente;
-- security group 80/443 conferido; runbook §11 de ponta a ponta: `certbot --standalone` uma vez,
-  overlay `docker-compose.prod-tls.yml`, os seis campos de env (`APP_URL`, `FRONTEND_URL`,
-  `SESSION_DOMAIN`, `SANCTUM_STATEFUL_DOMAINS`, `SESSION_SECURE_COOKIE=true`,
-  `CERTIFICATE_VALIDATION_URL`), `certbot renew --dry-run` com o hook de reload;
-- `301` HTTP→HTTPS provado em produção; HSTS **decidido** na spec (hoje não existe em doc nenhum);
-- restrição cruzada registrada no runbook e na ficha do site: quando o site publicar CAA (`D-49` de
-  lá), a zona tem de listar `letsencrypt.org` além de `amazon.com`, senão este repo não renova;
-- runbook §11 reescrito — "pedir o registro à Lotus/agência" virou "PR no lotus-site";
-- se o nome não for `app.`, os três arquivos do repo mudam e o packet/ADR registram o porquê.
-
-**Fora:** e-mail (item 33); alarmes (item 34); cutover do site (`B5` do lotus-site); o wildcard
-Let's Encrypt do WordPress (`D-51` do site, prazo 2026-10-11) — só toca a intranet se o nome for
-`sistema.` e ele continuar estacionado no WordPress até lá.
-
-**Paga:** `P-77` (reescrita: dono João, gatilho = registro + §11). **Destrava** a `P-79` em produção.
-
-**DoD:** login real em `https://<nome>.lotusotec.cl` com cookie `Secure`; um certificado emitido em
-produção com QR resolvendo em `https://`; `certbot renew --dry-run` verde; `curl -I http://<nome>`
-devolvendo `301`; medição em `audits/`.
-
----
-
 ## 33. `infra-producao-email-ses`
 
-**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim
+**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim · **Depende:** —
 **Fonte:** spec do item 10 v2 (`specs/archive/2026-09-02-infra-producao-provisionamento-aws-design.md:53-58`
 — "vira bloco próprio; a criação do item na fila é do João"); `deploy/aws/env.prod.example:116`
 (`MAIL_MAILER=log` "até o bloco de SES"); ADR-21/D7 (alerta síncrono); `docs/operacao-segredos.md:48,60-62`;
@@ -315,6 +271,116 @@ construídos pelo item 34 — aqui só se medem.
 
 **DoD:** release, fluxo crítico, backup e restore têm evidência; a divergência de disponibilidade
 está formalmente resolvida.
+
+---
+
+## 30. `harness-estado-por-bloco`
+
+**Prioridade:** P2 · **Frente:** Harness · **Contexto:** não · **Depende:** —
+**Fonte:** comparação com `Ela-Decora/ElaDecora-Brain@5eb74c0` em 2026-09-26; spec compartilhada
+[`specs/2026-09-26-harness-paridade-eladecora-design.md`](./specs/2026-09-26-harness-paridade-eladecora-design.md), §3 e §4.
+
+**Objetivo:** o estado de cada bloco passa a morar na pasta dele
+(`docs/superpowers/blocos/<NN>-<slug>/estado.md`), as lanes passam a ser descobertas por
+`git worktree list`, e o `state.md` vira contrato. Acaba a classe de divergência "estado da `main` ×
+estado da árvore" que o `SessionStart` acusa.
+
+**Escopo:** `.claude/scripts/lane.sh` (`descobrir`, `abrir` com portão de teto e de `**Depende:**`,
+`conferir`, `fechar`), com offset de porta de 1 a 3 e a receita de `.env` do `.env.example`
+automatizada; `session-start.sh` alimentado pelo `lane.sh`; liberação do `lane.sh` no
+`guard-main-shell.sh`; `state.md` reescrito como contrato; `CLAUDE.md` §3; `.env.example` com a
+linha +3; suíte em `.claude/tests/`.
+
+**Fora:** commands (item 35) e aceitação externa (item 36).
+
+**Integração:** a PR só mescla quando nenhuma lane do fluxo antigo estiver viva (decisão D6 da
+spec).
+
+**DoD:** `run-all.sh` verde; portão recusando a quarta lane e a dependência transitiva; `abrir` e
+`fechar` vistos rodar numa lane real, com stack no offset reservado e sem sobra de contêiner,
+volume, worktree ou branch.
+
+---
+
+## 35. `harness-commands-de-bloco`
+
+**Prioridade:** P2 · **Frente:** Harness · **Contexto:** não · **Depende:** 30
+**Fonte:** a mesma spec, §5; absorve a parte A do rascunho de política de modelo e esforço de
+2026-09-21 (ver a nota de numeração no topo).
+
+**Objetivo:** `/planejar-bloco`, `/executar-bloco`, `/revisar-bloco` e `/finalizar-bloco` no
+desenho do ElaDecora, em bash, com cada etapa invocando a skill do superpowers por `Skill()`
+explícito, e modelo e esforço declarados por fase e por papel.
+
+**Escopo:** os quatro commands; agentes de papel em `.claude/agents/` com `model` e `effort`
+(a ferramenta `Agent` não aceita esforço por chamada) e a tabela única `.claude/papeis.md`;
+`.claude/prompts/verificador-achado.md` e `gabarito-lotus.md`; plugin
+`superpowers@claude-plugins-official` no `settings.json`; aposentadoria das skills `revisar-sprint`
+e `fechar-sprint`; `model`/`effort` nas demais entradas; caminhos novos nos contratos do Codex em
+`.agents/skills/`; `CLAUDE.md` §4; `docs/estrutura-monolito.md` descrevendo `.claude/` (commands,
+agents, hooks, scripts, prompts, tests, `settings.json`) e a régua da allowlist do
+`guard-main-shell`; catraca `commands.tests.sh`.
+
+**Fora:** aceitação externa (item 36); sinal de contexto cheio (item 37).
+
+**Integração:** branch empilhada na ponta do 30; mescla depois dele. Fecha a **P-84**.
+
+**DoD:** catraca vermelha quando some um `Skill(superpowers:…)` esperado ou um `model:`, verde de
+volta — provado nos dois sentidos; os quatro commands vistos rodar de ponta a ponta num bloco real
+pequeno.
+
+---
+
+## 36. `harness-aceitacao-externa`
+
+**Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** 35
+**Fonte:** a mesma spec, §6.
+
+**Objetivo:** bloco cujo resultado depende de ação fora do repositório não fecha sem a prova dessa
+ação, e espera por ela em `blocked` sem ocupar lane.
+
+**Escopo:** `.claude/scripts/aceitacao.sh` (`gerar`, `conferir`) com provas HTTP declarativas
+`<alias> GET|HEAD <caminho> -> <código>` e itens manuais com resultado e data;
+`.claude/aceitacao-aliases.conf` (`producao`, `local`); portão de `efeito_externo` e modo aceitação
+no `/finalizar-bloco`; tabela `## Aguardando aceitação` neste arquivo; suíte contra servidor HTTP
+local.
+
+**Integração:** branch empilhada na ponta do 35; mescla depois dele.
+
+**DoD:** um bloco com um item automático e um manual percorre `PENDENTE` → `OK` de verdade.
+
+---
+
+## 37. `harness-sinal-de-contexto-cheio`
+
+**Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** —
+**Fonte:** parte B do rascunho de 2026-09-21, conferida contra a documentação do Claude Code
+(`hooks.md`, `settings-reference.md`, `sub-agents.md`) naquela data.
+
+**Não promovível sem decisão do João.** O pedido original — compactar ao passar de 150k tokens,
+independente do modelo — não existe como hook:
+
+- nenhum hook dispara por tamanho de contexto, e nenhum hook pode invocar `/compact`;
+- o nativo é `autoCompactEnabled` e `autoCompactWindow`, que é **percentual da janela** — 150k é 75%
+  de 200k e 15% de 1M, o oposto de "independente do modelo";
+- `PreCompact` e `PostCompact` só observam; não têm campo de decisão;
+- `transcript_path` é gravado de forma assíncrona e pode atrasar em relação à conversa: medir por
+  ele é estimativa;
+- subagente não tem medição de contexto própria, e o contexto dele morre com ele.
+
+**As três saídas, que se somam e nenhuma sozinha é o pedido:**
+
+1. `autoCompactWindow` calibrado para a janela do modelo em uso — compacta, sem limiar absoluto;
+2. hook que estima tokens pelo `transcript_path` e injeta aviso por
+   `hookSpecificOutput.additionalContext` ao passar de 150k — limiar absoluto, **não** compacta;
+   se entrar, nasce com a trava anti-laço do `stop-verify.sh` e `exit 0` sempre;
+3. não deixar o contexto chegar lá: `context: fork` nas fases pesadas e diff sempre por caminho de
+   arquivo, nunca colado no controlador — o `/revisar-bloco` do item 35 já faz a segunda metade.
+
+**Fora:** trocar de modelo em tempo de execução (`PreModelSwitch` só bloqueia troca em curso) e
+`CLAUDE_CODE_SUBAGENT_MODEL_FORCE` (anula o frontmatter de todo subagente, que o item 35 constrói).
+
+**DoD:** o caminho escolhido implementado e **visto disparar**.
 
 ---
 
