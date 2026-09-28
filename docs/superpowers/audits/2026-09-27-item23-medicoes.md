@@ -1275,7 +1275,9 @@ tudo OK
 
 A `D-65` pedia medir um sinal de rolagem no invólucro. **Não se implementa.** Em 1024x768, o piso
 de 42rem zera a rolagem que vinha do piso em toda tabela. Na seção 6, `scroll` = `frame` nas 12
-consumidoras com presa (as 18 linhas, com as visões de arquivados) e no diálogo do alumno. Nos dois
+consumidoras com presa do §1 da spec e no diálogo do alumno. São 18 linhas: as 12 consumidoras, que
+já incluem a lista de matrículas arquivadas (#5), e as 6 visões de arquivados que alternam dentro da
+mesma tabela. Nos dois
 painéis do Dashboard, `table` = `frame`, e o transbordo de 29–31px deles é conteúdo e fica fora do
 bloco (Observação 1). Então não sobra rolagem a anunciar. Em 390x844, o invólucro já se anuncia pelas
 sombras da UI-10 (`background-attachment: local/scroll`, `AppDataTable/style.ts`), e a coluna presa
