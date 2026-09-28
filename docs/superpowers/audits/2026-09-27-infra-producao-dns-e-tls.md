@@ -59,3 +59,35 @@ template executado é o da `main` do site, idêntico ao da PR.
   `app.lotusotec.cl. A 18.230.53.197` nos dois lados, `sim`; os seis do SES e o `_dmarc` `sim`.
 - DoH em 2026-09-27T22:15:15-03:00: `dns.google` A `['18.230.53.197']`, AAAA `[]`;
   `cloudflare-dns.com` A `['18.230.53.197']`.
+
+## Task 10 — reinstalação, certificado e promoção
+
+- SG `lotus-web` (sa-east-1): `80 80 0.0.0.0/0`, `443 443 0.0.0.0/0`, `22 22 <o /32 do João>`.
+  `app.lotusotec.cl` A `['18.230.53.197']`.
+- §7 rodado pelo João de `/home/jvbat/projetos/lotus` avançado até `42a50a4d`, com `arvore-igual`
+  contra `upstream/main`. Hashes no host iguais aos da árvore: `085e9ecb1bcb tls.conf`,
+  `4d28a5273788 backup-db.sh`, `84b2e1cbe6ad deploy.sh`, `ef5cddb672df recarregar-nginx.sh`,
+  `f5f6a2a6ca3e verificar-backup.sh`.
+- `stop nginx` às 2026-09-28T01:23:22Z. Certbot 2.9.0, `certonly --standalone`, conta ACME em
+  `contacto@lotusotec.cl`. `certbot certificates`: `app.lotusotec.cl`, chave ECDSA, validade
+  2026-12-27 00:27:08+00:00. A primeira tentativa não chegou a rodar: o marcador do e-mail foi colado
+  literal e o shell leu o `<` como redirecionamento.
+- Botão 1, [run 36365979779](https://github.com/Gatika-CL/lotus/actions/runs/36365979779):
+  `host alinhado ao SHA alvo` (01:26:54Z), `DEPLOY OK: a8ba3361…` (01:27:47Z). **Janela de queda:
+  01:23:22Z a 01:27:47Z, 4 min 25 s.** O `.env` não tinha sido editado: os cookies saíam sem `secure`
+  e sem `domain`.
+- `.env` editado pelo João (seis chaves do §11.3, por script `sed`, com backup).
+- Botão 2, [run 36366375279](https://github.com/Gatika-CL/lotus/actions/runs/36366375279):
+  `Failed`, `erro: /up respondeu 502` (01:34:00Z). O `.env` novo fez o compose recriar `app`,
+  `scheduler` e `mysql`; o nginx seguiu `Running` e já `healthy`, então o laço de saúde do `deploy.sh`
+  passou na hora e o `curl /up` bateu antes do php-fpm novo escutar. Sem queda de fora; o
+  `CURRENT_SHA` seguiu X, gravado pelo botão 1. Corrida latente do `deploy.sh` em todo deploy que só
+  recria o `app` — proposta de pendência no fechamento.
+- Botão 3, [run 36366650213](https://github.com/Gatika-CL/lotus/actions/runs/36366650213):
+  `host alinhado ao SHA alvo` (01:37:17Z), `DEPLOY OK: a8ba3361…` (01:37:45Z), `estado final:
+  Success`.
+- De fora, depois do botão 3: `https://…/up` 200; `/` 200 e `/api/nada` 404, os dois com
+  `strict-transport-security: max-age=31536000`; `http://…/x` 301 para `https://app.lotusotec.cl/x`,
+  sem HSTS; `http://…/up` 200 (isenção da sonda). Certificado servido: `CN = app.lotusotec.cl`,
+  emissor `Let's Encrypt` `YE2`, `notAfter=Dec 27 00:27:08 2026 GMT`. `GET /sanctum/csrf-cookie`:
+  `XSRF-TOKEN` e `lotus-session` com `domain=app.lotusotec.cl; secure`, a sessão também `httponly`.
