@@ -1,7 +1,7 @@
 # Medições do item 23 — `frontend-tabelas-reserva-e-rolagem`
 
-**Spec:** `docs/superpowers/specs/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md`
-**Plano:** `docs/superpowers/plans/2026-09-27-frontend-tabelas-reserva-e-rolagem.md`
+**Spec:** `docs/superpowers/specs/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md`
+**Plano:** `docs/superpowers/plans/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem.md`
 **Ambiente:** offset +2 (SPA `:5175`, API `:8082`), es-CL, tema claro, `admin@lotus.cl`,
 Playwright-core read-only (Apêndice A). Turma medida: 1.
 
@@ -973,6 +973,9 @@ O `scroll` mede 669, 323 e 960 em 1024, 390 e 1440. É igual ao "antes" nos trê
 passa. A tabela do diálogo não tem presa e não tem piso (`min-width` 0px), e a régua dela se reduz
 a isso. Ela segue com `rows 0`, como no §3 e no §4, porque o 1º alumno da lista não tem certificado.
 
+> **Superado no fechamento (seção 9).** O `min-width` 0px era efeito da tabela vazia, não ausência de
+> piso. Com uma linha, o diálogo herda os 42rem do default e rola 3px em 1024x768.
+
 ### Observações
 
 1. **O transbordo de conteúdo do Dashboard persiste.** Em 1024, o `scrollWidth` dos dois painéis é
@@ -1283,6 +1286,34 @@ bloco (Observação 1). Então não sobra rolagem a anunciar. Em 390x844, o inv�
 sombras da UI-10 (`background-attachment: local/scroll`, `AppDataTable/style.ts`), e a coluna presa
 tem sombra própria permanente. A 1ª coluna, agora fora da presa (seção 6, `box 0`), deixa à vista
 que a linha continua. Fecha a direção (a) da `D-65` no `/fechar-sprint`.
+
+## 9. Remedição do fechamento — `7f829137`
+
+O `/fechar-sprint` de 2026-09-28 rodou de novo o `medir.cjs` (Apêndice A) e o `umcontrole.cjs`
+(Apêndice D) no HEAD do review. Os dois foram conferidos idênticos aos anexos. O motivo foi que a
+seção 6 mediu em `dcda46e3`, antes das correções do review, e o `RowActions.tsx` mudou em
+`167fb7ac`. Mesmo ambiente da seção 6, sem a fixture: as 7 visões de arquivados medem vazio e não
+foram refeitas.
+
+- **18 visões ativas com presa, nos três viewports:** `frame`, `scroll`, `table`, piso, presa,
+  sobreposição, `col1`, `free`, `box`, `text` e `TRUNC` idênticos ao `depois.json`. Só `rows` subiu,
+  +1 por entidade, porque a fixture restaurou os 7 arquivados na visão ativa.
+- **Um controle por linha (390x844):** `tudo OK`, com o `⋮` único de 72px nas 8 visões.
+- **Diálogo do alumno: reprova a régua de 1024 por 3px.** O 1º alumno da lista agora tem uma turma,
+  e a tabela mede `rows 1`:
+
+| Viewport | `frame` | `scroll` | `table` | Piso | Régua |
+|---|---|---|---|---|---|
+| 1024x768 | 669 | 672 | 672 | 672px (42rem) | **reprova** (`scroll` > `frame` em 3px) |
+| 390x844 | 323 | 672 | 672 | 672px (42rem) | sem presa: a régua de 390 não se aplica |
+| 1440x900 | 960 | 960 | 960 | 672px (42rem) | passa |
+
+A seção 6 concluiu que a tabela do diálogo "não tem piso" a partir do `min-width` 0px da tabela vazia.
+Com dado, ela herda o default de 42rem da §4.1, e a moldura do diálogo em 1024 tem 669px. O "antes"
+com dado teria rolado 99px (piso de 48rem). O bloco reduziu a rolagem, mas não a zerou. Decisão do
+João no fechamento: fechar o bloco e registrar o resíduo na **P-94**. A seção 8 conta o diálogo
+entre as tabelas com `scroll` = `frame` em 1024. Com dado, isso não vale, e o resíduo fica na mesma
+ficha.
 
 ## Apêndice A — `medir.cjs`
 

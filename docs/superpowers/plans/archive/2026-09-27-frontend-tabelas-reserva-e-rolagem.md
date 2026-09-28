@@ -8,7 +8,7 @@
 
 **Tech Stack:** React 19 + TS, PrimeReact 10.9.8 via `shared/ui`, Tailwind v4, vitest + jsdom + Testing Library, ESLint `no-restricted-syntax` (esquery), Playwright-core (medição read-only).
 
-**Spec:** `docs/superpowers/specs/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md` (aprovada pelo João em 2026-09-27, com os refinamentos do §3 e do §4.2).
+**Spec:** `docs/superpowers/specs/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md` (aprovada pelo João em 2026-09-27, com os refinamentos do §3 e do §4.2).
 
 ## Global Constraints
 

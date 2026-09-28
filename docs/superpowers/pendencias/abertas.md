@@ -12,6 +12,26 @@
 
 # Frontend
 
+## P-94 — o diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha
+
+**Bloco:** — · **Gatilho:** fecha quando o `medir.cjs` do audit do item 23 (Apêndice A), com um
+alumno que tenha turma, medir `scroll` = `frame` na linha `DIALOGO` em 1024x768. O mesmo vale para
+qualquer bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo do Alumno ou o piso
+default do `AppDataTable/style.ts`. Revisar em **2026-10-31**.
+
+Medido em 2026-09-28, no fechamento do item 23 (`frontend-tabelas-reserva-e-rolagem`), em
+`7f829137`, offset +2, es-CL. A tabela de turmas do diálogo do Alumno (consumidora 15 da spec do
+item 23) mede `frame 669 · scroll 672 · table 672` em 1024x768. A régua da spec §3 pede
+`scrollWidth == clientWidth`, e reprova por 3px.
+
+A causa é o piso default de 42rem (672px) da §4.1, que o diálogo herda como toda consumidora sem
+`pt` próprio. A moldura do diálogo em 1024 tem 669px, 3px a menos. O audit do item 23 mediu o
+diálogo só vazio, com `rows 0` e `min-width` 0px, e concluiu que ele "não tem piso". A seção 9 do
+audit corrige isso. Antes do bloco, o piso era 48rem, e o mesmo diálogo com dado teria rolado 99px.
+
+Ficou aberta por decisão do João no gate de fechamento do item 23. O bloco fechou com o resíduo
+registrado, sem reabrir a execução.
+
 ## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
 
 **Bloco:** — · **Gatilho:** fecha quando uma régua por estado, no molde do `describe` da P-30

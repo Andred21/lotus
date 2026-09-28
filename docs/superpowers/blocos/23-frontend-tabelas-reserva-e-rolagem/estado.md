@@ -2,12 +2,12 @@
 schema_version: 3
 id: 23
 slug: 23-frontend-tabelas-reserva-e-rolagem
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+workflow_state: closing
+next_owner: joao
+next_action: "answer_integration_menu rebase sobre a main, PR e remocao da ficha 23 e da D-65 pelo main tree"
 resume_state: null
-active_spec: docs/superpowers/specs/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
-active_plan: docs/superpowers/plans/2026-09-27-frontend-tabelas-reserva-e-rolagem.md
+active_spec: docs/superpowers/specs/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
+active_plan: docs/superpowers/plans/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem.md
 active_review: null
 active_acceptance: null
 context_packet: null
@@ -17,9 +17,9 @@ branch: refactor/23-frontend-tabelas-reserva-e-rolagem
 worktree: ../fix-frontend
 offset: 2
 lane_base: 162cbaa7
-commit: 861d28dc
+commit: 7f829137
 blocker: null
-updated_at: 2026-09-28T11:30:00-03:00
+updated_at: 2026-09-28T01:28:13-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -104,3 +104,35 @@ tabelas à esquerda do ícone. No caminho apareceu o Q-4, que o review tinha dei
 
 Gates depois das correções: `pnpm lint` ok, `pnpm build` ok, `pnpm test` com 158 arquivos e 989
 testes verdes. Review limpo.
+
+## Fechamento (2026-09-28)
+
+Fechado nesta árvore, sem rebase, com o `/fechar-sprint` antigo, por instrução do João. A regra de
+transição do `state.md` da `main` foi seguida: onde o comando diz `state.md`, vale este arquivo. O
+`state.md` desta árvore não foi tocado, e a `lane-c` segue nele em `executing` até o rebase
+trocá-lo pelo contrato da `main`.
+
+- **§0, critério de aceite.** O `medir.cjs` e o `umcontrole.cjs` rodaram de novo em `7f829137`
+  (audit, seção 9). As 18 visões ativas com presa medem idênticas à seção 6 nos três viewports, e o
+  `umcontrole` dá `tudo OK`. **O diálogo do Alumno reprova a régua de 1024 por 3px** (`frame 669 ·
+  scroll 672`). O audit o tinha medido só vazio. O João decidiu fechar e registrar: o resíduo virou a
+  **P-94**.
+- **Gates.** Backend com **1221 passed / 5 skipped**. Front com lint 0, build verde e **158 arquivos /
+  989 testes** verdes. `pint` e `typescript:transform` são N/A: `git diff 162cbaa7..HEAD --
+  backend/ generated.ts` vazio.
+- **Código morto e leis.** Nenhum `.gitkeep` novo, nenhuma sobra de `reducedFloorTablePt` ou
+  `formatDateTime`. As exportações novas (`narrowFloorTablePt`, `Timestamp`) têm consumidor. O
+  diff não importa `primereact` nem outra feature, e o §5 do `CLAUDE.md` não foi ferido.
+- **Pendências.** Nasce a **P-94**. Nenhuma fecha. O rastro de `encerradas.md` não é da lane.
+- **Arquivamento.** Plano e spec foram para `plans/archive/` e `specs/archive/`, e as referências do
+  audit e do plano acompanharam.
+- **Histórico.** A linha do item 23 entrou em `historico/progress.md`, e a de 2026-09-03 (item 25)
+  desceu para o `progress-archive.md`. A narrativa do bloco é este arquivo, e o `state-archive.md`
+  não recebe nada.
+- **Backlog.** A ficha 23 e a `D-65` saem pelo main tree depois do merge (invariante 10), como no
+  bloco 32. A `D-73` entrou nesta branch antes do fechamento, por decisão do João no review (Q-3).
+
+O bloco fica em `closing`, e não em `closed`, porque nada dele está na `main`. A integração é do
+João: rebase sobre a `main`, PR e merge. O rebase vai pedir resolução no `state.md`, nas pendências
+e no `progress.md`, que a `main` também mexeu. A P-94 é o próximo número livre, e a P-93 é do bloco
+33, ainda não mesclado.
