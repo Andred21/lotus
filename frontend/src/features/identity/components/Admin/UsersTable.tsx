@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, reducedFloorTablePt } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn, Timestamp } from '@shared/ui'
 import type { UserData } from '@shared/types/generated'
-import { formatDateTime, roleLabel, type ArchivableRow } from '@shared/lib'
+import { roleLabel, type ArchivableRow } from '@shared/lib'
 import { UserRowActions } from './UserRowActions'
 import { userWidths } from './userColumns'
 
@@ -43,9 +43,6 @@ export function UsersTable({
   return (
     <SearchableTableFrame
       table={table}
-      // UI-02 de `2026-09-04-lotus-ui-review-administracion.md`: o piso
-      // default rolava em 1024x768 e a coluna presa cobria "Último acceso".
-      pt={reducedFloorTablePt}
       searchPlaceholder={t('admin.searchPlaceholder')}
       emptyState={
         <AppEmptyState
@@ -61,6 +58,11 @@ export function UsersTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
+      // Piso de 390 medido (item 23, audit §5): 149px de 1ª coluna contra 204px livres.
+      // Varrido no navegador (audit §5, Step 4): acima de 42rem a presa também cresce com
+      // `table-fixed` e o livre encolhe; 56rem é o teto com box 0 (col1 201px, livre 186px,
+      // margem 1px). Não alcança o col1 da ativa (204px): nenhum piso fecha as duas pernas.
+      pt={archived ? narrowFloorTablePt('56rem') : undefined}
     >
       <AppColumn
         field="name"
@@ -86,7 +88,7 @@ export function UsersTable({
         field="last_login"
         header={t('common.lastLogin')}
         sortable
-        body={(u: UserData) => (u.last_login ? formatDateTime(new Date(u.last_login)) : '—')}
+        body={(u: UserData) => (u.last_login ? <Timestamp value={new Date(u.last_login)} /> : '—')}
         style={largura.lastLogin}
       />
       {archived && archivedColumns(t)}

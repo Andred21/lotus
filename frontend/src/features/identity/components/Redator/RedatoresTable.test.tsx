@@ -38,29 +38,6 @@ const montar = (mode: 'active' | 'archived' = 'active') =>
     />,
   )
 
-describe('RedatoresTable — largura mínima da tabela (UI-03)', () => {
-  it('usa um piso menor que os 48rem default, para não forçar rolagem em 1024x768 (718px de moldura)', () => {
-    // A moldura padrão do AppDataTable (`min-w-[48rem]` = 768px) é maior que os
-    // 718px disponíveis em 1024x768 — o piso vence e a tabela é forçada a
-    // rolar mesmo sem precisar, e a coluna de ações presa (`right: 0`) passa a
-    // cobrir "Último acceso" com 50px de sobreposição (UI-03,
-    // `2026-09-04-lotus-ui-review-personas.md`). Redatores reduz o piso para
-    // caber nos 718px sem rolagem.
-    montar()
-
-    const tabela = document.querySelector('table') as HTMLTableElement
-    expect(tabela.className).not.toContain('min-w-[48rem]')
-    expect(tabela.className).toContain('min-w-[42rem]')
-  })
-
-  it('mantém o piso reduzido também na visão de arquivados', () => {
-    montar('archived')
-
-    const tabela = document.querySelector('table') as HTMLTableElement
-    expect(tabela.className).toContain('min-w-[42rem]')
-  })
-})
-
 /** Q-1 do review de 2026-09-26 (UI-01 de Pessoas, classe C): em 390x844 a
  * moldura tem 276px e a coluna presa de 12rem (192px) deixava 8px do nome
  * visíveis — só a inicial. Nenhum piso resolve (a coluna precisaria de ~70% da
@@ -85,5 +62,33 @@ describe('RedatoresTable — ações colapsam no telefone (UI-01)', () => {
     expect(screen.getByRole('button', { name: 'redator.resendInvitation' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'common.moreActions' })).toBeNull()
     expect(larguraDaColunaDeAcoes()).toBe('12rem')
+  })
+})
+
+describe('RedatoresTable — piso estreito abaixo de sm (item 23, audit §5)', () => {
+  it('em arquivados, o piso é o medido para esta visão', () => {
+    montar('archived')
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('57.5rem')
+  })
+})
+
+describe('RedatoresTable — Último acceso (item 23)', () => {
+  it('sai no Timestamp, com o instante do backend no dateTime', () => {
+    renderWithProviders(
+      <RedatoresTable
+        redatores={[{ ...REDATOR, last_login: '2026-09-27T23:24:00Z' } as RedatorRow]}
+        loading={false}
+        onView={() => {}}
+        mode="active"
+        onModeChange={() => {}}
+        onArchive={() => {}}
+        onRestore={() => {}}
+        busy={false}
+      />,
+    )
+    expect(document.querySelector('td time')?.getAttribute('dateTime')).toBe('2026-09-27T23:24:00.000Z')
   })
 })

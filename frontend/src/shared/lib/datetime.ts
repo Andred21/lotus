@@ -12,25 +12,26 @@ function activeLocale(): string {
   return i18n.language || 'es-CL'
 }
 
-/** Hora no formato HH:MM. */
+/**
+ * Hora no formato HH:MM — 24h (`h23`) em es-CL/pt-BR, 12h com AM/PM (`h12`)
+ * em en.
+ *
+ * O `hourCycle` é explícito, e não o default do `Intl` para o locale: o CLDR
+ * do ICU 78 (Node 22) e do Chromium 152 passou a resolver `es-CL` para `h12`
+ * (era `h23`) sem nenhuma troca de código — o relógio do cabeçalho passou a
+ * mostrar "02:05 p. m." em vez de "14:05" só por atualização de runtime. O
+ * produto quer 24h no idioma do cliente chileno e em pt-BR, e mantém o AM/PM
+ * de en.
+ */
 export function formatTime(date: Date): string {
-  return date.toLocaleTimeString(activeLocale(), { hour: '2-digit', minute: '2-digit' })
+  const locale = activeLocale()
+  const hourCycle = locale.startsWith('en') ? 'h12' : 'h23'
+  return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hourCycle })
 }
 
 /** Data no formato curto do idioma ativo (dd-mm-aaaa em es-CL). */
 export function formatDate(date: Date): string {
   return date.toLocaleDateString(activeLocale())
-}
-
-/**
- * Data + hora no formato curto do idioma ativo ("12-08-2026 14:32" em es-CL).
- * Usado no "último acesso" das tabelas de Usuários e Redatores.
- *
- * Compõe os dois formatters acima em vez de chamar `Intl` de novo: o locale
- * ativo já é resolvido por eles, num lugar só.
- */
-export function formatDateTime(date: Date): string {
-  return `${formatDate(date)} ${formatTime(date)}`
 }
 
 /**

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ServerTable } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass } from '@shared/ui'
+import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass } from '@shared/ui'
 import type { StudentData } from '@shared/types/generated'
 import { studentWidths } from './studentColumns'
 
@@ -37,6 +37,8 @@ export function StudentsTable({
       loading={table.loading}
       error={table.error}
       onRetry={table.refetch}
+      // Piso de 390 medido (item 23, audit §5): 230px de 1ª coluna contra 204px livres.
+      pt={narrowFloorTablePt('40rem')}
     >
       <AppColumn
         field="name"

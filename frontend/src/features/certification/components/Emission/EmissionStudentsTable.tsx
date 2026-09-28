@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, AppTag, AppButton, AppEmptyState, IdentityCell, stickyActionsColumn, identifierClass } from '@shared/ui'
+import { AppDataTable, AppColumn, AppTag, AppEmptyState, IdentityCell, narrowFloorTablePt, stickyActionsColumn, identifierClass, useCollapsibleActionsColumn } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { EmissionPanelEnrollmentData, EnrollmentApprovalStatus } from '@shared/types/generated'
 import { rowCertKind } from '../../lib/certStatus'
 import type { EmissionCounts } from '../../hooks/useEmissionPanelState'
 import { emissionWidths } from './emissionColumns'
+import { EmissionRowActions } from './EmissionRowActions'
 
 type Props = {
   enrollments: EmissionPanelEnrollmentData[]
@@ -34,6 +35,7 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, b
   const { t } = useTranslation()
   const largura = emissionWidths()
   const table = useTableFilter(enrollments)
+  const colunaDeAcoes = useCollapsibleActionsColumn('6rem')
 
   return (
     <AppDataTable
@@ -45,6 +47,8 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, b
       loading={loading}
       first={table.first}
       onPage={table.onPage}
+      // Piso de 390 medido (item 23, audit §5): 196px de 1ª coluna contra 170px livres.
+      pt={narrowFloorTablePt('39.75rem')}
       footerCount={t('certificate.studentsCount', { total: counts.total, approved: counts.aprobados })}
       emptyMessage={<AppEmptyState icon="pi pi-users" title={t('certificate.emptyStudents')} />}
     >
@@ -87,25 +91,17 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, b
         style={largura.certificate}
       />
       <AppColumn
-        body={(e: EmissionPanelEnrollmentData) => {
-          const kind = rowCertKind(e)
-          if (kind === 'emitido') {
-            return <AppButton label={t('certificate.view')} text onClick={() => onView(e)} />
-          }
-          if (kind === 'sin_emitir') {
-            return (
-              <AppButton
-                label={t('certificate.emit')}
-                text
-                disabled={blocked}
-                aria-describedby={blocked ? blockedReasonId : undefined}
-                onClick={() => onEmit(e)}
-              />
-            )
-          }
-          return null
-        }}
-        style={stickyActionsColumn('8rem')}
+        body={(e: EmissionPanelEnrollmentData) => (
+          <EmissionRowActions
+            enrollment={e}
+            blocked={blocked}
+            blockedReasonId={blockedReasonId}
+            onEmit={onEmit}
+            onView={onView}
+            collapsed={colunaDeAcoes.collapsed}
+          />
+        )}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </AppDataTable>
   )

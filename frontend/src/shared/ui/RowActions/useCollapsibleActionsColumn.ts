@@ -15,11 +15,12 @@ const COLLAPSED_WIDTH = '4.5rem'
  * `style={stickyActionsColumn(acoes.width)}`, que é a âncora que a catraca
  * `ACAO_SEM_ANCORA` do `eslint.config.js` procura em toda coluna de ação.
  *
- * Opt-in por tabela, e não no `stickyActionsColumn` de todas: a coluna só pode
- * encolher se a linha colapsar junto, e cada tabela que liga isto passa a ter
- * um layout de telefone novo, medido no navegador e não suposto. Hoje:
- * Redactores, Alumnos, Usuarios e Roles (item 16 fatia 3). As outras oito
- * tabelas da `D-65` são do item 23.
+ * Não mora dentro do `stickyActionsColumn` porque a coluna só pode encolher se
+ * a linha colapsar junto, e o `collapsed` tem de chegar ao `*RowActions` da
+ * tabela. Desde o item 23 as 12 tabelas com coluna presa ligam isto — as
+ * quatro da fatia 3 do item 16 e as oito da `D-65`, medidas no navegador —, e
+ * a catraca `ACAO_SEM_COLAPSO` do `eslint.config.js` reprova coluna presa cuja
+ * largura não venha daqui.
  *
  * Tabela de ação única (Roles, Alumnos) não passa `collapsed` a ninguém: um
  * botão só já cabe nos 4.5rem.

@@ -55,6 +55,7 @@ export * from './RowActions'
 export * from './SearchableTableFrame'
 export * from './SectionLabel'
 export * from './StatValue'
+export * from './Timestamp'
 // Arquivo plano pelo mesmo critério do `archivedColumns`: grafia não é componente.
 export * from './typography'
 export * from './AppLogo'

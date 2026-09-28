@@ -62,4 +62,14 @@ describe('Clock', () => {
 
     expect(container.querySelector('[lang]')?.getAttribute('lang')).toBe('pt-BR')
   })
+
+  it('é um Timestamp: um <time> com o instante corrente, e a classe do posicionador fica por fora', () => {
+    const { container } = render(<Clock className="hidden md:block" />)
+
+    const time = container.querySelector('time')
+    expect(time?.getAttribute('dateTime')).toBe(QUANDO.toISOString())
+    // `md:block` no próprio <time> derrubaria a grade de ícones.
+    expect(time?.className).not.toContain('md:block')
+    expect((container.firstElementChild as HTMLElement).className).toBe('hidden md:block')
+  })
 })

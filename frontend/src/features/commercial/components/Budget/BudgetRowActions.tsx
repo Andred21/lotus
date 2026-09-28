@@ -13,12 +13,14 @@ export function BudgetRowActions({
   busy,
   onView,
   onRestore,
+  collapsed,
 }: {
   budget: BudgetData
   archived: boolean
   busy: boolean
   onView: (b: BudgetData) => void
   onRestore: (b: BudgetData) => void
+  collapsed: boolean
 }) {
   const { can } = usePermissions()
 
@@ -29,6 +31,7 @@ export function BudgetRowActions({
       canRestore={can('commercial.budget.restore')}
       onRestore={() => onRestore(budget)}
       onView={() => onView(budget)}
+      collapsed={collapsed}
     />
   )
 }
