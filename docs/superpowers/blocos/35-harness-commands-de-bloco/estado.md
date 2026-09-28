@@ -6,7 +6,7 @@ workflow_state: planning
 next_owner: claude
 next_action: continue_active_planning
 resume_state: null
-active_spec: null
+active_spec: docs/superpowers/blocos/35-harness-commands-de-bloco/spec.md
 active_plan: null
 active_review: null
 active_acceptance: null
@@ -17,9 +17,9 @@ branch: chore/35-harness-commands-de-bloco
 worktree: ../lotus-35-harness-commands-de-bloco
 offset: 3
 lane_base: 42a50a4d
-commit: 42a50a4d
+commit: 45e23b2b
 blocker: null
-updated_at: 2026-09-27T23:29:37-03:00
+updated_at: 2026-09-27T23:37:48-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
