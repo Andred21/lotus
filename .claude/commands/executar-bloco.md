@@ -30,8 +30,8 @@ Invoque `Skill(caveman, "ultra")`. Confirme em uma linha que carregou.
 
 ## Passo 2 — Validar o estado
 
-Descubra a branch atual (`git rev-parse --abbrev-ref HEAD`) e confira contra o regex de lane das
-Global Constraints: `^(feat|fix|chore|refactor|infra|cicd|docs)/([0-9]+)-(.+)$`. Fora desse padrão,
+Descubra a branch atual (`git rev-parse --abbrev-ref HEAD`) e confira contra o regex de lane:
+`^(feat|fix|chore|refactor|infra|cicd|docs)/([0-9]+)-(.+)$`. Fora desse padrão,
 pare: execução acontece dentro da worktree do bloco, nunca no main tree. `bash
 .claude/scripts/lane.sh descobrir` dá o inventário, se precisar confirmar qual lane é esta.
 
@@ -56,7 +56,12 @@ sessão — **não conserte o arquivo**, relate:
 O campo `executor` do `estado.md` diz a rota. Para `codex`, os `paths_autorizados` exatos vêm da
 seção `## Handoff de execução` do `active_plan` — o `estado.md` só copia `claude`/`codex`.
 
-- **`executor: codex`.** Carregue o Codex — primeiro `mcp__codex__codex` via `ToolSearch`; ausente,
+- **`executor: codex`.** Decidida a rota, faça o Passo 4 antes de seguir — grava `executing` no
+  `estado.md`, sem commitar. O gate abaixo roda no lugar do Passo 5 nesta rota: não invoque
+  `subagent-driven-development` nem `executing-plans`, o Passo 5.1 não se aplica, e ao final siga
+  direto para o Passo 6.
+
+  Carregue o Codex — primeiro `mcp__codex__codex` via `ToolSearch`; ausente,
   o plugin `codex-companion` por Bash, em segundo plano e **com `--write`** (a execução delegada
   escreve):
 
@@ -65,11 +70,13 @@ seção `## Handoff de execução` do `active_plan` — o `estado.md` só copia 
   ```
 
   Invoque a skill `lotus-execute-block` com `plan_path` (o `active_plan` do estado), o intervalo
-  de tasks a executar e o commit base. Depois do report:
+  de tasks a executar e o commit base — o prompt diz ao Codex que ele deixa as mudanças sem
+  commitar e não toca o `estado.md`. Depois do report:
   1. valide os markers e o contrato;
   2. revise o diff real (`git status` + `git diff`) contra o plano — o report não substitui o diff;
   3. rode a verificação do plano você mesmo antes de aceitar;
-  4. commit por task ou grupo coeso, nos paths exatos;
+  4. commit por task ou grupo coeso, nos paths exatos — o primeiro desses commits leva junto o
+     `estado.md` gravado no Passo 4;
   5. `RECOMMENDED_TRANSITION: blocked` ou diff fora de `paths_autorizados` → `workflow_state:
      blocked` com `blocker`, sem aceitar o diff.
 
@@ -100,15 +107,24 @@ updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
 ```
 
 A invariante 6 proíbe um commit que só mude o `estado.md`: a mudança de estado tem de entrar no
-mesmo commit do artefato que prova a transição. Deixe a edição no working tree, sem `git add`.
-Quando o Passo 5 despachar o primeiro implementador do plano, o prompt do despacho manda ele dar
-`git add` nos paths da própria task **e** em `docs/superpowers/blocos/<NN>-<slug>/estado.md`
-juntos — assim a transição para `executing` entra no commit que prova a primeira task, não num
+mesmo commit do artefato que prova a transição. Deixe a edição no working tree, sem `git add`. Quem
+faz esse primeiro commit de task depende da rota do Passo 3:
+
+- `executor: codex` — é o gate do Passo 3 quem commita (item 4 dele), com o `estado.md` junto.
+- `executor: claude`, escolha `subagent-driven-development` — o Passo 5 despacha o primeiro
+  implementador do plano, e o prompt do despacho manda ele dar `git add` nos paths da própria
+  task **e** em `docs/superpowers/blocos/<NN>-<slug>/estado.md` juntos.
+- `executor: claude`, escolha `executing-plans` — não há despacho: a própria sessão faz o
+  primeiro commit de task, e é ela quem dá esse `git add` duplo.
+
+Nos três casos, a transição para `executing` entra no commit que prova a primeira task, não num
 commit à parte. Retomando de `executing`, pule este passo: a transição já está commitada.
 
-## Passo 5 — Executar
+## Passo 5 — Executar (rota `claude`)
 
-Conforme a escolha do Passo 3, invoque **uma** das duas — nunca as duas:
+Este passo vale só para `executor: claude`; a rota `executor: codex` já rodou o próprio gate no
+Passo 3, no lugar deste passo, e seguiu direto para o Passo 6. Conforme a escolha do Passo 3,
+invoque **uma** das duas — nunca as duas:
 
 - Escolha padrão: `Skill(superpowers:subagent-driven-development)`.
 - Escolha `--simples` ou bloco pequeno: `Skill(superpowers:executing-plans)`.
@@ -122,11 +138,15 @@ Confirme em uma linha que carregou. Deixe que ela conduza o loop.
   leva `model: "opus"`.
 - O prompt de **todo** implementador leva a linha: "Invoque
   `Skill(superpowers:test-driven-development)` antes de escrever código."
+- Vindo de `ready_for_execution` (Passo 4), o prompt do **primeiro** implementador despachado leva
+  também a instrução de dar `git add` nos paths da própria task **e** em
+  `docs/superpowers/blocos/<NN>-<slug>/estado.md` juntos, no mesmo commit. Retomando de
+  `executing`, essa linha não entra — a transição já está commitada.
 - **Stack.** Quando o bloco toca `backend/`, suba o stack antes da primeira task:
   `cd <lane> && docker compose up -d` (`<lane>` é a raiz desta worktree, a mesma da sessão). As
   portas saem do `.env` da lane, pelo offset dela.
 
-  A P-03 caiu (spec §3.2): backend não roda mais no main tree.
+  A P-03 caiu (spec compartilhada §3.2): backend não roda mais no main tree.
 
 ### Passo 5.1 — Pipeline de profundidade 1
 
@@ -155,6 +175,10 @@ rm "$rev/frontend/node_modules"   # so o link; nunca rm -r: atravessaria para o 
 git worktree remove "$rev"
 ```
 
+As duas últimas linhas — o `rm` do link e o `git worktree remove` — rodam numa chamada de Bash
+nova: variável de shell não atravessa chamadas, e a revisão em segundo plano leva minutos. Refaça
+o caminho como `../lotus-rev-<sha>` (o mesmo criado acima), não `$rev`.
+
 Sem isso o revisor leria arquivos que o implementador seguinte está editando e reportaria achado
 fantasma, e qualquer suíte que ele rodasse mediria uma árvore intermediária. Worktree de revisão
 não conta no teto de três lanes e não casa o padrão de lane.
@@ -167,7 +191,9 @@ não conta no teto de três lanes e não casa o padrão de lane.
 - Antes de tocar arquivo: `git status`. Arquivo sujo: `git diff <arquivo>` e leitura fresca
   imediatamente antes da edição.
 - O WIP do João é intocável; em conflito, o working tree existente vence.
-- `git add` somente nos paths exatos da task. Commits devem manter escopo e prova coerentes.
+- `git add` somente nos paths exatos da task — exceção única: o primeiro commit de task depois do
+  Passo 4, que leva também o `estado.md` (Passo 4 e Passo 5). Commits devem manter escopo e prova
+  coerentes.
 - Registre progresso fino em `.superpowers/sdd/progress.md` quando a técnica de execução exigir.
 - Desvio de convenção deve ser justificado no ledger; desvio de lei exige decisão explícita do
   João.
@@ -180,7 +206,10 @@ ferramenta ficou verde. Implemente somente o que o `active_plan` deste bloco ped
 
 ## Passo 6 — Preservar as decisões
 
-Ao final, a skill do Passo 5 apresenta a lista **"Rulings I made"**. Copie-a para
+A fonte da lista depende da rota do Passo 3. `executor: claude`: ao final, a skill do Passo 5
+apresenta a lista **"Rulings I made"**. `executor: codex`: a fonte é o `## Deviations and
+limitations` do report do Codex, somado a qualquer decisão que a sessão tomou ao aceitar o diff
+(gate do Passo 3, itens 2 a 4). Copie o que houver para
 `docs/superpowers/blocos/<NN>-<slug>/rulings.md`, uma decisão por linha, com o que custa se
 estiver errada — é o que permite ao João desfazer uma decisão tomada em nome dele. Sem rulings,
 grave a linha `Nenhuma decisão foi tomada em nome do João.` Commit.
