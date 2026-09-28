@@ -830,10 +830,13 @@ certificado real emitido em produção ter o QR decodificado (`pdftoppm` + `zbar
 A spec do item 32 (D4, DoD 7) mandava emitir e revogar um certificado sobre dado marcado como teste.
 Em 2026-09-28 a produção não tinha turma elegível (histórico de certificados vazio), e o João decidiu
 não criar em produção a cadeia de curso, turma, aluno e matrícula de teste, que ficaria para sempre
-no banco e na auditoria de um sistema com peso legal. Provado de fora no lugar: `/validar/<uuid>`
-responde 200 em https; `/api/publico/certificados/<uuid inexistente>` devolve 404 RFC 7807; o
-`CERTIFICATE_VALIDATION_URL` está entre os seis campos contados no host. Falta a igualdade no PDF —
-a URL que o QR carrega, lida do QR, não da configuração.
+no banco e na auditoria de um sistema com peso legal. Provado no lugar (review do item 32, Q-1): no
+contêiner `app` de produção, `CertificateValidationUrl::base()` devolve `https://app.lotusotec.cl`,
+com `APP_ENV=production` e a config em cache; o `CertificatePdfTest` prova que o QR do PDF carrega
+`<essa base>/validar/<uuid>`; `/api/publico/certificados/<uuid inexistente>` devolve 404 RFC 7807.
+O 200 de `/validar/<uuid>` só prova que a SPA é servida em https — o fallback do nginx responde 200 a
+qualquer caminho. Falta a igualdade num PDF de produção: a URL lida do QR de um documento que o
+Gotenberg de produção renderizou, não da configuração nem do teste.
 ---
 
 # Travadas em escrita fora do repositório

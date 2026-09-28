@@ -134,8 +134,20 @@ item 32 e alheio a ele (o front sempre manda o `Accept`); o 500 também sai com 
   `XSRF-TOKEN=…; expires=…; Max-Age=7200; path=/; domain=app.lotusotec.cl; secure; samesite=lax` e
   `lotus-session=…; expires=…; Max-Age=7200; path=/; domain=app.lotusotec.cl; secure; httponly; samesite=lax`.
 - Login real do João com o admin, tela autenticada recarregada: ok, 2026-09-27T22:45-03:00.
-- QR (D4, DoD 7): **não provado.** A produção não tem turma elegível e o histórico de certificados
-  está vazio; o João decidiu não criar a cadeia de teste em produção. Provado no lugar:
-  `https://…/validar/00000000-0000-4000-8000-000000000000` 200 (a SPA serve a página) e
-  `/api/publico/certificados/<o mesmo>` 404 RFC 7807 (`type` `…/errors/not-found`). A decodificação
-  do QR fica para o primeiro certificado real: **P-89**.
+- QR (D4, DoD 7): **não provado de ponta a ponta.** A produção não tem turma elegível e o histórico
+  de certificados está vazio; o João decidiu não criar a cadeia de teste em produção. Provado no
+  lugar:
+  - Leitura sem escrita no contêiner `app` de produção, feita no review (Q-1): `php artisan tinker
+    --execute` com `app(CertificateValidationUrl::class)->base()` devolveu `https://app.lotusotec.cl`
+    (2026-09-28T02:27:14Z); no mesmo contêiner, `app()->environment()` = `production` e
+    `app()->configurationIsCached()` verdadeiro (02:27:57Z). É o ramo de produção, que recusa chave
+    sem `https://`, lendo a config que o entrypoint cacheou — não o `.env` do host.
+  - O `CertificatePdfService` monta o QR com `CertificateValidationUrl::para()`, e
+    `CertificatePdfTest::test_qr_aponta_para_a_chave_de_validacao_quando_preenchida` prova que o QR do
+    PDF carrega `<base>/validar/<uuid>`.
+  - `/api/publico/certificados/00000000-0000-4000-8000-000000000000` 404 RFC 7807 (`type`
+    `…/errors/not-found`).
+
+  O `https://…/validar/00000000-0000-4000-8000-000000000000` 200 só prova que a SPA é servida em
+  https: o `location /` faz `try_files $uri $uri/ /index.html`, e qualquer caminho responde 200. A
+  decodificação do QR de um PDF de produção fica para o primeiro certificado real: **P-89**.
