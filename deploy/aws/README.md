@@ -558,7 +558,7 @@ nada na hora: a renovação falha em silêncio e o certificado expira até 90 di
 A ordem abaixo é a da spec do item 32 (§6). Tudo que escreve no host é do João; os portões são
 leituras.
 
-### 11.1 Antes de parar o nginx — dois portões e uma reinstalação
+### 11.1 Antes de parar o nginx — dois portões, uma reinstalação e duas variáveis
 
 1. **DNS de fora igual ao EIP** (os dois `curl` acima). Sem isto o `--standalone` falha na
    validação e consome uma das 5 tentativas por hora que o Let's Encrypt concede ao nome.
@@ -572,12 +572,26 @@ leituras.
 E o host tem de estar **reinstalado pelo §7** a partir de uma árvore igual à `main` do corporativo
 — inclusive `bin/recarregar-nginx.sh` e o `tls.conf` com HSTS —, senão o botão do 11.4 recusa.
 
+Por último, **as duas variáveis da queda**, definidas agora, no shell do host em que o 11.2 vai
+rodar. Com o nginx parado cada minuto é produção fora do ar, e um marcador `<…>` colado literal o
+shell lê como redirecionamento: o comando não roda (aconteceu no item 32). `X` é o SHA da `main` do
+corporativo, o da árvore reinstalada pelo §7 e o que o 11.4 promove:
+
+```bash
+EMAIL=contacto@lotusotec.cl
+X='cole aqui o SHA de 40 hexadecimais'
+[[ $X =~ ^[0-9a-f]{40}$ ]] && echo "X ok" || echo "PARE: X não é um SHA de 40 hexadecimais" >&2
+```
+
+A sessão SSH caiu depois disto? Defina as duas de novo antes de seguir: o 11.2 e o recuo do 11.4
+usam só `"$EMAIL"` e `"$X"`, e recusam rodar com elas vazias.
+
 ### 11.2 Emitir o certificado (uma vez, com o nginx parado)
 
 ```bash
 sudo apt-get install -y certbot
 sudo docker compose -p lotus --project-directory /opt/lotus -f /opt/lotus/docker-compose.prod.yml stop nginx
-sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m <e-mail> --non-interactive
+sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m "${EMAIL:?defina no 11.1}" --non-interactive
 sudo test -f /etc/letsencrypt/live/app.lotusotec.cl/fullchain.pem && echo certificado ok
 ```
 
@@ -649,7 +663,7 @@ quebrado a 443 pode ter respondido mesmo assim (um 502, por exemplo) e o header 
 ```bash
 sudo mv /opt/lotus/nginx/tls.conf /opt/lotus/nginx/tls.conf.off
 # os seis campos de volta aos valores da coluna "Fase sem DNS" da tabela acima
-sudo /opt/lotus/bin/deploy.sh <X — o sha de 40 hexadecimais do 11.4>
+sudo /opt/lotus/bin/deploy.sh "${X:?defina no 11.1}"
 ```
 
 O botão passa a recusar (`nginx/tls.conf ausente`) até o conserto — é o esperado, não um defeito.
