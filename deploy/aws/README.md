@@ -610,8 +610,10 @@ PDF**. Não herda o `FRONTEND_URL`, de propósito (P-79).
 
 ### 11.4 Subir com o overlay — pelo botão
 
-Promova pelo botão do corporativo (§8) o SHA que já está em `/opt/lotus/CURRENT_SHA`, ou o novo. A
-conferência de alinhamento passa porque o §7 foi refeito; o `deploy.sh` vê o `live/` e sobe com o
+Promova pelo botão do corporativo (§8) o SHA `X` da `main` do corporativo — o mesmo da árvore
+reinstalada no 11.1 (§7). `CURRENT_SHA` só serve se já for ele: promover outro SHA compara um
+`nginx/tls.conf` diferente do host, e o botão recusa (`.github/scripts/conferir-alinhamento.sh:59`).
+A conferência de alinhamento passa porque o §7 foi refeito; o `deploy.sh` vê o `live/` e sobe com o
 overlay; o nginx volta em 80 e 443, **já com HSTS de um ano** (`Strict-Transport-Security:
 max-age=31536000`, sem `includeSubDomains` nem `preload` — decidido na spec do item 32). Fim da
 queda.
@@ -636,12 +638,15 @@ propósito, porque o healthcheck do nginx e o gate pós-deploy do `deploy.sh` fa
 por um ano. Não existe "voltar para HTTP"; o recuo de um TLS quebrado é consertar o TLS.
 
 **Recuo de emergência do deploy** — só serve **antes** de qualquer navegador ter visto o HSTS, isto
-é, quando o `deploy.sh` abortou com o nginx `unhealthy` e a 443 nunca respondeu:
+é, quando o `deploy.sh` abortou com o nginx `unhealthy` e a 443 nunca respondeu. Cuidado: com o app
+quebrado a 443 pode ter respondido mesmo assim (um 502, por exemplo) e o header sai igual, porque o
+`add_header ... always` do `tls.conf` não depende do upstream estar de pé — o teste real não é "a
+443 respondeu", é "nenhum navegador chegou a ver o HSTS":
 
 ```bash
 sudo mv /opt/lotus/nginx/tls.conf /opt/lotus/nginx/tls.conf.off
 # os seis campos de volta aos valores da coluna "Fase sem DNS" da tabela acima
-sudo /opt/lotus/bin/deploy.sh "$(cat /opt/lotus/CURRENT_SHA)"
+sudo /opt/lotus/bin/deploy.sh X
 ```
 
 O botão passa a recusar (`nginx/tls.conf ausente`) até o conserto — é o esperado, não um defeito.
@@ -656,14 +661,22 @@ nginx, de pé — e falharia. O `tls.conf` serve `/.well-known/acme-challenge/` 
 
 ```bash
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot     # já existe pelo §7; o 755 é o que importa
-sudo certbot certonly --webroot -w /opt/lotus/certbot -d app.lotusotec.cl \
-  --cert-name app.lotusotec.cl --keep-until-expiring
+sudo certbot reconfigure --cert-name app.lotusotec.cl --webroot -w /opt/lotus/certbot
 grep -E '^(authenticator|webroot_path)' /etc/letsencrypt/renewal/app.lotusotec.cl.conf
 ```
 
-O `grep` tem de imprimir `authenticator = webroot`. **Se ainda disser `standalone`**, o certbot
-manteve o certificado sem reescrever a configuração; repita o comando com `--force-renewal` no lugar
-de `--keep-until-expiring` — uma emissão a mais, dentro do limite semanal de 5 por nome.
+Sem `-d`: o `reconfigure` recusa mudar o authenticator se receber domínios junto (existe desde o
+certbot 2.3; o noble tem 2.9.0). Ele ensaia por conta própria uma renovação em dry-run pelo webroot
+e só grava a configuração se o ensaio passar — é a prova antecipada de que o challenge está sendo
+servido pelo nginx, sem gastar uma emissão real. Por isso `certonly --keep-until-expiring` não serve
+aqui: com o certificado ainda longe do vencimento ele sai "Certificate not yet due for renewal; no
+action taken." e **nunca chega a reescrever** `/etc/letsencrypt/renewal/app.lotusotec.cl.conf`
+(certbot 2.9.0, `main.py:1592-1598`) — o `grep` abaixo mostraria `standalone` para sempre.
+
+O `grep` tem de imprimir `authenticator = webroot`. **Se o `reconfigure` falhar**, foi o dry-run que
+reprovou: confira o `755` do diretório e se o nginx está de fato servindo
+`/.well-known/acme-challenge/` a partir dele — a configuração antiga fica intacta, nada foi
+sobrescrito.
 
 O 755 do diretório não é detalhe: quem lê o challenge é o **worker** do nginx (uid 101), não o
 master, e `/opt/lotus` é `750 root:root`. O bind mount não carrega a permissão do pai, mas carrega a

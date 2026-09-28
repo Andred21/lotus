@@ -39,7 +39,9 @@ describe('deploy/bin/recarregar-nginx.sh', () => {
   })
 
   it('testa a conf ANTES de recarregar, no mesmo comando — conf ou certificado quebrado não derruba o nginx', () => {
-    expect(comando).toMatch(/exec -T nginx sh -c 'nginx -t && nginx -s reload'/)
+    // Âncora de fim: sem ela, um `|| true` colado depois do reload (silencia falha do nginx -t)
+    // passaria pela mesma regex (lição 19).
+    expect(comando).toMatch(/exec -T nginx sh -c 'nginx -t && nginx -s reload'\s*$/)
   })
 
   it('recarrega, nunca reinicia — restart/stop/down/up derrubam a 443 na renovação', () => {

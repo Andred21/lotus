@@ -40,6 +40,11 @@ function limpar(texto: string): string {
 /**
  * Corpo de um bloco `{ ... }`, casando chaves. Roda sobre o texto JÁ limpo,
  * então nenhuma chave dentro de comentário entra na contagem.
+ *
+ * Limite conhecido: a contagem é ingênua, char a char — uma `location` cujo
+ * regex contenha uma chave literal (ex.: `location ~ "^/x/[0-9]{4}$" {`)
+ * quebraria a casação. Nenhuma location deste projeto usa essa forma hoje;
+ * o mesmo limite vale para `nivelDoServer` e `locations`, abaixo.
  */
 function corpo(texto: string, cabecalho: string): string {
   const inicio = texto.indexOf(cabecalho)
