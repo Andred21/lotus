@@ -168,19 +168,22 @@ esse grupo é root sem senha, e o `/opt/lotus` é `750 root:root`. Logo `docker 
 `permission denied while trying to connect to the docker API at unix:///var/run/docker.sock` —
 é o comportamento desenhado, não uma instalação quebrada.
 
-Do WSL, com o `.pem` da §6:
+Do WSL, com o `.pem` da §6 (sem o `-i`, o `scp` oferece a chave padrão do WSL e o host recusa com
+`Permission denied (publickey)`):
 
 ```bash
-scp docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
-scp deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@<EIP>:/tmp/
-scp deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
+PEM=~/.ssh/<o .pem da §6>
+scp -i "$PEM" docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
+scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@<EIP>:/tmp/
+scp -i "$PEM" deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
 ```
 
-No host:
+No host. O glob de `/opt/lotus/bin/*.sh` expande **dentro** do `sudo sh -c`: o `/opt/lotus` é `750
+root:root`, e o shell do `ubuntu` não o lê — expandido fora, o glob chega literal ao `chmod`.
 
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
