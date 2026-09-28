@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
 import { AppColumn, AppDataTable } from './AppDataTable'
-import { appDataTablePt, stickyActionsColumn } from './style'
+import { appDataTablePt, narrowFloorTablePt, stickyActionsColumn } from './style'
 
 const ISO = '2026-08-19T13:00:00Z'
 const LINHAS = [{ id: 1, archived_at: ISO }]
@@ -251,5 +251,38 @@ describe('appDataTablePt — o piso default cabe em toda moldura de 1024', () =>
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('min-w-[42rem]')
     expect(tabela.className).not.toContain('min-w-[48rem]')
+  })
+})
+
+/**
+ * Item 23 (`D-65`, spec §4.2): em 390x844 a moldura tem 276px e a presa
+ * colapsada 72px; onde a 1ª coluna, proporcional à tabela, passa da área livre,
+ * o nome termina sob a presa. O piso por modo muda SÓ abaixo de `sm` — de `sm`
+ * para cima volta ao default, então 1024 e 1440 não mudam por construção.
+ */
+describe('narrowFloorTablePt — piso por modo abaixo de sm', () => {
+  const classeDaTabela = (pt: typeof appDataTablePt) => (pt.table as { className: string }).className
+
+  it('abaixo de sm usa o piso da tabela, de sm para cima o default, e compõe o table-fixed', () => {
+    expect(classeDaTabela(narrowFloorTablePt('32rem')).split(' ')).toEqual([
+      'min-w-(--table-narrow-floor)',
+      'sm:min-w-[42rem]',
+      'table-fixed',
+    ])
+  })
+
+  it('o piso de sm para cima é o MESMO do default', () => {
+    const padrao = classeDaTabela(appDataTablePt).split(' ').find((c) => c.startsWith('min-w-'))
+    expect(classeDaTabela(narrowFloorTablePt('32rem'))).toContain(`sm:${padrao}`)
+  })
+
+  it('o valor chega à <table> como variável CSS', () => {
+    render(
+      <AppDataTable value={LINHAS} pt={narrowFloorTablePt('32rem')}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('32rem')
   })
 })

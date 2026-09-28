@@ -96,6 +96,34 @@ export const appDataTablePt: DataTablePassThroughOptions = {
   bodyRow: { className: 'transition-colors' },
 }
 
+/** Piso da tabela abaixo de `sm`, por tabela e por modo (item 23, `D-65`,
+ * spec §4.2). De `sm` para cima volta ao default de 42rem, então 1024 e 1440
+ * não mudam por construção.
+ *
+ * Em 390x844 a moldura tem 276px (242px na Emisión) e a presa colapsada 72px:
+ * sobram ~204px. Com `table-fixed` a 1ª coluna é uma fração FIXA da tabela, e
+ * onde essa fração do piso de 42rem passa da área livre a caixa do nome
+ * termina sob a presa. O remédio é o piso, não o peso — a mesma conclusão da
+ * `D-65` em 1024. Duas direções:
+ * - visão ativa: piso MENOR, para a coluna identificadora caber na área livre;
+ * - visão de arquivados: piso MAIOR, para devolver à 1ª coluna o que o par fixo
+ *   de 24% de `ARCHIVED_COLUMN` tira dela.
+ * Cada valor sai da medição (audit do item 23, seção 5), nunca de conta de
+ * cabeça.
+ *
+ * O valor vai por variável CSS, e não montado numa classe: o Tailwind v4 só
+ * gera o CSS de classe que ele LÊ no fonte, e um `min-w-[${x}]` de runtime não
+ * existiria. As duas classes abaixo são literais, e o `sm:` repete o piso do
+ * default de propósito — o teste amarra os dois. */
+export function narrowFloorTablePt(floor: `${number}rem`): DataTablePassThroughOptions {
+  return {
+    table: {
+      className: `min-w-(--table-narrow-floor) sm:min-w-[42rem] ${TABLE_LAYOUT}`,
+      style: { '--table-narrow-floor': floor } as CSSProperties,
+    },
+  }
+}
+
 /** Faixa de rodapé da tabela (spec D12): o paginador do DataTable É o rodapé —
  * contagem à esquerda em `paginatorLeft`, controles à direita, uma faixa só.
  *

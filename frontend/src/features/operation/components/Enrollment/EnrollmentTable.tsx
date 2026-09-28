@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, IdentityCell, AppTag, AppEmptyState, ConfirmDialog, stickyActionsColumn, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppDataTable, AppColumn, IdentityCell, AppTag, AppEmptyState, ConfirmDialog, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn } from '@shared/ui'
 import { enrollmentWidths } from './enrollmentColumns'
 import { useTableFilter, usePermissions } from '@shared/hooks'
 import type { EnrollmentData } from '@shared/types/generated'
@@ -57,6 +57,8 @@ export function EnrollmentTable({
         onRetry={onRetry}
         first={table.first}
         onPage={table.onPage}
+        // Piso de 390 medido (item 23, audit §5): 292px de 1ª coluna contra 204px livres.
+        pt={narrowFloorTablePt('31.5rem')}
         footerCount={t('operation.enrollment.footerCount', { count: table.rows.length })}
         emptyMessage={
           // Sem ação: matricular é o botão da toolbar, logo acima.

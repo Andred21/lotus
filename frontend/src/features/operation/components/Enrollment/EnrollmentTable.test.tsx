@@ -86,4 +86,13 @@ describe('EnrollmentTable — ações da linha', () => {
     fireEvent.click(screen.getByRole('button', { name: 'operation.enrollment.remove' }))
     expect(await screen.findByText('operation.enrollment.removeTitle')).toBeTruthy()
   })
+
+  it('abaixo de sm, o piso é o medido para esta visão (item 23, audit §5)', () => {
+    comPermissoes(['operation.enrollment.manage'])
+    montar()
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('31.5rem')
+  })
 })
