@@ -65,10 +65,16 @@ devolveu — e use-os **literalmente** dali para frente, nos passos seguintes.
   gh pr view <branch> --json url,state
   ```
 
-  Falta push, ou não há PR → retome no **Passo 7**, pulando os Passos 3 a 6: o commit do 6f já
-  carrega os registros, e a verificação do Passo 3 foi feita contra esse mesmo HEAD. PR `OPEN` e
-  HEAD publicado → não há o que retomar; relate e pare. PR `CLOSED` sem merge → relate e pare:
-  reabrir ou abandonar é decisão do João. Estes comandos rodam na lane, não no main tree.
+  O `state` da PR decide primeiro, antes do HEAD:
+  - PR `MERGED` → nada a publicar, mesmo que a branch remota já tenha sido apagada e o
+    `rev-parse` acuse falta de push. Relate, aponte o modo Pós-PR (`/finalizar-bloco <NN>` no main
+    tree) e pare. Nunca empurre.
+  - PR `CLOSED` sem merge → relate e pare. Reabrir ou abandonar é decisão do João.
+  - PR `OPEN` e HEAD publicado → não há o que retomar. Relate e pare.
+  - Falta push, ou não há PR → retome no **Passo 7**, pulando os Passos 3 a 6. O commit do 6f já
+    carrega os registros, e a verificação do Passo 3 foi feita contra esse mesmo HEAD.
+
+  Estes comandos rodam na lane, não no main tree.
 
 - **Pós-PR.** A árvore é o main tree — a primeira entrada de `git worktree list --porcelain` — na
   branch `main`, e o argumento `NN` é obrigatório: sem lane, não há de onde tirá-lo. O `descobrir`
