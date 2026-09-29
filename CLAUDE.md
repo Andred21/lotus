@@ -52,7 +52,7 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 | `docs/estrutura-monolito.md`        | criar arquivo novo — para saber ONDE ele vai                    |
 | `docs/README.md` (lições)           | iniciar feature — não repetir erro já mapeado                   |
 | `docs/superpowers/pendencias/`      | antes de reportar divergência de doc — pode já estar registrada |
-| `docs/superpowers/context-packets/` | antes de consultar Drive/Notion/Figma para o bloco ativo        |
+| `docs/superpowers/blocos/<NN>-<slug>/context.md` | antes de consultar Drive/Notion/Figma para o bloco ativo (`context-packets/` guarda o legado) |
 
 > **Layout de `docs/superpowers/`:** na raiz vivem só os dois arquivos que decidem — `state.md`
 > (o contrato dos estados) e `backlog.md` (a fila; entra na `main` só por PR). Cada bloco aberto
