@@ -39,6 +39,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
+| P-93 | `docs/operacao-segredos.md` §3/§4/§6 descrevem `MAIL_PASSWORD` de um relay SMTP como o segredo de e-mail em uso e citam `backend/.env.production.example:106`; produção está em `MAIL_MAILER=log` desde o item 10 v2 e o item 33 a leva a `ses` pela instance role | 33 | **paga em 2026-09-28 (item 33, Task 4)**; sai no fechamento |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
@@ -85,7 +86,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > vivas sem pagá-las, por decisão do João no gate: a **P-51** (tocou `UpdateClientAction` e
 > `ClientData`, casa do campo 2) e a **P-53** (tocou `.claude/rules/backend-ddd.md` por outro
 > motivo). As duas fichas registram o disparo; o gatilho **não se desarma** por isso.
-| P-93 | `docs/operacao-segredos.md` §3/§4/§6 descrevem `MAIL_PASSWORD` de um relay SMTP como o segredo de e-mail em uso e citam `backend/.env.production.example:106`; produção está em `MAIL_MAILER=log` desde o item 10 v2 e o item 33 a leva a `ses` pela instance role | 33 | **paga em 2026-09-28 (item 33, Task 4)**; sai no fechamento |
 
 ### Travadas em decisão — não entram em bloco
 
