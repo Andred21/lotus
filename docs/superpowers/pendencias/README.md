@@ -85,7 +85,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > vivas sem pagá-las, por decisão do João no gate: a **P-51** (tocou `UpdateClientAction` e
 > `ClientData`, casa do campo 2) e a **P-53** (tocou `.claude/rules/backend-ddd.md` por outro
 > motivo). As duas fichas registram o disparo; o gatilho **não se desarma** por isso.
-| P-93 | `docs/operacao-segredos.md` §3/§4/§6 descrevem `MAIL_PASSWORD` de um relay SMTP como o segredo de e-mail em uso e citam `backend/.env.production.example:106`; produção está em `MAIL_MAILER=log` desde o item 10 v2 e o item 33 a leva a `ses` pela instance role | 33 | commit da Fase A do item 33 que reescreve o doc e alinha o molde legado; revisar 2026-10-31 |
+| P-93 | `docs/operacao-segredos.md` §3/§4/§6 descrevem `MAIL_PASSWORD` de um relay SMTP como o segredo de e-mail em uso e citam `backend/.env.production.example:106`; produção está em `MAIL_MAILER=log` desde o item 10 v2 e o item 33 a leva a `ses` pela instance role | 33 | **paga em 2026-09-28 (item 33, Task 4)**; sai no fechamento |
 
 ### Travadas em decisão — não entram em bloco
 
@@ -107,7 +107,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-49 | Eixos **redator** e **turma** fechados em 2026-08-23 (`lockForWrite()` nos cinco escritores + catraca); resta a janela **cotação × orçamento** | João | bloco que tocar `RestoreQuoteAction`/`DeleteBudgetAction` e puder travar os dois lados; revisar 2026-10-31 |
 | P-51 | Default literal em DTO de entrada — o campo de **acesso** (`is_active`) fechou em 2026-08-23; restam **cinco** campos sem controle de acesso | João | bloco que tocar `UpdateClientAction`/`UpdateCourseAction`, `BudgetController::update` ou `CourseTemplateController::update`; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | João | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
-| P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo — **disparado em 2026-09-04 e em 2026-09-25, não pago**; revisar 2026-10-31 |
+| P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | João | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo — **disparado em 2026-09-04 e em 2026-09-25, não pago**; revisar 2026-10-31; a linha "transporte de e-mail sem ADR" foi paga pelo item 33 (ADR-23) |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | João | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 | P-56 | O `XSRF-TOKEN` não é isolado entre árvores — a escrita da aba parada volta 419 (medido) | João | João escolher entre isolar por host ou aceitar a receita de perfil por árvore; revisar 2026-10-31 |
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas. Desde o item 12, a mesma raiz deixa o botão de promoção sem Environment | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
