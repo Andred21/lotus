@@ -574,6 +574,8 @@ Expected: `lotus-alerta`, `lotus-s3`, `lotus-ses`; o documento com `ses:SendRawE
 
 ### Task 9: `.env` do host, promoção pelo botão e sonda em sandbox
 
+> **Desvio aprovado em 2026-09-29 (review da Task 5):** os comandos de produção desta task valem como estão no runbook `deploy/aws/README.md` §13 corrigido — CSRF no loop D7, `config:show mail.default`, `grep -cF 'acesso.suspeito'`, sonda lida pelo texto do `Reason:`, link `¿Olvidaste tu clave?`. Onde o texto abaixo diverge, o runbook vence. Registro no `audit.md`, Task 5.
+
 - [ ] **Step 1: PARE — o João edita** `/opt/lotus/.env` (`MAIL_MAILER=ses`) e **depois** clica o botão no `SHA_ESPELHADO` da Task 6 (runbook §13.2).
 
 - [ ] **Step 2: Leitura do deploy**
@@ -619,6 +621,8 @@ A sessão termina aqui. Quando o João avisar que a AWS respondeu, repita o Step
 
 ### Task 11: prova do alerta D7 em caixa real
 
+> **Desvio aprovado em 2026-09-29 (review da Task 5):** os comandos de produção desta task valem como estão no runbook `deploy/aws/README.md` §13 corrigido — CSRF no loop D7, `config:show mail.default`, `grep -cF 'acesso.suspeito'`, sonda lida pelo texto do `Reason:`, link `¿Olvidaste tu clave?`. Onde o texto abaixo diverge, o runbook vence. Registro no `audit.md`, Task 5.
+
 - [ ] **Step 1: PARE — o João dispara** o loop do runbook §13.4 com o e-mail do **próprio** admin (ou a sessão roda, de fora, se ele preferir — são só `POST`s de login com senha errada, nada é escrito). Ele confirma que a mensagem chegou.
 
 - [ ] **Step 2: Leitura**
@@ -630,6 +634,8 @@ A sessão termina aqui. Quando o João avisar que a AWS respondeu, repita o Step
 Expected: tudo como acima. Registre no audit (`## Task 11 — DoD 5`). Se a mensagem não chegou e o log tem `Falha ao enviar alerta`, o João cola a classe da exceção: `MessageRejected` → a conta não saiu do sandbox (Task 10); `Throttling` → cota antiga ainda em vigor, esperar e repetir.
 
 ### Task 12: prova do reset, leitura final, handoff para review
+
+> **Desvio aprovado em 2026-09-29 (review da Task 5):** os comandos de produção desta task valem como estão no runbook `deploy/aws/README.md` §13 corrigido — CSRF no loop D7, `config:show mail.default`, `grep -cF 'acesso.suspeito'`, sonda lida pelo texto do `Reason:`, link `¿Olvidaste tu clave?`. Onde o texto abaixo diverge, o runbook vence. Registro no `audit.md`, Task 5.
 
 - [ ] **Step 1: PARE — o João faz o reset** pela UI (runbook §13.4, segundo bloco) com a própria conta: pede, recebe, abre o link, define a senha nova, loga com ela e confirma que a antiga não loga.
 
