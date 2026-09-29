@@ -91,6 +91,22 @@ aws iam put-role-policy --role-name lotus-ec2 --policy-name lotus-alerta --polic
 aws iam get-role-policy --role-name lotus-ec2 --policy-name lotus-alerta --query PolicyDocument
 ```
 
+O e-mail é a **terceira** inline, `lotus-ses` (item 33, ADR-23). Só a identidade `lotusotec.cl`
+— criada e possuída pelo stack `lotus-contato` do `lotus-site`, nunca recriada daqui — e só com
+o remetente do molde: qualquer outro `From` é `AccessDenied`. O ARN se monta em runtime; o número
+da conta não entra neste arquivo.
+
+```bash
+CONTA=$(aws sts get-caller-identity --query Account --output text)
+aws iam put-role-policy --role-name lotus-ec2 --policy-name lotus-ses --policy-document \
+  "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"ses:SendRawEmail\",\"ses:SendEmail\"],\"Resource\":\"arn:aws:ses:sa-east-1:$CONTA:identity/lotusotec.cl\",\"Condition\":{\"StringEquals\":{\"ses:FromAddress\":\"lotus@lotusotec.cl\"}}}]}"
+aws iam get-role-policy --role-name lotus-ec2 --policy-name lotus-ses --query PolicyDocument
+```
+
+O readback tem de mostrar as duas ações, o `Resource` na identidade e a `Condition` no remetente.
+A policy vale na hora para a role assumida pela instância — não há reinício. Revogar é
+`aws iam delete-role-policy --role-name lotus-ec2 --policy-name lotus-ses`.
+
 **Pela CLI, a role não basta.** O console cria o *instance profile* junto, escondido; a CLI trata
 os dois como objetos separados e o launch da §6 não acha o profile se ele não existir:
 
@@ -533,6 +549,13 @@ Sem confirmar, o tópico publica para ninguém. Depois: o `sns:Publish` da §4 e
 Canal definitivo de alerta é decisão do bloco de observabilidade. Trocar de canal depois é trocar
 um ARN no `.env` e a `Resource` da `lotus-alerta`.
 
+**E-mail da aplicação — SES, não SNS.** O alerta de acesso suspeito (D7), a recuperação de senha
+e o convite do redator saem pelo SES, remetente `Lotus <lotus@lotusotec.cl>`, pela identidade
+`lotusotec.cl` do site e pela inline `lotus-ses` da §4 — procedimento e provas na §13. É um canal
+diferente do tópico `lotus-alertas` de cima: aquele é do `verificar-backup.sh`, este é da
+aplicação. Nos dois vale a mesma regra: **a prova é a mensagem na caixa**, nunca "o container
+subiu".
+
 ## 11. TLS — o registro A, o certificado e a renovação
 
 O nome público da intranet é **`app.lotusotec.cl`** (ADR-14, emenda de 2026-09-27). A zona
@@ -743,3 +766,92 @@ há ~30 dias que ninguém mede.
 Como: stop → Change instance type → start. São minutos de indisponibilidade, aceitáveis para
 ~10 usuários. Medição de apoio: `docker stats --no-stream` + `free -m`, com a saída no audit —
 o critério é escrito, não memória de quem operou.
+
+## 13. E-mail — production access, `.env` e as duas provas
+
+Pré-condições: a inline `lotus-ses` aplicada (§4) e a `main` do corporativo com
+`MAIL_MAILER=ses` no molde (item 33). A identidade `lotusotec.cl` é do `lotus-site`: se
+`aws sesv2 get-email-identity --region sa-east-1 --email-identity lotusotec.cl` não devolver
+`VerifiedForSendingStatus: true`, `DkimAttributes.Status: SUCCESS` e
+`MailFromAttributes.MailFromDomainStatus: SUCCESS`, o problema é da zona ou do stack de lá — PARE.
+
+### 13.1 Production access — primeiro, porque é a única espera externa
+
+A conta nasce em sandbox: 200 mensagens/24 h, 1/s e **só destinatário verificado**. O site vive
+com isso (o destinatário dele é do domínio); a aplicação não — admins e redatores têm e-mail de
+qualquer domínio. Console SES em `sa-east-1` → *Account dashboard* → *Request production access*:
+tipo **Transactional**, URL `https://app.lotusotec.cl`, uso "alertas de segurança e recuperação
+de senha da intranet de gestão de capacitação, ~10 usuários internos, dezenas de mensagens por
+mês, sem lista de marketing; bounce e complaint tratados pela suppression list". Ou por CLI:
+
+```bash
+aws sesv2 put-account-details --region sa-east-1 --production-access-enabled \
+  --mail-type TRANSACTIONAL --website-url https://app.lotusotec.cl \
+  --use-case-description "Alertas de seguranca e recuperacao de senha da intranet Lotus; ~10 usuarios internos; dezenas de mensagens por mes; sem marketing" \
+  --contact-language EN
+aws sesv2 get-account --region sa-east-1 --query '{Producao:ProductionAccessEnabled,Max24h:SendQuota.Max24HourSend}'
+```
+
+Guarde o número do caso. A resposta leva de um a alguns dias úteis; até lá os passos seguintes
+andam, e a prova final espera.
+
+### 13.2 `.env` e promoção
+
+`sudo -e /opt/lotus/.env`: `MAIL_MAILER=ses`. As outras duas chaves (`MAIL_FROM_ADDRESS`,
+`MAIL_FROM_NAME`) já estão no valor do molde. Nenhuma chave nova: a conferência de alinhamento do
+botão (§7) não trava. **Depois** de salvar, promova pelo botão o SHA espelhado que trouxe o
+molde — o Compose recria `app` e `scheduler` porque o `env_file` mudou. Gate:
+
+```bash
+sudo grep -c '^MAIL_MAILER=' /opt/lotus/.env          # 1 (nome, não valor)
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA \
+  LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env \
+  docker compose -p lotus -f docker-compose.prod.yml exec -T app php -r "echo config(\"mail.default\"), PHP_EOL;"'   # ses
+```
+
+### 13.3 Sonda em sandbox — antes da aprovação, de propósito
+
+A autorização IAM acontece **antes** da regra do sandbox. Então, ainda em sandbox, um envio a um
+destinatário não verificado prova a role e a policy sem entregar nada:
+
+```bash
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml exec -T app php artisan tinker --execute "Mail::raw(\"sonda\", fn (\$m) => \$m->to(\"<e-mail de um admin>\")->subject(\"sonda\"));"'
+```
+
+| Saída | Significa | Próximo passo |
+|---|---|---|
+| `MessageRejected … Email address is not verified` | credencial e policy OK; conta em sandbox | esperar 13.1 |
+| `AccessDenied … ses:SendRawEmail` | `lotus-ses` ausente ou errada | §4, reaplicar |
+| `Throttling` | 1/s do sandbox | idem: esperar 13.1 |
+| nenhuma exceção | a conta já saiu do sandbox | 13.4 |
+
+### 13.4 As duas provas — depois de `ProductionAccessEnabled: true`
+
+**Alerta D7 (`login_falho_repetido`).** 15 senhas erradas para uma conta real em até 15 min, de
+fora, respeitando o `throttle:login` (5/min por `email|ip`):
+
+```bash
+for i in $(seq 1 15); do
+  curl -s -o /dev/null -w '%{http_code}\n' -X POST https://app.lotusotec.cl/api/login \
+    -H 'Origin: https://app.lotusotec.cl' -H 'Accept: application/json' -H 'Content-Type: application/json' \
+    -d '{"email":"<e-mail do admin>","password":"errada-'$i'"}'
+  [ $((i % 5)) -eq 0 ] && sleep 61
+done
+```
+
+Esperado: `422` × 15 (nunca `429`: o `sleep` respeita o throttle). Na 15ª, o alerta sai para
+**todos** os admins ativos. Prova: a mensagem na caixa de um admin, assunto do `seguranca.alerta`,
+e no *Show original* do Gmail `dkim=pass header.d=lotusotec.cl`, `spf=pass` em
+`ses.lotusotec.cl` e `dmarc=pass`; no host, o `logs app` do compose (mesmo prefixo do 13.2) com `grep alerta_de_acesso_suspeito`
+tem a linha do canal `seguranca`, e `grep 'Falha ao enviar alerta'` **não** tem linha nova.
+
+**Reset de senha.** Pela UI, "¿Olvidaste tu contraseña?" com o e-mail do admin → a mensagem chega
+→ o link abre a tela de nova senha → senha nova → login com ela. A antiga deixa de logar e as
+sessões anteriores caem (`PurgeOtherSessionsAction`). Máximo 6 pedidos/min por IP
+(`throttle:password`).
+
+### 13.5 Recuo
+
+`MAIL_MAILER=log` de volta no `.env` e `deploy.sh <mesmo SHA>` por SSH (§8.1) — nenhum dado muda;
+`delete-role-policy lotus-ses` derruba o envio sem reiniciar. Pedido de production access negado:
+o bloco para em `blocked` com o motivo; nada do repositório precisa voltar.
