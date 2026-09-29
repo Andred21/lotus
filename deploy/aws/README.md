@@ -804,9 +804,7 @@ molde — o Compose recria `app` e `scheduler` porque o `env_file` mudou. Gate:
 
 ```bash
 sudo grep -c '^MAIL_MAILER=' /opt/lotus/.env          # 1 (nome, não valor)
-sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA \
-  LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env \
-  docker compose -p lotus -f docker-compose.prod.yml exec -T app php -r "echo config(\"mail.default\"), PHP_EOL;"'   # ses
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml exec -T app php artisan config:show mail.default'   # a saída contém: ses
 ```
 
 ### 13.3 Sonda em sandbox — antes da aprovação, de propósito
@@ -818,37 +816,58 @@ destinatário não verificado prova a role e a policy sem entregar nada:
 sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml exec -T app php artisan tinker --execute "Mail::raw(\"sonda\", fn (\$m) => \$m->to(\"<e-mail de um admin>\")->subject(\"sonda\"));"'
 ```
 
-| Saída | Significa | Próximo passo |
+A falha sobe como `Symfony\Component\Mailer\Exception\TransportException`, com a mensagem
+`Request to AWS SES API failed. Reason: <mensagem da AWS>.` — o código de erro da AWS
+não aparece na tela. Leia o texto depois de `Reason:`:
+
+| Texto depois de `Reason:` | Significa | Próximo passo |
 |---|---|---|
-| `MessageRejected … Email address is not verified` | credencial e policy OK; conta em sandbox | esperar 13.1 |
-| `AccessDenied … ses:SendRawEmail` | `lotus-ses` ausente ou errada | §4, reaplicar |
-| `Throttling` | 1/s do sandbox | idem: esperar 13.1 |
+| `Email address is not verified` | credencial e policy OK; conta em sandbox | esperar 13.1 |
+| `is not authorized to perform: ses:SendRawEmail` | `lotus-ses` ausente ou errada | §4, reaplicar |
+| `Maximum sending rate exceeded` | 1/s do sandbox — só se a sonda for repetida rápido | esperar 1 s e repetir |
 | nenhuma exceção | a conta já saiu do sandbox | 13.4 |
 
 ### 13.4 As duas provas — depois de `ProductionAccessEnabled: true`
 
-**Alerta D7 (`login_falho_repetido`).** 15 senhas erradas para uma conta real em até 15 min, de
-fora, respeitando o `throttle:login` (5/min por `email|ip`):
+**Alerta D7 (`login_falho_repetido`).** Pré-condição: o contador é a chave `email|ip` numa janela
+**fixa** de 900 s (`AlertThresholds::LOGIN_FALHO_JANELA_SEGUNDOS`), aberta na primeira falha, e o
+alerta dispara na **igualdade** com a 15ª falha (`LOGIN_FALHO_LIMIAR`). Falhas anteriores dentro da
+mesma janela deslocam a contagem, e repetir dentro dela não realerta — espere 15 min entre
+tentativas. Roda de fora, com 15 senhas erradas para uma conta real, respeitando o `throttle:login`
+(5/min por `email|ip`). Com `Origin` de `app.lotusotec.cl` a request é stateful e passa pelo CSRF do
+Sanctum, então o loop pega o cookie `XSRF-TOKEN` e o devolve no header:
 
 ```bash
+J=$(mktemp)
+curl -s -o /dev/null -c "$J" https://app.lotusotec.cl/sanctum/csrf-cookie
 for i in $(seq 1 15); do
-  curl -s -o /dev/null -w '%{http_code}\n' -X POST https://app.lotusotec.cl/api/login \
+  X=$(awk '$6=="XSRF-TOKEN"{print $7}' "$J"); XSRF=$(printf '%b' "${X//%/\\x}")
+  curl -s -o /dev/null -w '%{http_code}\n' -b "$J" -c "$J" -X POST https://app.lotusotec.cl/api/login \
     -H 'Origin: https://app.lotusotec.cl' -H 'Accept: application/json' -H 'Content-Type: application/json' \
+    -H "X-XSRF-TOKEN: $XSRF" \
     -d '{"email":"<e-mail do admin>","password":"errada-'$i'"}'
-  [ $((i % 5)) -eq 0 ] && sleep 61
+  [ "$i" -lt 15 ] && [ $((i % 5)) -eq 0 ] && sleep 61
 done
+rm -f "$J"
 ```
 
-Esperado: `422` × 15 (nunca `429`: o `sleep` respeita o throttle). Na 15ª, o alerta sai para
-**todos** os admins ativos. Prova: a mensagem na caixa de um admin, assunto do `seguranca.alerta`,
-e no *Show original* do Gmail `dkim=pass header.d=lotusotec.cl`, `spf=pass` em
-`ses.lotusotec.cl` e `dmarc=pass`; no host, o `logs app` do compose (mesmo prefixo do 13.2) com `grep alerta_de_acesso_suspeito`
-tem a linha do canal `seguranca`, e `grep 'Falha ao enviar alerta'` **não** tem linha nova.
+Esperado: `422` × 15, nunca `419` nem `429`. `419` é CSRF faltando: o loop está errado, não o
+código; `429` é o `sleep` curto demais para o throttle. Na 15ª, o alerta sai para **todos** os
+admins ativos. Prova: a mensagem na caixa de um admin, com assunto
+`Lotus — alerta de acceso sospechoso` (`backend/lang/es_CL/seguranca.php`), e no *Show original*
+do Gmail `dkim=pass header.d=lotusotec.cl`, `spf=pass` em `ses.lotusotec.cl` e `dmarc=pass`. No
+host, o canal `seguranca` grava a linha antes do e-mail e o `Log::error` de falha de envio só
+existe se o SES recusar:
 
-**Reset de senha.** Pela UI, "¿Olvidaste tu contraseña?" com o e-mail do admin → a mensagem chega
-→ o link abre a tela de nova senha → senha nova → login com ela. A antiga deixa de logar e as
-sessões anteriores caem (`PurgeOtherSessionsAction`). Máximo 6 pedidos/min por IP
-(`throttle:password`).
+```bash
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml logs --since 30m app' | grep -c 'acesso.suspeito'         # >= 1
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml logs --since 30m app' | grep -c 'Falha ao enviar alerta'   # 0
+```
+
+**Reset de senha.** Pela UI, no link "¿Olvidaste tu clave?" (o rótulo muda com o idioma da UI;
+em pt-BR é "Esqueceu sua senha?") com o e-mail do admin → a mensagem chega → o link abre a tela de
+nova senha → senha nova → login com ela. A antiga deixa de logar e as sessões anteriores caem
+(`PurgeOtherSessionsAction`). Máximo 6 pedidos/min por IP (`throttle:password`).
 
 ### 13.5 Recuo
 
