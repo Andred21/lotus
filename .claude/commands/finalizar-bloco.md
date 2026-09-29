@@ -24,6 +24,11 @@ esse é o sinal de que o erro está prestes a acontecer — não uma dispensa. E
 já se repetiu neste projeto: o agente lê "use a skill Y", reconhece o processo, e executa uma
 versão de cabeça, pulando exatamente os gates que justificam a skill.
 
+Se a `Skill` responder `Unknown skill` para um nome `superpowers:<skill>`, pare e peça ao João
+que instale ou ative o plugin `superpowers@claude-plugins-official`. Nunca troque pelo nome
+sem prefixo: ele carrega a cópia legada de `~/.claude/skills/`, que não tem o que estes commands
+esperam.
+
 ## Passo 1 — Caveman
 
 Invoque `Skill(caveman, "ultra")`. Confirme em uma linha que carregou.
@@ -46,10 +51,24 @@ devolveu — e use-os **literalmente** dali para frente, nos passos seguintes.
 - **Normal.** A branch atual casa `^(feat|fix|chore|refactor|infra|cicd|docs)/([0-9]+)-(.+)$` — a
   sessão está numa lane, nunca no main tree. O `<NN>` vem da branch, nunca do argumento; se o
   argumento trouxer um `NN` diferente, pare — invariante 7. A pasta do bloco é a branch sem o
-  `<tipo>/`: `docs/superpowers/blocos/<NN>-<slug>/`. Leia o `estado.md` de lá: `workflow_state`
-  precisa ser `ready_for_closure`, e o `branch` gravado precisa bater com a branch atual —
-  divergindo, é `estado.md` desatualizado, e a invariante 7 manda parar, não consertar. Não sendo
-  `ready_for_closure`, caia no ramo **Nada casa**, abaixo.
+  `<tipo>/`: `docs/superpowers/blocos/<NN>-<slug>/`. Leia o `estado.md` de lá: o `branch` gravado
+  precisa bater com a branch atual — divergindo, é `estado.md` desatualizado, e a invariante 7
+  manda parar, não consertar. Com `workflow_state: ready_for_closure`, siga o fluxo normal. Com
+  `closed`, o Passo 6 já rodou nesta lane e a sessão parou antes de o Passo 7 publicar (ou a PR
+  voltou `CLOSED`): é a **retomada**, logo abaixo. Qualquer outro estado cai no ramo **Nada casa**.
+
+  **Retomada.** Confira se o HEAD está publicado e se há PR:
+
+  ```bash
+  git fetch origin
+  git rev-parse HEAD origin/<branch>        # ausente ou diferente → falta push
+  gh pr view <branch> --json url,state
+  ```
+
+  Falta push, ou não há PR → retome no **Passo 7**, pulando os Passos 3 a 6: o commit do 6f já
+  carrega os registros, e a verificação do Passo 3 foi feita contra esse mesmo HEAD. PR `OPEN` e
+  HEAD publicado → não há o que retomar; relate e pare. PR `CLOSED` sem merge → relate e pare:
+  reabrir ou abandonar é decisão do João. Estes comandos rodam na lane, não no main tree.
 
 - **Pós-PR.** A árvore é o main tree — a primeira entrada de `git worktree list --porcelain` — na
   branch `main`, e o argumento `NN` é obrigatório: sem lane, não há de onde tirá-lo. O `descobrir`
@@ -96,7 +115,7 @@ devolveu — e use-os **literalmente** dali para frente, nos passos seguintes.
 - **Nada casa.** Relate `workflow_state`, `next_owner` e `next_action` do `estado.md` que deu para
   ler, e pare.
 
-**Normal segue para o Passo 3. Pós-PR, com o merge-base já confirmado, pula direto para o
+**Normal segue para o Passo 3 — ou, com `closed` e algo por publicar, para o Passo 7. Pós-PR, com o merge-base já confirmado, pula direto para o
 Passo 8. Conserto e Aceitação terminam aqui mesmo, nos dois ramos acima.**
 
 ## Passo 3 — Verificação com evidência fresca
@@ -226,8 +245,12 @@ updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
 **f. Commit.** Tudo que os itens b–e tocaram, junto:
 
 ```bash
-git commit -m "chore(close): item <NN> fecha <slug>"
+git commit -m "chore(close): item <NN> fecha <slug>
+
+Co-Authored-By: Claude <modelo> <noreply@anthropic.com>"
 ```
+
+`<modelo>` é o modelo que de fato escreveu o commit (ex.: `Sonnet 5.5`).
 
 **Regra para o que vier depois.** PR que volta com correção — o João pede mudança depois de
 aberto, ou a `origin/main` trouxe algo que a verificação não passa mais — reescreve o `estado.md`
@@ -235,7 +258,10 @@ para `executing` ou `reviewing` no commit que corrige, porque `closed` deixou de
 cadeia recomeça no command daquele estado. Uma segunda passagem por este Passo 6, depois da
 correção, não repete os itens b–d do zero: confira o que a primeira passagem já gravou na branch —
 a linha do `historico/progress.md`, a ficha removida do `backlog.md`, os movimentos em
-`pendencias/` — e ajuste só o que precisar. Nunca duplique.
+`pendencias/` — e ajuste só o que precisar. Nunca duplique. O que viaja com o `closed` nessa
+passagem é a linha do `historico/progress.md` (item c): ela é atualizada, sem ganhar linha nova,
+para registrar a correção que voltou do PR — assim o commit nunca é só de `estado.md` (invariante
+6 de `docs/superpowers/state.md`).
 
 ## Passo 7 — Integração
 
@@ -259,7 +285,8 @@ gh pr view <branch> --json url,state
 ```
 
 PR aberta encontrada → o `git push` acima já a atualizou; não rode `gh pr create` — vá direto para
-a consulta de status, abaixo. Nenhuma PR encontrada → crie:
+a consulta de status, abaixo. PR `CLOSED` sem merge → relate e pare: reabrir ou abandonar é decisão
+do João. Nenhuma PR encontrada → crie:
 
 ```bash
 gh pr create --base main --head <branch> --title "<tipo>(<NN>): <resumo>" --body "…"
