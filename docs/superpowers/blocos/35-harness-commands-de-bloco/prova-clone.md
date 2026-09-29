@@ -100,7 +100,7 @@ ficha 99 saiu `1` no `grep -c`.
    `git ls-remote`). O commit de fechamento usou `git add -A docs`, dentro do que manda o
    `finalizar-bloco.md`: commitar junto tudo que os itens b–e tocaram.
 6. **Nenhum contêiner subiu**, conforme `docker ps` rodado pelo controlador às 20:14 (-03:00). O
-   `lane.sh abrir` rodou o `pnpm install` no clone, com 323 pacotes linkados a partir do store.
+   `lane.sh abrir` rodou o `pnpm install` no clone, com `Packages: +323`.
 7. **Sobra em `/tmp`.** O `/tmp/lotus-prova-35.P4OT1U/lotus` é um clone preparado sem sessão e
    sem lane. O Step 6 não o limpou.
 
