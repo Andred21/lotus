@@ -44,10 +44,10 @@ AGENTS.md §4).
 - Deviation needed from a plan step → stop that task, record the reason, continue only independent
   tasks, and report.
 
-Codex may commit implementation artifacts and update the block's `estado.md`/`progress.md`
-when the active plan names Codex as executor or João Victor explicitly delegates
-execution/closure. Never alter `backlog.md` unless explicitly requested.
-State transitions must be committed with their proving artifact.
+Leave the implementation changes uncommitted, and never write the block's `estado.md`, nor
+`progress.md` (it only changes at closure) or `backlog.md`. State, transitions and commits belong
+to Claude (`.claude/commands/executar-bloco.md`); report the transition you recommend in
+`RECOMMENDED_TRANSITION` instead.
 
 ## Output contract
 
