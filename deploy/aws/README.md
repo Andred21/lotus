@@ -860,7 +860,7 @@ host, o canal `seguranca` grava a linha antes do e-mail e o `Log::error` de falh
 existe se o SES recusar:
 
 ```bash
-sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml logs --since 30m app' | grep -c 'acesso.suspeito'         # >= 1
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml logs --since 30m app' | grep -cF 'acesso.suspeito'         # >= 1
 sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml logs --since 30m app' | grep -c 'Falha ao enviar alerta'   # 0
 ```
 
