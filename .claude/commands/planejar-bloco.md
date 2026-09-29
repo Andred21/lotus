@@ -24,6 +24,11 @@ esse é o sinal de que o erro está prestes a acontecer — não uma dispensa. E
 já se repetiu neste projeto: o agente lê "use a skill Y", reconhece o processo, e executa uma
 versão de cabeça, pulando exatamente os gates que justificam a skill.
 
+Se a `Skill` responder `Unknown skill` para um nome `superpowers:<skill>`, pare e peça ao João
+que instale ou ative o plugin `superpowers@claude-plugins-official`. Nunca troque pelo nome
+sem prefixo: ele carrega a cópia legada de `~/.claude/skills/`, que não tem o que estes commands
+esperam.
+
 ## Passo 1 — Caveman
 
 Invoque `Skill(caveman, "ultra")`. Confirme em uma linha que carregou antes de seguir.
