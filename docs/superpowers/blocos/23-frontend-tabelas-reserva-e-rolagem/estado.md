@@ -2,9 +2,9 @@
 schema_version: 3
 id: 23
 slug: 23-frontend-tabelas-reserva-e-rolagem
-workflow_state: closing
+workflow_state: closed
 next_owner: joao
-next_action: "answer_integration_menu PR da branch e remocao da ficha 23 e da D-65 pelo main tree"
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/specs/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem-design.md
 active_plan: docs/superpowers/plans/archive/2026-09-27-frontend-tabelas-reserva-e-rolagem.md
@@ -17,9 +17,9 @@ branch: refactor/23-frontend-tabelas-reserva-e-rolagem
 worktree: ../fix-frontend
 offset: 2
 lane_base: 162cbaa7
-commit: ed7baf3f
+commit: b8290de5
 blocker: null
-updated_at: 2026-09-28T01:35:42-03:00
+updated_at: 2026-10-01T20:25:15-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -105,3 +105,15 @@ arquivos e 1007 testes. A `main` não tocou `backend/`.
 
 Com o contrato novo na árvore, o `SessionStart` passou a reconhecer a lane e acusou `active_review`
 vazio. O review, que estava neste arquivo, foi movido verbatim para `revisao.md`.
+
+## Encerramento (2026-10-01)
+
+A PR #120 levou a branch à `main` em 2026-09-28 (`982b4929`). O espelho publicou `550758d7` no
+corporativo com `Source-Commit: 982b4929`; a CI de lá saiu verde (run `36379038524`) e a promoção
+para produção também (run `36379511035`). O `efeito_externo` é `nao`, então a invariante 11 não
+pede prova além dessa.
+
+A ficha 23 e a `D-65` saem do `backlog.md` no mesmo commit deste estado, pela PR da lane, e não
+pelo main tree. Foi decisão do João, registrada como desvio na P-92. A `D-65` fica no rastro de uma
+linha do `backlog.md`. O bloco vai a `closed`. Falta o `lane.sh fechar 23` do main tree, que apaga
+esta worktree e o banco de dev dela.
