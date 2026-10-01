@@ -48,3 +48,26 @@ describe('deploy/aws/env.prod.example — os seis campos do runbook §11', () =>
     expect(soltas).toEqual([])
   })
 })
+
+/**
+ * Item 33 (ADR-23): o e-mail sai pelo SES com credencial da instance role. O molde é a
+ * referência de VALOR para quem instala pelo runbook §13, e a ausência de chave é parte do
+ * contrato — uma access key ou uma senha SMTP aqui reabriria o `.env` a segredo de longa
+ * duração, que é o que o item 10 v2 tirou.
+ */
+describe('deploy/aws/env.prod.example — e-mail por SES (runbook §13)', () => {
+  it.each([
+    ['MAIL_MAILER', 'ses'],
+    ['MAIL_FROM_ADDRESS', 'lotus@lotusotec.cl'],
+    ['MAIL_FROM_NAME', 'Lotus'],
+  ])('%s=%s', (chave, esperado) => {
+    expect(valorDe(chave)).toBe(esperado)
+  })
+
+  it.each(['MAIL_PASSWORD', 'MAIL_USERNAME', 'MAIL_HOST', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])(
+    'sem %s — a credencial é a role, não um segredo no .env',
+    (chave) => {
+      expect(ATRIBUICOES.some((l) => l.startsWith(`${chave}=`))).toBe(false)
+    },
+  )
+})

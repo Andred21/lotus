@@ -493,7 +493,7 @@ deslocaram, e estão atualizadas abaixo.
 | `CLAUDE.md:159-161` | A lista de serviços do Compose omite `mailpit`, transporte real do convite/recuperação | `docker-compose.yml:33-35` (porta 8025) |
 | `CLAUDE.md:146` | Descreve `pnpm test` como "hooks de `shared/`"; o corte cobre hooks de feature, componentes e `frontend/tests/` | `frontend/tests/repo-docs-refs.test.ts`; `features/identity/components/PeoplePage.test.tsx`. A `frontend-fsliced.md:268-271` registra que a frase já foi lição 13 três vezes |
 | `.claude/rules/frontend-fsliced.md:261-266` | População de testes de componente congelada em 2026-08-16 ("13 arquivos, 9 montam wrapper"), com lista nominal | só `shared/ui/**` tem 21 `*.test.tsx` que montam componente |
-| `docs/adrs.md` | Transporte de e-mail virou padrão de fato sem ADR: broker `invites`, duas Notifications, Mailpit no Compose, três rotas públicas de senha | nenhuma ocorrência de mail/SMTP/Notification em `adrs.md`; a decisão só existe em plano arquivado |
+| `docs/adrs.md` | ~~Transporte de e-mail virou padrão de fato sem ADR: broker `invites`, duas Notifications, Mailpit no Compose, três rotas públicas de senha~~ | ~~nenhuma ocorrência de mail/SMTP/Notification em `adrs.md`; a decisão só existe em plano arquivado~~ — **paga pelo item 33 em 2026-09-28: ADR-23** |
 | `docs/adrs.md` | O arquivamento em cascata (`archived_with_parent` + `ArchivesChildren`/`LoadsCascadedChildren`, hooks `deleting`/`restored`) alcança 8 roots sem ADR | a única regra escrita é `frontend-fsliced.md:114-130`, que descreve o **kit de UI**, não o mecanismo de backend |
 | `abertas.md:57` | A âncora `[P-35](#p-35)` aponta para ficha que saiu de `abertas.md` no BD-14 e de `encerradas.md` no BD-12 | anterior a esta sprint; não corrigida por não ser dela |
 
@@ -797,6 +797,10 @@ existe para evitar.
 **Quando for apagar, confira antes se ela não é a única via de acesso programático à conta** — se o
 MFA do usuário estiver indisponível (o fallback da Task 12), apagar a chave pode deixar a conta
 operável só pelo console.
+
+**Medida de novo em 2026-09-28, pelo item 33:** `list-access-keys` ainda devolve a chave `Active`.
+A permissão de e-mail nasceu na role `lotus-ec2` (inline `lotus-ses`), nunca neste usuário — a
+chave segue sem uso pela aplicação e a ficha segue com o João.
 
 ---
 
@@ -1156,3 +1160,24 @@ por um motivo que não é da release, e quem o lê pode recuar o que estava cert
 healthcheck do `app` esperado junto com o do nginx —, com catraca em `deploy-sh.test.ts` vista
 reprovar pela sonda que devolve o `curl` único. Pela **P-87**, a correção só chega ao host pela
 reinstalação do runbook §7.
+
+## P-93 — `operacao-segredos.md` descreve um relay SMTP que a produção nunca teve
+
+**Bloco:** 33 (`infra-producao-email-ses`) · **Quem decide:** — · **Gatilho:** fecha no commit da
+Fase A do item 33 que reescreve `docs/operacao-segredos.md` §3, §4 e §6 e alinha
+`backend/.env.production.example` ao mailer `ses` (spec do bloco, §4.5 e §4.2). Revisar em
+**2026-10-31**.
+
+`docs/operacao-segredos.md:47-49` afirma que o segredo de e-mail em uso é `MAIL_PASSWORD` de um
+relay SMTP selecionado por `MAIL_MAILER=smtp` em `backend/.env.production.example:106`, e o §4
+(linhas 60-79) escreve o procedimento de rotação dessa senha. Nada disso existe: desde o item 10 v2
+o molde real é `deploy/aws/env.prod.example`, que fixa `MAIL_MAILER=log` "até o bloco de SES"
+(linha 115-116), e o host de produção não tem `MAIL_HOST`, `MAIL_USERNAME` nem `MAIL_PASSWORD`.
+O levantamento de 2026-09-26 leu o molde legado do `backend/` e tomou o `smtp` dele por realidade —
+falso positivo registrado na ficha 33 do backlog. O item 33 troca `log` por `ses` com credencial
+pela instance role, então a correção do doc sai junto com o mecanismo que ele passa a descrever:
+e-mail sem segredo de longa duração, e a policy `lotus-ses` como o que se revoga.
+
+**Paga em 2026-09-28 pelo item 33** (commit da Task 4 do plano): `docs/operacao-segredos.md` §3,
+§4, §5.2 e §6 reescritos, `backend/.env.production.example` alinhado a `ses`. Vai para
+`encerradas.md` no `/fechar-sprint` do bloco.

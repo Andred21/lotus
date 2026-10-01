@@ -430,6 +430,45 @@ Redis ficam fora por decisão (spec D12), não por adiamento.
 
 ---
 
+## ADR-23 — E-mail transacional por SES, identidade compartilhada com o site, sem segredo no host
+
+**Contexto (2026-09-28, item 33).** O backend envia três e-mails, todos síncronos (ADR-21: sem
+worker de fila): o alerta de acesso suspeito da `DetectorDeAcessoSuspeito` (D7, para todos os
+`admin` ativos), o link de recuperação de senha (`PasswordResetLink`, broker `users`) e o convite
+de primeiro acesso do redator (`RedatorAccessInvitation`, broker `invites`). Produção subiu no
+item 10 v2 com `MAIL_MAILER=log`: nada chegava a ninguém. A P-53 registrava que o transporte de
+e-mail tinha virado padrão de fato sem ADR, e a P-93 que `docs/operacao-segredos.md` descrevia um
+relay SMTP com senha que nunca existiu.
+
+**Decisão.** Mailer `ses` do Laravel (`config/mail.php`, transporte `ses`, API `SendRawEmail`),
+região `AWS_DEFAULT_REGION` (`sa-east-1`), pela **identidade de domínio `lotusotec.cl` que o
+stack `lotus-contato` do `lotus-site` criou e possui** (ADR-SITE-005 de lá): DKIM, MAIL FROM
+`ses.lotusotec.cl` e DMARC já estão na zona `lotus-dns`. **Nunca duas identidades**: recriar a
+identidade troca os três tokens DKIM na zona, e isso é coordenação com o site, não decisão deste
+repositório. Remetente único `Lotus <lotus@lotusotec.cl>`, travado na policy. **Credencial é a
+instance role `lotus-ec2`**, inline `lotus-ses` (`ses:SendRawEmail` e `ses:SendEmail` só na
+identidade, `Condition ses:FromAddress` no remetente — runbook `deploy/aws/README.md` §4);
+`services.ses` fica sem `key`/`secret` e o SDK cai na chain até o IMDSv2, o mesmo caminho do disco
+`s3`. **A conta sai do sandbox** (production access, runbook §13): os destinatários são pessoas com
+e-mail de qualquer domínio, e o sandbox só entrega a identidade verificada. **DNS do apex não
+muda**: o SPF é avaliado sobre o MAIL FROM (`ses.`) e o DMARC alinha pelo DKIM.
+
+**Consequências.** Não há segredo de e-mail no host: revogar é `delete-role-policy`, e a prova de
+qualquer troca continua sendo um e-mail que chega (`operacao-segredos.md` §4). O envio fica no
+request e a falha é contida (`FalhaDeObservabilidade`), então e-mail que não sai é assintomático
+por dentro — o canal `seguranca` registra o alerta antes do envio por isso. Bounce e complaint
+ficam só com a suppression list do SES, sem tópico de feedback: para ~10 usuários internos, aceito
+por escrito aqui. Production access é da conta: o teto de 200/dia que freava o `/api/contacto`
+do site (D-54 de lá) deixa de existir — efeito declarado ao site, decisão dele.
+
+**Descartado.** SMTP com senha no `.env` (segredo de longa duração, o que o item 10 v2 tirou);
+outro provedor (Resend, Postmark, relay do Workspace: segredo no host, DNS novo coordenado com o
+site e uma aprovação equivalente); `ses-v2` (uma linha de config a mais sem ganho medido);
+sandbox com guarda de domínio `@lotusotec.cl` no cadastro de usuário (recusada pelo João em
+2026-09-28: acopla os usuários do sistema ao domínio da empresa).
+
+---
+
 ## Pendências abertas (não decidir sem o João Victor)
 - ~~Estratégia fina de pruning da auditoria (ADR-08)~~ — **paga por este bloco.** Ver
   `RetentionPolicy` (`backend/app/Shared/Retention/RetentionPolicy.php`, janelas de 12 meses/5
