@@ -8,6 +8,15 @@
 > do bloco (`blocos/33-infra-producao-email-ses/spec.md` e `plano.md`), como o bloco 35 faz e como o
 > `lane.sh conferir` lê; os commands ainda dizem `specs/` e `plans/` (`state.md`, §Transição).
 
+> **Replanejamento em curso (2026-10-01).** Com a Fase A mesclada (PR #121, `44e6e372`, ainda
+> não espelhada), o João decidiu **não pedir production access**: a conta SES fica em sandbox. Os
+> destinatários `@lotusotec.cl` ficam cobertos pela identidade de domínio, e cada endereço externo
+> é verificado como identidade (`create-email-identity`, sem caso aberto na AWS). O Drive
+> (`arquitetura-aws-lotus.md`, G-1) pede a saída do sandbox; a sessão propõe a emenda e só escreve
+> com o ok do João. Achado que entra na emenda: em sandbox o SES autoriza o IAM **também contra a
+> identidade do destinatário**, então a `lotus-ses` com `Resource` só em `identity/lotusotec.cl`
+> recusa um externo verificado. D2, D5, D9, §5, §6, §8 e §9 abaixo valem até a emenda substituí-los.
+
 ## 1. Contexto
 
 ### 1.1 O que já existe — medido em 2026-09-28, não suposto
