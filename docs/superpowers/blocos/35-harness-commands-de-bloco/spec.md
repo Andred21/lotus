@@ -112,6 +112,26 @@ gravou `closed` na própria branch antes do merge, e a ficha 30 segue no backlog
 
 A §5.3 (Passo 3) e a §5.6 (Passos 2 e 7) valem lidas com esta emenda.
 
+### E9 — `efeito_externo: sim` com prova só depois do merge espera em `blocked`
+
+Achado Q-1 da revisão (rodada 1). Com a E8, o `closed` entra antes do PR, e a invariante 11 exige
+a prova antes do `closed`. Quando a prova só existe depois do merge (deploy, configuração em
+produção, aprovação de terceiro — o caso da lane 33), nada andava: sem prova, sem `closed`; sem
+`closed`, sem PR; sem PR, sem merge; sem merge, sem prova. Decisão do João (2026-10-01), no formato
+que a §6 da spec compartilhada já desenhava para o item 36:
+
+- **6a do `/finalizar-bloco`:** `sim` sem prova escrita não para. O commit de fechamento grava
+  `blocked`, com `resume_state: ready_for_closure` e um `blocker` que começa por
+  `aguardando aceitação` e lista os itens pendentes da `## Verificação externa`. A ficha fica no
+  `backlog.md`, e a linha do `historico/progress.md` registra que o bloco mesclou sem a prova.
+  Push e PR seguem como no modo normal.
+- **Retomada e pós-PR** aceitam esse `blocked` onde aceitavam o `closed`. A lane fecha, e o bloco
+  não.
+- **Saída, até o item 36:** uma PR de docs do João grava a prova no corpo do `estado.md`, leva o
+  `estado.md` de `blocked` a `closed`, remove a ficha e atualiza a linha do `progress.md`.
+- **`/planejar-bloco`** para diante de ficha cujo `estado.md` já existe na `main`, porque o
+  `lane.sh abrir` não recusa pasta de bloco existente e sobrescreveria o estado.
+
 ## Verificação externa
 
 Nenhuma. Este bloco é inteiramente interno ao repositório: commands, agentes, prompts,

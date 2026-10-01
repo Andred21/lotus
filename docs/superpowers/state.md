@@ -50,8 +50,10 @@ o estado de onde se está saindo, `blocker` com uma linha que descreve o impedim
 `blocker` foi resolvido, copie `resume_state` de volta para `workflow_state`, zere `blocker` e
 `resume_state` e troque o `next_action` pelo token do estado retomado. Nos dois sentidos vale a
 invariante 9. Enquanto o bloco está em `blocked`, as regras de "a partir de" (invariantes 3, 4 e
-12) usam o `resume_state` como régua. O item 36 acrescenta um caminho automático: aceitação externa
-pendente depois do merge.
+12) usam o `resume_state` como régua. Aceitação externa pendente depois do merge também espera aqui:
+o `/finalizar-bloco` (6a) grava `blocked` com `resume_state: ready_for_closure` e `blocker`
+começando por `aguardando aceitação`, e a lane fecha com o bloco nesse estado. O item 36 automatiza
+a prova e a saída.
 
 ## Campos (`schema_version: 3`)
 
@@ -113,7 +115,9 @@ pendente depois do merge.
     acrescenta nem edita ficha alheia, e é essa regra que mantém o arquivo livre de conflito.
 11. **Bloco com `efeito_externo: sim` não vai a `closed` sem a prova do efeito externo
     registrada.** `closed` significa resultado verificado, não código na `main`. O registro é o
-    `aceitacao.md` que o item 36 introduz; até ele, a prova vai no fechamento.
+    `aceitacao.md` que o item 36 introduz; até ele, a prova vai no corpo do `estado.md`, no
+    fechamento. Quando ela só existe depois do merge, o bloco mescla em `blocked` aguardando
+    aceitação e vai a `closed` na PR que traz a prova (spec do bloco 35, E9).
 12. **`efeito_externo` é obrigatório a partir de `ready_for_execution`.** Quem grava `sim` ou `nao`
     é o planejamento; o `lane.sh abrir` só semeia `null`. `null` num bloco que já passou dali é
     divergência pela invariante 7, e o `SessionStart` a acusa. Ler `null` como `nao` desligaria a

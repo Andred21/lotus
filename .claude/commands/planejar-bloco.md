@@ -51,14 +51,17 @@ blocos não se conferem aqui — quem confere é o portão do `lane.sh abrir`, n
 ## Passo 3 — Resolver a ficha
 
 - `NN` → leia a seção `## <NN>. \`<slug>\`` de `docs/superpowers/backlog.md`. Ausente → pare.
-  Ficha sob `## Aguardando aceitação` → pare: o que falta é prova, e o command certo é
-  `/finalizar-bloco`. Essa tabela só existe depois do item 36 mesclar — hoje ela não existe em
-  `backlog.md`, e este caso não se aplica ainda.
+  Ficha cuja pasta `docs/superpowers/blocos/<NN>-<slug>/` já tem `estado.md` na `main` → pare: o
+  bloco já passou por uma lane, e abrir outra sobrescreveria o estado dele. Em `blocked` aguardando
+  aceitação (o 6a do `/finalizar-bloco` deixa a ficha no backlog até o `closed`), o que falta é
+  prova, e o command certo é `/finalizar-bloco <NN>`. O item 36 acrescenta a tabela
+  `## Aguardando aceitação` ao `backlog.md`; ficha sob ela também para.
 - Leia da ficha: o slug, `**Contexto:**` e `**Depende:**`.
 - **Texto livre** → proponha a ficha no formato das existentes (título, linha
   Prioridade/Frente/Contexto/Depende, Fonte, Objetivo, Escopo, Fora, DoD), com o próximo número
-  livre — maior `## NN.` do backlog + 1, conferido contra `git branch -a` e
-  `docs/superpowers/blocos/` — e **pare**: a ficha só entra na `main` por PR de docs (E8,
+  livre — o maior `NN` visto entre as fichas `## NN.` do backlog, as branches de `git branch -a` e
+  as pastas de `docs/superpowers/blocos/`, mais 1; ficha fechada sai do backlog mas deixa a pasta,
+  e número fechado não se reusa — e **pare**: a ficha só entra na `main` por PR de docs (E8,
   invariante 10), e o command volta a ser invocado com o `NN` depois de publicada. Promover é
   decisão do João (invariante 8).
 - Sem argumento → liste as fichas e pergunte. Nunca escolha sozinho.

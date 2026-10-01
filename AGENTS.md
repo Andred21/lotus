@@ -14,12 +14,20 @@ solicitada**.
   explicitamente.
 - Codex pode executar, revisar e concluir etapas do Superpowers quando João Victor
   delegar explicitamente o bloco ou a transição.
-- Codex pode alterar o `estado.md` do bloco (`docs/superpowers/blocos/<NN>-<slug>/estado.md`;
-  `docs/superpowers/state.md` é só o contrato), `progress.md` e artefatos ativos somente quando:
+- **Chamado por um command de bloco** (Context Packet, execução delegada pelo `/executar-bloco`,
+  lente de revisão), o contrato da skill em `.agents/skills/` vence: o Codex não escreve o
+  `estado.md` do bloco, o `progress.md` nem o `backlog.md`, e não commita. Estado, transições e
+  commits ficam com o Claude; o Codex recomenda a transição no relatório.
+- **Fora dos commands**, com delegação explícita do João da transição, o Codex pode alterar o
+  `estado.md` do bloco (`docs/superpowers/blocos/<NN>-<slug>/estado.md`;
+  `docs/superpowers/state.md` é só o contrato) e artefatos ativos somente quando:
     1. a instrução atual autorizar a transição;
     2. os gates da etapa tiverem sido executados;
     3. `workflow_state`, `next_owner` e `next_action` permanecerem consistentes;
     4. a transição entrar no mesmo commit do artefato que a comprova.
+
+  O `historico/progress.md` e o `backlog.md` só mudam no commit de fechamento do bloco (E8 da
+  spec do bloco 35, invariante 10).
 - Sem delegação explícita, Codex apenas recomenda a próxima transição.
 - Altere arquivos do workspace somente dentro do escopo explicitamente solicitado. Preserve WIP e
   não inclua mudanças adjacentes.

@@ -2,6 +2,9 @@
 
 ## Em aberto
 
+Q-1 a Q-5: o João mandou corrigir todos em 2026-10-01 (Q-1 pela opção "espera em `blocked`",
+emenda E9 da spec). Correção aplicada no commit que traz esta seção; falta a rodada 2 confirmar.
+
 ## Rodada 1 — `42a50a4d..7804f706` — 2026-10-01 · Lente 1: opus · Lente 2: sonnet
 
 Risco: baixo — só harness (commands, agentes, prompts, docs de processo); nenhum domínio das

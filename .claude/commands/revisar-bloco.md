@@ -152,7 +152,9 @@ julgar cada achado `CONFIRMED`; as regras abaixo são as do Lotus por cima dela.
 - `CONFIRMED` Crítico ou Importante que o João decide **adiar** (não corrigir agora) vira **ficha
   proposta** dentro do `revisao.md`, no mesmo formato que ficha nova de bloco usa — título, linha
   `Prioridade/Frente/Contexto/Depende`, `Fonte`, `Objetivo`, `Escopo`, `Fora`, `DoD` —, com o
-  próximo número livre (maior `## NN.` de `docs/superpowers/backlog.md` + 1). A ficha fica
+  próximo número livre — o maior `NN` visto entre as fichas `## NN.` de
+  `docs/superpowers/backlog.md`, as branches de `git branch -a` e as pastas de
+  `docs/superpowers/blocos/`, mais 1, a mesma conta do Passo 3 do `/planejar-bloco`. A ficha fica
   **proposta**: só entra no `backlog.md` por PR de docs (E8, invariante 10) — este command nunca
   escreve nele.
 - Achado que é **divergência de documentação** (o doc afirma o que o código não faz, ou o
