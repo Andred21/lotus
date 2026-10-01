@@ -44,9 +44,8 @@ São duas metades:
 |---|---|---|
 | `APP_KEY` | `backend/config/app.php:107` (cifra de cookie/sessão, `cipher => AES-256-CBC` em `app.php:105`) | Ver §5 — aviso à parte. |
 | `DB_PASSWORD` | `backend/config/database.php:54` (conexão `mysql`) | Compartilhado pelos serviços `app` e `scheduler` (mesmo `env_file`). |
-| Credenciais de S3 (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`) | `backend/config/filesystems.php:52-53` (disco `s3`, ADR-11) | Hoje esse par cobre **só o S3**: o mailer de produção é `smtp`, não `ses` (ver as duas linhas abaixo). |
-| `MAIL_PASSWORD` (com `MAIL_USERNAME`) | `backend/config/mail.php:46-47` (mailer `smtp`), selecionado por `MAIL_MAILER=smtp` em `backend/.env.production.example:106` | **É o segredo de e-mail que produção usa hoje** — o relay por onde sai o alerta síncrono da `DetectorDeAcessoSuspeito` (D7). Rotação em §4. |
-| Credenciais de SES (mesmas `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`) | `backend/config/services.php:24-28` (bloco `ses`), consumido pelo mailer `ses` (`backend/config/mail.php:52-54`) | **Caminho futuro, não o corrente.** O bloco existe e a identidade IAM é a mesma do S3, mas enquanto `MAIL_MAILER` for `smtp` este par não manda e-mail nenhum — quem manda é a linha acima. Trocar para `ses` no item 10 inverte as duas linhas, e aí sim uma única identidade cobre storage e e-mail. |
+| Credenciais de S3 (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`) | `backend/config/filesystems.php:52-53` (disco `s3`, ADR-11) | **Vazias em produção de propósito**: o SDK cai na chain até o IMDSv2 e a credencial é a instance role `lotus-ec2` (runbook `deploy/aws/README.md` §4 e §6). Não é segredo do host — é permissão da role; o que se revoga é a inline `lotus-s3`. |
+| E-mail (SES) | `backend/config/services.php:24-28` (bloco `ses`, sem `key`/`secret` em produção), mailer `ses` de `backend/config/mail.php:52-54`, selecionado por `MAIL_MAILER=ses` em `deploy/aws/env.prod.example` | **Não há segredo de e-mail.** A mesma role cobre o envio pela identidade `lotusotec.cl`, com o remetente travado na inline `lotus-ses` (ADR-23). É a superfície cuja falha é assintomática por dentro — ver §4. |
 | `SANCTUM_STATEFUL_DOMAINS` / `SESSION_DOMAIN` | `backend/config/sanctum.php:21` (`explode(',', ...)`), `backend/config/session.php:159`, `backend/config/cors.php:22` | **Não são segredo** — não dão acesso a nada por si só —, mas entram aqui porque um valor errado quebra o login **em silêncio**: o gate do entrypoint (`docker/php/entrypoint.sh:19-25`) só confere que a variável não está vazia, então uma string não-vazia e errada passa, o container sobe saudável (`/up` responde 200) e o cookie do Sanctum simplesmente nunca é aceito. |
 
 ## 4. Procedimento de rotação por segredo
@@ -57,26 +56,22 @@ mesmo arquivo, e um reinício desalinhado deixa um dos dois autenticando com a s
 banco que já mudou. Efeito colateral: qualquer conexão já aberta com a senha antiga cai; não há downtime
 de dado, só de conexão até o reinício completar.
 
-**`MAIL_PASSWORD` (senha do relay SMTP).** É o segredo de e-mail **em uso**: `MAIL_MAILER=smtp`
-(`backend/.env.production.example:106`) faz o Symfony Mailer autenticar com
-`MAIL_USERNAME`/`MAIL_PASSWORD` (`backend/config/mail.php:46-47`). Procedimento: emitir a credencial
-nova no provedor do relay **sem revogar a antiga**, atualizar o `env_file`, reiniciar `app` **e**
-`scheduler` (o alerta de acesso suspeito pode nascer em qualquer um dos dois) e só então revogar a
-antiga. A prova é um **e-mail de teste que chega**, nunca "o container subiu": e-mail é a única
-superfície deste inventário cuja falha é assintomática do lado de dentro — o alerta da D7 quebra em
-silêncio, a `FalhaDeObservabilidade` registra a falha no canal default (sem endereço, sem mensagem
-crua) e a linha `acesso.suspeito` continua saindo no canal `seguranca` como se nada tivesse
-acontecido. Ninguém percebe pela aplicação; percebe-se pelo alerta que não chegou.
+**E-mail (SES, ADR-23).** Não há credencial a rotacionar: a instance role `lotus-ec2` é a
+credencial, e a inline `lotus-ses` (runbook §4) é o que se revoga — `aws iam delete-role-policy
+--role-name lotus-ec2 --policy-name lotus-ses` derruba todo o e-mail de saída na hora, sem
+reiniciar nada. O que continua valendo é a **prova**: um e-mail que chega, nunca "o container
+subiu". E-mail é a única superfície deste inventário cuja falha é assintomática do lado de
+dentro — o alerta da D7 quebra em silêncio, a `FalhaDeObservabilidade` registra a falha no canal
+default (sem endereço, sem mensagem crua) e a linha `acesso.suspeito` continua saindo no canal
+`seguranca` como se nada tivesse acontecido. Ninguém percebe pela aplicação; percebe-se pelo
+alerta que não chegou. Depois de qualquer mudança em `lotus-ses`, no `.env` (`MAIL_*`) ou na
+identidade SES, o gate é o do runbook §13: alerta ou reset em caixa real.
 
-**Credenciais de S3 (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`).** Hoje a rotação afeta só
-upload/download de arquivo (S3, ADR-11) — o e-mail sai pelo SMTP acima, não por SES (§3).
-Procedimento seguro: criar uma **segunda** chave de acesso na mesma conta IAM (não desativar a
-antiga ainda), atualizar o `env_file` com o par novo, reiniciar `app` e `scheduler`, confirmar a
-superfície funcionando (um upload e um download de teste) e só então desativar/apagar a chave antiga
-no IAM. Rotacionar sem esse intervalo de sobreposição arrisca quebrar a superfície inteira se o par
-novo estiver errado, sem chave velha para recuar. **Se o item 10 trocar `MAIL_MAILER` para `ses`**,
-esta rotação passa a derrubar também todo o e-mail de saída, e a prova precisa incluir o e-mail de
-teste.
+**Credenciais de S3.** Não existem como par de chaves: o acesso ao bucket é a inline `lotus-s3` da
+role (runbook §4), sem `AWS_ACCESS_KEY_ID` no `.env`. "Rotacionar" aqui é revisar a policy, não
+trocar segredo — e o teste continua sendo um upload e um download reais depois de qualquer
+mudança nela. A única access key da conta que interessa a este documento é a do usuário de
+provisionamento `lotus-infra`, que a aplicação **não usa** e que a P-81 manda apagar.
 
 **`SANCTUM_STATEFUL_DOMAINS` / `SESSION_DOMAIN`.** Não têm cadência — mudam só quando a topologia de
 domínio muda (ex.: `FRONTEND_URL` migra de host). Como o entrypoint só confere presença (§1, §3), todo
@@ -136,7 +131,7 @@ Gatilho: cookie/sessão vazado, chave exposta, suspeita de acesso indevido (§6)
 2. Fazer o deploy (`app` e `scheduler`). A partir daqui todo cookie emitido com a chave velha falha a
    decifragem — inclusive o do atacante — e toda sessão viva cai.
 3. Apagar as linhas de sessão no banco: `SESSION_DRIVER=database`
-   (`backend/.env.production.example:60`) guarda cada sessão numa linha de `sessions`
+   (`deploy/aws/env.prod.example:59`) guarda cada sessão numa linha de `sessions`
    (`backend/database/migrations/0001_01_01_000000_create_users_table.php:39`), e um
    `DELETE FROM sessions;` no MySQL revoga independentemente de chave. É o passo que **garante** a
    revogação: sem ele, restaria confiar em que nenhuma outra porta reabra a sessão.
@@ -150,9 +145,9 @@ isso — diferente das janelas de retenção (`RetentionPolicy`), que **são** d
 constante. Por isso este documento não inventa um número com peso de decisão de negócio: propõe uma
 cadência de **trabalho**, proporcional a ~10 usuários internos e revisável a qualquer momento por ele:
 
-- **Base:** revisão anual de `DB_PASSWORD`, do `MAIL_PASSWORD` e das credenciais de S3 — suficiente
-  para uma equipe deste tamanho, sem o custo operacional de uma rotação trimestral que ninguém está
-  medindo.
+- **Base:** revisão anual de `DB_PASSWORD` (S3 e e-mail vão pela role, sem credencial de longa
+  duração) — suficiente para uma equipe deste tamanho, sem o custo operacional de uma rotação
+  trimestral que ninguém está medindo.
 - **`APP_KEY`:** sem cadência de calendário própria — só rotaciona pelos gatilhos abaixo. A rotação
   planejada (§5.1) não custa sessão nenhuma; a de comprometimento (§5.2) derruba todas de propósito,
   e é a que o gatilho pede.
