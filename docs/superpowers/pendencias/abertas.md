@@ -357,6 +357,12 @@ ficha 33 a linha `**Depende:** —` que o portão do `lane.sh abrir` exige. É a
 `CONTRIBUINDO.md`, usada uma vez e registrada aqui; não é o caminho que fecha a pendência. A ficha 30
 continua no `backlog.md`.
 
+**Desvio de 2026-10-01, decidido pelo João:** a ficha 23 e a `D-65` saíram do `backlog.md` na PR
+de fechamento da própria lane, que também levou o bloco 23 a `closed`. É a segunda saída acima, sem
+a invariante 10 reescrita, e o mesmo desvio do item 30 (`7b14e817`), agora por escolha registrada.
+Passou pela CI e pelo `procedencia`, o que o commit direto do item 32 não passou. Não fecha a
+pendência: o caminho escrito continua com o item 35.
+
 ## P-32 — a guarda da lição 13 confere path, não classe
 
 **Bloco:** BD-15 · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a
