@@ -2,8 +2,27 @@
 
 ## Em aberto
 
-Q-1 a Q-5: o João mandou corrigir todos em 2026-10-01 (Q-1 pela opção "espera em `blocked`",
-emenda E9 da spec). Correção aplicada no commit que traz esta seção; falta a rodada 2 confirmar.
+- Q-6 · Importante · CONFIRMED — falta a aprovação do João para corrigir: o contrato
+  (`state.md`, saída de `blocked` e invariante 10), o `CLAUDE.md` e o `AGENTS.md` não levaram a E9.
+
+## Rodada 2 — `42a50a4d..0b073752` — 2026-10-01 · Lente 1: opus · Lente 2: sonnet
+
+Risco: baixo, como na rodada 1. A rodada revisa o bloco inteiro, com a correção `0b073752` dos
+achados da rodada 1. Na lente 1, Q-2 a Q-5 da rodada 1 saem fechados. O Q-1 fecha nos commands, e
+o que faltou dele no contrato virou o Q-6. Os achados desta rodada continuam a numeração da
+rodada 1.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-6 | Importante | A E9 não chegou ao contrato. A seção "Entrar e sair de `blocked`" manda copiar o `resume_state` de volta, mas o modo Aceitação vai direto de `blocked` a `closed`. A invariante 10 diz que é a lane que remove a ficha junto com o `closed`, mas na E9 quem remove é a PR de docs do João. O `CLAUDE.md` e o `AGENTS.md` repetem a regra antiga. A saída do modo Aceitação não diz o que gravar em `next_owner`/`next_action`, nem pede `commit`/`updated_at`/`updated_by` (invariante 9). Uma sessão que siga o contrato grava `ready_for_closure` na `main`, e o bloco cai em "Nada casa" | CONFIRMED | `docs/superpowers/state.md:49-51`, `:112-114`; `.claude/commands/finalizar-bloco.md:122-126`; `CLAUDE.md:42-43`; `AGENTS.md:29-30` | em aberto, espera a aprovação do João |
+| Q-7 | Menor | O modo Pós-PR não confere o `workflow_state` antes do `lane.sh fechar`. O único teste é o `merge-base --is-ancestor`, e uma lane viva com PR intermediária já mesclada seria fechada | CONFIRMED | `.claude/commands/finalizar-bloco.md:82-93`, `:368-372`; `.claude/scripts/lane.sh:391-396` | registrado, não bloqueia |
+| Q-8 | Menor | O resumo em negrito do Passo 2 manda à retomada no Passo 7 só o `closed`, e omite o `blocked` aguardando aceitação que o ramo Retomada trata igual | CONFIRMED | `.claude/commands/finalizar-bloco.md:131`, contra `:56-61` e `:77-78` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 1 confirmado, 0
+plausíveis, 0 refutados · Menor: 2 confirmados, 0 plausíveis, 0 refutados
+
+Correção da rodada 1: o João mandou corrigir Q-1 a Q-5 em 2026-10-01. O Q-1 seguiu a opção "espera
+em `blocked`" (emenda E9 da spec), e tudo foi aplicado em `0b073752`.
 
 ## Rodada 1 — `42a50a4d..7804f706` — 2026-10-01 · Lente 1: opus · Lente 2: sonnet
 
