@@ -2,9 +2,25 @@
 
 ## Em aberto
 
-- Q-6 · Importante · CONFIRMED — aprovado pelo João em 2026-10-01; correção aplicada no commit
-  que traz esta linha; falta a rodada 3 confirmar. Q-7 e Q-8 (Menor) ficam registrados, sem
-  correção.
+- Q-9 · Importante · CONFIRMED — falta a aprovação do João e a escolha da regra: o 6d e a
+  invariante 10 proíbem tirar do backlog o débito `D-*` que o bloco pagou.
+
+## Rodada 3 — `42a50a4d..58244621` — 2026-10-01 · Lente 1: opus · Lente 2: sonnet
+
+Risco: baixo. Esta rodada revisa a correção `58244621` do Q-6. A lente 1 dá o Q-6 como fechado
+(contrato, `CLAUDE.md`, `AGENTS.md` e o YAML do modo Aceitação) e sem problema novo. Q-7 e Q-8, da
+rodada 2, são Menores que o João decidiu não corrigir.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-9 | Importante | O 6d manda remover "só a própria ficha", e a invariante 10 diz o mesmo. Mas o `backlog.md` diz que o débito `D-*` sai do registro canônico no fechamento do bloco que o paga, e a tabela "Fichas que saíram desta fila" tem sete linhas assim. O fluxo novo proíbe essa edição e não diz o que fazer com o débito pago. O item 23 declara pagar a `D-65` e fecharia com ela ainda listada | CONFIRMED | `.claude/commands/finalizar-bloco.md:261-270`; `docs/superpowers/state.md:115-121`; `docs/superpowers/backlog.md:33-35`, `:488-490`, `:499-509`, `:227` | em aberto, espera a aprovação do João |
+| Q-10 | Menor | O `AGENTS.md` manda ler o `backlog.md` "somente no main tree", inclusive no fechamento. Mas o fechamento roda na lane (6d), como o `CLAUDE.md` §3 diz | CONFIRMED | `AGENTS.md:56-57`; `.claude/commands/finalizar-bloco.md:261`; `CLAUDE.md:41-44` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 1 confirmado, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+Correção da rodada 2: o João aprovou corrigir só o Q-6, em 2026-10-01, e a correção entrou em
+`58244621`. Q-7 e Q-8 ficaram registrados, sem correção.
 
 ## Rodada 2 — `42a50a4d..0b073752` — 2026-10-01 · Lente 1: opus · Lente 2: sonnet
 
