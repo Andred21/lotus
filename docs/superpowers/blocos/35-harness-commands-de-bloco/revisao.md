@@ -2,8 +2,9 @@
 
 ## Em aberto
 
-- Q-6 · Importante · CONFIRMED — falta a aprovação do João para corrigir: o contrato
-  (`state.md`, saída de `blocked` e invariante 10), o `CLAUDE.md` e o `AGENTS.md` não levaram a E9.
+- Q-6 · Importante · CONFIRMED — aprovado pelo João em 2026-10-01; correção aplicada no commit
+  que traz esta linha; falta a rodada 3 confirmar. Q-7 e Q-8 (Menor) ficam registrados, sem
+  correção.
 
 ## Rodada 2 — `42a50a4d..0b073752` — 2026-10-01 · Lente 1: opus · Lente 2: sonnet
 

@@ -52,8 +52,11 @@ o estado de onde se está saindo, `blocker` com uma linha que descreve o impedim
 invariante 9. Enquanto o bloco está em `blocked`, as regras de "a partir de" (invariantes 3, 4 e
 12) usam o `resume_state` como régua. Aceitação externa pendente depois do merge também espera aqui:
 o `/finalizar-bloco` (6a) grava `blocked` com `resume_state: ready_for_closure` e `blocker`
-começando por `aguardando aceitação`, e a lane fecha com o bloco nesse estado. O item 36 automatiza
-a prova e a saída.
+começando por `aguardando aceitação`, e a lane fecha com o bloco nesse estado. **A saída desse
+`blocked` é a exceção à regra acima:** vai direto a `closed`, não ao `resume_state`, porque o
+`ready_for_closure` já está cumprido — a revisão passou, e a prova era o que faltava. Ela entra numa
+PR de docs, com a prova no corpo do `estado.md` e os registros da invariante 10 (`/finalizar-bloco`,
+modo Aceitação). O item 36 automatiza a prova e a saída.
 
 ## Campos (`schema_version: 3`)
 
@@ -111,8 +114,11 @@ a prova e a saída.
 9. Quem altera um `estado.md` atualiza, no mesmo arquivo, `updated_at`, `updated_by` e `commit`.
 10. **`backlog.md` entra na `main` só por PR.** Ficha nova vem numa PR de docs; a lane remove só a
     própria ficha, no commit de fechamento do `/finalizar-bloco`, junto com a linha do
-    `historico/progress.md` e o `estado.md` em `closed` (spec do bloco 35, E8). Nenhuma lane
-    acrescenta nem edita ficha alheia, e é essa regra que mantém o arquivo livre de conflito.
+    `historico/progress.md` e o `estado.md` em `closed` (spec do bloco 35, E8). Exceção: o bloco
+    que mesclou em `blocked` aguardando aceitação (invariante 11) — a remoção da ficha, a linha do
+    `historico/progress.md` atualizada e o `closed` entram juntos na PR de docs que traz a prova
+    (E9). Nenhuma lane acrescenta nem edita ficha alheia, e é essa regra que mantém o arquivo livre
+    de conflito.
 11. **Bloco com `efeito_externo: sim` não vai a `closed` sem a prova do efeito externo
     registrada.** `closed` significa resultado verificado, não código na `main`. O registro é o
     `aceitacao.md` que o item 36 introduz; até ele, a prova vai no corpo do `estado.md`, no

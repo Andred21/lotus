@@ -26,8 +26,10 @@ solicitada**.
     3. `workflow_state`, `next_owner` e `next_action` permanecerem consistentes;
     4. a transição entrar no mesmo commit do artefato que a comprova.
 
-  O `historico/progress.md` e o `backlog.md` só mudam no commit de fechamento do bloco (E8 da
-  spec do bloco 35, invariante 10).
+  Essa delegação não alcança o `historico/progress.md` nem o `backlog.md`: eles mudam só nos
+  pontos da invariante 10 do `state.md` — ficha nova numa PR de docs; a remoção da própria ficha
+  e a linha do `progress.md` no fechamento do bloco, ou na PR de docs que traz a prova quando ele
+  mesclou aguardando aceitação.
 - Sem delegação explícita, Codex apenas recomenda a próxima transição.
 - Altere arquivos do workspace somente dentro do escopo explicitamente solicitado. Preserve WIP e
   não inclua mudanças adjacentes.

@@ -131,6 +131,9 @@ que a §6 da spec compartilhada já desenhava para o item 36:
   `estado.md` de `blocked` a `closed`, remove a ficha e atualiza a linha do `progress.md`.
 - **`/planejar-bloco`** para diante de ficha cujo `estado.md` já existe na `main`, porque o
   `lane.sh abrir` não recusa pasta de bloco existente e sobrescreveria o estado.
+- **Contrato** (achado Q-6, rodada 2): o `state.md` registra as duas exceções — a saída desse
+  `blocked` vai direto a `closed`, e não ao `resume_state`; e a invariante 10 aceita a remoção da
+  ficha na PR de docs que traz a prova. O `CLAUDE.md` §3 e o `AGENTS.md` repetem isso.
 
 ## Verificação externa
 

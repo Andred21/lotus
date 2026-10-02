@@ -119,11 +119,27 @@ devolveu — e use-os **literalmente** dali para frente, nos passos seguintes.
   `sem-arvore␟NN␟…` no `descobrir`, e `docs/superpowers/blocos/<NN>-<slug>/estado.md` — já
   mesclado na `main` — diz `workflow_state: blocked`, esperando prova de efeito externo depois do
   merge (o que o 6a gravou). Esse é o modo que o item 36 implementa por inteiro; aqui, pare e diga:
-  "o modo aceitação chega com o item 36". Até lá, a saída é do João, numa PR de docs: a prova
-  escrita no corpo do `estado.md`; o `estado.md` direto de `blocked` para `closed` (o
-  `resume_state` já está cumprido: a revisão passou e a prova era o que faltava), com `blocker` e
-  `resume_state` em `null`; a remoção da ficha como o 6d descreve; e a linha do
-  `historico/progress.md` atualizada, sem linha nova.
+  "o modo aceitação chega com o item 36". Até lá, a saída é do João, numa PR de docs
+  (`docs/superpowers/state.md`, "Entrar e sair de `blocked`" e invariante 10), com tudo num commit
+  só:
+
+  - a prova escrita no corpo do `estado.md`, abaixo do frontmatter (invariante 11);
+  - o frontmatter direto de `blocked` para `closed` — o `resume_state` já está cumprido: a revisão
+    passou e a prova era o que faltava:
+
+    ```yaml
+    workflow_state: closed
+    next_owner: joao
+    next_action: none
+    blocker: null
+    resume_state: null
+    commit: <git rev-parse --short HEAD antes deste commit>
+    updated_at: <date -Iseconds>
+    updated_by: <id -un>@<hostname -s> / <alias do modelo, ou terminal>
+    ```
+
+  - a remoção da ficha como o 6d descreve;
+  - a linha do `historico/progress.md` atualizada, sem linha nova.
 
 - **Nada casa.** Relate `workflow_state`, `next_owner` e `next_action` do `estado.md` que deu para
   ler, e pare.
