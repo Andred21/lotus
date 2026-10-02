@@ -2,9 +2,25 @@
 
 ## Em aberto
 
-- Q-9 · Importante · CONFIRMED — aprovado pelo João em 2026-10-02, pela opção "lane tira o `D-*`
-  pago" (emenda E10 da spec); correção aplicada no commit que traz esta linha; falta a rodada 4
-  confirmar. Q-10 (Menor) fica registrado, sem correção.
+## Rodada 4 — `42a50a4d..232faedd` — 2026-10-02 · Lente 1: opus · Lente 2: sonnet
+
+Risco: baixo. Esta rodada revisa a correção `232faedd` do Q-9. A lente 1 dá o Q-9 como fechado: o
+6d reconhece a declaração no formato real (``Paga a **`D-65`**``); o `git add` do 6f e o modo
+Aceitação acompanham a mudança; e a invariante 10, o `CLAUDE.md`, o `AGENTS.md` e o `backlog.md`
+estão alinhados. Os três achados novos vêm da própria correção, e todos são Menores. Q-7, Q-8 e
+Q-10, das rodadas anteriores, são Menores que o João decidiu não corrigir.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-11 | Menor | O 6d prescreve a linha da tabela de saídas sem o prefixo `> `, mas a tabela vive dentro de um blockquote. E o corte da ficha `D-*` não para no `---`: cortar a última, a `D-37`, apagaria o separador da seção | CONFIRMED | `.claude/commands/finalizar-bloco.md:272-275`; `docs/superpowers/backlog.md:500-509`, `:629-637` | registrado, não bloqueia |
+| Q-12 | Menor | A invariante 10 ainda diz que a regra "mantém o arquivo livre de conflito", mas com a E10 toda lane que paga um `D-*` acrescenta uma linha no fim da mesma tabela. Duas lanes em paralelo dão conflito no segundo PR | CONFIRMED | `docs/superpowers/state.md:121-122`; `.claude/commands/finalizar-bloco.md:274-275` | registrado, não bloqueia |
+| Q-13 | Menor | A exceção de aguardando aceitação na invariante 10 não cita os `D-*` pagos. E nesse caminho o 6d é pulado e a linha do 6c não nomeia quais `D-*` o Passo 3 deu como pagos, então o julgamento não fica registrado para a PR de docs | CONFIRMED | `docs/superpowers/state.md:118-121`; `.claude/commands/finalizar-bloco.md:258-259`, `:281-282`; `spec.md:147-148` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 3 confirmados, 0 plausíveis, 0 refutados
+
+Correção da rodada 3: o João aprovou o Q-9 em 2026-10-02, pela opção "lane tira o `D-*` pago"
+(emenda E10). A correção entrou em `232faedd`. Q-10 ficou registrado, sem correção.
 
 ## Rodada 3 — `42a50a4d..58244621` — 2026-10-01 · Lente 1: opus · Lente 2: sonnet
 
