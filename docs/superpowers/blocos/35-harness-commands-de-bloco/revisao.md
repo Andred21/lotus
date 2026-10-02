@@ -2,8 +2,9 @@
 
 ## Em aberto
 
-- Q-9 · Importante · CONFIRMED — falta a aprovação do João e a escolha da regra: o 6d e a
-  invariante 10 proíbem tirar do backlog o débito `D-*` que o bloco pagou.
+- Q-9 · Importante · CONFIRMED — aprovado pelo João em 2026-10-02, pela opção "lane tira o `D-*`
+  pago" (emenda E10 da spec); correção aplicada no commit que traz esta linha; falta a rodada 4
+  confirmar. Q-10 (Menor) fica registrado, sem correção.
 
 ## Rodada 3 — `42a50a4d..58244621` — 2026-10-01 · Lente 1: opus · Lente 2: sonnet
 

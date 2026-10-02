@@ -113,7 +113,8 @@ modo Aceitação). O item 36 automatiza a prova e a saída.
    explícita do João.
 9. Quem altera um `estado.md` atualiza, no mesmo arquivo, `updated_at`, `updated_by` e `commit`.
 10. **`backlog.md` entra na `main` só por PR.** Ficha nova vem numa PR de docs; a lane remove só a
-    própria ficha, no commit de fechamento do `/finalizar-bloco`, junto com a linha do
+    própria ficha e os débitos `D-*` que o bloco pagou (com a linha de cada um na tabela de fichas
+    que saíram — E10), no commit de fechamento do `/finalizar-bloco`, junto com a linha do
     `historico/progress.md` e o `estado.md` em `closed` (spec do bloco 35, E8). Exceção: o bloco
     que mesclou em `blocked` aguardando aceitação (invariante 11) — a remoção da ficha, a linha do
     `historico/progress.md` atualizada e o `closed` entram juntos na PR de docs que traz a prova

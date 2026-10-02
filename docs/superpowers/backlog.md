@@ -31,8 +31,8 @@
 > Histórico entregue → `historico/progress.md` · fichas `P-*` → `pendencias/abertas.md` ·
 > specs/planos → `specs/archive/` e `plans/archive/`. Não duplicar esses conteúdos aqui.
 > O registro canônico dos débitos `D-*` segue neste arquivo, na seção `# Débitos técnicos` —
-> entrar num bloco não move nem apaga a ficha; a remoção acontece no `/fechar-sprint` do bloco
-> que a paga.
+> entrar num bloco não move nem apaga a ficha; a remoção acontece no `/finalizar-bloco` do bloco
+> que a paga (item 6d).
 >
 > **Planejamento just-in-time (CLAUDE.md §4):** o roadmap vive como título e escopo, não como
 > plano pronto que envelhece. Spec e plano se escrevem imediatamente antes da execução; limites,
@@ -486,9 +486,9 @@ ficam só como ponteiro, e a ficha delas é lá.
 # Débitos técnicos — registro canônico
 
 > Ficha de cada débito vivo. A cobertura por bloco está mapeada na fila; **entrar num bloco não
-> move nem apaga a linha daqui** — a remoção acontece só depois do bloco aplicado e do
-> `/fechar-sprint` correspondente. Fichas completas anteriores: histórico do arquivo no Git
-> (`git log -- docs/superpowers/backlog.md`).
+> move nem apaga a linha daqui** — a remoção acontece só depois do bloco aplicado, no
+> `/finalizar-bloco` correspondente (item 6d). Fichas completas anteriores: histórico do arquivo
+> no Git (`git log -- docs/superpowers/backlog.md`).
 
 ## Agrupados em bloco
 

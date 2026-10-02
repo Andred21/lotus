@@ -135,6 +135,20 @@ que a §6 da spec compartilhada já desenhava para o item 36:
   `blocked` vai direto a `closed`, e não ao `resume_state`; e a invariante 10 aceita a remoção da
   ficha na PR de docs que traz a prova. O `CLAUDE.md` §3 e o `AGENTS.md` repetem isso.
 
+### E10 — a lane tira do backlog os débitos `D-*` que o bloco pagou
+
+Achado Q-9 da revisão (rodada 3). A E8 deixou a lane remover só a própria ficha, mas o `backlog.md`
+diz que o débito `D-*` sai do registro canônico no fechamento do bloco que o paga, e a tabela
+"Fichas que saíram desta fila" é o rastro disso. O item 23, que paga a `D-65`, fecharia com ela
+listada como viva. Decisão do João (2026-10-02), mantendo a prática de até aqui:
+
+- **6d do `/finalizar-bloco`:** além da própria ficha, a lane remove cada `D-*` que a ficha
+  (`Paga a …`) ou o plano declaram pagar e que a verificação do Passo 3 deu como paga, e acrescenta
+  a linha dela na tabela de saídas. Débito declarado e não pago fica, e o relato diz isso. Em
+  aguardando aceitação (E9), tudo isso vai para a PR que grava o `closed`.
+- **Invariante 10**, `CLAUDE.md` §3 e `AGENTS.md` dizem o mesmo; as duas frases do `backlog.md`
+  que citavam o `/fechar-sprint` passam a citar o `/finalizar-bloco`.
+
 ## Verificação externa
 
 Nenhuma. Este bloco é inteiramente interno ao repositório: commands, agentes, prompts,

@@ -138,7 +138,7 @@ devolveu — e use-os **literalmente** dali para frente, nos passos seguintes.
     updated_by: <id -un>@<hostname -s> / <alias do modelo, ou terminal>
     ```
 
-  - a remoção da ficha como o 6d descreve;
+  - a remoção da ficha e dos `D-*` pagos, como o 6d descreve;
   - a linha do `historico/progress.md` atualizada, sem linha nova.
 
 - **Nada casa.** Relate `workflow_state`, `next_owner` e `next_action` do `estado.md` que deu para
@@ -265,12 +265,21 @@ nomeia os itens pendentes; quem a atualiza, sem linha nova, é a PR que grava o 
 - a linha dela na tabela de `# Ordem de execução`, quando tiver uma — a linha cujo `Bloco` começa
   por `**<NN>**`. As outras linhas da tabela não mudam de posição nem de número.
 
-Nenhuma outra linha do `backlog.md` muda — prosa que cita o número, inclusive (E8, invariante 10 —
-a lane escreve a própria remoção; o main tree não publica commit nenhum na `main`, então a única
-porta pela qual o `backlog.md` chega lá é esta, dentro do PR).
+Depois, os **débitos `D-*` que o bloco pagou** — os que a própria ficha declara (``Paga a
+**`D-NN`**``) ou o plano diz pagar, e que a verificação do Passo 3 deu como pagos. Débito
+declarado e não pago fica onde está, e o relato do command diz isso. Para cada pago:
 
-Aguardando aceitação: pule este item. A ficha fica no `backlog.md` até o `closed`, e sai na mesma
-PR que o grava.
+- a ficha `- **D-NN · …**` sai de `# Débitos técnicos`, com os parágrafos indentados dela, até
+  antes do próximo `- **D-` ou do próximo título;
+- a tabela "Fichas que saíram desta fila" ganha, no fim, a linha
+  ``| <AAAA-MM-DD> | `D-NN` | paga — <a prova, em uma linha, com arquivo ou SHA> | item <NN> |``.
+
+Nenhuma outra linha do `backlog.md` muda — prosa que cita o número, inclusive (E8, E10, invariante
+10 — a lane escreve a própria remoção; o main tree não publica commit nenhum na `main`, então a
+única porta pela qual o `backlog.md` chega lá é esta, dentro do PR).
+
+Aguardando aceitação: pule este item inteiro. A ficha e os `D-*` ficam no `backlog.md` até o
+`closed`, e saem na mesma PR que o grava.
 
 **e. Estado.**
 
