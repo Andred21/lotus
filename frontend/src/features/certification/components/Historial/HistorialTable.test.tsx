@@ -43,7 +43,7 @@ function certificado(over: Partial<CertificateData['snapshot']['aluno']> = {}): 
   } as unknown as CertificateData
 }
 
-const montar = (c: CertificateData) => {
+const montar = (c: CertificateData, extra: Partial<Historial> = {}) => {
   historial.current = {
     // Forma do `SearchableTableState` de `shared/ui`: `first`/`onPage` fazem
     // parte do contrato — sem eles o DataTable pagina sobre `undefined` e o
@@ -71,6 +71,7 @@ const montar = (c: CertificateData) => {
     loadError: null,
     reload: () => {},
     setViewingCertificateId: () => {},
+    ...extra,
   } as unknown as Historial
 
   // A tabela monta os diálogos junto (`CertificateViewDialog` chama

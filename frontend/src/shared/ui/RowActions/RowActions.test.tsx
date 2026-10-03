@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, renderHook, screen } from '@testing-library/react'
+import { fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react'
 import { setViewportWidth } from '@shared/testing/viewport'
 import { ArchiveRowActions } from '../ArchiveRowActions'
 import { RowActions, type RowAction } from './RowActions'
@@ -66,6 +66,49 @@ describe('RowActions', () => {
 
     expect(screen.getByRole('button', { name: 'Ver' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'common.moreActions' })).toBeNull()
+  })
+
+  it('ação destrutiva tinge o botão solto, e o describedBy aponta o motivo do disabled', () => {
+    render(
+      <RowActions
+        collapsed={false}
+        actions={[acao('Quitar', { severity: 'danger', disabled: true, describedBy: 'motivo' })]}
+      />,
+    )
+
+    const botao = screen.getByRole('button', { name: 'Quitar' })
+    expect(botao.className).toContain('p-button-danger')
+    expect(botao.getAttribute('aria-describedby')).toBe('motivo')
+  })
+
+  it('a dica abre à ESQUERDA do ícone: à direita ela passa da borda da tabela e cria rolagem na página', async () => {
+    render(<RowActions collapsed={false} actions={[acao('Revocar', { tooltip: true })]} />)
+
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'Revocar' }))
+
+    const dica = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.p-tooltip')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(dica.textContent).toBe('Revocar')
+    expect(dica.className).toContain('p-tooltip-left')
+  })
+
+  it('o botão apagado também mostra a dica, pelo invólucro: o Prime não a abre em botão disabled', async () => {
+    render(<RowActions collapsed={false} actions={[acao('Emitir', { tooltip: true, disabled: true })]} />)
+
+    const botao = screen.getByRole('button', { name: 'Emitir' })
+    expect(botao.hasAttribute('disabled')).toBe(true)
+    fireEvent.mouseEnter(botao.parentElement!)
+
+    const dica = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.p-tooltip')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(dica.textContent).toBe('Emitir')
+    expect(dica.className).toContain('p-tooltip-left')
   })
 })
 

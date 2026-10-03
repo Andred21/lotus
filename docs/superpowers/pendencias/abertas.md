@@ -12,6 +12,26 @@
 
 # Frontend
 
+## P-94 — o diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha
+
+**Bloco:** — · **Gatilho:** fecha quando o `medir.cjs` do audit do item 23 (Apêndice A), com um
+alumno que tenha turma, medir `scroll` = `frame` na linha `DIALOGO` em 1024x768. O mesmo vale para
+qualquer bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo do Alumno ou o piso
+default do `AppDataTable/style.ts`. Revisar em **2026-10-31**.
+
+Medido em 2026-09-28, no fechamento do item 23 (`frontend-tabelas-reserva-e-rolagem`), em
+`7f829137`, offset +2, es-CL. A tabela de turmas do diálogo do Alumno (consumidora 15 da spec do
+item 23) mede `frame 669 · scroll 672 · table 672` em 1024x768. A régua da spec §3 pede
+`scrollWidth == clientWidth`, e reprova por 3px.
+
+A causa é o piso default de 42rem (672px) da §4.1, que o diálogo herda como toda consumidora sem
+`pt` próprio. A moldura do diálogo em 1024 tem 669px, 3px a menos. O audit do item 23 mediu o
+diálogo só vazio, com `rows 0` e `min-width` 0px, e concluiu que ele "não tem piso". A seção 9 do
+audit corrige isso. Antes do bloco, o piso era 48rem, e o mesmo diálogo com dado teria rolado 99px.
+
+Ficou aberta por decisão do João no gate de fechamento do item 23. O bloco fechou com o resíduo
+registrado, sem reabrir a execução.
+
 ## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
 
 **Bloco:** — · **Gatilho:** fecha quando uma régua por estado, no molde do `describe` da P-30
@@ -254,6 +274,30 @@ repositório prova lock.
   recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
   desta ficha). Turma 7 restaurada ao fim do gate.
 
+## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** bloco que tocar `backend/bootstrap/app.php`
+(`withMiddleware` ou `withExceptions`) ou o middleware de autenticação; revisar em **2026-10-31**.
+
+**Medido em produção pelo item 32, em 2026-09-27 e de novo no fechamento (2026-09-28T02:35Z):**
+`GET https://app.lotusotec.cl/api/courses/archived` sem sessão devolve **401** com
+`Accept: application/json` e **500** sem ele. Anterior ao item 32 e alheio a ele.
+
+**Causa:** o `Authenticate` do Laravel só pula o redirecionamento quando o pedido `expectsJson()`
+(`vendor/.../Auth/Middleware/Authenticate.php:104`). Sem `Accept`, ele monta o destino do
+redirecionamento pelo callback padrão que o `ApplicationBuilder` registra,
+`redirectGuestsTo(fn () => route('login'))` — rota que o Lotus não tem, porque o login é da SPA. A `RouteNotFoundException` nasce antes da `AuthenticationException`, e o
+`shouldRenderJsonWhen` de `api/*` renderiza o que chega: um 500 RFC 7807 no lugar do 401.
+
+**Por que ficou aberta:** o front sempre manda o `Accept`, então nenhum usuário vê o 500; quem o
+provoca é cliente sem o cabeçalho (curl, robô, sonda). Mas ele fere a §5.4 (401 RFC 7807 esperado
+para não autenticado) e, como 500, conta como defeito no registro de erro. O `/fechar-sprint` já
+documenta o sintoma como armadilha de curl, e não como falha do código.
+
+**Fecha quando:** `/api/*` sem sessão e sem `Accept` devolver 401 RFC 7807 — por exemplo
+`redirectGuestsTo` sem rota nomeada para `api/*` —, com teste de feature que faça o pedido sem o
+cabeçalho, visto reprovar antes da correção.
+
 ---
 
 # Documentação e mecanismo
@@ -283,6 +327,41 @@ recusa diz isso —, e não há doc que explique a régua da allowlist nem por q
 não escreveu nada disso porque o plano não listou entregável de doc; a spec §3.4 cobre a
 consequência de versionar os hooks, mas a spec agora está em `specs/archive/`, que ninguém lê por
 rotina.
+
+## P-92 — a invariante 10 manda o main tree escrever o `backlog.md` na `main`, e nenhum caminho deixa
+
+**Bloco:** 35 (`harness-commands-de-bloco`) · **Quem decide:** João · **Gatilho:** fecha quando o
+fluxo de fechamento tiver um caminho escrito, e exercido uma vez, para a ficha de um bloco fechado
+sair do `backlog.md` — ou quando a invariante 10 for reescrita para o caminho que existe. Revisar em
+**2026-10-31**.
+
+A invariante 10 do `state.md` diz: *"`backlog.md` é escrito somente pelo main tree, na `main`."*
+Mas o main tree não tem como escrever na `main`: o `guard-main` e o `guard-main-shell` negam
+escrita com a árvore na `main`, e o `pre-push` recusa push direto nela (`CONTRIBUINDO.md`). Toda
+mudança chega à `main` por PR, e PR sai de branch, que não é o main tree.
+
+**Medido em 2026-09-27, no fechamento do item 32:** a ficha 30 segue em `backlog.md:328` da
+`origin/main@229994bb`, um dia depois de o item 30 fechar e mesclar (PR #116); a ficha 32 segue em
+`backlog.md:137`, com o bloco em `closed` e mesclado (PR #118). Os dois fechamentos disseram "o
+main tree remove a ficha depois do merge", e nenhum dos dois tinha como. As mudanças do backlog que
+entraram até aqui vieram de branch de lane (`7b14e817`, na do item 30), contra a letra da regra.
+
+**Por que fica aberta:** o João escolheu, no fechamento do item 32, não quebrar a regra por atalho
+e entregar a lacuna ao item 35, que reescreve os comandos de bloco. As saídas que se veem: uma
+branch curta aberta do main tree só para o `backlog.md`, ou a lane remover a própria ficha no PR de
+fechamento, com a invariante reescrita para dizer isso.
+
+**Exceção de 2026-09-28, decidida pelo João:** a ficha 32 saiu do `backlog.md` por commit direto na
+`main`, do main tree, com `LOTUS_FORCA_MAIN=1` no push — sem branch nem PR. O mesmo commit deu à
+ficha 33 a linha `**Depende:** —` que o portão do `lane.sh abrir` exige. É a saída de emergência do
+`CONTRIBUINDO.md`, usada uma vez e registrada aqui; não é o caminho que fecha a pendência. A ficha 30
+continua no `backlog.md`.
+
+**Desvio de 2026-10-01, decidido pelo João:** a ficha 23 e a `D-65` saíram do `backlog.md` na PR
+de fechamento da própria lane, que também levou o bloco 23 a `closed`. É a segunda saída acima, sem
+a invariante 10 reescrita, e o mesmo desvio do item 30 (`7b14e817`), agora por escolha registrada.
+Passou pela CI e pelo `procedencia`, o que o commit direto do item 32 não passou. Não fecha a
+pendência: o caminho escrito continua com o item 35.
 
 ## P-32 — a guarda da lição 13 confere path, não classe
 
@@ -420,7 +499,7 @@ deslocaram, e estão atualizadas abaixo.
 | `CLAUDE.md:159-161` | A lista de serviços do Compose omite `mailpit`, transporte real do convite/recuperação | `docker-compose.yml:33-35` (porta 8025) |
 | `CLAUDE.md:146` | Descreve `pnpm test` como "hooks de `shared/`"; o corte cobre hooks de feature, componentes e `frontend/tests/` | `frontend/tests/repo-docs-refs.test.ts`; `features/identity/components/PeoplePage.test.tsx`. A `frontend-fsliced.md:268-271` registra que a frase já foi lição 13 três vezes |
 | `.claude/rules/frontend-fsliced.md:261-266` | População de testes de componente congelada em 2026-08-16 ("13 arquivos, 9 montam wrapper"), com lista nominal | só `shared/ui/**` tem 21 `*.test.tsx` que montam componente |
-| `docs/adrs.md` | Transporte de e-mail virou padrão de fato sem ADR: broker `invites`, duas Notifications, Mailpit no Compose, três rotas públicas de senha | nenhuma ocorrência de mail/SMTP/Notification em `adrs.md`; a decisão só existe em plano arquivado |
+| `docs/adrs.md` | ~~Transporte de e-mail virou padrão de fato sem ADR: broker `invites`, duas Notifications, Mailpit no Compose, três rotas públicas de senha~~ | ~~nenhuma ocorrência de mail/SMTP/Notification em `adrs.md`; a decisão só existe em plano arquivado~~ — **paga pelo item 33 em 2026-09-28: ADR-23** |
 | `docs/adrs.md` | O arquivamento em cascata (`archived_with_parent` + `ArchivesChildren`/`LoadsCascadedChildren`, hooks `deleting`/`restored`) alcança 8 roots sem ADR | a única regra escrita é `frontend-fsliced.md:114-130`, que descreve o **kit de UI**, não o mecanismo de backend |
 | `abertas.md:57` | A âncora `[P-35](#p-35)` aponta para ficha que saiu de `abertas.md` no BD-14 e de `encerradas.md` no BD-12 | anterior a esta sprint; não corrigida por não ser dela |
 
@@ -725,6 +804,10 @@ existe para evitar.
 MFA do usuário estiver indisponível (o fallback da Task 12), apagar a chave pode deixar a conta
 operável só pelo console.
 
+**Medida de novo em 2026-09-28, pelo item 33:** `list-access-keys` ainda devolve a chave `Active`.
+A permissão de e-mail nasceu na role `lotus-ec2` (inline `lotus-ses`), nunca neste usuário — a
+chave segue sem uso pela aplicação e a ficha segue com o João.
+
 ---
 
 # Travadas em decisão da Lotus
@@ -783,33 +866,23 @@ bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variá
 Bloco alunos (2026-07-27, spec D11): divergência aceita por decisão do João no mesmo dia — a ordem
 atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 
-## P-77 — `app.lotusotec.cl` não tem registro A; sem ele a produção fica em HTTP, sem cookie `Secure` e sem emitir certificado
+## P-89 — o QR em `https://app.lotusotec.cl/validar/…` não foi decodificado de um PDF de produção
 
-**Bloco:** `infra-producao-dns-e-tls` (item 32, promovido em 2026-09-27) · **Quem decide:** João ·
-**Gatilho:** `app.lotusotec.cl` resolver **exatamente** o EIP `18.230.53.197`, sem AAAA, **e** o §11
-do `deploy/aws/README.md` executado de ponta a ponta — certificado, seis campos do `.env`, promoção
-pelo botão com HSTS, renovação por webroot com o hook, `certbot renew --dry-run` verde. Revisar em
-**2026-10-31**.
+**Bloco:** `infra-producao-dns-e-tls` (item 32) · **Quem decide:** João · **Gatilho:** o primeiro
+certificado real emitido em produção ter o QR decodificado (`pdftoppm` + `zbarimg`) para
+`https://app.lotusotec.cl/validar/<uuid>`, a página responder 200 e
+`/api/publico/certificados/<uuid>` devolver o `codigo` dele. Revisar em **2026-10-31**.
 
-**Reescrita em 2026-09-27 (planejamento do item 32).** A ficha original dizia que o registro era
-pedido à Lotus/agência, que a zona vivia em `ns1–ns4.stackdns.com` sem acesso ao painel e que um
-curinga `*.lotusotec.cl` fazia qualquer nome resolver para o WordPress. Nada disso vale mais: desde
-2026-09-26 a zona está no Route 53 (stack `lotus-dns`, repo `Andred21/lotus-site`), **sem
-wildcard**, e o registro nasce por PR em `infra/lotus-dns.yaml` de lá — nunca à mão no console.
-Medido em 2026-09-27: `app.lotusotec.cl` **não resolve** (não há registro). O nome que a ficha
-antiga media, `sistema.`, é hoje registro explícito para o WordPress e não muda neste bloco.
-
-| Registro | Valor em 2026-09-27 | |
-|---|---|---|
-| `A app` | — (não existe) | nasce pela PR do item 32 no `lotus-site` |
-| `AAAA app` | — | não nasce: o EIP não tem IPv6 |
-| EIP da produção | `18.230.53.197` | — |
-
-Enquanto o registro não existe, a produção atende em `http://18.230.53.197` e **recusa emitir e
-baixar certificado** — `CERTIFICATE_VALIDATION_URL` vazio, 500 nomeado da P-79 (item 29). O overlay
-`docker-compose.prod-tls.yml`, o `deploy/nginx/tls.conf` e a catraca deles estão no repositório
-desde 2026-09-20 e nunca foram exercidos com certificado real. **A prova continua sendo a
-igualdade**: o audit do item 32 registra o valor devolvido, não o fato de haver resposta.
+A spec do item 32 (D4, DoD 7) mandava emitir e revogar um certificado sobre dado marcado como teste.
+Em 2026-09-28 a produção não tinha turma elegível (histórico de certificados vazio), e o João decidiu
+não criar em produção a cadeia de curso, turma, aluno e matrícula de teste, que ficaria para sempre
+no banco e na auditoria de um sistema com peso legal. Provado no lugar (review do item 32, Q-1): no
+contêiner `app` de produção, `CertificateValidationUrl::base()` devolve `https://app.lotusotec.cl`,
+com `APP_ENV=production` e a config em cache; o `CertificatePdfTest` prova que o QR do PDF carrega
+`<essa base>/validar/<uuid>`; `/api/publico/certificados/<uuid inexistente>` devolve 404 RFC 7807.
+O 200 de `/validar/<uuid>` só prova que a SPA é servida em https — o fallback do nginx responde 200 a
+qualquer caminho. Falta a igualdade num PDF de produção: a URL lida do QR de um documento que o
+Gotenberg de produção renderizou, não da configuração nem do teste.
 ---
 
 # Travadas em escrita fora do repositório
@@ -1070,3 +1143,47 @@ migration registra `"dump": null`, e o `deploy-sh.test.ts` assere o ramo do dump
 no [run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582), não tinha
 migration nova (`inicio` com `"migrations":[]` e `"dump":null`); o dump segue sem deploy real, e o
 bloco fechou sem pagar o gatilho.
+
+## P-90 — o gate `/up` do `deploy.sh` corre contra o php-fpm quando o deploy recria só o `app`
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
+`deploy/bin/deploy.sh`, ou o próximo botão que sair `erro: /up respondeu 502`; revisar em
+**2026-10-31**.
+
+**Medido no item 32, botão 2 (run
+[36366375279](https://github.com/Gatika-CL/lotus/actions/runs/36366375279), 01:34:00Z):** o `.env`
+novo fez o compose recriar `app`, `scheduler` e `mysql`, e o nginx seguiu de pé. O laço de saúde
+(`deploy.sh:205-211`) espera **só o nginx** ficar `healthy` — e ele já estava, então o laço saiu na
+primeira volta. O `curl` único de `deploy.sh:213` bateu em `/up` antes de o php-fpm novo escutar e
+recebeu 502. O botão saiu `Failed`; o botão 3, sem mudar nada, saiu verde. Sem queda vista de fora.
+
+**Por que importa:** a corrida existe em todo deploy que recria o `app` sem recriar o nginx — mudar
+`.env`, ou promover SHA com imagem de `app` nova e a do nginx igual. O `exit 1` do gate vem depois
+do `up`, com os contêineres novos já de pé, e antes de gravar o `CURRENT_SHA`: o botão fica vermelho
+por um motivo que não é da release, e quem o lê pode recuar o que estava certo.
+
+**Fecha quando:** o gate do `/up` tolerar a subida do php-fpm — várias tentativas com prazo, ou um
+healthcheck do `app` esperado junto com o do nginx —, com catraca em `deploy-sh.test.ts` vista
+reprovar pela sonda que devolve o `curl` único. Pela **P-87**, a correção só chega ao host pela
+reinstalação do runbook §7.
+
+## P-93 — `operacao-segredos.md` descreve um relay SMTP que a produção nunca teve
+
+**Bloco:** 33 (`infra-producao-email-ses`) · **Quem decide:** — · **Gatilho:** fecha no commit da
+Fase A do item 33 que reescreve `docs/operacao-segredos.md` §3, §4 e §6 e alinha
+`backend/.env.production.example` ao mailer `ses` (spec do bloco, §4.5 e §4.2). Revisar em
+**2026-10-31**.
+
+`docs/operacao-segredos.md:47-49` afirma que o segredo de e-mail em uso é `MAIL_PASSWORD` de um
+relay SMTP selecionado por `MAIL_MAILER=smtp` em `backend/.env.production.example:106`, e o §4
+(linhas 60-79) escreve o procedimento de rotação dessa senha. Nada disso existe: desde o item 10 v2
+o molde real é `deploy/aws/env.prod.example`, que fixa `MAIL_MAILER=log` "até o bloco de SES"
+(linha 115-116), e o host de produção não tem `MAIL_HOST`, `MAIL_USERNAME` nem `MAIL_PASSWORD`.
+O levantamento de 2026-09-26 leu o molde legado do `backend/` e tomou o `smtp` dele por realidade —
+falso positivo registrado na ficha 33 do backlog. O item 33 troca `log` por `ses` com credencial
+pela instance role, então a correção do doc sai junto com o mecanismo que ele passa a descrever:
+e-mail sem segredo de longa duração, e a policy `lotus-ses` como o que se revoga.
+
+**Paga em 2026-09-28 pelo item 33** (commit da Task 4 do plano): `docs/operacao-segredos.md` §3,
+§4, §5.2 e §6 reescritos, `backend/.env.production.example` alinhado a `ses`. Vai para
+`encerradas.md` no `/fechar-sprint` do bloco.

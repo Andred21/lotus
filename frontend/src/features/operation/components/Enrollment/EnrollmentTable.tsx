@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, IdentityCell, AppTag, AppButton, AppEmptyState, ConfirmDialog, stickyActionsColumn } from '@shared/ui'
+import { AppDataTable, AppColumn, IdentityCell, AppTag, AppEmptyState, ConfirmDialog, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn } from '@shared/ui'
 import { enrollmentWidths } from './enrollmentColumns'
 import { useTableFilter, usePermissions } from '@shared/hooks'
 import type { EnrollmentData } from '@shared/types/generated'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
 import { RegisterResultDialog } from './RegisterResultDialog'
+import { EnrollmentRowActions } from './EnrollmentRowActions'
 
 type Props = {
   turmaId: number
@@ -46,6 +47,7 @@ export function EnrollmentTable({
   // pelo clamp, que estavam copiados aqui linha a linha.
   const table = useTableFilter(enrollments)
   const largura = enrollmentWidths(!registroBloqueado)
+  const colunaDeAcoes = useCollapsibleActionsColumn('9rem')
   return (
     <>
       <AppDataTable
@@ -55,6 +57,8 @@ export function EnrollmentTable({
         onRetry={onRetry}
         first={table.first}
         onPage={table.onPage}
+        // Piso de 390 medido (item 23, audit §5): 292px de 1ª coluna contra 204px livres.
+        pt={narrowFloorTablePt('31.5rem')}
         footerCount={t('operation.enrollment.footerCount', { count: table.rows.length })}
         emptyMessage={
           // Sem ação: matricular é o botão da toolbar, logo acima.
@@ -95,28 +99,15 @@ export function EnrollmentTable({
         {!registroBloqueado && (
           <AppColumn
             body={(e: EnrollmentData) => (
-              <div className="flex items-center justify-end gap-1">
-                {canManage && (
-                  <AppButton
-                    icon="pi pi-pencil"
-                    text
-                    rounded
-                    aria-label={t('certificate.result.action')}
-                    onClick={() => setResultTarget(e)}
-                  />
-                )}
-                <AppButton
-                  icon="pi pi-times"
-                  text
-                  rounded
-                  severity="danger"
-                  disabled={removing}
-                  aria-label={t('operation.enrollment.remove')}
-                  onClick={() => setPending(e)}
-                />
-              </div>
+              <EnrollmentRowActions
+                canManage={canManage}
+                removing={removing}
+                onResult={() => setResultTarget(e)}
+                onRemove={() => setPending(e)}
+                collapsed={colunaDeAcoes.collapsed}
+              />
             )}
-            style={stickyActionsColumn('9rem')}
+            style={stickyActionsColumn(colunaDeAcoes.width)}
           />
         )}
       </AppDataTable>

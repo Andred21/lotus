@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, stickyActionsColumn, technicalDataClass } from '@shared/ui'
+import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
@@ -35,6 +35,9 @@ export function CoursesTable({
   const archived = mode === 'archived'
   const largura = courseWidths(archived)
   const table = useTableFilter(courses, (c) => [c.name, c.technical_name])
+  // Abaixo de `sm` a linha carrega um controle só e a presa encolhe junto
+  // (item 23, `D-65`).
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : '9rem')
 
   return (
     <SearchableTableFrame
@@ -54,6 +57,11 @@ export function CoursesTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
+      // Piso de 390 medido (item 23, audit §5): ativa 233px de 1ª coluna contra 204px livres.
+      // Arquivada varrida no navegador (audit §5, Step 4): acima de 42rem a presa também cresce
+      // com `table-fixed` e o livre encolhe; 51rem é o teto com box 0 (col1 209px, livre 194px,
+      // margem 1px). Não alcança o col1 da ativa (218px): nenhum piso fecha as duas pernas.
+      pt={narrowFloorTablePt(archived ? '51rem' : '39.5rem')}
     >
       <AppColumn
         field="name"
@@ -99,9 +107,10 @@ export function CoursesTable({
             onView={onView}
             onArchive={onArchive}
             onRestore={onRestore}
+            collapsed={colunaDeAcoes.collapsed}
           />
         )}
-        style={stickyActionsColumn(archived ? '10rem' : '9rem')}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   )

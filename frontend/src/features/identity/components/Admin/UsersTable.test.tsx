@@ -32,20 +32,25 @@ describe('UsersTable', () => {
     expect(screen.queryByText('superadmin')).toBeNull()
   })
 
-  it('usa um piso menor que os 48rem default, para não forçar rolagem em 1024x768 (UI-02)', () => {
-    // Mesma raiz do UI-03 de Pessoas (RedatoresTable): o piso default do
-    // AppDataTable (min-w-[48rem] = 768px) é maior que os 718px de moldura em
-    // 1024x768 — o piso vence, força rolagem, e a coluna de ações presa
-    // (right: 0) cobre "Último acceso" com ~50px de sobreposição.
+  it('Último acceso sai no Timestamp: um <time> com o instante do backend (item 23)', () => {
+    renderWithProviders(
+      <UsersTable
+        users={[{ ...user, last_login: '2026-09-27T23:24:00Z' }]} loading={false} onView={() => {}}
+        mode="active" onModeChange={() => {}} onArchive={() => {}} onRestore={() => {}} busy={false}
+      />,
+    )
+    expect(document.querySelector('td time')?.getAttribute('dateTime')).toBe('2026-09-27T23:24:00.000Z')
+  })
+
+  it('sem acesso registrado, a célula segue com travessão e sem <time>', () => {
     renderWithProviders(
       <UsersTable
         users={[user]} loading={false} onView={() => {}} mode="active" onModeChange={() => {}}
         onArchive={() => {}} onRestore={() => {}} busy={false}
       />,
     )
-    const tabela = document.querySelector('table') as HTMLTableElement
-    expect(tabela.className).not.toContain('min-w-[48rem]')
-    expect(tabela.className).toContain('min-w-[42rem]')
+    expect(screen.getByText('—')).toBeTruthy()
+    expect(document.querySelector('td time')).toBeNull()
   })
 })
 
@@ -78,5 +83,20 @@ describe('UsersTable — ações colapsam no telefone', () => {
     expect(screen.queryByRole('button', { name: 'archive.archiveAction' })).toBeNull()
     const coluna = document.querySelector('thead tr th:last-child') as HTMLTableCellElement
     expect(coluna.style.width).toBe('4.5rem')
+  })
+})
+
+describe('UsersTable — piso estreito abaixo de sm (item 23, audit §5)', () => {
+  it('em arquivados, o piso é o corrigido no Step 4 (a presa também escala com a tabela)', () => {
+    renderWithProviders(
+      <UsersTable
+        users={[user]} loading={false} onView={() => {}} mode="archived" onModeChange={() => {}}
+        onArchive={() => {}} onRestore={() => {}} busy={false}
+      />,
+    )
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('56rem')
   })
 })

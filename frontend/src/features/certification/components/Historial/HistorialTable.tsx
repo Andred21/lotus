@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { AppColumn, AppTag, AppButton, AppEmptyState, IdentityCell, SearchableTableFrame, stickyActionsColumn, identifierClass } from '@shared/ui'
+import { AppColumn, AppTag, AppEmptyState, IdentityCell, SearchableTableFrame, stickyActionsColumn, identifierClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { formatDate, CERTIFICATE_STATUS_SEVERITY, certificateStatusLabelKey } from '@shared/lib'
 import { useHistorial } from '../../hooks/useHistorial'
 import { historialWidths } from './historialColumns'
 import { HistorialDialogs } from './HistorialDialogs'
 import { HistorialStatusFilter } from './HistorialStatusFilter'
+import { HistorialRowActions } from './HistorialRowActions'
 
 /** Vazio aqui não é `null`: o snapshot corrompido chega com string VAZIA — é o
  * que `CertificateSnapshotData::missingRequiredFields()` mede (`trim === ''`).
@@ -19,6 +20,8 @@ export function HistorialTable() {
   const { t } = useTranslation()
   const largura = historialWidths()
   const h = useHistorial()
+  // No máximo dois ícones por linha (ver + revogar, ou ver + reemitir).
+  const colunaDeAcoes = useCollapsibleActionsColumn('9rem')
 
   return (
     <>
@@ -97,21 +100,18 @@ export function HistorialTable() {
           style={largura.estado}
         />
         <AppColumn
-          body={(c: CertificateData) => {
-            const status = c.display_status
-            return (
-              <div className="flex gap-2">
-                <AppButton label={t('certificate.view')} text onClick={() => h.setViewingCertificateId(c.id)} />
-                {h.canRevoke && (status === 'vigente' || status === 'por_vencer') && (
-                  <AppButton label={t('certificate.revoke')} text onClick={() => h.setRevoking(c)} />
-                )}
-                {h.canReissue && status === 'revocado' && (
-                  <AppButton label={t('certificate.reissue')} text onClick={() => h.setReissuing(c)} />
-                )}
-              </div>
-            )
-          }}
-          style={stickyActionsColumn('16rem')}
+          body={(c: CertificateData) => (
+            <HistorialRowActions
+              certificate={c}
+              canRevoke={h.canRevoke}
+              canReissue={h.canReissue}
+              onView={(x) => h.setViewingCertificateId(x.id)}
+              onRevoke={h.setRevoking}
+              onReissue={h.setReissuing}
+              collapsed={colunaDeAcoes.collapsed}
+            />
+          )}
+          style={stickyActionsColumn(colunaDeAcoes.width)}
         />
       </SearchableTableFrame>
 

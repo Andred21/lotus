@@ -24,8 +24,8 @@ import { RowActions, type RowAction } from '../RowActions'
  *
  * `collapsed` é o do `useCollapsibleActionsColumn` da tabela: abaixo de `sm` a
  * linha ativa vira o menu do `RowActions`, e restaurar perde o rótulo visível
- * (Q-1 do review de 2026-09-26). Tabela que não liga o hook não passa nada e
- * segue como era.
+ * (Q-1 do review de 2026-09-26). Desde o item 23 toda tabela que usa isto liga
+ * o hook; o default `false` fica para quem monta a peça fora de tabela.
  */
 export function ArchiveRowActions({
   archived,

@@ -42,4 +42,12 @@ describe('StudentsTable — coluna de ações no telefone (UI-01)', () => {
     renderWithProviders(<StudentsTable table={tabela} onView={() => {}} />)
     expect(larguraDaColunaDeAcoes()).toBe('6rem')
   })
+
+  it('abaixo de sm, o piso é o medido para esta visão (item 23, audit §5)', () => {
+    renderWithProviders(<StudentsTable table={tabela} onView={() => {}} />)
+
+    const tabelaEl = document.querySelector('table') as HTMLTableElement
+    expect(tabelaEl.className).toContain('sm:min-w-[42rem]')
+    expect(tabelaEl.style.getPropertyValue('--table-narrow-floor')).toBe('40rem')
+  })
 })

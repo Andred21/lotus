@@ -161,6 +161,21 @@ e o ADR-SITE-006 segue com `sistema.`: **quem vence aqui é esta decisão poster
 que fazer com o registro `sistema.` e com o ADR do site é do planejamento do item 32, não desta
 emenda.
 
+**Emenda (2026-09-27, bloco `infra-producao-dns-e-tls`).** O item `[FASE 2]` *"TLS
+automático (Let's Encrypt + Certbot no Nginx)"* está **vencido, e de outro jeito**: o certbot roda
+no **host**, não no contêiner do nginx. A emissão foi uma vez só, `--standalone`, com o nginx parado
+(minutos de queda). A renovação é por webroot: o `/.well-known/acme-challenge/` do
+`deploy/nginx/tls.conf` serve `/opt/lotus/certbot`, sem derrubar nada. O `certbot.timer` do sistema
+renova, e o deploy hook versionado `deploy/bin/recarregar-nginx.sh`, ligado por symlink em
+`/etc/letsencrypt/renewal-hooks/deploy/`, faz `nginx -t && nginx -s reload` no contêiner. O
+`deploy.sh` liga o overlay `docker-compose.prod-tls.yml` (443 e `/etc/letsencrypt` montado só para
+leitura) quando o host tem o `tls.conf` e o `/etc/letsencrypt/live`. HSTS de um ano, sem
+`includeSubDomains` nem `preload` (D3 da spec do item 32). **Não há alarme de expiração** até o
+item 34: uma renovação que falhe deixa ~30 dias em silêncio. Runbook em `deploy/aws/README.md` §11.
+Se o `decisao-stack.md` do Drive ainda trouxer o texto original, **quem vence aqui é esta decisão
+posterior do João**, e o original não se apaga. O último `[FASE 2]` deste ADR, *"monitoramento
+básico"*, continua aberto e é o item 34.
+
 ## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
 
 **Regra:**
@@ -412,6 +427,45 @@ teto; as bounded continuam devolvendo array.
 (`useServerTable`) com a mesma forma do `useTableFilter`, então a moldura não distingue as duas
 fontes. Cursor foi descartado: sem `total`, o paginador e o rodapé de contagem morrem. Cache e
 Redis ficam fora por decisão (spec D12), não por adiamento.
+
+---
+
+## ADR-23 — E-mail transacional por SES, identidade compartilhada com o site, sem segredo no host
+
+**Contexto (2026-09-28, item 33).** O backend envia três e-mails, todos síncronos (ADR-21: sem
+worker de fila): o alerta de acesso suspeito da `DetectorDeAcessoSuspeito` (D7, para todos os
+`admin` ativos), o link de recuperação de senha (`PasswordResetLink`, broker `users`) e o convite
+de primeiro acesso do redator (`RedatorAccessInvitation`, broker `invites`). Produção subiu no
+item 10 v2 com `MAIL_MAILER=log`: nada chegava a ninguém. A P-53 registrava que o transporte de
+e-mail tinha virado padrão de fato sem ADR, e a P-93 que `docs/operacao-segredos.md` descrevia um
+relay SMTP com senha que nunca existiu.
+
+**Decisão.** Mailer `ses` do Laravel (`config/mail.php`, transporte `ses`, API `SendRawEmail`),
+região `AWS_DEFAULT_REGION` (`sa-east-1`), pela **identidade de domínio `lotusotec.cl` que o
+stack `lotus-contato` do `lotus-site` criou e possui** (ADR-SITE-005 de lá): DKIM, MAIL FROM
+`ses.lotusotec.cl` e DMARC já estão na zona `lotus-dns`. **Nunca duas identidades**: recriar a
+identidade troca os três tokens DKIM na zona, e isso é coordenação com o site, não decisão deste
+repositório. Remetente único `Lotus <lotus@lotusotec.cl>`, travado na policy. **Credencial é a
+instance role `lotus-ec2`**, inline `lotus-ses` (`ses:SendRawEmail` e `ses:SendEmail` só na
+identidade, `Condition ses:FromAddress` no remetente — runbook `deploy/aws/README.md` §4);
+`services.ses` fica sem `key`/`secret` e o SDK cai na chain até o IMDSv2, o mesmo caminho do disco
+`s3`. **A conta sai do sandbox** (production access, runbook §13): os destinatários são pessoas com
+e-mail de qualquer domínio, e o sandbox só entrega a identidade verificada. **DNS do apex não
+muda**: o SPF é avaliado sobre o MAIL FROM (`ses.`) e o DMARC alinha pelo DKIM.
+
+**Consequências.** Não há segredo de e-mail no host: revogar é `delete-role-policy`, e a prova de
+qualquer troca continua sendo um e-mail que chega (`operacao-segredos.md` §4). O envio fica no
+request e a falha é contida (`FalhaDeObservabilidade`), então e-mail que não sai é assintomático
+por dentro — o canal `seguranca` registra o alerta antes do envio por isso. Bounce e complaint
+ficam só com a suppression list do SES, sem tópico de feedback: para ~10 usuários internos, aceito
+por escrito aqui. Production access é da conta: o teto de 200/dia que freava o `/api/contacto`
+do site (D-54 de lá) deixa de existir — efeito declarado ao site, decisão dele.
+
+**Descartado.** SMTP com senha no `.env` (segredo de longa duração, o que o item 10 v2 tirou);
+outro provedor (Resend, Postmark, relay do Workspace: segredo no host, DNS novo coordenado com o
+site e uma aprovação equivalente); `ses-v2` (uma linha de config a mais sem ganho medido);
+sandbox com guarda de domínio `@lotusotec.cl` no cadastro de usuário (recusada pelo João em
+2026-09-28: acopla os usuários do sistema ao domínio da empresa).
 
 ---
 

@@ -91,6 +91,22 @@ aws iam put-role-policy --role-name lotus-ec2 --policy-name lotus-alerta --polic
 aws iam get-role-policy --role-name lotus-ec2 --policy-name lotus-alerta --query PolicyDocument
 ```
 
+O e-mail é a **terceira** inline, `lotus-ses` (item 33, ADR-23). Só a identidade `lotusotec.cl`
+— criada e possuída pelo stack `lotus-contato` do `lotus-site`, nunca recriada daqui — e só com
+o remetente do molde: qualquer outro `From` é `AccessDenied`. O ARN se monta em runtime; o número
+da conta não entra neste arquivo.
+
+```bash
+CONTA=$(aws sts get-caller-identity --query Account --output text)
+aws iam put-role-policy --role-name lotus-ec2 --policy-name lotus-ses --policy-document \
+  "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"ses:SendRawEmail\",\"ses:SendEmail\"],\"Resource\":\"arn:aws:ses:sa-east-1:$CONTA:identity/lotusotec.cl\",\"Condition\":{\"StringEquals\":{\"ses:FromAddress\":\"lotus@lotusotec.cl\"}}}]}"
+aws iam get-role-policy --role-name lotus-ec2 --policy-name lotus-ses --query PolicyDocument
+```
+
+O readback tem de mostrar as duas ações, o `Resource` na identidade e a `Condition` no remetente.
+A policy vale na hora para a role assumida pela instância — não há reinício. Revogar é
+`aws iam delete-role-policy --role-name lotus-ec2 --policy-name lotus-ses`.
+
 **Pela CLI, a role não basta.** O console cria o *instance profile* junto, escondido; a CLI trata
 os dois como objetos separados e o launch da §6 não acha o profile se ele não existir:
 
@@ -168,19 +184,22 @@ esse grupo é root sem senha, e o `/opt/lotus` é `750 root:root`. Logo `docker 
 `permission denied while trying to connect to the docker API at unix:///var/run/docker.sock` —
 é o comportamento desenhado, não uma instalação quebrada.
 
-Do WSL, com o `.pem` da §6:
+Do WSL, com o `.pem` da §6 (sem o `-i`, o `scp` oferece a chave padrão do WSL e o host recusa com
+`Permission denied (publickey)`):
 
 ```bash
-scp docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
-scp deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@<EIP>:/tmp/
-scp deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
+PEM=~/.ssh/<o .pem da §6>
+scp -i "$PEM" docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
+scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@<EIP>:/tmp/
+scp -i "$PEM" deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
 ```
 
-No host:
+No host. O glob de `/opt/lotus/bin/*.sh` expande **dentro** do `sudo sh -c`: o `/opt/lotus` é `750
+root:root`, e o shell do `ubuntu` não o lê — expandido fora, o glob chega literal ao `chmod`.
 
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
@@ -530,6 +549,13 @@ Sem confirmar, o tópico publica para ninguém. Depois: o `sns:Publish` da §4 e
 Canal definitivo de alerta é decisão do bloco de observabilidade. Trocar de canal depois é trocar
 um ARN no `.env` e a `Resource` da `lotus-alerta`.
 
+**E-mail da aplicação — SES, não SNS.** O alerta de acesso suspeito (D7), a recuperação de senha
+e o convite do redator saem pelo SES, remetente `Lotus <lotus@lotusotec.cl>`, pela identidade
+`lotusotec.cl` do site e pela inline `lotus-ses` da §4 — procedimento e provas na §13. É um canal
+diferente do tópico `lotus-alertas` de cima: aquele é do `verificar-backup.sh`, este é da
+aplicação. Nos dois vale a mesma regra: **a prova é a mensagem na caixa**, nunca "o container
+subiu".
+
 ## 11. TLS — o registro A, o certificado e a renovação
 
 O nome público da intranet é **`app.lotusotec.cl`** (ADR-14, emenda de 2026-09-27). A zona
@@ -555,7 +581,7 @@ nada na hora: a renovação falha em silêncio e o certificado expira até 90 di
 A ordem abaixo é a da spec do item 32 (§6). Tudo que escreve no host é do João; os portões são
 leituras.
 
-### 11.1 Antes de parar o nginx — dois portões e uma reinstalação
+### 11.1 Antes de parar o nginx — dois portões, uma reinstalação e duas variáveis
 
 1. **DNS de fora igual ao EIP** (os dois `curl` acima). Sem isto o `--standalone` falha na
    validação e consome uma das 5 tentativas por hora que o Let's Encrypt concede ao nome.
@@ -569,12 +595,26 @@ leituras.
 E o host tem de estar **reinstalado pelo §7** a partir de uma árvore igual à `main` do corporativo
 — inclusive `bin/recarregar-nginx.sh` e o `tls.conf` com HSTS —, senão o botão do 11.4 recusa.
 
+Por último, **as duas variáveis da queda**, definidas agora, no shell do host em que o 11.2 vai
+rodar. Com o nginx parado cada minuto é produção fora do ar, e um marcador `<…>` colado literal o
+shell lê como redirecionamento: o comando não roda (aconteceu no item 32). `X` é o SHA da `main` do
+corporativo, o da árvore reinstalada pelo §7 e o que o 11.4 promove:
+
+```bash
+EMAIL=contacto@lotusotec.cl
+X='cole aqui o SHA de 40 hexadecimais'
+[[ $X =~ ^[0-9a-f]{40}$ ]] && echo "X ok" || echo "PARE: X não é um SHA de 40 hexadecimais" >&2
+```
+
+A sessão SSH caiu depois disto? Defina as duas de novo antes de seguir: o 11.2 e o recuo do 11.4
+usam só `"$EMAIL"` e `"$X"`, e recusam rodar com elas vazias.
+
 ### 11.2 Emitir o certificado (uma vez, com o nginx parado)
 
 ```bash
 sudo apt-get install -y certbot
 sudo docker compose -p lotus --project-directory /opt/lotus -f /opt/lotus/docker-compose.prod.yml stop nginx
-sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m <e-mail> --non-interactive
+sudo certbot certonly --standalone -d app.lotusotec.cl --agree-tos -m "${EMAIL:?defina no 11.1}" --non-interactive
 sudo test -f /etc/letsencrypt/live/app.lotusotec.cl/fullchain.pem && echo certificado ok
 ```
 
@@ -646,7 +686,7 @@ quebrado a 443 pode ter respondido mesmo assim (um 502, por exemplo) e o header 
 ```bash
 sudo mv /opt/lotus/nginx/tls.conf /opt/lotus/nginx/tls.conf.off
 # os seis campos de volta aos valores da coluna "Fase sem DNS" da tabela acima
-sudo /opt/lotus/bin/deploy.sh <X — o sha de 40 hexadecimais do 11.4>
+sudo /opt/lotus/bin/deploy.sh "${X:?defina no 11.1}"
 ```
 
 O botão passa a recusar (`nginx/tls.conf ausente`) até o conserto — é o esperado, não um defeito.
@@ -726,3 +766,111 @@ há ~30 dias que ninguém mede.
 Como: stop → Change instance type → start. São minutos de indisponibilidade, aceitáveis para
 ~10 usuários. Medição de apoio: `docker stats --no-stream` + `free -m`, com a saída no audit —
 o critério é escrito, não memória de quem operou.
+
+## 13. E-mail — production access, `.env` e as duas provas
+
+Pré-condições: a inline `lotus-ses` aplicada (§4) e a `main` do corporativo com
+`MAIL_MAILER=ses` no molde (item 33). A identidade `lotusotec.cl` é do `lotus-site`: se
+`aws sesv2 get-email-identity --region sa-east-1 --email-identity lotusotec.cl` não devolver
+`VerifiedForSendingStatus: true`, `DkimAttributes.Status: SUCCESS` e
+`MailFromAttributes.MailFromDomainStatus: SUCCESS`, o problema é da zona ou do stack de lá — PARE.
+
+### 13.1 Production access — primeiro, porque é a única espera externa
+
+A conta nasce em sandbox: 200 mensagens/24 h, 1/s e **só destinatário verificado**. O site vive
+com isso (o destinatário dele é do domínio); a aplicação não — admins e redatores têm e-mail de
+qualquer domínio. Console SES em `sa-east-1` → *Account dashboard* → *Request production access*:
+tipo **Transactional**, URL `https://app.lotusotec.cl`, uso "alertas de segurança e recuperação
+de senha da intranet de gestão de capacitação, ~10 usuários internos, dezenas de mensagens por
+mês, sem lista de marketing; bounce e complaint tratados pela suppression list". Ou por CLI:
+
+```bash
+aws sesv2 put-account-details --region sa-east-1 --production-access-enabled \
+  --mail-type TRANSACTIONAL --website-url https://app.lotusotec.cl \
+  --use-case-description "Alertas de seguranca e recuperacao de senha da intranet Lotus; ~10 usuarios internos; dezenas de mensagens por mes; sem marketing" \
+  --contact-language EN
+aws sesv2 get-account --region sa-east-1 --query '{Producao:ProductionAccessEnabled,Max24h:SendQuota.Max24HourSend}'
+```
+
+Guarde o número do caso. A resposta leva de um a alguns dias úteis; até lá os passos seguintes
+andam, e a prova final espera.
+
+### 13.2 `.env` e promoção
+
+`sudo -e /opt/lotus/.env`: `MAIL_MAILER=ses`. As outras duas chaves (`MAIL_FROM_ADDRESS`,
+`MAIL_FROM_NAME`) já estão no valor do molde. Nenhuma chave nova: a conferência de alinhamento do
+botão (§7) não trava. **Depois** de salvar, promova pelo botão o SHA espelhado que trouxe o
+molde — o Compose recria `app` e `scheduler` porque o `env_file` mudou. Gate:
+
+```bash
+sudo grep -c '^MAIL_MAILER=' /opt/lotus/.env          # 1 (nome, não valor)
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml exec -T app php artisan config:show mail.default'   # a saída contém: ses
+```
+
+### 13.3 Sonda em sandbox — antes da aprovação, de propósito
+
+A autorização IAM acontece **antes** da regra do sandbox. Então, ainda em sandbox, um envio a um
+destinatário não verificado prova a role e a policy sem entregar nada:
+
+```bash
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml exec -T app php artisan tinker --execute "Mail::raw(\"sonda\", fn (\$m) => \$m->to(\"<e-mail de um admin>\")->subject(\"sonda\"));"'
+```
+
+A falha sobe como `Symfony\Component\Mailer\Exception\TransportException`, com a mensagem
+`Request to AWS SES API failed. Reason: <mensagem da AWS>.` — o código de erro da AWS
+não aparece na tela. Leia o texto depois de `Reason:`:
+
+| Texto depois de `Reason:` | Significa | Próximo passo |
+|---|---|---|
+| `Email address is not verified` | credencial e policy OK; conta em sandbox | esperar 13.1 |
+| `is not authorized to perform: ses:SendRawEmail` | `lotus-ses` ausente ou errada | §4, reaplicar |
+| `Maximum sending rate exceeded` | 1/s do sandbox — só se a sonda for repetida rápido | esperar 1 s e repetir |
+| nenhuma exceção | a conta já saiu do sandbox | 13.4 |
+
+### 13.4 As duas provas — depois de `ProductionAccessEnabled: true`
+
+**Alerta D7 (`login_falho_repetido`).** Pré-condição: o contador é a chave `email|ip` numa janela
+**fixa** de 900 s (`AlertThresholds::LOGIN_FALHO_JANELA_SEGUNDOS`), aberta na primeira falha, e o
+alerta dispara na **igualdade** com a 15ª falha (`LOGIN_FALHO_LIMIAR`). Falhas anteriores dentro da
+mesma janela deslocam a contagem, e repetir dentro dela não realerta — espere 15 min entre
+tentativas. Roda de fora, com 15 senhas erradas para uma conta real, respeitando o `throttle:login`
+(5/min por `email|ip`). Com `Origin` de `app.lotusotec.cl` a request é stateful e passa pelo CSRF do
+Sanctum, então o loop pega o cookie `XSRF-TOKEN` e o devolve no header:
+
+```bash
+J=$(mktemp)
+curl -s -o /dev/null -c "$J" https://app.lotusotec.cl/sanctum/csrf-cookie
+for i in $(seq 1 15); do
+  X=$(awk '$6=="XSRF-TOKEN"{print $7}' "$J"); XSRF=$(printf '%b' "${X//%/\\x}")
+  curl -s -o /dev/null -w '%{http_code}\n' -b "$J" -c "$J" -X POST https://app.lotusotec.cl/api/login \
+    -H 'Origin: https://app.lotusotec.cl' -H 'Accept: application/json' -H 'Content-Type: application/json' \
+    -H "X-XSRF-TOKEN: $XSRF" \
+    -d '{"email":"<e-mail do admin>","password":"errada-'$i'"}'
+  [ "$i" -lt 15 ] && [ $((i % 5)) -eq 0 ] && sleep 61
+done
+rm -f "$J"
+```
+
+Esperado: `422` × 15, nunca `419` nem `429`. `419` é CSRF faltando: o loop está errado, não o
+código; `429` é o `sleep` curto demais para o throttle. Na 15ª, o alerta sai para **todos** os
+admins ativos. Prova: a mensagem na caixa de um admin, com assunto
+`Lotus — alerta de acceso sospechoso` (`backend/lang/es_CL/seguranca.php`), e no *Show original*
+do Gmail `dkim=pass header.d=lotusotec.cl`, `spf=pass` em `ses.lotusotec.cl` e `dmarc=pass`. No
+host, o canal `seguranca` grava a linha antes do e-mail e o `Log::error` de falha de envio só
+existe se o SES recusar:
+
+```bash
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml logs --since 30m app' | grep -cF 'acesso.suspeito'         # >= 1
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml logs --since 30m app' | grep -c 'Falha ao enviar alerta'   # 0
+```
+
+**Reset de senha.** Pela UI, no link "¿Olvidaste tu clave?" (o rótulo muda com o idioma da UI;
+em pt-BR é "Esqueceu sua senha?") com o e-mail do admin → a mensagem chega → o link abre a tela de
+nova senha → senha nova → login com ela. A antiga deixa de logar e as sessões anteriores caem
+(`PurgeOtherSessionsAction`). Máximo 6 pedidos/min por IP (`throttle:password`).
+
+### 13.5 Recuo
+
+`MAIL_MAILER=log` de volta no `.env` e `deploy.sh <mesmo SHA>` por SSH (§8.1) — nenhum dado muda;
+`delete-role-policy lotus-ses` derruba o envio sem reiniciar. Pedido de production access negado:
+o bloco para em `blocked` com o motivo; nada do repositório precisa voltar.

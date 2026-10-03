@@ -8,7 +8,7 @@
 
 **Tech Stack:** nginx (`add_header … always`), certbot (`--standalone` → `--webroot`, deploy hook), Docker Compose (`exec -T nginx sh -c 'nginx -t && nginx -s reload'`), CloudFormation (`lotus-dns`, `us-east-1`), Route 53, vitest (projeto `repo`) no `lotus-infra`, vitest + prettier no `lotus-site`, `gh`, `aws`, `curl`, `openssl`, `pdftoppm`, `zbarimg`.
 
-**Spec:** [`docs/superpowers/specs/2026-09-27-infra-producao-dns-e-tls-design.md`](../specs/2026-09-27-infra-producao-dns-e-tls-design.md). Packet: [`2026-09-27-infra-producao-dns-e-tls.md`](../context-packets/2026-09-27-infra-producao-dns-e-tls.md).
+**Spec:** [`docs/superpowers/specs/archive/2026-09-27-infra-producao-dns-e-tls-design.md`](../../specs/archive/2026-09-27-infra-producao-dns-e-tls-design.md). Packet: [`2026-09-27-infra-producao-dns-e-tls.md`](../../context-packets/2026-09-27-infra-producao-dns-e-tls.md).
 
 ## Global Constraints
 
@@ -383,7 +383,7 @@ Crie `docs/superpowers/audits/2026-09-27-infra-producao-dns-e-tls.md`:
 # Audit — `infra-producao-dns-e-tls` (item 32) — 2026-09-27
 
 > Evidência das DoD da spec
-> [`2026-09-27-infra-producao-dns-e-tls-design.md`](../specs/2026-09-27-infra-producao-dns-e-tls-design.md).
+> [`2026-09-27-infra-producao-dns-e-tls-design.md`](../../specs/archive/2026-09-27-infra-producao-dns-e-tls-design.md).
 > Do `.env` de produção só se registra nome de chave, nunca valor. Escritas na AWS e no host são do
 > João; a sessão lê e confere.
 
@@ -675,13 +675,13 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 Linha 175 passa a:
 
 ```bash
-scp deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@<EIP>:/tmp/
+scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@<EIP>:/tmp/
 ```
 
 Linha 183 passa a:
 
 ```bash
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
 ```
 
 - [ ] **Step 2: §11 — substituir a seção inteira**
@@ -1355,17 +1355,18 @@ Expected: linhas `80 80 0.0.0.0/0` e `443 443 0.0.0.0/0` (e a de 22 com o `/32` 
 De uma árvore igual à `main` do corporativo:
 ```bash
 git fetch upstream && git diff --quiet upstream/main -- deploy/bin docker-compose.prod.yml docker-compose.prod-tls.yml deploy/nginx/tls.conf deploy/aws/env.prod.example && echo arvore-igual
-scp docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@18.230.53.197:/tmp/
-scp deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@18.230.53.197:/tmp/
-scp deploy/nginx/tls.conf ubuntu@18.230.53.197:/tmp/
+PEM=~/.ssh/<o .pem da §6>
+scp -i "$PEM" docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@18.230.53.197:/tmp/
+scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@18.230.53.197:/tmp/
+scp -i "$PEM" deploy/nginx/tls.conf ubuntu@18.230.53.197:/tmp/
 ```
 No host:
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo chmod +x /opt/lotus/bin/*.sh
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
-sha256sum /opt/lotus/nginx/tls.conf /opt/lotus/bin/*.sh | cut -c1-12,65-
+sudo sh -c 'sha256sum /opt/lotus/nginx/tls.conf /opt/lotus/bin/*.sh' | cut -c1-12,65-
 ```
 Sessão compara com `sha256sum deploy/nginx/tls.conf deploy/bin/*.sh | cut -c1-12,65-` na árvore local. Expected: os cinco hashes iguais. Os containers seguem de pé.
 
