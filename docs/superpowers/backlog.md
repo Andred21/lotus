@@ -284,35 +284,6 @@ volume, worktree ou branch.
 
 ---
 
-## 35. `harness-commands-de-bloco`
-
-**Prioridade:** P2 · **Frente:** Harness · **Contexto:** não · **Depende:** 30
-**Fonte:** a mesma spec, §5; absorve a parte A do rascunho de política de modelo e esforço de
-2026-09-21 (ver a nota de numeração no topo).
-
-**Objetivo:** `/planejar-bloco`, `/executar-bloco`, `/revisar-bloco` e `/finalizar-bloco` no
-desenho do ElaDecora, em bash, com cada etapa invocando a skill do superpowers por `Skill()`
-explícito, e modelo e esforço declarados por fase e por papel.
-
-**Escopo:** os quatro commands; agentes de papel em `.claude/agents/` com `model` e `effort`
-(a ferramenta `Agent` não aceita esforço por chamada) e a tabela única `.claude/papeis.md`;
-`.claude/prompts/verificador-achado.md` e `gabarito-lotus.md`; plugin
-`superpowers@claude-plugins-official` no `settings.json`; aposentadoria das skills `revisar-sprint`
-e `fechar-sprint`; `model`/`effort` nas demais entradas; caminhos novos nos contratos do Codex em
-`.agents/skills/`; `CLAUDE.md` §4; `docs/estrutura-monolito.md` descrevendo `.claude/` (commands,
-agents, hooks, scripts, prompts, tests, `settings.json`) e a régua da allowlist do
-`guard-main-shell`; catraca `commands.tests.sh`.
-
-**Fora:** aceitação externa (item 36); sinal de contexto cheio (item 37).
-
-**Integração:** branch empilhada na ponta do 30; mescla depois dele. Fecha a **P-84**.
-
-**DoD:** catraca vermelha quando some um `Skill(superpowers:…)` esperado ou um `model:`, verde de
-volta — provado nos dois sentidos; os quatro commands vistos rodar de ponta a ponta num bloco real
-pequeno.
-
----
-
 ## 36. `harness-aceitacao-externa`
 
 **Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** 35

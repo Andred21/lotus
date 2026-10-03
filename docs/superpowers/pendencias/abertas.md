@@ -302,66 +302,63 @@ cabeçalho, visto reprovar antes da correção.
 
 # Documentação e mecanismo
 
-## P-84 — o harness de guarda não existe em nenhum doc versionado
+## P-95 — doze pontas do harness que o item 35 deixou registradas sem correção
 
-*(nasceu `P-79` no fechamento do item 28 e foi renumerada na integração: o item 10 v2 fechou
-a mesma faixa no mesmo dia e mesclou antes, pela PR #105. Ver a nota da colisão em
-[`encerradas.md`](./encerradas.md).)*
+**Bloco:** 36 (`harness-aceitacao-externa`) · **Quem decide:** João · **Gatilho:** fecha quando
+cada linha das duas tabelas abaixo for corrigida ou ganhar veredito escrito de que fica como está;
+dispara no próximo bloco que tocar `.claude/commands/`, `.claude/scripts/lane.sh`,
+`.claude/tests/commands.tests.sh` ou `docs/superpowers/state.md`. Revisar em **2026-10-31**.
 
-**Bloco:** 35 (`harness-commands-de-bloco`, desde 2026-09-26; nasceu `31` e foi renumerado em 2026-09-27) · **Gatilho:** fecha quando `docs/estrutura-monolito.md` descrever `.claude/hooks/`,
-`.claude/tests/` e `.claude/settings.json`, ou quando o `CONTRIBUINDO.md` disser o que os cinco
-hooks negam e como se acrescenta entrada à allowlist. Revisar em **2026-10-31**.
+O item 35 terminou com doze pontas conhecidas e não corrigidas. Seis são achados Menores que a
+revisão confirmou nas rodadas 2 a 4 e que o João decidiu não corrigir no bloco. As outras seis são
+as que o `rulings.md` da execução guardou "para o fechamento". No fechamento (2026-10-03), o João
+decidiu trazer as doze para cá numa ficha só, em vez de deixá-las nos artefatos do bloco, que
+ninguém lê por rotina.
 
-Medido em 2026-09-20, no `/fechar-sprint` do `harness-hooks-de-guarda` (item 28). O bloco entregou
-cinco hooks que passam a governar **toda** sessão futura — e nenhum doc versionado os menciona:
+**Da revisão** — a evidência de cada um, com linha, está na tabela da rodada correspondente em
+[`../blocos/35-harness-commands-de-bloco/revisao.md`](../blocos/35-harness-commands-de-bloco/revisao.md):
 
-| Doc | O que ele diz hoje |
-|---|---|
-| `docs/estrutura-monolito.md` | zero ocorrências de `.claude`. É o doc que o `CLAUDE.md` §3 manda ler "antes de criar arquivo novo — para saber ONDE ele vai", e ele não conhece a pasta |
-| `CONTRIBUINDO.md` | descreve o `pre-push` de `.githooks`, que é outro mecanismo. Nada sobre os hooks do Claude Code |
-| `CLAUDE.md` §4 e §6 | tabelam comandos e skills; hook não aparece |
+| Achado | O que falta | Onde |
+|---|---|---|
+| Q-7 | O modo Pós-PR não confere o `workflow_state` antes do `lane.sh fechar`. O único teste é o `merge-base --is-ancestor`, e uma lane viva com uma PR intermediária já mesclada seria fechada | `finalizar-bloco.md`, Passo 2 (Pós-PR) e Passo 8; `lane.sh fechar` |
+| Q-8 | O resumo em negrito do fim do Passo 2 manda à retomada no Passo 7 só o `closed`, e omite o `blocked` aguardando aceitação, que o ramo Retomada trata igual | `finalizar-bloco.md`, fim do Passo 2 |
+| Q-10 | O `AGENTS.md` manda ler o `backlog.md` "somente no main tree", inclusive no fechamento, mas o fechamento roda na lane (6d), como o `CLAUDE.md` §3 diz | `AGENTS.md:56-57` |
+| Q-11 | O 6d prescreve a linha da tabela de saídas sem o prefixo `> `, mas a tabela vive dentro de um blockquote. E o corte da ficha `D-*` não para no `---`: cortar a última, a `D-37`, apagaria o separador da seção | `finalizar-bloco.md`, 6d; `backlog.md`, `# Débitos técnicos` |
+| Q-12 | A invariante 10 diz que a regra "mantém o arquivo livre de conflito", mas com a E10 toda lane que paga um `D-*` acrescenta uma linha no fim da mesma tabela. Duas lanes em paralelo dão conflito no segundo PR | `state.md`, invariante 10 |
+| Q-13 | A exceção de aguardando aceitação na invariante 10 não cita os `D-*` pagos. Nesse caminho o 6d é pulado e a linha do 6c não nomeia quais `D-*` o Passo 3 deu como pagos, então o julgamento não fica registrado para a PR de docs | `state.md`, invariante 10; `finalizar-bloco.md`, 6c e 6d |
 
-A consequência não é estética: quando o `guard-main-shell` negar um comando legítimo, o remédio é
-"acrescente a entrada em `.claude/hooks/lib/classificar-comando.py` e commite" — o próprio motivo de
-recusa diz isso —, e não há doc que explique a régua da allowlist nem por que ela existe. O bloco
-não escreveu nada disso porque o plano não listou entregável de doc; a spec §3.4 cobre a
-consequência de versionar os hooks, mas a spec agora está em `specs/archive/`, que ninguém lê por
-rotina.
+**Do `rulings.md`** — seção "Para o fechamento" de
+[`../blocos/35-harness-commands-de-bloco/rulings.md`](../blocos/35-harness-commands-de-bloco/rulings.md),
+reconferida no HEAD do fechamento:
 
-## P-92 — a invariante 10 manda o main tree escrever o `backlog.md` na `main`, e nenhum caminho deixa
+| Ponta | O que falta | Onde |
+|---|---|---|
+| `context_required` e `closing` | Os dois estados seguem no contrato, com a invariante 5, mas nenhum dos quatro commands grava um ou outro | `docs/superpowers/state.md:27`, `:35` e `:103` |
+| `lotus-ui-review` | A skill do Codex ainda lê o `state.md` como fonte de estado, não o `estado.md` do bloco | `.agents/skills/lotus-ui-review/SKILL.md:36` |
+| Fluxo do `backlog.md` | A seção `## Fluxo` ainda descreve `context_required` antes do planejar e `/revisar-sprint → /fechar-sprint` no fim | `docs/superpowers/backlog.md:47-48` |
+| Semente do `lane.sh abrir` | O commit da semente é só de `estado.md` e não está declarado como exceção na invariante 6 | `.claude/scripts/lane.sh:313-316`; `docs/superpowers/state.md`, invariante 6 |
+| Catraca dos commands | Não cobra a existência de `prompts/gabarito-lotus.md` e `prompts/verificador-achado.md`, nem que todo `subagent_type` citado tenha agente | `.claude/tests/commands.tests.sh` |
+| `blocked` na rota codex | A ida a `blocked` no `/executar-bloco` não diz qual artefato prova a transição | `.claude/commands/executar-bloco.md:85-86` |
 
-**Bloco:** 35 (`harness-commands-de-bloco`) · **Quem decide:** João · **Gatilho:** fecha quando o
-fluxo de fechamento tiver um caminho escrito, e exercido uma vez, para a ficha de um bloco fechado
-sair do `backlog.md` — ou quando a invariante 10 for reescrita para o caminho que existe. Revisar em
-**2026-10-31**.
+## P-96 — três docs de mapa não acompanharam o que entrou depois deles
 
-A invariante 10 do `state.md` diz: *"`backlog.md` é escrito somente pelo main tree, na `main`."*
-Mas o main tree não tem como escrever na `main`: o `guard-main` e o `guard-main-shell` negam
-escrita com a árvore na `main`, e o `pre-push` recusa push direto nela (`CONTRIBUINDO.md`). Toda
-mudança chega à `main` por PR, e PR sai de branch, que não é o main tree.
+**Bloco:** BD-15-docs-guardrails-e-sincronizacao · **Gatilho:** fecha quando o `AGENTS.md` e o
+`INSTRUÇÕES-DO-PROJETO.md` listarem as seis rules de `.claude/rules/` e o
+`docs/estrutura-monolito.md` citar `shared/ui/Timestamp/`; dispara no próximo bloco que tocar
+qualquer um dos três. Revisar em **2026-10-31**.
 
-**Medido em 2026-09-27, no fechamento do item 32:** a ficha 30 segue em `backlog.md:328` da
-`origin/main@229994bb`, um dia depois de o item 30 fechar e mesclar (PR #116); a ficha 32 segue em
-`backlog.md:137`, com o bloco em `closed` e mesclado (PR #118). Os dois fechamentos disseram "o
-main tree remove a ficha depois do merge", e nenhum dos dois tinha como. As mudanças do backlog que
-entraram até aqui vieram de branch de lane (`7b14e817`, na do item 30), contra a letra da regra.
+Medido em 2026-10-03 pela `auditar-docs` do fechamento do item 35, contra a `origin/main` já
+mesclada na lane (`deeea4e8`):
 
-**Por que fica aberta:** o João escolheu, no fechamento do item 32, não quebrar a regra por atalho
-e entregar a lacuna ao item 35, que reescreve os comandos de bloco. As saídas que se veem: uma
-branch curta aberta do main tree só para o `backlog.md`, ou a lane remover a própria ficha no PR de
-fechamento, com a invariante reescrita para dizer isso.
+| Doc | O que falta | Evidência |
+|---|---|---|
+| `AGENTS.md` | `backend-lang.md` (`backend/lang/**`) e `frontend-estilizacao.md` (`frontend/src/**`) na lista de rules por caminho. O Codex não carrega rules sozinho, então perde as duas | `AGENTS.md:115-118`; `paths:` em `.claude/rules/backend-lang.md:3` e `.claude/rules/frontend-estilizacao.md:3` |
+| `INSTRUÇÕES-DO-PROJETO.md` | as mesmas duas rules na tabela "Onde mora a mecânica de código", que lista quatro das seis | `INSTRUÇÕES-DO-PROJETO.md:67-70` |
+| `docs/estrutura-monolito.md` | `Timestamp/` (data e hora formatadas) na árvore de `shared/ui`, ao lado do `Clock/`; o `…` da linha dos wrappers não cobre um componente de chrome | `docs/estrutura-monolito.md:120`; `frontend/src/shared/ui/Timestamp/index.ts` |
 
-**Exceção de 2026-09-28, decidida pelo João:** a ficha 32 saiu do `backlog.md` por commit direto na
-`main`, do main tree, com `LOTUS_FORCA_MAIN=1` no push — sem branch nem PR. O mesmo commit deu à
-ficha 33 a linha `**Depende:** —` que o portão do `lane.sh abrir` exige. É a saída de emergência do
-`CONTRIBUINDO.md`, usada uma vez e registrada aqui; não é o caminho que fecha a pendência. A ficha 30
-continua no `backlog.md`.
-
-**Desvio de 2026-10-01, decidido pelo João:** a ficha 23 e a `D-65` saíram do `backlog.md` na PR
-de fechamento da própria lane, que também levou o bloco 23 a `closed`. É a segunda saída acima, sem
-a invariante 10 reescrita, e o mesmo desvio do item 30 (`7b14e817`), agora por escolha registrada.
-Passou pela CI e pelo `procedencia`, o que o commit direto do item 32 não passou. Não fecha a
-pendência: o caminho escrito continua com o item 35.
+**Por que fica aberta:** nenhuma das três é do escopo do item 35. As duas listas de rules já
+estavam assim na `origin/main` antes dele, e o `Timestamp` chegou pela `main` no merge do Passo 5
+do fechamento. O fechamento só escreve registros, e o João decidiu registrar em vez de corrigir.
 
 ## P-32 — a guarda da lição 13 confere path, não classe
 
@@ -890,7 +887,7 @@ Gotenberg de produção renderizou, não da configuração nem do teste.
 ## P-31 — o ponto 5 do ADR-16 não está no espelho do Drive
 
 **Bloco:** BD-15-docs-guardrails-e-sincronizacao · **Gatilho:** fecha quando o ponto 5 estiver no `decisao-stack.md` do Drive — o João cola o texto, ou
-um bloco futuro ganha ferramenta de escrita no Drive e o aplica. Revisar em **2026-09-30**.
+um bloco futuro ganha ferramenta de escrita no Drive e o aplica. Revisar em **2026-10-31**.
 
 O ponto 5 do ADR-16 (identidade própria sobre o Lara — temas gerados, camada de marca, fim da exceção
 de shell) existe em `docs/adrs.md` e **não** no espelho canônico do Drive (`decisao-stack.md`,
@@ -919,6 +916,10 @@ sincronizá-lo. **Nada a fazer do lado do agente.**
 `modifiedTime` 2026-07-31T16:15:51Z na medição). O texto a colar é o ponto 5 do ADR-16 em
 `docs/adrs.md`, **copiado de lá e não reescrito**, mais a frase que revoga a exceção de shell — hoje
 o ADR-16 do Drive segue com os cinco bullets originais.
+
+**Renovada em 2026-10-03, no fechamento do item 35.** A `auditar-docs` daquele fechamento achou
+o gatilho vencido desde 2026-09-30, com o ponto 5 ainda fora do `decisao-stack.md`. O João renovou
+a data para 2026-10-31; o passo para fechar continua o do parágrafo acima.
 
 ## P-22 — H.1.3.1 existe duas vezes na base Notion canônica
 
