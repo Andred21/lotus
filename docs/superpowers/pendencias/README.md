@@ -2,7 +2,7 @@
 
 > Divergências e dívidas **já registradas**. A skill `auditar-docs` lê esta pasta e **não reporta
 > nada daqui como achado novo**. Toda pendência tem gatilho — pendência sem prazo vira mentira
-> permanente (lição 13). Revisada a cada `/fechar-sprint`.
+> permanente (lição 13). Revisada a cada `/finalizar-bloco`.
 >
 > Isto NÃO é backlog de produto — item de código/feature vai para `docs/superpowers/backlog.md`.
 > Aqui mora só o que faz um doc ou um mecanismo divergir da realidade.
@@ -35,14 +35,22 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-94 | O diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha (`frame 669 · scroll 672`): herda o piso default de 42rem, e o audit do item 23 só o mediu vazio | — | `medir.cjs` do item 23 medir `scroll` = `frame` na linha `DIALOGO` em 1024 com alumno que tenha turma, ou bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo ou o piso default do `AppDataTable`; revisar 2026-10-31 |
 | P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
-| P-84 | O harness de guarda entregue pelo item 28 governa toda sessão futura e não existe em nenhum doc versionado — `estrutura-monolito.md` não tem uma ocorrência de `.claude`, o `CONTRIBUINDO.md` só descreve o `pre-push` de `.githooks` | 35 | `estrutura-monolito.md` descrever `.claude/hooks`, `.claude/tests` e `settings.json`, ou o `CONTRIBUINDO.md` explicar a allowlist; revisar 2026-10-31 |
-| P-92 | A invariante 10 manda o main tree escrever o `backlog.md` na `main`, mas os guardas e o `pre-push` não deixam: as fichas 30 e 32 seguem no backlog depois de fechadas e mescladas | 35 | o fechamento ter caminho escrito e exercido para tirar a ficha do backlog, ou a invariante 10 reescrita; revisar 2026-10-31 |
+| P-95 | Doze pontas do harness que o item 35 deixou sem correção: seis Menores da revisão (Q-7, Q-8, Q-10 a Q-13) e seis do `rulings.md` (`context_required`/`closing` sem command, `lotus-ui-review` lendo o `state.md`, fluxo antigo no `backlog.md`, semente do `lane.sh` fora da invariante 6, catraca sem prompts nem `subagent_type`, `blocked` da rota codex sem artefato) | 36 | cada linha corrigida ou com veredito escrito; dispara no bloco que tocar `.claude/commands/`, `lane.sh`, `commands.tests.sh` ou `state.md`; revisar 2026-10-31 |
+| P-96 | `AGENTS.md` e `INSTRUÇÕES-DO-PROJETO.md` listam quatro das seis rules (faltam `backend-lang` e `frontend-estilizacao`), e o `estrutura-monolito.md` não cita o `shared/ui/Timestamp/` | BD-15 | os três docs acompanharem; dispara no bloco que tocar qualquer um deles; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
-| P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-09-30 |
+| P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
 | P-93 | `docs/operacao-segredos.md` §3/§4/§6 descrevem `MAIL_PASSWORD` de um relay SMTP como o segredo de e-mail em uso e citam `backend/.env.production.example:106`; produção está em `MAIL_MAILER=log` desde o item 10 v2 e o item 33 a leva a `ses` pela instance role | 33 | **paga em 2026-09-28 (item 33, Task 4)**; sai no fechamento |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
+>
+> **O item 35 (`harness-commands-de-bloco`) fechou em 2026-10-03 a P-84 e a P-92**, as duas que
+> hospedava: a P-84 pela seção HARNESS do `estrutura-monolito.md`, e a P-92 pela invariante 10
+> reescrita (a lane tira do `backlog.md` a própria ficha e os `D-*` pagos), exercida no próprio
+> fechamento. Abriu a **P-95** (as doze pontas do harness que o bloco deixou registradas, entre
+> Menores da revisão e o "para o fechamento" do `rulings.md`) e a **P-96** (três divergências que a
+> `auditar-docs` do fechamento achou fora do escopo dele). A **P-31** estava vencida desde
+> 2026-09-30, e o João a renovou para 2026-10-31. A **P-77** saiu do rastro.
 >
 > **O item 23 (`frontend-tabelas-reserva-e-rolagem`) fechou em 2026-09-28 e abriu a P-94.** A
 > remedição do fechamento achou o diálogo do Alumno rolando 3px em 1024 quando a tabela tem linha.

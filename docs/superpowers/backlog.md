@@ -35,8 +35,8 @@
 > Histórico entregue → `historico/progress.md` · fichas `P-*` → `pendencias/abertas.md` ·
 > specs/planos → `specs/archive/` e `plans/archive/`. Não duplicar esses conteúdos aqui.
 > O registro canônico dos débitos `D-*` segue neste arquivo, na seção `# Débitos técnicos` —
-> entrar num bloco não move nem apaga a ficha; a remoção acontece no `/fechar-sprint` do bloco
-> que a paga.
+> entrar num bloco não move nem apaga a ficha; a remoção acontece no `/finalizar-bloco` do bloco
+> que a paga (item 6d).
 >
 > **Planejamento just-in-time (CLAUDE.md §4):** o roadmap vive como título e escopo, não como
 > plano pronto que envelhece. Spec e plano se escrevem imediatamente antes da execução; limites,
@@ -284,35 +284,6 @@ volume, worktree ou branch.
 
 ---
 
-## 35. `harness-commands-de-bloco`
-
-**Prioridade:** P2 · **Frente:** Harness · **Contexto:** não · **Depende:** 30
-**Fonte:** a mesma spec, §5; absorve a parte A do rascunho de política de modelo e esforço de
-2026-09-21 (ver a nota de numeração no topo).
-
-**Objetivo:** `/planejar-bloco`, `/executar-bloco`, `/revisar-bloco` e `/finalizar-bloco` no
-desenho do ElaDecora, em bash, com cada etapa invocando a skill do superpowers por `Skill()`
-explícito, e modelo e esforço declarados por fase e por papel.
-
-**Escopo:** os quatro commands; agentes de papel em `.claude/agents/` com `model` e `effort`
-(a ferramenta `Agent` não aceita esforço por chamada) e a tabela única `.claude/papeis.md`;
-`.claude/prompts/verificador-achado.md` e `gabarito-lotus.md`; plugin
-`superpowers@claude-plugins-official` no `settings.json`; aposentadoria das skills `revisar-sprint`
-e `fechar-sprint`; `model`/`effort` nas demais entradas; caminhos novos nos contratos do Codex em
-`.agents/skills/`; `CLAUDE.md` §4; `docs/estrutura-monolito.md` descrevendo `.claude/` (commands,
-agents, hooks, scripts, prompts, tests, `settings.json`) e a régua da allowlist do
-`guard-main-shell`; catraca `commands.tests.sh`.
-
-**Fora:** aceitação externa (item 36); sinal de contexto cheio (item 37).
-
-**Integração:** branch empilhada na ponta do 30; mescla depois dele. Fecha a **P-84**.
-
-**DoD:** catraca vermelha quando some um `Skill(superpowers:…)` esperado ou um `model:`, verde de
-volta — provado nos dois sentidos; os quatro commands vistos rodar de ponta a ponta num bloco real
-pequeno.
-
----
-
 ## 36. `harness-aceitacao-externa`
 
 **Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** 35
@@ -417,9 +388,9 @@ ficam só como ponteiro, e a ficha delas é lá.
 # Débitos técnicos — registro canônico
 
 > Ficha de cada débito vivo. A cobertura por bloco está mapeada na fila; **entrar num bloco não
-> move nem apaga a linha daqui** — a remoção acontece só depois do bloco aplicado e do
-> `/fechar-sprint` correspondente. Fichas completas anteriores: histórico do arquivo no Git
-> (`git log -- docs/superpowers/backlog.md`).
+> move nem apaga a linha daqui** — a remoção acontece só depois do bloco aplicado, no
+> `/finalizar-bloco` correspondente (item 6d). Fichas completas anteriores: histórico do arquivo
+> no Git (`git log -- docs/superpowers/backlog.md`).
 
 ## Agrupados em bloco
 

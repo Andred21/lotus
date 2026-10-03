@@ -3,6 +3,8 @@ description: Revisa a qualidade de CÓDIGO do frontend de uma feature/sprint —
 argument-hint: [feature ou caminho — ex. commercial, features/catalog]
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(pnpm lint:*), Bash(pnpm build:*)
 disable-model-invocation: true
+model: sonnet
+effort: high
 ---
 
 > **Eixo CÓDIGO do review de frontend.** Estrutura, não pixel. Roda ANTES do `/revisar-ui` —

@@ -182,6 +182,76 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 
 ---
 
+## HARNESS — `.claude/` e `.agents/`
+
+```
+.claude/
+├── commands/                   # prompt fixo, invocado por `/`; description+model+effort no frontmatter
+│   ├── planejar-bloco.md       # fase 1 de 4 — brainstorming → spec → plano (opus/high)
+│   ├── executar-bloco.md       # fase 2 de 4 — executa o plano task a task (sonnet/medium)
+│   ├── revisar-bloco.md        # fase 3 de 4 — gabarito do Lotus + verificação de achado (opus/high)
+│   ├── finalizar-bloco.md      # fase 4 de 4 — verificação fresca, fechamento, PR (sonnet/high)
+│   ├── revisar-frontend.md     # revisão estrutural do frontend, fora do ciclo de bloco
+│   └── revisar-ui.md           # entrada legada da skill `lotus-ui-review`
+│
+├── agents/                     # um arquivo por papel, despachado por `Agent(subagent_type: ...)` —
+│                                #   dez hoje. Nome, model e effort têm de casar com `papeis.md` nos
+│                                #   dois sentidos (catraca em `commands.tests.sh`); lista não repetida
+│                                #   aqui de propósito — doc que copia lista envelhece calado (lição 13)
+│
+├── hooks/                      # SessionStart/PreToolUse/Stop; `exit 0` sempre — JSON no stdout,
+│                               #   exceto `session-start.sh` (texto puro)
+│   ├── guard-main-shell.sh     # restringe Bash só quando a branch é `main`: falha ABERTA sem saber
+│   │                           #   a branch (infra), FECHADA sem saber classificar o comando
+│   ├── guard-main.sh           # nega escrita cruzada entre árvores e escrita na `main` fora da allowlist
+│   ├── guard-secrets.sh        # nega gravar arquivo de ambiente ou conteúdo com marca de credencial
+│   ├── session-start.sh        # injeta `lane.sh descobrir` no início da sessão; nunca bloqueia
+│   ├── stop-verify.sh          # cobra evidência de verificação quando a sessão mexeu em código
+│   └── lib/                    # classificar-comando.py, ler-frontmatter.py, comum.sh, estados.sh
+│
+├── scripts/
+│   ├── lane.sh                 # portão de toda lane — verbos `descobrir`, `abrir`, `conferir`, `fechar`
+│   └── lib/backlog.py          # só leitura: fichas e conflitos de `Depende`, para o portão do `lane.sh abrir`
+│
+├── prompts/                    # texto longo consumido por um agente despachado, não command direto
+│   ├── gabarito-lotus.md       # lente 1 do `/revisar-bloco` — destilado da ex-skill `revisar-sprint`
+│   └── verificador-achado.md   # lente 2 — um despacho por achado, sem ver o raciocínio da lente 1
+│
+├── rules/                      # carrega sozinha ao tocar o arquivo coberto — não ler por precaução
+├── skills/                     # auditar-docs/ e lotus-ui-review/ — instrução sob demanda, não prompt fixo
+├── tests/                      # `run-all.sh` soma todo `*.tests.sh` da pasta (15 hoje); veredito é a
+│                               #   última linha e o código de saída. Cada arquivo recusa rodar avulso
+│                               #   — trava de uma linha no topo, catraca própria em `avulso.tests.sh`,
+│                               #   regra descrita em `_assert.sh`. Lição 10 (`docs/README.md:70`):
+│                               #   teste que nunca viu o bug reprovar é cobertura fantasma
+├── settings.json               # os 5 hooks acima + `enabledPlugins` do `superpowers@claude-plugins-official`
+└── papeis.md                   # única fonte de model/effort por papel despachado; catraca com agents/
+
+.agents/skills/                 # contrato do Codex: lotus-context-packet/, lotus-execute-block/, lotus-ui-review/
+```
+
+### Régua da allowlist do `guard-main-shell`
+
+- **Onde mora:** `.claude/hooks/lib/classificar-comando.py`, só chamado quando a branch é `main`
+  (fora dela o shell corre livre). Sete famílias `familia_*` (`leitura`, `git`, `docker`,
+  `docker_exec`, `pnpm`, `gh`, `lane`); o conjunto `GIT_SUB` lista os subcomandos git reconhecidos
+  na `main`, e cada um ganha sua própria régua de argumento (`branch`/`tag` negam a flag que
+  altera, `push`/`commit` negam force e `--no-verify`, `worktree` nega `remove`/`move`/`prune`/
+  `lock`/`unlock`/`repair`, `remote` nega alterar o remoto, `pull`/`fetch` negam URL solta); e
+  `NEGADOS_SEMPRE` lista os binários de execução ou escrita arbitrária, negados sob qualquer forma.
+- **O que ela libera na `main`:** leitura e verificação, dentro da régua de cada família — em
+  `git`, os subcomandos de `GIT_SUB` (item acima); em `gh`, só `pr view/list/diff/checks`,
+  `run view/list`, `repo view` e `gh api` sem verbo de escrita; e o `lane.sh` nas quatro formas
+  (`descobrir`; `conferir <NN>`; `fechar <NN>`; `abrir <NN> <tipo> <slug> [--modelo <alias>]`).
+- **Como acrescentar uma entrada:** editar a família ou o conjunto certo, acrescentar os casos que
+  liberam **e** os que negam em `.claude/tests/classificar-comando.tests.sh`, e rodar
+  `bash .claude/tests/run-all.sh`.
+- **O `guard-main` libera escrita na `main`** só em `docs/`, `.claude/`, `.agents/` e nos arquivos
+  raiz listados em `.claude/hooks/guard-main.sh` — hoje `CLAUDE.md`, `INSTRUÇÕES-DO-PROJETO.md`,
+  `CONTRIBUINDO.md`, `AGENTS.md` e `README.md`.
+
+---
+
 ## Divergências entre planejamento e estado real (atenção ao criar arquivos)
 
 Pequenos pontos onde o repo real difere do planejamento original — ambos aceitáveis, registrados para não confundir:

@@ -2,6 +2,8 @@
 name: auditor-docs
 description: Lê os docs do Lotus contra o código real e devolve APENAS a tabela de divergências. Use para auditoria de documentação, onde a leitura é pesada e os resultados intermediários não interessam à sessão principal.
 tools: Read, Grep, Glob
+model: sonnet
+effort: medium
 ---
 
 Você audita a documentação do projeto Lotus contra o código real.

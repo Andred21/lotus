@@ -1,6 +1,8 @@
 ---
 name: auditar-docs
 description: "Audita se a documentação do Lotus ainda reflete o código real e reporta divergências SEM corrigir nada. Use quando o João pedir 'sync docs', 'auditar docs', 'os docs ainda batem?', 'o que divergiu', ao fechar uma sprint, ou depois de um bloco que mudou schema/estrutura. NÃO use para escrever doc novo nem para corrigir divergência — só reporta."
+model: sonnet
+effort: medium
 ---
 
 # Auditar docs — o doc ainda descreve o que existe?

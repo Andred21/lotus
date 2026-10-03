@@ -1,130 +1,249 @@
 ---
-description: Planeja o trabalho ativo pelo estado operacional (brainstorming → spec → plano)
-argument-hint: [active_work_item, ex. "bloco6-frontend-exec3"]
-allowed-tools: Bash(git status:*)
+description: Abre um bloco do Lotus — ficha, lane, brainstorming, spec e plano. Não implementa nada.
+argument-hint: "[NN | texto livre] [--max]"
 disable-model-invocation: true
+model: opus
+effort: high
 ---
 
-## Âncoras de contexto (não pule)
+# /planejar-bloco
 
-@docs/superpowers/state.md
-@docs/superpowers/historico/progress.md
+Fase 1 de 4 do harness de blocos. Desenho: spec compartilhada
+`docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md` §5.3, com as emendas da
+spec do bloco 35.
 
-Leia `state.md` antes de qualquer outra fonte. Leia `backlog.md` somente se
-`workflow_state: idle`; ele serve para o João escolher um item, nunca para o comando selecionar o
-primeiro item pendente.
+Argumento: `$ARGUMENTS`
 
-## Escopo
+## Regra de invocação de skill — leia antes de tudo
 
-**$ARGUMENTS**
+Toda skill citada abaixo é invocada pela ferramenta `Skill`, e a invocação é confirmada antes
+do passo seguinte. **Nunca execute o processo de uma skill de cabeça.**
 
-O argumento é opcional. Quando fornecido, deve corresponder exatamente a `active_work_item`.
-Quando vazio, use exclusivamente `active_work_item`; nunca consulte o backlog para selecionar outro.
+Se você pensar *"eu já conheço essa skill"* ou *"o conteúdo dela já está no meu contexto"*,
+esse é o sinal de que o erro está prestes a acontecer — não uma dispensa. Este modo de falha
+já se repetiu neste projeto: o agente lê "use a skill Y", reconhece o processo, e executa uma
+versão de cabeça, pulando exatamente os gates que justificam a skill.
 
-## Gate de estado
+Se a `Skill` responder `Unknown skill` para um nome `superpowers:<skill>`, pare e peça ao João
+que instale ou ative o plugin `superpowers@claude-plugins-official`. Nunca troque pelo nome
+sem prefixo: ele carrega a cópia legada de `~/.claude/skills/`, que não tem o que estes commands
+esperam.
 
-Este comando aceita somente:
+## Passo 1 — Caveman
 
-- `context_required` → roteie a geração do Context Packet ao Codex (seção abaixo); com o packet
-  validado e salvo, transicione para `ready_for_planning` e prossiga;
-- `ready_for_planning` → valide as âncoras e transicione para `planning`;
-- `planning` → retome exatamente do ponto pendente.
+Invoque `Skill(caveman, "ultra")`. Confirme em uma linha que carregou antes de seguir.
 
-Qualquer outro estado → PARE e informe `workflow_state`, `next_owner` e `next_action`. Em `idle`,
-você pode mostrar o backlog e pedir ao João uma seleção explícita, mas não pode promover um item.
+## Passo 2 — Main tree na `main`
 
-Ao iniciar a partir de `ready_for_planning`, atualize `state.md` no mesmo commit do primeiro artefato
-durável:
+Rode:
 
-```yaml
-workflow_state: planning
-next_owner: claude
-next_action: continue_active_planning
+```bash
+git rev-parse --show-toplevel
+git rev-parse --abbrev-ref HEAD
+git worktree list --porcelain
 ```
 
-## Rota `context_required` → Codex
+A árvore tem de ser a primeira entrada do `worktree list` (o main tree nunca é lane), na branch
+`main`. Dentro de uma lane → pare e diga qual, lendo `bash .claude/scripts/lane.sh descobrir`: uma
+sessão conduz uma lane só, e planejar abre outra. O teto de três lanes e a independência entre
+blocos não se conferem aqui — quem confere é o portão do `lane.sh abrir`, no Passo 6.
 
-Pré-condições: `next_owner: codex`, `next_action: generate_context_packet`, `context_packet: null`.
-Divergência → `blocked`.
+## Passo 3 — Resolver a ficha
 
-1. Carregue o Codex. Primeiro o MCP: `ToolSearch "select:mcp__codex__codex"`. Se a ferramenta não
-   existir na sessão (foi o caso em 2026-09-27), use o plugin `codex-companion` por Bash, em
-   background e **sem `--write`** (sandbox `read-only`, que é o que o packet exige):
-   `node "$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | sort -V | tail -1)" task --fresh "<prompt>"`.
-   O prompt é o mesmo nos dois caminhos e o contrato de saída (markers, `RECOMMENDED_TRANSITION`)
-   também; quem valida é você. **Não** use o agente `codex:codex-rescue` como fallback: em
-   background ele pede permissão de Bash que ninguém responde.
+- `NN` → leia a seção `## <NN>. \`<slug>\`` de `docs/superpowers/backlog.md`. Ausente → pare.
+  Ficha cuja pasta `docs/superpowers/blocos/<NN>-<slug>/` já tem `estado.md` na `main` → pare: o
+  bloco já passou por uma lane, e abrir outra sobrescreveria o estado dele. Em `blocked` aguardando
+  aceitação (o 6a do `/finalizar-bloco` deixa a ficha no backlog até o `closed`), o que falta é
+  prova, e o command certo é `/finalizar-bloco <NN>`. O item 36 acrescenta a tabela
+  `## Aguardando aceitação` ao `backlog.md`; ficha sob ela também para.
+- Leia da ficha: o slug, `**Contexto:**` e `**Depende:**`.
+- **Texto livre** → proponha a ficha no formato das existentes (título, linha
+  Prioridade/Frente/Contexto/Depende, Fonte, Objetivo, Escopo, Fora, DoD), com o próximo número
+  livre — o maior `NN` visto entre as fichas `## NN.` do backlog, as branches de `git branch -a` e
+  as pastas de `docs/superpowers/blocos/`, mais 1; ficha fechada sai do backlog mas deixa a pasta,
+  e número fechado não se reusa — e **pare**: a ficha só entra na `main` por PR de docs (E8,
+  invariante 10), e o command volta a ser invocado com o `NN` depois de publicada. Promover é
+  decisão do João (invariante 8).
+- Sem argumento → liste as fichas e pergunte. Nunca escolha sozinho.
+
+## Passo 4 — Context Packet, se `Contexto: sim`
+
+Ainda não há lane: grave o packet com a ferramenta `Write`, num caminho fora de qualquer árvore
+git sob `${TMPDIR:-/tmp}` — ex. `<tmp>/lotus-packet-<NN>-<AAAAMMDD-HHMMSS>.md` — e só o traga para
+o repositório no Passo 6. Nada de `mktemp` aqui: o `guard-main-shell` nega `mktemp` na `main`, e a
+ferramenta `Write` para fora de qualquer árvore git passa. Resolva `<tmp>` e o timestamp com
+`echo "${TMPDIR:-/tmp}"` e `date +%Y%m%d-%H%M%S`, os dois liberados na `main`.
+
+**Rota Codex** — porta os itens 1, 2, 3 e 6 da rota Codex do command anterior (renumerados 1–4
+aqui):
+
+1. Carregue o Codex pelo MCP: `ToolSearch "select:mcp__codex__codex"`. O fallback `codex-companion`
+   por Bash (`node ...`) não roda aqui: o `guard-main-shell` nega `node` na `main`, e este passo
+   sempre roda no main tree. Sem `mcp__codex__codex` na sessão, vá direto para a rota **Codex
+   indisponível**, abaixo. **Não** use o agente `codex:codex-rescue` como fallback: em background
+   ele pede permissão de Bash que ninguém responde.
 2. Invoque o Codex (sandbox read-only) com prompt que exija a skill `lotus-context-packet` de
-   `.agents/skills/`, informando `active_work_item`, `active_spec`, branch e commit atuais. O Codex
-   não altera arquivos nem estado.
+   `.agents/skills/`, informando `NN`, slug, branch `main` e o commit atuais — não o item de
+   trabalho da lane, que ainda não existe. O Codex não altera arquivos nem estado.
 3. Valide a resposta: markers exatos, frontmatter completo, ≤ 8 key facts, fontes indisponíveis
    registradas, `RECOMMENDED_TRANSITION` presente. Contrato violado → uma re-invocação citando a
-   violação; persistindo → `blocked`.
-4. `RECOMMENDED_TRANSITION: blocked` → grave `workflow_state: blocked` com `blocker` copiado do
-   packet e PARE.
-5. `ready_for_planning` → salve o packet no `SUGGESTED_PATH`, e no MESMO commit atualize `state.md`:
-
-```yaml
-workflow_state: ready_for_planning
-next_owner: claude
-next_action: plan_active_work_item
-context_packet: docs/superpowers/context-packets/<arquivo>.md
-```
-
-6. Um packet `status: partial` prossegue; as fontes `unavailable` viram limitação declarada no
+   violação; persistindo → pare, sem lane.
+4. Um packet `status: partial` prossegue; as fontes `unavailable` viram limitação declarada no
    brainstorming. `status: blocked` nunca prossegue.
 
-## Reconstrução de contexto
+`RECOMMENDED_TRANSITION: blocked` → pare, sem lane: ainda não existe `estado.md` onde gravar
+`blocked`.
 
-1. Leia `context_packet` apontado pelo estado; ele deve existir e não pode ser `null` quando o bloco
-   depender de contexto externo.
-2. Leia `active_spec` quando não for `null`. A spec pode ser compartilhada por várias execuções;
-   sua existência não significa que este work item já tenha plano.
-3. Leia somente os documentos adicionais exigidos pelo packet/spec. Toca schema → `docs/adrs.md` +
-   `docs/der-fisico.md`.
-4. Leia as lições pertinentes de `docs/README.md`.
-5. Confirme que `active_plan` é `null` ou pertence ao mesmo `active_work_item`. Plano divergente
-   bloqueia a sessão.
+**Codex indisponível:** invoque `Skill(superpowers:dispatching-parallel-agents)`, com um agente
+`contexto-leitor` (`subagent_type`) por domínio independente, todos somente-leitura, na mesma
+resposta. As partes se fundem num packet só, com o mesmo contrato.
 
-Não use commits, existência de arquivos, ordem do backlog ou texto de `progress.md` para deduzir a
-fase. Divergência entre state, packet, spec, plano ou Git → transicione para `blocked`, descreva
-`blocker` e peça decisão; não escolha silenciosamente.
+**Regra dura: agente que escreve nunca é despachado em paralelo com agente que escreve.**
 
-## Workflow
+## Passo 5 — Brainstorming
 
-O dono das técnicas internas continua sendo **`using-superpowers`**. Dentro da fase `planning`:
+Invoque `Skill(superpowers:brainstorming)`. Confirme que carregou.
 
-1. **`brainstorming`** — refine somente as decisões ainda abertas, apresente o design em seções e
-   obtenha aprovação. Quando `active_spec` já for uma spec compartilhada aprovada, complemente-a
-   somente se a execução exigir decisão nova.
-2. **`writing-plans`** — escreva tasks pequenas com paths exatos, passos de verificação e DoD
-   comportamental. O plano sai em
-   `docs/superpowers/plans/AAAA-MM-DD-<active-work-item>.md`.
-   Todo plano termina com uma seção `## Handoff de execução` declarando `executor: claude|codex`
-   e, quando `codex`, a lista `paths_autorizados` (globs exatos). Critério: `codex` para tasks
-   mecânicas com verificação executável e paths fechados; `claude` quando a task toca lei do §5,
-   decisão de arquitetura ou exige julgamento fora do plano.
+Diga à skill, antes de ela começar, que a spec deste bloco vai para
+`docs/superpowers/blocos/<NN>-<slug>/spec.md` — o default dela vence se você não falar. **O gate
+de aprovação dela é obrigatório**; este command não avança sem o sim do João sobre o design.
 
-## Regras
+A skill anuncia a classificação antes da primeira pergunta:
 
-- Planejamento just-in-time: planeje apenas `active_work_item`.
-- Regra de negócio não se supõe. Fonte insuficiente → bloqueie e pergunte ao João.
-- DoD de cada task prova comportamento; build verde isolado não basta.
-- Possível quebra de lei do `CLAUDE.md` §5 → PARE e peça decisão explícita.
-- Toque backend assume main tree por causa da pendência P-03.
-- Não remova nem promova itens do backlog durante planejamento.
-- `progress.md` registra histórico; não recebe metadados operacionais nem controla transições.
+- ***spike*** → encerre aqui, sem lane: não crie branch, reporte a recomendação, e a ficha fica
+  como está no backlog.
+- ***bounded*** → siga curto — o caminho `bounded` da skill termina mandando implementar direto,
+  sem documento, e **não faça isso aqui** — mas **produza spec e plano**: neste harness `bounded`
+  economiza cerimônia, não artefato (menos perguntas, design curto, plano de poucas tasks). O
+  contrato deste harness é que todo bloco sai em `ready_for_execution` com `active_plan`
+  preenchido — invariante 3 —, e o Passo 10 diz que este command nunca implementa.
+  O contrato dos estados é `docs/superpowers/state.md`.
+- ***architectural*** → siga o caminho inteiro da skill.
 
-## Ao concluir
+**Assim que a classificação sair e não for *spike*, pare e execute o Passo 6 antes de a skill
+gravar a spec**: o commit dela tem de cair na branch do bloco, não na `main`.
 
-1. Mostre os paths finais da spec e do plano.
-2. Preencha `active_spec` e `active_plan` em `state.md`.
-3. Transicione no mesmo commit que torna o plano executável:
+## Passo 6 — Abrir a lane
+
+Você ainda está no main tree. Escolha o `<tipo>` (`feat fix chore refactor infra cicd docs`, D5)
+pelo conteúdo da ficha, e declare-o em uma linha.
+
+```bash
+bash .claude/scripts/lane.sh abrir <NN> <tipo> <slug> --modelo <alias da sessão>
+```
+
+`PORTAO RECUSOU` → pare: mexer na fila é decisão do João.
+
+Deu certo: `EnterWorktree(path: "<caminho absoluto impresso pelo LANE ABERTA>")`. Da sessão no
+main tree o caminho da árvore irmã é aceito (E2).
+
+Havendo Context Packet do Passo 4: já na lane, onde o Bash não tem mais a restrição do
+`guard-main-shell` da `main`, copie o temporário para
+`docs/superpowers/blocos/<NN>-<slug>/context.md` e apague-o; o `context.md` é commitado junto com
+a spec.
+
+O stack não sobe aqui — a saída do `abrir` já diz como subir, quando o bloco precisar dele.
+
+Volte ao Passo 5.
+
+## Passo 7 — Spec
+
+Grave a spec aprovada em `docs/superpowers/blocos/<NN>-<slug>/spec.md` e commite.
+
+A spec tem a seção `## Verificação externa` **sempre**: é o que o `/finalizar-bloco` lê, e seção
+ausente não é o mesmo que seção que declara não haver nada — a primeira é spec incompleta, a
+segunda é decisão registrada.
+
+Quando o bloco depende de ação fora do repositório, liste um item numerado por ação, com a prova
+de cada uma:
+
+```markdown
+## Verificação externa
+
+1. <ação fora do repositório>.
+   - prova: `<alias> <GET|HEAD> <caminho> -> <código>`
+```
+
+A prova é declarativa, no formato `<alias> <GET|HEAD> <caminho> -> <código>`, com os aliases do
+Lotus `producao` e `local`. Até o item 36 mesclar não há `aceitacao.sh` para executá-la: a prova
+fica só registrada. Item cuja verificação não tem superfície HTTP declara `prova: nenhuma`.
+
+Quando não houver ação externa nenhuma, a seção diz isso em uma linha, **sem item numerado**:
+
+```markdown
+## Verificação externa
+
+Nenhuma. <o que o bloco cobre>. `efeito_externo: nao`.
+```
+
+## Passo 8 — Plano
+
+Invoque `Skill(superpowers:writing-plans)`. Confirme que carregou. Diga à skill que o plano vai
+para `docs/superpowers/blocos/<NN>-<slug>/plano.md` — o default dela é outro caminho, e só este
+vence se você falar.
+
+Peça duas seções a mais, depois das tasks, e valide-as você mesmo antes de gravar:
+
+```markdown
+## Grupos paralelos
+
+| Grupo | Tasks | Files: disjuntos | Aresta Consumes/Produces |
+|---|---|---|---|
+| G1 | 3, 4, 5 | sim | nenhuma entre elas |
+
+Task fora de grupo executa e revisa uma a uma.
+```
+
+A validação é mecânica, por **par**: a interseção das listas `Files:` das duas tasks precisa ser
+vazia, e não pode existir aresta `Consumes`/`Produces` entre elas. Grupo que falha em um par é
+desfeito, não negociado.
+
+`## Handoff de execução` declara `executor: claude|codex`, o modelo e o esforço da sessão, os
+papéis de `.claude/papeis.md` que a execução vai despachar e, para `codex`, `paths_autorizados`
+com globs exatos. Critério: `codex` para task mecânica com verificação executável e paths
+fechados; `claude` quando a task toca lei do §5, decisão de arquitetura ou julgamento fora do
+plano.
+
+Com o plano gravado, rode a segunda metade do portão:
+
+```bash
+bash .claude/scripts/lane.sh conferir <NN>
+```
+
+Sai `1` → pare: o plano cruza arquivos com o de outra lane viva, e a saída é replanejar ou
+esperar a outra lane fechar.
+
+## Passo 9 — Gravar o estado
+
+Grave, no `estado.md` da lane e **no mesmo commit do plano**:
 
 ```yaml
 workflow_state: ready_for_execution
 next_owner: claude
 next_action: execute_active_plan
+active_spec: docs/superpowers/blocos/<NN>-<slug>/spec.md
+active_plan: docs/superpowers/blocos/<NN>-<slug>/plano.md
+context_packet: docs/superpowers/blocos/<NN>-<slug>/context.md  # null quando Contexto: não
+efeito_externo: <sim|nao>
+executor: <claude|codex>
+active_acceptance: null
+commit: <git rev-parse --short HEAD antes do commit>
+updated_at: <date -Iseconds>
+updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
 ```
 
-4. Não implemente. `/executar-bloco <active_work_item>` exige uma instrução posterior.
+- `efeito_externo` vale `sim` quando `## Verificação externa` tem item numerado, e `nao` quando
+  declara nenhum.
+- `active_acceptance` fica `null` até o item 36 trazer o `aceitacao.md`.
+- `id`, `slug`, `branch`, `worktree`, `offset` e `lane_base` são do `lane.sh` e não se reescrevem.
+
+## Passo 10 — Parar
+
+**Este command nunca implementa.** Reporte: o bloco, a branch, os caminhos da spec e do plano,
+quantas tasks o plano tem, e que o próximo passo é `/executar-bloco <NN>`, numa sessão aberta na
+lane.
+
+## `--max`
+
+`--max` sobe `sonnet` para `opus` em todo despacho deste command, pelo parâmetro `model: "opus"`
+da ferramenta `Agent`, conforme `.claude/papeis.md`. O esforço da sessão não muda.
