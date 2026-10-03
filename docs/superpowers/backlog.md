@@ -256,34 +256,6 @@ está formalmente resolvida.
 
 ---
 
-## 30. `harness-estado-por-bloco`
-
-**Prioridade:** P2 · **Frente:** Harness · **Contexto:** não · **Depende:** —
-**Fonte:** comparação com `Ela-Decora/ElaDecora-Brain@5eb74c0` em 2026-09-26; spec compartilhada
-[`specs/2026-09-26-harness-paridade-eladecora-design.md`](./specs/2026-09-26-harness-paridade-eladecora-design.md), §3 e §4.
-
-**Objetivo:** o estado de cada bloco passa a morar na pasta dele
-(`docs/superpowers/blocos/<NN>-<slug>/estado.md`), as lanes passam a ser descobertas por
-`git worktree list`, e o `state.md` vira contrato. Acaba a classe de divergência "estado da `main` ×
-estado da árvore" que o `SessionStart` acusa.
-
-**Escopo:** `.claude/scripts/lane.sh` (`descobrir`, `abrir` com portão de teto e de `**Depende:**`,
-`conferir`, `fechar`), com offset de porta de 1 a 3 e a receita de `.env` do `.env.example`
-automatizada; `session-start.sh` alimentado pelo `lane.sh`; liberação do `lane.sh` no
-`guard-main-shell.sh`; `state.md` reescrito como contrato; `CLAUDE.md` §3; `.env.example` com a
-linha +3; suíte em `.claude/tests/`.
-
-**Fora:** commands (item 35) e aceitação externa (item 36).
-
-**Integração:** a PR só mescla quando nenhuma lane do fluxo antigo estiver viva (decisão D6 da
-spec).
-
-**DoD:** `run-all.sh` verde; portão recusando a quarta lane e a dependência transitiva; `abrir` e
-`fechar` vistos rodar numa lane real, com stack no offset reservado e sem sobra de contêiner,
-volume, worktree ou branch.
-
----
-
 ## 36. `harness-aceitacao-externa`
 
 **Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** 35
