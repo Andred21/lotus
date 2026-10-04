@@ -227,7 +227,7 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 │                               #   — trava de uma linha no topo, catraca própria em `avulso.tests.sh`,
 │                               #   regra descrita em `_assert.sh`. Lição 10 (`docs/README.md:70`):
 │                               #   teste que nunca viu o bug reprovar é cobertura fantasma
-├── aceitacao-aliases.conf      # `<alias> <URL-base>` das provas automáticas: `producao` e `local`; sem segredo
+├── aceitacao-aliases.conf      # `<alias> <URL-base>` das provas automáticas: só `producao` (sem stack local, E11 do 36); sem segredo
 ├── settings.json               # os 5 hooks acima + `enabledPlugins` do `superpowers@claude-plugins-official`
 └── papeis.md                   # única fonte de model/effort por papel despachado; catraca com agents/
 

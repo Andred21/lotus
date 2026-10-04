@@ -269,10 +269,16 @@ esse commit que o Passo 7 empurra. É ele quem carrega os registros até o PR.
     - preencher `Resultado` e `Data` (`AAAA-MM-DD`) dos itens manuais no `aceitacao.md` desta
       lane — ele mesmo, ou ditando a esta sessão: o resultado é a palavra dele, nunca uma
       conclusão sua — e rodar o `conferir` de novo, nesta mesma sessão;
-    - ou descartar: aqui, `git restore docs/superpowers/blocos/<NN>-<slug>/aceitacao.md`; no
-      terminal dele, no main tree, `bash .claude/scripts/lane.sh fechar <NN> --force` — o commit
-      do `aceitar` não está na `main`, e o `fechar` sem `--force` recusa. Nada é publicado, e o
-      bloco segue em `blocked` na `main`.
+    - ou descartar. Aqui, quando `git ls-files -- <caminho>` lista o `aceitacao.md`, ele é
+      versionado e volta com `git restore -- docs/superpowers/blocos/<NN>-<slug>/aceitacao.md`.
+      Quando não lista — bloco que chegou com `active_acceptance: null`, e foi o `conferir` que
+      criou o arquivo —, o `git restore` não o alcança, e ele sai com
+      `git clean -f -- docs/superpowers/blocos/<NN>-<slug>/aceitacao.md`. Confira o
+      `git status --porcelain` vazio: com qualquer mudança na árvore, o `fechar` recusa mesmo com
+      `--force`. Depois, no terminal dele, no main tree,
+      `bash .claude/scripts/lane.sh fechar <NN> --force` — o commit do `aceitar` não está na
+      `main`, e o `fechar` sem `--force` recusa. Nada é publicado, e o bloco segue em `blocked` na
+      `main`.
 
   Com OK, e com PENDENTE na lane do bloco, o `aceitacao.md` entra no commit do item f.
 

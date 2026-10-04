@@ -28,6 +28,7 @@ _CM_TRECHOS=(
   'finalizar-bloco|bash .claude/scripts/aceitacao.sh conferir'
   'finalizar-bloco|bash .claude/scripts/lane.sh aceitar'
   "finalizar-bloco|grep -E '^(deploy/|docker/Dockerfile\.prod|docker-compose\.prod|\.github/workflows/|scripts/)'"
+  'finalizar-bloco|git clean -f -- docs/superpowers/blocos/<NN>-<slug>/aceitacao.md'
 )
 
 cm_campos() { python3 "$_cm_ler" "$@"; }
@@ -184,6 +185,8 @@ cm_sonda sem-aceitar 'finalizar-bloco: sem o trecho bash .claude/scripts/lane.sh
   sed -i '/lane.sh aceitar/d' commands/finalizar-bloco.md
 cm_sonda sem-rede 'finalizar-bloco: sem o trecho grep -E' \
   sed -i '/docker-compose/d' commands/finalizar-bloco.md
+cm_sonda sem-clean 'finalizar-bloco: sem o trecho git clean -f --' \
+  sed -i '/git clean -f --/d' commands/finalizar-bloco.md
 
 # O .claude/ real.
 assert_igual '' "$(cm_problemas "$DIR_TESTES/..")" 'o .claude/ real passa na catraca dos commands'

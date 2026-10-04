@@ -64,7 +64,7 @@ Achado da revisão final (2026-10-04): o curl expande `[]` e `{}` do caminho. Co
 `bad range` e mede `000`. A chamada ganha o `-g`, logo depois do `-q`, e a URL segue literal. A
 gramática do caminho não é restringida: `[]{}` passam a ser caracteres comuns.
 
-### E8 — sem alias `local`
+### E11 — sem alias `local`
 
 Q-1 do `/revisar-bloco` (2026-10-04). A E1 levou o `conferir` para a lane de aceitação, que não
 sobe stack, e a §1.5 não foi reconciliada com isso. Uma prova `local` mediria `000` em toda rodada,
@@ -72,6 +72,15 @@ e o bloco ficaria em `blocked` sem caminho até `closed`. Decisão do João: o
 `aceitacao-aliases.conf` perde o `local`, e a prova `local` cai na recusa de alias desconhecido,
 tanto no `gerar` quanto no `conferir`. O marcador `{LOTUS_DEV_HTTP_PORT}` continua aceito, mas
 nenhum alias do conf real o usa, e a suíte o prova com um conf de teste.
+
+### E12 — o descarte do PENDENTE com `aceitacao.md` não versionado
+
+Q-1 da Rodada 2 do `/revisar-bloco` (2026-10-04). O bloco que mesclou antes do item 36 chega à
+lane de aceitação com `active_acceptance: null` e sem `aceitacao.md`. O `conferir` cria o arquivo,
+o `git restore` não o alcança (`pathspec ... did not match`), e o `fechar --force` recusa a árvore
+suja. Decisão do João: o descarte (§2.4) usa `git restore --` quando o arquivo é versionado e
+`git clean -f --` quando não é. O trecho do `git clean` entra na catraca dos commands, e o
+`lane-aceitar.tests.sh` percorre os dois descartes até o `fechar --force`.
 
 ## 1. Script e formato
 
@@ -164,7 +173,7 @@ Versionado e sem segredo. Uma linha `<alias> <URL-base>` por alias; `#` comenta.
 producao https://app.lotusotec.cl
 ```
 
-Não há alias `local` (E8).
+Não há alias `local` (E11).
 
 - `{LOTUS_DEV_HTTP_PORT}` é o único marcador aceito. O valor vem do `.env` da raiz da árvore
   atual, lido como o `offset_da_arvore` do `lane.sh` o lê (só dígitos), e vale `8080` sem `.env`
@@ -280,8 +289,10 @@ nascer coerente.
   - **6a, PENDENTE:** para **antes** de commitar e mostra os itens pendentes. O João escolhe:
     preencher `Resultado` e `Data` dos manuais no `aceitacao.md` da lane — ele mesmo, ou ditando à
     sessão: o resultado é a palavra dele — e rodar o `conferir` de novo, na mesma sessão; ou
-    descartar. Para descartar, a sessão restaura o `aceitacao.md`
-    (`git restore`), e o João roda no terminal dele, no main tree,
+    descartar. Para descartar, a sessão restaura o `aceitacao.md` com `git restore --` quando ele
+    é versionado, ou o apaga com `git clean -f --` quando não é (bloco que chegou com
+    `active_acceptance: null`: o `conferir` o criou), e confere a árvore limpa (E12). Depois o João
+    roda no terminal dele, no main tree,
     `bash .claude/scripts/lane.sh fechar <NN> --force` — o commit do `aceitar` não está na `main`,
     então o `fechar` sem `--force` recusa. Nada é publicado, e o bloco segue em `blocked` na
     `main`.
@@ -353,7 +364,7 @@ Em `.claude/tests/`, somados pelo `run-all.sh`, cada arquivo com a trava de não
     recusa com exit 2.
   - Curl e aliases, pelo stub: sem `-H` e sem `-u`; `-q` primeiro; sem `-L`; `-I` só no `HEAD`; URL
     montada; o marcador lendo `LOTUS_DEV_HTTP_PORT` do `.env` e caindo em `8080` (num conf de
-    teste, E8); prova `local` recusada pelo conf real; URL de alias com userinfo ou com caminho
+    teste, E11); prova `local` recusada pelo conf real; URL de alias com userinfo ou com caminho
     recusada.
 - **`lane-aceitar.tests.sh`**, no molde dos `lane-*.tests.sh`: recusa fora do main tree, fora da
   `main`, com estado que não é o de aguardando aceitação, com lane viva do número, com

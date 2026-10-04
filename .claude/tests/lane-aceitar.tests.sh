@@ -199,6 +199,32 @@ assert_igual '' "$(git -C "$_laarv" status --porcelain)" 'a arvore da lane fica 
 assert_igual "$_labase" "$(git -C "$_lahm" rev-parse --short main)" 'a main nao anda'
 assert_igual '' "$(git -C "$_lahm" status --porcelain)" 'o main tree fica limpo'
 
+# --- descarte do PENDENTE (6a do finalizar-bloco): o conferir criou o
+# aceitacao.md, que o bloco mesclado antes do item 36 nao versiona. O
+# git restore nao o alcanca; o git clean -f -- sim, e o fechar --force passa.
+_laac="docs/superpowers/blocos/$_lap/aceitacao.md"
+printf '# 33 — Aceitação externa\n' > "$_laarv/$_laac"
+git -C "$_laarv" restore -- "$_laac" 2>/dev/null
+assert_igual 1 "$?" 'aceitacao.md nao versionado: o git restore sozinho falha'
+git -C "$_laarv" clean -f -- "$_laac" >/dev/null
+assert_igual '' "$(git -C "$_laarv" status --porcelain)" 'aceitacao.md nao versionado: o git clean -f -- limpa a arvore'
+rodar_lane "$_lahm" fechar 33 --force
+assert_igual 0 "$CODIGO_LANE" 'depois do descarte, o fechar 33 --force sai 0'
+
+# --- o mesmo descarte com o aceitacao.md versionado: o git restore -- volta
+# ao que a lane tinha.
+_lavm=$(criar_main_lane); registrar_descarte "$(dirname "$_lavm")"
+mesclado "$_lavm" "$_lap" "chore/$_lap"
+printf '# 33 — Aceitação externa\n' > "$_lavm/$_laac"
+git -C "$_lavm" add "$_laac"; git -C "$_lavm" commit -q -m 'aceitacao.md versionado'
+rodar_lane "$_lavm" aceitar 33
+_lavarv="$(dirname "$_lavm")/lotus-$_lap"
+printf '| 1 | x | `nenhuma` | OK | 2026-10-04 |\n' >> "$_lavarv/$_laac"
+git -C "$_lavarv" restore -- "$_laac"
+assert_igual '' "$(git -C "$_lavarv" status --porcelain)" 'aceitacao.md versionado: o git restore -- limpa a arvore'
+rodar_lane "$_lavm" fechar 33 --force
+assert_igual 0 "$CODIGO_LANE" 'aceitacao.md versionado: depois do descarte, o fechar 33 --force sai 0'
+
 # --- bloco cuja branch ja era docs/: reabre em chore/
 _lacm=$(criar_main_lane); registrar_descarte "$(dirname "$_lacm")"
 mesclado "$_lacm" "$_lap" "docs/$_lap"
