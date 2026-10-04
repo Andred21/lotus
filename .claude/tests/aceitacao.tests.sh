@@ -310,3 +310,129 @@ assert_igual 0 "$AC_COD" 'o aceitacao-aliases.conf real e valido e tem producao'
 printf '## Verificação externa\n\n1. Item.\n   - prova: teste GET /up -> 200\n' | ac_spec
 AC_ALIASES='' ac_rodar gerar 50
 ac_recusa 'alias `teste`' 'alias fora do conf real e recusado'
+
+# --- conferir: servidor HTTP local, so em 127.0.0.1, que morre sozinho em
+# 120 s se a suite cair antes do kill do fim
+_ac_www="$_ac_t/www"; mkdir -p "$_ac_www"; printf 'ok\n' > "$_ac_www/up"
+timeout 120 python3 -u -m http.server 0 --bind 127.0.0.1 --directory "$_ac_www" \
+  > "$_ac_t/http.log" 2>&1 &
+_ac_pid=$!
+_ac_porta=''
+for _ac_i in $(seq 100); do
+  _ac_porta=$(sed -nE 's/^Serving HTTP on 127\.0\.0\.1 port ([0-9]+) .*/\1/p' "$_ac_t/http.log")
+  [[ -n $_ac_porta ]] && break
+  sleep 0.05
+done
+if [[ $_ac_porta =~ ^[0-9]+$ ]]; then
+  printf '  ok    http.server de pe em 127.0.0.1:%s\n' "$_ac_porta"
+else
+  FALHAS_TESTE=$((FALHAS_TESTE + 1)); printf '  FALHA http.server nao subiu: %s\n' "$(cat "$_ac_t/http.log")"
+fi
+_ac_fechada=$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')
+printf 'teste http://127.0.0.1:%s\nfechado http://127.0.0.1:%s\n' "$_ac_porta" "$_ac_fechada" > "$_ac_t/http.conf"
+AC_ALIASES="$_ac_t/http.conf"
+AC_CURL=curl
+
+ac_novo sim "$_AC_P/spec.md"
+ac_spec <<'SPEC'
+## Verificação externa
+
+1. A rota responde.
+   - prova: `teste GET /up -> 200`
+2. A rota responde ao HEAD.
+   - prova: `teste HEAD /up -> 200`
+3. O João confere.
+   - prova: nenhuma
+SPEC
+ac_rodar gerar 50
+ac_rodar conferir 50
+assert_igual 1 "$AC_COD" 'manual vazio: conferir sai 1'
+assert_igual 'ACEITACAO PENDENTE: 1 de 3 item(ns): 3' "$AC_ULTIMA" 'manual vazio: pendente pelo numero'
+assert_contem "$AC_SAIDA" "MEDIDO 1: GET http://127.0.0.1:$_ac_porta/up -> 200, esperado 200: OK" 'GET medido contra o http.server'
+assert_contem "$AC_SAIDA" "MEDIDO 2: HEAD http://127.0.0.1:$_ac_porta/up -> 200, esperado 200: OK" 'HEAD medido contra o http.server'
+_ac_hoje=$(date +%F)
+assert_igual "| 1 | A rota responde. | \`teste GET /up -> 200\` | \`200\`, esperado \`200\`: OK | $_ac_hoje |" \
+  "$(ac_linha 1)" 'a medicao entra na tabela, datada de hoje'
+ac_manual 3 'conferido no painel' ontem
+ac_rodar conferir 50
+assert_igual 'ACEITACAO PENDENTE: 1 de 3 item(ns): 3' "$AC_ULTIMA" 'data ontem: pendente'
+sed -i 's/| ontem |/| 2026-02-30 |/' "$AC_R/$_AC_P/aceitacao.md"
+ac_rodar conferir 50
+assert_igual 'ACEITACAO PENDENTE: 1 de 3 item(ns): 3' "$AC_ULTIMA" 'data 2026-02-30: pendente'
+sed -i 's/| 2026-02-30 |/| 2026-10-04 |/' "$AC_R/$_AC_P/aceitacao.md"
+sed -i -E 's/^\| 1 \| (.*) \| (`teste GET \/up -> 200`) \| .* \| .* \|$/| 1 | \1 | \2 | forjado | 2020-01-01 |/' \
+  "$AC_R/$_AC_P/aceitacao.md"
+ac_rodar conferir 50
+assert_igual 0 "$AC_COD" 'tudo provado: conferir sai 0'
+assert_igual 'ACEITACAO OK: 3 item(ns)' "$AC_ULTIMA" 'tudo provado: OK com a contagem'
+assert_igual "| 1 | A rota responde. | \`teste GET /up -> 200\` | \`200\`, esperado \`200\`: OK | $_ac_hoje |" \
+  "$(ac_linha 1)" 'a automatica e remedida e sobrescreve o que foi escrito nela'
+assert_igual '| 3 | O João confere. | manual | conferido no painel | 2026-10-04 |' "$(ac_linha 3)" \
+  'o manual nunca e tocado'
+
+ac_novo sim "$_AC_P/spec.md"
+printf '## Verificação externa\n\n1. Some.\n   - prova: teste GET /nada -> 200\n2. Fechado.\n   - prova: fechado GET /up -> 200\n' | ac_spec
+ac_rodar conferir 50
+assert_igual 1 "$AC_COD" '404 e porta fechada: sai 1'
+assert_igual 'ACEITACAO PENDENTE: 2 de 2 item(ns): 1, 2' "$AC_ULTIMA" '404 e porta fechada: os dois pendentes'
+assert_contem "$(ac_linha 1)" '`404`, esperado `200`: FALHOU' '404 e FALHOU'
+assert_contem "$(ac_linha 2)" '`000`, esperado `200`: FALHOU' 'porta fechada mede 000'
+
+ac_novo sim "$_AC_P/spec.md"
+printf '## Verificação externa\n\nNenhuma.\n' | ac_spec
+ac_rodar conferir 50
+ac_recusa 'nao tem item numerado' 'conferir com zero itens'
+ac_nada_escrito 'conferir com zero itens'
+
+kill "$_ac_pid" 2>/dev/null
+wait "$_ac_pid" 2>/dev/null
+
+# --- curl falso: argumentos exatos, URL montada e aliases reais
+_ac_curl="$_ac_t/curl-falso"
+cat > "$_ac_curl" <<FALSO
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> '$_ac_curl.log'
+printf '200'
+FALSO
+chmod +x "$_ac_curl"
+AC_CURL=$_ac_curl
+AC_ALIASES="$_ac_t/aliases.conf"
+ac_novo sim "$_AC_P/spec.md"
+printf '## Verificação externa\n\n1. Get.\n   - prova: teste GET /up?x=1 -> 200\n2. Head.\n   - prova: outro-alias HEAD /h -> 200\n' | ac_spec
+: > "$_ac_curl.log"
+ac_rodar conferir 50
+assert_igual 'ACEITACAO OK: 2 item(ns)' "$AC_ULTIMA" 'curl falso: OK'
+assert_igual "-q -sS -o /dev/null -w %{http_code} --max-time 30 --proto =http,https http://teste.local/up?x=1
+-q -sS -o /dev/null -w %{http_code} --max-time 30 --proto =http,https -I http://outro.local:8443/h" \
+  "$(cat "$_ac_curl.log")" '-q primeiro, sem -L, -H ou -u, -I so no HEAD e a URL montada'
+
+ac_novo sim "$_AC_P/spec.md"
+printf '## Verificação externa\n\n1. Shell no caminho.\n   - prova: teste GET /x$(touch${IFS}%s) -> 200\n' "$_ac_t/pwned2" | ac_spec
+: > "$_ac_curl.log"
+ac_rodar conferir 50
+assert_contem "$(cat "$_ac_curl.log")" 'http://teste.local/x$(touch${IFS}' 'o caminho chega ao curl como texto'
+if [[ -e $_ac_t/pwned2 ]]; then
+  FALHAS_TESTE=$((FALHAS_TESTE + 1)); printf '  FALHA o $(...) do caminho foi executado\n'
+else
+  printf '  ok    o $(...) do caminho nunca vira shell\n'
+fi
+
+AC_ALIASES=''
+ac_novo sim "$_AC_P/spec.md"
+printf '## Verificação externa\n\n1. Producao.\n   - prova: producao GET /up -> 200\n2. Local.\n   - prova: local GET /up -> 200\n' | ac_spec
+: > "$_ac_curl.log"
+ac_rodar conferir 50
+assert_contem "$(cat "$_ac_curl.log")" ' https://app.lotusotec.cl/up' 'producao e https://app.lotusotec.cl'
+assert_contem "$(cat "$_ac_curl.log")" ' http://localhost:8080/up' 'local sem .env cai em 8080'
+printf 'LOTUS_DEV_HTTP_PORT=8081\nLOTUS_DEV_HTTP_PORT="8082"\n' > "$AC_R/.env"
+: > "$_ac_curl.log"
+ac_rodar conferir 50
+assert_contem "$(cat "$_ac_curl.log")" ' http://localhost:8082/up' 'local le a ultima LOTUS_DEV_HTTP_PORT do .env, com aspas'
+
+cat > "$_ac_curl" <<FALSO
+#!/usr/bin/env bash
+printf '200200'
+FALSO
+ac_rodar conferir 50
+assert_igual 'ACEITACAO PENDENTE: 2 de 2 item(ns): 1, 2' "$AC_ULTIMA" 'saida que nao e um codigo mede 000'
+assert_contem "$(ac_linha 1)" '`000`, esperado `200`: FALHOU' 'saida que nao e um codigo fica registrada como 000'

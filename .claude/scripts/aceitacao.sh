@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Portao de efeito externo do /finalizar-bloco (spec do bloco 36, secao 1).
 # `gerar` monta o aceitacao.md do bloco a partir da secao
-# `## Verificacao externa` da spec dele. Existe como script, e nao como prosa
-# no command, porque portao escrito em prosa o agente executa de cabeca e
-# pula (a licao do aceitacao.ps1 do ElaDecora).
+# `## Verificacao externa` da spec dele; `conferir` mede as provas
+# automaticas, grava o resultado e da o veredito na ultima linha. Existe
+# como script, e nao como prosa no command, porque portao escrito em prosa o
+# agente executa de cabeca e pula (a licao do aceitacao.ps1 do ElaDecora).
 #
 # Contrato: recusa sai como `PORTAO RECUSOU: <motivo>` no stderr, com exit
-# 2, antes de escrever qualquer coisa. A leitura e a escrita do markdown
-# moram em lib/aceitacao.py; aqui ficam o argumento e a raiz da arvore. O
-# arquivo de aliases entra por ACEITACAO_ALIASES, para a suite usar o dela.
+# 2, antes de escrever qualquer coisa; o exit 1 e so do veredito PENDENTE. A
+# leitura e a escrita do markdown moram em lib/aceitacao.py; aqui ficam o
+# argumento, a raiz da arvore e a chamada HTTP. `curl` entra por
+# ACEITACAO_CURL e o arquivo de aliases por ACEITACAO_ALIASES, para a suite
+# nao sair para a rede externa.
 
 DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=/dev/null
@@ -17,6 +20,7 @@ source "$DIR/../hooks/lib/comum.sh"
 LER_FM="$DIR/../hooks/lib/ler-frontmatter.py"
 ACEITACAO_PY="$DIR/lib/aceitacao.py"
 ALIASES=${ACEITACAO_ALIASES:-$DIR/../aceitacao-aliases.conf}
+CURL=${ACEITACAO_CURL:-curl}
 PADRAO_NN='^[1-9][0-9]*$'
 # Unit Separator (0x1F), nao TAB: ver o docstring do ler-frontmatter.py.
 SEP=$'\x1f'
@@ -26,10 +30,47 @@ recusar() {
   exit 2
 }
 
-(( $# == 2 )) || recusar 'uso: aceitacao.sh gerar <NN>'
+medir() {
+  # $1 = metodo, $2 = URL. Ecoa o codigo HTTP; falha de rede, ou saida que
+  # nao e um codigo, mede 000. Sem -L, sem cabecalho e sem credencial; o -q
+  # vem primeiro para o ~/.curlrc nao entrar.
+  local -a args=(-q -sS -o /dev/null -w '%{http_code}' --max-time 30 --proto '=http,https')
+  [[ $1 == HEAD ]] && args+=(-I)
+  local codigo
+  codigo=$("$CURL" "${args[@]}" "$2")
+  [[ $codigo =~ ^[0-9]{3}$ ]] || codigo=000
+  printf '%s' "$codigo"
+}
+
+verbo_conferir() {
+  local provas cod n metodo base caminho esperado url codigo situacao
+  local -a medidas=()
+  provas=$(python3 "$ACEITACAO_PY" provas "$SPEC" "$ALVO" "$ALIASES" "$PORTA" "$NN")
+  cod=$?
+  (( cod == 0 )) || { (( cod == 2 )) || recusar "lib/aceitacao.py saiu $cod"; exit 2; }
+  while IFS=$SEP read -r n metodo base caminho esperado; do
+    [[ -n $n ]] || continue
+    # A ancora de / de novo, aqui, antes da chamada: sem ela, `@evil.example/x`
+    # colado na URL do alias vira userinfo e troca o host.
+    [[ $caminho == /* ]] || recusar "o caminho da prova do item $n nao comeca em /: $caminho"
+    url=$base$caminho
+    codigo=$(medir "$metodo" "$url")
+    situacao=FALHOU
+    [[ $codigo == "$esperado" ]] && situacao=OK
+    printf 'MEDIDO %s: %s %s -> %s, esperado %s: %s\n' "$n" "$metodo" "$url" "$codigo" "$esperado" "$situacao"
+    medidas+=("$n=$codigo")
+  done <<<"$provas"
+  python3 "$ACEITACAO_PY" conferir "$SPEC" "$ALVO" "$ALIASES" "$PORTA" "$NN" "${medidas[@]}"
+  cod=$?
+  (( cod <= 2 )) || recusar "lib/aceitacao.py saiu $cod"
+  exit "$cod"
+}
+
+(( $# == 2 )) || recusar 'uso: aceitacao.sh <gerar|conferir> <NN>'
 VERBO=$1
 NN=$2
-[[ $VERBO == gerar ]] || recusar "verbo '$VERBO' desconhecido; use gerar"
+[[ $VERBO == gerar || $VERBO == conferir ]] \
+  || recusar "verbo '$VERBO' desconhecido; use gerar ou conferir"
 [[ $NN =~ $PADRAO_NN ]] || recusar "NN '$NN' nao e numero de ficha"
 
 RAIZ=$(raiz_de "$PWD")
@@ -67,4 +108,5 @@ case $VERBO in
     (( cod == 0 || cod == 2 )) || recusar "lib/aceitacao.py saiu $cod"
     exit "$cod"
     ;;
+  conferir) verbo_conferir ;;
 esac

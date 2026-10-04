@@ -4,22 +4,30 @@ aceitacao.md dele, para o aceitacao.sh (spec do bloco 36, secao 1). Porta
 das defesas do `aceitacao.ps1` do ElaDecora-Brain@3b7cc1bf.
 
 Uso, sempre da raiz da arvore (os caminhos sao relativos a ela):
-  aceitacao.py gerar <spec> <alvo> <aliases> <porta> <NN>
+  aceitacao.py gerar    <spec> <alvo> <aliases> <porta> <NN>
       Cria ou completa <alvo>, preservando o resultado de todo item cuja
       identidade bate. stdout: um aviso por resultado descartado e, por
       ultimo, `ACEITACAO GERADA: <alvo> (<n> item(ns))`.
+  aceitacao.py provas   <spec> <alvo> <aliases> <porta> <NN>
+      Valida tudo e nao escreve nada. stdout: uma linha por prova
+      automatica, `n<US>metodo<US>url-base<US>caminho<US>esperado`.
+  aceitacao.py conferir <spec> <alvo> <aliases> <porta> <NN> [<n>=<codigo>...]
+      Grava em <alvo> a medicao de cada prova automatica, datada de hoje.
+      stdout: os avisos e, na ultima linha, o veredito.
   <porta> e o LOTUS_DEV_HTTP_PORT que o aceitacao.sh leu do .env da raiz.
 
-Saida: 0 gerado; 2 recusa, com `PORTAO RECUSOU: <motivo>` no stderr e nada
-escrito. Excecao inesperada tambem sai 2: o exit 1 fica para o veredito
-PENDENTE do `conferir`.
+Saida: 0 gerado ou ACEITACAO OK; 1 ACEITACAO PENDENTE; 2 recusa, com
+`PORTAO RECUSOU: <motivo>` no stderr e nada escrito. Excecao inesperada
+tambem sai 2: o exit 1 e so do veredito PENDENTE.
 """
 
 import os
 import re
 import sys
 import traceback
+from datetime import date
 
+SEP = "\x1f"
 TITULO = re.compile(r"^(#{1,2})\s+(.*?)\s*$")
 SECAO = re.compile(r"^verifica(ç|c)(ã|a)o externa$", re.I)
 CERCA = re.compile(r"^(`{3,}|~{3,})(.*)$")
@@ -31,7 +39,10 @@ URL_BASE = re.compile(r"^https?://[A-Za-z0-9.-]+(:[0-9]+)?$")
 MARCADOR = "{LOTUS_DEV_HTTP_PORT}"
 LINHA_TABELA = re.compile(r"^\|\s*(\d+)\s*\|")
 PIPE = re.compile(r"(?<!\\)\|")
-USO = "uso: aceitacao.py gerar <spec> <alvo> <aliases> <porta> <NN>"
+DATA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+MEDIDA = re.compile(r"^(\d+)=(\d{3})$")
+USO = ("uso: aceitacao.py <gerar|provas|conferir> <spec> <alvo> <aliases> "
+       "<porta> <NN> [<n>=<codigo>...]")
 
 CABECALHO = """# Bloco {nn} — aceitação externa
 
@@ -253,13 +264,77 @@ def escrever_tabela(caminho, nn, itens, valores):
         f.write("\n".join(linhas) + "\n")
 
 
+def data_valida(texto):
+    if not DATA.match(texto):
+        return False
+    try:
+        date.fromisoformat(texto)
+    except ValueError:
+        return False
+    return True
+
+
+def ler_medidas(extras, itens):
+    """{n: codigo} dos argumentos `<n>=<codigo>`; cada prova automatica
+    medida uma vez, e nada alem delas."""
+    automaticos = {it["n"] for it in itens if it["auto"]}
+    medidas = {}
+    for e in extras:
+        m = MEDIDA.match(e)
+        if not m or int(m.group(1)) not in automaticos or int(m.group(1)) in medidas:
+            raise Recusa("medicao invalida: %s" % e)
+        medidas[int(m.group(1))] = m.group(2)
+    faltam = sorted(automaticos - set(medidas))
+    if faltam:
+        raise Recusa("prova automatica sem medicao: item(ns) %s" % ", ".join(map(str, faltam)))
+    return medidas
+
+
+def conferir(itens, tabela, medidas, alvo, nn):
+    valores, avisos = reaproveitar(itens, tabela, alvo)
+    hoje = date.today().isoformat()
+    pendentes = []
+    for it in itens:
+        n = it["n"]
+        if it["auto"]:
+            esperado = it["auto"]["esperado"]
+            ok = medidas[n] == esperado
+            valores[n] = ("`%s`, esperado `%s`: %s" % (medidas[n], esperado,
+                                                        "OK" if ok else "FALHOU"), hoje)
+            if not ok:
+                pendentes.append(n)
+            continue
+        resultado, data = valores.get(n, ("", ""))
+        if not resultado or not data_valida(data):
+            pendentes.append(n)
+    escrever_tabela(alvo, nn, itens, valores)
+    for a in avisos:
+        print(a)
+    if not pendentes:
+        print("ACEITACAO OK: %d item(ns)" % len(itens))
+        return 0
+    print("ACEITACAO PENDENTE: %d de %d item(ns): %s"
+          % (len(pendentes), len(itens), ", ".join(map(str, pendentes))))
+    return 1
+
+
 def executar(args):
-    if len(args) != 6 or args[0] != "gerar":
+    if len(args) < 6 or args[0] not in ("gerar", "provas", "conferir") \
+            or (args[0] != "conferir" and len(args) > 6):
         raise Recusa(USO)
-    spec, alvo, arquivo_aliases, porta, nn = args[1:]
+    verbo, spec, alvo, arquivo_aliases, porta, nn = args[:6]
     itens = ler_itens(spec)
     classificar(itens, ler_aliases(arquivo_aliases, porta), arquivo_aliases)
     tabela = ler_tabela(alvo)
+    if verbo == "provas":
+        for it in itens:
+            a = it["auto"]
+            if a:
+                print(SEP.join([str(it["n"]), a["metodo"], a["base"], a["caminho"],
+                                a["esperado"]]))
+        return 0
+    if verbo == "conferir":
+        return conferir(itens, tabela, ler_medidas(args[6:], itens), alvo, nn)
     valores, avisos = reaproveitar(itens, tabela, alvo)
     escrever_tabela(alvo, nn, itens, valores)
     for a in avisos:
