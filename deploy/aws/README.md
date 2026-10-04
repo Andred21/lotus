@@ -830,17 +830,35 @@ sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/ga
 
 ### 13.3 Sondas — positiva e negativa
 
-Duas, pelo `tinker` do contêiner, depois do 13.2. A **positiva** vai a um externo verificado no
-13.1 (o Gmail do João) e prova de uma vez a role, a policy e a checagem do destinatário: não lança
-exceção, e a mensagem chega com `dkim=pass`, `spf=pass` e `dmarc=pass` no *Show original*. A
-**negativa** vai a um endereço que não é identidade — um reservado, que não é de ninguém, como
-`sonda@example.com` — e prova que o sandbox segue de pé. Ela contém a exceção, imprime a mensagem e
-a reporta, para a saída de erro mostrar também a linha que o log default grava (item 33, D15):
+Duas, pelo `tinker` **interativo** do contêiner, depois do 13.2. A **positiva** vai a um externo
+verificado no 13.1 (o Gmail do João) e prova de uma vez a role, a policy e a checagem do
+destinatário: não lança exceção, e a mensagem chega com `dkim=pass`, `spf=pass` e `dmarc=pass` no
+*Show original*. A **negativa** vai a um endereço que não é identidade — um reservado, que não é de
+ninguém, como `sonda@example.com` — e prova que o sandbox segue de pé. Ela contém a exceção, imprime
+a mensagem e a reporta, para a saída de erro mostrar também a linha que o log default grava
+(item 33, D15).
+
+**Interativo, e não `tinker --execute` numa linha só.** Dentro de `sudo -i sh -c '…'` o `sudo -i`
+escapa com `\` todo caractere especial do comando, menos o `$`: o `\$m` do `fn (\$m) => …` chega ao
+shell do root como `\` seguido de `$m`, o `$m` expande para vazio, e o PHP recebe `fn (\)` —
+`PARSE ERROR  PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR` (medido em produção em
+2026-10-04, na aceitação do item 33). No prompt do `tinker` não há camada de shell nenhuma. Entre
+pelo SSH com TTY (`ssh -t`) e **sem** o `-T` do `exec`:
 
 ```bash
-sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml exec -T app php artisan tinker --execute "Mail::raw(\"sonda\", fn (\$m) => \$m->to(\"<externo verificado>\")->subject(\"sonda positiva\"));"'
-sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml exec -T app php artisan tinker --execute "try { Mail::raw(\"sonda\", fn (\$m) => \$m->to(\"sonda@example.com\")->subject(\"sonda negativa\")); } catch (\Throwable \$e) { echo \$e->getMessage(), PHP_EOL; report(\$e); }"'
+sudo -i sh -c 'cd /opt/lotus && SHA=$(cat CURRENT_SHA) && LOTUS_IMAGE=ghcr.io/gatika-cl/lotus-app:$SHA LOTUS_CLAMAV_IMAGE=ghcr.io/gatika-cl/lotus-clamav:$SHA LOTUS_ENV_FILE=/opt/lotus/.env docker compose -p lotus -f docker-compose.prod.yml exec app php artisan tinker'
 ```
+
+E, no prompt, uma sonda de cada vez (troque `<externo verificado>` pelo endereço de verdade):
+
+```php
+Mail::raw('sonda', fn ($m) => $m->to('<externo verificado>')->subject('sonda positiva'));
+try { Mail::raw('sonda', fn ($m) => $m->to('sonda@example.com')->subject('sonda negativa')); } catch (\Throwable $e) { echo $e->getMessage(), PHP_EOL; report($e); }
+```
+
+A positiva imprime `= Illuminate\Mail\SentMessage {#…}` e nada mais. Na negativa, o `LOG_CHANNEL` do
+molde é `stderr`, então a linha do `report` aparece no próprio terminal do `tinker`, logo abaixo da
+mensagem impressa.
 
 A falha sobe como `Symfony\Component\Mailer\Exception\TransportException`, com a mensagem
 `Request to AWS SES API failed. Reason: <mensagem da AWS>.` Leia o texto depois de `Reason:` e, na

@@ -56,3 +56,66 @@
 - `arquitetura-aws-lotus.md` (ID `10eFmpqDTKL4wfWsJW-Rr7dDuBkb1RtaI`, G-1 do packet): nova versão do mesmo arquivo, subida pelo João; `fileSize` 10600, `modifiedTime` 2026-10-04T18:49:34.864Z.
 - O conector do Drive não expõe checksum, e o conteúdo só sai dele como base64 transcrito, o que não serve de prova byte a byte. A prova é o `fileSize` 10600 — idêntico ao do arquivo montado no planejamento a partir da versão de 2026-06-22 (10130 bytes, sha256 `71f5fdcdc4d8d917f52158f1bcbfe4d9eace556df0225e7df5d807d38ec5e08f`), com só as linhas 52 (§1.4, *Implementação*) e 179 (*Pendências*) trocadas, sha256 `a4dd4fe9aa9cbb8940f5fb8dda449a872a6f6e92de088a0ef09409b75753af1d` —, o `modifiedTime` acima e a afirmação do João, em 2026-10-04, de que subiu esse arquivo. A conferência por hash fica para quem baixar a versão e rodar `sha256sum`.
 - É a prova do item 1 da `## Verificação externa` da spec.
+
+## Fase B' — aceitação (2026-10-04)
+
+> Escrita do João, leitura da sessão. As saídas dos comandos de `aws`, `curl` e do host vieram coladas
+> pelo João na conversa (o main tree nega `aws`, `curl` e `dig` à sessão); a sessão leu por conta
+> própria só o que o `gh` alcança. Horários dos e-mails em -03, como o Gmail os mostra. Nenhum
+> endereço de destinatário, valor de `.env` ou corpo de e-mail entra aqui.
+
+### B1 — espelho (passo 1; D13)
+
+- `gh api repos/Gatika-CL/lotus/commits/main`: `26087133`, `release: espelho de 0726bfec -- Merge pull request #125`. O `0726bfec` é o merge da PR #125, a do bloco.
+- `deploy/aws/env.prod.example` no corporativo: `MAIL_MAILER=ses`.
+
+### B2 — policy (passo 2; item 2)
+
+- `list-role-policies` de `lotus-ec2`: `lotus-alerta`, `lotus-s3`, `lotus-ses`.
+- `get-role-policy lotus-ses`: `Effect` `Allow`; ações `ses:SendRawEmail` e `ses:SendEmail`; `Resource` `arn:aws:ses:sa-east-1:<conta>:identity/*`; `Condition.StringEquals.ses:FromAddress` `lotus@lotusotec.cl`.
+- `list-access-keys` de `lotus-infra`: 1 (nenhuma chave nova; a P-81 segue aberta).
+
+### B3 — destinatários (passo 3; item 3)
+
+- Contagem na base de produção, pelo `tinker`: **2** usuários ativos, de tipo admin ou redator, fora de `@lotusotec.cl` (1 admin e 1 redator). Zero ativos em `@lotusotec.cl`.
+- O admin era a conta `id 4`, criada em 2026-09-04 com role `superadmin` e o e-mail do seed de desenvolvimento (`admin@lotus.cl`). `Hash::check` contra a senha do seed (`senha123`): **`false`** — a conta não usa a credencial pública do `DatabaseSeeder`, foi criada à mão.
+- Como era o único admin ativo e nenhuma caixa dele era legível pelo SES, o João trocou o e-mail da conta duas vezes pelo `tinker` (`update` do Eloquent): primeiro para uma caixa `@lotusotec.cl` sem leitor — que recebeu um primeiro alerta D7 que ninguém leu —, depois para o Gmail dele, já verificado. O model é `Auditable` e `email` está em `$auditInclude`; a linha de `audits` não foi lida nesta aceitação.
+- `list-email-identities` na região `sa-east-1`: `1 DOMAIN` e `1 EMAIL_ADDRESS` (o Gmail do João, verificado pelo clique no link; a sonda positiva entregue a ele em sandbox é a prova).
+- **Exceção, decisão do João em 2026-10-04:** o redator externo ativo **não** foi verificado. Enquanto não for, reset e convite para ele falham calados, com `aws_erro` `MessageRejected` e sem o endereço (spec §8); avisar a pessoa é do João. A pendência ficou na **P-98**.
+
+### B4 — `.env` e botão (passos 1 e 4; item 4)
+
+- `.env` do host: `grep -c '^MAIL_MAILER='` = **1**; `config:show mail.default` = `ses`.
+- `gh run list` do `deploy.yml` no corporativo: run `37233116290`, `success`, `headSha` `2608713392d6…` (o `26087133` do B1), criado às 20:42Z.
+- `releases.jsonl`, últimas duas linhas: `inicio` às 20:44:13Z e `fim` às 20:44:52Z, ambos no `2608713392d6…`, `resultado` `ok`, `etapa` `ok`; `sha_anterior` `550758d7…`; sem migration.
+- `GET https://app.lotusotec.cl/up` de fora: **200** (leitura do João; o `aceitacao.sh conferir` mediu de novo: `producao GET /up -> 200`).
+
+### B5 — sondas (passo 5; item 5; D9, D15)
+
+- **Desvio:** a primeira tentativa, no formato `tinker --execute` do runbook §13.3 dentro de `sudo -i sh -c '…'`, deu `PARSE ERROR  PHP Parse error: Syntax error, unexpected T_NS_SEPARATOR` nas duas sondas — o `sudo -i` escapa o `$` de `\$m` de um jeito que o PHP recebe `fn (\)`. Nenhum e-mail saiu. As sondas rodaram pelo `tinker` interativo, e o runbook §13.3 foi emendado na mesma PR.
+- **Positiva** (para o Gmail do João): retorno `Illuminate\Mail\SentMessage`, sem exceção. No *Show original*: `From` `lotus@lotusotec.cl`, `Subject` `sonda`, SPF `pass`, DKIM `pass` com o domínio `lotusotec.cl`, DMARC `pass`; criado às 17h59. O João confirmou o domínio do SPF: `ses.lotusotec.cl`.
+- **Negativa** (para `sonda@example.com`), às 21:00:03Z: a mensagem impressa diz `Request to AWS SES API failed. Reason: Email address is not verified` (o resto é a lista de identidades, que traz o endereço da sonda e por isso não é transcrita). A saída de erro: `production.ERROR: Falha ao enviar e-mail {"excecao":"Symfony\\Component\\Mailer\\Exception\\TransportException","codigo":0,"origem":"/var/www/vendor/laravel/framework/src/Illuminate/Mail/Transport/SesTransport.php:85","aws_erro":"MessageRejected"}` — **sem `@`**, sem mensagem e sem `Throwable` no contexto (DoD 10).
+
+### B6 — prova D7 (passo 6; item 6)
+
+- Loop do runbook §13.4, de fora, com o e-mail da conta admin: **15 × `422`**, nenhum `419` nem `429`. Rodou duas vezes (primeira com a caixa `@lotusotec.cl` sem leitor, depois com o Gmail), cada uma numa chave `email|ip` nova.
+- Host, `docker compose logs --since 10m app`: `grep -cF 'acesso.suspeito'` = **1**; `grep -c 'Falha ao enviar alerta'` = **0**. A primeira rodada deu os mesmos dois números com `--since 30m`.
+- Caixa do admin (o Gmail): `From` `lotus@lotusotec.cl`; `Subject` `Lotus — alerta de acceso sospechoso` (a tela do navegador o mostrou traduzido); SPF `pass`, DKIM `pass` com `lotusotec.cl`, DMARC `pass`; criado às 18h10.
+
+### B7 — reset (passo 7; item 7)
+
+- Pela UI, em `https://app.lotusotec.cl`, com o e-mail do admin (o Gmail): a mensagem chegou — `From` `lotus@lotusotec.cl`, `Subject` `Recuperación de clave — Lotus` (a tela do navegador o mostrou traduzido), SPF, DKIM e DMARC `pass`, criada às 18h15. O link **não** foi lido nem transcrito.
+- Palavra do João: o link abriu a tela de nova senha; a senha nova logou; a senha antiga foi recusada.
+
+### B8 — leitura final (passo 8; item 7)
+
+- `get-account`: `ProductionAccessEnabled` **`false`** (decisão do ADR-23), `SendingEnabled` `true`, `SentLast24Hours` **5** — a cota é da conta, dividida com o site.
+- `get-email-identity lotusotec.cl`: `VerifiedForSendingStatus` `true`, `DkimAttributes.Status` `SUCCESS`, `MailFromDomainStatus` `SUCCESS`.
+- MX do apex, pelo DNS público do Google (o `dig` não existe na máquina do João): `1 aspmx.l.google.com`, `5 alt1.aspmx.l.google.com`, `5 alt2.aspmx.l.google.com`, `10 alt3.aspmx.l.google.com`, `10 alt4.aspmx.l.google.com` — só o Google, TTL 3600.
+
+### Desvios e registros da aceitação
+
+1. **A conta admin única de produção usa hoje o Gmail pessoal do João**, porque não existe caixa `@lotusotec.cl` com leitor. O alerta D7 e o reset só chegam a ele. **P-98.**
+2. **O redator externo ficou sem identidade SES** (exceção do João, B3). **P-98.**
+3. **Runbook §13.3 emendado:** as duas sondas passam a rodar pelo `tinker` interativo, com a causa medida (B5).
+4. Spec §10 cumprida no `backlog.md` desta PR: entram o `FUT-4` (D14) e a ficha da `QueryException` (`D-74`), e a ficha 33 sai. O ADR-23 em `docs/adrs.md` cita o `FUT-4`, que passa a existir.
