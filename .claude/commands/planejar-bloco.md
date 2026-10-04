@@ -165,9 +165,10 @@ de cada uma:
 ```
 
 A prova é declarativa, no formato `<alias> <GET|HEAD> <caminho> -> <código>`, com o caminho
-começando em `/` e um alias de `.claude/aceitacao-aliases.conf` (`producao` ou `local`). Item cuja
-verificação não tem superfície HTTP declara `prova: nenhuma`. Cada item tem exatamente uma linha
-`- prova:`, e o `aceitacao.sh gerar` do Passo 9 recusa a seção que foge disso.
+começando em `/` e um alias de `.claude/aceitacao-aliases.conf` (hoje, só `producao`). Não há
+alias para o stack local: quem mede a prova depois do merge é a lane de aceitação, que não sobe
+stack. Item cuja verificação não tem superfície HTTP declara `prova: nenhuma`. Cada item tem
+exatamente uma linha `- prova:`, e o `aceitacao.sh gerar` do Passo 9 recusa a seção que foge disso.
 
 Quando não houver ação externa nenhuma, a seção diz isso em uma linha, **sem item numerado**:
 

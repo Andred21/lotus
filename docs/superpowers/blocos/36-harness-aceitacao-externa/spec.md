@@ -64,6 +64,15 @@ Achado da revisão final (2026-10-04): o curl expande `[]` e `{}` do caminho. Co
 `bad range` e mede `000`. A chamada ganha o `-g`, logo depois do `-q`, e a URL segue literal. A
 gramática do caminho não é restringida: `[]{}` passam a ser caracteres comuns.
 
+### E8 — sem alias `local`
+
+Q-1 do `/revisar-bloco` (2026-10-04). A E1 levou o `conferir` para a lane de aceitação, que não
+sobe stack, e a §1.5 não foi reconciliada com isso. Uma prova `local` mediria `000` em toda rodada,
+e o bloco ficaria em `blocked` sem caminho até `closed`. Decisão do João: o
+`aceitacao-aliases.conf` perde o `local`, e a prova `local` cai na recusa de alias desconhecido,
+tanto no `gerar` quanto no `conferir`. O marcador `{LOTUS_DEV_HTTP_PORT}` continua aceito, mas
+nenhum alias do conf real o usa, e a suíte o prova com um conf de teste.
+
 ## 1. Script e formato
 
 ### 1.1 `.claude/scripts/aceitacao.sh <gerar|conferir> <NN>`
@@ -153,8 +162,9 @@ Versionado e sem segredo. Uma linha `<alias> <URL-base>` por alias; `#` comenta.
 
 ```
 producao https://app.lotusotec.cl
-local    http://localhost:{LOTUS_DEV_HTTP_PORT}
 ```
+
+Não há alias `local` (E8).
 
 - `{LOTUS_DEV_HTTP_PORT}` é o único marcador aceito. O valor vem do `.env` da raiz da árvore
   atual, lido como o `offset_da_arvore` do `lane.sh` o lê (só dígitos), e vale `8080` sem `.env`
@@ -342,8 +352,9 @@ Em `.claude/tests/`, somados pelo `run-all.sh`, cada arquivo com a trava de não
     a cada rodada, sobrescrevendo o que foi escrito nela; última linha e exit code de cada veredito;
     recusa com exit 2.
   - Curl e aliases, pelo stub: sem `-H` e sem `-u`; `-q` primeiro; sem `-L`; `-I` só no `HEAD`; URL
-    montada; `local` lendo `LOTUS_DEV_HTTP_PORT` do `.env` e caindo em `8080`; URL de alias com
-    userinfo ou com caminho recusada.
+    montada; o marcador lendo `LOTUS_DEV_HTTP_PORT` do `.env` e caindo em `8080` (num conf de
+    teste, E8); prova `local` recusada pelo conf real; URL de alias com userinfo ou com caminho
+    recusada.
 - **`lane-aceitar.tests.sh`**, no molde dos `lane-*.tests.sh`: recusa fora do main tree, fora da
   `main`, com estado que não é o de aguardando aceitação, com lane viva do número, com
   `sem-arvore` e no teto; abre com `docs/` e com `chore/` (bloco cuja branch era `docs/`); campos

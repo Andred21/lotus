@@ -310,6 +310,9 @@ assert_igual 0 "$AC_COD" 'o aceitacao-aliases.conf real e valido e tem producao'
 printf '## Verificação externa\n\n1. Item.\n   - prova: teste GET /up -> 200\n' | ac_spec
 AC_ALIASES='' ac_rodar gerar 50
 ac_recusa 'alias `teste`' 'alias fora do conf real e recusado'
+printf '## Verificação externa\n\n1. Item.\n   - prova: local GET /up -> 200\n' | ac_spec
+AC_ALIASES='' ac_rodar gerar 50
+ac_recusa 'alias `local`' 'o conf real nao tem local: a lane de aceitacao nao sobe stack para medi-lo'
 
 # --- conferir: servidor HTTP local, so em 127.0.0.1, que morre sozinho em
 # 120 s se a suite cair antes do kill do fim
@@ -427,10 +430,16 @@ fi
 
 AC_ALIASES=''
 ac_novo sim "$_AC_P/spec.md"
-printf '## Verificação externa\n\n1. Producao.\n   - prova: producao GET /up -> 200\n2. Local.\n   - prova: local GET /up -> 200\n' | ac_spec
+printf '## Verificação externa\n\n1. Producao.\n   - prova: producao GET /up -> 200\n' | ac_spec
 : > "$_ac_curl.log"
 ac_rodar conferir 50
 assert_contem "$(cat "$_ac_curl.log")" ' https://app.lotusotec.cl/up' 'producao e https://app.lotusotec.cl'
+# O marcador, num conf de teste: o conf real nao tem alias que o use.
+printf 'producao https://app.lotusotec.cl\nlocal http://localhost:{LOTUS_DEV_HTTP_PORT}\n' > "$_ac_t/marcador.conf"
+AC_ALIASES="$_ac_t/marcador.conf"
+printf '## Verificação externa\n\n1. Producao.\n   - prova: producao GET /up -> 200\n2. Local.\n   - prova: local GET /up -> 200\n' | ac_spec
+: > "$_ac_curl.log"
+ac_rodar conferir 50
 assert_contem "$(cat "$_ac_curl.log")" ' http://localhost:8080/up' 'local sem .env cai em 8080'
 printf 'LOTUS_DEV_HTTP_PORT=8081\nLOTUS_DEV_HTTP_PORT="8082"\n' > "$AC_R/.env"
 : > "$_ac_curl.log"
