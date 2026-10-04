@@ -172,7 +172,7 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 
 ## 34. `infra-producao-observabilidade`
 
-**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim
+**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim · **Depende:** 32
 **Fonte:** spec do item 10 v2 (mesmas linhas 53-58 — "CloudWatch agent, alarmes de app; bloco
 próprio"); Notion admin `10.1.8` (healthcheck + alerta de queda, CloudWatch básico); Drive ADR-14
 ("healthcheck + alerta de queda `[FASE 2]`"); `deploy/bin/verificar-backup.sh` e o tópico SNS
