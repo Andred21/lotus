@@ -2,6 +2,12 @@
 
 ## Em aberto
 
+- **Q-1 — Importante.** Saiu PLAUSIBLE da lente 2, mas o mecanismo existe:
+  `.claude/scripts/lib/aceitacao.py:280-289` exige medição de toda prova automática. O João
+  aprovou corrigir em 2026-10-04 (o `gerar` recusa `local`, uma frase no Passo 7 do
+  `/planejar-bloco`, um caso na suíte). Falta aplicar a correção, e o `/revisar-bloco` roda de novo
+  como Rodada 2.
+
 ## Rodada 1 — `20aa04ef..07c9b33b` — 2026-10-04 · Lente 1: opus · Lente 2: sonnet
 
 Bloco classificado como baixo risco: só harness (`.claude/`) e docs, nenhum domínio das leis §5,
