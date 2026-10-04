@@ -1,26 +1,32 @@
-import { describe, it, expect } from 'vitest'
-import { formatDate, formatTime, formatDateTime, formatIsoDate } from './datetime'
+import { afterAll, describe, expect, it } from 'vitest'
+import i18n from '@shared/config/i18n'
+import { formatDate, formatTime, formatIsoDate } from './datetime'
 
-describe('formatDateTime', () => {
-  const d = new Date(2026, 7, 12, 14, 32)
+/**
+ * O `hourCycle` de `formatTime` é explícito por decisão de produto, não
+ * default do `Intl`: o CLDR do ICU 78 (Node 22) e do Chromium 152 passou a
+ * resolver `es-CL` para `h12` (era `h23`) sem nenhuma troca de código — o
+ * relógio do cabeçalho passaria a mostrar "02:05 p. m." em vez de "14:05".
+ * O produto quer 24h em es-CL e pt-BR, e mantém 12h com AM/PM em en.
+ */
+const idiomaOriginal = i18n.language
 
-  it('compõe data e hora do idioma ativo, nesta ordem', () => {
-    expect(formatDateTime(d)).toBe(`${formatDate(d)} ${formatTime(d)}`)
-  })
+afterAll(async () => {
+  await i18n.changeLanguage(idiomaOriginal)
+})
 
-  it('inclui a hora — não é formatDate disfarçado', () => {
-    expect(formatDateTime(d)).not.toBe(formatDate(d))
-    expect(formatDateTime(d)).toContain(formatTime(d))
-  })
+describe('formatTime', () => {
+  const QUANDO = new Date(2026, 7, 11, 14, 5)
 
-  it('preserva a data de um horário de meia-noite', () => {
-    const meiaNoite = new Date(2026, 7, 12, 0, 0)
-    expect(formatDateTime(meiaNoite)).toContain(formatDate(meiaNoite))
-  })
+  it('força 24h em es-CL e pt-BR, mantém 12h com AM/PM em en', async () => {
+    await i18n.changeLanguage('es-CL')
+    expect(formatTime(QUANDO)).toBe('14:05')
 
-  it('formata ISO vindo do backend sem perder o dia', () => {
-    const doBackend = new Date('2026-08-12T14:32:00.000Z')
-    expect(formatDateTime(doBackend)).toBe(`${formatDate(doBackend)} ${formatTime(doBackend)}`)
+    await i18n.changeLanguage('pt-BR')
+    expect(formatTime(QUANDO)).toBe('14:05')
+
+    await i18n.changeLanguage('en')
+    expect(formatTime(QUANDO)).toMatch(/^02:05\sPM$/)
   })
 })
 

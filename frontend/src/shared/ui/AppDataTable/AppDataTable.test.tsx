@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
 import { AppColumn, AppDataTable } from './AppDataTable'
-import { appDataTablePt, reducedFloorTablePt, stickyActionsColumn } from './style'
+import { appDataTablePt, narrowFloorTablePt, stickyActionsColumn } from './style'
 
 const ISO = '2026-08-19T13:00:00Z'
 const LINHAS = [{ id: 1, archived_at: ISO }]
@@ -182,17 +182,16 @@ describe('detalhe do servidor no estado de erro (P-70)', () => {
 
 /**
  * Regressão do passe de correção do UI-02 (Administración) e do UI-03 de
- * Pessoas (RedatoresTable, 19a616fb): três tabelas passaram a reduzir o piso
- * para `min-w-[42rem]` (`reducedFloorTablePt`) para caber em 1024x768 sem
- * rolar. O `widthPt` deste wrapper zera `table.className` sem
- * linha (erro ou vazio) para não empurrar `AppErrorState`/`AppEmptyState` para
- * fora da faixa visível em 390x844 (docblock de `hasRows` acima) — mas a
- * fusão antiga deixava o `pt` do CHAMADOR vencer por último, e o `min-w`
- * dessas três tabelas voltava a forçar rolagem justamente no vazio/erro, que
- * é o estado que o guard existe para proteger.
+ * Pessoas (RedatoresTable, 19a616fb). O `widthPt` deste wrapper zera
+ * `table.className` sem linha (erro ou vazio) para não empurrar
+ * `AppErrorState`/`AppEmptyState` para fora da faixa visível em 390x844
+ * (docblock de `hasRows` acima). A fusão antiga deixava o `pt` do CHAMADOR
+ * vencer por último, e o piso dele voltava a forçar rolagem justamente no
+ * vazio/erro, que é o estado que o guard existe para proteger.
  */
 describe('AppDataTable — largura mínima cede ao guard de "sem linha" mesmo com pt do chamador', () => {
-  const CALLER_PT = reducedFloorTablePt
+  // Um piso qualquer do CHAMADOR — o que se mede é quem vence a fusão.
+  const CALLER_PT = { table: { className: 'min-w-[30rem] table-fixed' } }
 
   it('vazio: o pt do chamador NÃO sobrevive — a tabela some (thead hidden, sem min-w)', () => {
     render(
@@ -202,7 +201,7 @@ describe('AppDataTable — largura mínima cede ao guard de "sem linha" mesmo co
     )
 
     const tabela = document.querySelector('table') as HTMLTableElement
-    expect(tabela.className).not.toContain('min-w-[42rem]')
+    expect(tabela.className).not.toContain('min-w-[30rem]')
     expect(document.querySelector('thead')?.className).toContain('hidden')
   })
 
@@ -214,7 +213,7 @@ describe('AppDataTable — largura mínima cede ao guard de "sem linha" mesmo co
     )
 
     const tabela = document.querySelector('table') as HTMLTableElement
-    expect(tabela.className).not.toContain('min-w-[42rem]')
+    expect(tabela.className).not.toContain('min-w-[30rem]')
   })
 
   it('com linha, o pt do chamador continua vencendo — o guard só rege o vazio/erro', () => {
@@ -225,30 +224,65 @@ describe('AppDataTable — largura mínima cede ao guard de "sem linha" mesmo co
     )
 
     const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('min-w-[30rem]')
+    expect(tabela.className).not.toContain('min-w-[42rem]')
+  })
+})
+
+/**
+ * Item 23 (`D-65`): o piso é o que decide se a tabela rola, e a sobreposição
+ * da coluna presa é `larguraDaTabela - larguraDaMoldura` por inteiro. Em
+ * 1024x768 as molduras medidas são 718px e 684px (Emisión); 48rem (768px)
+ * rolava em todas, 42rem (672px) cabe em todas. A exceção de três tabelas virou
+ * o default, e o `table-fixed` segue composto pelo `TABLE_LAYOUT` do wrapper.
+ */
+describe('appDataTablePt — o piso default cabe em toda moldura de 1024', () => {
+  it('é 42rem com table-fixed, e nada mais na folha', () => {
+    const classe = (appDataTablePt.table as { className: string }).className
+    expect(classe.split(' ')).toEqual(['min-w-[42rem]', 'table-fixed'])
+  })
+
+  it('a tabela montada sem pt do chamador sai com o piso default', () => {
+    render(
+      <AppDataTable value={LINHAS}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+    const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('min-w-[42rem]')
     expect(tabela.className).not.toContain('min-w-[48rem]')
   })
 })
 
 /**
- * Q-5 do review de 2026-09-26: as três tabelas do piso reduzido escreviam a
- * string `'min-w-[42rem] table-fixed'` cada uma. O `mergePt` SUBSTITUI a folha
- * `table.className`, então cada cópia recravava também o `table-fixed`, que é
- * decisão do wrapper — mudar o layout da tabela aqui deixaria as três para trás
- * sem nenhum teste reprovar.
+ * Item 23 (`D-65`, spec §4.2): em 390x844 a moldura tem 276px e a presa
+ * colapsada 72px; onde a 1ª coluna, proporcional à tabela, passa da área livre,
+ * o nome termina sob a presa. O piso por modo muda SÓ abaixo de `sm` — de `sm`
+ * para cima volta ao default, então 1024 e 1440 não mudam por construção.
  */
-describe('reducedFloorTablePt — o piso reduzido troca só a largura mínima', () => {
-  const semPiso = (classes: string) =>
-    classes.split(' ').filter((classe) => !classe.startsWith('min-w-')).join(' ')
-  const classeDaTabela = (pt: typeof appDataTablePt) =>
-    (pt.table as { className: string }).className
+describe('narrowFloorTablePt — piso por modo abaixo de sm', () => {
+  const classeDaTabela = (pt: typeof appDataTablePt) => (pt.table as { className: string }).className
 
-  it('fora o min-w, a classe da tabela é a mesma do default', () => {
-    expect(semPiso(classeDaTabela(reducedFloorTablePt))).toBe(semPiso(classeDaTabela(appDataTablePt)))
+  it('abaixo de sm usa o piso da tabela, de sm para cima o default, e compõe o table-fixed', () => {
+    expect(classeDaTabela(narrowFloorTablePt('32rem')).split(' ')).toEqual([
+      'min-w-(--table-narrow-floor)',
+      'sm:min-w-[42rem]',
+      'table-fixed',
+    ])
   })
 
-  it('o piso é menor que o default — 42rem contra 48rem', () => {
-    expect(classeDaTabela(reducedFloorTablePt)).toContain('min-w-[42rem]')
-    expect(classeDaTabela(appDataTablePt)).toContain('min-w-[48rem]')
+  it('o piso de sm para cima é o MESMO do default', () => {
+    const padrao = classeDaTabela(appDataTablePt).split(' ').find((c) => c.startsWith('min-w-'))
+    expect(classeDaTabela(narrowFloorTablePt('32rem'))).toContain(`sm:${padrao}`)
+  })
+
+  it('o valor chega à <table> como variável CSS', () => {
+    render(
+      <AppDataTable value={LINHAS} pt={narrowFloorTablePt('32rem')}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('32rem')
   })
 })

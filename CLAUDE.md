@@ -39,14 +39,12 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
   `active_spec` e `active_plan` (quando não forem `null`). O packet vem antes de qualquer consulta
   a Drive, Notion ou Figma e não substitui spec, plano, rules, ADRs ou código.
 - **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada no main tree:
-  para abrir lane, no planejamento, no fechamento ou por solicitação explícita do João.
+  para abrir lane e no planejamento, ou por solicitação explícita do João; no fechamento, é a
+  lane que remove a própria ficha e os `D-*` que pagou — ou, no bloco que mesclou aguardando
+  aceitação, a PR de docs que traz a prova (`state.md`, invariante 10).
 - **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
 - **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task a task. Serve
   somente para retomar detalhe fino da execução; nunca decide a fase.
-
-> **Transição até o item 35 mesclar:** os commands e skills ainda dizem `state.md`, `lanes:` e
-> `focused_lane`. Leia "o `estado.md` do bloco" onde eles dizem `state.md` (`state.md`,
-> seção Transição).
 
 | Doc                                 | Consulte antes de                                               |
 | ------------------------------------|-----------------------------------------------------------------|
@@ -55,10 +53,10 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 | `docs/estrutura-monolito.md`        | criar arquivo novo — para saber ONDE ele vai                    |
 | `docs/README.md` (lições)           | iniciar feature — não repetir erro já mapeado                   |
 | `docs/superpowers/pendencias/`      | antes de reportar divergência de doc — pode já estar registrada |
-| `docs/superpowers/context-packets/` | antes de consultar Drive/Notion/Figma para o bloco ativo        |
+| `docs/superpowers/blocos/<NN>-<slug>/context.md` | antes de consultar Drive/Notion/Figma para o bloco ativo (`context-packets/` guarda o legado) |
 
 > **Layout de `docs/superpowers/`:** na raiz vivem só os dois arquivos que decidem — `state.md`
-> (o contrato dos estados) e `backlog.md` (a fila, escrita só pelo main tree). Cada bloco aberto
+> (o contrato dos estados) e `backlog.md` (a fila; entra na `main` só por PR). Cada bloco aberto
 > pelo `lane.sh` tem a pasta `blocos/<NN>-<slug>/`, com o `estado.md` e os artefatos dele. O resto
 > mora em pasta: `pendencias/` (`README.md` é o índice, `abertas.md` a ficha de cada uma,
 > `encerradas.md` o rastro de 1 sprint), `historico/` (`progress.md`, `progress-archive.md` e
@@ -78,12 +76,14 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 
 ## 4. Fluxo de trabalho (superpowers)
 
-O dono do fluxo é a skill **`using-superpowers`** — pergunte a ela a próxima etapa, não reproduza a
-sequência de cabeça, não pule nem reinicie etapa concluída. Ciclo canônico:
+Os quatro commands de bloco são o fluxo, e cada etapa invoca a skill do superpowers por `Skill()`
+explícito (plugin `superpowers@claude-plugins-official`, ligado no `.claude/settings.json`):
 
-`brainstorming` → `using-git-worktrees` → `writing-plans` → `subagent-driven-development` /
-`executing-plans` → `test-driven-development` → `requesting-code-review` →
-`finishing-a-development-branch`.
+`/planejar-bloco` (`brainstorming` → `lane.sh abrir` → `writing-plans`) → `/executar-bloco`
+(`subagent-driven-development` ou `executing-plans`, com `test-driven-development`) →
+`/revisar-bloco` (`requesting-code-review` → `dispatching-parallel-agents` →
+`receiving-code-review`) → `/finalizar-bloco` (`verification-before-completion` →
+`finishing-a-development-branch`). Modelo e esforço de cada papel despachado: `.claude/papeis.md`.
 
 Entradas do fluxo — **comandos** (`.claude/commands/`) e **skills** (`.claude/skills/`) se invocam
 igual, com `/`, mas não são a mesma coisa: comando é prompt fixo, skill carrega instrução sob demanda.
@@ -94,11 +94,12 @@ igual, com `/`, mas não são a mesma coisa: comando é prompt fixo, skill carre
 | `/executar-bloco` | comando | execução, com a mecânica de gate e disciplina git |
 | `/revisar-frontend` | comando | revisão estrutural focada do frontend |
 | `/lotus-ui-review` | skill | revisão UI/UX de uma tela local pelo navegador (`/revisar-ui` é a entrada legada) |
-| `/revisar-sprint` | skill | review do bloco contra o padrão do projeto |
-| `/fechar-sprint` | skill | gate de fechamento |
+| `/revisar-bloco` | comando | revisão de duas lentes: gabarito do Lotus e verificação de cada achado |
+| `/finalizar-bloco` | comando | verificação fresca, registros de fechamento na lane, PR; depois do merge, fecha a lane |
 | `/auditar-docs` | skill | auditoria de doc vs. código (reporta, não corrige) |
 
-Planos/specs ativos em `docs/superpowers/`; concluídos em `plans/archive/` e `specs/archive/`.
+Bloco novo: spec, plano, revisão e rulings em `docs/superpowers/blocos/<NN>-<slug>/`. `specs/` e
+`plans/` guardam o legado e as specs compartilhadas.
 Histórico curto: `docs/superpowers/historico/progress.md` (§3).
 
 Delegação ao Codex (Context Packet, execução delegada, revisão independente) é roteada pelos
@@ -108,8 +109,9 @@ próprios comandos conforme o `estado.md` do bloco; os contratos vivem em `.agen
 de executá-lo. O roadmap adiante vive como títulos em `docs/superpowers/backlog.md`, não como planos
 prontos que envelhecem. O backlog nunca autoriza execução nem promove trabalho sozinho.
 
-> **A mecânica de execução** — gate inline (5 critérios), gate worktree, disciplina git no main tree
-> e DoD end-to-end — **vive no `/executar-bloco`.** Não a duplique aqui.
+> **A mecânica de execução** — validação do estado do bloco, rota pelo `executor` com o gate do
+> Codex, TDD e disciplina git, e DoD end-to-end — **vive no `/executar-bloco`.** Não a duplique
+> aqui.
   
 ## 5. Leis invioláveis
 

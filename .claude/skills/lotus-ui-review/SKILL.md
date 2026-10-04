@@ -4,6 +4,8 @@ description: Revisa uma tela ou jornada read-only do Lotus local pelo navegador,
 argument-hint: "tela-ou-jornada-local"
 disable-model-invocation: false
 allowed-tools: Read, Glob, Grep, Write, Bash(git status:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(mkdir:*), Bash(playwright-cli:*), Bash(.agents/skills/lotus-ui-review/scripts/preflight.sh:*)
+model: sonnet
+effort: high
 ---
 
 Leia integralmente `../../../.agents/skills/lotus-ui-review/SKILL.md` e cada referência que ela exigir;

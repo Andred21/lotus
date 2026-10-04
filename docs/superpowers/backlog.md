@@ -28,11 +28,15 @@
 > O **16** (`frontend-revisao-ui-por-modulo`) **fechou em 2026-09-27** com a fatia 3 (Cursos, Pessoas
 > e Administración) e saiu desta fila. Entrega em `historico/progress.md`; a `D-59`, que ele pagou,
 > está na tabela de fichas que saíram, e os achados que não couberam viraram `D-71` e `D-72`.
+> O **23** (`frontend-tabelas-reserva-e-rolagem`) **fechou em 2026-09-28** e saiu desta fila em
+> 2026-10-01, pela PR da própria lane — desvio da invariante 10 decidido pelo João e registrado na
+> `P-92`. Entrega em `historico/progress.md`; a `D-65`, que ele pagou, está na tabela de fichas que
+> saíram, e o resíduo do diálogo do Alumno virou a `P-94`.
 > Histórico entregue → `historico/progress.md` · fichas `P-*` → `pendencias/abertas.md` ·
 > specs/planos → `specs/archive/` e `plans/archive/`. Não duplicar esses conteúdos aqui.
 > O registro canônico dos débitos `D-*` segue neste arquivo, na seção `# Débitos técnicos` —
-> entrar num bloco não move nem apaga a ficha; a remoção acontece no `/fechar-sprint` do bloco
-> que a paga.
+> entrar num bloco não move nem apaga a ficha; a remoção acontece no `/finalizar-bloco` do bloco
+> que a paga (item 6d).
 >
 > **Planejamento just-in-time (CLAUDE.md §4):** o roadmap vive como título e escopo, não como
 > plano pronto que envelhece. Spec e plano se escrevem imediatamente antes da execução; limites,
@@ -108,8 +112,9 @@ dias —, e o **29** entrou na frente. O **29** saiu em 2026-09-25, fechado; as 
 subiram uma casa sem mudar a ordem relativa. O **12** saiu em 2026-09-26, fechado, e o **13** subiu
 uma casa. O **31** entrou na posição 0, promovido pelo João, e saiu no mesmo dia, fechado; as
 demais posições não se moveram. O **16** saiu em 2026-09-27, fechado; as posições abaixo dele subiram
-uma casa sem mudar a ordem relativa. **Emendada em 2026-09-26:** o **32** entra na posição 1 — a
-produção roda na "fase sem DNS" do runbook e por isso **recusa emitir certificado**, que é a função
+uma casa sem mudar a ordem relativa. O **23** saiu em 2026-10-01, fechado em 2026-09-28, e as
+posições abaixo dele subiram uma casa do mesmo jeito. **Emendada em 2026-09-26:** o **32** entra
+na posição 1 — a produção roda na "fase sem DNS" do runbook e por isso **recusa emitir certificado**, que é a função
 central; o **33** entra logo atrás, porque produção não entrega e-mail nenhum, nem o alerta de
 segurança; o **34** entra antes do **13**, que é gate de medição e não constrói alarme. Os três são
 da frente Infra (lane-b) e não disputam árvore com os de Frontend (lane-c) — a ordem que vincula é a
@@ -119,10 +124,9 @@ abaixo está escrita nesta ordem.
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
 | 1 | **33** `infra-producao-email-ses` | Infra | O alerta síncrono de acesso suspeito (ADR-21/D7) e o reset de senha não chegam a ninguém: `MAIL_MAILER=log` em produção |
-| 2 | **23** `frontend-tabelas-reserva-e-rolagem` | Frontend | Mesma frente e mesmo instrumento (navegador a 1024px) das runs do 16 (fechado em 2026-09-27), que já aplicou (b) e (c) em quatro das 12 tabelas, e é P2 |
-| 3 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
-| 4 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (fechado em 2026-09-27, alarme de certificado) e, de preferência, do 33 |
-| 5 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
+| 2 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
+| 3 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (fechado em 2026-09-27, alarme de certificado) e, de preferência, do 33 |
+| 4 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
 Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
@@ -164,28 +168,6 @@ spec do item 10 v2 prometeu este bloco e ele nunca entrou na fila.
 
 **DoD:** um alerta D7 disparado em produção chega a um destinatário real; um reset de senha real
 completa o ciclo; `aws sesv2 get-email-identity` com `DkimStatus: SUCCESS`; conta fora do sandbox.
-
----
-
-## 23. `frontend-tabelas-reserva-e-rolagem`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não
-**Fonte:** a ficha `D-65`, remedida no brainstorming do item 21 (2026-08-31), e o audit
-`audits/2026-08-28-item18-fase3.md` (f3 UI-01) que a originou.
-
-Paga a **`D-65`** (ficha inteira em `# Débitos técnicos`). A reserva da coluna presa é em `rem`
-contra `tableWidths` em %, sobre `min-w-[48rem]` (`AppDataTable/style.ts:73`): em 1024px a coluna
-presa come largura que as outras colunas já reservaram, e o efeito muda de tabela para tabela porque
-**a reserva não é uma constante** — são sete valores, vários condicionais ao ramo `archived`.
-
-Duas direções a medir nas 12 tabelas, a 1024px: (a) sinal de rolagem no wrapper, para que a
-rolagem horizontal deixe de ser descoberta por acidente; (b) `min-width` menor onde a reserva não
-cabe. As duas reabrem 12 medições em navegador, e é por isso que a ficha não coube no item 21.
-`RedatoresTable`, `UsersTable` e `RolesTable` já receberam (b) na fatia 3 do item 16, pelo valor
-nomeado `reducedFloorTablePt` (`AppDataTable/style.ts`). A ficha `D-65` registra ainda uma TERCEIRA
-direção, (c) colapsar as ações da linha num menu abaixo de `sm`, que (a) e (b) não cobrem em
-390x844 — **já aplicada** em Redactores, Alumnos, Usuarios e Roles pelo Q-1 do review daquela
-fatia (`8b40d176`). Nas outras oito, (c) é medição, não suposição.
 
 ---
 
@@ -271,63 +253,6 @@ construídos pelo item 34 — aqui só se medem.
 
 **DoD:** release, fluxo crítico, backup e restore têm evidência; a divergência de disponibilidade
 está formalmente resolvida.
-
----
-
-## 30. `harness-estado-por-bloco`
-
-**Prioridade:** P2 · **Frente:** Harness · **Contexto:** não · **Depende:** —
-**Fonte:** comparação com `Ela-Decora/ElaDecora-Brain@5eb74c0` em 2026-09-26; spec compartilhada
-[`specs/2026-09-26-harness-paridade-eladecora-design.md`](./specs/2026-09-26-harness-paridade-eladecora-design.md), §3 e §4.
-
-**Objetivo:** o estado de cada bloco passa a morar na pasta dele
-(`docs/superpowers/blocos/<NN>-<slug>/estado.md`), as lanes passam a ser descobertas por
-`git worktree list`, e o `state.md` vira contrato. Acaba a classe de divergência "estado da `main` ×
-estado da árvore" que o `SessionStart` acusa.
-
-**Escopo:** `.claude/scripts/lane.sh` (`descobrir`, `abrir` com portão de teto e de `**Depende:**`,
-`conferir`, `fechar`), com offset de porta de 1 a 3 e a receita de `.env` do `.env.example`
-automatizada; `session-start.sh` alimentado pelo `lane.sh`; liberação do `lane.sh` no
-`guard-main-shell.sh`; `state.md` reescrito como contrato; `CLAUDE.md` §3; `.env.example` com a
-linha +3; suíte em `.claude/tests/`.
-
-**Fora:** commands (item 35) e aceitação externa (item 36).
-
-**Integração:** a PR só mescla quando nenhuma lane do fluxo antigo estiver viva (decisão D6 da
-spec).
-
-**DoD:** `run-all.sh` verde; portão recusando a quarta lane e a dependência transitiva; `abrir` e
-`fechar` vistos rodar numa lane real, com stack no offset reservado e sem sobra de contêiner,
-volume, worktree ou branch.
-
----
-
-## 35. `harness-commands-de-bloco`
-
-**Prioridade:** P2 · **Frente:** Harness · **Contexto:** não · **Depende:** 30
-**Fonte:** a mesma spec, §5; absorve a parte A do rascunho de política de modelo e esforço de
-2026-09-21 (ver a nota de numeração no topo).
-
-**Objetivo:** `/planejar-bloco`, `/executar-bloco`, `/revisar-bloco` e `/finalizar-bloco` no
-desenho do ElaDecora, em bash, com cada etapa invocando a skill do superpowers por `Skill()`
-explícito, e modelo e esforço declarados por fase e por papel.
-
-**Escopo:** os quatro commands; agentes de papel em `.claude/agents/` com `model` e `effort`
-(a ferramenta `Agent` não aceita esforço por chamada) e a tabela única `.claude/papeis.md`;
-`.claude/prompts/verificador-achado.md` e `gabarito-lotus.md`; plugin
-`superpowers@claude-plugins-official` no `settings.json`; aposentadoria das skills `revisar-sprint`
-e `fechar-sprint`; `model`/`effort` nas demais entradas; caminhos novos nos contratos do Codex em
-`.agents/skills/`; `CLAUDE.md` §4; `docs/estrutura-monolito.md` descrevendo `.claude/` (commands,
-agents, hooks, scripts, prompts, tests, `settings.json`) e a régua da allowlist do
-`guard-main-shell`; catraca `commands.tests.sh`.
-
-**Fora:** aceitação externa (item 36); sinal de contexto cheio (item 37).
-
-**Integração:** branch empilhada na ponta do 30; mescla depois dele. Fecha a **P-84**.
-
-**DoD:** catraca vermelha quando some um `Skill(superpowers:…)` esperado ou um `model:`, verde de
-volta — provado nos dois sentidos; os quatro commands vistos rodar de ponta a ponta num bloco real
-pequeno.
 
 ---
 
@@ -435,9 +360,9 @@ ficam só como ponteiro, e a ficha delas é lá.
 # Débitos técnicos — registro canônico
 
 > Ficha de cada débito vivo. A cobertura por bloco está mapeada na fila; **entrar num bloco não
-> move nem apaga a linha daqui** — a remoção acontece só depois do bloco aplicado e do
-> `/fechar-sprint` correspondente. Fichas completas anteriores: histórico do arquivo no Git
-> (`git log -- docs/superpowers/backlog.md`).
+> move nem apaga a linha daqui** — a remoção acontece só depois do bloco aplicado, no
+> `/finalizar-bloco` correspondente (item 6d). Fichas completas anteriores: histórico do arquivo
+> no Git (`git log -- docs/superpowers/backlog.md`).
 
 ## Agrupados em bloco
 
@@ -456,59 +381,12 @@ ficam só como ponteiro, e a ficha delas é lá.
 > | 2026-09-03 | `D-69` | paga — os quatro sítios de utility de paleta em `features/` morreram e a **partição `files: CATRACA_COR` foi removida**; a prova é o `pnpm lint` verde **sem** a lista, não o grep | item 25, Task 1 |
 > | 2026-09-26 | `D-59` | paga — o alternador Activos/Archivados de "Cotizaciones" subiu para o slot `actions` do `AppCardHeader` (`BudgetQuotesCard`) e a régua própria de 56px sumiu, medido nos três viewports (`180bfa1a`, teste em `a3439596`). A ficha seguiu aberta aqui até o Q-2 do review | fatia 3 do item 16 |
 > | 2026-09-26 | — (herança da Task 12 da fatia 1, nunca escrita) | **morta antes de nascer** — a recusa em espanhol fixo de `Turma.php:200` já virou `__('operation.turma.concluded_locked')` nos três locales; reconfirmado em `Turma.php:201` nesta leitura. Paga em 2026-08-30, junto com `D-07`/`D-18`/`D-36`/`D-38`/`D-58`, antes de a ficha ganhar nome | item 7 (reconfirmado pela Task 10 da fatia 3 do item 16) |
+> | 2026-09-28 | `D-65` | paga — em 1024 a coluna presa não cobre mais nada nas 18 visões com presa, sobre o piso default de 42rem; abaixo de `sm` o `narrowFloorTablePt` medido por visão tira a 1ª coluna de baixo da presa, e o `RowActions` colapsa as ações num `⋮` único, sob a catraca `ACAO_SEM_COLAPSO`. Cursos e Usuarios arquivados ficam como exceção provada, e o diálogo do Alumno, que rola 3px em 1024, virou a `P-94` (`audits/2026-09-27-item23-medicoes.md`) | item 23 |
 >
 > **O que aqueles fechamentos deixaram aberto, e que não é débito:** cinco recusas literais fora de
 > `lang/` viraram a **P-71** e o 419 virou a **P-72** — as duas fechadas depois pelo item 26; a
 > legenda do `AppLineChart` fechou como **P-63** em 2026-09-01; e o item 25 abriu a **P-74**. Todas
 > em `pendencias/`.
-
-- **D-65 · A reserva da coluna presa não é uma constante** → `frontend-tabelas-reserva-e-rolagem`
-  (item 23). f3 UI-01: a reserva de `stickyActionsColumn` é em `rem` e as colunas são em %, sobre
-  `min-w-[48rem]` (`AppDataTable/style.ts:73`, conferido vivo em 2026-09-03); em 1024px a soma
-  estoura e a coluna presa come largura alheia. **A ficha dizia `8rem` fixo nas 12 tabelas;
-  remedido em 2026-08-31, são SETE valores**, vários condicionais ao ramo `archived` — `6rem`
-  (`RolesTable`, `StudentsTable`, `BudgetsTable` ativo), `8rem` (`EmissionStudentsTable`, o único),
-  `9rem` (`EnrollmentTable` + os ramos ativos de `TurmasTable`, `CoursesTable`, `UsersTable`,
-  `ClientsTable`), `10rem` (`ArchivedEnrollmentsList` + os ramos `archived` de seis tabelas),
-  `12rem` (`RedatoresTable` ativo), `16rem` (`HistorialTable`). Não se corrige numa constante: são
-  12 decisões. **Estava listada entre as decisões não promovíveis até 2026-09-03** — mas tem
-  hospedeiro desde que o item 23 nasceu, e débito com bloco não é decisão travada.
-
-  **Remedido em 2026-09-20, run de Pessoas (item 16 fatia 3, UI-01/UI-03):** medido direto no
-  navegador que a sobreposição é `larguraDaTabela - larguraDaMoldura`, **por inteiro** — não depende
-  de como `tableWidths()` reparte o % entre as colunas de dado (confirmado patchando a tabela viva
-  com pesos diferentes: a sobreposição não mudou 1px). Corrigir `columnWidth.ts` não bastava por
-  isso; a correção real é reduzir o `min-w` da TABELA. Aplicado como fix pontual (não a varredura das
-  12): `RedatoresTable` ganhou o piso de 42rem via `SearchableTableFrame` (que agora repassa `pt`
-  ao `AppDataTable` por baixo — mecanismo novo, reaproveitável pelas outras 11). Fecha UI-03 (1024x768, 718px de moldura: 672px cabe sem rolar).
-  Quem fizer a varredura do item 23: `RedatoresTable` já está no piso reduzido, não repita.
-
-  **Remedido em 2026-09-26, run de Administración (item 16 fatia 3, UI-02):** mesmo defeito, mesmo
-  fix pontual — `UsersTable` e `RolesTable` também ganharam o piso de 42rem (a primeira via
-  `SearchableTableFrame`, a segunda direto no `AppDataTable`, que já aceita `pt`). Medido em 1024x768: as duas foram de 718/768/768
-  (wrapper/scrollWidth/tabela, com rolagem forçada e sobreposição) para 718/718/718 — "Último
-  acceso" e "PERMISOS" saem inteiros. Sem regressão em 1440x900 (1134/1134/1134 nas duas). Quem
-  fizer a varredura do item 23: `UsersTable` e `RolesTable`, como `RedatoresTable`, já estão no piso
-  reduzido — não repita as três. **Desde o Q-5 do review da fatia 3 (`d1141a0c`) o piso é o valor
-  nomeado `reducedFloorTablePt`**, que compõe o mesmo `table-fixed` do default: quem varrer as
-  outras nove importa a constante, nunca a string — `mergePt` substitui a folha
-  `table.className`, e a cópia literal divergiria em silêncio do wrapper.
-
-  **Terceira direção, APLICADA em 2026-09-26 nas quatro tabelas da fatia 3 do item 16** (Q-1 do
-  review, `8b40d176`). Em 390x844 (276px de moldura) nenhum `min-width` fecha: `RedatoresTable`
-  ativo precisaria reservar ~70% da tabela para a coluna de 3 ícones. A UI-01 de Pessoas (classe
-  `C`) tinha sido deferida para cá sem aprovação; o review a reabriu e o João decidiu consertar no
-  bloco. Abaixo de `sm` a linha carrega UM controle: `RowActions` (`shared/ui`) colapsa duas ou
-  mais ações num menu, e `useCollapsibleActionsColumn(width)` encolhe a coluna presa para 4.5rem
-  no mesmo render — os dois saem do mesmo booleano, porque um sem o outro é defeito. Medido no
-  navegador, nome coberto pela coluna presa (antes → depois): Redactores 44px, com só a inicial à
-  vista → 0; Usuarios 29px → 0; Alumnos 9-14px → 0; Roles 0 → 0 (os 6rem não cobriam o nome).
-  1024x768 e 1440x900 não mudam. **Para o item 23:** é opt-in por tabela — as outras oito ligam o
-  hook e passam `collapsed` ao `*RowActions` depois de medir, não por padrão. **Resíduo medido, não
-  corrigido:** na visão de arquivados em 390x844 a coluna de identidade de Redactores fica com 132px,
-  espremida pelo par fixo de 24% das colunas de arquivados, e o nome sai com reticência depois de 2
-  ou 3 letras — não está mais coberto, está estreito. É decisão de piso por modo, a mesma família
-  de (b), e fica com o item 23.
 
 - **D-71 · Rótulos `perm.*` do diálogo de Roles expõem jargão interno (Flujo N, RN-02, soft delete),
   nos 3 locales** → **sem bloco hospedeiro.** UI-04 da run de Administración de 2026-09-26
@@ -546,6 +424,19 @@ ficam só como ponteiro, e a ficha delas é lá.
   redator, ou o redesenho do item 9 se ele alcançar o mesmo assembler. Origem: UI-04 da run
   `ready-redator` de 2026-08-22, classe `B`, herança que a Task 12 da fatia 1 do item 16 prometeu e
   nunca escreveu.
+
+- **D-73 · Os dois painéis de tabela do Dashboard transbordam por conteúdo, não por piso** →
+  **sem bloco hospedeiro.** `app/pages/Dashboard/admin/CompliancePanel.tsx` e
+  `RedatorLoadPanel.tsx` têm `scrollWidth` maior que a tabela: em 1024x768, 749 e 747px sobre
+  moldura e tabela de 718, ou seja, 31 e 29px a mais. Antes do item 23 eram 25 e 21px sobre 768. Em
+  390x844, 708 e 707 sobre 672. A tabela cabe na moldura (`table` ≤ `frame`, régua do item 23), então
+  o que passa é conteúdo de célula, e o piso não mexe nisso. A spec do item 23 (§1, "Fora") mandou
+  abrir ficha se o transbordo persistisse depois do piso novo. Ele persistiu, medido no audit
+  `audits/2026-09-27-item23-medicoes.md` §6, Observação 1. Não há coluna presa nesses painéis. O
+  remédio provável é achar a célula que força a largura (grafia sem quebra ou `min-width` de
+  conteúdo) e deixá-la quebrar ou truncar. **Quem decide o hospedeiro é o João.** **DoD:**
+  `scrollWidth == clientWidth` no invólucro dos dois painéis em 1024x768 e 390x844, medido no
+  navegador. Origem: Q-3 do review do item 23 (`frontend-tabelas-reserva-e-rolagem`).
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**

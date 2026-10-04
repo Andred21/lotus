@@ -13,7 +13,8 @@ Uma lane é uma worktree irmã, `../lotus-<NN>-<slug>`, numa branch que casa
 `backlog.md`; a pasta do bloco é `blocos/<NN>-<slug>/`. Branch fora do padrão não é lane.
 
 - **O main tree fica sempre na `main` e nunca é lane.** Ele planeja, abre e fecha lane
-  (`lane.sh abrir` e `lane.sh fechar`) e escreve o `backlog.md`.
+  (`lane.sh abrir` e `lane.sh fechar`) e lê o `backlog.md`. Ele não publica commit: a `main` só
+  recebe PR mesclado (`CONTRIBUINDO.md`).
 - **No máximo três lanes.** Cada uma publica as portas do offset que o `abrir` reservou no `.env`
   da raiz dela: +1, +2 ou +3, pela tabela do `.env.example`. O `abrir` conta como ocupado o
   offset de toda árvore do `git worktree list`, lane ou não.
@@ -49,8 +50,13 @@ o estado de onde se está saindo, `blocker` com uma linha que descreve o impedim
 `blocker` foi resolvido, copie `resume_state` de volta para `workflow_state`, zere `blocker` e
 `resume_state` e troque o `next_action` pelo token do estado retomado. Nos dois sentidos vale a
 invariante 9. Enquanto o bloco está em `blocked`, as regras de "a partir de" (invariantes 3, 4 e
-12) usam o `resume_state` como régua. O item 36 acrescenta um caminho automático: aceitação externa
-pendente depois do merge.
+12) usam o `resume_state` como régua. Aceitação externa pendente depois do merge também espera aqui:
+o `/finalizar-bloco` (6a) grava `blocked` com `resume_state: ready_for_closure` e `blocker`
+começando por `aguardando aceitação`, e a lane fecha com o bloco nesse estado. **A saída desse
+`blocked` é a exceção à regra acima:** vai direto a `closed`, não ao `resume_state`, porque o
+`ready_for_closure` já está cumprido — a revisão passou, e a prova era o que faltava. Ela entra numa
+PR de docs, com a prova no corpo do `estado.md` e os registros da invariante 10 (`/finalizar-bloco`,
+modo Aceitação). O item 36 automatiza a prova e a saída.
 
 ## Campos (`schema_version: 3`)
 
@@ -106,11 +112,19 @@ pendente depois do merge.
 8. **O backlog nunca promove trabalho automaticamente.** Abrir lane para uma ficha é sempre escolha
    explícita do João.
 9. Quem altera um `estado.md` atualiza, no mesmo arquivo, `updated_at`, `updated_by` e `commit`.
-10. **`backlog.md` é escrito somente pelo main tree, na `main`.** É o último arquivo compartilhado
-    entre lanes, e a regra o mantém livre de conflito.
+10. **`backlog.md` entra na `main` só por PR.** Ficha nova vem numa PR de docs; a lane remove só a
+    própria ficha e os débitos `D-*` que o bloco pagou (com a linha de cada um na tabela de fichas
+    que saíram — E10), no commit de fechamento do `/finalizar-bloco`, junto com a linha do
+    `historico/progress.md` e o `estado.md` em `closed` (spec do bloco 35, E8). Exceção: o bloco
+    que mesclou em `blocked` aguardando aceitação (invariante 11) — a remoção da ficha, a linha do
+    `historico/progress.md` atualizada e o `closed` entram juntos na PR de docs que traz a prova
+    (E9). Nenhuma lane acrescenta nem edita ficha alheia, e é essa regra que mantém o arquivo livre
+    de conflito.
 11. **Bloco com `efeito_externo: sim` não vai a `closed` sem a prova do efeito externo
     registrada.** `closed` significa resultado verificado, não código na `main`. O registro é o
-    `aceitacao.md` que o item 36 introduz; até ele, a prova vai no fechamento.
+    `aceitacao.md` que o item 36 introduz; até ele, a prova vai no corpo do `estado.md`, no
+    fechamento. Quando ela só existe depois do merge, o bloco mescla em `blocked` aguardando
+    aceitação e vai a `closed` na PR que traz a prova (spec do bloco 35, E9).
 12. **`efeito_externo` é obrigatório a partir de `ready_for_execution`.** Quem grava `sim` ou `nao`
     é o planejamento; o `lane.sh abrir` só semeia `null`. `null` num bloco que já passou dali é
     divergência pela invariante 7, e o `SessionStart` a acusa. Ler `null` como `nao` desligaria a
@@ -122,11 +136,3 @@ Os blocos do fluxo antigo têm uma linha cada em `historico/progress.md` e a nar
 `historico/state-archive.md`, que recebeu o `state.md` antigo inteiro na virada do item 30 e depois
 dele congela. Bloco novo: a pasta `blocos/<NN>-<slug>/` é o registro, e o `progress.md` ganha a
 linha dele no fechamento.
-
-## Transição
-
-Até o item 35 mesclar, os commands e skills (`/planejar-bloco`, `/executar-bloco`,
-`revisar-sprint`, `fechar-sprint` e `.agents/skills/`) ainda citam `state.md`, `lanes:`,
-`focused_lane` e os campos singulares do topo. Leia "o `estado.md` do bloco" onde eles dizem
-`state.md`, e "o bloco" onde dizem lane em foco ou `active_work_item`. O `estado.md` do 35 e o do
-36 são semeados à mão, porque o `lane.sh abrir` exige o main tree na `main` (spec 2026-09-26, §7).

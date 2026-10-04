@@ -47,6 +47,7 @@ function montar(archived: boolean) {
       onView={() => {}}
       onArchive={() => {}}
       onRestore={() => {}}
+      collapsed={false}
     />,
   )
 }

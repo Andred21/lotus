@@ -14,12 +14,22 @@ solicitada**.
   explicitamente.
 - Codex pode executar, revisar e concluir etapas do Superpowers quando João Victor
   delegar explicitamente o bloco ou a transição.
-- Codex pode alterar `docs/superpowers/state.md`, `progress.md` e artefatos ativos
-  somente quando:
+- **Chamado por um command de bloco** (Context Packet, execução delegada pelo `/executar-bloco`,
+  lente de revisão), o contrato da skill em `.agents/skills/` vence: o Codex não escreve o
+  `estado.md` do bloco, o `progress.md` nem o `backlog.md`, e não commita. Estado, transições e
+  commits ficam com o Claude; o Codex recomenda a transição no relatório.
+- **Fora dos commands**, com delegação explícita do João da transição, o Codex pode alterar o
+  `estado.md` do bloco (`docs/superpowers/blocos/<NN>-<slug>/estado.md`;
+  `docs/superpowers/state.md` é só o contrato) e artefatos ativos somente quando:
     1. a instrução atual autorizar a transição;
     2. os gates da etapa tiverem sido executados;
     3. `workflow_state`, `next_owner` e `next_action` permanecerem consistentes;
     4. a transição entrar no mesmo commit do artefato que a comprova.
+
+  Essa delegação não alcança o `historico/progress.md` nem o `backlog.md`: eles mudam só nos
+  pontos da invariante 10 do `state.md` — ficha nova numa PR de docs; a remoção da própria ficha
+  e dos `D-*` pagos, e a linha do `progress.md`, no fechamento do bloco, ou na PR de docs que traz
+  a prova quando ele mesclou aguardando aceitação.
 - Sem delegação explícita, Codex apenas recomenda a próxima transição.
 - Altere arquivos do workspace somente dentro do escopo explicitamente solicitado. Preserve WIP e
   não inclua mudanças adjacentes.
@@ -27,10 +37,11 @@ solicitada**.
   que identifique a ação e o alvo.
 - Quando chamado pelo plugin do Claude Code, trate o pedido recebido como o escopo completo. Não
   amplie a tarefa nem importe contexto adicional sem necessidade.
-- **Context Packet:** a skill `lotus-context-packet` é invocada pelo `/planejar-bloco` quando
-  `state.md` está em `context_required`. Consulte somente as fontes externas exigidas e retorne o
-  packet conforme o contrato da skill. A consulta autoriza leitura externa seletiva, não escrita
-  externa nem mudança de estado do Superpowers.
+- **Context Packet:** a skill `lotus-context-packet` é invocada pelo `/planejar-bloco` quando o
+  bloco tem `Contexto: sim` no `backlog.md`; o `/planejar-bloco` pede o packet antes de abrir a
+  lane, então ainda não existe `estado.md` nesse momento. Consulte somente as fontes externas
+  exigidas e retorne o packet conforme o contrato da skill. A consulta autoriza leitura externa
+  seletiva, não escrita externa nem mudança de estado do Superpowers.
 
 ## 2. Bootstrap obrigatório e seletivo
 
@@ -38,19 +49,20 @@ Antes de analisar qualquer tarefa, leia nesta ordem:
 
 1. `CLAUDE.md` — leis, fontes e comandos;
 2. `INSTRUÇÕES-DO-PROJETO.md` — postura e exceções;
-3. `docs/superpowers/state.md` — etapa atual e próxima ação permitida;
+3. a saída de `bash .claude/scripts/lane.sh descobrir` e o `estado.md` do bloco da árvore atual —
+   etapa atual e próxima ação permitida; `docs/superpowers/state.md` é o contrato;
 4. `docs/superpowers/historico/progress.md` — histórico recente, somente para orientação.
 
-Leia `docs/superpowers/backlog.md` somente quando `state.md` estiver em `idle`, quando a tarefa for
-planejamento ou fechamento, ou quando a solicitação pedir explicitamente o roadmap.
+Leia `docs/superpowers/backlog.md` somente no main tree — para abrir lane, no planejamento, no
+fechamento, ou por solicitação explícita do João Victor (CLAUDE.md §3).
 
 O Codex não infere transições operacionais. Pode aplicá-las quando João Victor
 delegar explicitamente o fechamento ou avanço da etapa e os gates estiverem provados.
 
 Depois do bootstrap, carregue somente o necessário:
 
-- feature ativa ou alterada: Context Packet, spec e plano apontados pelo `state.md`, ignorando os
-  ponteiros que estiverem `null`;
+- feature ativa ou alterada: Context Packet, spec e plano apontados pelo `estado.md` do bloco
+  (`docs/superpowers/state.md` é só o contrato), ignorando os ponteiros que estiverem `null`;
 - início de feature: `docs/README.md`;
 - arquitetura, stack ou infraestrutura: `docs/adrs.md`;
 - schema, migration ou model: `docs/der-fisico.md`;

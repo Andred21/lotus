@@ -25,17 +25,6 @@ describe('RolesTable', () => {
     expect(screen.queryByText('redator')).toBeNull()
     expect(screen.getByText('auditor')).toBeTruthy()
   })
-
-  it('usa um piso menor que os 48rem default, para não forçar rolagem em 1024x768 (UI-02)', () => {
-    // Mesma raiz do UI-03 de Pessoas (RedatoresTable): o piso default do
-    // AppDataTable (min-w-[48rem] = 768px) é maior que os 718px de moldura em
-    // 1024x768 — o piso vence, força rolagem, e o cabeçalho "Permisos" fica
-    // cortado sob a coluna de ações presa.
-    renderWithProviders(<RolesTable roles={roles} loading={false} onView={() => {}} />)
-    const tabela = document.querySelector('table') as HTMLTableElement
-    expect(tabela.className).not.toContain('min-w-[48rem]')
-    expect(tabela.className).toContain('min-w-[42rem]')
-  })
 })
 
 /** Q-1 do review de 2026-09-26: uma ação só (Ver) não tem o que colapsar, mas a
@@ -54,5 +43,13 @@ describe('RolesTable — coluna de ações no telefone', () => {
   it('no desktop mantém os 6rem', () => {
     renderWithProviders(<RolesTable roles={roles} loading={false} onView={() => {}} />)
     expect(larguraDaColunaDeAcoes()).toBe('6rem')
+  })
+
+  it('abaixo de sm, o piso é o medido para esta visão (item 23, audit §5)', () => {
+    renderWithProviders(<RolesTable roles={roles} loading={false} onView={() => {}} />)
+
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.className).toContain('sm:min-w-[42rem]')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('27.75rem')
   })
 })

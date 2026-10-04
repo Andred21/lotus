@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass, reducedFloorTablePt } from '@shared/ui'
+import { AppColumn, IdentityCell, AppTag, AppEmptyState, ArchiveSwitch, SearchableTableFrame, useToast, archivedColumns, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass, Timestamp } from '@shared/ui'
 import type { RedatorData } from '@shared/types/generated'
-import { idoneidade, IDONEIDADE_SEVERITY, formatDateTime, type ArchivableRow } from '@shared/lib'
+import { idoneidade, IDONEIDADE_SEVERITY, type ArchivableRow } from '@shared/lib'
 import { useRedatorInvitation } from '../../hooks/useRedatorInvitation'
 import { RedatorRowActions } from './RedatorRowActions'
 import { redatorWidths } from './redatorColumns'
@@ -54,9 +54,6 @@ export function RedatoresTable({
   return (
     <SearchableTableFrame
       table={table}
-      // UI-03 de `2026-09-04-lotus-ui-review-personas.md`: o piso default
-      // rolava em 1024x768 e a coluna presa cobria "Último acceso".
-      pt={reducedFloorTablePt}
       searchPlaceholder={t('redator.searchPlaceholder')}
       emptyState={
         <AppEmptyState
@@ -72,6 +69,8 @@ export function RedatoresTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
+      // Piso de 390 medido (item 23, audit §5): 132px de 1ª coluna contra 204px livres.
+      pt={archived ? narrowFloorTablePt('57.5rem') : undefined}
     >
       <AppColumn
         field="name"
@@ -104,7 +103,7 @@ export function RedatoresTable({
         field="last_login"
         header={t('common.lastLogin')}
         sortable
-        body={(r: RedatorData) => (r.last_login ? formatDateTime(new Date(r.last_login)) : '—')}
+        body={(r: RedatorData) => (r.last_login ? <Timestamp value={new Date(r.last_login)} /> : '—')}
         style={largura.lastLogin}
       />
       {archived && archivedColumns(t)}

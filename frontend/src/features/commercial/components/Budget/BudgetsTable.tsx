@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AppColumn, AppTag, IdentityCell, stickyActionsColumn,
-  AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns,
+  AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt, useCollapsibleActionsColumn,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
@@ -43,6 +43,9 @@ export function BudgetsTable({
   const clients = useCommercialClients()
   const archived = mode === 'archived'
   const largura = budgetWidths(archived)
+  // Abaixo de `sm` a linha carrega um controle só e a presa encolhe junto
+  // (item 23, `D-65`).
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : '6rem')
 
   // A falha da query auxiliar conta como falha da tabela. Sem isso um GET de
   // clientes quebrado deixava a tabela inteira com `—` na coluna Cliente e a
@@ -91,6 +94,8 @@ export function BudgetsTable({
       loading={carregando}
       error={loadError}
       onRetry={retry}
+      // Piso de 390 medido (item 23, audit §5): 66px de 1ª coluna contra 204px livres.
+      pt={archived ? narrowFloorTablePt('58rem') : undefined}
     >
       <AppColumn
         header={t('budget.code')}
@@ -128,9 +133,10 @@ export function BudgetsTable({
             busy={busy}
             onView={(x) => navigate(`/comercial/presupuestos/${x.id}`)}
             onRestore={onRestore}
+            collapsed={colunaDeAcoes.collapsed}
           />
         )}
-        style={stickyActionsColumn(archived ? '10rem' : '6rem')}
+        style={stickyActionsColumn(colunaDeAcoes.width)}
       />
     </SearchableTableFrame>
   )
