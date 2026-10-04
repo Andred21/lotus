@@ -228,8 +228,9 @@ commits que deixariam de existir.
   --diff-filter=U`. Não resolva os conflitos nem aborte o merge sozinho — `git merge --abort` ou a
   resolução são decisão do João.
 
-Depois do merge — ou mesmo sem novidade nenhuma — refaça o Passo 3 inteiro contra o HEAD novo.
-Vermelho aqui para o command: a lane estava verde contra uma `origin/main` que já ficou velha.
+Depois do merge — ou mesmo sem novidade nenhuma — refaça o Passo 3 inteiro contra o HEAD novo
+(na lane de aceitação, nada: a verificação é o `conferir` do 6a). Vermelho aqui para o command:
+a lane estava verde contra uma `origin/main` que já ficou velha.
 
 ## Passo 6 — Registros de fechamento na lane
 
