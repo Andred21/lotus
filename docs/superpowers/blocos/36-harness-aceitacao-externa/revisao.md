@@ -2,11 +2,30 @@
 
 ## Em aberto
 
-- **Q-1 da Rodada 2 — Importante, CONFIRMED.** O descarte do PENDENTE na lane de aceitação não tem
-  saída quando o `aceitacao.md` não é versionado. O João aprovou a correção em 2026-10-04: o
-  descarte usa `git clean -f --` quando o arquivo não está no git e `git restore --` quando está,
-  o command e a §2.4 da spec mudam, e o Q-2 (Menor) entra junto. Falta aplicar a correção, e o
-  `/revisar-bloco` roda de novo como Rodada 3.
+## Rodada 3 — `20aa04ef..f4a25c1c` — 2026-10-04 · Lente 1: opus · Lente 2: sonnet
+
+As correções aprovadas na Rodada 2 entraram em `f4a25c1c`:
+- **Q-1:** o descarte do PENDENTE usa `git restore --` quando o arquivo é versionado e
+  `git clean -f --` quando não é (emenda E12). O trecho entrou na catraca com a sonda `sem-clean`,
+  e `lane-aceitar.tests.sh:202-226` percorre os dois descartes até o `fechar --force`.
+- **Q-2:** corrigido em `docs/estrutura-monolito.md:230`.
+
+A lente 1 conferiu as duas correções e as achou completas. A suíte, rodada fresca, deu
+`OK: 17 arquivo(s) de teste, nenhuma falha`.
+
+**Errata das Rodadas 1 e 2.** O `f4a25c1c` renumerou as emendas próprias desta spec para E11 (sem
+alias `local`) e E12 (o descarte), porque "E8" sem sufixo, no harness, é a E8 do 35. Onde as
+Rodadas 1 e 2 dizem "E8", leia E11. É o Q-3 abaixo, e esta errata o resolve sem editar rodada
+antiga.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | O `reaproveitar` casa o resultado gravado pela posição do item, não pela identidade (texto mais prova) em qualquer posição. Um item inserido no topo da seção descarta o manual já escrito de um item que ficou idêntico, e o aviso diz "mudou". A §1.3 da spec promete preservar "todo resultado cuja identidade bate" | CONFIRMED | `.claude/scripts/lib/aceitacao.py:247-253`, `spec.md:141-146` | registrado, não bloqueia. Só acontece quando a spec muda depois de um manual escrito: isso não ocorre na lane de aceitação, e o git guarda a versão anterior |
+| Q-2 | Menor | A §6 da spec ("Aviso à lane 33") está desatualizada. O 33 já mesclou em `blocked`, a spec dele tem a `## Verificação externa`, ele chega com `active_acceptance: null` e sem `aceitacao.md`, e o `progress.md` promete acréscimos ao `backlog.md` por uma "PR de docs da aceitação" que a E2 extinguiu | CONFIRMED | `spec.md:414-418`; no main tree, `blocos/33-infra-producao-email-ses/spec.md:527` e `estado.md:7,12,21` | registrado, não bloqueia. O aviso atualizado vai ao João no relatório desta rodada |
+| Q-3 | Menor | As Rodadas 1 e 2 citam "E8" para a remoção do `local`, que agora é a E11 | CONFIRMED | `revisao.md:14,21` (na Rodada 2), `spec.md:67` | resolvido pela errata acima |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0 plausíveis,
+0 refutados · Menor: 3 confirmados, 0 plausíveis, 0 refutados
 
 ## Rodada 2 — `20aa04ef..bbdc58f0` — 2026-10-04 · Lente 1: opus · Lente 2: sonnet
 

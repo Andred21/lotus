@@ -2,9 +2,9 @@
 schema_version: 3
 id: 36
 slug: 36-harness-aceitacao-externa
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings Q-1 e Q-2 da rodada 2 aprovados, aplicar a correcao
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/blocos/36-harness-aceitacao-externa/spec.md
 active_plan: docs/superpowers/blocos/36-harness-aceitacao-externa/plano.md
@@ -17,9 +17,9 @@ branch: chore/36-harness-aceitacao-externa
 worktree: ../lotus-36-harness-aceitacao-externa
 offset: 2
 lane_base: 20aa04ef
-commit: 07c53cdb
+commit: f4a25c1c
 blocker: null
-updated_at: 2026-10-04T17:32:09-03:00
+updated_at: 2026-10-04T17:44:45-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
