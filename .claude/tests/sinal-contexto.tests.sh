@@ -169,4 +169,14 @@ mkdir -p "$_sc_d/com espaco"
 acionar_hook "$SINAL" "$(sc_payload PostToolUse teste-espaco "$_sc_d/com espaco/t.jsonl")"
 assert_igual PostToolUse "$(sc_evento)" 'transcript_path com espaco e lido'
 
+# --- 14. o settings.json real liga o hook nos dois eventos, sem filtro de ferramenta
+for _sc_ev in PostToolUse UserPromptSubmit; do
+  _sc_n=$(jq --arg ev "$_sc_ev" \
+    '[.hooks[$ev][]? | select((.matcher // "") == "" or .matcher == "*")
+      | .hooks[]? | select(.type == "command"
+                           and (.command | test("/\\.claude/hooks/sinal-contexto\\.sh")))] | length' \
+    "$DIR_TESTES/../settings.json" 2>/dev/null)
+  assert_igual 1 "$_sc_n" "settings.json liga o sinal-contexto.sh em $_sc_ev, uma vez e sem filtro de ferramenta"
+done
+
 sc_limpar

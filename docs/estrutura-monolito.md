@@ -199,13 +199,15 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 │                                #   dois sentidos (catraca em `commands.tests.sh`); lista não repetida
 │                                #   aqui de propósito — doc que copia lista envelhece calado (lição 13)
 │
-├── hooks/                      # SessionStart/PreToolUse/Stop; `exit 0` sempre — JSON no stdout,
-│                               #   exceto `session-start.sh` (texto puro)
+├── hooks/                      # SessionStart/PreToolUse/PostToolUse/UserPromptSubmit/Stop; `exit 0`
+│                               #   sempre — JSON no stdout, exceto `session-start.sh` (texto puro)
 │   ├── guard-main-shell.sh     # restringe Bash só quando a branch é `main`: falha ABERTA sem saber
 │   │                           #   a branch (infra), FECHADA sem saber classificar o comando
 │   ├── guard-main.sh           # nega escrita cruzada entre árvores e escrita na `main` fora da allowlist
 │   ├── guard-secrets.sh        # nega gravar arquivo de ambiente ou conteúdo com marca de credencial
 │   ├── session-start.sh        # injeta `lane.sh descobrir` no início da sessão; nunca bloqueia
+│   ├── sinal-contexto.sh       # avisa modelo e João ao passar de 150k tokens de contexto, uma vez por
+│   │                           #   travessia; mede o `usage` do transcript e nunca compacta
 │   ├── stop-verify.sh          # cobra evidência de verificação quando a sessão mexeu em código
 │   └── lib/                    # classificar-comando.py, ler-frontmatter.py, comum.sh, estados.sh
 │
@@ -222,13 +224,13 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 │
 ├── rules/                      # carrega sozinha ao tocar o arquivo coberto — não ler por precaução
 ├── skills/                     # auditar-docs/ e lotus-ui-review/ — instrução sob demanda, não prompt fixo
-├── tests/                      # `run-all.sh` soma todo `*.tests.sh` da pasta (17 hoje); veredito é a
+├── tests/                      # `run-all.sh` soma todo `*.tests.sh` da pasta (18 hoje); veredito é a
 │                               #   última linha e o código de saída. Cada arquivo recusa rodar avulso
 │                               #   — trava de uma linha no topo, catraca própria em `avulso.tests.sh`,
 │                               #   regra descrita em `_assert.sh`. Lição 10 (`docs/README.md:70`):
 │                               #   teste que nunca viu o bug reprovar é cobertura fantasma
 ├── aceitacao-aliases.conf      # `<alias> <URL-base>` das provas automáticas: só `producao` (sem stack local, E11 do 36); sem segredo
-├── settings.json               # os 5 hooks acima + `enabledPlugins` do `superpowers@claude-plugins-official`
+├── settings.json               # os 6 hooks acima + `enabledPlugins` do `superpowers@claude-plugins-official`
 └── papeis.md                   # única fonte de model/effort por papel despachado; catraca com agents/
 
 .agents/skills/                 # contrato do Codex: lotus-context-packet/, lotus-execute-block/, lotus-ui-review/
