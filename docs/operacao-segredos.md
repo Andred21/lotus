@@ -65,7 +65,10 @@ dentro — o alerta da D7 quebra em silêncio, a `FalhaDeObservabilidade` regist
 default (sem endereço, sem mensagem crua) e a linha `acesso.suspeito` continua saindo no canal
 `seguranca` como se nada tivesse acontecido. Ninguém percebe pela aplicação; percebe-se pelo
 alerta que não chegou. Depois de qualquer mudança em `lotus-ses`, no `.env` (`MAIL_*`) ou na
-identidade SES, o gate é o do runbook §13: alerta ou reset em caixa real.
+identidade SES, o gate é o do runbook §13: alerta ou reset em caixa real. Em sandbox (ADR-23,
+emenda de 2026-10-01) há um segundo jeito de falhar calado: o destinatário de fora de
+`@lotusotec.cl` que ainda não clicou no link de verificação da AWS — o log default diz `aws_erro`
+`MessageRejected`, sem o endereço, e a ordem certa é a do runbook §13.1.
 
 **Credenciais de S3.** Não existem como par de chaves: o acesso ao bucket é a inline `lotus-s3` da
 role (runbook §4), sem `AWS_ACCESS_KEY_ID` no `.env`. "Rotacionar" aqui é revisar a policy, não
