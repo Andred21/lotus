@@ -446,26 +446,37 @@ stack `lotus-contato` do `lotus-site` criou e possui** (ADR-SITE-005 de lá): DK
 `ses.lotusotec.cl` e DMARC já estão na zona `lotus-dns`. **Nunca duas identidades**: recriar a
 identidade troca os três tokens DKIM na zona, e isso é coordenação com o site, não decisão deste
 repositório. Remetente único `Lotus <lotus@lotusotec.cl>`, travado na policy. **Credencial é a
-instance role `lotus-ec2`**, inline `lotus-ses` (`ses:SendRawEmail` e `ses:SendEmail` só na
-identidade, `Condition ses:FromAddress` no remetente — runbook `deploy/aws/README.md` §4);
+instance role `lotus-ec2`**, inline `lotus-ses` (`ses:SendRawEmail` e `ses:SendEmail` em
+`identity/*`, `Condition ses:FromAddress` no remetente — runbook `deploy/aws/README.md` §4);
 `services.ses` fica sem `key`/`secret` e o SDK cai na chain até o IMDSv2, o mesmo caminho do disco
-`s3`. **A conta sai do sandbox** (production access, runbook §13): os destinatários são pessoas com
-e-mail de qualquer domínio, e o sandbox só entrega a identidade verificada. **DNS do apex não
-muda**: o SPF é avaliado sobre o MAIL FROM (`ses.`) e o DMARC alinha pelo DKIM.
+`s3`. **A conta fica em sandbox, por decisão** (emenda de 2026-10-01, abaixo): `@lotusotec.cl`
+recebe pela identidade de domínio, e o endereço de outro domínio vira identidade verificada antes
+do primeiro envio (runbook §13.1). **DNS do apex não muda**: o SPF é avaliado sobre o MAIL FROM
+(`ses.`) e o DMARC alinha pelo DKIM.
 
 **Consequências.** Não há segredo de e-mail no host: revogar é `delete-role-policy`, e a prova de
 qualquer troca continua sendo um e-mail que chega (`operacao-segredos.md` §4). O envio fica no
 request e a falha é contida (`FalhaDeObservabilidade`), então e-mail que não sai é assintomático
 por dentro — o canal `seguranca` registra o alerta antes do envio por isso. Bounce e complaint
 ficam só com a suppression list do SES, sem tópico de feedback: para ~10 usuários internos, aceito
-por escrito aqui. Production access é da conta: o teto de 200/dia que freava o `/api/contacto`
-do site (D-54 de lá) deixa de existir — efeito declarado ao site, decisão dele.
+por escrito aqui. O teto do sandbox segue — 200 mensagens/24 h e 1/s, divididos com o
+`/api/contacto` do site, que o Turnstile de lá segura.
 
 **Descartado.** SMTP com senha no `.env` (segredo de longa duração, o que o item 10 v2 tirou);
 outro provedor (Resend, Postmark, relay do Workspace: segredo no host, DNS novo coordenado com o
 site e uma aprovação equivalente); `ses-v2` (uma linha de config a mais sem ganho medido);
 sandbox com guarda de domínio `@lotusotec.cl` no cadastro de usuário (recusada pelo João em
 2026-09-28: acopla os usuários do sistema ao domínio da empresa).
+
+**Emenda de 2026-10-01 — sandbox por decisão.** O João decidiu não pedir production access agora:
+os destinatários são ~10 usuários internos, e verificar o e-mail de quem é de fora custa um clique
+por pessoa (runbook §13.1). Em sandbox o IAM confere também a identidade do destinatário, por isso a
+`lotus-ses` vai em `identity/*`, e não só no domínio — o remetente segue travado pela `Condition`.
+**Gatilho para pedir o production access** (runbook §13.6, com o texto e o comando prontos): uma
+feature que envie e-mail a quem não é admin ou redator interno — cliente, aluno, usuário de outra
+empresa (FUT-4 do backlog) —, verificar externo virando rotina, ou o volume somado ao do site
+chegando perto de 200/24 h. Aprovado, o teto que freia o `/api/contacto` do site deixa de existir:
+efeito a avisar ao site (D-54 de lá).
 
 ---
 
