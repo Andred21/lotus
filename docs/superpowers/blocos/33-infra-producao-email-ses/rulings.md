@@ -1,0 +1,14 @@
+# Bloco 33 — rulings da execução (Fase A')
+
+Decisões tomadas em nome do João durante o `/executar-bloco 33` (SDD, Tasks 13 a 19), uma por
+linha, com o que custa se estiver errada.
+
+- **Sem pipeline de profundidade 1 (Passo 5.1).** Tasks executadas e revisadas em sequência; o G1 (15, 16, 17) não rodou com revisor em segundo plano. Custo se errado: só tempo de parede, nenhum risco de árvore intermediária.
+- **Tasks 15, 16 e 17 num despacho só**, um commit por task e uma revisão conjunta — G1 disjunto, cada uma edição verbatim de doc em um arquivo. Custo se errado: a revisão conjunta mistura achados das três; a revisão saiu limpa nas três.
+- **M1 da revisão final corrigido (`bce6b763`):** a nota de 2026-10-04 do packet passa a dar como superados também o *Goal* ("produção fora do sandbox") e o critério de aceite do `get-account`, além do texto verbatim da Task 17 — o packet é lido antes da spec. Custo se errado: nota mais longa que a aprovada no plano.
+- **M2 estacionado:** a `spec.md` (linha 420) fala em "4 casos" e o `FalhaDeEnvioDeEmailTest` tem 8; a frase sobre o que reprova segue certa para os 4 caminhos, e a spec não muda na execução. Custo se errado: imprecisão numérica na spec.
+- **M3 estacionado:** na falha do SES a `origem` aponta sempre para o `SesTransport.php` do vendor, então a linha `Falha ao enviar e-mail` não separa reset, cadastro e reenvio — fica para um bloco de observabilidade. Custo se errado: diagnóstico em produção só por horário cruzado com o nginx.
+- **M4 estacionado:** `aws/aws-sdk-php` entra só como dependência transitiva (`league/flysystem-aws-s3-v3`); sem ele o `instanceof AwsException` dá falso e o `aws_erro` some, sem quebrar. Custo se errado: `aws_erro` desaparece silenciosamente se o pacote do flysystem sair.
+- **M6 estacionado:** uma `AwsException` que não é de e-mail (ex.: `AccessDenied` do S3) ainda vai ao log com o ARN na mensagem — fora da D15, não é dado pessoal. Custo se errado: ARN no log de produção.
+- **Achado de revisão de task refutado:** "o teste da cadeia só prova profundidade 1" — o revisor da branch mostrou a `AwsException` no segundo `previous`, então o Review Focus 4 está provado. Custo se errado: cadeia funda sem teste.
+- **Task 19 aceita sem hash byte a byte:** o conector do Drive não expõe checksum e só devolve o conteúdo como base64 transcrito pelo modelo (a transcrição saiu com 3 acentos errados, corrigidos à mão — prova circular, descartada em `7cb647c1`). A prova do item 1 da `## Verificação externa` é `fileSize` 10600 (idêntico ao arquivo aprovado), `modifiedTime` 2026-10-04T18:49:34.864Z e a afirmação do João, em 2026-10-04, de que subiu o arquivo aprovado. Custo se errado: o Drive guarda um texto de mesmo tamanho diferente do aprovado; detectável baixando a versão e rodando `sha256sum` (esperado `a4dd4fe9…af1d`).

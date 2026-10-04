@@ -1168,23 +1168,30 @@ healthcheck do `app` esperado junto com o do nginx —, com catraca em `deploy-s
 reprovar pela sonda que devolve o `curl` único. Pela **P-87**, a correção só chega ao host pela
 reinstalação do runbook §7.
 
-## P-93 — `operacao-segredos.md` descreve um relay SMTP que a produção nunca teve
+## P-97 — dez divergências de coordenada e de mapa que a `auditar-docs` do item 33 mediu
 
-**Bloco:** 33 (`infra-producao-email-ses`) · **Quem decide:** — · **Gatilho:** fecha no commit da
-Fase A do item 33 que reescreve `docs/operacao-segredos.md` §3, §4 e §6 e alinha
-`backend/.env.production.example` ao mailer `ses` (spec do bloco, §4.5 e §4.2). Revisar em
-**2026-10-31**.
+**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar
+`docs/operacao-segredos.md`, `docs/estrutura-monolito.md` ou `deploy/aws/README.md` por outro motivo
+e puder reconciliá-los; dispara também quando uma citação por linha custar uma leitura errada.
+Revisar em **2026-10-31**.
 
-`docs/operacao-segredos.md:47-49` afirma que o segredo de e-mail em uso é `MAIL_PASSWORD` de um
-relay SMTP selecionado por `MAIL_MAILER=smtp` em `backend/.env.production.example:106`, e o §4
-(linhas 60-79) escreve o procedimento de rotação dessa senha. Nada disso existe: desde o item 10 v2
-o molde real é `deploy/aws/env.prod.example`, que fixa `MAIL_MAILER=log` "até o bloco de SES"
-(linha 115-116), e o host de produção não tem `MAIL_HOST`, `MAIL_USERNAME` nem `MAIL_PASSWORD`.
-O levantamento de 2026-09-26 leu o molde legado do `backend/` e tomou o `smtp` dele por realidade —
-falso positivo registrado na ficha 33 do backlog. O item 33 troca `log` por `ses` com credencial
-pela instance role, então a correção do doc sai junto com o mecanismo que ele passa a descrever:
-e-mail sem segredo de longa duração, e a policy `lotus-ses` como o que se revoga.
+Medido em 2026-10-04 pela `auditar-docs` do fechamento do item 33, contra a `origin/main` já mesclada
+na lane (nenhuma novidade). Três linhas da tabela acompanham o que o bloco 33 tocou; o resto é
+coordenada que envelheceu. Registradas sem correção, porque a skill reporta e não corrige.
 
-**Paga em 2026-09-28 pelo item 33** (commit da Task 4 do plano): `docs/operacao-segredos.md` §3,
-§4, §5.2 e §6 reescritos, `backend/.env.production.example` alinhado a `ses`. Vai para
-`encerradas.md` no `/fechar-sprint` do bloco.
+| Doc | Divergência | Evidência |
+|---|---|---|
+| `docs/operacao-segredos.md` §1 | `env_file` do `app` está na linha 33 e o do `scheduler` na 67 (o doc cita 30 e 60); o comentário "mesmo arquivo" na 50 (o doc cita 43); e um terceiro `env_file`, no `mysql`, na 85, que o texto não menciona | `docker-compose.prod.yml:33,50,67,85` |
+| `docs/operacao-segredos.md` §1 | Linhas do `Dockerfile.prod` (23, 29, 46, 49, 80, 89, 90) não casam com os `COPY` reais; a afirmação de que só há COPY de código segue verdadeira | `docker/Dockerfile.prod:27,33,58,61,82-86,92` |
+| `docs/operacao-segredos.md` §3 e §5 | `config/app.php`: cipher na 115, `key` na 117 e `previous_keys` na 119 (o doc cita 105, 107 e 109-111) | `backend/config/app.php:115,117,119` |
+| `docs/operacao-segredos.md` §3 | Bloco `ses` está em `services.php:25-29` (o doc cita 24-28) | `backend/config/services.php:25-29` |
+| `docs/operacao-segredos.md` §5 | `EncryptCookies` está em `bootstrap/app.php:117` (o doc cita 89) | `backend/bootstrap/app.php:117` |
+| `docs/operacao-segredos.md` §5.1 | `SESSION_LIFETIME` não está em `.env.example:38`; está em `backend/.env.example:40`, e o molde de produção é `deploy/aws/env.prod.example:65` | `deploy/aws/env.prod.example:65` |
+| `docs/operacao-segredos.md` §2 | `backlog.md:152` deixou de ser o item 10: é a ficha do 33 | `docs/superpowers/backlog.md:150-153` |
+| `deploy/aws/README.md:5` | O plano do item 10 foi arquivado; o caminho citado é o antigo | `docs/superpowers/plans/archive/2026-09-02-infra-producao-provisionamento-aws.md` |
+| `docs/estrutura-monolito.md:63` | A árvore de `Shared/Logging/` lista só `EventoDeSeguranca`; a pasta tem também `RegistraEventoDeErro` e `FalhaDeObservabilidade` | `backend/app/Shared/Logging/` (3 arquivos) |
+| `CLAUDE.md` §6 | A lista de serviços do Compose omite `clamav` (o `mailpit` já está na P-53) | `docker-compose.yml:27,53,69` |
+
+**Não é divergência, só dependência:** o ADR-23 cita o `FUT-4` do `backlog.md`, que só nasce na PR de
+docs da aceitação do item 33 (spec §10). Se a PR da aceitação não o levar, vira a 11ª linha desta
+ficha.

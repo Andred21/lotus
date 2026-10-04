@@ -7,82 +7,27 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-84 — o harness de guarda não existe em nenhum doc versionado
+## P-93 — `operacao-segredos.md` descreve um relay SMTP que a produção nunca teve
 
-**Encerrada em 2026-10-03, no fechamento do `harness-commands-de-bloco` (item 35), pelo gatilho
-pago.** O `docs/estrutura-monolito.md` ganhou a seção `## HARNESS — .claude/ e .agents/`, que
-descreve `.claude/hooks/` (os cinco hooks e o que cada um nega), `.claude/tests/` e
-`.claude/settings.json`, mais a régua da allowlist do `guard-main-shell` e como se acrescenta
-entrada a ela. A `auditar-docs` do fechamento conferiu a seção contra o disco, sem divergência.
-
-*(nasceu `P-79` no fechamento do item 28 e foi renumerada na integração: o item 10 v2 fechou
-a mesma faixa no mesmo dia e mesclou antes, pela PR #105. Ver a nota da colisão em
-[`encerradas.md`](./encerradas.md).)*
-
-**Bloco:** 35 (`harness-commands-de-bloco`, desde 2026-09-26; nasceu `31` e foi renumerado em 2026-09-27) · **Gatilho:** fecha quando `docs/estrutura-monolito.md` descrever `.claude/hooks/`,
-`.claude/tests/` e `.claude/settings.json`, ou quando o `CONTRIBUINDO.md` disser o que os cinco
-hooks negam e como se acrescenta entrada à allowlist. Revisar em **2026-10-31**.
-
-Medido em 2026-09-20, no `/fechar-sprint` do `harness-hooks-de-guarda` (item 28). O bloco entregou
-cinco hooks que passam a governar **toda** sessão futura — e nenhum doc versionado os menciona:
-
-| Doc | O que ele diz hoje |
-|---|---|
-| `docs/estrutura-monolito.md` | zero ocorrências de `.claude`. É o doc que o `CLAUDE.md` §3 manda ler "antes de criar arquivo novo — para saber ONDE ele vai", e ele não conhece a pasta |
-| `CONTRIBUINDO.md` | descreve o `pre-push` de `.githooks`, que é outro mecanismo. Nada sobre os hooks do Claude Code |
-| `CLAUDE.md` §4 e §6 | tabelam comandos e skills; hook não aparece |
-
-A consequência não é estética: quando o `guard-main-shell` negar um comando legítimo, o remédio é
-"acrescente a entrada em `.claude/hooks/lib/classificar-comando.py` e commite" — o próprio motivo de
-recusa diz isso —, e não há doc que explique a régua da allowlist nem por que ela existe. O bloco
-não escreveu nada disso porque o plano não listou entregável de doc; a spec §3.4 cobre a
-consequência de versionar os hooks, mas a spec agora está em `specs/archive/`, que ninguém lê por
-rotina.
-
-## P-92 — a invariante 10 manda o main tree escrever o `backlog.md` na `main`, e nenhum caminho deixa
-
-**Encerrada em 2026-10-03, no fechamento do `harness-commands-de-bloco` (item 35), pelos dois
-lados do gatilho.** A invariante 10 de `docs/superpowers/state.md` foi reescrita (emendas E8 e E10
-da spec do bloco): o `backlog.md` entra na `main` só por PR, e a lane remove a própria ficha e os
-`D-*` que pagou no commit de fechamento do `/finalizar-bloco`. O caminho ficou escrito no Passo 6d
-do command e foi exercido uma vez, no próprio fechamento do item 35, que tirou a ficha 35 do
-`backlog.md` dentro do PR dele.
-
-**Bloco:** 35 (`harness-commands-de-bloco`) · **Quem decide:** João · **Gatilho:** fecha quando o
-fluxo de fechamento tiver um caminho escrito, e exercido uma vez, para a ficha de um bloco fechado
-sair do `backlog.md` — ou quando a invariante 10 for reescrita para o caminho que existe. Revisar em
+**Bloco:** 33 (`infra-producao-email-ses`) · **Quem decide:** — · **Gatilho:** fecha no commit da
+Fase A do item 33 que reescreve `docs/operacao-segredos.md` §3, §4 e §6 e alinha
+`backend/.env.production.example` ao mailer `ses` (spec do bloco, §4.5 e §4.2). Revisar em
 **2026-10-31**.
 
-A invariante 10 do `state.md` diz: *"`backlog.md` é escrito somente pelo main tree, na `main`."*
-Mas o main tree não tem como escrever na `main`: o `guard-main` e o `guard-main-shell` negam
-escrita com a árvore na `main`, e o `pre-push` recusa push direto nela (`CONTRIBUINDO.md`). Toda
-mudança chega à `main` por PR, e PR sai de branch, que não é o main tree.
+`docs/operacao-segredos.md:47-49` afirma que o segredo de e-mail em uso é `MAIL_PASSWORD` de um
+relay SMTP selecionado por `MAIL_MAILER=smtp` em `backend/.env.production.example:106`, e o §4
+(linhas 60-79) escreve o procedimento de rotação dessa senha. Nada disso existe: desde o item 10 v2
+o molde real é `deploy/aws/env.prod.example`, que fixa `MAIL_MAILER=log` "até o bloco de SES"
+(linha 115-116), e o host de produção não tem `MAIL_HOST`, `MAIL_USERNAME` nem `MAIL_PASSWORD`.
+O levantamento de 2026-09-26 leu o molde legado do `backend/` e tomou o `smtp` dele por realidade —
+falso positivo registrado na ficha 33 do backlog. O item 33 troca `log` por `ses` com credencial
+pela instance role, então a correção do doc sai junto com o mecanismo que ele passa a descrever:
+e-mail sem segredo de longa duração, e a policy `lotus-ses` como o que se revoga.
 
-**Medido em 2026-09-27, no fechamento do item 32:** a ficha 30 segue em `backlog.md:328` da
-`origin/main@229994bb`, um dia depois de o item 30 fechar e mesclar (PR #116); a ficha 32 segue em
-`backlog.md:137`, com o bloco em `closed` e mesclado (PR #118). Os dois fechamentos disseram "o
-main tree remove a ficha depois do merge", e nenhum dos dois tinha como. As mudanças do backlog que
-entraram até aqui vieram de branch de lane (`7b14e817`, na do item 30), contra a letra da regra.
+**Encerrada em 2026-10-04, no fechamento do `infra-producao-email-ses` (item 33), pelo gatilho pago.** Paga em 2026-09-28 pelo item 33 (commit da Task 4 do plano): `docs/operacao-segredos.md` §3,
+§4, §5.2 e §6 reescritos, `backend/.env.production.example` alinhado a `ses`. A `auditar-docs` do fechamento conferiu o `operacao-segredos.md` contra o molde `deploy/aws/env.prod.example`.
 
-**Por que fica aberta:** o João escolheu, no fechamento do item 32, não quebrar a regra por atalho
-e entregar a lacuna ao item 35, que reescreve os comandos de bloco. As saídas que se veem: uma
-branch curta aberta do main tree só para o `backlog.md`, ou a lane remover a própria ficha no PR de
-fechamento, com a invariante reescrita para dizer isso.
-
-**Exceção de 2026-09-28, decidida pelo João:** a ficha 32 saiu do `backlog.md` por commit direto na
-`main`, do main tree, com `LOTUS_FORCA_MAIN=1` no push — sem branch nem PR. O mesmo commit deu à
-ficha 33 a linha `**Depende:** —` que o portão do `lane.sh abrir` exige. É a saída de emergência do
-`CONTRIBUINDO.md`, usada uma vez e registrada aqui; não é o caminho que fecha a pendência. A ficha 30
-continua no `backlog.md`.
-
-**Desvio de 2026-10-01, decidido pelo João:** a ficha 23 e a `D-65` saíram do `backlog.md` na PR
-de fechamento da própria lane, que também levou o bloco 23 a `closed`. É a segunda saída acima, sem
-a invariante 10 reescrita, e o mesmo desvio do item 30 (`7b14e817`), agora por escolha registrada.
-Passou pela CI e pelo `procedencia`, o que o commit direto do item 32 não passou. Não fecha a
-pendência: o caminho escrito continua com o item 35.
-
-*(P-84 e P-92, encerradas pelo item 35 em 2026-10-03. A **`P-77`** saiu no mesmo
-fechamento.)*
+*(P-93, encerrada pelo item 33 em 2026-10-04.)*
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -103,6 +48,12 @@ fechamento.)*
 > **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
 ## Rastro anterior, já removido
+
+**A P-84 e a P-92 saíram no fechamento do `infra-producao-email-ses` (item 33, 2026-10-04)**, o primeiro
+depois do item 35 que as encerrou em 2026-10-03: a P-84 pela seção HARNESS do
+`docs/estrutura-monolito.md`, a P-92 pela invariante 10 reescrita e exercida no fechamento do item
+35. O rastro durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-77 saiu no fechamento do `harness-commands-de-bloco` (item 35, 2026-10-03)**. Fechou no
 item 32, em 2026-09-27, pelo gatilho pago: `app.lotusotec.cl` resolve exatamente o EIP
