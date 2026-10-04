@@ -27,3 +27,11 @@
 
 - `pnpm test --project repo`: 20 arquivos, 306 testes, verde. `pnpm lint`: exit 0. `pnpm build`: exit 0 (só o aviso de chunk size de sempre).
 - `git diff --stat main...HEAD -- backend/`: só `backend/.env.production.example` (6+/10-). `git diff main...HEAD -- backend/app backend/config frontend/src/shared/api/generated.ts | wc -l` = 0.
+
+## Task 13 — D15, o destinatário fora do log
+
+- Linha de base: `composer install` no contêiner da lane (a árvore não tinha `backend/vendor`); `php artisan test` 5 skipped, 1221 passed (9284 assertions).
+- `FalhaDeEnvioDeEmailTest`, vermelho antes do código: 7 de 8 reprovando, cada um pelo motivo do plano (o de exceção que não é de e-mail é guarda e já passava). Com o `aws_erro`: 2 de 8. Com o `report` do `bootstrap/app.php`: 8 de 8.
+- Sondas: 1 (sem `stop()`) reprova 6; 2 (sem `aws_erro`) reprova 5; 3 (callback em `Throwable`) reprova 1 — a matriz do plano. Arquivos restaurados por `cp`, `cmp` limpo.
+- Pint nos três arquivos: passed. Suíte inteira: 5 skipped, 1229 passed (9354 assertions) (linha de base mais 8).
+- Prova no contêiner da lane (`tinker`, SMTP recusado em `127.0.0.1:1`, o molde da sonda negativa do runbook §13.3): uma linha `Falha ao enviar e-mail` com `excecao` `TransportException` e sem `aws_erro`; nenhuma linha com a mensagem crua ou com o endereço da sonda.
