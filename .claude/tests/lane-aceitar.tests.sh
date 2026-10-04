@@ -226,3 +226,17 @@ assert_igual 1 "$CODIGO_LANE" 'estado sem lane_base: sai 1'
 assert_contem "$SAIDA_LANE" 'LANE PELA METADE' 'estado sem lane_base: diz que ficou pela metade'
 assert_contem "$SAIDA_LANE" "a branch docs/$_lap" 'nomeia a branch criada'
 assert_contem "$SAIDA_LANE" 'lane.sh fechar 33' 'manda fechar'
+
+# --- a recuperacao indicada funciona: o fechar passa depois da falha no meio
+rodar_lane "$_lafm" fechar 33
+assert_igual 0 "$CODIGO_LANE" 'depois da falha no meio, o fechar 33 sai 0'
+if [[ -e $(dirname "$_lafm")/lotus-$_lap ]]; then
+  FALHAS_TESTE=$((FALHAS_TESTE + 1)); printf '  FALHA a arvore da lane pela metade continua no disco\n'
+else
+  printf '  ok    o fechar removeu a arvore da lane pela metade\n'
+fi
+if git -C "$_lafm" show-ref --verify --quiet "refs/heads/docs/$_lap"; then
+  FALHAS_TESTE=$((FALHAS_TESTE + 1)); printf '  FALHA a branch da lane pela metade continua\n'
+else
+  printf '  ok    o fechar removeu a branch da lane pela metade\n'
+fi

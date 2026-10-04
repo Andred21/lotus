@@ -463,11 +463,14 @@ verbo_aceitar() {
     || falhar_no_meio "$nn" 'git worktree add'
   CRIADO+=("a branch $branch" "a arvore $arvore")
   escrever_env "$arvore" "$offset" || falhar_no_meio "$nn" 'o .env da raiz'
+  # Falhou depois da reescrita: devolve o estado.md ao HEAD (indice e arvore;
+  # a arvore e a reescrita sao desta execucao), senao o fechar recusa por
+  # "mudanca nao commitada" e a recuperacao que a mensagem indica nao serve.
   reabrir_estado "$arvore/$rel" "$branch" "$pasta" "$offset" "$base" "$modelo" "$br_antiga" \
-    || falhar_no_meio "$nn" 'a reescrita do estado.md'
+    || { git -C "$arvore" checkout -q HEAD -- "$rel"; falhar_no_meio "$nn" 'a reescrita do estado.md'; }
   { git -C "$arvore" add "$rel" \
       && git -C "$arvore" commit -q -m "chore($nn): abre a lane de aceitação"; } \
-    || falhar_no_meio "$nn" 'o commit do estado.md'
+    || { git -C "$arvore" checkout -q HEAD -- "$rel"; falhar_no_meio "$nn" 'o commit do estado.md'; }
   printf 'LANE ABERTA: %s em %s\n' "$branch" "$arvore"
 }
 
