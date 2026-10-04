@@ -71,6 +71,20 @@ rodar_lane "$_ab1" abrir 33 chore outro-slug
 assert_recusa 'nao bate' 'slug diferente do da ficha'
 nada_criado "$_ab1" 'recusa 2'
 
+# --- 2. ... e o bloco nunca passou por lane (spec do bloco 36, 2.6)
+_ab2=$(criar_main_lane); registrar_descarte "$(dirname "$_ab2")"
+_ab2e="$_ab2/docs/superpowers/blocos/33-harness-sinal-de-contexto-cheio/estado.md"
+mkdir -p "$(dirname "$_ab2e")"
+printf -- '---\nworkflow_state: closed\nresume_state: null\nblocker: null\n---\n' > "$_ab2e"
+rodar_lane "$_ab2" abrir 33 chore harness-sinal-de-contexto-cheio
+assert_recusa 'ja passou por lane' 'pasta do bloco com estado.md'
+assert_contem "$SAIDA_LANE" 'sobrescreveria' 'estado.md existente: diz o que o abrir faria'
+printf -- '---\nworkflow_state: blocked\nresume_state: ready_for_closure\nblocker: "aguardando aceitação depois do merge: itens 1"\n---\n' > "$_ab2e"
+rodar_lane "$_ab2" abrir 33 chore harness-sinal-de-contexto-cheio
+assert_recusa 'ja passou por lane' 'bloco aguardando aceitacao'
+assert_contem "$SAIDA_LANE" '/finalizar-bloco 33' 'aguardando aceitacao: aponta o /finalizar-bloco'
+nada_criado "$_ab2" 'recusa 2, estado.md existente'
+
 # --- 3. falha fechada sem **Depende:**
 rodar_lane "$_ab1" abrir 40 feat ficha-sem-depende
 assert_recusa 'Depende' 'ficha sem a linha Depende'
