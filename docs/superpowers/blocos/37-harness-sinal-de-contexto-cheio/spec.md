@@ -14,6 +14,23 @@ João. O hook não compacta.
 | D1 | **Só a saída 2 da ficha**: hook de aviso com limiar absoluto | saída 1 (`autoCompactWindow`): o limiar é percentual da janela e dispara em pontos diferentes por modelo, o oposto de "independente do modelo"; saída 3 (`context: fork` nas fases pesadas): mexe nos commands do item 35, e a metade "diff por caminho" já está feita |
 | D2 | **Uma vez por travessia**: avisa ao cruzar o limiar e cala até o contexto voltar para baixo dele | repetir a cada +25k; repetir em toda chamada acima, o que polui o contexto quando ele já está cheio |
 
+## Emendas do planejamento (2026-10-04)
+
+Saíram da bancada do plano, que montou e rodou o hook numa cópia da lane, e ficam para a revisão
+do João junto com o plano. Nenhuma muda o desenho aprovado. As três fecham caminhos que ele deixava
+abertos.
+
+- **E1 — o `compact_boundary` zera a medição.** O `/compact` grava
+  `{"type":"system","subtype":"compact_boundary"}` e o resumo antes da primeira resposta nova. Até
+  essa resposta, a última entrada `assistant` do transcript é a de antes da compactação: num
+  transcript real do Lotus, a sequência foi 157459 → fronteira → 63109. Sem a regra, o
+  `UserPromptSubmit` logo depois de um `/compact` avisaria com o número velho (§1.2).
+- **E2 — o `session_id` é saneado antes de virar nome de arquivo.** A marca é um caminho montado com
+  dado do payload. Todo caractere fora de `[A-Za-z0-9_-]` vira `_` (§1.4).
+- **E3 — a prova de que cada guarda tem teste é uma bancada de mutantes.** São 22 mutantes, cada um
+  desligando uma guarda do hook, do emissor ou da ligação no `settings.json`. A bancada roda o
+  arquivo de teste contra cada um e exige ao menos uma asserção vermelha por mutante (§2 e DoD 1).
+
 ## Fatos que sustentam o desenho
 
 Conferidos na doc dos hooks (`code.claude.com/docs/en/hooks`) em 2026-10-04:
@@ -62,9 +79,12 @@ Na ordem abaixo, a primeira condição que casar encerra o hook sem saída:
    entrada que tenha, ao mesmo tempo:
    - `type == "assistant"`;
    - `isSidechain` diferente de `true`;
-   - `message.usage` como objeto;
-   - soma dos três campos maior que zero, contando campo ausente como 0. Entrada de soma zero é
-     mensagem sintética do Claude Code, não chamada à API.
+   - `message` e `message.usage` como objetos;
+   - soma dos três campos maior que zero, contando como 0 o campo ausente, nulo ou que não é
+     número. Entrada de soma zero é mensagem sintética do Claude Code, não chamada à API.
+
+   Uma entrada `{"type":"system","subtype":"compact_boundary"}` zera a medição (E1). Se ela vem
+   depois da última entrada válida, não há medição.
 
 **Falta de medição nunca rearma.** Quando não há número, o hook não sabe se o contexto está abaixo do
 limiar, e por isso não apaga a marca (§1.4).
@@ -78,7 +98,8 @@ vivo, e o padrão é o que a ficha pede.
 ### 1.4 Uma vez por travessia
 
 A marca da sessão é `${TMPDIR:-/tmp}/lotus-contexto-<session_id>.marca`. Com `session_id` ausente o
-nome usa `sem-sessao`, como no `stop-verify`.
+nome usa `sem-sessao`, como no `stop-verify`. Antes de entrar no caminho, todo caractere do
+`session_id` fora de `[A-Za-z0-9_-]` vira `_` (E2).
 
 | Medição | Marca | Ação |
 |---|---|---|
@@ -142,13 +163,19 @@ fixture é um transcript JSONL gerado no `TMPDIR`, com `usage` controlado. As ma
 | 10 | transcript ausente; transcript vazio | sem saída; nunca sai ≠ 0 |
 | 10b | linha quebrada no fim, depois de uma entrada acima | avisa com a medição da última entrada válida |
 | 11 | entrada sintética de soma zero depois de uma acima, com marca | sem saída, e a marca continua |
-| 12 | cauda só com entradas `user`, com marca | sem saída, e a marca continua |
-| 13 | `LOTUS_CONTEXTO_LIMIAR=20000` com medição 25000; valor inválido | avisa com `<L>` 20; o inválido cai em 150000 |
+| 12 | 200 linhas `user` depois da entrada acima, com marca; e uma sessão nova sobre o mesmo transcript | sem saída nas duas, e a marca continua: a leitura é só da cauda |
+| 13 | `LOTUS_CONTEXTO_LIMIAR=20000` com medição 25000; `abc`; `0` | avisa com `<L>` 20; `abc` e `0` caem em 150000 |
 | 14 | o `.claude/settings.json` real | liga o hook em `PostToolUse` e em `UserPromptSubmit` |
+| RF1 | `compact_boundary` depois de uma entrada acima; depois, uma entrada acima após a fronteira | sem saída no `UserPromptSubmit`; a entrada nova avisa |
+| RF2 | `session_id` com `../` | avisa, e a marca fica no `TMPDIR` com `_` no lugar |
+| RF3 | `TMPDIR` inexistente | sem saída |
+| RF4 | `usage` com campo nulo e campo que não é número; `message` que não é objeto | soma só os números, e a entrada estranha não derruba a leitura |
+| RF5 | `transcript_path` com espaço | avisa |
 
 O caso 14 é a catraca contra um hook escrito e nunca ligado. Segundo a lição 10, cada caso precisa
-ser visto reprovar antes de passar. O estado antigo se reproduz por cópia no scratchpad, nunca por
-`git stash`, porque a pilha de stash é compartilhada entre as árvores.
+ser visto reprovar antes de passar: os testes nascem antes do hook, e a bancada de mutantes (E3)
+mostra que cada guarda tem asserção que a prende. O estado antigo se reproduz por cópia no
+scratchpad, nunca por `git stash`, porque a pilha de stash é compartilhada entre as árvores.
 
 ## 3. Docs
 
@@ -161,9 +188,14 @@ Em `docs/estrutura-monolito.md`:
 
 ## 4. Definition of Done
 
-1. `bash .claude/tests/run-all.sh` verde, e cada caso novo visto reprovar antes de passar.
-2. **Visto disparar.** O João abre uma sessão interativa na lane com
-   `LOTUS_CONTEXTO_LIMIAR=20000 claude`, faz o modelo chamar uma ferramenta e vê o `systemMessage`. O
+1. `bash .claude/tests/run-all.sh` verde, e cada caso novo visto reprovar antes de passar. A
+   bancada de mutantes sai sem mutante que passe, e o registro vai para
+   `docs/superpowers/blocos/37-harness-sinal-de-contexto-cheio/prova-catraca.md`.
+2. **Visto disparar.** O João abre uma sessão interativa nascida no diretório da lane, com
+   `cd ../lotus-37-harness-sinal-de-contexto-cheio && LOTUS_CONTEXTO_LIMIAR=20000 claude`. A sessão
+   precisa nascer ali: o `settings.json` e o `${CLAUDE_PROJECT_DIR}` vêm do diretório onde ela
+   começa, e uma sessão aberta na `main` rodaria a `main`, que não tem o hook. Ele faz o modelo
+   chamar uma ferramenta e vê o `systemMessage`. O
    registro vai para `docs/superpowers/blocos/37-harness-sinal-de-contexto-cheio/prova-disparo.md`,
    com a data, o comando e o texto visto.
 3. `docs/estrutura-monolito.md` atualizado.
