@@ -42,7 +42,7 @@ teste para passar.
 - **Prova automática** (spec §1.4): `<alias> <GET|HEAD> <caminho> -> <código>`, com o alias em
   `^[a-z][a-z0-9-]*$`, o caminho começando em `/` e o código de três dígitos; `prova: nenhuma` é
   item manual. A chamada é
-  `curl -q -sS -o /dev/null -w '%{http_code}' --max-time 30 --proto '=http,https'`, com `-I` só
+  `curl -q -g -sS -o /dev/null -w '%{http_code}' --max-time 30 --proto '=http,https'`, com `-I` só
   no `HEAD`, sem `-L`, sem cabeçalho e sem credencial. Falha de rede, ou saída que não é um
   código de três dígitos, mede `000`.
 - **Aliases** (spec §1.5): `.claude/aceitacao-aliases.conf`, uma linha `<alias> <URL-base>`. O

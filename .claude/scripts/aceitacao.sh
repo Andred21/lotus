@@ -33,8 +33,9 @@ recusar() {
 medir() {
   # $1 = metodo, $2 = URL. Ecoa o codigo HTTP; falha de rede, ou saida que
   # nao e um codigo, mede 000. Sem -L, sem cabecalho e sem credencial; o -q
-  # vem primeiro para o ~/.curlrc nao entrar.
-  local -a args=(-q -sS -o /dev/null -w '%{http_code}' --max-time 30 --proto '=http,https')
+  # vem primeiro para o ~/.curlrc nao entrar; o -g desliga o globbing do curl
+  # (sem ele, /{up} mediria /up e gravaria OK).
+  local -a args=(-q -g -sS -o /dev/null -w '%{http_code}' --max-time 30 --proto '=http,https')
   [[ $1 == HEAD ]] && args+=(-I)
   local codigo
   codigo=$("$CURL" "${args[@]}" "$2")

@@ -378,6 +378,14 @@ assert_igual 'ACEITACAO PENDENTE: 2 de 2 item(ns): 1, 2' "$AC_ULTIMA" '404 e por
 assert_contem "$(ac_linha 1)" '`404`, esperado `200`: FALHOU' '404 e FALHOU'
 assert_contem "$(ac_linha 2)" '`000`, esperado `200`: FALHOU' 'porta fechada mede 000'
 
+# o curl nao expande [] e {} do caminho: /{up} nao vira /up (OK falso)
+ac_novo sim "$_AC_P/spec.md"
+printf '## Verificação externa\n\n1. Chaves.\n   - prova: teste GET /{up} -> 200\n' | ac_spec
+ac_rodar conferir 50
+assert_igual 1 "$AC_COD" 'caminho com chaves: sai 1'
+assert_contem "$AC_SAIDA" "MEDIDO 1: GET http://127.0.0.1:$_ac_porta/{up} -> 404, esperado 200: FALHOU" \
+  'sem globbing: /{up} mede 404, nao o 200 de /up'
+
 ac_novo sim "$_AC_P/spec.md"
 printf '## Verificação externa\n\nNenhuma.\n' | ac_spec
 ac_rodar conferir 50
@@ -402,9 +410,9 @@ printf '## Verificação externa\n\n1. Get.\n   - prova: teste GET /up?x=1 -> 20
 : > "$_ac_curl.log"
 ac_rodar conferir 50
 assert_igual 'ACEITACAO OK: 2 item(ns)' "$AC_ULTIMA" 'curl falso: OK'
-assert_igual "-q -sS -o /dev/null -w %{http_code} --max-time 30 --proto =http,https http://teste.local/up?x=1
--q -sS -o /dev/null -w %{http_code} --max-time 30 --proto =http,https -I http://outro.local:8443/h" \
-  "$(cat "$_ac_curl.log")" '-q primeiro, sem -L, -H ou -u, -I so no HEAD e a URL montada'
+assert_igual "-q -g -sS -o /dev/null -w %{http_code} --max-time 30 --proto =http,https http://teste.local/up?x=1
+-q -g -sS -o /dev/null -w %{http_code} --max-time 30 --proto =http,https -I http://outro.local:8443/h" \
+  "$(cat "$_ac_curl.log")" '-q primeiro, -g, sem -L, -H ou -u, -I so no HEAD e a URL montada'
 
 ac_novo sim "$_AC_P/spec.md"
 printf '## Verificação externa\n\n1. Shell no caminho.\n   - prova: teste GET /x$(touch${IFS}%s) -> 200\n' "$_ac_t/pwned2" | ac_spec

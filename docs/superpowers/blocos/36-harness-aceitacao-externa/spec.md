@@ -57,6 +57,13 @@ que toca `infra/`, `.github/workflows/`, `docker-compose.prod*` ou `scripts/espe
 `docker/Dockerfile.prod`, e `scripts/` guarda o espelho e o `provar-release.sh`. A lista vale:
 `deploy/`, `docker/Dockerfile.prod`, `docker-compose.prod*`, `.github/workflows/` e `scripts/`.
 
+### E7 — o curl sem globbing
+
+Achado da revisão final (2026-10-04): o curl expande `[]` e `{}` do caminho. Com `/{up}` ele pede
+`/up` e a prova gravaria OK sobre um caminho que não é o escrito; `?filter[status]=x` dá
+`bad range` e mede `000`. A chamada ganha o `-g`, logo depois do `-q`, e a URL segue literal. A
+gramática do caminho não é restringida: `[]{}` passam a ser caracteres comuns.
+
 ## 1. Script e formato
 
 ### 1.1 `.claude/scripts/aceitacao.sh <gerar|conferir> <NN>`
@@ -134,10 +141,11 @@ Porta das defesas do `aceitacao.ps1`, com as diferenças do Lotus marcadas:
   concatenado à URL do alias vira userinfo e troca o host.
 - O `conferir` mede **toda** prova automática a cada rodada e sobrescreve `Resultado` e `Data`
   (hoje): medição de ontem não prova o estado de hoje. Item manual nunca é tocado.
-- A chamada é `curl -q -sS -o /dev/null -w '%{http_code}' --max-time 30 --proto '=http,https'`,
+- A chamada é `curl -q -g -sS -o /dev/null -w '%{http_code}' --max-time 30 --proto '=http,https'`,
   com `-I` no `HEAD`, sem `-L`, **sem cabeçalho e sem credencial**. O `-q` vem primeiro para o
-  `~/.curlrc` não entrar. Falha de rede mede `000`, que é FALHOU. `ACEITACAO_CURL` troca o binário
-  — a suíte injeta um stub, como faz com o `LANE_DOCKER` do `lane.sh`.
+  `~/.curlrc` não entrar; o `-g` desliga o globbing do curl (E7). Falha de rede mede `000`, que é
+  FALHOU. `ACEITACAO_CURL` troca o binário — a suíte injeta um stub, como faz com o `LANE_DOCKER`
+  do `lane.sh`.
 
 ### 1.5 `.claude/aceitacao-aliases.conf`
 
