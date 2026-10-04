@@ -37,10 +37,10 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-95 | Doze pontas do harness que o item 35 deixou sem correção: seis Menores da revisão (Q-7, Q-8, Q-10 a Q-13) e seis do `rulings.md` (`context_required`/`closing` sem command, `lotus-ui-review` lendo o `state.md`, fluxo antigo no `backlog.md`, semente do `lane.sh` fora da invariante 6, catraca sem prompts nem `subagent_type`, `blocked` da rota codex sem artefato) | 36 | cada linha corrigida ou com veredito escrito; dispara no bloco que tocar `.claude/commands/`, `lane.sh`, `commands.tests.sh` ou `state.md`; revisar 2026-10-31 |
 | P-96 | `AGENTS.md` e `INSTRUÇÕES-DO-PROJETO.md` listam quatro das seis rules (faltam `backend-lang` e `frontend-estilizacao`), e o `estrutura-monolito.md` não cita o `shared/ui/Timestamp/` | BD-15 | os três docs acompanharem; dispara no bloco que tocar qualquer um deles; revisar 2026-10-31 |
+| P-97 | Dez divergências de coordenada e de mapa medidas pela `auditar-docs` do item 33: linhas de `operacao-segredos.md` §1/§2/§3/§5 deslocadas, o plano do item 10 arquivado em `deploy/aws/README.md`, `Shared/Logging/` incompleta no `estrutura-monolito.md` e `clamav` fora do `CLAUDE.md` §6 | — | bloco que tocar `operacao-segredos.md`, `estrutura-monolito.md` ou `deploy/aws/README.md` por outro motivo; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
-| P-93 | `docs/operacao-segredos.md` §3/§4/§6 descrevem `MAIL_PASSWORD` de um relay SMTP como o segredo de e-mail em uso e citam `backend/.env.production.example:106`; produção está em `MAIL_MAILER=log` desde o item 10 v2 e o item 33 a leva a `ses` pela instance role | 33 | **paga em 2026-09-28 (item 33, Task 4)**; sai no fechamento |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
@@ -130,8 +130,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (1)
 
-**Em rastro:** a **P-77**, encerrada pelo `infra-producao-dns-e-tls` (item 32) em 2026-09-27.
+**Em rastro:** a **P-93**, encerrada pelo `infra-producao-email-ses` (item 33) em 2026-10-04.
 Ficha completa em [`encerradas.md`](./encerradas.md).
+
+**A P-84 e a P-92 saíram no fechamento do item 33 (2026-10-04)**, o primeiro depois do item 35 que as
+encerrou em 2026-10-03. O rastro durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-55, a P-87 e a P-88 saíram no fechamento do item 32 (2026-09-27)**, o primeiro da `lane-b`
 depois dos que as encerraram: a P-55 no item 30 (o espelho do `state.md` deixou de existir) e a P-87
