@@ -57,3 +57,12 @@ bloquear_stop() {
   # hookSpecificOutput do PreToolUse.
   jq -n --arg motivo "$1" '{decision:"block", reason:$motivo}'
 }
+
+injetar_contexto() {
+  # PostToolUse e UserPromptSubmit: o texto vai ao modelo em
+  # hookSpecificOutput.additionalContext e ao usuario em systemMessage, que
+  # fica na RAIZ do JSON. $1 = evento do payload, $2 = texto.
+  jq -n --arg evento "$1" --arg texto "$2" \
+    '{systemMessage:$texto,
+      hookSpecificOutput:{hookEventName:$evento, additionalContext:$texto}}'
+}

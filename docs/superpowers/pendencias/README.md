@@ -129,10 +129,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (0)
 
-**Em rastro:** a **P-93**, encerrada pelo `infra-producao-email-ses` (item 33) em 2026-10-04.
-Ficha completa em [`encerradas.md`](./encerradas.md).
+**A P-93 saiu no fechamento do item 37 (2026-10-04)**, o primeiro depois do item 33 que a encerrou
+no mesmo dia. O rastro durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-84 e a P-92 saíram no fechamento do item 33 (2026-10-04)**, o primeiro depois do item 35 que as
 encerrou em 2026-10-03. O rastro durável está nos commits e na linha de entrega em
