@@ -21,6 +21,14 @@ word_budget: 1200
 
 > Derived snapshot. Canonical source hierarchy and staleness rules remain authoritative.
 
+> **Nota de 2026-10-04 (item 33).** A linha "Sandbox" de *Resolved decisions and divergences* e o
+> key fact 2 ("não satisfaz o DoD") foram substituídos pela emenda de 2026-10-01 da spec: a conta
+> fica em sandbox por decisão do João `[J-1]`, com destinatário verificado e o production access
+> adiado com gatilho (ADR-23). Pela mesma emenda, o **Goal** ("produção fora do sandbox") e o
+> critério de aceite do `get-account` ("production access habilitado") também estão superados:
+> o `get-account` segue mostrando sandbox. O número da conta virou `<conta>`: o repositório
+> pessoal é público.
+
 ## Scope
 
 **Goal:** habilitar o backend Lotus para enviar por SES usando a identidade compartilhada de `lotusotec.cl`, credencial da instance role, produção fora do sandbox e provas reais do alerta D7 e do reset de senha.
@@ -40,7 +48,7 @@ word_budget: 1200
 
 ## Key facts
 
-1. A identidade SES compartilhada **já existe** na conta `760144413534`, região `sa-east-1`, criada e possuída pelo stack `lotus-contato` do `lotus-site`. Em 2026-09-26, `get-email-identity lotusotec.cl` mediu `VerifiedForSendingStatus: true`, DKIM `SUCCESS` e MAIL FROM `SUCCESS`. Este bloco reusa essa identidade; não cria outra. `[S-1]`
+1. A identidade SES compartilhada **já existe** na conta `<conta>`, região `sa-east-1`, criada e possuída pelo stack `lotus-contato` do `lotus-site`. Em 2026-09-26, `get-email-identity lotusotec.cl` mediu `VerifiedForSendingStatus: true`, DKIM `SUCCESS` e MAIL FROM `SUCCESS`. Este bloco reusa essa identidade; não cria outra. `[S-1]`
 2. A conta **não saiu do sandbox**: a medição de 2026-09-26 registrou `ProductionAccessEnabled: false`, cota de 200/24h e 1/s, embora `SendingEnabled: true`. Isso bastou ao formulário porque seu destinatário pertence ao domínio verificado, mas não satisfaz o DoD explícito deste bloco nem o Drive. `[S-1][G-1][L-1]`
 3. A zona `lotus-dns` já publica os três CNAME Easy DKIM, `ses.lotusotec.cl MX 10 feedback-smtp.sa-east-1.amazonses.com` e `TXT "v=spf1 include:amazonses.com ~all"`. O apex conserva cinco MX do Google e SPF `"v=spf1 include:_spf.google.com include:spf.stackmail.com -all"`; `mail.` continua CNAME do Google. SES não exige alterar o SPF do apex porque o MAIL FROM próprio vive em `ses.`. `[S-1]`
 4. O backend já oferece o mailer `ses`; `services.php` usa `AWS_DEFAULT_REGION`, hoje `sa-east-1`. O molde do host ainda fixa `MAIL_MAILER=log` e `MAIL_FROM_ADDRESS=lotus@lotusotec.cl`; nenhuma fonte sustenta `no-reply`. `[L-1]`

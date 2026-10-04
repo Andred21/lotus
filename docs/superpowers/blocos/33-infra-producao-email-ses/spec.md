@@ -8,6 +8,33 @@
 > do bloco (`blocos/33-infra-producao-email-ses/spec.md` e `plano.md`), como o bloco 35 faz e como o
 > `lane.sh conferir` lê; os commands ainda dizem `specs/` e `plans/` (`state.md`, §Transição).
 
+> **Emendada em 2026-10-01 (replanejamento, decisão do João).** A Fase A original (§4.1 a §4.7)
+> entrou na `main` pela PR #121 (`44e6e372`) e ainda não foi espelhada. Depois disso o João decidiu
+> **não pedir production access**: a conta SES fica em sandbox. `@lotusotec.cl` recebe pela
+> identidade de domínio; cada endereço externo é verificado como identidade antes do primeiro
+> envio; o production access fica adiado, com o gatilho escrito em três lugares (D14). A emenda
+> reescreve D2, D5, D6 e D9, acrescenta D12 a D14 e a §4.8, e substitui §5, §6, §8 e §9. Onde um
+> texto de 2026-09-28 sobrevive e diverge da emenda, a emenda vence. A ficha 33 do `backlog.md`
+> ainda pede "conta fora do sandbox" no DoD: a decisão de 2026-10-01 a substitui, e o main tree
+> remove a ficha no fechamento (§10).
+
+> **Emendada de novo em 2026-10-04 (aprovação da emenda, decisão do João).** A emenda de
+> 2026-10-01 foi aprovada com uma mudança: o destinatário que vaza para o log default, que ela
+> deixava como débito de outro bloco, é corrigido aqui (D15, §4.9) — o bloco passa a ter PHP, com
+> TDD, Pint e suíte. A D12 também muda: o conector do Drive não reescreve arquivo, então o João sobe
+> a nova versão e a sessão confere. Esta emenda reescreve D2, D3, D9 e D12, acrescenta D15 e a
+> §4.9, e ajusta §3 e §5 a §10. Onde divergir das anteriores, ela vence.
+
+> **Alinhada ao harness do item 35 em 2026-10-04 (planejamento).** O merge da `origin/main`
+> (`95fd1d0e`) entrou antes do plano, para o `/executar-bloco` novo rodar o plano emendado, e
+> trouxe os commands de bloco do item 35 e as invariantes 10 e 11 reescritas. Três consequências,
+> sem decisão nova de produto: a revisão vem antes da PR (`/revisar-bloco`), e quem abre a PR é o
+> `/finalizar-bloco`; a Fase B só existe depois do merge, então o bloco mescla em `blocked`
+> aguardando aceitação e vai a `closed` na PR de docs que traz a prova (§5, §10); e o FUT-4, o
+> débito da `QueryException` e a saída da ficha 33 vão nessa PR, porque o main tree não publica
+> commit e a lane não acrescenta ficha. A seção `## Verificação externa`, que o `/finalizar-bloco`
+> lê, entra no fim. Onde um texto anterior manda o main tree escrever no fechamento, vale o §10.
+
 ## 1. Contexto
 
 ### 1.1 O que já existe — medido em 2026-09-28, não suposto
@@ -57,10 +84,12 @@
 
 ### 1.2 O que falta
 
-1. Sair do sandbox — sem isso, alerta e reset a destinatário não verificado voltam
-   `MessageRejected` e a `FalhaDeObservabilidade` engole (a falha assintomática que o
-   `operacao-segredos.md` §4 já descreve).
-2. `ses:SendRawEmail`/`ses:SendEmail` na `lotus-ec2`, só pela identidade e só com o remetente.
+1. Destinatário entregável — em sandbox, alerta, reset e convite só chegam a `@lotusotec.cl`
+   (domínio verificado) ou a endereço verificado como identidade; o resto volta `Email address is
+   not verified`, e a `FalhaDeObservabilidade` (ou o `report`) engole — a falha assintomática que o
+   `operacao-segredos.md` §4 já descreve. A versão de 2026-09-28 dizia "sair do sandbox".
+2. `ses:SendRawEmail`/`ses:SendEmail` na `lotus-ec2`, só com o remetente — `Resource`
+   `identity/*`, porque o sandbox autoriza também a identidade do destinatário (§1.3).
 3. `MAIL_MAILER=ses` no molde e no host, e os contêineres recriados com o env novo.
 4. ADR do transporte de e-mail (P-53) e `operacao-segredos.md` dizendo a verdade (P-93).
 5. As duas provas da ficha, em caixa real.
@@ -78,30 +107,86 @@
   freio natural do `/api/contacto` (D5 da spec B2, débito `D-54`) **desaparece**. O gatilho da
   D-54 é literalmente "pedido de production access do SES". Efeito lateral declarado (§8).
 
+**Achados do replanejamento de 2026-10-01** (os três acima ficam como registro do que se decidiu
+antes):
+
+- **Sandbox com destinatário verificado.** O João decidiu não abrir caso na AWS. A guarda de
+  domínio segue recusada; no lugar dela, o endereço externo vira identidade (`create-email-identity`,
+  escrita do João), e a pessoa clica no link da AWS antes do primeiro envio — uma vez por endereço.
+  O Turnstile já freia o `/api/contacto` do site, e com a conta em sandbox o teto de 200/dia
+  continua existindo.
+- **Em sandbox o IAM é checado também contra a identidade do destinatário** (AWS, *Identity and
+  access management in Amazon SES*: as restrições do sandbox impedem algumas policies). Com
+  `Resource` só em `identity/lotusotec.cl`, um destinatário `@lotusotec.cl` passa — ele cai na
+  mesma identidade, que é o caso do site — e um externo verificado volta `not authorized …
+  identity/<destinatário>`. A sonda D9 de 2026-09-28 leria esse erro como "policy errada".
+- **A verificação personalizada exige production access** (`SendCustomVerificationEmail` lança
+  `ProductionAccessNotGrantedException`): o e-mail de verificação é o padrão da AWS, em inglês, e
+  o link vale 24 h.
+- **A AWS aceita rajada curta acima de 1/s** (*Managing your Amazon SES sending limits*): o alerta
+  D7 em série para poucos admins deve caber; a prova D7 mede.
+- **O convite só vai para redator.** O admin não recebe convite; provar o convite exigiria um
+  redator de teste em produção, que é dado auditado. O transporte é o mesmo do reset.
+
+**Achados da aprovação de 2026-10-04:**
+
+- **O reenvio do convite também vaza.** `RedatorInvitationController::store` não contém a falha: a
+  exceção sobe ao handler global, cujo `report()` grava a mensagem crua no canal default — o
+  terceiro caminho, ao lado dos `report($e)` de `PasswordResetController::forgot` e
+  `CreateRedatorAction`. A recusa de IAM vaza mais que o endereço: `… is not authorized to perform:
+  ses:SendRawEmail on resource: …` traz o ARN do papel assumido (conta e InstanceId) e o da
+  identidade do destinatário.
+- **O `Reason` sai do log; o código da AWS pode ficar.** O `SesTransport` embrulha a `AwsException`
+  como `previous` da `TransportException` (vendor, medido), e `getAwsErrorCode()` devolve um
+  identificador fixo do protocolo — `MessageRejected`, `AccessDenied`, `Throttling` — sem dado de
+  ninguém. É o que separa destinatário não verificado de policy errada e de rajada quando a
+  mensagem some.
+- **O conector do Drive não escreve conteúdo.** `update_file` só troca título e pasta;
+  `create_file` cria outro arquivo, com outro ID e sem o histórico.
+- **A `QueryException` também leva dado ao log**, por outro caminho: a mensagem traz a SQL com os
+  bindings (`Str::replaceArray`), e com o banco fora qualquer `report()` grava e-mail, RUT ou nome.
+  É anterior ao SES e vale para o app inteiro; o Laravel 13.34 lê `mask_bindings_in_exception_messages`
+  na conexão. Fica fora (§3), com débito (§10).
+
 ## 2. Decisões do brainstorming
 
 | # | Decisão | Alternativas recusadas |
 |---|---|---|
-| D1 | **Repositório antes da produção, em duas fases.** Fase A na lane, PR mesclada e espelhada. Fase B em produção: o João escreve (ticket, IAM, `.env`, botão, provas), a sessão lê e escreve o audit. | Host primeiro: o botão recusa host divergente da `main` (item 31). Um bloco só de "pedir access" antes: a espera corre igual em paralelo. |
-| D2 | **Sair do sandbox por production access**, pedido no passo 1 da Fase B. | Sandbox + guarda de domínio no backend (recusada pelo João: acopla usuários a `@lotusotec.cl`). Verificar cada destinatário como identidade: cria identidade por pessoa e quebra convite/reset de quem ainda não clicou. Outro provedor: §1.3. |
-| D3 | **Mailer `ses`** (API v1, `SendRawEmail`), já declarado no `mail.php`. Zero código PHP. | `ses-v2`: uma linha a mais no `mail.php` sem ganho medido; a v1 é suportada e o SDK é o mesmo. |
+| D1 | **Repositório antes da produção, em duas fases.** Fase A na lane, PR mesclada e espelhada. Fase B em produção: o João escreve (IAM, identidades, `.env`, botão, provas — o ticket da AWS saiu na emenda de 2026-10-01), a sessão lê e escreve o audit. | Host primeiro: o botão recusa host divergente da `main` (item 31). Um bloco só de "pedir access" antes: a espera corre igual em paralelo. |
+| D2 | **Conta em sandbox, destinatário verificado** (emenda de 2026-10-01; a versão de 2026-09-28 pedia production access). `@lotusotec.cl` recebe pela identidade de domínio; o endereço externo vira identidade (`create-email-identity`, escrita do João) e a pessoa clica no link da AWS antes do primeiro envio — uma vez por endereço. Sem guarda no backend: esquecer a verificação faz a falha passar calada para quem esperava o e-mail (runbook §13.1); o log diz por quê sem dizer quem (D15). Production access adiado, com gatilho (D14). | Production access agora: o João não quer abrir caso na AWS, e o caminho fica pronto no runbook §13.6. Sandbox + guarda de domínio no backend: recusada em 2026-09-28, acopla os usuários a `@lotusotec.cl`. Outro provedor: §1.3. |
+| D3 | **Mailer `ses`** (API v1, `SendRawEmail`), já declarado no `mail.php`. Nenhum PHP no transporte; o único PHP do bloco é a D15 (emenda de 2026-10-04). | `ses-v2`: uma linha a mais no `mail.php` sem ganho medido; a v1 é suportada e o SDK é o mesmo. |
 | D4 | **Remetente `Lotus <lotus@lotusotec.cl>`**, o que o molde já fixa desde o item 10. Sem caixa: resposta volta pelo MX do Google como inexistente. | `no-reply@`: muda molde e host por nada. Caixa real: ninguém a lê. |
-| D5 | **Terceira inline `lotus-ses` na `lotus-ec2`**, aplicada pelo João com `put-role-policy` + readback, snippet no runbook §4 — o mesmo molde da `lotus-alerta`. `Action: ses:SendRawEmail, ses:SendEmail`; `Resource`: o ARN da identidade; `Condition StringEquals ses:FromAddress: lotus@lotusotec.cl`. | Script `deploy/aws/conceder-ses.sh` com catraca: mais arquivos por uma política aplicada uma vez. Ampliar a `lotus-s3`: mistura escopos. |
-| D6 | **ADR-23 curto**: e-mail transacional por SES, identidade compartilhada do site (o site é dono, o Lotus reusa, nunca duas), instance role, síncrono sem fila, sandbox fora, bounce/complaint só pela suppression list do SES. Paga a linha da P-53. | Emenda no ADR-14: a decisão não é de compute, e a P-53 seguiria aberta. |
+| D5 | **Terceira inline `lotus-ses` na `lotus-ec2`**, aplicada pelo João com `put-role-policy` + readback, snippet no runbook §4 — o mesmo molde da `lotus-alerta`. `Action: ses:SendRawEmail, ses:SendEmail`; `Resource: arn:aws:ses:sa-east-1:<conta>:identity/*` (emenda de 2026-10-01: o sandbox autoriza também a identidade do destinatário); `Condition StringEquals ses:FromAddress: lotus@lotusotec.cl` — o remetente segue travado. Vale igual fora do sandbox. | `Resource` só na identidade de domínio: externo verificado volta "not authorized" em sandbox. `Resource` com o ARN de cada externo: reaplicar a policy a cada usuário novo, com e-mail pessoal dentro do IAM. Script `deploy/aws/conceder-ses.sh` com catraca: mais arquivos por uma política aplicada uma vez. Ampliar a `lotus-s3`: mistura escopos. |
+| D6 | **ADR-23 curto**: e-mail transacional por SES, identidade compartilhada do site (o site é dono, o Lotus reusa, nunca duas), instance role, síncrono sem fila, bounce/complaint só pela suppression list do SES. Paga a linha da P-53. **Emenda de 2026-10-01:** conta em sandbox por decisão, `identity/*` na policy, production access adiado com gatilho (D14). | Emenda no ADR-14: a decisão não é de compute, e a P-53 seguiria aberta. |
 | D7 | **`backend/.env.production.example` alinhado a `ses` no mesmo commit** do molde real; `operacao-segredos.md` passa a citar só `deploy/aws/env.prod.example`. | Apagar o legado: toca a spec dos hooks de guarda e referências fora do escopo. Deixar: doc corrigido e molde mentindo. |
 | D8 | **`.env` do host muda antes do botão, e a recriação é o próprio deploy** do SHA espelhado da PR desta lane. O Compose recria `app` e `scheduler` porque o `env_file` mudou. Sem chave nova no molde, a conferência de alinhamento (item 31) não trava. | `docker compose up -d` à mão por SSH: fora do botão e do ledger. Chave nova só para forçar recriação: ruído. |
-| D9 | **Sonda em sandbox antes da aprovação**, por `tinker` no contêiner: `Mail::raw` para um admin. `MessageRejected` (destinatário não verificado) **prova** credencial pela role e policy — a autorização IAM acontece antes da regra do sandbox; `AccessDenied` diz que a policy está errada. Nada é entregue. | Esperar a aprovação para testar tudo: um erro de policy custaria mais um dia. |
+| D9 | **Duas sondas por `tinker` no contêiner** (emenda de 2026-10-01). Positiva: `Mail::raw` para um externo verificado (o Gmail do João) — chega, e prova role, policy e a checagem do destinatário de uma vez. Negativa: para um endereço não verificado — `Reason: Email address is not verified`, a prova de que o sandbox segue de pé. `not authorized … ses:SendRawEmail` diz que a policy está errada. Pela emenda de 2026-10-04 a negativa é contida e reportada (`report($e)`): a saída de erro traz a linha `Falha ao enviar e-mail` com `aws_erro` `MessageRejected` e sem o endereço da sonda — a D15 provada com a exceção real do SES. | Só a negativa (a de 2026-09-28): não prova o caminho do externo, e com `Resource` no domínio devolveria o erro de policy no lugar do de sandbox. |
 | D10 | **Prova D7 pela família `login_falho_repetido`**: 15 senhas erradas contra uma conta real, de fora, dentro de 15 min, respeitando o `throttle:login` (5/min) — cerca de 4 min. | `sequencia_de_403`: exige usuário sem permissão logado e 20 chamadas. `sessao_de_conta_desativada`: desativar uma conta real. |
 | D11 | **`efeito_externo: sim`, `executor: claude`.** Produção, conta AWS, cross-repo em efeito, julgamento fora do plano. | — |
+| D12 | **Drive emendado com o texto aprovado pelo João em 2026-10-04** (`arquitetura-aws-lotus.md`, G-1; emenda de 2026-10-04 — a de 2026-10-01 dizia "pela sessão"): o §1.4 *Implementação* e a linha de *Pendências* deixam de pedir a saída do sandbox antes de produção e passam a dizer "sandbox por decisão, com gatilho". O conector não escreve conteúdo (§1.3): a sessão monta o arquivo inteiro com só as duas linhas trocadas, o João o sobe como **nova versão do mesmo arquivo** (mesmo ID, histórico preservado), e a sessão confere o tamanho e o hash do que voltar do Drive contra o que montou. Registro no audit. | Deixar divergente: o Drive vence, e a próxima sessão leria "sair do sandbox" como requisito. Arquivo novo pelo conector: outro ID, histórico perdido, e o antigo continuaria lá. |
+| D13 | **Espelho único.** A PR da emenda (§4.8) sai desta mesma branch, depois de trazer a `origin/main`; o João mescla e espelha uma vez, levando o #121 e a emenda juntos. O botão promove esse SHA. | Espelhar o #121 antes: o corporativo receberia ADR-23 e runbook pedindo production access. |
+| D14 | **O gatilho do production access em três lugares.** (a) O ADR-23: quando uma feature enviar e-mail a quem não é admin ou redator interno (cliente, aluno, outra empresa), quando verificar externo virar rotina, ou quando o volume somado ao do site se aproximar de 200/24 h. (b) O runbook §13.6, com o texto e o comando do pedido prontos. (c) O **FUT-4** do `backlog.md`, que entra pela PR de docs da aceitação (§10; alinhamento de 2026-10-04). | Só o ADR: o planejamento de uma feature lê o backlog antes dos ADRs. Pendência: o índice é de divergência de doc, não de feature futura. |
+| D15 | **Falha de transporte de e-mail vai ao log sem a mensagem, com o código da AWS** (emenda de 2026-10-04; a de 2026-10-01 deixava como débito). Um `report` no `bootstrap/app.php` para `TransportExceptionInterface` registra pela `FalhaDeObservabilidade` — classe, código e origem, nunca a mensagem — e encerra a propagação (`stop()`). Cobre os dois `report($e)` que contêm a falha (reset e cadastro), o reenvio do convite, que não contém e chega pelo handler, e todo envio futuro. A `FalhaDeObservabilidade` passa a gravar `aws_erro` quando a cadeia traz uma `AwsException`, e o alerta D7 ganha o campo junto. Provada por teste nos quatro caminhos e, em produção, pela sonda negativa (D9). | Trocar os dois `report($e)` e pôr `catch` no reenvio: três pontos de código, e o próximo envio nasceria com o mesmo furo. Mascarar o endereço por regex na mensagem: texto de terceiro, e a recusa de IAM traz também conta e InstanceId. Só a mensagem fixa, sem `aws_erro`: a correção apagaria o único sinal que separa destinatário não verificado de policy errada e de rajada. Débito para o próximo bloco de `Identity` (proposta de 2026-10-01): recusado pelo João. |
 
 ## 3. Escopo
 
 **Dentro:** §4 e §5 inteiros. **Fora** (registrado): Lambda/formulário/WAF do site; DKIM do Google
 e `include:spf.stackmail.com` (D-46 do site); central de notificações (FUT-3); worker de fila;
-tratamento de bounce/complaint além do padrão do SES; observabilidade de e-mail (bloco próprio);
+tratamento de bounce/complaint além do padrão do SES; observabilidade de e-mail além da D15 (bloco próprio);
 P-81 (a chave é do João); Notion `10.1.4` (o João marca); `CLAUDE.md` e as outras linhas da P-53.
+Fora também, pela emenda de 2026-10-01: o production access (adiado com gatilho, D14 — o pedido
+fica pronto no runbook §13.6); o e-mail de verificação personalizado (exige production access); a
+prova do convite do redator (exigiria um redator de teste em produção, e o transporte é o mesmo do
+reset); o número da conta nos dois audits legados de `docs/superpowers/audits/` (itens 10 v2 e 12),
+que são de outros blocos. Fora, pela emenda de 2026-10-04: a `QueryException` com bindings no log
+(§1.3; débito no §10).
 
 ## 4. Fase A — repositório (`lotus-infra`, esta lane)
+
+As §4.1 a §4.7 foram entregues pela PR #121 (mesclada em 2026-10-01, `44e6e372`) e ficam como
+registro. A §4.8 é a emenda de 2026-10-01 e vence onde divergir delas: a §4.3 ainda diz
+"production access da conta", e a §4.4 ainda nomeia o §13 como "production access". A §4.9 é a
+emenda de 2026-10-04 e vai na mesma PR da §4.8.
 
 ### 4.1 Molde do host — `deploy/aws/env.prod.example`, com catraca
 
@@ -190,55 +275,140 @@ domínio — cada um com a linha do porquê). Sem número de conta nem ARN liter
 Uma PR desta lane para a `main`, mesclada pelo João e espelhada pelo caminho do `CONTRIBUINDO.md`.
 O SHA espelhado é o que o botão promove no §5.4.
 
-## 5. Fase B — produção, na ordem
+### 4.8 Emenda de 2026-10-01 — Fase A', uma PR nova desta branch
 
-Escrita do João; leitura e audit da sessão (`blocos/33-infra-producao-email-ses/audit.md`). Do
-`.env` só sai nome de chave. Nenhum e-mail é transcrito: do alerta e do reset ficam remetente,
-assunto, `Authentication-Results` e o horário.
+A branch traz a `origin/main` antes (o #121 já está lá, e os #122 a #124 vieram depois) — feito no
+planejamento, `95fd1d0e`; a PR nova leva só a emenda. O espelho é um só (D13).
 
-1. **Production access.** Console SES `sa-east-1` → *Account dashboard* → *Request production
-   access*: tipo `Transactional`; URL `https://app.lotusotec.cl`; uso: alertas de segurança e
-   recuperação de senha da intranet de gestão de capacitação da Lotus, ~10 usuários internos,
-   dezenas de mensagens por mês, sem lista de marketing; bounces e complaints tratados pela
-   suppression list. Ou por CLI, `aws sesv2 put-account-details --production-access-enabled
-   --mail-type TRANSACTIONAL --website-url https://app.lotusotec.cl --use-case-description "…"
-   --contact-language EN`. O João guarda o número do caso; a sessão registra a data.
-2. **Policy.** João aplica a `lotus-ses` (§4.4). Sessão lê `get-role-policy` e confere as três
-   partes: ações, `Resource` na identidade, `Condition` no remetente.
-3. **Merge e espelho** da PR (§4.7).
-4. **`.env` e botão.** João edita `/opt/lotus/.env` (`MAIL_MAILER=ses`), depois clica o botão no
-   SHA espelhado. Sessão lê o run (`fim` com `resultado ok`), `/up` 200 de fora,
+- **Runbook §4.** A `lotus-ses` passa a `Resource` `arn:aws:ses:sa-east-1:$CONTA:identity/*`, com
+  a mesma `Condition`. Uma frase diz por quê (o sandbox checa a identidade do destinatário) e que a
+  policy vale igual fora do sandbox. O readback confere as duas ações, `identity/*` e o remetente.
+- **Runbook §13** passa a "E-mail — sandbox, destinatários, `.env` e as duas provas":
+  - **13.1 Destinatários em sandbox.** A regra (domínio verificado ou endereço verificado). A ordem
+    para externo: `create-email-identity`; a pessoa clica no link da AWS em até 24 h (em inglês —
+    avise antes); só então convite ou reset. A leitura `get-email-identity … --query
+    VerifiedForSendingStatus`. A tabela do que acontece com a ordem invertida: no cadastro, o
+    convite se perde calado e o admin reenvia depois do clique; no reenvio, a tela avisa; no reset,
+    a resposta é a genérica e nada chega; no alerta, a falha é engolida, e um admin não verificado
+    no meio da série corta os seguintes. No desligamento do usuário, `delete-email-identity`.
+  - **13.2** `.env` e promoção, igual.
+  - **13.3 Sondas** positiva e negativa (D9), com a tabela de `Reason`.
+  - **13.4 As duas provas**, sem a condição de production access. Pré-condição: todo admin ativo é
+    `@lotusotec.cl` ou verificado.
+  - **13.5 Recuo**, sem o caso "pedido negado".
+  - **13.6 Sair do sandbox — só quando o gatilho do ADR-23 disparar.** O texto e o comando do
+    §13.1 de 2026-09-29 (console ou `put-account-details`), o `get-account` de readback, o efeito no
+    teto do site e a limpeza opcional das identidades pessoais depois da aprovação. A policy não
+    muda.
+- **ADR-23.** A *Decisão* troca "só na identidade" por `identity/*` e "a conta sai do sandbox" por
+  "a conta fica em sandbox por decisão, destinatário verificado". As *Consequências* trocam "o teto
+  de 200/dia deixa de existir" por "o teto segue, dividido com o site". O production access não
+  entra no *Descartado*: vira um parágrafo **Emenda de 2026-10-01** com o porquê e o gatilho (D14).
+  Sem número de conta.
+- **`docs/operacao-segredos.md` §4.** Uma frase: em sandbox, o destinatário externo não verificado
+  também falha calado — runbook §13.1.
+- **Packet** (`docs/superpowers/context-packets/2026-09-28-infra-producao-email-ses.md`): o número
+  da conta vira `<conta>` (o repositório pessoal é público), e uma nota datada no topo diz que a
+  linha "Sandbox" das decisões resolvidas foi substituída pela emenda de 2026-10-01 (J-1).
+- **Audit.** A seção "Replanejamento de 2026-10-01" registra a decisão, o achado do IAM, o estado do
+  espelho, a nova versão do Drive conferida (D12) e a emenda de 2026-10-04 (D15).
+
+As catracas são as mesmas da §7; o runbook segue sem catraca, declarado.
+
+### 4.9 Emenda de 2026-10-04 — o destinatário fora do log (D15), na PR da §4.8
+
+PHP com TDD (`superpowers:test-driven-development`): cada caso visto vermelho pelo motivo certo
+antes do código. Esta árvore não tem `backend/vendor`, e o `app` monta `./backend` por bind: o
+`composer install` roda no contêiner da lane (offset +1) antes do primeiro teste.
+
+- **`backend/tests/Feature/Shared/FalhaDeEnvioDeEmailTest.php`** (novo), no molde de
+  `AcessoSuspeitoTest::test_falha_de_envio_nao_leva_endereco_de_email_para_o_log`: captura por
+  `Log::listen(MessageLogged)` e `Notification::swap` com um `ChannelManager` que lança a cadeia
+  real do `SesTransport` — `TransportException('Request to AWS SES API failed. Reason: Email
+  address is not verified. The following identities failed the check in region SA-EAST-1:
+  <endereço>.')`, com uma `SesException` de código `MessageRejected` como `previous`. Um caso por
+  caminho, todos com o mesmo critério de log (sem o endereço; com a mensagem fixa, a classe e
+  `MessageRejected`):
+  1. `POST /api/password/forgot` com o e-mail de um usuário ativo → 200 com a mensagem genérica.
+  2. `CreateRedatorAction` → o cadastro sobrevive.
+  3. `POST /api/redatores/{redator}/invitation` como admin → 500 em `problem+json`.
+  4. Alerta D7 (`DetectorDeAcessoSuspeito`) → linha `Falha ao enviar alerta de acesso suspeito`.
+- **`backend/bootstrap/app.php`**: `$exceptions->report()` para
+  `Symfony\Component\Mailer\Exception\TransportExceptionInterface`, que registra pela
+  `FalhaDeObservabilidade` com a mensagem fixa `Falha ao enviar e-mail` e encerra com `stop()` — o
+  handler não chega a gravar a mensagem crua. Os dois `report($e)` ficam como estão: passam a cair
+  aqui. Comentário com o porquê, no estilo do arquivo.
+- **`backend/app/Shared/Logging/FalhaDeObservabilidade.php`**: `aws_erro` no contexto quando a cadeia
+  de `getPrevious()` traz uma `Aws\Exception\AwsException`, ausente nos demais casos; o docblock
+  ganha o porquê.
+- Pint nos três arquivos (nunca sem argumento) e a suíte inteira no contêiner. Sem DTO, sem
+  `typescript:transform`.
+- **Runbook §13.3**: a sonda negativa contém a exceção, imprime o `Reason` e chama `report($e)`; o
+  texto diz o que ler na saída de erro (D9). Uma tabela `aws_erro` → próximo passo serve à sonda, ao
+  `Falha ao enviar alerta` do §13.4 e ao `Falha ao enviar e-mail`: `MessageRejected` (destinatário
+  ou remetente não verificado), `AccessDenied` (policy, §4), `Throttling` (rajada acima do sandbox).
+
+## 5. Fase B — produção, na ordem (emenda de 2026-10-01)
+
+Depois do merge da PR do bloco e do espelho, com o bloco em `blocked` aguardando aceitação (§10).
+Escrita do João; leitura e audit da sessão (`blocos/33-infra-producao-email-ses/audit.md`, que volta
+na PR de docs da aceitação). Do `.env` só sai nome de chave. Nenhum e-mail é transcrito: do alerta, do reset e da sonda ficam
+remetente, assunto, `Authentication-Results` e o horário. **Nenhum endereço de destinatário entra
+em arquivo versionado**: o audit diz "o Gmail do João" e conta os externos, sem listá-los. Os
+comandos são os do runbook §13 emendado (§4.8 e §4.9); onde este texto e o runbook divergirem, o runbook
+vence (desvio aprovado em 2026-09-29, review da Task 5).
+
+1. **Merge e espelho** da PR da §4.8 (D13). O SHA espelhado leva o #121 e a emenda.
+2. **Policy.** O João aplica a `lotus-ses` do runbook §4. A sessão lê `get-role-policy` e confere
+   as três partes — ações, `Resource` `identity/*`, `Condition` no remetente — e o
+   `list-access-keys` de `lotus-infra`, sem chave nova.
+3. **Destinatários.** O João levanta, na base de produção, os admins e redatores ativos fora de
+   `@lotusotec.cl` e roda `create-email-identity` para cada um e para o próprio Gmail; cada pessoa
+   clica no link em até 24 h. A sessão lê `list-email-identities` (o domínio mais N externos) e o
+   `VerifiedForSendingStatus: true` de cada um; o audit registra só N. A prova D7 só roda com este
+   passo completo para **todos os admins ativos**: um admin não verificado corta a série.
+4. **`.env` e botão.** O João edita `/opt/lotus/.env` (`MAIL_MAILER=ses`) e depois clica o botão
+   no SHA espelhado. A sessão lê o run (`fim` com `resultado ok`), o `/up` 200 de fora,
    `grep -c '^MAIL_MAILER=' /opt/lotus/.env` = 1 (nome, não valor) e
-   `docker compose … exec -T app php -r 'echo config("mail.default");'` = `ses` — se o auto mode
-   barrar, o João roda e cola.
-5. **Sonda em sandbox (D9).** `tinker`: `Mail::raw('sonda item 33', fn ($m) => $m->to('<e-mail do
-   admin>')->subject('sonda'))`. Esperado antes da aprovação: `MessageRejected … not verified`.
-   `AccessDenied` → PARE, policy errada, volta ao passo 2. Sem exceção → a conta já saiu do
-   sandbox (passo 6 já vale).
-6. **Aprovação.** `aws sesv2 get-account --region sa-east-1` com `ProductionAccessEnabled: true`.
-   Até chegar, o bloco espera aqui: `blocked`, `resume_state: executing`, `blocker` com o número
-   do caso. Negado: `blocked` com o motivo, decisão do João.
-7. **Prova D7.** De fora, 15 `POST /api/login` com senha errada para a conta do João, com
-   `Origin` e `Accept` (lição 12), 5 por minuto. Na 15ª, o alerta sai para todos os admins ativos.
-   Prova: o e-mail na caixa do João, com `Authentication-Results` mostrando `dkim=pass
-   header.d=lotusotec.cl`, `spf=pass … ses.lotusotec.cl` e `dmarc=pass`; a linha
-   `alerta_de_acesso_suspeito` no canal `seguranca`; e `FalhaDeObservabilidade` sem linha nova.
-8. **Prova do reset.** Pela UI em `https://app.lotusotec.cl`: "olvidé mi contraseña" com o e-mail
-   do João → e-mail chega → link abre a tela de nova senha → senha nova → login com ela → o
-   `throttle:password` (6/min) não é tocado. A senha antiga cai (sessões purgadas).
-9. **Leitura final.** `get-email-identity` segue `true`/`SUCCESS`/`SUCCESS`; `dig MX lotusotec.cl`
-   (ou `nslookup -type=MX`) devolve só Google; `get-account` com `SentLast24Hours` ≥ 2.
+   `php artisan config:show mail.default` com `ses` (runbook §13.2) — se o auto mode barrar, o João
+   roda e cola.
+5. **Sondas (D9).** Positiva para o Gmail do João: sem exceção, e a mensagem chega com DKIM, SPF e
+   DMARC `pass`. Negativa para um endereço não verificado: `Reason: Email address is not
+   verified`, e na saída de erro a linha `Falha ao enviar e-mail` com `aws_erro` `MessageRejected` e
+   sem o endereço da sonda (D15). `not authorized … ses:SendRawEmail` → PARE, volta ao passo 2.
+6. **Prova D7.** De fora, 15 `POST /api/login` com senha errada para a conta de um admin, pelo loop
+   com CSRF do runbook §13.4, 5 por minuto. Na 15ª, o alerta sai para todos os admins ativos.
+   Prova: a mensagem na caixa de um admin real, com `dkim=pass header.d=lotusotec.cl`, `spf=pass`
+   em `ses.lotusotec.cl` e `dmarc=pass`; a linha `acesso.suspeito` no canal `seguranca`; e nenhuma
+   linha `Falha ao enviar alerta`.
+7. **Prova do reset.** Pela UI em `https://app.lotusotec.cl`, no link "¿Olvidaste tu clave?", com o
+   e-mail de um usuário `@lotusotec.cl` ou verificado → o e-mail chega → o link abre a tela de nova
+   senha → senha nova → login com ela. A senha antiga cai (sessões purgadas); o `throttle:password`
+   (6/min) não é tocado.
+8. **Leitura final.** `get-account`: `ProductionAccessEnabled: false` (decisão, ADR-23),
+   `SendingEnabled: true` e `SentLast24Hours` maior que zero, lido no dia das provas.
+   `get-email-identity lotusotec.cl` segue `true`/`SUCCESS`/`SUCCESS`; `dig MX lotusotec.cl` (ou
+   `nslookup -type=MX`) devolve só Google.
+
+Os passos 2 e 3 andam a qualquer hora; o 1 vem antes do 4, e o 4 antes do 5, do 6 e do 7. Não há
+espera da AWS nem `blocked` previsto.
 
 ## 6. Falhas e recuo
 
 - Passo 4 sem `/up` 200: rollback pelo botão não é o caminho — o SHA é o mesmo; o João volta
   `MAIL_MAILER=log` no `.env` e roda `deploy.sh <mesmo sha>` por SSH (runbook §8.1). Nenhum
   dado muda.
-- Passo 5 com `AccessDenied`: `get-role-policy`, corrigir, reaplicar (idempotente).
-- Alerta sem chegar no passo 7 com `MessageRejected` no log: a conta não saiu do sandbox —
-  reler o passo 6. Com `Throttling`: cota de 1/s ainda em vigor, idem.
-- Reverter tudo: `delete-role-policy --policy-name lotus-ses` e `MAIL_MAILER=log`. O ADR e os docs
-  ficam, com emenda datada dizendo o que foi revertido.
+- Passo 5 com `not authorized … ses:SendRawEmail`: `get-role-policy`, corrigir, reaplicar
+  (idempotente). Sonda positiva com `Email address is not verified`: o Gmail não terminou a
+  verificação — volta ao passo 3.
+- Passo 6 com `Falha ao enviar alerta`: PARE. O log não traz o `Reason`, de propósito, mas traz o
+  `aws_erro` (D15). `MessageRejected`: algum admin ativo não é `@lotusotec.cl` nem verificado —
+  volta ao passo 3 e espera os 15 min da janela do D7 antes de repetir. `Throttling`: a rajada
+  passou do que o sandbox aceita — o conserto pede código (espaçar os envios, ou um envio só para
+  todos os admins) e é bloco próprio, decisão do João. `AccessDenied`: a policy — volta ao passo 2.
+- Reverter tudo: `delete-role-policy --policy-name lotus-ses` e `MAIL_MAILER=log`. As identidades
+  externas podem ficar (sozinhas não enviam nada) ou sair com `delete-email-identity`. O ADR e os
+  docs ficam, com emenda datada dizendo o que foi revertido.
 
 ## 7. Catracas (lição 19)
 
@@ -247,43 +417,139 @@ assunto, `Authentication-Results` e o horário.
 | `deploy/aws/env.prod.example` | `frontend/tests/env-prod-example.test.ts` (par nominal já existente) | `MAIL_MAILER=log`; `AWS_ACCESS_KEY_ID=` presente |
 | `docs/adrs.md`, `docs/operacao-segredos.md`, `docs/README.md` | `frontend/tests/repo-docs-refs.test.ts` (paths citados existem) | citar um path inexistente reprova (já provado pelo teste) |
 | `deploy/aws/README.md` §4/§13 | nenhuma (o runbook nunca teve; declarado, como o `ci.yml`) | — |
-| Backend | nenhum `.php` muda; `git diff main...HEAD -- backend/app backend/config` vazio | — |
+| `backend/bootstrap/app.php` e `FalhaDeObservabilidade` (D15, emenda de 2026-10-04) | `backend/tests/Feature/Shared/FalhaDeEnvioDeEmailTest.php` (4 casos) | sem o `report` do `bootstrap`, os casos 1 a 3 reprovam com o endereço no log; sem o `aws_erro`, os 4 reprovam |
+| Resto do backend | nenhum outro `.php` muda: na PR da §4.8, `backend/` só tem os dois arquivos acima e o teste | — |
+
+A emenda (§4.8) passa pelas mesmas catracas, e a §4.9 também pela suíte PHP inteira; o packet não
+tem catraca.
 
 ## 8. Limites e riscos declarados
 
-- **A aprovação é da AWS.** Prazo típico de um dia útil; pode pedir detalhe. O bloco espera em
-  `blocked` com o número do caso; nada se simula.
-- **Alerta D7 a N admins em série.** `Notification::send` faz uma chamada por admin; uma exceção
-  no meio deixa os seguintes sem e-mail. Com production access a cota deixa de ser 1/s. Não se
-  corrige aqui (ADR-21: sem fila); vai para a ficha de observabilidade se o gate medir.
-- **Efeito no site.** Production access tira o teto de 200/dia do `/api/contacto` (D-54 do
-  `lotus-site`). Registro no audit e aviso ao João; a decisão (WAF, Turnstile basta, outro freio) é
-  da sessão do site, não deste bloco.
+- **Falha calada com externo não verificado** (emenda de 2026-10-01). O reset responde a mensagem
+  genérica e não entrega; o convite do cadastro se perde no `report` (o reenvio, esse, avisa na
+  tela); o alerta é engolido pela `FalhaDeObservabilidade`. A mitigação é a ordem do runbook §13.1,
+  e os admins da Lotus precisam saber que cadastro com e-mail de fora passa antes pelo João. Quem
+  avisa é o João; o sistema não avisa.
+- **O destinatário ia para o log default no reset e no convite** — fechado pela D15 (emenda de
+  2026-10-04). Os dois `report($e)` e o reenvio, que não contém a falha, gravavam a mensagem da
+  exceção; a do SES em sandbox é `… Email address is not verified. The following identities failed
+  the check in region SA-EAST-1: <destinatário>`. Agora os três caminhos, e todo envio futuro,
+  passam pelo `report` de `TransportExceptionInterface`. Fica de fora a `QueryException`, que leva
+  bindings ao log com o banco fora, em qualquer rota (§1.3, débito no §10).
+- **Alerta D7 a N admins em série.** `Notification::send` faz uma chamada por admin; uma exceção no
+  meio — admin não verificado, ou rajada acima do 1/s do sandbox — deixa os seguintes sem e-mail.
+  A AWS aceita rajada curta acima do limite; a prova D7 mede. Não se corrige aqui (ADR-21: sem
+  fila); vai para a ficha de observabilidade se o gate medir.
+- **Cota de 200/24 h dividida com o site.** O `/api/contacto` e o Lotus gastam a mesma cota. O
+  Turnstile do site segura abuso, e o Lotus manda dezenas por mês. Encostar no teto é um dos
+  gatilhos do production access (D14).
+- **Identidades pessoais na conta do site.** Cada externo verificado é uma identidade de e-mail na
+  conta AWS onde o `lotus-site` também vive. Sozinha ela não envia nada (a policy do Lotus trava o
+  remetente em `lotus@`, e a do site em `sitio@`), mas é dado pessoal fora da base: sai com
+  `delete-email-identity` no desligamento do usuário (runbook §13.1).
+- **O e-mail de verificação é da AWS, em inglês.** A versão personalizada exige production access.
+  Quem vai receber precisa ser avisado antes, ou o link expira em 24 h sem clique.
 - **Bounce/complaint.** Sem tópico SNS de feedback: o SES põe o endereço na suppression list e o
   próximo envio falha contido. Para ~10 usuários internos, aceito por escrito no ADR-23.
-- **Suíte PHP.** `backend/.env.production.example` muda, logo `backend/` tem diff: a suíte roda no
-  fechamento (offset +1); Pint e `typescript:transform` não se aplicam (nenhum `.php`, nenhum DTO).
+- **Suíte PHP.** A §4.9 muda dois `.php` e cria um teste (o #121 já tinha mudado
+  `backend/.env.production.example`); a suíte inteira roda no contêiner da lane (offset +1) antes da
+  PR. Pint nos três arquivos; `typescript:transform` não se aplica (nenhum DTO).
 - **Custo.** SES a 0,10 USD por mil; o Budget `lotus-prod-teto` não filtra serviço, então cobre.
 
 ## 9. Definition of Done — comportamento provado
 
 1. Catracas do §7 verdes, sondas vistas reprovar, `pnpm lint` e `pnpm build` verdes.
 2. `aws iam get-role-policy --role-name lotus-ec2 --policy-name lotus-ses` devolve as duas ações,
-   o ARN da identidade e a condição no remetente; `list-access-keys` de `lotus-infra` não ganhou
-   chave nova.
-3. `aws sesv2 get-account --region sa-east-1` → `ProductionAccessEnabled: true`.
+   o `Resource` `arn:aws:ses:sa-east-1:<conta>:identity/*` e a condição no remetente;
+   `list-access-keys` de `lotus-infra` não ganhou chave nova.
+3. `aws sesv2 get-account --region sa-east-1` → `ProductionAccessEnabled: false`, registrado como
+   decisão no ADR-23 (emenda de 2026-10-01); `list-email-identities` → o domínio mais os N externos
+   do passo 3, cada um com `VerifiedForSendingStatus: true`.
 4. `aws sesv2 get-email-identity --email-identity lotusotec.cl` → `DkimAttributes.Status: SUCCESS`,
    `MailFromDomainStatus: SUCCESS`, `VerifiedForSendingStatus: true`; o MX do apex segue Google.
-5. Um alerta D7 disparado em produção chega à caixa de um admin real, com DKIM, SPF e DMARC `pass`,
-   e o canal `seguranca` tem a linha correspondente.
-6. Um reset de senha real completa o ciclo pela UI de produção e a senha nova loga.
-7. `docs/operacao-segredos.md` não contém `MAIL_PASSWORD`, `smtp` nem
-   `backend/.env.production.example`; P-93 encerrada; a linha da P-53 marcada; ADR-23 publicado.
-8. Audit em `blocos/33-infra-producao-email-ses/audit.md` com cada leitura, sem valor de `.env`
-   e sem corpo de e-mail.
+5. A sonda positiva chega ao Gmail do João (externo verificado) com DKIM, SPF e DMARC `pass`, e a
+   negativa devolve `Email address is not verified`.
+6. Um alerta D7 disparado em produção chega à caixa de um admin real, com DKIM, SPF e DMARC `pass`;
+   o canal `seguranca` tem a linha correspondente, e `Falha ao enviar alerta` não tem nenhuma.
+7. Um reset de senha real completa o ciclo pela UI de produção e a senha nova loga.
+8. `docs/operacao-segredos.md` não contém `MAIL_PASSWORD`, `smtp` nem
+   `backend/.env.production.example`; P-93 encerrada; a linha da P-53 marcada; ADR-23 publicado
+   com a emenda de 2026-10-01 e o gatilho; runbook §13.6 com o pedido pronto; nova versão do Drive
+   conferida por tamanho e hash (D12); packet sem número de conta.
+9. Audit em `blocos/33-infra-producao-email-ses/audit.md` com cada leitura, sem valor de `.env`, sem
+   corpo de e-mail e sem endereço de destinatário.
+10. D15 (emenda de 2026-10-04): `FalhaDeEnvioDeEmailTest` verde com as duas sondas da §7 vistas
+    reprovar, suíte PHP inteira verde e Pint limpo nos arquivos tocados. Em produção, a sonda
+    negativa deixa na saída de erro a linha `Falha ao enviar e-mail` com `aws_erro`
+    `MessageRejected` e sem o endereço.
 
 ## 10. Handoff
 
-`executor: claude`. Fase A é da sessão; Fase B é escrita do João e leitura da sessão. Sem
-delegação ao Codex na execução; a lente independente entra no `/revisar-sprint` (risco alto:
-credencial IAM e caminho de reset de senha).
+`executor: claude`. A Fase A' é da sessão, pelo `/executar-bloco`; a revisão é o `/revisar-bloco`,
+com a lente Codex (risco alto: credencial IAM, caminho de reset de senha e, pela D15, o handler
+global de exceção); o `/finalizar-bloco` abre a PR. A Fase B é escrita do João e leitura da sessão.
+Sem delegação ao Codex na execução.
+
+**Fechamento em duas PRs** (alinhamento de 2026-10-04 ao item 35; a versão anterior fechava "pelo
+main tree", que não publica mais commit):
+
+- **A PR do bloco** mescla com o `estado.md` em `blocked` aguardando aceitação (invariante 11): os
+  itens 2 a 7 da `## Verificação externa` só existem depois do merge e do espelho. A linha do
+  `historico/progress.md` nasce nela, dizendo o que falta; o `backlog.md` não muda.
+- **A PR de docs da aceitação** — o modo Aceitação do `/finalizar-bloco`, que o item 36 automatiza;
+  até lá, do João — traz num commit só a prova de cada item no corpo do `estado.md`, as leituras no
+  `audit.md`, o `closed`, a linha do `historico/progress.md` atualizada e o `backlog.md` abaixo
+  (invariante 10: ficha nova só entra por PR de docs). O main tree não roda `aws` nem `curl`
+  (allowlist do `guard-main-shell`): as leituras da Fase B rodam numa árvore fora dele, ou o João
+  roda e cola.
+
+**No `backlog.md`, pela PR de docs da aceitação:**
+
+- *Futuros* ganha o **FUT-4** (D14):
+
+  > - **FUT-4 · Destinatário de e-mail fora dos usuários internos** — cliente, aluno ou usuário de
+  >   outra empresa recebendo e-mail do sistema. A conta SES está em sandbox por decisão (ADR-23,
+  >   emenda de 2026-10-01): sem production access, cada destinatário fora de `@lotusotec.cl` precisa
+  >   clicar antes num link da AWS. Pré-requisito do bloco que trouxer a feature: pedir o production
+  >   access logo no início (runbook `deploy/aws/README.md` §13.6, cerca de 1 dia útil de espera). Se
+  >   a feature der login a cliente ou aluno, ela também reabre a RN-01 (lei 5 do `CLAUDE.md`).
+
+- *Débitos técnicos* ganha o da `QueryException` (§1.3), com o próximo `D-NN` livre (`D-74` em
+  2026-10-04): a mensagem traz a SQL com os bindings, e com o banco fora qualquer `report()` leva
+  e-mail, RUT ou nome ao log default, em qualquer rota. O
+  Laravel 13.34 lê `mask_bindings_in_exception_messages` na conexão; ligar custa os valores no
+  diagnóstico de erro de SQL, e a decisão é do João. Gatilho: o próximo bloco que tocar a
+  observabilidade ou `config/database.php`. O débito do `report($e)` proposto em 2026-10-01 não
+  nasce: a D15 o paga neste bloco.
+- A ficha 33 sai com o DoD de 2026-09-28 ("conta fora do sandbox") substituído pela decisão de
+  2026-10-01 (cabeçalho desta spec).
+
+## Verificação externa
+
+Alinhamento de 2026-10-04 ao item 35. O item 1 ganha prova antes do merge (Task 19 do plano) e vai
+para o corpo do `estado.md` no fechamento; os itens 2 a 7 só existem depois do merge e do espelho,
+vão no `blocker` do aguardando aceitação e voltam na PR de docs (§10). O procedimento é o runbook
+§13 e a Fase B' do plano; o detalhe de cada leitura fica no `audit.md`.
+
+1. Nova versão de `arquitetura-aws-lotus.md` no Drive, só com as duas linhas aprovadas trocadas
+   (D12).
+   - prova: nenhuma
+2. Inline `lotus-ses` em `identity/*`, com a `Condition` no remetente, e nenhuma access key nova
+   (§5, passo 2).
+   - prova: nenhuma
+3. Todo admin e redator ativo fora de `@lotusotec.cl`, e o Gmail do João, verificados como
+   identidade (§5, passo 3).
+   - prova: nenhuma
+4. Espelho do merge, `MAIL_MAILER=ses` no `.env` do host e o botão no SHA espelhado (§5, passos 1
+   e 4).
+   - prova: `producao GET /up -> 200`
+5. Sonda positiva entregue com DKIM, SPF e DMARC `pass`; negativa com `Email address is not
+   verified` e a linha `Falha ao enviar e-mail` com `aws_erro` `MessageRejected`, sem o endereço
+   (§5, passo 5; D9, D15).
+   - prova: nenhuma
+6. Alerta D7 real na caixa de um admin, com DKIM, SPF e DMARC `pass`, e nenhuma linha `Falha ao
+   enviar alerta` (§5, passo 6).
+   - prova: nenhuma
+7. Reset de senha real completo pela UI e a leitura final da conta e da identidade (§5, passos 7
+   e 8).
+   - prova: nenhuma

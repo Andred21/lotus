@@ -4,6 +4,7 @@ use App\Shared\Exceptions\ProblemDetails;
 use App\Shared\Exceptions\RecusaDeDominio;
 use App\Shared\Http\Middleware\EnsureAccountIsActive;
 use App\Shared\Http\Middleware\SetLocale;
+use App\Shared\Logging\FalhaDeObservabilidade;
 use App\Shared\Logging\RegistraEventoDeErro;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
@@ -23,6 +24,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -146,6 +148,26 @@ return Application::configure(basePath: dirname(__DIR__))
         // base `RecusaDeDominio`, e não por `PublicDetail`, que as duas
         // compartilham.
         $exceptions->dontReport(RecusaDeDominio::class);
+
+        // Falha de transporte de e-mail vai ao log SEM a mensagem (item 33,
+        // D15). A mensagem é texto do servidor de envio, e ele nomeia quem não
+        // recebeu: o SES em sandbox devolve "Email address is not verified. The
+        // following identities failed the check in region SA-EAST-1:
+        // <endereço>", e a recusa de IAM traz o ARN do papel assumido — número
+        // da conta e InstanceId. O registro padrão grava a mensagem e serializa
+        // a exceção com a cadeia de `previous`, então o dado chegava ao canal
+        // default por três caminhos: os `report($e)` do reset de senha e do
+        // cadastro de redator, e o reenvio do convite, que não contém a falha e
+        // sobe até aqui.
+        //
+        // Um ponto só, e não um `catch` por envio: o próximo envio já nasce
+        // coberto. A `FalhaDeObservabilidade` grava classe, código, origem e o
+        // `aws_erro` (`MessageRejected`, `AccessDenied`, `Throttling`), que diz
+        // por que falhou sem dizer para quem. O `stop()` encerra aqui: sem ele o
+        // handler gravaria a mensagem crua logo depois da linha limpa.
+        $exceptions->report(function (TransportExceptionInterface $e): void {
+            FalhaDeObservabilidade::registrar('Falha ao enviar e-mail', $e);
+        })->stop();
 
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
