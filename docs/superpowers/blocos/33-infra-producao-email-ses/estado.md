@@ -2,10 +2,10 @@
 schema_version: 3
 id: 33
 slug: 33-infra-producao-email-ses
-workflow_state: blocked
-next_owner: joao
-next_action: "resolve_blocker aguardando aceitação: itens 2 a 7 da ## Verificação externa (policy lotus-ses, identidades, host em ses, sondas, alerta D7, reset de senha)"
-resume_state: ready_for_closure
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item aceitacao externa
+resume_state: null
 active_spec: docs/superpowers/blocos/33-infra-producao-email-ses/spec.md
 active_plan: docs/superpowers/blocos/33-infra-producao-email-ses/plano.md
 active_review: docs/superpowers/blocos/33-infra-producao-email-ses/revisao.md
@@ -13,13 +13,13 @@ active_acceptance: null
 context_packet: docs/superpowers/context-packets/2026-09-28-infra-producao-email-ses.md
 efeito_externo: sim
 executor: claude
-branch: infra/33-infra-producao-email-ses
+branch: docs/33-infra-producao-email-ses
 worktree: ../lotus-33-infra-producao-email-ses
-offset: 1
-lane_base: 6be051de
-commit: 6237b045
-blocker: "aguardando aceitação depois do merge: itens 2 a 7 da ## Verificação externa da spec (policy lotus-ses sem access key nova; identidades verificadas; espelho, MAIL_MAILER=ses e botão no SHA; sonda positiva e negativa com a linha Falha ao enviar e-mail; alerta D7 real; reset de senha pela UI)"
-updated_at: 2026-10-04T16:55:00-03:00
+offset: 2
+lane_base: e94f417b
+commit: e94f417b
+blocker: null
+updated_at: 2026-10-04T18:33:12-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
@@ -43,3 +43,5 @@ Só existem depois do merge e do espelho; a prova de cada um volta na PR de docs
 verificadas · 4 espelho, `MAIL_MAILER=ses` e o botão no SHA espelhado · 5 sonda positiva e negativa,
 com `aws_erro` `MessageRejected` e sem o endereço · 6 alerta D7 real · 7 reset de senha pela UI e a
 leitura final da conta e da identidade.
+
+Reaberto em 2026-10-04 pelo lane.sh aceitar, na branch docs/33-infra-producao-email-ses; a branch do bloco era infra/33-infra-producao-email-ses.
