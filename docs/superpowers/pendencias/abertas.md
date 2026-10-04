@@ -811,6 +811,39 @@ operável só pelo console.
 A permissão de e-mail nasceu na role `lotus-ec2` (inline `lotus-ses`), nunca neste usuário — a
 chave segue sem uso pela aplicação e a ficha segue com o João.
 
+**Medida de novo em 2026-10-04, na aceitação do item 33:** `list-access-keys` de `lotus-infra`
+devolve 1 chave, nenhuma nova depois da inline `lotus-ses`. Segue com o João.
+
+## P-98 — em produção, o único admin ativo recebe pelo Gmail pessoal do João, e o redator externo não recebe
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha quando existir uma caixa `@lotusotec.cl`
+com leitor para o admin de produção e o redator externo estiver verificado no SES (ou a conta sair
+do sandbox, runbook §13.6); dispara de qualquer forma antes do go-live (item 13). Revisar em
+**2026-10-31**.
+
+Medido em 2026-10-04, na aceitação do item 33 (`blocos/33-infra-producao-email-ses/audit.md`, B3 e
+Desvios):
+
+- A base de produção tem 2 usuários ativos de tipo admin ou redator, e **nenhum** em `@lotusotec.cl`:
+  um admin e um redator, ambos de fora do domínio. Em sandbox, o SES só entrega à identidade de domínio
+  e a endereço verificado, e nenhuma caixa `@lotusotec.cl` tinha leitor para a prova. O João trocou o
+  e-mail da conta do admin para o Gmail dele, que já está verificado, e é para onde chegam o alerta
+  D7 (ADR-21) e o reset de senha — a prova do item 33 só fechou assim. **O alerta de segurança de
+  produção hoje tem um destinatário só, e é uma caixa pessoal.**
+- O redator externo **não foi verificado**, por decisão do João. Reset de senha e convite para ele
+  falham calados, com `aws_erro` `MessageRejected` e sem o endereço no log (spec §8); quem avisa a
+  pessoa é o João, o sistema não avisa.
+
+**Por que não é urgente:** o Lotus tem ~10 usuários internos e baixa concorrência, e o alerta D7 só
+vai a admins. **O que não pode acontecer** é o João sair do caminho do alerta sem outro admin com
+caixa legível: o D7 voltaria a não chegar a ninguém, como antes do item 33.
+
+**Como fecha:** a Lotus entrega uma caixa `@lotusotec.cl` (ou outro admin com identidade
+verificada em `create-email-identity`, runbook §13.1), e o João troca o e-mail do admin pelo
+`tinker` — a troca é `update` do Eloquent, o model é `Auditable`; e verifica o redator, ou decide
+que ele não recebe e-mail. Com production access (runbook §13.6, FUT-4) o problema da verificação
+some, mas a caixa com leitor continua sendo necessária.
+
 ---
 
 # Travadas em decisão da Lotus
@@ -1193,11 +1226,10 @@ coordenada que envelheceu. Registradas sem correção, porque a skill reporta e 
 | `docs/operacao-segredos.md` §3 | Bloco `ses` está em `services.php:25-29` (o doc cita 24-28) | `backend/config/services.php:25-29` |
 | `docs/operacao-segredos.md` §5 | `EncryptCookies` está em `bootstrap/app.php:117` (o doc cita 89) | `backend/bootstrap/app.php:117` |
 | `docs/operacao-segredos.md` §5.1 | `SESSION_LIFETIME` não está em `.env.example:38`; está em `backend/.env.example:40`, e o molde de produção é `deploy/aws/env.prod.example:65` | `deploy/aws/env.prod.example:65` |
-| `docs/operacao-segredos.md` §2 | `backlog.md:152` deixou de ser o item 10: é a ficha do 33 | `docs/superpowers/backlog.md:150-153` |
+| `docs/operacao-segredos.md` §2 | `backlog.md:152` deixou de ser o item 10: era a ficha do 33, que saiu na aceitação (2026-10-04) — a linha agora cai dentro da ficha do 9 | `docs/superpowers/backlog.md:150-153` |
 | `deploy/aws/README.md:5` | O plano do item 10 foi arquivado; o caminho citado é o antigo | `docs/superpowers/plans/archive/2026-09-02-infra-producao-provisionamento-aws.md` |
 | `docs/estrutura-monolito.md:63` | A árvore de `Shared/Logging/` lista só `EventoDeSeguranca`; a pasta tem também `RegistraEventoDeErro` e `FalhaDeObservabilidade` | `backend/app/Shared/Logging/` (3 arquivos) |
 | `CLAUDE.md` §6 | A lista de serviços do Compose omite `clamav` (o `mailpit` já está na P-53) | `docker-compose.yml:27,53,69` |
 
-**Não é divergência, só dependência:** o ADR-23 cita o `FUT-4` do `backlog.md`, que só nasce na PR de
-docs da aceitação do item 33 (spec §10). Se a PR da aceitação não o levar, vira a 11ª linha desta
-ficha.
+**A dependência fechou em 2026-10-04:** o ADR-23 cita o `FUT-4` do `backlog.md`, e a PR de docs da
+aceitação do item 33 o levou (spec §10).

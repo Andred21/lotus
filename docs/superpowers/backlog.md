@@ -123,7 +123,6 @@ abaixo está escrita nesta ordem.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **33** `infra-producao-email-ses` | Infra | O alerta síncrono de acesso suspeito (ADR-21/D7) e o reset de senha não chegam a ninguém: `MAIL_MAILER=log` em produção |
 | 2 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
 | 3 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (fechado em 2026-09-27, alarme de certificado) e, de preferência, do 33 |
 | 4 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
@@ -146,40 +145,6 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 ---
 
 # Fila priorizada
-
-## 33. `infra-producao-email-ses`
-
-**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim · **Depende:** —
-**Fonte:** spec do item 10 v2 (`specs/archive/2026-09-02-infra-producao-provisionamento-aws-design.md:53-58`
-— "vira bloco próprio; a criação do item na fila é do João"); `deploy/aws/env.prod.example:116`
-(`MAIL_MAILER=log` "até o bloco de SES"); ADR-21/D7 (alerta síncrono); `docs/operacao-segredos.md:48,60-62`;
-Notion admin `10.1.4`; lotus-site `docs/adr/ADR-SITE-005.md` (SES do site: Easy DKIM, MAIL FROM
-`ses.lotusotec.cl`, porque `mail.` já é CNAME do Google) e tasks `7.1.4`/`4.1.7`; Drive
-`arquitetura-aws-lotus.md` (SES, domínio verificado, SPF/DKIM, "sair do sandbox antes de produção" —
-ainda com o placeholder `lotus.cl`).
-
-**Por que existe:** produção não envia e-mail nenhum. O alerta de acesso suspeito (ADR-21, D7) grava no
-canal `seguranca` e não chega a ninguém; reset de senha idem. `docs/operacao-segredos.md` afirma que
-produção usa SMTP — está errado desde o item 10 v2 (falso positivo do levantamento de 2026-09-26). A
-spec do item 10 v2 prometeu este bloco e ele nunca entrou na fila.
-
-**Escopo:**
-- identidade SES de domínio `lotusotec.cl` **compartilhada com o site** (ADR-SITE-005): quem criar
-  primeiro registra DKIM/MAIL FROM na zona `lotus-dns`; o segundo reusa — nunca duas identidades;
-- saída do sandbox do SES; remetente e `MAIL_MAILER` reais no `env.prod.example` e no host; credencial
-  por instance role, não access key;
-- alerta D7 e reset de senha vistos chegar em caixa real; `docs/operacao-segredos.md` corrigido;
-- MX do apex intocado (Google Workspace).
-
-**Fora:** central de notificações (FUT-3); e-mail do formulário do site (Lambda do lotus-site).
-
-**Paga:** a divergência `operacao-segredos.md` × `env.prod.example` (ficha a abrir no planejamento).
-**Depende de:** zona no Route 53 (feito em 2026-09-26); coordenação com o lotus-site `7.1.4`.
-
-**DoD:** um alerta D7 disparado em produção chega a um destinatário real; um reset de senha real
-completa o ciclo; `aws sesv2 get-email-identity` com `DkimStatus: SUCCESS`; conta fora do sandbox.
-
----
 
 ## 9. `administracao-roles-permissoes-redesign`
 
@@ -344,6 +309,12 @@ ficam só como ponteiro, e a ficha delas é lá.
 - **FUT-3 · Central de notificações** — notificações persistidas na aplicação alimentadas por
   eventos/condições dos domínios; badge/central/leitura primeiro; e-mail apenas como canal futuro
   para eventos críticos. Exige levantamento funcional próprio.
+- **FUT-4 · Destinatário de e-mail fora dos usuários internos** — cliente, aluno ou usuário de
+  outra empresa recebendo e-mail do sistema. A conta SES está em sandbox por decisão (ADR-23,
+  emenda de 2026-10-01): sem production access, cada destinatário fora de `@lotusotec.cl` precisa
+  clicar antes num link da AWS. Pré-requisito do bloco que trouxer a feature: pedir o production
+  access logo no início (runbook `deploy/aws/README.md` §13.6, cerca de 1 dia útil de espera). Se
+  a feature der login a cliente ou aluno, ela também reabre a RN-01 (lei 5 do `CLAUDE.md`).
 
 ---
 
@@ -427,6 +398,17 @@ ficam só como ponteiro, e a ficha delas é lá.
   conteúdo) e deixá-la quebrar ou truncar. **Quem decide o hospedeiro é o João.** **DoD:**
   `scrollWidth == clientWidth` no invólucro dos dois painéis em 1024x768 e 390x844, medido no
   navegador. Origem: Q-3 do review do item 23 (`frontend-tabelas-reserva-e-rolagem`).
+
+- **D-74 · A `QueryException` leva a SQL com os bindings ao log default, e com o banco fora qualquer
+  `report()` grava e-mail, RUT ou nome** → **sem bloco hospedeiro.** A mensagem da exceção traz a
+  SQL com os valores já interpolados (`Str::replaceArray`), em qualquer rota. É anterior ao SES e
+  vale para o app inteiro: o item 33 fechou o mesmo vazamento para o destinatário de e-mail (D15,
+  `report` de `TransportExceptionInterface` no `bootstrap/app.php`) e deixou esta fatia de fora
+  (spec do item 33, §1.3 e §8). O Laravel 13.34 lê `mask_bindings_in_exception_messages` na
+  conexão; ligar custa os valores no diagnóstico de erro de SQL, e **a decisão é do João**.
+  Gatilho: o próximo bloco que tocar a observabilidade ou `config/database.php`. O débito do
+  `report($e)` proposto em 2026-10-01 não nasceu: a D15 o pagou neste bloco. Origem: brainstorming
+  de 2026-10-04 do item 33 (`infra-producao-email-ses`).
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
