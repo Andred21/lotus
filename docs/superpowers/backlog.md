@@ -266,26 +266,6 @@ está formalmente resolvida.
 
 ---
 
-## 36. `harness-aceitacao-externa`
-
-**Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** 35
-**Fonte:** a mesma spec, §6.
-
-**Objetivo:** bloco cujo resultado depende de ação fora do repositório não fecha sem a prova dessa
-ação, e espera por ela em `blocked` sem ocupar lane.
-
-**Escopo:** `.claude/scripts/aceitacao.sh` (`gerar`, `conferir`) com provas HTTP declarativas
-`<alias> GET|HEAD <caminho> -> <código>` e itens manuais com resultado e data;
-`.claude/aceitacao-aliases.conf` (`producao`, `local`); portão de `efeito_externo` e modo aceitação
-no `/finalizar-bloco`; tabela `## Aguardando aceitação` neste arquivo; suíte contra servidor HTTP
-local.
-
-**Integração:** branch empilhada na ponta do 35; mescla depois dele.
-
-**DoD:** um bloco com um item automático e um manual percorre `PENDENTE` → `OK` de verdade.
-
----
-
 ## 37. `harness-sinal-de-contexto-cheio`
 
 **Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** —
