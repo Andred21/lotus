@@ -24,7 +24,10 @@ word_budget: 1200
 > **Nota de 2026-10-04 (item 33).** A linha "Sandbox" de *Resolved decisions and divergences* e o
 > key fact 2 ("não satisfaz o DoD") foram substituídos pela emenda de 2026-10-01 da spec: a conta
 > fica em sandbox por decisão do João `[J-1]`, com destinatário verificado e o production access
-> adiado com gatilho (ADR-23). O número da conta virou `<conta>`: o repositório pessoal é público.
+> adiado com gatilho (ADR-23). Pela mesma emenda, o **Goal** ("produção fora do sandbox") e o
+> critério de aceite do `get-account` ("production access habilitado") também estão superados:
+> o `get-account` segue mostrando sandbox. O número da conta virou `<conta>`: o repositório
+> pessoal é público.
 
 ## Scope
 
