@@ -1,4 +1,5 @@
 [[ -n ${DIR_TESTES:-} ]] || { printf 'rode pelo run-all.sh: %s nao roda avulso\n' "${BASH_SOURCE[0]}" >&2; exit 1; }
+unset LOTUS_CONTEXTO_LIMIAR  # a sessao pode herdar o limiar de prova; cada caso passa o dele por comando
 # Sinal de contexto cheio (spec do bloco 37, secao 2): o sinal-contexto.sh
 # contra transcripts JSONL gerados aqui, com usage controlado. As marcas das
 # sessoes de teste se chamam lotus-contexto-teste-* e saem no comeco e no fim.
@@ -134,10 +135,12 @@ assert_igual '' "$SAIDA_HOOK" 'a leitura e so da cauda: a entrada alem de 200 li
 { sc_user; sc_assistant 25000; } > "$_sc_t"
 LOTUS_CONTEXTO_LIMIAR=20000 acionar_hook "$SINAL" "$(sc_payload PostToolUse teste-limiar "$_sc_t")"
 assert_contem "$(sc_aviso)" 'Contexto em ~25 mil tokens, acima de 20 mil' 'LOTUS_CONTEXTO_LIMIAR troca o limiar'
+# Limiar invalido cai no padrao, nao silencia: acima de 150 mil ainda avisa.
+{ sc_user; sc_assistant 160000; } > "$_sc_t"
 LOTUS_CONTEXTO_LIMIAR=abc acionar_hook "$SINAL" "$(sc_payload PostToolUse teste-limiar-texto "$_sc_t")"
-assert_igual '' "$SAIDA_HOOK" 'limiar que nao e numero cai no padrao de 150 mil'
+assert_contem "$(sc_aviso)" 'acima de 150 mil' 'limiar que nao e numero cai no padrao de 150 mil'
 LOTUS_CONTEXTO_LIMIAR=0 acionar_hook "$SINAL" "$(sc_payload PostToolUse teste-limiar-zero "$_sc_t")"
-assert_igual '' "$SAIDA_HOOK" 'limiar zero cai no padrao de 150 mil'
+assert_contem "$(sc_aviso)" 'acima de 150 mil' 'limiar zero cai no padrao de 150 mil'
 
 # --- RF1. depois do /compact a medicao anterior nao vale
 { sc_user; sc_assistant 170000; sc_compactacao; } > "$_sc_t"

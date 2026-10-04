@@ -4,8 +4,8 @@
 # vivo). Nao compacta: nenhum hook dispara compactacao. O aviso manda fechar a
 # unidade atual e pedir /compact ao Joao.
 # A medicao e o usage da ultima chamada a API gravada no transcript: numero
-# real, com atraso de uma chamada, porque o transcript e gravado de forma
-# assincrona.
+# real, com atraso de uma chamada: a resposta e o resultado da ferramenta so
+# entram no prompt da chamada seguinte.
 # Uma vez por travessia: a marca em TMPDIR cala o aviso ate a medicao voltar
 # para baixo do limiar, o caminho depois de um /compact. Sem medicao nao
 # rearma: falta de numero nao e "abaixo".

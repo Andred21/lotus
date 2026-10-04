@@ -110,3 +110,46 @@ sem-UserPromptSubmit: falhas: 1 | settings.json liga o sinal-contexto.sh em User
 vez e sem filtro de ferramenta
 mutantes sem teste que reprove: 0 de 22
 ```
+
+## Re-rodada após a revisão final
+
+Data: 2026-10-04. Medido sobre o `HEAD` `9729f16e` mais as três correções desta onda, antes do
+commit que as grava (o SHA do commit está no log da branch, `fix(37): ...`).
+
+O que mudou:
+
+- **I1.** O teste ganhou `unset LOTUS_CONTEXTO_LIMIAR` logo depois da trava de avulso. A sessão do
+  DoD 2 abre com `LOTUS_CONTEXTO_LIMIAR=20000 claude` e o Bash dela herda a variável; sem o
+  `unset`, seis asserções falhavam. Os casos do item 13 passam a variável por comando.
+- **M1.** Os casos `abc` e `0` do item 13 mediam 25000, abaixo do padrão, e por isso "cai no
+  padrão" e "fica mudo" davam a mesma saída. Agora medem 160000 e exigem o aviso com
+  `acima de 150 mil`.
+- **M2.** O comentário do hook atribuía o atraso de uma chamada à gravação assíncrona do
+  transcript; passou a dar a causa da spec: a resposta e o resultado da ferramenta só entram no
+  prompt da chamada seguinte.
+
+Placar da suíte, `bash .claude/tests/run-all.sh`:
+
+```
+LOTUS_CONTEXTO_LIMIAR=20000, antes do unset:  FALHOU: 6 asercao(oes)
+LOTUS_CONTEXTO_LIMIAR=20000, depois:          OK: 18 arquivo(s) de teste, nenhuma falha
+sem a variável:                               OK: 18 arquivo(s) de teste, nenhuma falha
+```
+
+Mutante extra do M1: na cópia do hook, a linha do limiar vira
+`[[ -z $limiar ]] && limiar=$LIMIAR_PADRAO; [[ $limiar =~ ^[1-9][0-9]*$ ]] || return 0`, de modo
+que valor inválido silencia o hook. Antes da correção do teste, o `sinal-contexto.tests.sh` contra
+essa cópia deu `falhas: 0` (mutante vivo). Depois:
+
+```
+  FALHA limiar que nao e numero cai no padrao de 150 mil
+  FALHA limiar zero cai no padrao de 150 mil
+falhas: 2
+```
+
+Bancada de mutantes da Task 3, mesmo script, contra a árvore corrigida (nenhum trecho deixou de
+casar com o comentário novo):
+
+```
+mutantes sem teste que reprove: 0 de 22
+```
