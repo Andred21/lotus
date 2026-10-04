@@ -210,8 +210,11 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 │   └── lib/                    # classificar-comando.py, ler-frontmatter.py, comum.sh, estados.sh
 │
 ├── scripts/
-│   ├── lane.sh                 # portão de toda lane — verbos `descobrir`, `abrir`, `conferir`, `fechar`
-│   └── lib/backlog.py          # só leitura: fichas e conflitos de `Depende`, para o portão do `lane.sh abrir`
+│   ├── lane.sh                 # portão de toda lane — verbos `descobrir`, `abrir`, `aceitar`, `conferir`, `fechar`
+│   ├── aceitacao.sh            # portão de efeito externo: `gerar` no planejamento, `conferir` no fechamento
+│   └── lib/
+│       ├── backlog.py          # só leitura: fichas e conflitos de `Depende`, para o portão do `lane.sh abrir`
+│       └── aceitacao.py        # lê a `## Verificação externa` da spec; lê e escreve o `aceitacao.md`
 │
 ├── prompts/                    # texto longo consumido por um agente despachado, não command direto
 │   ├── gabarito-lotus.md       # lente 1 do `/revisar-bloco` — destilado da ex-skill `revisar-sprint`
@@ -219,11 +222,12 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 │
 ├── rules/                      # carrega sozinha ao tocar o arquivo coberto — não ler por precaução
 ├── skills/                     # auditar-docs/ e lotus-ui-review/ — instrução sob demanda, não prompt fixo
-├── tests/                      # `run-all.sh` soma todo `*.tests.sh` da pasta (15 hoje); veredito é a
+├── tests/                      # `run-all.sh` soma todo `*.tests.sh` da pasta (17 hoje); veredito é a
 │                               #   última linha e o código de saída. Cada arquivo recusa rodar avulso
 │                               #   — trava de uma linha no topo, catraca própria em `avulso.tests.sh`,
 │                               #   regra descrita em `_assert.sh`. Lição 10 (`docs/README.md:70`):
 │                               #   teste que nunca viu o bug reprovar é cobertura fantasma
+├── aceitacao-aliases.conf      # `<alias> <URL-base>` das provas automáticas: só `producao` (sem stack local, E11 do 36); sem segredo
 ├── settings.json               # os 5 hooks acima + `enabledPlugins` do `superpowers@claude-plugins-official`
 └── papeis.md                   # única fonte de model/effort por papel despachado; catraca com agents/
 
@@ -241,8 +245,9 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
   `NEGADOS_SEMPRE` lista os binários de execução ou escrita arbitrária, negados sob qualquer forma.
 - **O que ela libera na `main`:** leitura e verificação, dentro da régua de cada família — em
   `git`, os subcomandos de `GIT_SUB` (item acima); em `gh`, só `pr view/list/diff/checks`,
-  `run view/list`, `repo view` e `gh api` sem verbo de escrita; e o `lane.sh` nas quatro formas
-  (`descobrir`; `conferir <NN>`; `fechar <NN>`; `abrir <NN> <tipo> <slug> [--modelo <alias>]`).
+  `run view/list`, `repo view` e `gh api` sem verbo de escrita; e o `lane.sh` nas cinco formas
+  (`descobrir`; `conferir <NN>`; `fechar <NN>`; `abrir <NN> <tipo> <slug> [--modelo <alias>]`;
+  `aceitar <NN> [--modelo <alias>]`).
 - **Como acrescentar uma entrada:** editar a família ou o conjunto certo, acrescentar os casos que
   liberam **e** os que negam em `.claude/tests/classificar-comando.tests.sh`, e rodar
   `bash .claude/tests/run-all.sh`.

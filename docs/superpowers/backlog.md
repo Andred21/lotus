@@ -133,6 +133,16 @@ Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o rela
 `audits/2026-09-04-lotus-ui-review-administracion.md` mede a tela **atual**. Se o 9 redesenhar, a
 tela nova pede run própria dentro dele.
 
+## Aguardando aceitação
+
+Bloco que mesclou em `blocked` esperando a prova do efeito externo (`state.md`, invariante 11). A
+linha entra no fechamento da lane do bloco, quando o `aceitacao.sh conferir` sai PENDENTE, e sai no
+fechamento da lane de aceitação, junto com a ficha (`/finalizar-bloco`, item d do Passo 6). Ficha
+listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no main tree.
+
+| Bloco | Itens pendentes | Desde |
+|---|---|---|
+
 ---
 
 # Fila priorizada
@@ -253,26 +263,6 @@ construídos pelo item 34 — aqui só se medem.
 
 **DoD:** release, fluxo crítico, backup e restore têm evidência; a divergência de disponibilidade
 está formalmente resolvida.
-
----
-
-## 36. `harness-aceitacao-externa`
-
-**Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** 35
-**Fonte:** a mesma spec, §6.
-
-**Objetivo:** bloco cujo resultado depende de ação fora do repositório não fecha sem a prova dessa
-ação, e espera por ela em `blocked` sem ocupar lane.
-
-**Escopo:** `.claude/scripts/aceitacao.sh` (`gerar`, `conferir`) com provas HTTP declarativas
-`<alias> GET|HEAD <caminho> -> <código>` e itens manuais com resultado e data;
-`.claude/aceitacao-aliases.conf` (`producao`, `local`); portão de `efeito_externo` e modo aceitação
-no `/finalizar-bloco`; tabela `## Aguardando aceitação` neste arquivo; suíte contra servidor HTTP
-local.
-
-**Integração:** branch empilhada na ponta do 35; mescla depois dele.
-
-**DoD:** um bloco com um item automático e um manual percorre `PENDENTE` → `OK` de verdade.
 
 ---
 

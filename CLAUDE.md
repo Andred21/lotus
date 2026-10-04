@@ -41,7 +41,7 @@ Antes de decidir arquitetura, padrão ou schema, **leia a fonte**. Se a dúvida 
 - **SÓ QUANDO O ESTADO EXIGIR:** `docs/superpowers/backlog.md` — fila futura, usada no main tree:
   para abrir lane e no planejamento, ou por solicitação explícita do João; no fechamento, é a
   lane que remove a própria ficha e os `D-*` que pagou — ou, no bloco que mesclou aguardando
-  aceitação, a PR de docs que traz a prova (`state.md`, invariante 10).
+  aceitação, a lane de aceitação (`state.md`, invariante 10).
 - **SE a task toca schema/DB/infra:** `docs/adrs.md` e `docs/der-fisico.md`.  
 - **OPCIONAL (se presente):** `.superpowers/sdd/progress.md` — ledger local task a task. Serve
   somente para retomar detalhe fino da execução; nunca decide a fase.

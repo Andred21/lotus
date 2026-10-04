@@ -10,7 +10,8 @@ effort: high
 
 Fase 4 de 4 do harness de blocos. Desenho: spec compartilhada
 `docs/superpowers/specs/2026-09-26-harness-paridade-eladecora-design.md` §5.6, com as emendas da
-spec do bloco 35 — em especial a E8, que reescreve o Passo 6 e a invariante 10 para este command.
+spec do bloco 35 — em especial a E8, que reescreve o Passo 6 e a invariante 10 para este command —
+e a aceitação externa da spec do bloco 36 (§2.2 a §2.5).
 
 Argumento: `$ARGUMENTS`
 
@@ -35,8 +36,8 @@ Invoque `Skill(caveman, "ultra")`. Confirme em uma linha que carregou.
 
 ## Passo 2 — Descobrir o modo
 
-Este command tem quatro modos que já existem, mais um quinto que só o item 36 implementa. O
-primeiro que casar vence — não escolha por conveniência, escolha pela assinatura em disco:
+Este command tem cinco modos. O primeiro que casar vence — não escolha por conveniência, escolha
+pela assinatura em disco:
 
 ```bash
 git rev-parse --abbrev-ref HEAD
@@ -59,6 +60,11 @@ devolveu — e use-os **literalmente** dali para frente, nos passos seguintes.
   já rodou nesta lane e a sessão parou antes de o Passo 7 publicar (ou a PR voltou `CLOSED`): é a
   **retomada**, logo abaixo. Qualquer outro estado — `blocked` por outro motivo, inclusive — cai no
   ramo **Nada casa**.
+
+  **Lane de aceitação.** É a lane que o modo Aceitação abre pelo `lane.sh aceitar`. A assinatura
+  dela é `next_action: close_active_work_item aceitacao externa`, texto que só o `aceitar`
+  escreve. Ela corre no modo Normal, com as diferenças marcadas no Passo 3 e nos itens a a f do
+  Passo 6.
 
   **Retomada.** Confira se o HEAD está publicado e se há PR:
 
@@ -117,39 +123,33 @@ devolveu — e use-os **literalmente** dali para frente, nos passos seguintes.
 
 - **Aceitação.** No main tree, o `NN` do argumento não aparece nem como `lane␟NN␟…` nem como
   `sem-arvore␟NN␟…` no `descobrir`, e `docs/superpowers/blocos/<NN>-<slug>/estado.md` — já
-  mesclado na `main` — diz `workflow_state: blocked`, esperando prova de efeito externo depois do
-  merge (o que o 6a gravou). Esse é o modo que o item 36 implementa por inteiro; aqui, pare e diga:
-  "o modo aceitação chega com o item 36". Até lá, a saída é do João, numa PR de docs
-  (`docs/superpowers/state.md`, "Entrar e sair de `blocked`" e invariante 10), com tudo num commit
-  só:
+  mesclado na `main` — está em `blocked` aguardando aceitação: `resume_state: ready_for_closure` e
+  `blocker` começando por `aguardando aceitação`, o que o 6a gravou. O main tree não publica
+  commit (E8), então a prova se confere numa **lane de aceitação**, aberta a partir da `main`
+  atual:
 
-  - a prova escrita no corpo do `estado.md`, abaixo do frontmatter (invariante 11);
-  - o frontmatter direto de `blocked` para `closed` — o `resume_state` já está cumprido: a revisão
-    passou e a prova era o que faltava:
+  ```bash
+  git fetch origin
+  git merge --ff-only origin/main
+  bash .claude/scripts/lane.sh aceitar <NN> --modelo <alias do modelo da sessão>
+  ```
 
-    ```yaml
-    workflow_state: closed
-    next_owner: joao
-    next_action: none
-    blocker: null
-    resume_state: null
-    commit: <git rev-parse --short HEAD antes deste commit>
-    updated_at: <date -Iseconds>
-    updated_by: <id -un>@<hostname -s> / <alias do modelo, ou terminal>
-    ```
-
-  - a remoção da ficha e dos `D-*` pagos, como o 6d descreve;
-  - a linha do `historico/progress.md` atualizada, sem linha nova.
+  O `merge --ff-only` falhando, ou `PORTAO RECUSOU` → pare e relate. Deu certo:
+  `EnterWorktree(path: "<caminho absoluto impresso pelo LANE ABERTA>")` e siga **nesta mesma
+  sessão** pelo modo **Normal**, relendo a branch atual e o `estado.md` da lane — o `aceitar` o
+  deixou em `ready_for_closure`, com a assinatura da lane de aceitação.
 
 - **Nada casa.** Relate `workflow_state`, `next_owner` e `next_action` do `estado.md` que deu para
   ler, e pare.
 
 **Normal segue para o Passo 3 — ou, com `closed` e algo por publicar, para o Passo 7. Pós-PR, com o merge-base já confirmado, pula direto para o
-Passo 8. Conserto e Aceitação terminam aqui mesmo, nos dois ramos acima.**
+Passo 8. Conserto termina aqui mesmo; Aceitação segue no modo Normal, dentro da lane que abriu.**
 
 ## Passo 3 — Verificação com evidência fresca
 
-Só no modo normal.
+Só no modo normal. **Na lane de aceitação, nada deste passo se aplica:** o diff dela contra a
+`origin/main` é só a pasta do bloco, e a verificação é o `aceitacao.sh conferir` do 6a. Siga para
+o Passo 4.
 
 Invoque `Skill(superpowers:verification-before-completion)`. Confirme que carregou.
 
@@ -228,8 +228,9 @@ commits que deixariam de existir.
   --diff-filter=U`. Não resolva os conflitos nem aborte o merge sozinho — `git merge --abort` ou a
   resolução são decisão do João.
 
-Depois do merge — ou mesmo sem novidade nenhuma — refaça o Passo 3 inteiro contra o HEAD novo.
-Vermelho aqui para o command: a lane estava verde contra uma `origin/main` que já ficou velha.
+Depois do merge — ou mesmo sem novidade nenhuma — refaça o Passo 3 inteiro contra o HEAD novo
+(na lane de aceitação, nada: a verificação é o `conferir` do 6a). Vermelho aqui para o command:
+a lane estava verde contra uma `origin/main` que já ficou velha.
 
 ## Passo 6 — Registros de fechamento na lane
 
@@ -239,14 +240,47 @@ esse commit que o Passo 7 empurra. É ele quem carrega os registros até o PR.
 **a. Portão de efeito externo.** Leia `efeito_externo` no `estado.md`.
 - Ausente ou `null` → pare. `null` nunca vale `nao`: é a semente do `lane.sh abrir`, e um campo
   assim parado ali diz que o `/planejar-bloco` não gravou a decisão.
-- `sim` → até o item 36 trazer o `aceitacao.md`, a prova do efeito externo vai escrita no corpo em
-  markdown do `estado.md` (abaixo do frontmatter — invariante 11). Com a prova escrita, siga para o
-  item b. Sem ela, o bloco não vai a `closed` — e não para aqui: quando a prova só existe depois do
-  merge (deploy, configuração em produção, aprovação de terceiro), o fechamento segue em
-  **aguardando aceitação**, com as diferenças marcadas nos itens c a f. Antes, liste os
-  itens de `## Verificação externa` da spec do bloco que ainda não têm prova: são eles que vão no
-  `blocker`.
-- `nao` → siga para o item b.
+- `nao` → a rede de segurança: liste o que o bloco mudou no caminho da produção.
+
+  ```bash
+  git diff --name-only $(git merge-base origin/main HEAD)..HEAD \
+    | grep -E '^(deploy/|docker/Dockerfile\.prod|docker-compose\.prod|\.github/workflows/|scripts/)'
+  ```
+
+  Saiu qualquer caminho → pare e pergunte ao João se o `nao` está certo. Mudar o campo é decisão
+  dele; com a resposta, refaça este item pelo valor que ficar gravado. Nada listado → siga para o
+  item b.
+- `sim` → o portão é o script, não esta prosa — portão em prosa o agente executa de cabeça e pula:
+
+  ```bash
+  bash .claude/scripts/aceitacao.sh conferir <NN>
+  ```
+
+  O veredito é a última linha, e o código de saída o confirma.
+  - `PORTAO RECUSOU` (exit 2) → pare: a spec ou o `aceitacao.md` estão incompletos, e o motivo diz
+    o quê. Bloco planejado antes do item 36 pode não ter item numerado na `## Verificação
+    externa`; completar a seção é decisão do João.
+  - `ACEITACAO OK: <n> item(ns)` (exit 0) → siga para o item b: o fechamento é o normal.
+  - `ACEITACAO PENDENTE: <k> de <n> item(ns): <números>` (exit 1), **na lane do bloco** → o
+    fechamento segue em **aguardando aceitação**, com as diferenças marcadas nos itens c a f. Os
+    `<números>` são os itens pendentes.
+  - `ACEITACAO PENDENTE`, **na lane de aceitação** → pare **antes** de commitar e mostre os itens
+    pendentes. O João escolhe:
+    - preencher `Resultado` e `Data` (`AAAA-MM-DD`) dos itens manuais no `aceitacao.md` desta
+      lane — ele mesmo, ou ditando a esta sessão: o resultado é a palavra dele, nunca uma
+      conclusão sua — e rodar o `conferir` de novo, nesta mesma sessão;
+    - ou descartar. Aqui, quando `git ls-files -- <caminho>` lista o `aceitacao.md`, ele é
+      versionado e volta com `git restore -- docs/superpowers/blocos/<NN>-<slug>/aceitacao.md`.
+      Quando não lista — bloco que chegou com `active_acceptance: null`, e foi o `conferir` que
+      criou o arquivo —, o `git restore` não o alcança, e ele sai com
+      `git clean -f -- docs/superpowers/blocos/<NN>-<slug>/aceitacao.md`. Confira o
+      `git status --porcelain` vazio: com qualquer mudança na árvore, o `fechar` recusa mesmo com
+      `--force`. Depois, no terminal dele, no main tree,
+      `bash .claude/scripts/lane.sh fechar <NN> --force` — o commit do `aceitar` não está na
+      `main`, e o `fechar` sem `--force` recusa. Nada é publicado, e o bloco segue em `blocked` na
+      `main`.
+
+  Com OK, e com PENDENTE na lane do bloco, o `aceitacao.md` entra no commit do item f.
 
 **b. Pendências.** O item 7 do antigo `fechar-sprint`, verbatim: em
 `docs/superpowers/pendencias/`, algum gatilho venceu? Alguma pendência fechou — a ficha sai de
@@ -255,15 +289,20 @@ Alguma das encerradas já passou de 1 sprint e sai de vez? Alguma nasceu nesta s
 
 **c. Histórico.** Uma linha nova em `docs/superpowers/historico/progress.md`, no formato das que
 já estão lá. No máximo dez entradas recentes: o excesso desce, **verbatim**, para
-`progress-archive.md`. Aguardando aceitação: a linha diz que o bloco mesclou sem a prova externa e
-nomeia os itens pendentes; quem a atualiza, sem linha nova, é a PR que grava o `closed`.
+`progress-archive.md`.
+- Aguardando aceitação: a linha diz que o bloco mesclou sem a prova externa, nomeia os itens
+  pendentes do `ACEITACAO PENDENTE` e nomeia os `D-*` que a verificação do Passo 3 deu como pagos.
+  É dela que a lane de aceitação os tira, porque ela não refaz o Passo 3.
+- Lane de aceitação: nenhuma linha nova. Atualize a linha do bloco onde ela estiver — no
+  `progress.md` ou, se já desceu, no `progress-archive.md` —, registrando a aceitação e a data.
 
 **d. Backlog.** Remova **só a própria ficha**, que no `backlog.md` ocupa dois lugares:
 
 - a seção `## <NN>. …`, até antes do próximo `---`, `## ` ou `# `. Depois do corte, não podem
   sobrar dois `---` seguidos (só linha em branco entre eles): sobrando, apague um;
-- a linha dela na tabela de `# Ordem de execução`, quando tiver uma — a linha cujo `Bloco` começa
-  por `**<NN>**`. As outras linhas da tabela não mudam de posição nem de número.
+- a linha dela na tabela de recomendação de `# Ordem de execução` (`| # | Bloco | Frente | Por
+  que aqui |`), quando tiver uma — a linha cujo `Bloco` começa por `**<NN>**`. As outras linhas da
+  tabela não mudam de posição nem de número.
 
 Depois, os **débitos `D-*` que o bloco pagou** — os que a própria ficha declara (``Paga a
 **`D-NN`**``) ou o plano diz pagar, e que a verificação do Passo 3 deu como pagos. Débito
@@ -274,12 +313,19 @@ declarado e não pago fica onde está, e o relato do command diz isso. Para cada
 - a tabela "Fichas que saíram desta fila" ganha, no fim, a linha
   ``| <AAAA-MM-DD> | `D-NN` | paga — <a prova, em uma linha, com arquivo ou SHA> | item <NN> |``.
 
-Nenhuma outra linha do `backlog.md` muda — prosa que cita o número, inclusive (E8, E10, invariante
-10 — a lane escreve a própria remoção; o main tree não publica commit nenhum na `main`, então a
-única porta pela qual o `backlog.md` chega lá é esta, dentro do PR).
+A aceitação externa muda este item nos dois fechamentos dela:
 
-Aguardando aceitação: pule este item inteiro. A ficha e os `D-*` ficam no `backlog.md` até o
-`closed`, e saem na mesma PR que o grava.
+- Aguardando aceitação (lane do bloco): a ficha e os `D-*` ficam. Sai só a linha da ficha na
+  tabela de recomendação de `# Ordem de execução`, quando tiver uma, e entra no fim da tabela de
+  `## Aguardando aceitação` a linha
+  ``| **<NN>** `<slug>` | <números do ACEITACAO PENDENTE> | <AAAA-MM-DD de hoje> |``.
+- Lane de aceitação: a ficha sai como acima; os `D-*` que saem são os que a linha do bloco no
+  histórico (item c) nomeia como pagos, com a prova tirada dela; e a linha do bloco sai da tabela
+  de `## Aguardando aceitação`.
+
+Fora isso, nenhuma outra linha do `backlog.md` muda — prosa que cita o número, inclusive (E8,
+E10, invariante 10 — a lane escreve a própria remoção; o main tree não publica commit nenhum na
+`main`, então a única porta pela qual o `backlog.md` chega lá é esta, dentro do PR).
 
 **e. Estado.**
 
@@ -294,19 +340,26 @@ updated_at: <date -Iseconds>
 updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
 ```
 
-Aguardando aceitação, no lugar do bloco acima (`docs/superpowers/state.md`, "Entrar e sair de
+Com `efeito_externo: sim`, grave também
+`active_acceptance: docs/superpowers/blocos/<NN>-<slug>/aceitacao.md` quando ele vier `null` —
+bloco planejado antes do item 36.
+
+Aguardando aceitação, no lugar do bloco de cima (`docs/superpowers/state.md`, "Entrar e sair de
 `blocked`"):
 
 ```yaml
 workflow_state: blocked
 resume_state: ready_for_closure
-blocker: "aguardando aceitação depois do merge: <itens pendentes da ## Verificação externa>"
+blocker: "aguardando aceitação depois do merge: itens <números do ACEITACAO PENDENTE> da ## Verificação externa"
 next_owner: joao
-next_action: "resolve_blocker aguardando aceitação: <itens>"
+next_action: "resolve_blocker aguardando aceitação: itens <números>"
 commit: <git rev-parse --short HEAD antes deste commit>
 updated_at: <date -Iseconds>
 updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
 ```
+
+O `blocker` começa por `aguardando aceitação`: é por esse começo que o modo Aceitação e o
+`lane.sh aceitar` reconhecem o bloco.
 
 **f. Commit.** Tudo que os itens b–e tocaram, junto — e só isso. `git add` nomeia cada caminho;
 nunca `-A`, `.` nem diretório, porque o WIP do João é intocável (a mesma disciplina do
@@ -316,7 +369,8 @@ nunca `-A`, `.` nem diretório, porque o WIP do João é intocável (a mesma dis
 git add docs/superpowers/blocos/<NN>-<slug>/estado.md \
         docs/superpowers/backlog.md \
         docs/superpowers/historico/progress.md
-# mais, só quando o item tocou: docs/superpowers/historico/progress-archive.md (c) e
+# mais, só quando o item tocou: docs/superpowers/blocos/<NN>-<slug>/aceitacao.md (a, com sim),
+# docs/superpowers/historico/progress-archive.md (c) e
 # docs/superpowers/pendencias/abertas.md, encerradas.md e README.md (b), cada um pelo nome
 git diff --cached --name-only    # tem de listar só os caminhos acima
 git commit -m "chore(close): item <NN> fecha <slug>
@@ -325,7 +379,8 @@ Co-Authored-By: Claude <modelo> <noreply@anthropic.com>"
 ```
 
 `<modelo>` é o modelo que de fato escreveu o commit (ex.: `Sonnet 5.5`). Aguardando aceitação, o
-assunto é `chore(close): item <NN> aguarda aceitação`, e o `backlog.md` não entra no `git add`.
+assunto é `chore(close): item <NN> aguarda aceitação`; na lane de aceitação,
+`chore(close): item <NN> aceito`.
 
 **Regra para o que vier depois.** PR que volta com correção — o João pede mudança depois de
 aberto, ou a `origin/main` trouxe algo que a verificação não passa mais — reescreve o `estado.md`
@@ -402,7 +457,7 @@ git branch --list <branch>
 Os dois últimos comandos confirmam que a lane saiu dos dois — nem árvore, nem branch. Nada é
 escrito nem commitado nesta sessão: os registros de fechamento já viajaram no commit do Passo 6, e
 foi o PR que os trouxe para a `main`. Reporte o resultado. Com o bloco em `blocked` aguardando
-aceitação, diga também que a lane fechou mas o bloco não: falta a prova externa, e a saída é a do
-modo Aceitação (Passo 2).
+aceitação, diga também que a lane fechou mas o bloco não: falta a prova externa, e a saída é
+`/finalizar-bloco <NN>` no main tree, que cai no modo Aceitação.
 
 O espelho corporativo (`scripts/espelhar-corporativo.sh`) fica fora: é release, não bloco.

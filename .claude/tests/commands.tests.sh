@@ -20,6 +20,16 @@ declare -A _CM_BLOCO=(
 )
 # entradas que so precisam de model e effort validos (spec 5.7)
 _CM_ENTRADAS=(commands/revisar-frontend.md commands/revisar-ui.md skills/auditar-docs/SKILL.md skills/lotus-ui-review/SKILL.md)
+# Portoes do item 36 que o command roda como comando, porque em prosa o
+# agente os executa de cabeca e pula (spec do bloco 36, 2.6). Cada entrada e
+# 'command|trecho literal'; o trecho vai do primeiro | ate o fim.
+_CM_TRECHOS=(
+  'planejar-bloco|bash .claude/scripts/aceitacao.sh gerar'
+  'finalizar-bloco|bash .claude/scripts/aceitacao.sh conferir'
+  'finalizar-bloco|bash .claude/scripts/lane.sh aceitar'
+  "finalizar-bloco|grep -E '^(deploy/|docker/Dockerfile\.prod|docker-compose\.prod|\.github/workflows/|scripts/)'"
+  'finalizar-bloco|git clean -f -- docs/superpowers/blocos/<NN>-<slug>/aceitacao.md'
+)
 
 cm_campos() { python3 "$_cm_ler" "$@"; }
 
@@ -47,7 +57,7 @@ cm_papeis_agentes() {
 
 cm_problemas() {
   # $1 = diretorio .claude (o que contem commands/, agents/, skills/...)
-  local c=$1 nome arq s model effort dmi tab ag
+  local c=$1 nome arq s model effort dmi tab ag par
   local -a spec
   for nome in "${!_CM_BLOCO[@]}"; do
     arq="$c/commands/$nome.md"
@@ -62,6 +72,11 @@ cm_problemas() {
     for s in "${spec[@]:2}"; do
       grep -qF "Skill($s)" "$arq" || printf '%s: sem Skill(%s)\n' "$nome" "$s"
     done
+  done
+  for par in "${_CM_TRECHOS[@]}"; do
+    arq="$c/commands/${par%%|*}.md"
+    [[ -f $arq ]] || continue   # a ausencia ja saiu como "command ausente"
+    grep -qF -- "${par#*|}" "$arq" || printf '%s: sem o trecho %s\n' "${par%%|*}" "${par#*|}"
   done
   for arq in "${_CM_ENTRADAS[@]}"; do
     [[ -f $c/$arq ]] || { printf '%s: entrada ausente\n' "$arq"; continue; }
@@ -94,7 +109,7 @@ cm_problemas() {
 
 cm_fixture() {
   # Arvore .claude minima e valida, para as sondas estragarem.
-  local c=$1 nome s arq
+  local c=$1 nome s arq par
   local -a spec
   mkdir -p "$c/commands" "$c/agents" "$c/skills/auditar-docs" "$c/skills/lotus-ui-review"
   for nome in "${!_CM_BLOCO[@]}"; do
@@ -103,6 +118,9 @@ cm_fixture() {
       printf -- '---\ndescription: x\nargument-hint: "[NN]"\ndisable-model-invocation: true\nmodel: %s\neffort: %s\n---\n\n' "${spec[0]}" "${spec[1]}"
       printf 'Invoque `Skill(caveman, "ultra")`.\n'
       for s in "${spec[@]:2}"; do printf 'Invoque `Skill(%s)`.\n' "$s"; done
+      for par in "${_CM_TRECHOS[@]}"; do
+        [[ ${par%%|*} == "$nome" ]] && printf '%s\n' "${par#*|}"
+      done
     } > "$c/commands/$nome.md"
   done
   for arq in "${_CM_ENTRADAS[@]}"; do
@@ -159,6 +177,16 @@ cm_sonda sem-plugin 'settings.json sem o plugin superpowers@claude-plugins-offic
   sh -c 'printf "{}\n" > settings.json'
 cm_sonda aposentada 'skill aposentada ainda existe: revisar-sprint' \
   mkdir -p skills/revisar-sprint
+cm_sonda sem-gerar 'planejar-bloco: sem o trecho bash .claude/scripts/aceitacao.sh gerar' \
+  sed -i '/aceitacao.sh gerar/d' commands/planejar-bloco.md
+cm_sonda sem-conferir 'finalizar-bloco: sem o trecho bash .claude/scripts/aceitacao.sh conferir' \
+  sed -i '/aceitacao.sh conferir/d' commands/finalizar-bloco.md
+cm_sonda sem-aceitar 'finalizar-bloco: sem o trecho bash .claude/scripts/lane.sh aceitar' \
+  sed -i '/lane.sh aceitar/d' commands/finalizar-bloco.md
+cm_sonda sem-rede 'finalizar-bloco: sem o trecho grep -E' \
+  sed -i '/docker-compose/d' commands/finalizar-bloco.md
+cm_sonda sem-clean 'finalizar-bloco: sem o trecho git clean -f --' \
+  sed -i '/git clean -f --/d' commands/finalizar-bloco.md
 
 # O .claude/ real.
 assert_igual '' "$(cm_problemas "$DIR_TESTES/..")" 'o .claude/ real passa na catraca dos commands'

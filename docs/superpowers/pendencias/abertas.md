@@ -340,6 +340,8 @@ reconferida no HEAD do fechamento:
 | Catraca dos commands | Não cobra a existência de `prompts/gabarito-lotus.md` e `prompts/verificador-achado.md`, nem que todo `subagent_type` citado tenha agente | `.claude/tests/commands.tests.sh` |
 | `blocked` na rota codex | A ida a `blocked` no `/executar-bloco` não diz qual artefato prova a transição | `.claude/commands/executar-bloco.md:85-86` |
 
+**Gatilho disparado e não pago — 2026-10-04, `harness-aceitacao-externa` (item 36).** O bloco tocou `.claude/commands/finalizar-bloco.md`, `planejar-bloco.md`, `.claude/scripts/lane.sh`, `.claude/tests/commands.tests.sh` e `docs/superpowers/state.md` por outro motivo: o portão de `efeito_externo`, o modo aceitação e a invariante 10. Nenhuma das doze pontas foi corrigida nem ganhou veredito escrito (Q-10 segue em `AGENTS.md:56-57`; o fluxo antigo segue em `backlog.md:47-48`). Decisão do João no gate de fechamento: anotar e seguir. **As doze seguem válidas**; o gatilho não se desarma.
+
 ## P-96 — três docs de mapa não acompanharam o que entrou depois deles
 
 **Bloco:** BD-15-docs-guardrails-e-sincronizacao · **Gatilho:** fecha quando o `AGENTS.md` e o
@@ -359,6 +361,8 @@ mesclada na lane (`deeea4e8`):
 **Por que fica aberta:** nenhuma das três é do escopo do item 35. As duas listas de rules já
 estavam assim na `origin/main` antes dele, e o `Timestamp` chegou pela `main` no merge do Passo 5
 do fechamento. O fechamento só escreve registros, e o João decidiu registrar em vez de corrigir.
+
+**Gatilho disparado e não pago — 2026-10-04, `harness-aceitacao-externa` (item 36).** O bloco tocou `AGENTS.md` e `docs/estrutura-monolito.md` (a seção HARNESS) por outro motivo. As rules `backend-lang` e `frontend-estilizacao` e o `shared/ui/Timestamp/` continuam fora dos três docs. Decisão do João no gate de fechamento: anotar e seguir. **As três linhas seguem válidas**; o gatilho não se desarma.
 
 ## P-32 — a guarda da lição 13 confere path, não classe
 
@@ -517,6 +521,8 @@ review. A metade *"e puder reconciliá-los contra a árvore"* de novo não se cu
 config e conteúdo de documento. Decisão do João no gate de fechamento: anotar e seguir, como no item
 22. **As 12 seguem válidas**, e as coordenadas do `backend-ddd.md` na tabela (24-26, 12-17, 38)
 seguem as mesmas: a seção nova entrou abaixo de todas. O gatilho não se desarma.
+
+**Gatilho disparado e não pago de novo — 2026-10-04, `harness-aceitacao-externa` (item 36).** O bloco tocou `docs/estrutura-monolito.md` (a seção HARNESS) por outro motivo. A metade *"e puder reconciliá-los contra a árvore"* de novo não se cumpriu — o bloco era de harness. Decisão do João no gate de fechamento: anotar e seguir, como nos itens 22 e 29. **As 12 seguem válidas**; o gatilho não se desarma.
 
 **O padrão é o mesmo que a P-52 nomeia:** doc de estrutura envelhece em silêncio porque nada mede o
 documento contra a árvore. A `auditar-docs` mede — mas só roda no fechamento, e reporta em vez de

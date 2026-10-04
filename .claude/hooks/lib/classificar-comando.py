@@ -657,7 +657,8 @@ def familia_gh(args):
 
 
 def familia_lane(args):
-    """args[0] ja e LANE_SCRIPT. Libera so as quatro formas da spec."""
+    """args[0] ja e LANE_SCRIPT. Libera so as cinco formas das specs (a do
+    item 30 e o `aceitar` do item 36)."""
     resto = args[1:]
     if not resto:
         negar("`lane.sh` sem verbo.")
@@ -675,10 +676,16 @@ def familia_lane(args):
                 return
             if params[3] == "--modelo" and LANE_ALIAS.fullmatch(params[4]):
                 return
+    if verbo == "aceitar" and len(params) in (1, 3) \
+            and LANE_NN.fullmatch(params[0]):
+        if len(params) == 1:
+            return
+        if params[1] == "--modelo" and LANE_ALIAS.fullmatch(params[2]):
+            return
     negar("`lane.sh %s` fora das formas liberadas na main: `descobrir`, "
-          "`conferir <NN>`, `fechar <NN>` e `abrir <NN> <tipo> <slug> "
-          "[--modelo <alias>]`. `fechar --force` e do terminal do Joao."
-          % " ".join(resto))
+          "`conferir <NN>`, `fechar <NN>`, `abrir <NN> <tipo> <slug> "
+          "[--modelo <alias>]` e `aceitar <NN> [--modelo <alias>]`. "
+          "`fechar --force` e do terminal do Joao." % " ".join(resto))
 
 
 def classificar_simples(tokens):

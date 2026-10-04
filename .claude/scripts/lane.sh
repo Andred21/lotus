@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Descobre, abre, confere e fecha lanes do harness de blocos
-# (spec 2026-09-26-harness-paridade-eladecora-design.md, §3.2 e §4.1).
+# (spec 2026-09-26-harness-paridade-eladecora-design.md, §3.2 e §4.1), e
+# abre a lane de aceitacao de um bloco que mesclou esperando a prova do
+# efeito externo (spec do bloco 36, 2.3).
 #
 # Uma lane e uma worktree irma numa branch <tipo>/<NN>-<resto>. O main tree
 # fica na main e nunca e lane. O estado de cada lane mora em
@@ -103,14 +105,30 @@ verbo_descobrir() {
       emitir orfa "$cam" "$br"
     fi
   done
-  # Branch de lane sem worktree: a assinatura de fechamento interrompido. A
-  # do main tree entra na lista de "tem worktree" como qualquer outra.
+  while IFS=$SEP read -r nn ref; do
+    emitir sem-arvore "$nn" "$ref"
+  done < <(branches_sem_arvore)
+}
+
+branches_sem_arvore() {
+  # NN<US>branch por branch de lane sem worktree: a assinatura de fechamento
+  # interrompido. A do main tree entra na lista de "tem worktree" como
+  # qualquer outra.
+  local ref nn
   while IFS= read -r ref; do
     [[ $ref =~ $PADRAO_LANE ]] || continue
     nn=$((10#${BASH_REMATCH[2]}))
     printf '%s\n' "${ARV_BRANCH[@]}" | grep -qxF -- "$ref" && continue
-    emitir sem-arvore "$nn" "$ref"
+    emitir "$nn" "$ref"
   done < <(git -C "$RAIZ" for-each-ref --format='%(refname:short)' refs/heads/)
+}
+
+aguardando_aceitacao() {
+  # $1 = estado.md. Sai 0 quando ele esta em blocked aguardando aceitacao, o
+  # que o 6a do /finalizar-bloco grava para `sim` sem prova.
+  local ws resume blocker
+  IFS=$SEP read -r ws resume blocker < <(python3 "$LER_FM" "$1" workflow_state resume_state blocker)
+  [[ $ws == blocked && $resume == ready_for_closure && $blocker == 'aguardando aceitação'* ]]
 }
 
 offset_da_arvore() {
@@ -265,6 +283,15 @@ verbo_abrir() {
   IFS=$SEP read -r slug_ficha deps <<<"$ficha"
   [[ $slug_ficha == "$slug" ]] \
     || recusar "o slug '$slug' nao bate com o da ficha $nn ('$slug_ficha')"
+  # ... e o bloco nunca passou por lane: abrir de novo sobrescreveria o
+  # estado.md dele.
+  local e
+  for e in "$RAIZ"/docs/superpowers/blocos/"$nn"-*/estado.md; do
+    [[ -f $e ]] || continue
+    aguardando_aceitacao "$e" \
+      && recusar "o bloco $nn ja passou por lane e espera aceitacao em blocked ($e): o caminho e /finalizar-bloco $nn"
+    recusar "o bloco $nn ja passou por lane: $e existe, e abrir de novo o sobrescreveria"
+  done
 
   # 3. a ficha declara **Depende:** (falha fechada)
   [[ $deps != SEM-DEPENDE ]] \
@@ -321,6 +348,130 @@ verbo_abrir() {
   printf '  portas: HTTP %s, DB %s, Mailpit %s, MinIO %s/%s, Vite %s\n' \
     "$http" "$db" "$mail" "$minio" "$console" "$vite"
   printf '  proximo passo, quando o bloco precisar do stack: (cd %s && docker compose up -d)\n' "$arvore"
+}
+
+reabrir_estado() {
+  # $1 estado.md na arvore nova, $2 branch, $3 pasta (NN-slug), $4 offset,
+  # $5 SHA da main, $6 alias do modelo, $7 branch do bloco. Reescreve so os
+  # campos da lane e da etapa (spec do bloco 36, 2.3) e confere que todos
+  # sairam: um campo ausente no frontmatter nao vira lane incoerente calada.
+  local agora quem c
+  agora=$(date -Iseconds)
+  quem="$(id -un)@$(hostname -s) / $6"
+  local -a campos=(
+    'workflow_state: ready_for_closure'
+    'next_owner: claude'
+    'next_action: close_active_work_item aceitacao externa'
+    'resume_state: null'
+    'blocker: null'
+    "branch: $2"
+    "worktree: ../lotus-$3"
+    "offset: $4"
+    "lane_base: $5"
+    "commit: $5"
+    "updated_at: $agora"
+    "updated_by: $quem"
+  ) sed_args=()
+  for c in "${campos[@]}"; do
+    sed_args+=(-e "2,/^---\$/ s|^${c%%:*}:.*|$c|")
+  done
+  sed -i -E "${sed_args[@]}" "$1" || return 1
+  printf '\nReaberto em %s pelo lane.sh aceitar, na branch %s; a branch do bloco era %s.\n' \
+    "$(date +%F)" "$2" "${7:-desconhecida}" >> "$1" || return 1
+  [[ $(python3 "$LER_FM" "$1" workflow_state next_owner next_action resume_state blocker \
+        branch worktree offset lane_base commit updated_at updated_by) \
+     == "$(emitir ready_for_closure claude 'close_active_work_item aceitacao externa' '' '' \
+        "$2" "../lotus-$3" "$4" "$5" "$5" "$agora" "$quem")" ]]
+}
+
+verbo_aceitar() {
+  local nn=${1:-} modelo=terminal
+  if (( $# == 3 )) && [[ $2 == --modelo ]]; then
+    modelo=$3
+  elif (( $# != 1 )); then
+    recusar "uso: lane.sh aceitar <NN> [--modelo <alias>]"
+  fi
+  [[ $nn =~ $PADRAO_NN ]] || recusar "NN '$nn' nao e numero de ficha"
+  [[ $modelo =~ $PADRAO_ALIAS ]] || recusar "alias de modelo '$modelo' fora de $PADRAO_ALIAS"
+
+  raiz_ou_recusa
+  # 1. main tree, na main
+  exigir_main_tree aceitar
+  [[ -f $RAIZ/.env.example ]] || recusar "sem .env.example na raiz, de onde sai o .env da lane"
+
+  # 2. a pasta unica do bloco tem, como a main o versiona, o estado.md em
+  # blocked aguardando aceitacao
+  local -a estados=()
+  local e
+  for e in "$RAIZ"/docs/superpowers/blocos/"$nn"-*/estado.md; do
+    [[ -f $e ]] && estados+=("$e")
+  done
+  (( ${#estados[@]} == 1 )) \
+    || recusar "o bloco $nn precisa de uma pasta docs/superpowers/blocos/$nn-*/ com estado.md, e ha ${#estados[@]}"
+  local pasta rel
+  pasta=$(basename "$(dirname "${estados[0]}")")
+  rel="docs/superpowers/blocos/$pasta/estado.md"
+  [[ ${pasta#*-} =~ $PADRAO_SLUG ]] || recusar "a pasta $pasta nao casa <NN>-<slug>"
+  { git -C "$RAIZ" ls-files --error-unmatch -- "$rel" && git -C "$RAIZ" diff --quiet HEAD -- "$rel"; } \
+    >/dev/null 2>&1 || recusar "o $rel do main tree nao e o da main (nao versionado ou com mudanca local)"
+  aguardando_aceitacao "${estados[0]}" \
+    || recusar "o bloco $nn nao esta em blocked aguardando aceitacao: $rel diz workflow_state $(python3 "$LER_FM" "${estados[0]}" workflow_state)"
+
+  # 3. nenhuma lane viva com o numero e nenhuma branch dele sem worktree
+  local -a nums=() branches=()
+  local n c b
+  while IFS=$SEP read -r n c b; do
+    [[ $n == "$nn" ]] && recusar "a ficha $nn ja tem lane viva: $b em $c"
+    nums+=("$n")
+    branches+=("$b")
+  done < <(lanes_vivas)
+  while IFS=$SEP read -r n b; do
+    [[ $n == "$nn" ]] \
+      && recusar "a branch $b do bloco $nn existe sem worktree, de um fechamento interrompido: /finalizar-bloco $nn no modo conserto"
+  done < <(branches_sem_arvore)
+
+  # 4. teto de lanes: a de aceitacao conta
+  (( ${#nums[@]} < TETO_LANES )) || recusar "ja ha $TETO_LANES lanes vivas: ${branches[*]}"
+
+  # 5. sem portao de dependencia: o codigo do bloco ja esta na main, e a lane
+  # so toca a pasta dele, o backlog.md e o historico/.
+
+  # 6. branch nova: com o nome da branch do bloco, o gh pr view acharia a PR
+  # antiga, ja mesclada. A checagem da branch e defesa: o portao 3 ja pega
+  # toda branch de lane com o numero.
+  local br_antiga tipo=docs branch arvore
+  br_antiga=$(python3 "$LER_FM" "${estados[0]}" branch)
+  [[ $br_antiga == "docs/$pasta" ]] && tipo=chore
+  branch="$tipo/$pasta"
+  arvore="$(dirname "$PRINCIPAL")/lotus-$pasta"
+  ! git -C "$RAIZ" show-ref --verify --quiet "refs/heads/$branch" \
+    || recusar "a branch $branch ja existe"
+  [[ ! -e $arvore ]] || recusar "o caminho $arvore ja existe"
+
+  # 7. offset livre de 1 a 3
+  local offset
+  offset=$(offset_livre) || recusar "nenhum offset livre de 1 a 3: $(descrever_offsets)"
+
+  printf 'PORTAO OK: %s pode abrir em %s, offset +%s\n' "$branch" "$arvore" "$offset"
+
+  # Sem pnpm install e sem copiar backend/.env e frontend/.env: a lane de
+  # aceitacao nao sobe stack nem toca codigo.
+  local base
+  base=$(git -C "$RAIZ" rev-parse --short main)
+  CRIADO=()
+  git -C "$RAIZ" worktree add -q -b "$branch" "$arvore" main \
+    || falhar_no_meio "$nn" 'git worktree add'
+  CRIADO+=("a branch $branch" "a arvore $arvore")
+  escrever_env "$arvore" "$offset" || falhar_no_meio "$nn" 'o .env da raiz'
+  # Falhou depois da reescrita: devolve o estado.md ao HEAD (indice e arvore;
+  # a arvore e a reescrita sao desta execucao), senao o fechar recusa por
+  # "mudanca nao commitada" e a recuperacao que a mensagem indica nao serve.
+  reabrir_estado "$arvore/$rel" "$branch" "$pasta" "$offset" "$base" "$modelo" "$br_antiga" \
+    || { git -C "$arvore" checkout -q HEAD -- "$rel"; falhar_no_meio "$nn" 'a reescrita do estado.md'; }
+  { git -C "$arvore" add "$rel" \
+      && git -C "$arvore" commit -q -m "chore($nn): abre a lane de aceitação"; } \
+    || { git -C "$arvore" checkout -q HEAD -- "$rel"; falhar_no_meio "$nn" 'o commit do estado.md'; }
+  printf 'LANE ABERTA: %s em %s\n' "$branch" "$arvore"
 }
 
 arquivos_do_plano() {
@@ -425,7 +576,8 @@ verbo=${1:-}
 case $verbo in
   descobrir) verbo_descobrir "$@" ;;
   abrir)     verbo_abrir "$@" ;;
+  aceitar)   verbo_aceitar "$@" ;;
   conferir)  verbo_conferir "$@" ;;
   fechar)    verbo_fechar "$@" ;;
-  *) recusar "verbo '$verbo' desconhecido; use descobrir, abrir, conferir ou fechar" ;;
+  *) recusar "verbo '$verbo' desconhecido; use descobrir, abrir, aceitar, conferir ou fechar" ;;
 esac
