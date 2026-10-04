@@ -52,10 +52,10 @@ blocos não se conferem aqui — quem confere é o portão do `lane.sh abrir`, n
 
 - `NN` → leia a seção `## <NN>. \`<slug>\`` de `docs/superpowers/backlog.md`. Ausente → pare.
   Ficha cuja pasta `docs/superpowers/blocos/<NN>-<slug>/` já tem `estado.md` na `main` → pare: o
-  bloco já passou por uma lane, e abrir outra sobrescreveria o estado dele. Em `blocked` aguardando
-  aceitação (o 6a do `/finalizar-bloco` deixa a ficha no backlog até o `closed`), o que falta é
-  prova, e o command certo é `/finalizar-bloco <NN>`. O item 36 acrescenta a tabela
-  `## Aguardando aceitação` ao `backlog.md`; ficha sob ela também para.
+  bloco já passou por uma lane, e abrir outra sobrescreveria o estado dele (o `lane.sh abrir`
+  também recusa). Em `blocked` aguardando aceitação (o 6a do `/finalizar-bloco` deixa a ficha no
+  backlog até o `closed`), o que falta é prova, e o command certo é `/finalizar-bloco <NN>`. Ficha
+  listada na tabela `## Aguardando aceitação` do `backlog.md` também para.
 - Leia da ficha: o slug, `**Contexto:**` e `**Depende:**`.
 - **Texto livre** → proponha a ficha no formato das existentes (título, linha
   Prioridade/Frente/Contexto/Depende, Fonte, Objetivo, Escopo, Fora, DoD), com o próximo número
@@ -164,9 +164,10 @@ de cada uma:
    - prova: `<alias> <GET|HEAD> <caminho> -> <código>`
 ```
 
-A prova é declarativa, no formato `<alias> <GET|HEAD> <caminho> -> <código>`, com os aliases do
-Lotus `producao` e `local`. Até o item 36 mesclar não há `aceitacao.sh` para executá-la: a prova
-fica só registrada. Item cuja verificação não tem superfície HTTP declara `prova: nenhuma`.
+A prova é declarativa, no formato `<alias> <GET|HEAD> <caminho> -> <código>`, com o caminho
+começando em `/` e um alias de `.claude/aceitacao-aliases.conf` (`producao` ou `local`). Item cuja
+verificação não tem superfície HTTP declara `prova: nenhuma`. Cada item tem exatamente uma linha
+`- prova:`, e o `aceitacao.sh gerar` do Passo 9 recusa a seção que foge disso.
 
 Quando não houver ação externa nenhuma, a seção diz isso em uma linha, **sem item numerado**:
 
@@ -226,7 +227,7 @@ active_plan: docs/superpowers/blocos/<NN>-<slug>/plano.md
 context_packet: docs/superpowers/blocos/<NN>-<slug>/context.md  # null quando Contexto: não
 efeito_externo: <sim|nao>
 executor: <claude|codex>
-active_acceptance: null
+active_acceptance: docs/superpowers/blocos/<NN>-<slug>/aceitacao.md  # null com efeito_externo: nao
 commit: <git rev-parse --short HEAD antes do commit>
 updated_at: <date -Iseconds>
 updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
@@ -234,7 +235,15 @@ updated_by: <id -un>@<hostname -s> / <alias do modelo da sessão>
 
 - `efeito_externo` vale `sim` quando `## Verificação externa` tem item numerado, e `nao` quando
   declara nenhum.
-- `active_acceptance` fica `null` até o item 36 trazer o `aceitacao.md`.
+- Com `sim`, depois de gravar o `estado.md` e antes do commit, gere a tabela de aceitação do bloco:
+
+  ```bash
+  bash .claude/scripts/aceitacao.sh gerar <NN>
+  ```
+
+  `PORTAO RECUSOU` → corrija a `## Verificação externa` da spec, como o motivo diz, e rode de novo;
+  a spec corrigida entra no mesmo commit. O `aceitacao.md` gerado entra no commit do plano. Com
+  `nao` não há tabela, e `active_acceptance` fica `null`.
 - `id`, `slug`, `branch`, `worktree`, `offset` e `lane_base` são do `lane.sh` e não se reescrevem.
 
 ## Passo 10 — Parar
