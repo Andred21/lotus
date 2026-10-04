@@ -54,5 +54,5 @@
 ## Task 19 — Drive conferido (D12)
 
 - `arquitetura-aws-lotus.md` (ID `10eFmpqDTKL4wfWsJW-Rr7dDuBkb1RtaI`, G-1 do packet): nova versão do mesmo arquivo, subida pelo João; `fileSize` 10600, `modifiedTime` 2026-10-04T18:49:34.864Z.
-- O conteúdo baixado tem sha256 `a4dd4fe9aa9cbb8940f5fb8dda449a872a6f6e92de088a0ef09409b75753af1d`: o arquivo montado no planejamento a partir da versão de 2026-06-22 (10130 bytes, sha256 `71f5fdcdc4d8d917f52158f1bcbfe4d9eace556df0225e7df5d807d38ec5e08f`), com só as linhas 52 (§1.4, *Implementação*) e 179 (*Pendências*) trocadas pelo texto que o João aprovou em 2026-10-04.
+- O conector do Drive não expõe checksum, e o conteúdo só sai dele como base64 transcrito, o que não serve de prova byte a byte. A prova é o `fileSize` 10600 — idêntico ao do arquivo montado no planejamento a partir da versão de 2026-06-22 (10130 bytes, sha256 `71f5fdcdc4d8d917f52158f1bcbfe4d9eace556df0225e7df5d807d38ec5e08f`), com só as linhas 52 (§1.4, *Implementação*) e 179 (*Pendências*) trocadas, sha256 `a4dd4fe9aa9cbb8940f5fb8dda449a872a6f6e92de088a0ef09409b75753af1d` —, o `modifiedTime` acima e a afirmação do João, em 2026-10-04, de que subiu esse arquivo. A conferência por hash fica para quem baixar a versão e rodar `sha256sum`.
 - É a prova do item 1 da `## Verificação externa` da spec.
