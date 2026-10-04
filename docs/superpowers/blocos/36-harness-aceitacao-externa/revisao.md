@@ -3,7 +3,10 @@
 ## Em aberto
 
 - **Q-1 da Rodada 2 — Importante, CONFIRMED.** O descarte do PENDENTE na lane de aceitação não tem
-  saída quando o `aceitacao.md` não é versionado. Falta a aprovação do João.
+  saída quando o `aceitacao.md` não é versionado. O João aprovou a correção em 2026-10-04: o
+  descarte usa `git clean -f --` quando o arquivo não está no git e `git restore --` quando está,
+  o command e a §2.4 da spec mudam, e o Q-2 (Menor) entra junto. Falta aplicar a correção, e o
+  `/revisar-bloco` roda de novo como Rodada 3.
 
 ## Rodada 2 — `20aa04ef..bbdc58f0` — 2026-10-04 · Lente 1: opus · Lente 2: sonnet
 
