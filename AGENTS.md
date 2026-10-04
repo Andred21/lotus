@@ -28,8 +28,8 @@ solicitada**.
 
   Essa delegação não alcança o `historico/progress.md` nem o `backlog.md`: eles mudam só nos
   pontos da invariante 10 do `state.md` — ficha nova numa PR de docs; a remoção da própria ficha
-  e dos `D-*` pagos, e a linha do `progress.md`, no fechamento do bloco, ou na PR de docs que traz
-  a prova quando ele mesclou aguardando aceitação.
+  e dos `D-*` pagos, e a linha do `progress.md`, no fechamento do bloco, ou na lane de aceitação
+  quando ele mesclou aguardando aceitação.
 - Sem delegação explícita, Codex apenas recomenda a próxima transição.
 - Altere arquivos do workspace somente dentro do escopo explicitamente solicitado. Preserve WIP e
   não inclua mudanças adjacentes.

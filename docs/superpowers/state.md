@@ -13,8 +13,8 @@ Uma lane é uma worktree irmã, `../lotus-<NN>-<slug>`, numa branch que casa
 `backlog.md`; a pasta do bloco é `blocos/<NN>-<slug>/`. Branch fora do padrão não é lane.
 
 - **O main tree fica sempre na `main` e nunca é lane.** Ele planeja, abre e fecha lane
-  (`lane.sh abrir` e `lane.sh fechar`) e lê o `backlog.md`. Ele não publica commit: a `main` só
-  recebe PR mesclado (`CONTRIBUINDO.md`).
+  (`lane.sh abrir`, `lane.sh aceitar` e `lane.sh fechar`) e lê o `backlog.md`. Ele não publica
+  commit: a `main` só recebe PR mesclado (`CONTRIBUINDO.md`).
 - **No máximo três lanes.** Cada uma publica as portas do offset que o `abrir` reservou no `.env`
   da raiz dela: +1, +2 ou +3, pela tabela do `.env.example`. O `abrir` conta como ocupado o
   offset de toda árvore do `git worktree list`, lane ou não.
@@ -52,11 +52,11 @@ o estado de onde se está saindo, `blocker` com uma linha que descreve o impedim
 invariante 9. Enquanto o bloco está em `blocked`, as regras de "a partir de" (invariantes 3, 4 e
 12) usam o `resume_state` como régua. Aceitação externa pendente depois do merge também espera aqui:
 o `/finalizar-bloco` (6a) grava `blocked` com `resume_state: ready_for_closure` e `blocker`
-começando por `aguardando aceitação`, e a lane fecha com o bloco nesse estado. **A saída desse
-`blocked` é a exceção à regra acima:** vai direto a `closed`, não ao `resume_state`, porque o
-`ready_for_closure` já está cumprido — a revisão passou, e a prova era o que faltava. Ela entra numa
-PR de docs, com a prova no corpo do `estado.md` e os registros da invariante 10 (`/finalizar-bloco`,
-modo Aceitação). O item 36 automatiza a prova e a saída.
+começando por `aguardando aceitação`, e a lane fecha com o bloco nesse estado. A saída segue a
+regra acima, sem exceção: o modo Aceitação do `/finalizar-bloco` roda o `lane.sh aceitar`, que
+abre uma **lane de aceitação** com o bloco de volta no `resume_state`. Quem confirma o `blocker`
+resolvido é o `aceitacao.sh conferir` do 6a, já nessa lane: `ACEITACAO OK` leva a `closed`, e
+`ACEITACAO PENDENTE` não publica nada.
 
 ## Campos (`schema_version: 3`)
 
@@ -72,7 +72,7 @@ modo Aceitação). O item 36 automatiza a prova e a saída.
 | `active_spec` | caminho da spec, relativo à raiz da árvore |
 | `active_plan` | caminho do plano; obrigatório a partir de `ready_for_execution` |
 | `active_review` | caminho do `revisao.md`; obrigatório a partir de `ready_for_closure` |
-| `active_acceptance` | caminho do `aceitacao.md` (item 36); `null` quando `efeito_externo` é `nao` |
+| `active_acceptance` | caminho do `aceitacao.md`: o `/planejar-bloco` (Passo 9) o grava com `efeito_externo: sim`, e o 6e do `/finalizar-bloco` o preenche quando vem `null` (bloco planejado antes do item 36); `null` quando `efeito_externo` é `nao` |
 | `context_packet` | caminho do Context Packet, quando o bloco exige contexto externo |
 | `efeito_externo` | `sim` quando o resultado depende de ação fora do repositório, `nao` caso contrário. `null` é a semente do `lane.sh abrir` e **nunca** vale `nao` |
 | `executor` | quem executa o plano, copiado do `## Handoff de execução` dele: `claude` ou `codex` |
@@ -90,11 +90,13 @@ modo Aceitação). O item 36 automatiza a prova e a saída.
 1. **No máximo três lanes vivas.** Cada lane é um bloco, uma branch `<tipo>/<NN>-<slug>` e uma
    worktree irmã, conduzida por uma sessão própria. Abrir lane passa pelo portão do
    `lane.sh abrir`: nada de quarta lane, nada de dois blocos que dependem um do outro (pela linha
-   `**Depende:**` das fichas, transitivamente, nos dois sentidos) e nada de offset repetido. O
-   portão compara o offset, lido do `LOTUS_DEV_HTTP_PORT` do `.env` de cada árvore; porta avulsa
-   fora da tabela do `.env.example` fica com o `docker compose up`, que falha alto. O
-   `lane.sh conferir` acusa dois planos vivos que tocam os mesmos arquivos, lendo o `plano.md` da
-   pasta de cada bloco; a lane que não tem um sai nomeada como `NAO CONFERIDA`.
+   `**Depende:**` das fichas, transitivamente, nos dois sentidos) e nada de offset repetido. A
+   lane de aceitação, aberta pelo `lane.sh aceitar`, conta no teto e não passa pelo portão de
+   dependência: o código do bloco já está na `main`, e ela só toca a pasta dele, o `backlog.md` e
+   o `historico/`. O portão compara o offset, lido do `LOTUS_DEV_HTTP_PORT` do `.env` de cada
+   árvore; porta avulsa fora da tabela do `.env.example` fica com o `docker compose up`, que falha
+   alto. O `lane.sh conferir` acusa dois planos vivos que tocam os mesmos arquivos, lendo o
+   `plano.md` da pasta de cada bloco; a lane que não tem um sai nomeada como `NAO CONFERIDA`.
 2. **`next_action` começa pelo token do `workflow_state`.** Se não começar, o arquivo está
    corrompido: pare, relate e reconstrua a partir do git e dos artefatos do bloco. O `SessionStart`
    acusa isso como `ESTADO INCOERENTE`.
@@ -115,16 +117,19 @@ modo Aceitação). O item 36 automatiza a prova e a saída.
 10. **`backlog.md` entra na `main` só por PR.** Ficha nova vem numa PR de docs; a lane remove só a
     própria ficha e os débitos `D-*` que o bloco pagou (com a linha de cada um na tabela de fichas
     que saíram — E10), no commit de fechamento do `/finalizar-bloco`, junto com a linha do
-    `historico/progress.md` e o `estado.md` em `closed` (spec do bloco 35, E8). Exceção: o bloco
-    que mesclou em `blocked` aguardando aceitação (invariante 11) — a remoção da ficha, a linha do
-    `historico/progress.md` atualizada e o `closed` entram juntos na PR de docs que traz a prova
-    (E9). Nenhuma lane acrescenta nem edita ficha alheia, e é essa regra que mantém o arquivo livre
-    de conflito.
+    `historico/progress.md` e o `estado.md` em `closed` (spec do bloco 35, E8). O bloco que mescla
+    em `blocked` aguardando aceitação (invariante 11) deixa a ficha e os `D-*` onde estão: a lane
+    dele tira a linha da ficha da tabela de `# Ordem de execução` e escreve a do bloco em
+    `## Aguardando aceitação`; a lane de aceitação remove depois a ficha, os `D-*` pagos e essa
+    linha, no commit que grava `closed` (spec do bloco 36, §2.5). Nenhuma lane acrescenta nem
+    edita ficha alheia, e é essa regra que mantém o arquivo livre de conflito.
 11. **Bloco com `efeito_externo: sim` não vai a `closed` sem a prova do efeito externo
     registrada.** `closed` significa resultado verificado, não código na `main`. O registro é o
-    `aceitacao.md` que o item 36 introduz; até ele, a prova vai no corpo do `estado.md`, no
-    fechamento. Quando ela só existe depois do merge, o bloco mescla em `blocked` aguardando
-    aceitação e vai a `closed` na PR que traz a prova (spec do bloco 35, E9).
+    `aceitacao.md` da pasta do bloco, e o commit que grava `closed` vem de um
+    `aceitacao.sh conferir` que saiu `ACEITACAO OK`. Quando a prova só existe depois do merge, o
+    bloco mescla em `blocked` aguardando aceitação e vai a `closed` pela lane de aceitação (spec do
+    bloco 36, E1). Os blocos fechados antes do item 36 têm a prova em prosa no corpo do
+    `estado.md`.
 12. **`efeito_externo` é obrigatório a partir de `ready_for_execution`.** Quem grava `sim` ou `nao`
     é o planejamento; o `lane.sh abrir` só semeia `null`. `null` num bloco que já passou dali é
     divergência pela invariante 7, e o `SessionStart` a acusa. Ler `null` como `nao` desligaria a
