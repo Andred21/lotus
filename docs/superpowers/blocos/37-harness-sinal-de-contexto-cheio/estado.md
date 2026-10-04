@@ -2,9 +2,9 @@
 schema_version: 3
 id: 37
 slug: 37-harness-sinal-de-contexto-cheio
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/blocos/37-harness-sinal-de-contexto-cheio/spec.md
 active_plan: docs/superpowers/blocos/37-harness-sinal-de-contexto-cheio/plano.md
@@ -17,10 +17,10 @@ branch: chore/37-harness-sinal-de-contexto-cheio
 worktree: ../lotus-37-harness-sinal-de-contexto-cheio
 offset: 1
 lane_base: e94f417b
-commit: 75fb07bc
+commit: 145136ef
 blocker: null
-updated_at: 2026-10-04T19:01:47-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+updated_at: 2026-10-04T19:03:57-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 37 — estado
