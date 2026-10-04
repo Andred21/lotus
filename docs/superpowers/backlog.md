@@ -133,6 +133,16 @@ Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o rela
 `audits/2026-09-04-lotus-ui-review-administracion.md` mede a tela **atual**. Se o 9 redesenhar, a
 tela nova pede run própria dentro dele.
 
+## Aguardando aceitação
+
+Bloco que mesclou em `blocked` esperando a prova do efeito externo (`state.md`, invariante 11). A
+linha entra no fechamento da lane do bloco, quando o `aceitacao.sh conferir` sai PENDENTE, e sai no
+fechamento da lane de aceitação, junto com a ficha (`/finalizar-bloco`, item d do Passo 6). Ficha
+listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no main tree.
+
+| Bloco | Itens pendentes | Desde |
+|---|---|---|
+
 ---
 
 # Fila priorizada
