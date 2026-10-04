@@ -25,6 +25,16 @@
 > a nova versão e a sessão confere. Esta emenda reescreve D2, D3, D9 e D12, acrescenta D15 e a
 > §4.9, e ajusta §3 e §5 a §10. Onde divergir das anteriores, ela vence.
 
+> **Alinhada ao harness do item 35 em 2026-10-04 (planejamento).** O merge da `origin/main`
+> (`95fd1d0e`) entrou antes do plano, para o `/executar-bloco` novo rodar o plano emendado, e
+> trouxe os commands de bloco do item 35 e as invariantes 10 e 11 reescritas. Três consequências,
+> sem decisão nova de produto: a revisão vem antes da PR (`/revisar-bloco`), e quem abre a PR é o
+> `/finalizar-bloco`; a Fase B só existe depois do merge, então o bloco mescla em `blocked`
+> aguardando aceitação e vai a `closed` na PR de docs que traz a prova (§5, §10); e o FUT-4, o
+> débito da `QueryException` e a saída da ficha 33 vão nessa PR, porque o main tree não publica
+> commit e a lane não acrescenta ficha. A seção `## Verificação externa`, que o `/finalizar-bloco`
+> lê, entra no fim. Onde um texto anterior manda o main tree escrever no fechamento, vale o §10.
+
 ## 1. Contexto
 
 ### 1.1 O que já existe — medido em 2026-09-28, não suposto
@@ -155,7 +165,7 @@ antes):
 | D11 | **`efeito_externo: sim`, `executor: claude`.** Produção, conta AWS, cross-repo em efeito, julgamento fora do plano. | — |
 | D12 | **Drive emendado com o texto aprovado pelo João em 2026-10-04** (`arquitetura-aws-lotus.md`, G-1; emenda de 2026-10-04 — a de 2026-10-01 dizia "pela sessão"): o §1.4 *Implementação* e a linha de *Pendências* deixam de pedir a saída do sandbox antes de produção e passam a dizer "sandbox por decisão, com gatilho". O conector não escreve conteúdo (§1.3): a sessão monta o arquivo inteiro com só as duas linhas trocadas, o João o sobe como **nova versão do mesmo arquivo** (mesmo ID, histórico preservado), e a sessão confere o tamanho e o hash do que voltar do Drive contra o que montou. Registro no audit. | Deixar divergente: o Drive vence, e a próxima sessão leria "sair do sandbox" como requisito. Arquivo novo pelo conector: outro ID, histórico perdido, e o antigo continuaria lá. |
 | D13 | **Espelho único.** A PR da emenda (§4.8) sai desta mesma branch, depois de trazer a `origin/main`; o João mescla e espelha uma vez, levando o #121 e a emenda juntos. O botão promove esse SHA. | Espelhar o #121 antes: o corporativo receberia ADR-23 e runbook pedindo production access. |
-| D14 | **O gatilho do production access em três lugares.** (a) O ADR-23: quando uma feature enviar e-mail a quem não é admin ou redator interno (cliente, aluno, outra empresa), quando verificar externo virar rotina, ou quando o volume somado ao do site se aproximar de 200/24 h. (b) O runbook §13.6, com o texto e o comando do pedido prontos. (c) O **FUT-4** do `backlog.md`, que o main tree escreve no fechamento (§10). | Só o ADR: o planejamento de uma feature lê o backlog antes dos ADRs. Pendência: o índice é de divergência de doc, não de feature futura. |
+| D14 | **O gatilho do production access em três lugares.** (a) O ADR-23: quando uma feature enviar e-mail a quem não é admin ou redator interno (cliente, aluno, outra empresa), quando verificar externo virar rotina, ou quando o volume somado ao do site se aproximar de 200/24 h. (b) O runbook §13.6, com o texto e o comando do pedido prontos. (c) O **FUT-4** do `backlog.md`, que entra pela PR de docs da aceitação (§10; alinhamento de 2026-10-04). | Só o ADR: o planejamento de uma feature lê o backlog antes dos ADRs. Pendência: o índice é de divergência de doc, não de feature futura. |
 | D15 | **Falha de transporte de e-mail vai ao log sem a mensagem, com o código da AWS** (emenda de 2026-10-04; a de 2026-10-01 deixava como débito). Um `report` no `bootstrap/app.php` para `TransportExceptionInterface` registra pela `FalhaDeObservabilidade` — classe, código e origem, nunca a mensagem — e encerra a propagação (`stop()`). Cobre os dois `report($e)` que contêm a falha (reset e cadastro), o reenvio do convite, que não contém e chega pelo handler, e todo envio futuro. A `FalhaDeObservabilidade` passa a gravar `aws_erro` quando a cadeia traz uma `AwsException`, e o alerta D7 ganha o campo junto. Provada por teste nos quatro caminhos e, em produção, pela sonda negativa (D9). | Trocar os dois `report($e)` e pôr `catch` no reenvio: três pontos de código, e o próximo envio nasceria com o mesmo furo. Mascarar o endereço por regex na mensagem: texto de terceiro, e a recusa de IAM traz também conta e InstanceId. Só a mensagem fixa, sem `aws_erro`: a correção apagaria o único sinal que separa destinatário não verificado de policy errada e de rajada. Débito para o próximo bloco de `Identity` (proposta de 2026-10-01): recusado pelo João. |
 
 ## 3. Escopo
@@ -267,8 +277,8 @@ O SHA espelhado é o que o botão promove no §5.4.
 
 ### 4.8 Emenda de 2026-10-01 — Fase A', uma PR nova desta branch
 
-A branch traz a `origin/main` antes (o #121 já está lá, e os #122 a #124 vieram depois); a PR nova
-leva só a emenda. O espelho é um só (D13).
+A branch traz a `origin/main` antes (o #121 já está lá, e os #122 a #124 vieram depois) — feito no
+planejamento, `95fd1d0e`; a PR nova leva só a emenda. O espelho é um só (D13).
 
 - **Runbook §4.** A `lotus-ses` passa a `Resource` `arn:aws:ses:sa-east-1:$CONTA:identity/*`, com
   a mesma `Condition`. Uma frase diz por quê (o sandbox checa a identidade do destinatário) e que a
@@ -340,8 +350,9 @@ antes do código. Esta árvore não tem `backend/vendor`, e o `app` monta `./bac
 
 ## 5. Fase B — produção, na ordem (emenda de 2026-10-01)
 
-Escrita do João; leitura e audit da sessão (`blocos/33-infra-producao-email-ses/audit.md`). Do
-`.env` só sai nome de chave. Nenhum e-mail é transcrito: do alerta, do reset e da sonda ficam
+Depois do merge da PR do bloco e do espelho, com o bloco em `blocked` aguardando aceitação (§10).
+Escrita do João; leitura e audit da sessão (`blocos/33-infra-producao-email-ses/audit.md`, que volta
+na PR de docs da aceitação). Do `.env` só sai nome de chave. Nenhum e-mail é transcrito: do alerta, do reset e da sonda ficam
 remetente, assunto, `Authentication-Results` e o horário. **Nenhum endereço de destinatário entra
 em arquivo versionado**: o audit diz "o Gmail do João" e conta os externos, sem listá-los. Os
 comandos são os do runbook §13 emendado (§4.8 e §4.9); onde este texto e o runbook divergirem, o runbook
@@ -474,11 +485,25 @@ tem catraca.
 
 ## 10. Handoff
 
-`executor: claude`. Fase A é da sessão; Fase B é escrita do João e leitura da sessão. Sem
-delegação ao Codex na execução; a lente independente entra no `/revisar-sprint` (risco alto:
-credencial IAM, caminho de reset de senha e, pela D15, o handler global de exceção).
+`executor: claude`. A Fase A' é da sessão, pelo `/executar-bloco`; a revisão é o `/revisar-bloco`,
+com a lente Codex (risco alto: credencial IAM, caminho de reset de senha e, pela D15, o handler
+global de exceção); o `/finalizar-bloco` abre a PR. A Fase B é escrita do João e leitura da sessão.
+Sem delegação ao Codex na execução.
 
-**No fechamento, pelo main tree** (a lane não escreve o `backlog.md`):
+**Fechamento em duas PRs** (alinhamento de 2026-10-04 ao item 35; a versão anterior fechava "pelo
+main tree", que não publica mais commit):
+
+- **A PR do bloco** mescla com o `estado.md` em `blocked` aguardando aceitação (invariante 11): os
+  itens 2 a 7 da `## Verificação externa` só existem depois do merge e do espelho. A linha do
+  `historico/progress.md` nasce nela, dizendo o que falta; o `backlog.md` não muda.
+- **A PR de docs da aceitação** — o modo Aceitação do `/finalizar-bloco`, que o item 36 automatiza;
+  até lá, do João — traz num commit só a prova de cada item no corpo do `estado.md`, as leituras no
+  `audit.md`, o `closed`, a linha do `historico/progress.md` atualizada e o `backlog.md` abaixo
+  (invariante 10: ficha nova só entra por PR de docs). O main tree não roda `aws` nem `curl`
+  (allowlist do `guard-main-shell`): as leituras da Fase B rodam numa árvore fora dele, ou o João
+  roda e cola.
+
+**No `backlog.md`, pela PR de docs da aceitação:**
 
 - *Futuros* ganha o **FUT-4** (D14):
 
@@ -489,11 +514,42 @@ credencial IAM, caminho de reset de senha e, pela D15, o handler global de exce�
   >   access logo no início (runbook `deploy/aws/README.md` §13.6, cerca de 1 dia útil de espera). Se
   >   a feature der login a cliente ou aluno, ela também reabre a RN-01 (lei 5 do `CLAUDE.md`).
 
-- *Débitos técnicos* ganha o da `QueryException` (§1.3): a mensagem traz a SQL com os bindings, e
-  com o banco fora qualquer `report()` leva e-mail, RUT ou nome ao log default, em qualquer rota. O
+- *Débitos técnicos* ganha o da `QueryException` (§1.3), com o próximo `D-NN` livre (`D-74` em
+  2026-10-04): a mensagem traz a SQL com os bindings, e com o banco fora qualquer `report()` leva
+  e-mail, RUT ou nome ao log default, em qualquer rota. O
   Laravel 13.34 lê `mask_bindings_in_exception_messages` na conexão; ligar custa os valores no
   diagnóstico de erro de SQL, e a decisão é do João. Gatilho: o próximo bloco que tocar a
   observabilidade ou `config/database.php`. O débito do `report($e)` proposto em 2026-10-01 não
   nasce: a D15 o paga neste bloco.
 - A ficha 33 sai com o DoD de 2026-09-28 ("conta fora do sandbox") substituído pela decisão de
   2026-10-01 (cabeçalho desta spec).
+
+## Verificação externa
+
+Alinhamento de 2026-10-04 ao item 35. O item 1 ganha prova antes do merge (Task 19 do plano) e vai
+para o corpo do `estado.md` no fechamento; os itens 2 a 7 só existem depois do merge e do espelho,
+vão no `blocker` do aguardando aceitação e voltam na PR de docs (§10). O procedimento é o runbook
+§13 e a Fase B' do plano; o detalhe de cada leitura fica no `audit.md`.
+
+1. Nova versão de `arquitetura-aws-lotus.md` no Drive, só com as duas linhas aprovadas trocadas
+   (D12).
+   - prova: nenhuma
+2. Inline `lotus-ses` em `identity/*`, com a `Condition` no remetente, e nenhuma access key nova
+   (§5, passo 2).
+   - prova: nenhuma
+3. Todo admin e redator ativo fora de `@lotusotec.cl`, e o Gmail do João, verificados como
+   identidade (§5, passo 3).
+   - prova: nenhuma
+4. Espelho do merge, `MAIL_MAILER=ses` no `.env` do host e o botão no SHA espelhado (§5, passos 1
+   e 4).
+   - prova: `producao GET /up -> 200`
+5. Sonda positiva entregue com DKIM, SPF e DMARC `pass`; negativa com `Email address is not
+   verified` e a linha `Falha ao enviar e-mail` com `aws_erro` `MessageRejected`, sem o endereço
+   (§5, passo 5; D9, D15).
+   - prova: nenhuma
+6. Alerta D7 real na caixa de um admin, com DKIM, SPF e DMARC `pass`, e nenhuma linha `Falha ao
+   enviar alerta` (§5, passo 6).
+   - prova: nenhuma
+7. Reset de senha real completo pela UI e a leitura final da conta e da identidade (§5, passos 7
+   e 8).
+   - prova: nenhuma
