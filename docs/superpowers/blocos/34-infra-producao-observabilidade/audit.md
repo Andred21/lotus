@@ -65,3 +65,25 @@ mascaradas.
 pressão e relê do disco; swap do agente 0. O portão disparou e o bloco parou. O João decidiu
 aceitar e seguir: o custo fixo de RAM é o heap, e o recuo do host (`systemctl disable --now`) fica
 no runbook. O critério da spec "RSS dentro do portão" cede a essa decisão.
+
+## Task 10 — gate da Fase A
+
+Em 2026-10-05, no HEAD `a6e7b43a`.
+
+| Verificação | Resultado |
+|---|---|
+| `pnpm lint` · `pnpm test` · `pnpm build` | verdes; Test Files 164 passed (164), Tests 1078 passed (1078) |
+| `php artisan test` (contêiner da lane) | 5 skipped, 1233 passed (9361 assertions) — linha de base da Task 5 + 4 |
+| `pint --test` nos dois arquivos PHP | `PASS` |
+| `bash -n` nos quatro scripts | sem saída |
+| arquivos da branch desde `77196049` | só os do plano |
+| higiene (conta, instância, e-mail) | limpo |
+
+O filtro da higiene isenta também `noreply@anthropic.com`, o trailer de commit dos modelos do plano
+(`plano.md`), que não é e-mail de cliente, conta ou pessoa.
+
+Sondas da lição 19, vistas reprovar e restauradas por `cmp`: Task 2 (3), Task 3 (3), Task 4 (4),
+Task 5 (2), Task 7 (1).
+
+Os itens 1 e 2 da `## Verificação externa` estão provados nas seções das Tasks 1 e 6. Os itens 3 a
+7 só existem depois do merge e do espelho (Fase B).
