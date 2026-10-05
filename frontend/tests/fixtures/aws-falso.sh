@@ -25,10 +25,15 @@ case "$junto" in
     done
     case "$padrao" in
       *'$.up'*)
-        case "$linha" in *'"up":'*) echo 1 ;; *) echo 0 ;; esac
+        case "$linha" in *'"up":'*) casou=1 ;; *) casou=0 ;; esac
+        # FAKE_ERRA=up inverte a resposta: o padrao de Up "nao se comporta".
+        if [ "${FAKE_ERRA:-}" = up ]; then casou=$((1 - casou)); fi
+        echo "$casou"
         ;;
       *'$.cert_dias'*)
-        case "$linha" in *'"cert_dias":'*) echo 1 ;; *) echo 0 ;; esac
+        case "$linha" in *'"cert_dias":'*) casou=1 ;; *) casou=0 ;; esac
+        if [ "${FAKE_ERRA:-}" = cert ]; then casou=$((1 - casou)); fi
+        echo "$casou"
         ;;
       *'$.log'*)
         case "$padrao" in
@@ -56,7 +61,7 @@ case "$junto" in
     echo "${FAKE_ASSINATURAS:-1}"
     ;;
   *" cloudwatch describe-alarms "*"length(MetricAlarms"*)
-    echo 4
+    echo "${FAKE_ACOES:-4}"
     ;;
 esac
 exit 0

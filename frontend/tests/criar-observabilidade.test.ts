@@ -224,6 +224,16 @@ describe('criar-observabilidade.sh base', () => {
     expect(doTipo(e, 'logs', 'put-metric-filter')).toEqual([])
   })
 
+  it.each([
+    ['up', 'o padrao de Up'],
+    ['cert', 'o padrao de CertDias'],
+  ])('padrão que não se comporta (%s) sai 1, sem filtro nenhum', (erra, mensagem) => {
+    const e = rodar(['base', 'prod'], { FAKE_RETENCAO: '30', FAKE_ERRA: erra })
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain(mensagem)
+    expect(doTipo(e, 'logs', 'put-metric-filter')).toEqual([])
+  })
+
   it('retenção diferente no readback sai 1', () => {
     const e = rodar(['base', 'prod'], { FAKE_RETENCAO: '7' })
     expect(e.status).toBe(1)
@@ -266,6 +276,12 @@ describe('criar-observabilidade.sh alarmes', () => {
     expect(e.status).toBe(1)
     expect(e.stderr).toContain('disk_used_percent')
     expect(doTipo(e, 'cloudwatch', 'put-metric-alarm')).toEqual([])
+  })
+
+  it('readback com menos de quatro alarmes com ação sai 1', () => {
+    const e = rodar(['alarmes'], { FAKE_ACOES: '3' })
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain('o readback nao mostra os quatro alarmes com acao')
   })
 
   it('recusa sem assinatura confirmada — PendingConfirmation não conta', () => {

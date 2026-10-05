@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 /**
@@ -88,7 +90,7 @@ describe('deploy/aws/user-data.sh', () => {
     for (const linha of instalacoes) expect(linha).toContain('--no-upgrade')
   })
 
-  it('o agente vem fixado — versão, pacote e sha256 — e o sha256 é conferido antes do dpkg', () => {
+  it('o agente vem fixado — versão, pacote e sha256', () => {
     const versao = semComentarios.match(/^AGENTE_VERSAO=(\d+\.\d+\.\d+b\d+)$/m)
     const pacote = semComentarios.match(/^AGENTE_PACOTE=(\S+)$/m)
     expect(versao).not.toBeNull()
@@ -96,14 +98,60 @@ describe('deploy/aws/user-data.sh', () => {
     expect(semComentarios).toMatch(/^AGENTE_SHA256=[0-9a-f]{64}$/m)
     expect(semComentarios).toContain('/ubuntu/arm64/$AGENTE_VERSAO/amazon-cloudwatch-agent.deb')
     expect(semComentarios).not.toMatch(/arm64\/latest\//)
-    const conferencia = semComentarios.indexOf('sha256sum -c')
-    const instalacao = semComentarios.indexOf('dpkg -i')
-    expect(conferencia).toBeGreaterThan(-1)
-    expect(instalacao).toBeGreaterThan(conferencia)
     // Só instala quando a versão instalada é outra: reexecutar não reinstala.
     expect(semComentarios).toMatch(
       /^if \[ "\$\(dpkg-query -W -f='\$\{Version\}' amazon-cloudwatch-agent 2>\/dev\/null \|\| true\)" != "\$AGENTE_PACOTE" \]; then$/m,
     )
+  })
+
+  // O trecho da instalação RODA, com o `set` do topo do arquivo, um `curl` que
+  // entrega um .deb de mentira, um `dpkg` que só anota a chamada e o
+  // `sha256sum` de verdade. Comparar posições no texto deixava o gate virar
+  // `sha256sum -c - || true` com a suíte verde (revisão do item 34, Q-1).
+  it('sha256 errado sai ≠ 0 sem chegar ao dpkg; o certo instala', () => {
+    const set = LINHAS.find((l) => /^set -/.test(l))
+    const inicio = indice((l) => l.startsWith('AGENTE_VERSAO='))
+    const fim = indice((l) => l === 'fi', inicio)
+    expect(set).toBeDefined()
+    expect(inicio).toBeGreaterThan(-1)
+    expect(fim).toBeGreaterThan(inicio)
+
+    const dir = mkdtempSync(join(tmpdir(), 'user-data-agente-'))
+    try {
+      const bin = join(dir, 'bin')
+      const deb = join(dir, 'agente.deb')
+      const chamadas = join(dir, 'dpkg.log')
+      mkdirSync(bin)
+      const falso = (nome: string, corpo: string) => {
+        writeFileSync(join(bin, nome), `#!/usr/bin/env bash\n${corpo}\n`)
+        chmodSync(join(bin, nome), 0o755)
+      }
+      falso('dpkg-query', 'exit 1')
+      falso('curl', 'while [ $# -gt 0 ]; do if [ "$1" = -o ]; then printf deb-falso > "$2"; fi; shift; done')
+      falso('dpkg', `echo "$*" >> '${chamadas}'`)
+
+      const rodar = (sha256: string) => {
+        const trecho = LINHAS.slice(inicio, fim + 1)
+          .join('\n')
+          .replace(/\/tmp\/amazon-cloudwatch-agent\.deb/g, deb)
+          .replace(/^AGENTE_SHA256=.*$/m, `AGENTE_SHA256=${sha256}`)
+        return spawnSync('bash', ['-c', `${set}\n${trecho}`], {
+          encoding: 'utf8',
+          env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+        })
+      }
+
+      const errado = rodar('0'.repeat(64))
+      expect(errado.status).not.toBe(0)
+      expect(existsSync(chamadas)).toBe(false)
+
+      const certo = rodar(createHash('sha256').update('deb-falso').digest('hex'))
+      expect(certo.status, certo.stderr).toBe(0)
+      expect(readFileSync(chamadas, 'utf8').trim()).toBe(`-i ${deb}`)
+      expect(existsSync(deb)).toBe(false)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 
   it('config: métricas com dimensões estáveis entre instâncias', () => {
