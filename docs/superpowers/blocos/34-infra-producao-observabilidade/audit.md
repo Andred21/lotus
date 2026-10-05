@@ -93,8 +93,8 @@ Os itens 1 e 2 da `## Verificação externa` estão provados nas seções das Ta
 ## Revisão final — correções
 
 Em 2026-10-05. I1 (decisão do João): a imagem de produção liga `zend.exception_ignore_args`, para o
-stack trace não gravar o valor dos argumentos. O programa lança uma exceção dentro de `f("12.345.678-9")`
-(valor sintético) e imprime o `ini_get` e o `getTraceAsString()`.
+stack trace não gravar o valor dos argumentos. O programa lança uma exceção
+dentro de `f("12.345.678-9")` (valor sintético) e imprime o `ini_get` e o `getTraceAsString()`.
 
 Sem o ini:
 
