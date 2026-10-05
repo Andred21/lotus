@@ -2,8 +2,35 @@
 
 ## Em aberto
 
-- **Q-1 (rodada 2) · Importante**: nenhuma comparação do portão dos padrões tem catraca própria.
-  São 10 comparações em `Up`, `CertDias` e 5xx. Falta a aprovação do João para a correção.
+## Rodada 3 — `77196049..607d9d50` — 2026-10-05 · Lente 1: opus · Lente 2: sonnet
+
+Rodada aberta pela correção do Q-1 e do Q-2 da rodada 2, aprovada pelo João, nos commits
+`9a497387` e `607d9d50`. A lente Codex não foi despachada porque a cota segue esgotada até 3 de
+novembro de 2026. A lente 1 é só o `revisor-bloco`.
+
+O revisor fechou a rodada 2 com sonda própria, sobre uma cópia. Depois o `cmp` contra o HEAD saiu
+idêntico, e o working tree ficou limpo.
+
+- **Q-1, as 10 comparações:** fechado. Cada comparação foi trocada por `true`, uma de cada vez,
+  e cada troca reprova só o caso dela (28 de 29 verdes).
+- **Sabotagens em volta das comparações:** todas reprovam. São elas:
+  - `|| true` antes do `falha` de `Up` e de `CertDias`;
+  - o `break` apagado;
+  - o portão D14 com `|| true`;
+  - `[ "$obtido" = "$2" ]` trocado por `true`;
+  - a ordem dos candidatos invertida;
+  - o `return 1` do recusado trocado por `return 0`.
+- **O loop do 5xx:** o ramo "aceito pela API e não se comporta" passou a rodar nos 4 casos
+  `literal:*`. As comparações são as mesmas para os dois candidatos.
+- **Q-2:** fechado para a retenção. O que sobrou é o Q-1 abaixo.
+- **Acréscimo à lição 19:** reproduz o texto aprovado.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| 1 | Menor | É o resíduo do Q-2 da rodada 2. O cabeçalho da fixture ainda promete "tudo existe" sem `FAKE_*`. Mas a fixture só responde a `describe-log-groups` quando a chamada traz `retentionInDays`, então a consulta de existência recebe vazio e o script cria os dois grupos. O teste `prod` depende disso, e o ramo "o grupo já existe, não recria" nunca roda na suíte. | CONFIRMED | `frontend/tests/fixtures/aws-falso.sh:6-8` e `:65-67`, `deploy/aws/criar-observabilidade.sh:131-134`, `frontend/tests/criar-observabilidade.test.ts:186-189` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
 
 ## Rodada 2 — `77196049..e45d0ce1` — 2026-10-05 · Lente 1: opus · Lente 2: sonnet
 
