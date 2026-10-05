@@ -231,39 +231,6 @@ está formalmente resolvida.
 
 ---
 
-## 37. `harness-sinal-de-contexto-cheio`
-
-**Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** —
-**Fonte:** parte B do rascunho de 2026-09-21, conferida contra a documentação do Claude Code
-(`hooks.md`, `settings-reference.md`, `sub-agents.md`) naquela data.
-
-**Não promovível sem decisão do João.** O pedido original — compactar ao passar de 150k tokens,
-independente do modelo — não existe como hook:
-
-- nenhum hook dispara por tamanho de contexto, e nenhum hook pode invocar `/compact`;
-- o nativo é `autoCompactEnabled` e `autoCompactWindow`, que é **percentual da janela** — 150k é 75%
-  de 200k e 15% de 1M, o oposto de "independente do modelo";
-- `PreCompact` e `PostCompact` só observam; não têm campo de decisão;
-- `transcript_path` é gravado de forma assíncrona e pode atrasar em relação à conversa: medir por
-  ele é estimativa;
-- subagente não tem medição de contexto própria, e o contexto dele morre com ele.
-
-**As três saídas, que se somam e nenhuma sozinha é o pedido:**
-
-1. `autoCompactWindow` calibrado para a janela do modelo em uso — compacta, sem limiar absoluto;
-2. hook que estima tokens pelo `transcript_path` e injeta aviso por
-   `hookSpecificOutput.additionalContext` ao passar de 150k — limiar absoluto, **não** compacta;
-   se entrar, nasce com a trava anti-laço do `stop-verify.sh` e `exit 0` sempre;
-3. não deixar o contexto chegar lá: `context: fork` nas fases pesadas e diff sempre por caminho de
-   arquivo, nunca colado no controlador — o `/revisar-bloco` do item 35 já faz a segunda metade.
-
-**Fora:** trocar de modelo em tempo de execução (`PreModelSwitch` só bloqueia troca em curso) e
-`CLAUDE_CODE_SUBAGENT_MODEL_FORCE` (anula o frontmatter de todo subagente, que o item 35 constrói).
-
-**DoD:** o caminho escolhido implementado e **visto disparar**.
-
----
-
 # Decisões não promovíveis isoladamente
 
 Executar sem a decisão é escolher no lugar de quem decide. A tabela é o índice; as fichas com
