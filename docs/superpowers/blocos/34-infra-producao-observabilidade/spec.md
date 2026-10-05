@@ -16,8 +16,8 @@
 >
 > E cumpre o único critério de aceite da task Notion 10.1.8: "Alerta dispara em queda".
 
-> **Uma decisão nova espera o João na revisão desta spec: a D12, sobre o D-74.** Os trechos que
-> dependem dela estão marcados `(D12)`.
+> **D12 decidida pelo João na revisão desta spec: o D-74 é pago neste bloco.** Os trechos que vêm
+> dela estão marcados `(D12)`.
 
 ## 1. Contexto
 
@@ -91,7 +91,8 @@ Nenhuma fonte fixa métrica, limiar, período, retenção, destinatário ou teto
      "o próximo bloco que tocar a observabilidade ou `config/database.php`", e este bloco é esse.
    - Com o bloco, o log default deixa de ser ≤ 30 MB girando no host e passa a ficar 30 dias no
      CloudWatch. Junto com ele vão o e-mail, o RUT ou o nome que a exceção interpolar.
-   - O desenho aprovado diz que o backend não muda, e o D-74 diz que a decisão é do João (D12).
+   - O desenho das seções dizia que o backend não muda. O D-74 deixa a decisão ao João, e ele
+     decidiu pagá-lo aqui, na revisão da spec (D12).
 5. **A "URL" do log do nginx inclui a query string.** A Seção 4 aprovou IP, user agent e URL saindo
    do host. O `$request` traz a query, e o `q` das listas paginadas (ADR-22, `PageRequest`) é termo
    de busca: pode ser nome ou RUT. Fica como limite declarado (§8), sem mudar o nginx.
@@ -111,7 +112,7 @@ Nenhuma fonte fixa métrica, limiar, período, retenção, destinatário ou teto
 | D9 | Memória e swap são coletados **sem alarme**: o swap já está em uso, e um alarme nele dispararia sempre. Os dois viram o histórico da decisão de resize (§12, P-80). | Seção 2 |
 | D10 | Emenda do ADR-21: a política de retenção declarada do log de segurança passa a ser 30 dias no CloudWatch, com o teto local mantido. | Seção 4 |
 | D11 | Emenda do ADR-14: o monitoramento básico sai do `[FASE 2]`. | Seção 3 |
-| D12 | **Pendente do João, na revisão desta spec.** A recomendação é pagar o D-74 aqui, com `mask_bindings_in_exception_messages` na conexão e um teste (§4.8). O custo é perder os valores no diagnóstico de erro de SQL, que foi o motivo de o item 33 deixar a decisão para depois; o que mudou é que agora o log fica 30 dias fora do host. Com o sim, valem os trechos `(D12)`. Com o não, eles saem, o D-74 fica como está no backlog, e a recusa fica registrada aqui e na emenda do ADR-21. | achado 4 |
+| D12 | O D-74 é **pago neste bloco**, com `mask_bindings_in_exception_messages` na conexão e um teste (§4.8). O custo é perder os valores no diagnóstico de erro de SQL, que foi o motivo de o item 33 deixar a decisão para depois; o que mudou é que agora o log fica 30 dias fora do host. | João, na revisão da spec (achado 4) |
 | D13 | Custo: **≈ US$ 0** dentro do free tier da organização e **≈ US$ 3–4/mês** fora dele (6 métricas custom, 4 alarmes, ~43 mil `PutMetricData`/mês e 0,3–0,5 GB de log/mês, pela tabela de `us-east-1`; a de `sa-east-1` é um pouco mais alta). O valor real sai do Cost Explorer desta conta ~3 dias depois da instalação e vai para a P-80. Teto e resize continuam decididos juntos em 2026-10-31. | Seção 4 e resposta sobre o free tier |
 | D14 | Portões: o bloco para e volta ao João se a RSS do agente no lab passar de ~100 MB, se o disco de produção estiver em ≥ 75% na leitura, ou se o `test-metric-filter` recusar a regex do 5xx **e** o termo literal. | Seção 4 |
 | D15 | O alarme de certificado mede o certificado **servido** na 443, não a saída do `certbot renew --dry-run` (a alternativa da ficha). Assim, pega também o hook de recarga quebrado. | Seção 2 |
@@ -131,8 +132,8 @@ Nenhuma fonte fixa métrica, limiar, período, retenção, destinatário ou teto
 **Fora do repositório (Fase B):** recursos base, lab, reinstalação, reparo, alarmes, janela de
 sondas e medição de custo, na ordem do §5.
 
-**Não mudam:** o `docker-compose.prod.yml`, o nginx (`deploy/nginx/` e `docker/nginx/`) e, sem a
-D12, o backend.
+**Não mudam:** o `docker-compose.prod.yml` e o nginx (`deploy/nginx/` e `docker/nginx/`). Do
+backend, só muda o que o §4.8 diz.
 
 **Fora:**
 - APM, tracing e dashboards;
@@ -472,7 +473,8 @@ Fora a catraca cruzada, o runbook não tem catraca. Nunca teve, e isso fica decl
 - **Privacidade.** Saem do host, por 30 dias:
   - o id do ator e o IP, do canal `seguranca`;
   - IP, user agent e URL com query string, do nginx (o `q` das listas pode ser nome ou RUT);
-  - as mensagens de erro do Laravel, com bindings se não houver a D12.
+  - as mensagens de erro do Laravel, sem os bindings da SQL (D12), mas com o resíduo do §4.8: o
+    texto de erro do próprio MySQL.
 
   Lê esses logs quem tem `logs:GetLogEvents` ou `logs:FilterLogEvents` na conta. Hoje, é o usuário
   administrativo do João.
@@ -530,8 +532,6 @@ plano confirma isso no `## Handoff de execução`.
 - **A lane de aceitação** roda os passos 4 a 9, grava as provas e o `closed`, e remove a ficha 34 e
   a linha de `## Aguardando aceitação`.
   - `(D12)` Remove também o D-74, como pago.
-  - Sem a D12, o D-74 fica como está, porque nenhuma lane edita ficha alheia (invariante 10).
-    Reescrever o gatilho dele é uma PR de docs do João.
 
 ## Verificação externa
 
