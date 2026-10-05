@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # `aws` de mentira do frontend/tests/criar-observabilidade.test.ts. Registra
-# cada chamada em $FAKE_LOG — uma linha `---` e depois um argumento por linha —
+# cada chamada em $FAKE_LOG - uma linha `---` e depois um argumento por linha -
 # e devolve o minimo que o deploy/aws/criar-observabilidade.sh le. Os FAKE_*
 # escolhem o cenario; sem eles, tudo existe e tudo passa.
 {
