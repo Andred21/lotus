@@ -34,6 +34,13 @@ e quanto custa se a decisão estiver errada.
   protocolo nova, como o `HTTP/3` (o nginx não serve hoje), passa a não contar. Nesse caso o
   recuo é a regex de volta na frente.
 
+- **`/revisar-bloco`, rodada 2 (2026-10-05): corrigir o Q-1 e o Q-2 e acrescentar à lição 19.**
+  O `FAKE_ERRA` da fixture dá lugar ao `FAKE_INVERTE=<padrao>:<linha>`, que vira a resposta de
+  uma só das 10 comparações do portão dos padrões. Cada comparação ganha o seu caso de teste. O
+  cabeçalho da fixture diz que a retenção é a exceção ao "tudo passa". O acréscimo à lição 19: um
+  gate de várias comparações tem uma sonda por comparação. **Se estiver errado:** só um cenário
+  de fixture a mais. O script de produção não muda.
+
 ## Do controlador, em nome do João
 
 - **Tasks 1 e 6 feitas pelo controlador, não despachadas.** Dependem de SSH em produção e de

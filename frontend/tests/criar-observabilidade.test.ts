@@ -228,15 +228,32 @@ describe('criar-observabilidade.sh base', () => {
     expect(doTipo(e, 'logs', 'put-metric-filter')).toEqual([])
   })
 
+  // Cada comparação do portão dos padrões tem o seu cenário: o FAKE_INVERTE vira a
+  // resposta de uma só. Um cenário que virasse todas provaria só o `|| falha`, e
+  // apagar uma comparação deixaria a suíte verde (revisão do item 34, rodada 2, Q-1).
   it.each([
-    ['up', 'o padrao de Up'],
-    ['cert', 'o padrao de CertDias'],
-  ])('padrão que não se comporta (%s) sai 1, sem filtro nenhum', (erra, mensagem) => {
-    const e = rodar(['base', 'prod'], { FAKE_RETENCAO: '30', FAKE_ERRA: erra })
+    ['up:sonda-ok', 'o padrao de Up'],
+    ['up:sonda-fora', 'o padrao de Up'],
+    ['up:lixo', 'o padrao de Up'],
+    ['cert:sonda-ok', 'o padrao de CertDias'],
+    ['cert:sonda-vencido', 'o padrao de CertDias'],
+    ['cert:sonda-fora', 'o padrao de CertDias'],
+  ])('a comparação %s errada sai 1, sem filtro nenhum', (inverte, mensagem) => {
+    const e = rodar(['base', 'prod'], { FAKE_RETENCAO: '30', FAKE_INVERTE: inverte })
     expect(e.status).toBe(1)
     expect(e.stderr).toContain(mensagem)
     expect(doTipo(e, 'logs', 'put-metric-filter')).toEqual([])
   })
+
+  it.each(['literal:502-h1', 'literal:503-h2', 'literal:200-h1', 'literal:200-h2'])(
+    'literal que erra a comparação %s: o 5xx sai com a regex',
+    (inverte) => {
+      const e = rodar(['base', 'prod'], { FAKE_RETENCAO: '30', FAKE_INVERTE: inverte })
+      expect(e.status, e.stderr).toBe(0)
+      const http5xx = doTipo(e, 'logs', 'put-metric-filter').find((c) => valor(c, '--filter-name') === 'Http5xx')
+      expect(valor(http5xx!, '--filter-pattern')).toBe(P_5XX_REGEX)
+    },
+  )
 
   it('retenção diferente no readback sai 1', () => {
     const e = rodar(['base', 'prod'], { FAKE_RETENCAO: '7' })
