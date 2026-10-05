@@ -82,6 +82,7 @@ RUN apk add --no-cache --virtual .build-deps libzip-dev icu-dev oniguruma-dev li
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
 COPY docker/php/memory-cli.ini /usr/local/etc/php/conf.d/zz-memory-cli.ini
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+COPY docker/php/excecoes.ini /usr/local/etc/php/conf.d/zz-excecoes.ini
 COPY docker/php/www.conf /usr/local/etc/php-fpm.d/zz-www.conf
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint
 

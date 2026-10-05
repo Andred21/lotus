@@ -451,7 +451,11 @@ serviço o cifra em repouso.
   - as mensagens de erro do Laravel, **sem os bindings da SQL**. A conexão liga
     `mask_bindings_in_exception_messages` (`backend/config/database.php`, D12 da spec: o D-74 pago).
     O que resta é o texto de erro do próprio MySQL, como `Duplicate entry '<valor>'`, que a
-    máscara não alcança.
+    máscara não alcança;
+  - os stack traces dessas mensagens, **sem o valor dos argumentos**: a imagem de produção liga
+    `zend.exception_ignore_args` (`docker/php/excecoes.ini`, revisão final do bloco 34). Sem isso,
+    cada argumento string ia ao trace com até 15 caracteres, o que cabe num RUT. O trace mantém
+    arquivo, linha e função.
 - **O prazo.** 30 dias é menos que os 12 meses do IP em `login_logs` e `audits`: o registro longo é
   o banco.
 - **Quem lê.** Lê esses logs quem tem `logs:GetLogEvents` ou `logs:FilterLogEvents` na conta, e
