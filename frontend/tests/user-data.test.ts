@@ -154,6 +154,14 @@ describe('deploy/aws/user-data.sh', () => {
     expect(semComentarios).toContain('amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c "file:$CONF" -s')
   })
 
+  it('fetch-config falho apaga a config, para a reexecução reaplicar', () => {
+    const linhas = semComentarios.split('\n')
+    const i = linhas.findIndex((linha) => linha.includes('amazon-cloudwatch-agent-ctl -a fetch-config'))
+    expect(i).toBeGreaterThan(-1)
+    expect(linhas[i].trimEnd()).toMatch(/ -s \\$/)
+    expect(linhas[i + 1].trim()).toBe('|| { rm -f "$CONF"; exit 1; }')
+  })
+
   it('a sonda: timer de um minuto que espera o script chegar pelo §7', () => {
     expect(semComentarios).toContain('ConditionPathExists=/opt/lotus/bin/sondar-saude.sh')
     expect(semComentarios).toContain('ExecStart=/opt/lotus/bin/sondar-saude.sh')

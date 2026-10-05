@@ -136,7 +136,9 @@ cat > "$CONF.novo" <<JSON
 JSON
 if ! cmp -s "$CONF.novo" "$CONF" || ! systemctl is-active --quiet amazon-cloudwatch-agent; then
   mv "$CONF.novo" "$CONF"
-  /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c "file:$CONF" -s
+  # fetch-config falho apaga a config: o cmp da reexecução vê a diferença e reaplica.
+  /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c "file:$CONF" -s \
+    || { rm -f "$CONF"; exit 1; }
 else
   rm -f "$CONF.novo"
 fi
