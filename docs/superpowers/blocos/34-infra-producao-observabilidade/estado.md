@@ -2,24 +2,24 @@
 schema_version: 3
 id: 34
 slug: 34-infra-producao-observabilidade
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
-active_spec: null
-active_plan: null
+active_spec: docs/superpowers/blocos/34-infra-producao-observabilidade/spec.md
+active_plan: docs/superpowers/blocos/34-infra-producao-observabilidade/plano.md
 active_review: null
-active_acceptance: null
-context_packet: null
-efeito_externo: null
-executor: null
+active_acceptance: docs/superpowers/blocos/34-infra-producao-observabilidade/aceitacao.md
+context_packet: docs/superpowers/blocos/34-infra-producao-observabilidade/context.md
+efeito_externo: sim
+executor: claude
 branch: infra/34-infra-producao-observabilidade
 worktree: ../lotus-34-infra-producao-observabilidade
 offset: 2
 lane_base: 77196049
-commit: 77196049
+commit: 112ef648
 blocker: null
-updated_at: 2026-10-04T19:00:09-03:00
+updated_at: 2026-10-04T22:36:52-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
