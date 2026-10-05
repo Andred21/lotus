@@ -2,9 +2,9 @@
 schema_version: 3
 id: 34
 slug: 34-infra-producao-observabilidade
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/blocos/34-infra-producao-observabilidade/spec.md
 active_plan: docs/superpowers/blocos/34-infra-producao-observabilidade/plano.md
@@ -17,10 +17,10 @@ branch: infra/34-infra-producao-observabilidade
 worktree: ../lotus-34-infra-producao-observabilidade
 offset: 2
 lane_base: 77196049
-commit: ea480f58
+commit: 30c5255b
 blocker: null
-updated_at: 2026-10-04T22:40:28-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-10-04T23:52:57-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 34 — estado
