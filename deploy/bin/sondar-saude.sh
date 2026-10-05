@@ -15,13 +15,11 @@ set -euo pipefail
 
 NOME=app.lotusotec.cl
 URL="${LOTUS_SONDA_URL:-https://$NOME/up}"
-# >>> VARIANTE A (HAIRPIN: ok) - troque este bloco pela VARIANTE B se a Task 1 mandar.
 # Caminho ate o nginx: o hairpin pelo EIP, medido na Task 1 do plano do item 34
 # (audit do bloco). Passa por DNS, EIP, security group e TLS como um cliente,
-# so que de dentro da AWS.
+# so que de dentro da AWS. Se o hairpin quebrar, o recuo e' o loopback com o
+# nome no SNI e no Host (spec do item 34, sec. 4.2).
 TLS="${LOTUS_SONDA_TLS:-$NOME:443}"
-RESOLVER=()
-# <<< VARIANTE A
 # Com um PEM aqui, os dias saem do arquivo, sem conectar: e assim que o teste e
 # a janela de sondas (runbook sec. 14.4) provam o alarme sem tocar no certificado
 # servido.
@@ -30,7 +28,7 @@ LOG="${LOTUS_SONDA_LOG:-/var/log/lotus/sonda.log}"
 
 # HTTP. Sem -L: o 301 da porta 80 nao e saude. Teto de 10 s, para uma execucao
 # nunca encostar na seguinte. Sem resposta, o curl escreve 000.
-HTTP=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "${RESOLVER[@]}" "$URL" || true)
+HTTP=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$URL" || true)
 [[ $HTTP =~ ^[0-9]{3}$ ]] || HTTP=000
 HTTP=$((10#$HTTP))
 UP=0
