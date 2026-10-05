@@ -78,7 +78,13 @@ Nenhuma fonte fixa métrica, limiar, período, retenção, destinatário ou teto
    - No mesmo arquivo: um arquivo que aparece depois de o agente subir, sem estado salvo e com
      `from_beginning: false`, é lido **do fim**. Perderiam-se as primeiras linhas do contêiner
      recriado pelo deploy, que são onde mora o erro de boot.
-   - As duas chaves entram na config, e o lab prova as duas (§5, passo 3).
+   - Só a primeira chave entra na config. A segunda já vale `true` por default e **não pode ser
+     escrita**, medido no planejamento, em 2026-10-04, no `.deb` 1.300073.2b1889:
+     - o schema que vem no pacote recusa `from_beginning` em `collect_list`
+       (`additionalProperties: false`), e o `fetch-config` reprovaria a config inteira;
+     - o tradutor do agente usa `true` quando a chave falta
+       (`translator/.../collect_list/ruleFromBeginning.go`: `DefaultCase("from_beginning", true, …)`).
+   - O lab prova os dois comportamentos do mesmo jeito (§5, passo 3).
 2. **Metric filter não aceita dimensão fixa.** A dimensão só sai de campo do evento. Um filtro
    igual no grupo do lab alimentaria a mesma métrica dos alarmes de produção. Por isso os filtros
    existem só nos grupos de `prod`, e o lab valida os padrões com `test-metric-filter` (D7).
@@ -168,8 +174,10 @@ execução não muda nada, e o lab prova isso.
     `mem` e `swap`, com `used_percent`. Cada um com `append_dimensions` `{"Ambiente": "<AMBIENTE>"}`.
   - `logs`, com stream `{instance_id}`:
     - `/var/lib/docker/containers/*/*-json.log` vai para `/lotus/<AMBIENTE>/containers`, com
-      `publish_multi_logs: true` e `from_beginning: true`;
-    - `/var/log/lotus/sonda.log` vai para `/lotus/<AMBIENTE>/sonda`, com `from_beginning: true`.
+      `publish_multi_logs: true`;
+    - `/var/log/lotus/sonda.log` vai para `/lotus/<AMBIENTE>/sonda`.
+  - Sem `from_beginning` na config: o default do tradutor já é `true`, e o schema recusa a chave
+    (achado 1).
   - Sem `retention_in_days` na config. A retenção é do script da AWS, e a role não pode mudá-la.
 - **Sonda:**
   - cria `/var/log/lotus/`;
@@ -228,8 +236,14 @@ Segue o padrão do `criar-oidc-e-role.sh`:
   - `Up`, no grupo `sonda`, com valor `$.up`;
   - `CertDias`, no grupo `sonda`, com valor `$.cert_dias`, casando só a linha que traz a chave;
   - `Http5xx`, no grupo `containers`, com valor 1, **default 0** e o padrão
-    `{ $.log = %HTTP/[0-9.]+" 5[0-9]{2} % }`. Se a regex for recusada, entra um termo literal
-    equivalente.
+    `{ $.log = %HTTP/[0-9.]+..5[0-9]{2}.% }`. Se a regex for recusada, entra o termo literal
+    equivalente `{ ($.log = "*HTTP/1.1\" 5*") || ($.log = "*HTTP/2.0\" 5*") || ($.log = "*HTTP/1.0\" 5*") }`.
+
+    A regex do desenho, `%HTTP/[0-9.]+" 5[0-9]{2} %`, foi recusada no planejamento
+    (`test-metric-filter`, 2026-10-04: `Invalid character(s) in term`): a aspa e o espaço ficam
+    fora do conjunto que o CloudWatch aceita em regex. A forma acima troca os dois por `.`, e ela e
+    o literal casaram 502 e 503 (HTTP/1.1 e HTTP/2.0) e recusaram 200 e 404 em linhas sintéticas.
+    Quem decide é a execução, com as linhas reais.
 
   `Up` e `CertDias` ficam **sem** default. Um 0 em cada linha que não casa viraria queda falsa e
   certificado vencido falso.
@@ -368,7 +382,7 @@ IP de cliente, sem endereço de e-mail e sem valor do `.env`.
      ficam registradas para o alarme;
    - logs de dois contêineres diferentes em `/lotus/lab/containers` (prova do
      `publish_multi_logs`), e a primeira linha de um contêiner que nasceu depois do agente (prova do
-     `from_beginning`);
+     `from_beginning` default);
    - a sonda, copiada à mão, roda uma vez, e a linha chega em `/lotus/lab/sonda`;
    - o user-data rodado de novo não muda nada, e o Docker não reinicia (`ActiveEnterTimestamp`
      igual);
@@ -442,7 +456,7 @@ IP de cliente, sem endereço de e-mail e sem valor do `.env`.
 
 | Entregável | Catraca | Sonda que tem de reprovar |
 |---|---|---|
-| `deploy/aws/user-data.sh` | `frontend/tests/user-data.test.ts`. Exige: `--no-upgrade` em todo `apt-get install`; `AMBIENTE=prod` validado; versão e sha256 fixados e conferidos antes do `dpkg`; a config JSON do heredoc parseando, com `omit_hostname`, `Lotus/Host`, `Ambiente`, `drop_device`, `publish_multi_logs` e `from_beginning`; o timer e o `ConditionPathExists` | um `apt-get install` sem `--no-upgrade`; `publish_multi_logs` removido |
+| `deploy/aws/user-data.sh` | `frontend/tests/user-data.test.ts`. Exige: `--no-upgrade` em todo `apt-get install`; `AMBIENTE=prod` validado; versão e sha256 fixados e conferidos antes do `dpkg`; a config JSON do heredoc parseando, com `omit_hostname`, `Lotus/Host`, `Ambiente`, `drop_device` e `publish_multi_logs`, e só com chaves que o schema do agente aceita (sem `from_beginning`); o timer e o `ConditionPathExists` | um `apt-get install` sem `--no-upgrade`; `publish_multi_logs` removido; `from_beginning` escrito |
 | `deploy/bin/sondar-saude.sh` | `frontend/tests/sondar-saude.test.ts`. Estática: executável, `set -euo pipefail`, sem `aws`, sem `.env`. **Execução**, com servidor HTTP e certificados locais pelos overrides: 200 dá `up` 1; 503 dá `up` 0; sem servidor dá `up` 0 e `http` 0; certificado de 30 dias dá `cert_dias` 29 ou 30; PEM ilegível dá a linha sem `cert_dias` | gravar `cert_dias` 0 na falha; `up` 1 com 503 |
 | `deploy/aws/criar-observabilidade.sh` | `frontend/tests/criar-observabilidade.test.ts`. Exige: nomes, métricas, limiares, M de N e falta de dado iguais ao §4.4; `OKActions`; nenhum número de 12 dígitos; `alarmes` recusando sem `Up`, sem a métrica de disco e sem assinatura confirmada; `test-metric-filter` antes do `put-metric-filter`; IAM sem `CreateLogGroup` nem `PutRetentionPolicy`; `Up` e `CertDias` sem default | trocar um limiar ou o tratamento de falta de dado |
 | Nomes entre arquivos | catraca cruzada: log groups, namespaces e nomes de métrica iguais no user-data, no script e no runbook §14 | renomear um grupo num arquivo só |
