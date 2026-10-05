@@ -398,7 +398,7 @@ o app inteiro tinha só três chamadas de `Log::warning` de descarte de arquivo 
 §1).
 
 **Regra:** os logs de ações do software são centralizados **dentro do monólito**, num canal próprio —
-`seguranca` (`backend/config/logging.php:134-142`, driver `monolog` sobre `stderr`, formatado em JSON)
+`seguranca` (`backend/config/logging.php:136-144`, driver `monolog` sobre `stderr`, formatado em JSON)
 — escrito por um ponto único, `EventoDeSeguranca`
 (`backend/app/Shared/Logging/EventoDeSeguranca.php`). Não existe, nem nasce deste bloco, nenhum
 microserviço próprio para esta função, em nuvem ou não.
@@ -459,7 +459,8 @@ serviço o cifra em repouso.
 - **O prazo.** 30 dias é menos que os 12 meses do IP em `login_logs` e `audits`: o registro longo é
   o banco.
 - **Quem lê.** Lê esses logs quem tem `logs:GetLogEvents` ou `logs:FilterLogEvents` na conta, e
-  hoje esse é o usuário administrativo do João. A role da EC2 só escreve (`lotus-observabilidade`).
+  hoje esse é o usuário administrativo do João. A role da EC2 escreve e lista os streams, mas não
+  lê o conteúdo deles (`lotus-observabilidade`).
 
 **A regra deste ADR não muda:** o coletor é infraestrutura da AWS, não o microserviço do
 `RNF-SEC-05`, e a P-64 segue aberta.

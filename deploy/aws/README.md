@@ -1242,7 +1242,7 @@ aws cloudwatch get-metric-statistics --region sa-east-1 --namespace Lotus/Host \
 
 Troque `swap_used_percent` por `mem_used_percent` para ver a memória. Lê esses logs quem tem
 `logs:GetLogEvents` ou `logs:FilterLogEvents` na conta, e hoje esse é o usuário administrativo do
-João. A role da EC2 só escreve.
+João. A role da EC2 escreve e lista os streams, mas não lê o conteúdo deles.
 
 ### 14.6 O que fazer com cada e-mail
 
