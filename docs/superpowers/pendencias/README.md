@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (37)
+## Abertas (38)
 
 ### Agrupadas em bloco de execução
 
@@ -38,6 +38,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-95 | Doze pontas do harness que o item 35 deixou sem correção: seis Menores da revisão (Q-7, Q-8, Q-10 a Q-13) e seis do `rulings.md` (`context_required`/`closing` sem command, `lotus-ui-review` lendo o `state.md`, fluxo antigo no `backlog.md`, semente do `lane.sh` fora da invariante 6, catraca sem prompts nem `subagent_type`, `blocked` da rota codex sem artefato) | 36 | cada linha corrigida ou com veredito escrito; dispara no bloco que tocar `.claude/commands/`, `lane.sh`, `commands.tests.sh` ou `state.md` — **disparado em 2026-10-04 (item 36), não pago**; revisar 2026-10-31 |
 | P-96 | `AGENTS.md` e `INSTRUÇÕES-DO-PROJETO.md` listam quatro das seis rules (faltam `backend-lang` e `frontend-estilizacao`), e o `estrutura-monolito.md` não cita o `shared/ui/Timestamp/` | BD-15 | os três docs acompanharem; dispara no bloco que tocar qualquer um deles — **disparado em 2026-10-04 (item 36), não pago**; revisar 2026-10-31 |
 | P-97 | Dez divergências de coordenada e de mapa medidas pela `auditar-docs` do item 33: linhas de `operacao-segredos.md` §1/§2/§3/§5 deslocadas, o plano do item 10 arquivado em `deploy/aws/README.md`, `Shared/Logging/` incompleta no `estrutura-monolito.md` e `clamav` fora do `CLAUDE.md` §6 | — | bloco que tocar `operacao-segredos.md`, `estrutura-monolito.md` ou `deploy/aws/README.md` por outro motivo; revisar 2026-10-31 |
+| P-99 | O comentário do canal `seguranca` em `config/logging.php` ainda chama o teto `json-file` de política de retenção (o ADR-21 emendado diz 30 dias no CloudWatch), e a lição 19 não lista os quatro pares de catraca do item 34 | — | rodada de correção do item 34, se o João a levar junto do Q-1; senão, bloco que tocar `config/logging.php` ou a lição 19; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
