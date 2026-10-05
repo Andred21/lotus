@@ -176,6 +176,34 @@ Se o `decisao-stack.md` do Drive ainda trouxer o texto original, **quem vence aq
 posterior do João**, e o original não se apaga. O último `[FASE 2]` deste ADR, *"monitoramento
 básico"*, continua aberto e é o item 34.
 
+**Emenda (2026-10-04, bloco `infra-producao-observabilidade`).** O último item `[FASE 2]` deste
+ADR, *"monitoramento básico (healthcheck + alerta CloudWatch)"*, está **vencido**.
+- **O agente.** O host roda o CloudWatch agent, instalado pelo `deploy/aws/user-data.sh` com
+  versão e sha256 fixados. Ele publica disco, memória e swap em `Lotus/Host` e leva o log de todo
+  contêiner ao CloudWatch Logs (`/lotus/prod/containers`, 30 dias).
+- **A sonda.** O `deploy/bin/sondar-saude.sh` roda num timer de um minuto, mede
+  `https://app.lotusotec.cl/up` e os dias do certificado servido, e metric filters fazem disso
+  `Lotus/Sonda`.
+- **Os alarmes.** São quatro, e todos avisam no `ALARM` e no `OK`:
+  - `/up` fora: 3 de 5 minutos, e falta de dado conta como falha;
+  - 5xx sustentado: ≥ 5 em 5 minutos;
+  - disco acima de 80%;
+  - certificado com menos de 21 dias.
+- **O canal.** O tópico SNS `lotus-alertas` passa a ser o canal definitivo de alerta de
+  infraestrutura.
+
+Fecha também o *"não há alarme de expiração até o item 34"* da emenda de 2026-09-27, que fica como
+estava, datada.
+
+Limites escritos:
+- a sonda mede de dentro da AWS, pelo hairpin no EIP;
+- não há sonda externa nem auto-recover;
+- CloudWatch ou SNS fora na região não avisam ninguém.
+
+O procedimento, a leitura e a resposta a cada e-mail estão no runbook `deploy/aws/README.md`, §14.
+Se o `decisao-stack.md` do Drive ainda trouxer o texto original, **quem vence aqui é esta decisão
+posterior do João**, e o original não se apaga.
+
 ## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
 
 **Regra:**
@@ -370,7 +398,7 @@ o app inteiro tinha só três chamadas de `Log::warning` de descarte de arquivo 
 §1).
 
 **Regra:** os logs de ações do software são centralizados **dentro do monólito**, num canal próprio —
-`seguranca` (`backend/config/logging.php:134-142`, driver `monolog` sobre `stderr`, formatado em JSON)
+`seguranca` (`backend/config/logging.php:136-144`, driver `monolog` sobre `stderr`, formatado em JSON)
 — escrito por um ponto único, `EventoDeSeguranca`
 (`backend/app/Shared/Logging/EventoDeSeguranca.php`). Não existe, nem nasce deste bloco, nenhum
 microserviço próprio para esta função, em nuvem ou não.
@@ -404,6 +432,38 @@ foi tomada.
 **Descartado:** microserviço de logs em nuvem, na forma literal do requisito — desproporcional ao
 porte atual do time e da infraestrutura (uma EC2, sem fila); reavaliável se o projeto crescer o
 suficiente para justificar operar um componente a mais.
+
+**Emenda (2026-10-04, bloco `infra-producao-observabilidade`).** O coletor existe. O CloudWatch
+agent leva o log de todo contêiner, inclusive o canal `seguranca`, ao grupo `/lotus/prod/containers`
+do CloudWatch Logs. O grupo fica em `sa-east-1`, na mesma conta e região do S3 e dos backups, e o
+serviço o cifra em repouso.
+
+- **A retenção.** **A política de retenção declarada do log de segurança passa a ser 30 dias no
+  CloudWatch Logs** (D1 e D10 da spec do bloco). O teto local `json-file` 10 MB × 3 continua, para
+  quando o coletor cair, e deixa de ser a política.
+- **O "log morre com a instância"** deixa de valer para o que já saiu do host: o agente envia a
+  cada poucos segundos, e o que se perde numa queda é a janela ainda não enviada.
+- **O que sai do host, por 30 dias:**
+  - do canal `seguranca`, o id do ator e o IP. Nunca e-mail, senha ou token, pela forma fixa do
+    `EventoDeSeguranca`;
+  - do nginx, o IP, o user agent e a URL com a query string. O `q` das listas paginadas (ADR-22)
+    pode trazer nome ou RUT, e isso é limite declarado, sem mascaramento;
+  - as mensagens de erro do Laravel, **sem os bindings da SQL**. A conexão liga
+    `mask_bindings_in_exception_messages` (`backend/config/database.php`, D12 da spec: o D-74 pago).
+    O que resta é o texto de erro do próprio MySQL, como `Duplicate entry '<valor>'`, que a
+    máscara não alcança;
+  - os stack traces dessas mensagens, **sem o valor dos argumentos**: a imagem de produção liga
+    `zend.exception_ignore_args` (`docker/php/excecoes.ini`, revisão final do bloco 34). Sem isso,
+    cada argumento string ia ao trace com até 15 caracteres, o que cabe num RUT. O trace mantém
+    arquivo, linha e função.
+- **O prazo.** 30 dias é menos que os 12 meses do IP em `login_logs` e `audits`: o registro longo é
+  o banco.
+- **Quem lê.** Lê esses logs quem tem `logs:GetLogEvents` ou `logs:FilterLogEvents` na conta, e
+  hoje esse é o usuário administrativo do João. A role da EC2 escreve e lista os streams, mas não
+  lê o conteúdo deles (`lotus-observabilidade`).
+
+**A regra deste ADR não muda:** o coletor é infraestrutura da AWS, não o microserviço do
+`RNF-SEC-05`, e a P-64 segue aberta.
 
 ---
 

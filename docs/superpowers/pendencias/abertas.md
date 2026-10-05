@@ -704,7 +704,7 @@ Task 12, Step 6). **Fecha junto com esta ficha:** quando a org virar Team, o job
 
 **Gatilho:** fecha quando o fundo passar a distinguir página 1 das seguintes **e** as cunhas
 existirem (por raster recomposto ou CSS), ou quando a Lotus aprovar o documento como está. Revisar em
-**2026-09-30**.
+**2026-10-31** (renovada pelo João no fechamento do item 34; vencia em 2026-09-30).
 
 O certificado renderizado não reproduz duas coisas do `docs/templates/certificado.pdf`: (a) as cunhas
 diagonais azul/preta das quinas da página 1, e (b) a página 2, que na nossa saída herda as faixas
@@ -780,6 +780,25 @@ O alarme **existe e funciona** — Budget `lotus-prod-teto`, MONTHLY, 30 USD, `A
 `FORECASTED > 100%` por e-mail para `jvbatalha32@gmail.com` (o DoD 6 fechou por ele). O que esta
 ficha guarda não é a falta do alarme: é que ele **vai disparar**, porque o número que ele vigia já
 está estourado na previsão.
+
+**Observabilidade, item 34 (2026-10-04).** O CloudWatch entra na conta (D13 da spec do bloco):
+- ≈ US$ 0/mês dentro do free tier permanente: 10 métricas custom, 10 alarmes, 1 milhão de chamadas
+  de API e 5 GB de log;
+- ≈ US$ 3–4/mês fora dele: 6 métricas, 4 alarmes, ~43 mil `PutMetricData`/mês e 0,3–0,5 GB de
+  log/mês.
+
+A conta é membro de uma organização, e o free tier é um só para todas as contas: daqui não se lê
+quanto sobra.
+
+O agente consome **112.8 MiB** de RAM (RSS), medidos no lab, num host de 2 GiB com swap em uso.
+Isso passa do portão D14 da spec (~100 MB; 112.8 MiB são ≈ 118 MB), e o João aceitou o excesso em
+2026-10-05. Pela leitura do controlador, 28.8 MiB são heap, e 84.0 MiB são páginas limpas do
+binário, que o kernel descarta sob pressão (audit do bloco 34, Task 6). Isso entra na conta do
+resize, junto com o resto. O histórico de `mem_used_percent` e `swap_used_percent` em `Lotus/Host`
+substitui o `free -m` à mão como evidência do critério do runbook §12 (§14.5).
+
+O custo medido no Cost Explorer, ~3 dias depois da instalação em produção, entra aqui pela lane de
+aceitação do item 34.
 
 ## P-81 — a access key que provisionou a produção continua ativa
 

@@ -108,7 +108,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-83 | Sete decisões de política dos guardas (allowlist da `main` para `.github/`/`.githooks/`/`.codex/`/`.superpowers/`, `merge --ff-only`, o `docker/probe.env` real, os três caminhos do `stop-verify`, o motivo que ensina a alargar a allowlist, `git commit` sem `-m`) ficaram só no ledger, que é **gitignorado** | João | João decidir cada linha — a favor ou contra — e a decisão virar commit; revisar 2026-10-31 |
 | P-74 | O botão de severidade reprova AA no estado base do tema claro em quatro das cinco famílias (success 2,28:1, info 2,77:1, danger 3,76:1, help 3,96:1) — o `warning`, que a P-30 fechou, era a quarta pior | João | uma régua por estado, no molde do `describe` da P-30 em `frontend/tests/tone-ink.test.ts`, cobrir as cinco severidades nos três estados e todas passarem 4,5:1; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
-| P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-09-30 |
+| P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-10-31 (renovada no fechamento do item 34) |
 | P-08 | RF-CUR-04 promete Manual por curso; implementado é Blade única | Lotus | contratante pedir manual personalizado por curso |
 | P-09 | Figma mostra 4 tipos de documento de turma; implementados são 3 | Lotus | Lotus confirmar que quer os 4 |
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
@@ -129,7 +129,10 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (0)
+## Encerradas (1)
+
+**Em rastro:** a **P-99**, encerrada pelo `infra-producao-observabilidade` (item 34) em 2026-10-05.
+Ficha completa em [`encerradas.md`](./encerradas.md).
 
 **A P-93 saiu no fechamento do item 37 (2026-10-04)**, o primeiro depois do item 33 que a encerrou
 no mesmo dia. O rastro durável está nos commits e na linha de entrega em

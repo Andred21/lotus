@@ -34,6 +34,10 @@ return [
 
         'sqlite' => [
             'driver' => 'sqlite',
+            // D-74, pago no item 34 (D12): a QueryException não leva os
+            // valores da consulta ao log, que fica 30 dias no CloudWatch
+            // (ADR-21). O texto de erro do próprio banco não é mascarado.
+            'mask_bindings_in_exception_messages' => true,
             'url' => env('DB_URL'),
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
@@ -46,6 +50,10 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
+            // D-74, pago no item 34 (D12): a QueryException não leva os
+            // valores da consulta ao log, que fica 30 dias no CloudWatch
+            // (ADR-21). O texto de erro do próprio banco não é mascarado.
+            'mask_bindings_in_exception_messages' => true,
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),

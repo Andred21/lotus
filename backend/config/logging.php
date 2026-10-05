@@ -112,10 +112,12 @@ return [
          * default —, então não depende de `LOG_CHANNEL` nem de `LOG_STACK` e
          * vale igual em desenvolvimento e em produção.
          *
-         * `stderr` porque é para lá que o runtime de produção manda tudo, e o
-         * Docker aplica o teto `json-file` 10 MB × 3 do `docker-compose.prod.yml`
-         * — essa rotação É a política de retenção deste log, não um acidente de
-         * default.
+         * `stderr` porque é para lá que o runtime de produção manda tudo. O
+         * CloudWatch agent leva a linha ao grupo `/lotus/prod/containers`, e os
+         * 30 dias de retenção desse grupo SÃO a política deste log (ADR-21,
+         * emenda de 2026-10-04). O teto `json-file` 10 MB × 3 do
+         * `docker-compose.prod.yml` fica como reserva local, para quando o
+         * coletor cair.
          *
          * `JsonFormatter` porque linha de log de segurança é para ser LIDA por
          * máquina: quem procurar "todo 403 do usuário 7 ontem" precisa filtrar

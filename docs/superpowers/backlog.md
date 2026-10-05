@@ -124,7 +124,6 @@ abaixo está escrita nesta ordem.
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
 | 2 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
-| 3 | **34** `infra-producao-observabilidade` | Infra | Só o backup atrasado alerta hoje; queda, disco e 5xx não. Depois do 32 (fechado em 2026-09-27, alarme de certificado) e, de preferência, do 33 |
 | 4 | **13** `go-live-confiabilidade-e-recuperacao` | Cross-cutting | Gate final por definição: mede release, backup e restore sobre o que os anteriores construíram — agora sobre HTTPS |
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
@@ -141,6 +140,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 
 | Bloco | Itens pendentes | Desde |
 |---|---|---|
+| **34** `infra-producao-observabilidade` | 1, 2, 5, 6, 7 | 2026-10-05 |
 
 ---
 
@@ -172,7 +172,7 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 
 ## 34. `infra-producao-observabilidade`
 
-**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim
+**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim · **Depende:** 32
 **Fonte:** spec do item 10 v2 (mesmas linhas 53-58 — "CloudWatch agent, alarmes de app; bloco
 próprio"); Notion admin `10.1.8` (healthcheck + alerta de queda, CloudWatch básico); Drive ADR-14
 ("healthcheck + alerta de queda `[FASE 2]`"); `deploy/bin/verificar-backup.sh` e o tópico SNS

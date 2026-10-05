@@ -157,7 +157,8 @@ Launch instance:
 - **Tipo**: `t4g.small`; **EBS**: gp3 20 GiB;
 - **Key pair**: novo, `.pem` guardado fora do repositório;
 - **Instance profile**: `lotus-ec2` (§4); **Security group**: `lotus-web` (§5);
-- **User data**: o conteúdo de `deploy/aws/user-data.sh`;
+- **User data**: o conteúdo de `deploy/aws/user-data.sh`, com `AMBIENTE=prod` — o lab da §14.1
+  troca para `lab`;
 - **Advanced → Metadata**: **IMDSv2 `required`** e **hop limit `2`**. Sem o hop 2 o container não
   alcança a credencial da role — a falha é um timeout silencioso de ~10 s por request, não um
   erro claro.
@@ -170,10 +171,13 @@ Prova do cloud-init, por SSH:
 docker --version; docker compose version; aws --version; free -m | grep -i swap; ls -ld /opt/lotus
 sudo docker run --rm hello-world | tail -3
 aws sts get-caller-identity
+systemctl is-active amazon-cloudwatch-agent lotus-sonda.timer
 ```
 
 Esperado: Docker do repositório oficial (sem `ubuntu` no build), `Docker Compose version v2+`,
-`aws-cli/2.x`, `Swap` ≈ 2047 MiB, `/opt/lotus` em `drwxr-x---`. Falhou →
+`aws-cli/2.x`, `Swap` ≈ 2047 MiB, `/opt/lotus` em `drwxr-x---`, e `active` duas vezes no
+`systemctl` — o CloudWatch agent e o timer da sonda, do item 34. O timer só roda depois que o §7
+entrega o script, e o `lotus-prod-up` acusa a falta de dado enquanto isso (§14). Falhou →
 `sudo cat /var/log/cloud-init-output.log`.
 
 O `Arn` do `sts` tem de ser `arn:aws:sts::<conta>:assumed-role/lotus-ec2/i-…` — **role assumida,
@@ -194,7 +198,7 @@ Do WSL, com o `.pem` da §6 (sem o `-i`, o `scp` oferece a chave padrão do WSL 
 ```bash
 PEM=~/.ssh/<o .pem da §6>
 scp -i "$PEM" docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
-scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh ubuntu@<EIP>:/tmp/
+scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh deploy/bin/sondar-saude.sh ubuntu@<EIP>:/tmp/
 scp -i "$PEM" deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
 ```
 
@@ -203,7 +207,7 @@ root:root`, e o shell do `ubuntu` não o lê — expandido fora, o glob chega li
 
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /tmp/sondar-saude.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
@@ -550,8 +554,10 @@ aws sns list-subscriptions-by-topic --region sa-east-1 --topic-arn "$T" \
 Sem confirmar, o tópico publica para ninguém. Depois: o `sns:Publish` da §4 e o ARN em
 `LOTUS_ALERT_TOPIC_ARN` no `/opt/lotus/.env`.
 
-Canal definitivo de alerta é decisão do bloco de observabilidade. Trocar de canal depois é trocar
-um ARN no `.env` e a `Resource` da `lotus-alerta`.
+**O `lotus-alertas` é o canal definitivo de alerta de infraestrutura** (item 34, D2). Avisam por
+ele o `verificar-backup.sh` e os quatro alarmes da §14, no `ALARM` e no `OK`. O único assinante é o
+e-mail do João. Trocar de canal é trocar o ARN no `.env`, a `Resource` da `lotus-alerta` e o
+tópico do `deploy/aws/criar-observabilidade.sh`, rodando o `alarmes` de novo (§14.3).
 
 **E-mail da aplicação — SES, não SNS.** O alerta de acesso suspeito (D7), a recuperação de senha
 e o convite do redator saem pelo SES, remetente `Lotus <lotus@lotusotec.cl>`, pela identidade
@@ -757,8 +763,10 @@ Tem de passar **com o nginx de pé** — é o ensaio da renovação real, e é a
 cadeia toda funciona: authenticator certo, diretório com a permissão certa, e o `tls.conf` servindo
 o challenge sem redirecionar. Reprovando aqui, o certificado morre em 90 dias sem uma linha de
 aviso. Backup que nunca restaurou não é backup; renovação que nunca ensaiou não é renovação
-(lição 1). **Não há alarme de expiração** até o item 34: entre uma renovação falhada e o vencimento
-há ~30 dias que ninguém mede.
+(lição 1). **O alarme de expiração existe desde o item 34:** o `lotus-prod-certificado` (§14)
+dispara quando o certificado **servido** na 443 tem menos de 21 dias. Isso acontece quando a
+renovação falhou nove dias seguidos, ou quando ela renovou e o hook não recarregou o nginx. Ele não
+substitui este gate: o gate ensaia a renovação antes, e o alarme acusa a falha depois.
 
 ## 12. Critério de resize
 
@@ -768,8 +776,10 @@ há ~30 dias que ninguém mede.
 - swap sustentado em uso normal (`free -m`, não pico isolado).
 
 Como: stop → Change instance type → start. São minutos de indisponibilidade, aceitáveis para
-~10 usuários. Medição de apoio: `docker stats --no-stream` + `free -m`, com a saída no audit —
-o critério é escrito, não memória de quem operou.
+~10 usuários. **A evidência é a série do CloudWatch, desde o item 34:** `mem_used_percent` e
+`swap_used_percent` em `Lotus/Host` (`Ambiente=prod`), um ponto por minuto, sem alarme (D9 da spec
+do item 34). A leitura está na §14.5. `docker stats --no-stream` e `free -m` viram conferência
+pontual, com a saída no audit — o critério é escrito, não memória de quem operou.
 
 ## 13. E-mail — sandbox, destinatários, `.env` e as duas provas
 
@@ -963,3 +973,399 @@ Guarde o número do caso; a resposta leva de um a alguns dias úteis. Aprovado, 
 site deixa de existir, porque o production access é da conta, não do Lotus (D-54 do `lotus-site`:
 avise a sessão de lá); e as identidades pessoais do 13.1 deixam de ser necessárias e podem sair com
 `delete-email-identity`. A policy `lotus-ses` não muda.
+
+## 14. Observabilidade — agente, sonda e os quatro alarmes
+
+O host publica no CloudWatch desde o item 34 (spec
+`docs/superpowers/blocos/34-infra-producao-observabilidade/spec.md`). São três peças, e cada uma
+nasce de um arquivo versionado:
+
+- **O agente** `amazon-cloudwatch-agent`, instalado pelo `deploy/aws/user-data.sh` (§6) com versão
+  e sha256 fixados.
+  - Métricas: `disk_used_percent` de `/`, `mem_used_percent` e `swap_used_percent`, no namespace
+    `Lotus/Host`, com a dimensão `Ambiente=prod`, um ponto por minuto.
+  - Logs: leva ao CloudWatch Logs o log de **todo contêiner** (`/lotus/prod/containers`, um stream
+    por contêiner) e o da sonda (`/lotus/prod/sonda`), com retenção de 30 dias. O teto local
+    `json-file` 10 MB × 3 continua, para quando o agente cair.
+- **A sonda** `/opt/lotus/bin/sondar-saude.sh` (`deploy/bin/`, instalada pelo §7), que o timer
+  `lotus-sonda.timer` roda a cada minuto.
+  - Mede `https://app.lotusotec.cl/up` e os dias que faltam no certificado servido na 443.
+  - Grava uma linha em `/var/log/lotus/sonda.log`:
+    `{"ts":"…","up":1,"http":200,"cert_dias":84}`. Medição que falha omite `cert_dias`.
+- **Os metric filters e os alarmes**, criados pelo `deploy/aws/criar-observabilidade.sh` com a
+  credencial do João.
+  - Os filtros transformam as linhas em `Lotus/Sonda` `Up`, `CertDias` e `Http5xx`. Este último
+    conta as respostas 5xx no log do nginx.
+  - Os alarmes avisam o tópico `lotus-alertas` (§10) no `ALARM` e no `OK`.
+
+| Alarme | Métrica | Estatística, período | Dispara | M de N | Falta de dado |
+|---|---|---|---|---|---|
+| `lotus-prod-up` | `Lotus/Sonda` `Up` | mínimo, 60 s | `< 1` | 3 de 5 | conta como falha |
+| `lotus-prod-5xx` | `Lotus/Sonda` `Http5xx` | soma, 300 s | `≥ 5` | 1 de 1 | conta como OK |
+| `lotus-prod-disco` | `Lotus/Host` `disk_used_percent` (`Ambiente=prod`, `fstype`, `path=/`) | máximo, 300 s | `> 80` | 2 de 2 | mantém o estado |
+| `lotus-prod-certificado` | `Lotus/Sonda` `CertDias` | mínimo, 300 s | `< 21` | 1 de 1 | mantém o estado |
+
+O `lotus-prod-up` é o único em que falta de dado conta como falha: ele é o *dead-man's switch* do
+agente, da sonda e do host. Por isso o e-mail dele não quer dizer "o site caiu", e sim "a linha da
+sonda não chegou dizendo 200". O 14.6 separa os casos.
+
+A role `lotus-ec2` ganha uma quarta inline, `lotus-observabilidade`, que o 14.1 aplica:
+- `logs:CreateLogStream`, `logs:PutLogEvents` e `logs:DescribeLogStreams` em `log-group:/lotus/*`;
+- `cloudwatch:PutMetricData` só no namespace `Lotus/Host`.
+
+Ela não tem `CreateLogGroup` nem `PutRetentionPolicy`: do host não se cria grupo nem se muda
+retenção.
+
+### 14.1 Recursos base e o lab
+
+Pré-condição: o `lotus-alertas` com assinatura confirmada (14.8). Da raiz de uma árvore do
+repositório, com a credencial administrativa:
+
+```bash
+deploy/aws/criar-observabilidade.sh base prod   # inline, grupos de 30 dias, os três filtros
+deploy/aws/criar-observabilidade.sh base lab    # grupos de 1 dia, sem filtro
+```
+
+Cada etapa confere os padrões no `test-metric-filter` antes de criar qualquer filtro: cada um tem
+de casar a linha certa e recusar a errada.
+- O padrão do `Http5xx` tem duas formas, nesta ordem: um termo literal e, de recuo, a regex
+  `%HTTP/[0-9.]+..5[0-9]{2}.%`. Vale a primeira que passar. O literal vem antes porque exige a aspa
+  real que fecha a linha de requisição, e uma URL não a forja; o `.` da regex aceita qualquer
+  caractere (revisão do item 34, Q-2). **As duas recusadas é o portão D14 da spec do item 34:**
+  PARE. A saída seria mudar o formato de log do nginx.
+- Filtro só existe em `prod`: metric filter não aceita dimensão fixa, e um filtro no grupo do lab
+  publicaria na métrica dos alarmes de produção.
+- O readback mostra a inline, a retenção de cada grupo e os filtros. Retenção errada sai 1.
+
+**O lab** prova o recreate sem tocar na produção: uma EC2 descartável nasce do user-data da branch,
+com `AMBIENTE=lab`, e morre no fim.
+
+```bash
+sed 's/^AMBIENTE=prod$/AMBIENTE=lab/' deploy/aws/user-data.sh > /tmp/user-data-lab.sh
+grep -c '^AMBIENTE=lab$' /tmp/user-data-lab.sh      # 1
+aws ec2 run-instances --region sa-east-1 \
+  --image-id resolve:ssm:/aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id \
+  --instance-type t4g.small --key-name lotus-prod \
+  --iam-instance-profile Name=lotus-ec2 --security-groups lotus-web \
+  --metadata-options HttpTokens=required,HttpPutResponseHopLimit=2 \
+  --user-data file:///tmp/user-data-lab.sh \
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=lotus-lab}]' \
+  --query 'Instances[0].InstanceId' --output text
+```
+
+O lab assume a `lotus-ec2`, com o S3, o SES e o SNS de produção, porque é a role que um recreate
+real usaria. Vive minutos, sem app. Por SSH (`ubuntu@<IP do lab>`, o mesmo `.pem`), confere-se:
+
+- `cloud-init status --wait` dá `status: done`, e
+  `systemctl is-active amazon-cloudwatch-agent lotus-sonda.timer` dá `active` duas vezes;
+- `sudo grep -ci accessdenied /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log` dá
+  `0`;
+- `aws cloudwatch list-metrics --region sa-east-1 --namespace Lotus/Host --dimensions Name=Ambiente,Value=lab`
+  lista as três métricas, e as dimensões do disco são as do `DISCO` do script (`Ambiente`,
+  `fstype`, `path`);
+- dois contêineres nascidos **depois** do agente aparecem em `/lotus/lab/containers`, cada um no
+  seu stream, cada um com a sua primeira linha:
+
+  ```bash
+  sudo docker run -d --name lab-a busybox sh -c 'echo PRIMEIRA-LINHA-lab-a; while true; do echo lab-a; sleep 5; done'
+  sudo docker run -d --name lab-b busybox sh -c 'echo PRIMEIRA-LINHA-lab-b; while true; do echo lab-b; sleep 5; done'
+  aws logs filter-log-events --region sa-east-1 --log-group-name /lotus/lab/containers \
+    --filter-pattern '"PRIMEIRA-LINHA"' --query 'events[].message' --output text
+  ```
+
+- a sonda, copiada como no §7 (`scp` para `/tmp`, `sudo mv` para `/opt/lotus/bin/` e `chmod +x`),
+  roda no minuto seguinte, e a linha chega em `/lotus/lab/sonda`;
+- o user-data rodado de novo (`sudo bash /tmp/user-data-lab.sh`) não muda nada. O
+  `ActiveEnterTimestamp` do `docker` e do agente é o mesmo de antes, e o trace não tem `dpkg -i` nem
+  `fetch-config`;
+- a memória do agente, com `ps -o rss= -C amazon-cloudwatch-agent` (em KiB).
+
+No fim:
+
+```bash
+aws ec2 terminate-instances --region sa-east-1 --instance-ids <i-do-lab>
+aws logs delete-log-group --region sa-east-1 --log-group-name /lotus/lab/containers
+aws logs delete-log-group --region sa-east-1 --log-group-name /lotus/lab/sonda
+```
+
+As métricas `Ambiente=lab` não se apagam: param de receber ponto e deixam de ser cobradas.
+
+### 14.2 Instalar no host vivo
+
+Duas partes, nesta ordem.
+
+1. **A sonda, pelo §7.** O `sondar-saude.sh` vai junto com os outros scripts, de uma árvore igual à
+   `main` do corporativo. Como todo `deploy/bin/*.sh` novo, ele trava o botão até esta
+   reinstalação.
+2. **O agente e o timer, pelo reparo.** O `user-data.sh` também é o reparo do host vivo: copiado
+   como os artefatos do §7 e rodado como root. Ele não reinstala o Docker (`--no-upgrade`) nem
+   reinicia contêiner.
+
+   ```bash
+   scp -i "$PEM" deploy/aws/user-data.sh ubuntu@<EIP>:/tmp/
+   ```
+
+   No host:
+
+   ```bash
+   systemctl show docker -p ActiveEnterTimestamp
+   sudo sh -c 'docker inspect -f "{{.Name}} {{.State.StartedAt}}" $(docker ps -q)'
+   sudo bash /tmp/user-data.sh > /tmp/user-data.log 2>&1; echo "rc=$?"
+   systemctl show docker -p ActiveEnterTimestamp                                   # igual ao de antes
+   sudo sh -c 'docker inspect -f "{{.Name}} {{.State.StartedAt}}" $(docker ps -q)' # iguais aos de antes
+   systemctl is-active amazon-cloudwatch-agent lotus-sonda.timer                   # active, active
+   sudo tail -2 /var/log/lotus/sonda.log                                           # "up":1,"http":200
+   rm /tmp/user-data.sh
+   ```
+
+   - `rc` diferente de 0: leia `/tmp/user-data.log` do fim para o começo.
+   - **Docker ou contêiner reiniciado: PARE.** O `--no-upgrade` falhou. Leia
+     `/var/log/apt/history.log` antes de qualquer outro passo.
+
+Depois, espere pelo menos 10 minutos antes do 14.3. A sonda precisa acumular `Up`. E o primeiro
+envio do agente, que lê os logs dos contêineres desde o começo, precisa sair da janela do 5xx.
+
+### 14.3 Os alarmes
+
+```bash
+deploy/aws/criar-observabilidade.sh alarmes
+```
+
+O script recusa em três casos, e em cada um olha o efeito:
+- **sem um ponto de `Lotus/Sonda` `Up` nos últimos 10 minutos:** o alarme de `/up` nasceria
+  disparando por falta de dado. Volte ao 14.2;
+- **sem `disk_used_percent` com as dimensões exatas do alarme** (o `DISCO` do script): o alarme de
+  disco nunca sairia de `INSUFFICIENT_DATA`. Compare com o `list-metrics` do 14.5;
+- **sem uma assinatura confirmada no `lotus-alertas`:** os alarmes avisariam ninguém (14.8).
+
+O readback mostra, de cada alarme:
+- a métrica e as dimensões;
+- a estatística e o período;
+- o limiar e o M de N;
+- o tratamento de falta de dado;
+- o número de ações de `ALARM` e de `OK`.
+
+Falta de ação sai 1. Dez minutos depois, os quatro têm de estar em `OK`:
+
+```bash
+aws cloudwatch describe-alarms --region sa-east-1 --alarm-name-prefix lotus-prod- \
+  --query 'MetricAlarms[].[AlarmName,StateValue]' --output text
+```
+
+Reexecutar é seguro: o `put-metric-alarm` substitui o alarme por ele mesmo.
+
+### 14.4 Janela de sondas
+
+A janela prova que cada alarme dispara **e** que o e-mail chega: alerta que nunca chegou não é
+alerta (lição 1).
+- Fora do horário comercial do Chile.
+- Com os quatro alarmes em `OK`.
+- Sem desligar as ações: o e-mail é o que se prova.
+
+Anote o início em UTC, para o histórico.
+
+**`/up` e 5xx (~6 minutos de app parado, de verdade):**
+
+```bash
+APP=$(sudo docker ps -q --filter label=com.docker.compose.service=app)
+sudo docker stop "$APP"
+# esperar lotus-prod-up e lotus-prod-5xx em ALARM, e os dois e-mails
+sudo docker start "$APP"
+curl -s -o /dev/null -w '%{http_code}\n' https://app.lotusotec.cl/up     # 200
+```
+
+Sem 200 em um minuto:
+`sudo docker restart $(sudo docker ps -q --filter label=com.docker.compose.service=nginx)`. Sem 200
+depois disso: `deploy.sh <SHA corrente>` (§8.1).
+
+**Disco (~12 minutos a 82%):**
+
+```bash
+read -r USADO LIVRE <<<"$(df -B1 --output=used,avail / | tail -1)"
+sudo fallocate -l $(( (USADO + LIVRE) * 82 / 100 - USADO )) /var/tmp/lotus-sonda-disco
+df -h /                                   # ~82%
+# esperar lotus-prod-disco em ALARM e o e-mail
+sudo rm -f /var/tmp/lotus-sonda-disco
+```
+
+A qualquer sinal de problema, o arquivo sai na hora.
+
+**Certificado (uma linha da sonda com um certificado de teste de 1 dia):**
+
+```bash
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 1 \
+  -subj /CN=sonda-certificado -keyout /tmp/sonda.key -out /tmp/sonda-1dia.pem
+sudo env LOTUS_SONDA_CERT_ARQUIVO=/tmp/sonda-1dia.pem /opt/lotus/bin/sondar-saude.sh
+sudo tail -1 /var/log/lotus/sonda.log     # "cert_dias":0
+rm /tmp/sonda.key /tmp/sonda-1dia.pem
+```
+
+O `lotus-prod-certificado` vai a `ALARM` na avaliação seguinte. Volta a `OK` no período depois,
+com as linhas normais da sonda. O certificado servido não muda.
+
+Cada transição tem de aparecer no histórico. Cada alarme tem de ter mandado dois e-mails, o de
+`ALARM` e o de `OK`:
+
+```bash
+aws cloudwatch describe-alarm-history --region sa-east-1 --alarm-name <alarme> \
+  --history-item-type StateUpdate --start-date <início da janela, UTC> \
+  --query 'AlarmHistoryItems[].[Timestamp,HistorySummary]' --output text
+```
+
+### 14.5 Ler logs e métricas
+
+```bash
+aws logs tail /lotus/prod/containers --region sa-east-1 --since 15m
+aws logs tail /lotus/prod/containers --region sa-east-1 --since 1h --filter-pattern '"production.ERROR"'
+aws logs tail /lotus/prod/sonda --region sa-east-1 --since 10m
+```
+
+O stream de cada contêiner leva o ID dele no nome. Para achar um serviço:
+- no host, `sudo docker ps --no-trunc --format '{{.ID}} {{.Names}}'`;
+- na conta, o nome do stream com esse ID:
+  `aws logs describe-log-streams --log-group-name /lotus/prod/containers --region sa-east-1 --query "logStreams[?contains(logStreamName, '<ID>')].logStreamName" --output text`;
+- no `tail`, `--log-stream-names <nome>`.
+
+Um deploy recria os contêineres, e cada um ganha stream novo. O antigo some com a retenção.
+
+As métricas do host (`Ambiente=prod`) e a série que decide o resize (§12):
+
+```bash
+aws cloudwatch list-metrics --region sa-east-1 --namespace Lotus/Host \
+  --query 'Metrics[].[MetricName,to_string(Dimensions)]' --output text
+aws cloudwatch get-metric-statistics --region sa-east-1 --namespace Lotus/Host \
+  --metric-name swap_used_percent --dimensions Name=Ambiente,Value=prod \
+  --start-time "$(date -u -d '-7 days' +%FT%TZ)" --end-time "$(date -u +%FT%TZ)" \
+  --period 3600 --statistics Average Maximum \
+  --query 'sort_by(Datapoints,&Timestamp)[].[Timestamp,Average,Maximum]' --output text
+```
+
+Troque `swap_used_percent` por `mem_used_percent` para ver a memória. Lê esses logs quem tem
+`logs:GetLogEvents` ou `logs:FilterLogEvents` na conta, e hoje esse é o usuário administrativo do
+João. A role da EC2 escreve e lista os streams, mas não lê o conteúdo deles.
+
+### 14.6 O que fazer com cada e-mail
+
+O assunto do SNS traz o nome do alarme e o estado. O e-mail de `OK` é o alarme voltando: anote no
+audit do incidente, se houve um.
+
+**`lotus-prod-up`.** Comece pela sonda, no host. A última linha diz o que ela viu:
+
+```bash
+sudo tail -3 /var/log/lotus/sonda.log
+systemctl status amazon-cloudwatch-agent lotus-sonda.timer --no-pager
+```
+
+- **Linhas novas com `"up":1`:** o site está de pé, e o que caiu foi o caminho até o CloudWatch.
+  Rode `sudo tail -50 /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log`.
+  `AccessDenied` é a inline `lotus-observabilidade` (14.1). Com o agente parado,
+  `sudo systemctl restart amazon-cloudwatch-agent`.
+- **Sem linha nova:** é o timer ou o script. Rode `systemctl status lotus-sonda.service`. Sem o
+  `/opt/lotus/bin/sondar-saude.sh`, o serviço é pulado em silêncio (`ConditionPathExists`):
+  reinstale pelo §7.
+- **`"up":0` com `"http":502` ou `504`:** é o app. Rode `sudo docker ps` e leia os logs do app pelo
+  14.5.
+- **`"up":0,"http":0`:** é o nginx, o TLS ou a rede. Rode `sudo docker ps` e o `curl` de fora.
+
+Sem SSH, o host caiu. Não há auto-recover: console da EC2, *status checks*, e reboot ou recreate
+(§6).
+
+**`lotus-prod-5xx`.** São cinco ou mais respostas 5xx do nginx em 5 minutos, com ou sem o `/up`
+verde. A causa é uma rota quebrada, ou o S3 ou o Gotenberg fora:
+
+```bash
+aws logs tail /lotus/prod/containers --region sa-east-1 --since 30m \
+  --filter-pattern '{ $.log = %HTTP/[0-9.]+..5[0-9]{2}.% }'
+aws logs tail /lotus/prod/containers --region sa-east-1 --since 30m --filter-pattern '"production.ERROR"'
+```
+
+Um deploy que demore mais de ~1 minuto pode disparar este alarme sozinho, porque o healthcheck do
+nginx leva 502 enquanto o `app` sobe. O `OK` chega no período seguinte.
+
+**`lotus-prod-disco`.** O disco `/` passou de 80% em dois períodos de 5 minutos:
+
+```bash
+df -h /
+sudo docker system df
+sudo du -xh --max-depth=2 /var/lib /opt /var/log /tmp 2>/dev/null | sort -h | tail -15
+```
+
+Os logs dos contêineres têm teto (10 MB × 3 cada), e o swap é fixo. O que cresce é imagem de
+release antiga e o volume do MySQL. Limpar imagem é decisão do João: o rollback do §8.1 precisa da
+imagem anterior.
+
+**`lotus-prod-certificado`.** O certificado **servido** na 443 vence em menos de 21 dias. Ou a
+renovação falhou nove dias seguidos, ou ela renovou e o nginx não recarregou.
+
+```bash
+sudo certbot certificates
+systemctl status certbot.timer --no-pager
+sudo tail -50 /var/log/letsencrypt/letsencrypt.log
+```
+
+- Renovação falhando: o gate do §11.7 (`sudo certbot renew --dry-run`).
+- Certificado novo em disco e o velho servido: o hook do §11.6.
+
+### 14.7 Parada planejada
+
+Resize (§12), reemissão TLS (§11.2) ou qualquer parada de propósito dispara o `lotus-prod-up` e o
+`lotus-prod-5xx`. Desligue as ações antes da parada e religue depois:
+
+```bash
+aws cloudwatch disable-alarm-actions --region sa-east-1 --alarm-names lotus-prod-up lotus-prod-5xx
+aws cloudwatch enable-alarm-actions --region sa-east-1 --alarm-names lotus-prod-up lotus-prod-5xx
+```
+
+Esquecer o `enable` é ficar sem alarme sem saber. Confira com
+`describe-alarms --query 'MetricAlarms[].[AlarmName,ActionsEnabled]'`. A janela de sondas (14.4)
+**não** desliga nada: o que ela prova é o e-mail.
+
+### 14.8 A assinatura do tópico
+
+```bash
+CONTA=$(aws sts get-caller-identity --query Account --output text)
+aws sns list-subscriptions-by-topic --region sa-east-1 \
+  --topic-arn "arn:aws:sns:sa-east-1:$CONTA:lotus-alertas" \
+  --query 'Subscriptions[].SubscriptionArn' --output text   # nenhum PendingConfirmation
+```
+
+Só o `alarmes` confere a assinatura, e uma vez só. Se ela sumir depois, os alarmes disparam para
+ninguém, e nada avisa. Confira depois de trocar o e-mail e antes de cada janela de sondas.
+
+### 14.9 Recuo
+
+No host, sem tocar no app:
+
+```bash
+sudo systemctl disable --now amazon-cloudwatch-agent lotus-sonda.timer
+aws cloudwatch disable-alarm-actions --region sa-east-1 \
+  --alarm-names lotus-prod-up lotus-prod-5xx lotus-prod-disco lotus-prod-certificado
+```
+
+Na AWS, se o recuo for de vez:
+
+```bash
+aws cloudwatch delete-alarms --region sa-east-1 \
+  --alarm-names lotus-prod-up lotus-prod-5xx lotus-prod-disco lotus-prod-certificado
+aws logs delete-metric-filter --region sa-east-1 --log-group-name /lotus/prod/sonda --filter-name Up
+aws logs delete-metric-filter --region sa-east-1 --log-group-name /lotus/prod/sonda --filter-name CertDias
+aws logs delete-metric-filter --region sa-east-1 --log-group-name /lotus/prod/containers --filter-name Http5xx
+aws logs delete-log-group --region sa-east-1 --log-group-name /lotus/prod/containers
+aws logs delete-log-group --region sa-east-1 --log-group-name /lotus/prod/sonda
+aws iam delete-role-policy --role-name lotus-ec2 --policy-name lotus-observabilidade
+```
+
+O ADR-14, o ADR-21 e este runbook ficam, com uma emenda datada dizendo o que foi revertido.
+
+### 14.10 Custo
+
+A estimativa da spec do item 34 (D13) é ≈ US$ 0 dentro do free tier permanente do CloudWatch e
+≈ US$ 3–4/mês fora dele.
+- O free tier cobre 10 métricas custom, 10 alarmes, 1 milhão de chamadas de API e 5 GB de log.
+- Este uso cabe nele com folga: 6 métricas, 4 alarmes, ~43 mil `PutMetricData` por mês e
+  0,3–0,5 GB de log.
+- Mas a conta é membro de uma organização, e o free tier é um só para todas as contas, somado na
+  pagadora. Daqui não se lê quanto sobra.
+
+O número real é o do Cost Explorer desta conta (console → *Cost Explorer* → serviço *CloudWatch*,
+diário), ~3 dias depois da instalação, registrado na P-80.
