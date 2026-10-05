@@ -1270,3 +1270,7 @@ Rodada 1, Q-4 e Q-5, os dois CONFIRMED pela lente 2):
 **Por que não é urgente:** nenhum dos dois muda comportamento. O custo é de quem lê. O comentário
 manda o leitor procurar a política no lugar errado, e a lição não avisa o próximo bloco que mexer
 num desses scripts de que já existe catraca a estender.
+
+**Paga em 2026-10-05, na rodada de correção do item 34:** o comentário de `config/logging.php`
+aponta o ADR-21 emendado (30 dias no CloudWatch, teto local como reserva), e a lição 19 ganhou a
+emenda do item 34 com os quatro pares. Sai para `encerradas.md` no fechamento do item 34.
