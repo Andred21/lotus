@@ -38,10 +38,14 @@ LIXO='linha que nao e da sonda'
 
 # Padroes (spec sec. 4.3). Up e CertDias casam so a linha que traz a chave e
 # ficam sem default: um 0 em cada evento que nao casa viraria queda falsa e
-# certificado vencido falso. O 5xx tem duas formas, nesta ordem: a regex, com
-# `.` no lugar da aspa e do espaco, que o CloudWatch recusa em regex (medido em
-# 2026-10-04: "Invalid character(s) in term"), e o termo literal. Vale a
-# primeira que o test-metric-filter aceitar e que se comportar.
+# certificado vencido falso. O 5xx tem duas formas, nesta ordem: o termo
+# literal, que exige a aspa real que fecha a linha de requisicao - o nginx
+# escapa como \x22 a aspa que vem do cliente, entao uma URL nao a forja -, e a
+# regex, com `.` no lugar da aspa e do espaco, que o CloudWatch recusa em regex
+# (medido em 2026-10-04: "Invalid character(s) in term"). O `.` aceita qualquer
+# caractere, e uma URL como /HTTP/1.1--500- casaria a regex: ela e' so o recuo
+# (revisao do item 34, Q-2). Vale a primeira que o test-metric-filter aceitar e
+# que se comportar.
 P_UP='{ ($.up = 0) || ($.up = 1) }'
 P_CERT='{ ($.cert_dias > 0) || ($.cert_dias <= 0) }'
 P_5XX_REGEX='{ $.log = %HTTP/[0-9.]+..5[0-9]{2}.% }'
@@ -141,7 +145,7 @@ JSON
     && confere "$P_UP" 0 "$LIXO"; } || falha "o padrao de Up nao se comportou como o esperado"
   { confere "$P_CERT" 1 "$SONDA_OK" && confere "$P_CERT" 1 "$SONDA_VENCIDO" \
     && confere "$P_CERT" 0 "$SONDA_FORA"; } || falha "o padrao de CertDias nao se comportou como o esperado"
-  for candidato in "$P_5XX_REGEX" "$P_5XX_LITERAL"; do
+  for candidato in "$P_5XX_LITERAL" "$P_5XX_REGEX"; do
     echo "    5xx: $candidato"
     if confere "$candidato" 1 "$NGINX_502" && confere "$candidato" 1 "$NGINX_H2_503" \
         && confere "$candidato" 0 "$NGINX_200" && confere "$candidato" 0 "$NGINX_H2_200"; then

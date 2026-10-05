@@ -196,7 +196,7 @@ describe('criar-observabilidade.sh base', () => {
       ['/lotus/prod/sonda', 'CertDias', 'metricName=CertDias,metricNamespace=Lotus/Sonda,metricValue=$.cert_dias'],
       ['/lotus/prod/containers', 'Http5xx', 'metricName=Http5xx,metricNamespace=Lotus/Sonda,metricValue=1,defaultValue=0'],
     ])
-    expect(valor(filtros[2], '--filter-pattern')).toBe(P_5XX_REGEX)
+    expect(valor(filtros[2], '--filter-pattern')).toBe(P_5XX_LITERAL)
   })
 
   it('lab: 1 dia e nenhum filtro — filtro no lab publicaria na métrica de produção', () => {
@@ -210,11 +210,15 @@ describe('criar-observabilidade.sh base', () => {
     expect(doTipo(e, 'logs', 'put-metric-filter')).toEqual([])
   })
 
-  it('regex recusada: o 5xx sai com o termo literal', () => {
-    const e = rodar(['base', 'prod'], { FAKE_RETENCAO: '30', FAKE_RECUSA_REGEX: '1' })
+  // O literal vem primeiro: ele exige a aspa real que fecha a linha de requisição,
+  // que o cliente não forja (o nginx escapa a dele como \x22). O `.` da regex
+  // aceita qualquer caractere, e uma URL como `/HTTP/1.1--500-` casaria
+  // (revisão do item 34, Q-2).
+  it('literal recusado: o 5xx sai com a regex', () => {
+    const e = rodar(['base', 'prod'], { FAKE_RETENCAO: '30', FAKE_RECUSA_LITERAL: '1' })
     expect(e.status, e.stderr).toBe(0)
     const http5xx = doTipo(e, 'logs', 'put-metric-filter').find((c) => valor(c, '--filter-name') === 'Http5xx')
-    expect(valor(http5xx!, '--filter-pattern')).toBe(P_5XX_LITERAL)
+    expect(valor(http5xx!, '--filter-pattern')).toBe(P_5XX_REGEX)
   })
 
   it('as duas formas recusadas: portão D14, sem filtro nenhum', () => {

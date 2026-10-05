@@ -19,6 +19,21 @@ e quanto custa se a decisão estiver errada.
   efeito. **Se estiver errado:** os traces de produção perdem o valor dos argumentos, mas mantêm
   arquivo, linha e função; reverter é tirar um ini e uma linha de COPY.
 
+- **`/revisar-bloco`, rodada 1 (2026-10-05): corrigir os cinco achados e emendar a lição 19.**
+  O João aprovou corrigir o Q-1 (Crítico) e levar os quatro Menores na mesma rodada.
+  - **Q-2 inverte a ordem da spec §4.3:** o literal do 5xx vem antes da regex, que fica como recuo.
+    O `.` da regex deixa uma URL forjada (`/HTTP/1.1--500-`) contar como 5xx. O literal exige a
+    aspa real que fecha a linha de requisição. A produção tem hoje o `Http5xx` com a regex
+    (`audit.md`, Task 6). **O João reroda `deploy/aws/criar-observabilidade.sh base prod` antes de
+    preencher o item 1 do `aceitacao.md`:** o script confere o literal no `test-metric-filter` e o
+    `put-metric-filter` sobrescreve o filtro de mesmo nome.
+  - **A emenda da lição 19** registra os quatro pares do bloco e obriga o plano a listar, para cada
+    gate, a sonda `|| true` e o cenário que o faz disparar.
+
+  **Se estiver errado:** o literal lista só `HTTP/1.0`, `HTTP/1.1` e `HTTP/2.0`. Uma versão de
+  protocolo nova, como o `HTTP/3` (o nginx não serve hoje), passa a não contar. Nesse caso o
+  recuo é a regex de volta na frente.
+
 ## Do controlador, em nome do João
 
 - **Tasks 1 e 6 feitas pelo controlador, não despachadas.** Dependem de SSH em produção e de

@@ -1028,9 +1028,11 @@ deploy/aws/criar-observabilidade.sh base lab    # grupos de 1 dia, sem filtro
 
 Cada etapa confere os padrões no `test-metric-filter` antes de criar qualquer filtro: cada um tem
 de casar a linha certa e recusar a errada.
-- O padrão do `Http5xx` tem duas formas, a regex `%HTTP/[0-9.]+..5[0-9]{2}.%` e um termo literal, e
-  vale a primeira que passar. **As duas recusadas é o portão D14 da spec do item 34:** PARE. A
-  saída seria mudar o formato de log do nginx.
+- O padrão do `Http5xx` tem duas formas, nesta ordem: um termo literal e, de recuo, a regex
+  `%HTTP/[0-9.]+..5[0-9]{2}.%`. Vale a primeira que passar. O literal vem antes porque exige a aspa
+  real que fecha a linha de requisição, e uma URL não a forja; o `.` da regex aceita qualquer
+  caractere (revisão do item 34, Q-2). **As duas recusadas é o portão D14 da spec do item 34:**
+  PARE. A saída seria mudar o formato de log do nginx.
 - Filtro só existe em `prod`: metric filter não aceita dimensão fixa, e um filtro no grupo do lab
   publicaria na métrica dos alarmes de produção.
 - O readback mostra a inline, a retenção de cada grupo e os filtros. Retenção errada sai 1.
