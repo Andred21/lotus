@@ -96,7 +96,7 @@ const sondar = (env: Record<string, string>): Promise<Execucao> => {
       stdio: 'ignore',
     })
     filho.on('close', (status) => {
-      let linhas: string[] = []
+      let linhas: string[]
       try {
         linhas = readFileSync(log, 'utf8').split('\n').filter(Boolean)
       } catch {
