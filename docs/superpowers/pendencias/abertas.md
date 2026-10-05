@@ -791,9 +791,9 @@ A conta é membro de uma organização, e o free tier é um só para todas as co
 quanto sobra.
 
 O agente consome **112.8 MiB** de RAM (RSS), medidos no lab, num host de 2 GiB com swap em uso.
-Isso passa do portão D14 da spec (~100 MiB), e o João aceitou o excesso em 2026-10-05: 28.8 MiB
-são heap, e 84.0 MiB são páginas limpas do binário, que o kernel descarta sob pressão (audit do
-bloco 34, Task 6). Isso entra na conta do resize, junto com o resto. O histórico de
+Isso passa do portão D14 da spec (~100 MB; 112.8 MiB são ≈ 118 MB), e o João aceitou o excesso em
+2026-10-05. Pela leitura do controlador, 28.8 MiB são heap, e 84.0 MiB são páginas limpas do
+binário, que o kernel descarta sob pressão (audit do bloco 34, Task 6). Isso entra na conta do resize, junto com o resto. O histórico de
 `mem_used_percent` e `swap_used_percent` em `Lotus/Host` substitui o `free -m` à mão como evidência
 do critério do runbook §12 (§14.5).
 

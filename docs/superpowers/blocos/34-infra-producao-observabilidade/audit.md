@@ -56,15 +56,17 @@ mascaradas.
 | `from_beginning` default | `PRIMEIRA-LINHA-lab-a` e `PRIMEIRA-LINHA-lab-b` no grupo |
 | sonda | `{"ts":"2026-10-05T02:15:00Z","up":1,"http":200,"cert_dias":82}` em `/lotus/lab/sonda` |
 | reexecução do user-data | `rc=0`; `ActiveEnterTimestamp` do Docker e do agente e `StartedAt` dos contêineres iguais; 0 `dpkg -i`, 0 `fetch-config`, 0 `Unpacking` |
-| RSS do agente | **112.8 MiB** após 12.6 min — portão D14 (~100 MiB): **excedido, aceito pelo João** (abaixo) |
+| RSS do agente | **112.8 MiB** após 12.6 min — portão D14 (~100 MB na spec): **excedido, aceito pelo João** (abaixo) |
 | desmonte | instância `terminated`; grupos de `lab` apagados |
 
 **Portão D14 da RSS.** Quatro amostras, de 9.4 a 12.6 min: 114.0, 112.7, 112.8 e 112.8 MiB; pico
 (`VmHWM`) 113.8 MiB. O `smaps_rollup` divide a RSS em 28.8 MiB de heap (`Private_Dirty`) e
 84.0 MiB de páginas limpas do binário de 180.5 MiB (`Private_Clean`), que o kernel descarta sob
-pressão e relê do disco; swap do agente 0. O portão disparou e o bloco parou. O João decidiu
-aceitar e seguir: o custo fixo de RAM é o heap, e o recuo do host (`systemctl disable --now`) fica
-no runbook. O critério da spec "RSS dentro do portão" cede a essa decisão.
+pressão e relê do disco; swap do agente 0. 112.8 MiB são ≈ 118 MB: excede o portão nas duas
+unidades. O portão disparou e o bloco parou.
+O João decidiu aceitar e seguir. A leitura que embasou a opção recomendada pelo controlador: o
+custo fixo de RAM é o heap, e o recuo do host (`systemctl disable --now`) fica no runbook. O
+critério da spec "RSS dentro do portão" cede à decisão do João.
 
 ## Task 10 — gate da Fase A
 
@@ -87,3 +89,28 @@ Task 5 (2), Task 7 (1).
 
 Os itens 1 e 2 da `## Verificação externa` estão provados nas seções das Tasks 1 e 6. Os itens 3 a
 7 só existem depois do merge e do espelho (Fase B).
+
+## Revisão final — correções
+
+Em 2026-10-05. I1 (decisão do João): a imagem de produção liga `zend.exception_ignore_args`, para o
+stack trace não gravar o valor dos argumentos. O programa lança uma exceção dentro de `f("12.345.678-9")`
+(valor sintético) e imprime o `ini_get` e o `getTraceAsString()`.
+
+Sem o ini:
+
+```
+0
+#0 Command line code(1): f('12.345.678-9')
+#1 {main}
+```
+
+Com `docker/php/excecoes.ini` montado em `conf.d/zz-excecoes.ini`:
+
+```
+1
+#0 Command line code(1): f()
+#1 {main}
+```
+
+A prova roda na base `php:8.3-fpm-alpine` do estágio `app`, pelo digest, com o ini montado. O build
+da imagem inteira não rodou. A catraca `imagem-excecoes.test.ts` amarra o COPY no `Dockerfile.prod`.

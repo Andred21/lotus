@@ -1220,7 +1220,9 @@ aws logs tail /lotus/prod/sonda --region sa-east-1 --since 10m
 
 O stream de cada contêiner leva o ID dele no nome. Para achar um serviço:
 - no host, `sudo docker ps --no-trunc --format '{{.ID}} {{.Names}}'`;
-- no `tail`, `--log-stream-name-prefix <instância>_var_lib_docker_containers_<ID>`.
+- na conta, o nome do stream com esse ID:
+  `aws logs describe-log-streams --log-group-name /lotus/prod/containers --region sa-east-1 --query "logStreams[?contains(logStreamName, '<ID>')].logStreamName" --output text`;
+- no `tail`, `--log-stream-names <nome>`.
 
 Um deploy recria os contêineres, e cada um ganha stream novo. O antigo some com a retenção.
 
