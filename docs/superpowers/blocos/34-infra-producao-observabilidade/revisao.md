@@ -2,8 +2,66 @@
 
 ## Em aberto
 
-- **Q-1 · Crítico** — três gates guardados só pela palavra (sha256 do agente, readback das ações
-  dos alarmes, padrões `Up`/`CertDias`). Falta a aprovação do João para a correção.
+- **Q-1 (rodada 2) · Importante**: nenhuma comparação do portão dos padrões tem catraca própria.
+  São 10 comparações em `Up`, `CertDias` e 5xx. Falta a aprovação do João para a correção.
+
+## Rodada 2 — `77196049..e45d0ce1` — 2026-10-05 · Lente 1: opus · Lente 2: sonnet
+
+Rodada aberta pela correção dos cinco achados da rodada 1, nos commits `cc82f4d8`, `ed05b6b3`,
+`5f201427` e `e45d0ce1`. A lente Codex não foi despachada. A cota segue esgotada até 3 de novembro
+de 2026 (rodada 1), por isso a lente 1 desta rodada é só o `revisor-bloco`.
+
+Fechamento da rodada 1, com sonda própria do revisor sobre uma cópia:
+
+- **Q-1 (a), sha256:** fechado. Com `sha256sum -c - || true`, o teste `sha256 errado sai ≠ 0…`
+  reprova.
+- **Q-1 (b), readback:** fechado. Com `= 4 ] || true`, o caso `FAKE_ACOES: '3'` reprova.
+- **Q-1 (c), `Up`/`CertDias`:** fechado em parte. O `|| falha` tem catraca; as comparações, não.
+  É o Q-1 abaixo.
+- **Q-2, Q-3, Q-4 e Q-5:** fechados. Com o literal e a regex trocados de volta, o teste `prod`
+  reprova.
+
+Os gates da assinatura, da retenção e os dois `[ "$pontos" -gt 0 ]` também reprovaram com a sonda.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| 1 | Importante | A catraca do portão dos padrões ancora a saída de falha, mas não as comparações. A fixture tem dois cenários de falha, `FAKE_ERRA=up` e `FAKE_ERRA=cert`, e cada um inverte todas as respostas do padrão. No ramo `$.log`, a resposta é sempre 1 para `' 502 '`/`' 503 '` e 0 para o resto. Por isso apagar uma comparação deixa a suíte com 21 de 21 verdes. Os casos medidos: o `0 "$LIXO"` do `Up`, o `0 "$SONDA_FORA"` do `CertDias` e os dois `0` de 200 do 5xx. O ramo do loop em que o candidato é aceito pela API mas não se comporta nunca é exercido. A defesa contra um `Http5xx` que case toda requisição, que mandaria e-mail falso em série no `lotus-prod-5xx`, fica sem prova. | CONFIRMED | `deploy/aws/criar-observabilidade.sh:144-155`, `frontend/tests/fixtures/aws-falso.sh:30`, `:35` e `:47` | aguarda aprovação do João |
+| 2 | Menor | O cabeçalho da fixture diz "sem eles, tudo existe e tudo passa". Mas sem `FAKE_RETENCAO` o readback da retenção recebe vazio e sai 1. Quem escrever o próximo cenário vai esperar `base` verde sem configurar nada. | CONFIRMED | `frontend/tests/fixtures/aws-falso.sh:6` e `:52`, `deploy/aws/criar-observabilidade.sh:172-174` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 1 confirmado, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+**Sobre o alcance do Q-1.** A sessão principal sondou também as comparações positivas: apagou
+`confere "$P_UP" 1 "$SONDA_OK"` e `confere "$candidato" 1 "$NGINX_502"` e rodou a suíte. Ficaram
+21 de 21 verdes. Os arquivos voltaram idênticos ao HEAD, conferido com `cmp`. Como o `FAKE_ERRA`
+inverte as três respostas do padrão, as outras duas ainda falham e o `|| falha` dispara de todo
+jeito. As 10 comparações estão sem catraca individual, não só as negativas.
+
+**Correção proposta.** A fixture ganha um `FAKE_INVERTE=<padrao>:<linha>` que vira a resposta de
+uma única comparação:
+
+- `<padrao>`: `up`, `cert`, `literal` ou `regex`;
+- `<linha>`: `sonda-ok`, `sonda-fora`, `sonda-vencido`, `lixo`, `200-h1`, `502-h1`, `200-h2` ou
+  `503-h2`.
+
+Ela substitui o `FAKE_ERRA`. Um `it.each` cobre as 10 comparações:
+
+- nas 6 de `Up` e `CertDias`, `base prod` sai 1 com a mensagem do padrão e sem `put-metric-filter`;
+- nas 4 do literal, o loop cai na regex, e o `put-metric-filter` grava `P_5XX_REGEX`.
+
+O comentário do cabeçalho (Q-2) passa a dizer que a retenção é a exceção. A sonda de prova apaga
+cada comparação, uma por vez. Esforço: P.
+
+### Padrão reincidente
+
+É o terceiro caso de "palavra, não gate" da lição 19 e o segundo neste bloco. A emenda de
+2026-10-05 pede a sonda `|| true`, que prova só a saída de falha. Um gate que soma várias
+comparações num `&&` passa nela com um cenário que inverte tudo, como passou aqui. O texto a
+seguir é proposto para acrescentar à emenda de 2026-10-05, e a decisão é do João:
+
+> Gate que soma várias comparações (`a && b && c || falha`) tem uma sonda por comparação: apagar
+> qualquer uma reprova a catraca, e a fixture tem o cenário que faz só aquela comparação responder
+> errado. Um cenário que inverte todas as respostas ancora a saída de falha, não as comparações.
 
 ## Rodada 1 — `77196049..b0e26d71` — 2026-10-05 · Lente 1: opus · Lente 2: sonnet
 
