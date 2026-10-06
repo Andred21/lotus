@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-05T00:00:00Z",
+  "title": "Design System: Lotus",
+  "extensions": {
+    "colorMeta": {
+      "celeste-lotus": { "role": "primary", "displayName": "Celeste Lotus", "canonical": "#25a5e4", "tonalRamp": ["#0c3549", "#124f6d", "#186b94", "#1e87bb", "#25a5e4", "#62beec", "#96d4f2", "#c2e6f7", "#e3f3fb", "#f4fbfe"] },
+      "celeste-tinta": { "role": "primary", "displayName": "Celeste Tinta (700)", "canonical": "#186b94", "tonalRamp": ["#0c3549", "#124f6d", "#186b94", "#1e87bb", "#25a5e4", "#62beec", "#96d4f2", "#c2e6f7"] },
+      "azul-poste": { "role": "primary", "displayName": "Azul-poste", "canonical": "#0f2b3d", "tonalRamp": ["#071520", "#0f2b3d", "#1a3f57", "#275472", "#366a8c", "#5a88a5", "#86a9bf", "#b5cbd9"] },
+      "humo": { "role": "neutral", "displayName": "Humo", "canonical": "#f1f5f9", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "grafite": { "role": "neutral", "displayName": "Grafite", "canonical": "#334155", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1"] },
+      "cinza-apoio": { "role": "neutral", "displayName": "Cinza de apoio (slate-600)", "canonical": "#475569", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"] },
+      "cinza-traco": { "role": "neutral", "displayName": "Cinza de traço (slate-500)", "canonical": "#64748b", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0"] },
+      "linha-clara": { "role": "neutral", "displayName": "Linha clara", "canonical": "#dfe7ef", "tonalRamp": ["#334155", "#64748b", "#94a3b8", "#cbd5e1", "#dfe7ef", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+      "cartao-claro": { "role": "neutral", "displayName": "Cartão claro", "canonical": "#ffffff", "tonalRamp": ["#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc", "#ffffff"] },
+      "noche": { "role": "neutral", "displayName": "Noche", "canonical": "#0b1220", "tonalRamp": ["#020617", "#0b1220", "#0f172a", "#1e293b", "#334155", "#64748b", "#94a3b8", "#cbd5e1"] },
+      "cartao-noche": { "role": "neutral", "displayName": "Cartão noche", "canonical": "#1e293b", "tonalRamp": ["#020617", "#0b1220", "#0f172a", "#1e293b", "#334155", "#64748b", "#94a3b8", "#cbd5e1"] },
+      "tinta-noche": { "role": "neutral", "displayName": "Tinta noche", "canonical": "rgba(255, 255, 255, 0.87)", "tonalRamp": ["rgba(255,255,255,0.1)", "rgba(255,255,255,0.2)", "rgba(255,255,255,0.4)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.75)", "rgba(255,255,255,0.87)", "rgba(255,255,255,1)"] },
+      "apoio-noche": { "role": "neutral", "displayName": "Apoio noche", "canonical": "rgba(255, 255, 255, 0.6)", "tonalRamp": ["rgba(255,255,255,0.1)", "rgba(255,255,255,0.2)", "rgba(255,255,255,0.4)", "rgba(255,255,255,0.6)", "rgba(255,255,255,0.75)", "rgba(255,255,255,0.87)"] },
+      "linha-noche": { "role": "neutral", "displayName": "Linha noche", "canonical": "rgba(255, 255, 255, 0.1)", "tonalRamp": ["rgba(255,255,255,0.03)", "rgba(255,255,255,0.1)", "rgba(255,255,255,0.2)", "rgba(255,255,255,0.4)"] },
+      "tinta-painel": { "role": "neutral", "displayName": "Tinta do painel (shell)", "canonical": "oklch(86.9% 0.022 252.894)", "tonalRamp": ["oklch(30% 0.03 253)", "oklch(45% 0.035 253)", "oklch(60% 0.04 253)", "oklch(70.4% 0.04 256.788)", "oklch(86.9% 0.022 252.894)", "oklch(95% 0.01 253)"] },
+      "tinta-painel-apagada": { "role": "neutral", "displayName": "Tinta do painel apagada", "canonical": "oklch(70.4% 0.04 256.788)", "tonalRamp": ["oklch(30% 0.03 253)", "oklch(45% 0.035 253)", "oklch(60% 0.04 253)", "oklch(70.4% 0.04 256.788)", "oklch(86.9% 0.022 252.894)"] },
+      "info-claro": { "role": "tertiary", "displayName": "Info (claro, 700)", "canonical": "#186b94", "tonalRamp": ["#0c3549", "#124f6d", "#186b94", "#1e87bb", "#25a5e4", "#62beec", "#96d4f2", "#c2e6f7"] },
+      "info-escuro": { "role": "tertiary", "displayName": "Info (escuro, 400)", "canonical": "#62beec", "tonalRamp": ["#0c3549", "#124f6d", "#186b94", "#1e87bb", "#25a5e4", "#62beec", "#96d4f2", "#c2e6f7"] },
+      "exito-claro": { "role": "tertiary", "displayName": "Êxito (claro, 800)", "canonical": "#136c34", "tonalRamp": ["#0b3f1e", "#136c34", "#188a42", "#1da750", "#22c55e", "#4cd07d", "#80dca0", "#b3e9c2"] },
+      "exito-escuro": { "role": "tertiary", "displayName": "Êxito (escuro, 400)", "canonical": "#4cd07d", "tonalRamp": ["#0b3f1e", "#136c34", "#188a42", "#1da750", "#22c55e", "#4cd07d", "#80dca0", "#b3e9c2"] },
+      "aviso-claro": { "role": "tertiary", "displayName": "Aviso (claro, 800)", "canonical": "#816204", "tonalRamp": ["#5e4803", "#816204", "#a47c05", "#c79807", "#eab308", "#eec137", "#f2d066", "#f6de95"] },
+      "aviso-escuro": { "role": "tertiary", "displayName": "Aviso (escuro, 400)", "canonical": "#eec137", "tonalRamp": ["#5e4803", "#816204", "#a47c05", "#c79807", "#eab308", "#eec137", "#f2d066", "#f6de95"] },
+      "perigo-claro": { "role": "tertiary", "displayName": "Perigo (claro, 700)", "canonical": "#b32b23", "tonalRamp": ["#7f1d1d", "#b32b23", "#d9342b", "#e24c4c", "#ef4444", "#ff6259", "#ff8780", "#ffb3ae"] },
+      "perigo-escuro": { "role": "tertiary", "displayName": "Perigo (escuro, 400)", "canonical": "#ff6259", "tonalRamp": ["#7f1d1d", "#b32b23", "#d9342b", "#e24c4c", "#ef4444", "#ff6259", "#ff8780", "#ffb3ae"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (Archivo 30px)", "purpose": "KPI que é o assunto da dobra e o veredito da validação pública." },
+      "headline": { "displayName": "Headline (Archivo 24px)", "purpose": "O h1 de página, dono único: PageHeader e DetailHeader." },
+      "title": { "displayName": "Título de cartão (Inter 16px/600)", "purpose": "cardTitleClass; caixa mista, registro diferente da faixa de seção." },
+      "body": { "displayName": "Corpo (Inter 16px)", "purpose": "Controles Prime a 16px; tabela, descrição e rótulo de formulário a 14px." },
+      "label": { "displayName": "Faixa de seção (Inter 12px, caixa alta)", "purpose": "SectionLabel com hairline; rótulo de campo usa a mesma caixa sem peso." },
+      "mono": { "displayName": "Dado técnico (IBM Plex Mono, tabular)", "purpose": "Folio, RUT, código, data, versão. Sempre tabular-nums; identificador nunca quebra." }
+    },
+    "shadows": [
+      { "name": "overlay", "value": "0 1px 3px rgba(0, 0, 0, 0.3)", "purpose": "Só diálogo e popups do Prime, com máscara rgba(0,0,0,0.4)." },
+      { "name": "scroll-edge", "value": "linear-gradient(to right, color-mix(in srgb, var(--text-color) 22%, transparent), transparent) 1rem", "purpose": "Anúncio de rolagem horizontal da tabela, desenhado como fundo do wrapper." }
+    ],
+    "motion": [
+      { "name": "state", "value": "0.2s", "purpose": "Transição de background, color, border-color e box-shadow em todo controle do tema." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "compact-viewport", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão preenchido (Prime base)",
+      "kind": "button",
+      "refersTo": "button-filled",
+      "description": "Celeste com rótulo azul-poste; hover escurece e o rótulo vira branco.",
+      "html": "<button class=\"ds-btn-filled\">Emitir certificado</button>",
+      "css": ".ds-btn-filled { font-family: Inter, system-ui, sans-serif; font-size: 1rem; color: #0f2b3d; background: #25a5e4; border: 1px solid #25a5e4; padding: 0.75rem 1.25rem; border-radius: 4px; cursor: pointer; transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s; } .ds-btn-filled:hover { background: #1a74a1; border-color: #1a74a1; color: #ffffff; } .ds-btn-filled:active { background: #166287; border-color: #166287; color: #ffffff; } .ds-btn-filled:focus-visible { box-shadow: 0 0 0 0.2rem #b2dff5; outline: 2px solid #0f2b3d; outline-offset: 2px; }"
+    },
+    {
+      "name": "Botão de marca (claro)",
+      "kind": "button",
+      "refersTo": "button-brand-light",
+      "description": "variant=\"primary\" no tema claro: contorno 2px e rótulo em celeste-tinta sobre o cartão.",
+      "html": "<button class=\"ds-btn-brand\">Nuevo presupuesto</button>",
+      "css": ".ds-btn-brand { display: inline-flex; align-items: center; justify-content: center; font-family: Inter, system-ui, sans-serif; font-size: 1rem; color: #186b94; background: #ffffff; border: 2px solid #186b94; padding: 0.75rem 1.25rem; border-radius: 4px; cursor: pointer; transition: color 0.2s, box-shadow 0.2s; } .ds-btn-brand:hover { color: #334155; } .ds-btn-brand:focus-visible { box-shadow: 0 0 0 0.2rem #b2dff5; outline: 2px solid #0f2b3d; outline-offset: 2px; }"
+    },
+    {
+      "name": "Botão de marca (escuro)",
+      "kind": "button",
+      "refersTo": "button-brand-dark",
+      "description": "O mesmo variant no tema escuro: celeste preenchido, borda branca, rótulo azul-poste.",
+      "html": "<div style=\"background:#0b1220;padding:16px;display:inline-block\"><button class=\"ds-btn-brand-dark\">Nuevo presupuesto</button></div>",
+      "css": ".ds-btn-brand-dark { display: inline-flex; align-items: center; justify-content: center; font-family: Inter, system-ui, sans-serif; font-size: 1rem; color: #0f2b3d; background: #25a5e4; border: 2px solid #ffffff; padding: 0.75rem 1.25rem; border-radius: 4px; cursor: pointer; transition: color 0.2s, box-shadow 0.2s; } .ds-btn-brand-dark:hover { color: #1e293b; } .ds-btn-brand-dark:focus-visible { box-shadow: 0 0 0 0.2rem rgba(37,165,228,0.2); outline: 2px solid #25a5e4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo de formulário",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Rótulo irmão do controle, borda slate-500 (3:1) que vira celeste no hover e no foco.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-rut\">RUT</label><input class=\"ds-input\" id=\"ds-rut\" value=\"76.123.456-0\" /></div>",
+      "css": ".ds-field { display: block; font-family: Inter, system-ui, sans-serif; } .ds-field-label { display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: #475569; } .ds-input { font-family: Inter, system-ui, sans-serif; font-size: 1rem; color: #334155; background: #ffffff; padding: 0.75rem 0.75rem; border: 1px solid #64748b; border-radius: 4px; width: 100%; max-width: 20rem; transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s; } .ds-input:hover { border-color: #25a5e4; } .ds-input:focus-visible { border-color: #25a5e4; box-shadow: 0 0 0 0.2rem #b2dff5; outline: 2px solid #0f2b3d; outline-offset: 2px; }"
+    },
+    {
+      "name": "Tag de estado",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Severidade como fundo tingido a 15% e tinta do tom; texto em contraste cheio, nunca branco sobre saturado.",
+      "html": "<span class=\"ds-tag ds-tag-success\">Vigente</span> <span class=\"ds-tag ds-tag-warning\">Pendiente</span> <span class=\"ds-tag ds-tag-danger\">Revocado</span> <span class=\"ds-tag ds-tag-neutral\">Sin subir</span>",
+      "css": ".ds-tag { display: inline-block; font-family: Inter, system-ui, sans-serif; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.4rem; border-radius: 4px; margin-right: 0.5rem; } .ds-tag-success { background: color-mix(in srgb, #22c55e 15%, #ffffff); color: #136c34; } .ds-tag-warning { background: color-mix(in srgb, #eab308 15%, #ffffff); color: #816204; } .ds-tag-danger { background: color-mix(in srgb, #ef4444 15%, #ffffff); color: #b32b23; } .ds-tag-neutral { background: #e2e8f0; color: #334155; }"
+    },
+    {
+      "name": "Cartão de estatística",
+      "kind": "card",
+      "refersTo": "card-stat",
+      "description": "Rótulo em caixa alta, número Archivo tabular e um trilho de 3px na borda de início com a tinta do tom.",
+      "html": "<div class=\"ds-stat ds-stat-warning\"><span class=\"ds-stat-label\">Conclusiones a confirmar</span><span class=\"ds-stat-value\">1</span></div>",
+      "css": ".ds-stat { display: inline-flex; flex-direction: column; gap: 0.25rem; min-width: 11rem; background: #ffffff; color: #334155; border: 1px solid #dfe7ef; border-inline-start-width: 3px; border-radius: 8px; padding: 0.875rem 1rem; font-family: Inter, system-ui, sans-serif; } .ds-stat-warning { border-inline-start-color: #816204; } .ds-stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.025em; color: #475569; } .ds-stat-value { font-family: Archivo, Inter, system-ui, sans-serif; font-size: 1.875rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Item de navegação",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Sobre o navy fixo: repouso em tinta do painel, hover branco a 10%, ativo celeste com a borda esquerda acesa.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\"/></svg>Dashboard</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><path d=\"M14 2v6h6\"/></svg>Comercial</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 1rem; width: 16rem; padding: 0.75rem; background: #0f2b3d; font-family: Inter, system-ui, sans-serif; } .ds-nav-item { display: flex; align-items: center; gap: 1rem; padding: 0.625rem 0.75rem; border-radius: 4px; border-left: 2px solid transparent; font-weight: 500; text-decoration: none; color: oklch(86.9% 0.022 252.894); transition: background-color 0.2s, color 0.2s; } .ds-nav-item:hover { background: rgba(255,255,255,0.1); } .ds-nav-item-active { border-left-color: #25a5e4; background: rgba(255,255,255,0.05); color: #25a5e4; } .ds-nav-item:focus-visible { outline: 2px solid #25a5e4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Folio do certificado",
+      "kind": "custom",
+      "refersTo": "mono",
+      "description": "A assinatura do sistema: legenda em rótulo de campo e o número LOT-ano-seq em Plex Mono tabular com tracking aberto.",
+      "html": "<dl class=\"ds-folio\"><dt class=\"ds-folio-label\">Folio</dt><dd class=\"ds-folio-value\">LOT-2026-0142</dd></dl>",
+      "css": ".ds-folio { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 0; text-align: center; font-family: Inter, system-ui, sans-serif; } .ds-folio-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.025em; color: #475569; } .ds-folio-value { margin: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 1.875rem; letter-spacing: 0.15em; white-space: nowrap; color: #334155; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "O Voltímetro",
+    "overview": "O Lotus é um instrumento de medição, não um painel de marketing. O mostrador é fixo e escuro — a sidebar e a barra superior são azul-poste nos dois temas, como a carcaça de um aparelho que não muda de cor conforme a luz da sala. Dentro do mostrador, a leitura é o que importa: números em mono tabular que alinham em coluna, um único acento celeste onde o ponteiro marca (o item ativo da navegação, o traço de foco, o botão de marca), e cor de severidade que aparece como trilho ou tinta, nunca como campo preenchido que grita.\n\nA densidade é a de uma ferramenta de escritório usada o dia inteiro: cartões com hairline, tabelas de 14px, rótulos em caixa alta de 12px que encabeçam grupos sem pedir atenção. A superfície clara (humo) e a escura (noche) trocam por folha de tema em tempo de execução; o que não troca é a assinatura. Cada decisão de cor foi medida contra WCAG antes de entrar — o sistema é contido porque a régua é contraste, não gosto.\n\nRejeitado de forma explícita: o template de admin genérico (azul Lara stock, gray misturado com slate, todo título em `text-2xl bold`), o editorial cream + serif, e o painel dark + neon.",
+    "keyCharacteristics": [
+      "Shell navy fixo nos dois temas; só o conteúdo acompanha o tema.",
+      "Um acento (celeste) e uma tinta derivada dele para primeiro plano sobre claro.",
+      "Cor de severidade em trilho e tinta, texto sempre em contraste cheio.",
+      "Três famílias tipográficas com papéis estritos: Archivo (display), Inter (corpo), IBM Plex Mono (dado técnico).",
+      "Dois raios, por papel: 4px no controle, 8px na superfície.",
+      "Plano: hierarquia por hairline e tom de superfície, não por sombra."
+    ],
+    "rules": [
+      { "name": "The Fixed Dial Rule", "body": "Sidebar e header são azul-poste nos dois temas. Nenhum `dark:` ali; quem pousa sobre o navy redeclara `--focus-stroke`, `--divider-stroke` e usa `--shell-ink`.", "section": "colors" },
+      { "name": "The Ink, Not Fill Rule", "body": "Cor de severidade entra como trilho de 3px ou como tinta de texto. Texto branco sobre hue saturado está banido: a tag `Vigente` media 2,28:1 assim.", "section": "colors" },
+      { "name": "The 700 Rule", "body": "Celeste nunca é primeiro plano sobre superfície clara. Lá ele vira `celeste-tinta` (degrau 700, 5,88:1). Azul-poste no lugar dele apagaria a marca dos botões.", "section": "colors" },
+      { "name": "The Tabular Rule", "body": "Todo dígito que alinha em coluna — célula de tabela, KPI, folio, data — leva `tabular-nums`. `font-mono` sem ele é erro de lint (`MONO_LITERAL`).", "section": "typography" },
+      { "name": "The Two Registers Rule", "body": "Faixa de seção (12px, caixa alta, tracking) e título de cartão (16px, caixa mista) são registros diferentes, não degraus da mesma escala. Não os unifique.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Superfície em repouso não tem sombra. Sombra só em overlay e em anúncio de rolagem. Hover é mudança de tom (`--surface-hover`, branco a 3% no escuro), não elevação.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do pintar com as CSS vars do tema (`--surface-card`, `--surface-border`, `--text-color`, `--tone-*-ink`) por `style` ou via wrapper; a folha troca sozinha.",
+      "Do customizar componente Prime no wrapper de `shared/ui`, por `className` na raiz ou `pt`.",
+      "Do usar `rounded-control` / `rounded-surface` e as constantes de `typography.ts` (`pageTitleClass`, `sectionLabelClass`, `technicalDataClass`…) em vez de literais.",
+      "Do medir contraste antes de escolher degrau: 4,5:1 texto, 3:1 traço e gráfico, nos dois temas.",
+      "Do manter o celeste raro: item ativo, foco, botão de marca. A raridade é o ponteiro.",
+      "Do deixar o shell redeclarar `--focus-stroke: var(--brand)` ao pousar sobre o navy."
+    ],
+    "donts": [
+      "Don't escrever `dark:` sobre componente Prime nem pares `bg-white dark:bg-slate-800`.",
+      "Don't pôr celeste como texto ou borda sobre superfície clara; use `--brand-ink`.",
+      "Don't pôr branco sobre celeste ou sobre hue de severidade saturado.",
+      "Don't editar `themes/lara-*-lotus.css` à mão — regere com `pnpm brand-theme`.",
+      "Don't importar PrimeReact direto numa feature, nem escrever hex fora de `brand-theme.css`/`tokens.ts`.",
+      "Don't usar zebra em tabela, sombra em cartão, ou título de página fora do `PageHeader`.",
+      "Don't usar gray do Tailwind; a família de neutros é slate."
+    ]
+  }
+}
