@@ -4,7 +4,7 @@ id: 34
 slug: 34-infra-producao-observabilidade
 workflow_state: blocked
 next_owner: joao
-next_action: "resolve_blocker aguardando aceitação: itens 1, 2, 5, 6, 7"
+next_action: "resolve_blocker aguardando aceitação: item 7"
 resume_state: ready_for_closure
 active_spec: docs/superpowers/blocos/34-infra-producao-observabilidade/spec.md
 active_plan: docs/superpowers/blocos/34-infra-producao-observabilidade/plano.md
@@ -13,13 +13,13 @@ active_acceptance: docs/superpowers/blocos/34-infra-producao-observabilidade/ace
 context_packet: docs/superpowers/blocos/34-infra-producao-observabilidade/context.md
 efeito_externo: sim
 executor: claude
-branch: infra/34-infra-producao-observabilidade
+branch: docs/34-infra-producao-observabilidade
 worktree: ../lotus-34-infra-producao-observabilidade
-offset: 2
-lane_base: 77196049
-commit: 3363ff0e
-blocker: "aguardando aceitação depois do merge: itens 1, 2, 5, 6, 7 da ## Verificação externa"
-updated_at: 2026-10-05T00:39:06-03:00
+offset: 1
+lane_base: c5a04213
+commit: 0f0d9800
+blocker: "aguardando aceitação depois do merge: item 7 da ## Verificação externa"
+updated_at: 2026-10-05T21:43:56-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -39,3 +39,13 @@ e a `Data`, e quem escreve é o João.
 
 Os itens 3 e 4 saíram OK no `conferir` pela prova `producao GET /up -> 200`, que já passava antes
 do merge. A lane de aceitação os refaz pelo runbook §14, e a prova automática dela mede de novo.
+
+Reaberto em 2026-10-05 pelo lane.sh aceitar, na branch docs/34-infra-producao-observabilidade; a branch do bloco era infra/34-infra-producao-observabilidade.
+
+## Aceitação parcial (2026-10-05)
+
+A lane de aceitação rodou a Fase B do runbook §14 (spec §5, passos 4 a 8), e a leitura está no
+`audit.md`, seção "Aceitação — Fase B". Os itens 1, 2, 5 e 6 têm `Resultado` e `Data` com o aval do João, e os itens 3 e 4
+mediram OK. O `conferir` saiu `ACEITACAO PENDENTE: 1 de 7 item(ns): 7`: o custo no Cost Explorer só
+se lê a partir de 2026-10-08. Por decisão do João, a lane publica o andamento e volta o bloco a
+`blocked`. A próxima lane de aceitação parte com os itens 1 a 6 preenchidos e só lê o custo.
