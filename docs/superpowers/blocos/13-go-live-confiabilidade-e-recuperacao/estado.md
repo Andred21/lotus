@@ -2,9 +2,9 @@
 schema_version: 3
 id: 13
 slug: 13-go-live-confiabilidade-e-recuperacao
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/spec.md
 active_plan: docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/plano.md
@@ -17,10 +17,10 @@ branch: infra/13-go-live-confiabilidade-e-recuperacao
 worktree: ../lotus-13-go-live-confiabilidade-e-recuperacao
 offset: 1
 lane_base: 546be1f1
-commit: 2fc0cdd3
+commit: e3fe9374
 blocker: null
-updated_at: 2026-10-06T00:43:00-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / fable
+updated_at: 2026-10-06T00:46:49-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 13 — estado

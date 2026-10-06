@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# `docker` de mentira do frontend/tests/conferir-golive.test.ts. Registra cada
+# chamada em $FAKE_LOG (uma linha `---` e um argumento por linha) e responde o
+# minimo que o deploy/bin/conferir-golive.sh le. Os FAKE_* escolhem o cenario.
+# A consulta SQL chega por `-e CONSULTA=...`, como o script a envia.
+{
+  printf '%s\n' '---'
+  printf '%s\n' "$@"
+} >> "$FAKE_LOG"
+
+sub="${1:-}"
+case "$sub" in
+  compose)
+    [ "${FAKE_SEM_SERVICO:-}" != 1 ] || exit 0
+    case " $* " in
+      *" ps -q mysql "*) echo mysql-falso ;;
+      *" ps -q app "*) echo app-falso ;;
+      *) echo "docker falso: compose sem resposta para: $*" >&2; exit 1 ;;
+    esac
+    ;;
+  exec)
+    shift
+    consulta=''
+    alvo=''
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        -e) consulta="${2#CONSULTA=}"; shift 2 ;;
+        -*) shift ;;
+        *) alvo="$1"; shift; break ;;
+      esac
+    done
+    case "$alvo" in
+      mysql-falso)
+        [ "${FAKE_MYSQL_FORA:-}" != 1 ] || exit 1
+        case "$consulta" in
+          *"FROM migrations"*) cat "$FAKE_MIGRACOES_BANCO" ;;
+          *"FROM permissions"*) cat "$FAKE_PERMS_BANCO" ;;
+          *"FROM roles"*) tr ' ' '\n' <<< "$FAKE_ROLES" ;;
+          *"role_has_permissions"*) echo "$FAKE_SUPERADMIN_N" ;;
+          *"MIN(created_at)"*) cat "$FAKE_DADOS_ANTIGOS" ;;
+          *"FROM users WHERE email"*) echo "$FAKE_SONDAS_N" ;;
+          *"'certificados'"*) cat "$FAKE_SMOKE" ;;
+          *) echo "docker falso: consulta sem resposta: $consulta" >&2; exit 1 ;;
+        esac
+        ;;
+      app-falso)
+        [ "${FAKE_APP_FORA:-}" != 1 ] || exit 1
+        case " $* " in
+          *" ls "*) cat "$FAKE_MIGRACOES_CODIGO" ;;
+          *" php "*) cat "$FAKE_PERMS_CODIGO" ;;
+          *) echo "docker falso: comando no app sem resposta: $*" >&2; exit 1 ;;
+        esac
+        ;;
+      *) echo "docker falso: alvo desconhecido: $alvo" >&2; exit 1 ;;
+    esac
+    ;;
+  *) echo "docker falso: subcomando nao previsto: $sub" >&2; exit 1 ;;
+esac

@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+#
+# Conferencia de go-live (bloco 13, spec secao 4.1). So leitura: le o banco e a
+# imagem pelos conteineres vivos do projeto `lotus` (compose ps -q + docker
+# exec) e o S3 pelo aws. Nunca sobe conteiner, nunca escreve no banco, nunca
+# chama artisan.
+#
+# Uso no host: sudo /opt/lotus/bin/conferir-golive.sh [--final]
+#
+# Uma linha por verificacao: OK|FALHA|AVISO|INFO <nome> <detalhe>. Todas rodam,
+# mesmo com outra em FALHA. Sai 1 com ao menos uma FALHA; senao 0. Leitor
+# indisponivel (mysql fora, app fora, aws sem credencial) e FALHA com o motivo,
+# nunca OK por omissao.
+#
+# Do .env saem so os NOMES das chaves e o valor de LOTUS_BACKUP_BUCKET. Nenhum
+# outro valor aparece na saida nem em erro: toda saida de mysql/docker/aws vai
+# para /dev/null, e o script nunca faz `source` do .env.
+#
+# Sem --final, `smoke` e INFO. Com --final, e a rede do passo 8 do runbook
+# secao 15: certificado SMOKE-GOLIVE revogado, cliente e curso arquivados,
+# turma e aluno presentes.
+set -euo pipefail
+umask 077
+
+# Mesmo gancho do verificar-backup.sh: a catraca aponta LOTUS_BASE para um
+# diretorio temporario e poe docker/aws falsos no PATH.
+BASE="${LOTUS_BASE:-/opt/lotus}"
+FINAL=0
+for arg in "$@"; do
+  case "$arg" in
+    --final) FINAL=1 ;;
+    *) echo "uso: $0 [--final]" >&2; exit 2 ;;
+  esac
+done
+
+# Chaves que o .env de producao precisa ter. Lista embutida porque o molde
+# deploy/aws/env.prod.example nao vai ao host; a catraca prende os dois.
+CHAVES_ESPERADAS="APP_NAME APP_ENV APP_KEY APP_DEBUG APP_URL APP_LOCALE APP_FALLBACK_LOCALE LOG_CHANNEL LOG_LEVEL DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD MYSQL_DATABASE MYSQL_ROOT_PASSWORD SESSION_DRIVER SESSION_DOMAIN SESSION_LIFETIME SESSION_ENCRYPT SESSION_PATH SESSION_SAME_SITE SESSION_SECURE_COOKIE CACHE_STORE QUEUE_CONNECTION FRONTEND_URL SANCTUM_STATEFUL_DOMAINS CERTIFICATE_VALIDATION_URL FILESYSTEM_DISK AWS_DEFAULT_REGION AWS_BUCKET AWS_USE_PATH_STYLE_ENDPOINT LOTUS_BACKUP_BUCKET LOTUS_ALERT_TOPIC_ARN MAIL_MAILER MAIL_FROM_ADDRESS MAIL_FROM_NAME CERTIFICATE_ISSUER_NAME CERTIFICATE_ISSUER_RUT"
+
+# D-37: a coluna archived_with_parent nasceu em 2026-08-18; registro anterior
+# so pode ter vindo de importacao do dev.
+LIMITE_NASCIMENTO="2026-08-18"
+# Backup diario as 06:10 UTC: mais de 1 dia e noite falhada.
+LIMITE_BACKUP_DIAS=1
+
+FALHAS=0
+# linha <ESTADO> <nome> <detalhe>: a unica porta de saida das verificacoes.
+linha() {
+  [ "$1" != FALHA ] || FALHAS=$((FALHAS + 1))
+  printf '%s %s %s\n' "$1" "$2" "$3"
+}
+
+# Le UM valor do .env, so para LOTUS_BACKUP_BUCKET. O `|| true` e porque grep
+# sem match sai 1 e o pipefail mataria o script aqui.
+chave() { grep -E "^$1=" "$BASE/.env" 2>/dev/null | cut -d= -f2- || true; }
+
+compose() {
+  docker compose -p lotus --project-directory "$BASE" -f "$BASE/docker-compose.prod.yml" "$@"
+}
+MYSQL=$(compose ps -q mysql 2>/dev/null || true)
+APP=$(compose ps -q app 2>/dev/null || true)
+
+# sql <consulta>: roda no conteiner mysql vivo, saida -N -B (sem cabecalho,
+# tab). A consulta vai por variavel de ambiente para nao passar por nenhum
+# shell intermediario. stderr vai fora: e onde o mysql reclamaria da senha.
+sql() {
+  [ -n "$MYSQL" ] || return 1
+  docker exec -e CONSULTA="$1" "$MYSQL" sh -c \
+    'exec mysql -N -B -uroot -p"$MYSQL_ROOT_PASSWORD" -e "$CONSULTA" "$MYSQL_DATABASE"' 2>/dev/null
+}
+
+# no_app <comando...>: roda no conteiner app vivo (exec, nunca run).
+no_app() {
+  [ -n "$APP" ] || return 1
+  docker exec "$APP" "$@" 2>/dev/null
+}
+
+conferir_env() {
+  local presentes esperadas faltam sobram
+  if [ ! -r "$BASE/.env" ]; then
+    linha FALHA env "$BASE/.env ilegivel"
+    return
+  fi
+  presentes=$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$BASE/.env" | cut -d= -f1 | sort -u || true)
+  esperadas=$(tr ' ' '\n' <<< "$CHAVES_ESPERADAS" | sort -u)
+  faltam=$(comm -13 <(printf '%s\n' "$presentes") <(printf '%s\n' "$esperadas") | paste -sd, -)
+  sobram=$(comm -23 <(printf '%s\n' "$presentes") <(printf '%s\n' "$esperadas") | paste -sd, -)
+  if [ -n "$faltam" ]; then
+    linha FALHA env "faltam: $faltam"
+  elif [ -n "$sobram" ]; then
+    linha AVISO env "chaves a mais (nao previstas no molde): $sobram"
+  else
+    linha OK env "$(wc -l <<< "$esperadas" | tr -d ' ') chaves presentes"
+  fi
+}
+
+conferir_env
+
+exit $(( FALHAS > 0 ? 1 : 0 ))
