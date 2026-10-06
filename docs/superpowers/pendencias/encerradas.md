@@ -7,6 +7,20 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
+## P-100 — a idade do backup era truncada em dias inteiros
+
+**Aberta e encerrada em 2026-10-06, no bloco `go-live-confiabilidade-e-recuperacao` (item 13).** A
+rodada 1 da revisão (Q-1) mediu que `verificar-backup.sh` e `conferir-golive.sh` dividiam a idade
+por 86400 antes de comparar: o alerta do SNS só saía com 72 h (o ADR-09 diz "passando de 2 dias"),
+e a linha de base do go-live só reprovava com 48 h, deixando uma noite falhada passar OK. Os dois
+passaram a comparar em segundos e a imprimir horas; as catracas ganharam a fronteira — 30 h reprova
+e 23 h passa no `conferir-golive.test.ts`, 47 h passa e 50 h publica no `verificar-backup.test.ts`,
+este agora executando o script com `aws` falso —, vistas reprovar contra os scripts antigos. A
+proposta à Lotus passou a dizer "supera 48 horas". Chega ao host pela reinstalação do runbook §7, a
+mesma do passo 1 do §15.
+
+**Bloco:** 13 · **Quem decidiu:** João, 2026-10-06 (aprovou a correção da Q-1).
+
 ## P-05 — migrations "adicionais" não consolidadas
 
 **Encerrada em 2026-10-06, no bloco `go-live-confiabilidade-e-recuperacao` (item 13), por

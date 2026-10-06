@@ -13,3 +13,9 @@ Decisões tomadas pela sessão de execução em nome do João. Cada linha traz o
 9. **Minors deixados sem correção** (todos resultam em FALHA, nunca em OK falso): `export KEY=` (T1), desvios do mysql de roles/n_super sem cenário e `wc -l <<< ""` (T2, T3, T5), `created_at` todo NULL (T3), rótulos inesperados no smoke (T5), comentário `lotus-<data>-golive` (T6). Também para a lane de aceitação: RTO "parcial" na proposta, prefixo "no nome" das entidades sem nome, segundo terminal para o `t2`, e alinhar a redação do gatilho de RPO entre ADR-09 e ADR-14. Se errado: correção pontual cada.
 
 Desvio do harness: nenhum. O Passo 5.1 (pipeline de profundidade 1) não foi usado; o loop foi sequencial, como a SDD descreve.
+
+## Correções da revisão, rodada 1 (aprovadas pelo João em 2026-10-06: Q-1, Q-2, Q-4)
+
+10. **Estendi a Q-1 ao `verificar-backup.sh`**, fora do escopo da spec §3: a mesma divisão por 86400 fazia o SNS só alertar na terceira noite falhada, contra o próprio cabeçalho ("duas é padrão") e o ADR-09 ("passando de 2 dias"). A P-100 só fechava com os dois, e a reinstalação do §7 já é obrigatória no passo 1 do §15 pelo script novo, então o custo de host é zero. A catraca dele passou a executar o script com `aws` falso. Se errado: reverter o `verificar-backup.sh` e o `describe` novo, e reabrir a P-100 com a metade dele.
+11. **O passo 4 do §15 conta o certificado `SMOKE-GOLIVE` no dump** (contêiner descartável, como o §9, com `umask 077` e `/root`), não o total de `certificates`: produção já emitiu certificado fora do smoke (`LOT-2026-1000`, P-78), e o total poderia passar sem o do smoke. Se errado: trocar o `SELECT` pelo do §9.
+12. **Acertei dois contadores do `pendencias/README.md`** que o bloco deixou para trás ao encerrar a P-05 (`Abertas` e `Encerradas`/`Em rastro`). Se errado: só número.

@@ -63,8 +63,12 @@ QUANDO=$(aws s3api list-objects-v2 --bucket "$BUCKET" --prefix backups/ \
 [ -n "$QUANDO" ] && [ "$QUANDO" != "None" ] \
   || gritar "Lotus: nenhum backup em s3://$BUCKET/backups/. O banco de producao esta sem copia. ADR-09: gatilho de reversao ao RDS."
 
-IDADE=$(( ( $(date -u +%s) - $(date -u -d "$QUANDO" +%s) ) / 86400 ))
-[ "$IDADE" -le "$LIMITE_DIAS" ] \
-  || gritar "Lotus: o backup mais recente de s3://$BUCKET/backups/ tem ${IDADE} dias (limite ${LIMITE_DIAS}). Ultimo: $QUANDO. Aos 7 dias o gatilho de reversao do ADR-09 dispara."
+# Compara em segundos, nao em dias inteiros: dividir por 86400 antes de comparar
+# deixava 71h59 passar como "2 dias", e o alerta so saia na TERCEIRA noite
+# falhada, nao na segunda (P-100).
+IDADE_S=$(( $(date -u +%s) - $(date -u -d "$QUANDO" +%s) ))
+HORAS=$(( IDADE_S / 3600 ))
+[ "$IDADE_S" -le $(( LIMITE_DIAS * 86400 )) ] \
+  || gritar "Lotus: o backup mais recente de s3://$BUCKET/backups/ tem ${HORAS} h (limite ${LIMITE_DIAS} dias). Ultimo: $QUANDO. Aos 7 dias o gatilho de reversao do ADR-09 dispara."
 
-echo "backup ok: o mais recente tem ${IDADE}d (limite ${LIMITE_DIAS}d) — $QUANDO"
+echo "backup ok: o mais recente tem ${HORAS}h (limite ${LIMITE_DIAS}d) — $QUANDO"

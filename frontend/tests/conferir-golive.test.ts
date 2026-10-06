@@ -376,7 +376,19 @@ describe('deploy/bin/conferir-golive.sh — sondas-dev (P-44)', () => {
 describe('deploy/bin/conferir-golive.sh — backup', () => {
   it('objeto mais recente com mais de 1 dia → FALHA com idade e limite', () => {
     const l = reprovaSo(rodar({ ...cenarioBom().env, FAKE_ULTIMO_BACKUP: horasAtras(26 + 48) }), 'backup')
-    expect(l.detalhe).toContain('3d (limite 1d)')
+    expect(l.detalhe).toContain('74h (limite 24h)')
+  })
+
+  // Fronteira (P-100): em dias inteiros, 30 h truncava para "1d" e saía OK — uma
+  // noite falhada passava pela linha de base.
+  it('uma noite falhada (30 h) → FALHA, não OK por truncamento em dias', () => {
+    const l = reprovaSo(rodar({ ...cenarioBom().env, FAKE_ULTIMO_BACKUP: horasAtras(30) }), 'backup')
+    expect(l.detalhe).toContain('30h (limite 24h)')
+  })
+
+  it('23 h, antes do backup da noite → OK', () => {
+    const e = rodar({ ...cenarioBom().env, FAKE_ULTIMO_BACKUP: horasAtras(23) })
+    expect(porNome(e.stdout).backup).toEqual({ estado: 'OK', detalhe: expect.stringContaining('ha 23h:') })
   })
 
   it('bucket sem objeto (None) → FALHA', () => {

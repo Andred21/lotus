@@ -41,8 +41,8 @@ CHAVES_ESPERADAS="APP_NAME APP_ENV APP_KEY APP_DEBUG APP_URL APP_LOCALE APP_FALL
 # D-37: a coluna archived_with_parent nasceu em 2026-08-18; registro anterior
 # so pode ter vindo de importacao do dev.
 LIMITE_NASCIMENTO="2026-08-18"
-# Backup diario as 06:10 UTC: mais de 1 dia e noite falhada.
-LIMITE_BACKUP_DIAS=1
+# Backup diario as 06:10 UTC: mais de 24 h sem objeto novo e noite falhada.
+LIMITE_BACKUP_HORAS=24
 
 FALHAS=0
 # linha <ESTADO> <nome> <detalhe>: a unica porta de saida das verificacoes.
@@ -171,9 +171,9 @@ conferir_sondas_dev() {
 }
 
 # Mesma medida do verificar-backup.sh: a idade do objeto mais recente em
-# s3://$BUCKET/backups/. Limite 1 dia, nao 2: aqui e linha de base, nao alarme.
+# s3://$BUCKET/backups/. Limite 24 h, nao 48: aqui e linha de base, nao alarme.
 conferir_backup() {
-  local bucket quando epoch idade
+  local bucket quando epoch idade_s
   bucket=$(chave LOTUS_BACKUP_BUCKET)
   if [ -z "$bucket" ]; then
     linha FALHA backup "LOTUS_BACKUP_BUCKET ausente ou vazio no .env"
@@ -192,11 +192,13 @@ conferir_backup() {
     linha FALHA backup "data ilegivel: $quando"
     return
   fi
-  idade=$(( ( $(date -u +%s) - epoch ) / 86400 ))
-  if [ "$idade" -le "$LIMITE_BACKUP_DIAS" ]; then
-    linha OK backup "mais recente ha ${idade}d: $quando"
+  # Compara em segundos: dividir por 86400 antes truncaria 47h59 para "1 dia" e
+  # a noite falhada passaria OK (P-100).
+  idade_s=$(( $(date -u +%s) - epoch ))
+  if [ "$idade_s" -le $(( LIMITE_BACKUP_HORAS * 3600 )) ]; then
+    linha OK backup "mais recente ha $(( idade_s / 3600 ))h: $quando"
   else
-    linha FALHA backup "mais recente ha ${idade}d (limite ${LIMITE_BACKUP_DIAS}d): $quando"
+    linha FALHA backup "mais recente ha $(( idade_s / 3600 ))h (limite ${LIMITE_BACKUP_HORAS}h): $quando"
   fi
 }
 

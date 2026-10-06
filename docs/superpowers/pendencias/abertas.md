@@ -1231,32 +1231,3 @@ coordenada que envelheceu. Registradas sem correção, porque a skill reporta e 
 
 **A dependência fechou em 2026-10-04:** o ADR-23 cita o `FUT-4` do `backlog.md`, e a PR de docs da
 aceitação do item 33 o levou (spec §10).
-
-## P-100 — a idade do backup é truncada em dias inteiros: o alerta sai um dia depois do que o texto promete
-
-**Bloco:** — · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
-`deploy/bin/verificar-backup.sh` ou `deploy/bin/conferir-golive.sh`, ou o envio da proposta
-`blocos/13-go-live-confiabilidade-e-recuperacao/proposta-dis02.md` à Lotus (passo 9 do runbook
-§15), o que vier primeiro; revisar em **2026-10-31**.
-
-**Medido na revisão do item 13 (Q-1, rodada 1, 2026-10-06):** os dois scripts calculam a idade com
-`$(( (agora - epoch) / 86400 ))` e comparam com `-le`.
-
-- `deploy/bin/verificar-backup.sh:66-67`, limite 2: o SNS só dispara com **72 h ou mais**. O
-  ADR-09 (`docs/adrs.md:87`) diz "passando de 2 dias"; um backup de 50 h passa de 2 dias e não
-  alerta.
-- `deploy/bin/conferir-golive.sh:44-45,195-196`, limite 1: o comentário promete "mais de 1 dia e
-  noite falhada", mas a linha de base só reprova com **48 h ou mais** — uma noite falhada sai OK.
-- A catraca `frontend/tests/conferir-golive.test.ts:378` testa só 74 h; nenhum cenário na
-  fronteira.
-- A proposta à Lotus (`proposta-dis02.md:22`) diz "la verificación alerta si el último respaldo
-  supera 2 días". Lida em dias inteiros, se defende; a janela real até alguém saber é ~3 dias.
-
-**Por que importa:** o RPO declarado é ≤ 24 h com respaldo sano, e o pior caso de perda não
-detectada é um dia maior do que os textos (ADR-09, proposta, passo 2 do §15) fazem supor.
-
-**Fecha quando:** as duas comparações forem em segundos (limite × 86400, imprimindo as horas), com
-cenário de fronteira em cada catraca visto reprovar (ex.: 30 h no `conferir-golive`, 50 h no
-`verificar-backup`) — **ou** o João decidir que o limite é em dias inteiros e o ADR-09, o
-comentário do `conferir-golive.sh` e a proposta disserem a janela real. Pela **P-87**, mudar o
-script só chega ao host pela reinstalação do runbook §7.

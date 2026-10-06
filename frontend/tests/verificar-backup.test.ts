@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import { readFileSync, statSync } from 'node:fs'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { spawnSync } from 'node:child_process'
+import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 /**
@@ -80,5 +82,62 @@ describe('deploy/bin/verificar-backup.sh', () => {
     const limite = semComentarios.match(/LIMITE_DIAS="\$\{LOTUS_BACKUP_MAX_DIAS:-(\d+)\}"/)
     expect(limite).not.toBeNull()
     expect(Number(limite![1])).toBeLessThan(7)
+  })
+})
+
+/**
+ * Execução de verdade, com `aws` falso no PATH (P-100). A comparação era em dias
+ * inteiros: 50 h truncava para "2 dias", passava no `-le 2`, e o alerta só saía
+ * na TERCEIRA noite falhada — o contrário do "duas é padrão" do cabeçalho e do
+ * "passando de 2 dias" do ADR-09.
+ */
+describe('deploy/bin/verificar-backup.sh — fronteira dos 2 dias', () => {
+  const FAKES = join(__dirname, 'fixtures', 'verificar-backup')
+  let base: string
+
+  beforeAll(() => {
+    base = mkdtempSync(join(tmpdir(), 'verificar-backup-'))
+    writeFileSync(
+      join(base, '.env'),
+      'LOTUS_BACKUP_BUCKET=bucket-falso\nLOTUS_ALERT_TOPIC_ARN=arn:aws:sns:sa-east-1:000000000000:lotus-alertas\n',
+    )
+  })
+
+  afterAll(() => {
+    rmSync(base, { recursive: true, force: true })
+  })
+
+  const rodar = (horas: number) => {
+    const log = join(base, `chamadas-${horas}.log`)
+    writeFileSync(log, '')
+    const r = spawnSync('bash', [CAMINHO], {
+      env: {
+        ...process.env,
+        LOTUS_BASE: base,
+        FAKE_LOG: log,
+        FAKE_ULTIMO_BACKUP: new Date(Date.now() - horas * 3600_000).toISOString(),
+        PATH: `${FAKES}:${process.env.PATH ?? ''}`,
+      },
+      encoding: 'utf8',
+    })
+    return { status: r.status, stdout: r.stdout, stderr: r.stderr, log: readFileSync(log, 'utf8') }
+  }
+
+  it('o aws falso é executável', () => {
+    expect(statSync(join(FAKES, 'aws')).mode & 0o111).not.toBe(0)
+  })
+
+  it('47 h (uma noite falhada) → sai 0 sem publicar', () => {
+    const e = rodar(47)
+    expect(e.status).toBe(0)
+    expect(e.stdout).toContain('backup ok: o mais recente tem 47h')
+    expect(e.log).not.toContain('publish')
+  })
+
+  it('50 h (duas noites falhadas) → publica e sai 1', () => {
+    const e = rodar(50)
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain('tem 50 h (limite 2 dias)')
+    expect(e.log).toContain('publish')
   })
 })

@@ -12,14 +12,14 @@ de caída*.
 
 Una única instancia EC2 en la región `sa-east-1` (São Paulo), con la base de datos MySQL 8 en
 contenedor dentro de la misma instancia. **No hay servidor redundante.** La decisión se tomó por
-costo (techo de US$ 30/mes para ~10 usuarios internos de baja concurrencia) y está registrada en
+costo, proporcional a ~10 usuarios internos de baja concurrencia, y está registrada en
 las decisiones ADR-09 y ADR-14 del repositorio.
 
 ## 3. Qué garantiza la arquitectura actual
 
 | Medida | Valor | Cómo se garantiza |
 |---|---|---|
-| **RPO** (pérdida máxima de datos) | **≤ 24 horas con respaldo sano** | respaldo diario de la base a las 06:10 UTC hacia S3, con retención de 30 días; la verificación alerta si el último respaldo supera 2 días |
+| **RPO** (pérdida máxima de datos) | **≤ 24 horas con respaldo sano** | respaldo diario de la base a las 06:10 UTC hacia S3, con retención de 30 días; la verificación alerta si el último respaldo supera 48 horas |
 | **RTO** (tiempo máximo de recuperación) | **`<RTO medido>`** | restauración manual según el runbook, medida en el go-live sobre una base pequeña (fecha y tamaño del respaldo registrados en el ADR-14); crece con el volumen |
 
 ## 4. Qué se pierde en una restauración

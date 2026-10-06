@@ -508,7 +508,7 @@ em `sa-east-1`, a mesma da EC2, mas o script não depende disso.
 Provar as duas pontas à mão, na ordem:
 
 ```bash
-sudo /opt/lotus/bin/verificar-backup.sh          # com backup do dia: "backup ok: … 0d"
+sudo /opt/lotus/bin/verificar-backup.sh          # com backup do dia: "backup ok: … 0h"
 sudo env LOTUS_BACKUP_MAX_DIAS=-1 /opt/lotus/bin/verificar-backup.sh   # força o alerta
 ```
 
@@ -1419,8 +1419,23 @@ banco, nunca sobe contêiner e nunca mostra valor do `.env`.
    sudo cat /root/golive.txt      # s3://<bucket>/backups/lotus-<data>-golive.sql.gz
    ```
 
-   Conferir `certificates ≥ 1`: rodar `sudo /opt/lotus/bin/conferir-golive.sh` e ler `INFO smoke
-   certificados=N`.
+   Conferir o certificado **no próprio dump**, pela contagem do §9, antes de qualquer `DROP`: o
+   passo 5 apaga o banco, e um dump sem o certificado só apareceria no passo 6, com a produção já
+   recarregada dele.
+
+   ```bash
+   sudo sh -c 'umask 077; aws s3 cp "$(cat /root/golive.txt)" /root/golive-prova.sql.gz --only-show-errors'
+   sudo docker run --rm -d --memory 512m --name lotus-golive-prova -e MYSQL_ROOT_PASSWORD=prova -e MYSQL_DATABASE=lotus mysql:8.0
+   sleep 40          # o MySQL subir, como no §9
+   sudo sh -c 'gunzip -c /root/golive-prova.sql.gz | docker exec -i lotus-golive-prova mysql -uroot -pprova lotus'
+   sudo docker exec lotus-golive-prova mysql -uroot -pprova -N -e \
+     "SELECT COUNT(*) FROM lotus.certificates c JOIN lotus.courses co ON co.id = c.course_id WHERE co.name LIKE 'SMOKE-GOLIVE%'"
+   sudo docker rm -f lotus-golive-prova && sudo rm /root/golive-prova.sql.gz
+   ```
+
+   O número tem de ser ≥ 1 e igual ao `certificados=N` do `INFO smoke` de
+   `sudo /opt/lotus/bin/conferir-golive.sh`. Menor → **parar**: o dump não serve, não seguir para o
+   passo 5.
 
 5. **Restore cronometrado sobre o volume real.** É o §8.1.1 como está, com `DUMP=$(cat
    /root/golive.txt)`. Três marcos, anotados no momento:
