@@ -198,7 +198,7 @@ Do WSL, com o `.pem` da §6 (sem o `-i`, o `scp` oferece a chave padrão do WSL 
 ```bash
 PEM=~/.ssh/<o .pem da §6>
 scp -i "$PEM" docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
-scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh deploy/bin/sondar-saude.sh ubuntu@<EIP>:/tmp/
+scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh deploy/bin/sondar-saude.sh deploy/bin/conferir-golive.sh ubuntu@<EIP>:/tmp/
 scp -i "$PEM" deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
 ```
 
@@ -207,7 +207,7 @@ root:root`, e o shell do `ubuntu` não o lê — expandido fora, o glob chega li
 
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /tmp/sondar-saude.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /tmp/sondar-saude.sh /tmp/conferir-golive.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
@@ -1369,3 +1369,107 @@ A estimativa da spec do item 34 (D13) é ≈ US$ 0 dentro do free tier permanent
 
 O número real é o do Cost Explorer desta conta (console → *Cost Explorer* → serviço *CloudWatch*,
 diário), ~3 dias depois da instalação, registrado na P-80.
+
+## 15. Go-live — linha de base, smoke, restore cronometrado e rede final
+
+Bloco 13 (`docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/spec.md`, §5). Quem
+roda é o João, depois do merge e do espelho; a sessão lê e confere. Os marcos de tempo vão na
+`aceitacao.md` do bloco, um por linha, em UTC (`date -u +%FT%TZ`).
+
+**Risco declarado (spec D3).** O passo 5 apaga o banco de produção e o recarrega do dump do passo 4.
+É aceitável só enquanto não houver dado real de cliente. **Havendo**, o passo 5 roda num contêiner
+descartável (bloco "alternativa" abaixo) e o RTO é declarado **parcial**.
+
+`sudo /opt/lotus/bin/conferir-golive.sh` é só leitura: imprime uma linha por verificação
+(`OK|FALHA|AVISO|INFO <nome> <detalhe>`) e sai 1 com qualquer `FALHA`. Ele nunca escreve no
+banco, nunca sobe contêiner e nunca mostra valor do `.env`.
+
+1. **Instalar e promover.** O script entra pelo §7 (`scp` + `sudo mv`). Até isso o botão recusa:
+   ele compara o sha256 de cada `bin/*.sh` do host com a `main`. Depois, promover o SHA mesclado
+   pelo botão *Promover para producao*.
+
+2. **Linha de base.**
+
+   ```bash
+   sudo /opt/lotus/bin/conferir-golive.sh
+   ```
+
+   - `rbac` em `FALHA` → rodar o seeder pelo §8.3 e conferir de novo.
+   - `env` em `FALHA` → corrigir o `.env`, promover pelo botão (o `.env` só é lido no subir) e
+     conferir de novo. `AVISO` por chave a mais não bloqueia.
+   - `migrations`, `dados-antigos` ou `sondas-dev` em `FALHA` → **parar** e voltar ao bloco (spec
+     §6): não promover nada.
+   - `smoke` sai `INFO`.
+
+3. **Smoke pela UI, sobre HTTPS, com admin real** (`https://app.lotusotec.cl`). Tudo com o
+   prefixo `SMOKE-GOLIVE` no nome: cliente, cotação, curso, turma, aluno, matrícula, resultado,
+   conclusão da turma e certificado. Abrir o QR fora da sessão: a validação pública mostra
+   *emitido*. Anotar o uuid; de fora, `GET /api/publico/certificados/<uuid>` responde 200.
+
+4. **Dump manual com o certificado.**
+
+   ```bash
+   sudo env LOTUS_BACKUP_ROTULO=golive LOTUS_BACKUP_SAIDA=/root/golive.txt /opt/lotus/bin/backup-db.sh
+   sudo cat /root/golive.txt      # s3://<bucket>/backups/lotus-<data>-golive.sql.gz
+   ```
+
+   Conferir `certificates ≥ 1` pela contagem do §9.
+
+5. **Restore cronometrado sobre o volume real.** É o §8.1.1 como está, com `DUMP=$(cat
+   /root/golive.txt)`. Três marcos, anotados no momento:
+
+   - `t0`: antes do passo 1 do §8.1.1 (`aws s3 cp`).
+   - `t1`: logo depois de `$C stop app scheduler` (passo 2 do §8.1.1).
+   - `t2`: o primeiro `/up` 200 depois de soltar o cadeado e apertar o botão (passo 7). Deixe o
+     laço rodando **antes** de apertar:
+
+     ```bash
+     until curl -fsS -o /dev/null https://app.lotusotec.cl/up; do sleep 2; done; date -u +%FT%TZ
+     ```
+
+   **RTO = t2 - t0**, e cada etapa (download, parada, dump "antes", carga, promoção) fica anotada
+   com a duração. O tamanho do dump e a data entram na emenda do ADR-14.
+
+   *Alternativa com dado real de cliente (D3):* não tocar no volume. Subir um MySQL descartável e
+   cronometrar só a carga:
+
+   ```bash
+   sudo docker run --rm -d --name lotus-restore-ensaio -e MYSQL_ROOT_PASSWORD=ensaio -e MYSQL_DATABASE=lotus mysql:8.0
+   date -u +%FT%TZ   # t0
+   aws s3 cp "$(sudo cat /root/golive.txt)" /tmp/golive.sql.gz --only-show-errors
+   gunzip -c /tmp/golive.sql.gz | sudo docker exec -i lotus-restore-ensaio mysql -uroot -pensaio lotus
+   date -u +%FT%TZ   # t2 (parcial: sem parada nem promoção)
+   sudo docker rm -f lotus-restore-ensaio && rm /tmp/golive.sql.gz
+   ```
+
+   O RTO fica declarado **parcial** na proposta e no ADR-14.
+
+6. **Pós-restore.** A validação pública do uuid continua *emitido* e o PDF gera pela UI (sob
+   demanda, Gotenberg — ADR-12). Certificado que suma aqui **bloqueia o go-live** (spec §6).
+
+7. **Limpeza.** Com `superadmin`, revogar o certificado pela UI (a validação passa a *revogado*)
+   e arquivar o cliente e o curso `SMOKE-GOLIVE`. Turma concluída não se arquiva (RN-15) e aluno
+   não tem arquivar: ficam, identificados pelo prefixo. Nada se apaga.
+
+8. **Rede final.**
+
+   ```bash
+   sudo /opt/lotus/bin/conferir-golive.sh --final
+   ```
+
+   Sai 0, todo `OK`. Qualquer `FALHA` volta ao passo que a causou.
+
+9. **Proposta.** Preencher `<RTO medido>` em
+   `docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/proposta-dis02.md`, enviar à
+   Lotus e registrar a resposta na `aceitacao.md`. A lane de aceitação finaliza a emenda do
+   ADR-14, encerra D-37 e P-44 e remove a ficha 13 do backlog.
+
+**Numeração de certificado.** O restore devolve `certificate_sequences` ao valor do dump. Um
+certificado emitido depois do dump e perdido no restore deixa de validar pelo QR, e o número
+`LOT-<ano>-<n>` dele pode ser reatribuído ao próximo certificado emitido. Num restore real (não
+neste ensaio, em que o certificado `SMOKE-GOLIVE` está no dump), reemitir os perdidos e avisar
+quem tem o original (proposta, §4).
+
+**Recuo.** Restore que falha no passo 5: repetir o passo 4 do §8.1.1 inteiro; persistindo, carregar
+o dump `antes-do-restore` pelo mesmo procedimento. Restore que falha é gatilho do ADR-09 e bloqueia
+o go-live: registrar e parar.

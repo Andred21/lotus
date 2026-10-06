@@ -479,3 +479,40 @@ describe('deploy/bin/conferir-golive.sh — smoke', () => {
     expect(e.stderr).toContain('uso:')
   })
 })
+
+describe('deploy/aws/README.md — §7 e §15', () => {
+  const RUNBOOK = readFileSync(join(RAIZ, 'deploy', 'aws', 'README.md'), 'utf8')
+  const secao = (inicio: string, fim: string): string => {
+    const a = RUNBOOK.indexOf(inicio)
+    expect(a).toBeGreaterThan(-1)
+    const b = fim === '' ? RUNBOOK.length : RUNBOOK.indexOf(fim, a + 1)
+    expect(b).toBeGreaterThan(a)
+    return RUNBOOK.slice(a, b)
+  }
+
+  it('o §7 leva o conferir-golive.sh ao host — sem ele o botão trava no sha256 de bin/', () => {
+    const s7 = secao('\n## 7. ', '\n## 8. ')
+    expect(s7).toMatch(/^scp .*deploy\/bin\/conferir-golive\.sh/m)
+    expect(s7).toMatch(/^sudo mv .*\/tmp\/conferir-golive\.sh/m)
+  })
+
+  it('o §15 existe, usa o script nos dois modos e marca t0, t1 e t2', () => {
+    const s15 = secao('\n## 15. ', '')
+    expect(s15).toContain('sudo /opt/lotus/bin/conferir-golive.sh')
+    expect(s15).toContain('sudo /opt/lotus/bin/conferir-golive.sh --final')
+    expect(s15).toContain('LOTUS_BACKUP_ROTULO=golive')
+    for (const marco of ['t0', 't1', 't2']) expect(s15).toContain(`\`${marco}\``)
+    expect(s15).toContain('RTO = t2 - t0')
+    expect(s15).toContain('§8.1.1')
+    expect(s15).toContain('§8.3')
+  })
+
+  it('o §15 avisa da numeração de certificado antes do recuo', () => {
+    const s15 = secao('\n## 15. ', '')
+    const aviso = s15.indexOf('**Numeração de certificado.**')
+    expect(aviso).toBeGreaterThan(-1)
+    expect(aviso).toBeLessThan(s15.indexOf('**Recuo.**'))
+    expect(s15).toContain('certificate_sequences')
+    expect(s15).toContain('proposta, §4')
+  })
+})
