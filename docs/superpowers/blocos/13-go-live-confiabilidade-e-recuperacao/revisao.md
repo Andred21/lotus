@@ -2,6 +2,33 @@
 
 ## Em aberto
 
+## Rodada 2 — `546be1f1..685ccc6d` — 2026-10-06 · Lente 1: opus · Lente 2: sonnet
+
+Classificação: **alto risco**, como na rodada 1. A lente Codex foi despachada de novo pelo
+`codex-companion` e **não rodou** (mesmo limite de uso, "try again at Nov 3rd, 2026"); a rodada
+ficou só com a lente 1 do `revisor-bloco`.
+
+A lente 1 conferiu as correções do `685ccc6d`:
+- Q-1: os dois scripts comparam em segundos. Uma noite falhada sai OK e duas alertam, de acordo com
+  o ADR-09, a proposta e o §9. As catracas passaram 65/65 e cercam a fronteira: 23 h/30 h e 47 h/50 h.
+  A sonda `|| gritar` → `|| true` agora reprova.
+- Q-2: o `SELECT` do passo 4 é igual à cláusula da `CONSULTA_SMOKE`, o dump carrega em `lotus` e a
+  parada vem antes do passo 5.
+- Q-4: o teto saiu da proposta.
+- Contadores de `pendencias/`: batem (36 abertas, 3 encerradas).
+
+Nenhuma lei do §5 foi ferida. A Q-3 da rodada 1 e os Menores do `rulings.md` item 9 não foram
+reapresentados.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | O contêiner MySQL descartável do passo 4 e o da D3 saem com `docker rm -f`, sem `-v`. Como o `mysql:8.0` declara `VOLUME /var/lib/mysql`, o banco de produção carregado (com `certificates` e `audits`) ficaria num volume anônimo depois do passo, embora o `.sql.gz` seja apagado. O §9 tem o mesmo padrão | PLAUSIBLE | `deploy/aws/README.md:1428,1433,1459,1465` · `deploy/aws/README.md:533` | observação: a lente 1 mediu o volume órfão localmente, com a mesma imagem e as mesmas flags; a lente 2 não fecha o caso, porque o `--rm` limpa volume anônimo no autoremove e a corrida com `rm -f` depende da versão do Docker |
+| Q-2 | Menor | O passo 5 do §15 para a produção de propósito (`$C stop app scheduler`, depois o botão de promoção) sem desligar e religar as ações do `lotus-prod-up`/`lotus-prod-5xx`, que o §14.7 manda fazer em "qualquer parada de propósito" | CONFIRMED | `deploy/aws/README.md:1316-1321` · `deploy/aws/README.md:1440-1444` | registrado; não bloqueia. O e-mail de ALARM na janela leva ao §14.6 por engano |
+| Q-3 | Menor | A igualdade do passo 4 depende de duas cópias à mão da cláusula `SMOKE-GOLIVE` (runbook e `CONSULTA_SMOKE`), e o `describe` do §7/§15 não tem asserção sobre o passo 4. Se uma cópia mudar, ou se o passo voltar a contar no MySQL vivo, a suíte segue verde | CONFIRMED | `deploy/aws/README.md:1431-1432` · `deploy/bin/conferir-golive.sh:209` · `frontend/tests/conferir-golive.test.ts:512-536` | registrado; não bloqueia (lição 19 na margem: é runbook, não script montado em produção) |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 2 confirmados, 1 plausível, 0 refutados
+
 ## Rodada 1 — `546be1f1..296633cc` — 2026-10-06 · Lente 1: opus · Lente 2: sonnet
 
 Classificação: **alto risco** (produção, restore de banco com certificado de peso legal, texto à

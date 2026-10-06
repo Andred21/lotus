@@ -2,9 +2,9 @@
 schema_version: 3
 id: 13
 slug: 13-go-live-confiabilidade-e-recuperacao
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings Q-1 Q-2 Q-4 aplicados; repetir /revisar-bloco 13
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/spec.md
 active_plan: docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/plano.md
@@ -17,9 +17,9 @@ branch: infra/13-go-live-confiabilidade-e-recuperacao
 worktree: ../lotus-13-go-live-confiabilidade-e-recuperacao
 offset: 1
 lane_base: 546be1f1
-commit: 7974a85c
+commit: 685ccc6d
 blocker: null
-updated_at: 2026-10-06T08:46:21-03:00
+updated_at: 2026-10-06T09:00:54-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
@@ -34,6 +34,8 @@ aluno ficam vivos, RN-15). Plano gravado em 2026-10-06 com 10 tasks, `## Grupos 
 
 Revisao rodada 1 em 2026-10-06 (`revisao.md`): zero Critico/Importante, tres Menores
 confirmados e um plausivel; a Q-1 abriu a P-100. O Joao aprovou corrigir Q-1, Q-2 e Q-4;
-aplicadas (P-100 encerrada no mesmo PR). Proximo: `/revisar-bloco 13`, rodada 2. A Fase B (spec secao 5) e do Joao,
+aplicadas em 685ccc6d (P-100 encerrada no mesmo PR). Rodada 2 em 2026-10-06: zero
+Critico/Importante, dois Menores confirmados e um plausivel, nenhum bloqueia. Proximo:
+`/finalizar-bloco 13`. A Fase B (spec secao 5) e do Joao,
 em producao, depois do merge: a PR mescla com o bloco `blocked` aguardando aceitacao (invariante
 11).
