@@ -1,0 +1,42 @@
+# Propuesta de revisión del requisito RNF-DIS-02 — disponibilidad y recuperación
+
+**Para:** Lotus · **De:** equipo de desarrollo de la plataforma · **Fecha:** 2026-10-06 ·
+**Estado:** pendiente de aceptación
+
+## 1. Qué dice el requisito hoy
+
+El `RNF-DIS-02` de `requisitos-negocio.md` exige un *servidor redundante listo para asumir en caso
+de caída*.
+
+## 2. Qué entrega la arquitectura actual
+
+Una única instancia EC2 en la región `sa-east-1` (São Paulo), con la base de datos MySQL 8 en
+contenedor dentro de la misma instancia. **No hay servidor redundante.** La decisión se tomó por
+costo (techo de US$ 30/mes para ~10 usuarios internos de baja concurrencia) y está registrada en
+las decisiones ADR-09 y ADR-14 del repositorio.
+
+## 3. Qué garantiza la arquitectura actual
+
+| Medida | Valor | Cómo se garantiza |
+|---|---|---|
+| **RPO** (pérdida máxima de datos) | **≤ 24 horas** | respaldo diario de la base a las 06:10 UTC hacia S3, con retención de 30 días y verificación automática de la edad del último respaldo |
+| **RTO** (tiempo máximo de recuperación) | **`<RTO medido>`** | restauración manual según el runbook, medida en el go-live sobre la base real (fecha y tamaño del respaldo registrados en el ADR-14) |
+
+## 4. Qué se pierde en una restauración
+
+Todo lo escrito después del último respaldo: hasta un día de certificados emitidos, matrículas y
+registros de auditoría. Un certificado emitido y luego perdido en una restauración tendría que
+**volver a emitirse**; el número de serie no se reutiliza.
+
+## 5. Ruta futura de alta disponibilidad
+
+Base de datos gestionada (RDS multi-AZ) y segunda instancia EC2 detrás de un balanceador (ALB).
+**Se activa si** Lotus exige un RTO/RPO menor que los declarados arriba, o si una indisponibilidad
+real supera el RTO declarado. Costo estimado adicional: del orden de US$ 40–60/mes.
+
+## 6. Lo que se pide
+
+Que Lotus **acepte explícitamente** la revisión del `RNF-DIS-02` en estos términos: sin servidor
+redundante, RPO ≤ 24 h, RTO `<RTO medido>`, y la ruta de alta disponibilidad como etapa futura
+con los gatillos del punto 5. La aceptación (o el rechazo) queda registrada en el repositorio con
+fecha y nombre de quien responde.
