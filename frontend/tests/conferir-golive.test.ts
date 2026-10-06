@@ -29,7 +29,7 @@ const semComentarios = SCRIPT.split(/\r?\n/)
  * até as sete da spec: migrations, rbac, dados-antigos, sondas-dev, env,
  * backup, smoke. A "fixture boa" e o `reprovaSo` exigem exatamente esta lista.
  */
-const NOMES: string[] = ['env']
+const NOMES: string[] = ['migrations', 'rbac', 'env']
 const SENTINELA = 'SENTINELA-NAO-VAZAR-9f3a'
 
 const ATRIBUICAO = /^[A-Za-z_][A-Za-z0-9_]*=/
@@ -222,5 +222,89 @@ describe('deploy/bin/conferir-golive.sh — env', () => {
     rmSync(join(env.LOTUS_BASE, '.env'))
     const l = reprovaSo(rodar(env), 'env')
     expect(l.detalhe).toContain('.env')
+  })
+})
+
+describe('deploy/bin/conferir-golive.sh — migrations', () => {
+  it('migration só no código → FALHA listando-a', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_MIGRACOES_CODIGO = arquivo(dir, 'migracoes-codigo-2', [
+      '0001_01_01_000000_create_users_table.php', '2026_08_05_100000_certificates.php', '2026_12_01_000000_nova.php',
+    ])
+    const l = reprovaSo(rodar(env), 'migrations')
+    expect(l.detalhe).toContain('so-no-codigo: 2026_12_01_000000_nova')
+  })
+
+  it('migration só no banco → FALHA listando-a', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_MIGRACOES_BANCO = arquivo(dir, 'migracoes-banco-2', [
+      '0001_01_01_000000_create_users_table', '2026_08_05_100000_certificates', '2026_07_01_000000_sumiu',
+    ])
+    const l = reprovaSo(rodar(env), 'migrations')
+    expect(l.detalhe).toContain('so-no-banco: 2026_07_01_000000_sumiu')
+  })
+
+  it('OK imprime as duas contagens', () => {
+    const e = rodar(cenarioBom().env)
+    expect(porNome(e.stdout).migrations).toEqual({ estado: 'OK', detalhe: 'banco=2 codigo=2' })
+  })
+
+  it('mysql fora → FALHA em migrations e rbac nomeando o mysql; env segue', () => {
+    const e = rodar({ ...cenarioBom().env, FAKE_MYSQL_FORA: '1' })
+    const mapa = porNome(e.stdout)
+    expect(e.status).toBe(1)
+    expect(Object.keys(mapa).sort()).toEqual([...NOMES].sort())
+    expect(mapa.migrations).toEqual({ estado: 'FALHA', detalhe: 'leitor indisponivel: mysql' })
+    expect(mapa.rbac).toEqual({ estado: 'FALHA', detalhe: 'leitor indisponivel: mysql' })
+    expect(mapa.env.estado).toBe('OK')
+  })
+
+  it('serviço mysql fora do compose (ps -q vazio) → mesma FALHA', () => {
+    const e = rodar({ ...cenarioBom().env, FAKE_SEM_SERVICO: '1' })
+    const mapa = porNome(e.stdout)
+    expect(mapa.migrations.estado).toBe('FALHA')
+    expect(mapa.rbac.estado).toBe('FALHA')
+    expect(mapa.env.estado).toBe('OK')
+  })
+
+  it('app fora → FALHA em migrations e rbac nomeando o app; o resto segue', () => {
+    const e = rodar({ ...cenarioBom().env, FAKE_APP_FORA: '1' })
+    const mapa = porNome(e.stdout)
+    expect(mapa.migrations).toEqual({ estado: 'FALHA', detalhe: 'leitor indisponivel: app' })
+    expect(mapa.rbac).toEqual({ estado: 'FALHA', detalhe: 'leitor indisponivel: app' })
+    expect(mapa.env.estado).toBe('OK')
+  })
+})
+
+describe('deploy/bin/conferir-golive.sh — rbac', () => {
+  it('permissão no catálogo e não no banco → FALHA listando-a', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_PERMS_CODIGO = arquivo(dir, 'perms-codigo-2', ['identity.user.view', 'identity.user.create', 'certification.certificate.revoke', 'nova.perm'])
+    const l = reprovaSo(rodar(env), 'rbac')
+    expect(l.detalhe).toContain('so-no-codigo: nova.perm')
+  })
+
+  it('permissão no banco e não no catálogo → FALHA listando-a', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_PERMS_BANCO = arquivo(dir, 'perms-banco-2', ['identity.user.view', 'identity.user.create', 'certification.certificate.revoke', 'velha.perm'])
+    const l = reprovaSo(rodar(env), 'rbac')
+    expect(l.detalhe).toContain('so-no-banco: velha.perm')
+  })
+
+  it('role de sistema ausente → FALHA nomeando-a', () => {
+    const env = { ...cenarioBom().env, FAKE_ROLES: 'admin superadmin' }
+    const l = reprovaSo(rodar(env), 'rbac')
+    expect(l.detalhe).toContain('roles ausentes: redator')
+  })
+
+  it('superadmin sem todas as permissões → FALHA com as contagens', () => {
+    const env = { ...cenarioBom().env, FAKE_SUPERADMIN_N: '2' }
+    const l = reprovaSo(rodar(env), 'rbac')
+    expect(l.detalhe).toContain('superadmin tem 2 de 3')
+  })
+
+  it('OK imprime contagem e roles', () => {
+    const e = rodar(cenarioBom().env)
+    expect(porNome(e.stdout).rbac).toEqual({ estado: 'OK', detalhe: '3 permissoes; roles admin,redator,superadmin; superadmin com todas' })
   })
 })

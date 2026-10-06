@@ -75,6 +75,61 @@ no_app() {
   docker exec "$APP" "$@" 2>/dev/null
 }
 
+# Tabela migrations x basenames de database/migrations/*.php na imagem viva.
+conferir_migrations() {
+  local banco codigo so_banco so_codigo
+  if ! banco=$(sql "SELECT migration FROM migrations" | sort); then
+    linha FALHA migrations "leitor indisponivel: mysql"
+    return
+  fi
+  if ! codigo=$(no_app ls /var/www/database/migrations | sed 's/\.php$//' | sort); then
+    linha FALHA migrations "leitor indisponivel: app"
+    return
+  fi
+  so_banco=$(comm -23 <(printf '%s\n' "$banco") <(printf '%s\n' "$codigo") | paste -sd, -)
+  so_codigo=$(comm -13 <(printf '%s\n' "$banco") <(printf '%s\n' "$codigo") | paste -sd, -)
+  if [ -n "$so_banco" ] || [ -n "$so_codigo" ]; then
+    linha FALHA migrations "so-no-banco: ${so_banco:--} so-no-codigo: ${so_codigo:--}"
+  else
+    linha OK migrations "banco=$(wc -l <<< "$banco" | tr -d ' ') codigo=$(wc -l <<< "$codigo" | tr -d ' ')"
+  fi
+}
+
+# permissions x PermissionCatalog::descriptions(); tres roles; superadmin com todas.
+# O catalogo e um array literal: o autoload do composer basta, sem boot do Laravel.
+conferir_rbac() {
+  local banco codigo roles n_super n_codigo so_banco so_codigo faltam
+  if ! banco=$(sql "SELECT name FROM permissions WHERE guard_name = 'web'" | sort); then
+    linha FALHA rbac "leitor indisponivel: mysql"
+    return
+  fi
+  if ! codigo=$(no_app php -r 'require "/var/www/vendor/autoload.php"; foreach (array_keys(App\Domains\Identity\Support\PermissionCatalog::descriptions()) as $n) { echo $n, "\n"; }' | sort); then
+    linha FALHA rbac "leitor indisponivel: app"
+    return
+  fi
+  if ! roles=$(sql "SELECT name FROM roles WHERE guard_name = 'web' ORDER BY name" | sort); then
+    linha FALHA rbac "leitor indisponivel: mysql"
+    return
+  fi
+  if ! n_super=$(sql "SELECT COUNT(*) FROM role_has_permissions rhp JOIN roles r ON r.id = rhp.role_id WHERE r.name = 'superadmin' AND r.guard_name = 'web'"); then
+    linha FALHA rbac "leitor indisponivel: mysql"
+    return
+  fi
+  so_banco=$(comm -23 <(printf '%s\n' "$banco") <(printf '%s\n' "$codigo") | paste -sd, -)
+  so_codigo=$(comm -13 <(printf '%s\n' "$banco") <(printf '%s\n' "$codigo") | paste -sd, -)
+  faltam=$(comm -13 <(printf '%s\n' "$roles") <(printf 'admin\nredator\nsuperadmin\n') | paste -sd, -)
+  n_codigo=$(wc -l <<< "$codigo" | tr -d ' ')
+  if [ -n "$so_banco" ] || [ -n "$so_codigo" ]; then
+    linha FALHA rbac "so-no-banco: ${so_banco:--} so-no-codigo: ${so_codigo:--}"
+  elif [ -n "$faltam" ]; then
+    linha FALHA rbac "roles ausentes: $faltam"
+  elif [ "$n_super" != "$n_codigo" ]; then
+    linha FALHA rbac "superadmin tem $n_super de $n_codigo permissoes"
+  else
+    linha OK rbac "$n_codigo permissoes; roles $(paste -sd, - <<< "$roles"); superadmin com todas"
+  fi
+}
+
 conferir_env() {
   local presentes esperadas faltam sobram
   if [ ! -r "$BASE/.env" ]; then
@@ -94,6 +149,8 @@ conferir_env() {
   fi
 }
 
+conferir_migrations
+conferir_rbac
 conferir_env
 
 exit $(( FALHAS > 0 ? 1 : 0 ))
