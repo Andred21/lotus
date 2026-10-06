@@ -203,7 +203,7 @@ chegar ao destinatário; `user-data.sh` recria a instância com o agente; mediç
 
 ## 13. `go-live-confiabilidade-e-recuperacao`
 
-**Prioridade:** último gate P0 · **Frente:** Cross-cutting/Infra · **Contexto:** sim
+**Prioridade:** último gate P0 · **Frente:** Cross-cutting/Infra · **Contexto:** sim · **Depende:** —
 **Fonte:** Drive `RNF-DIS-*`; Notion `11.1.1–11.1.3`; `P-05`, `P-44`, `D-37`.
 
 **Escopo:**
