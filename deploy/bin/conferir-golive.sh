@@ -195,6 +195,49 @@ conferir_backup() {
   fi
 }
 
+# Entidades SMOKE-GOLIVE (spec D5, emenda do plano). Certificado liga ao curso
+# por course_id; turma nao tem nome e liga pelo curso; aluno e cliente vivem em
+# users.name (cliente tambem em clients.legal_name). Turma concluida e aluno
+# nao se arquivam, por isso so contam presenca. Sem --final e INFO.
+CONSULTA_SMOKE="SELECT 'certificados', COUNT(*), IFNULL(SUM(c.revoked_at IS NULL), 0) FROM certificates c JOIN courses co ON co.id = c.course_id WHERE co.name LIKE 'SMOKE-GOLIVE%' UNION ALL SELECT 'clientes', COUNT(*), IFNULL(SUM(cl.deleted_at IS NULL), 0) FROM clients cl JOIN users u ON u.id = cl.user_id WHERE cl.legal_name LIKE 'SMOKE-GOLIVE%' OR u.name LIKE 'SMOKE-GOLIVE%' UNION ALL SELECT 'cursos', COUNT(*), IFNULL(SUM(deleted_at IS NULL), 0) FROM courses WHERE name LIKE 'SMOKE-GOLIVE%' UNION ALL SELECT 'turmas', COUNT(*), 0 FROM turmas t JOIN courses co ON co.id = t.course_id WHERE co.name LIKE 'SMOKE-GOLIVE%' UNION ALL SELECT 'alunos', COUNT(*), 0 FROM students s JOIN users u ON u.id = s.user_id WHERE u.name LIKE 'SMOKE-GOLIVE%'"
+conferir_smoke() {
+  local saida n cert cert_vivos cli cli_vivos cur cur_vivos tur alu motivo=''
+  if ! saida=$(sql "$CONSULTA_SMOKE"); then
+    linha FALHA smoke "leitor indisponivel: mysql"
+    return
+  fi
+  n=$(wc -l <<< "$saida" | tr -d ' ')
+  if [ "$n" != 5 ]; then
+    linha FALHA smoke "esperava 5 linhas, leu $n"
+    return
+  fi
+  cert=$(awk -F'\t' '$1 == "certificados" { print $2 }' <<< "$saida")
+  cert_vivos=$(awk -F'\t' '$1 == "certificados" { print $3 }' <<< "$saida")
+  cli=$(awk -F'\t' '$1 == "clientes" { print $2 }' <<< "$saida")
+  cli_vivos=$(awk -F'\t' '$1 == "clientes" { print $3 }' <<< "$saida")
+  cur=$(awk -F'\t' '$1 == "cursos" { print $2 }' <<< "$saida")
+  cur_vivos=$(awk -F'\t' '$1 == "cursos" { print $3 }' <<< "$saida")
+  tur=$(awk -F'\t' '$1 == "turmas" { print $2 }' <<< "$saida")
+  alu=$(awk -F'\t' '$1 == "alunos" { print $2 }' <<< "$saida")
+  if [ "$FINAL" != 1 ]; then
+    linha INFO smoke "certificados=$cert (nao revogados $cert_vivos) clientes=$cli (vivos $cli_vivos) cursos=$cur (vivos $cur_vivos) turmas=$tur alunos=$alu"
+    return
+  fi
+  [ "$cert" != 0 ] || motivo="$motivo nenhum certificado SMOKE-GOLIVE;"
+  [ "$cert_vivos" = 0 ] || motivo="$motivo certificados nao revogados: $cert_vivos;"
+  [ "$cli" != 0 ] || motivo="$motivo nenhum cliente SMOKE-GOLIVE;"
+  [ "$cli_vivos" = 0 ] || motivo="$motivo clientes nao arquivados: $cli_vivos;"
+  [ "$cur" != 0 ] || motivo="$motivo nenhum curso SMOKE-GOLIVE;"
+  [ "$cur_vivos" = 0 ] || motivo="$motivo cursos nao arquivados: $cur_vivos;"
+  [ "$tur" != 0 ] || motivo="$motivo nenhuma turma SMOKE-GOLIVE;"
+  [ "$alu" != 0 ] || motivo="$motivo nenhum aluno SMOKE-GOLIVE;"
+  if [ -n "$motivo" ]; then
+    linha FALHA smoke "${motivo# }"
+  else
+    linha OK smoke "certificados=$cert todos revogados; clientes=$cli e cursos=$cur arquivados; turmas=$tur alunos=$alu"
+  fi
+}
+
 conferir_env() {
   local presentes esperadas faltam sobram
   if [ ! -r "$BASE/.env" ]; then
@@ -220,5 +263,6 @@ conferir_dados_antigos
 conferir_sondas_dev
 conferir_env
 conferir_backup
+conferir_smoke
 
 exit $(( FALHAS > 0 ? 1 : 0 ))

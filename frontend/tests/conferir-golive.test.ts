@@ -25,11 +25,11 @@ const semComentarios = SCRIPT.split(/\r?\n/)
   .join('\n')
 
 /**
- * As verificações que o script já tem. Cresce uma task por vez (Tasks 2–5)
- * até as sete da spec: migrations, rbac, dados-antigos, sondas-dev, env,
- * backup, smoke. A "fixture boa" e o `reprovaSo` exigem exatamente esta lista.
+ * As sete verificações da spec: migrations, rbac, dados-antigos, sondas-dev,
+ * env, backup, smoke. A "fixture boa" e o `reprovaSo` exigem exatamente esta
+ * lista.
  */
-const NOMES: string[] = ['migrations', 'rbac', 'dados-antigos', 'sondas-dev', 'env', 'backup']
+const NOMES: string[] = ['migrations', 'rbac', 'dados-antigos', 'sondas-dev', 'env', 'backup', 'smoke']
 const SENTINELA = 'SENTINELA-NAO-VAZAR-9f3a'
 
 const ATRIBUICAO = /^[A-Za-z_][A-Za-z0-9_]*=/
@@ -403,5 +403,79 @@ describe('deploy/bin/conferir-golive.sh — backup', () => {
     const s3 = chamadas(e.log).find((a) => a[0] === 's3api') ?? []
     expect(s3).toContain('valor-lotus_backup_bucket')
     expect(s3).toContain('backups/')
+  })
+})
+
+const smoke = (linhas: Record<string, [number, number]>): string[] =>
+  ['certificados', 'clientes', 'cursos', 'turmas', 'alunos'].map((n) => `${n}\t${linhas[n][0]}\t${linhas[n][1]}`)
+
+const SMOKE_LIMPO = { certificados: [1, 0], clientes: [1, 0], cursos: [1, 0], turmas: [1, 0], alunos: [1, 0] } as Record<string, [number, number]>
+
+describe('deploy/bin/conferir-golive.sh — smoke', () => {
+  it('sem --final é INFO com as contagens, mesmo com tudo vivo', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_SMOKE = arquivo(dir, 'smoke-2', smoke({ certificados: [1, 1], clientes: [1, 1], cursos: [1, 1], turmas: [1, 0], alunos: [1, 0] }))
+    const e = rodar(env)
+    expect(e.status).toBe(0)
+    expect(porNome(e.stdout).smoke).toEqual({ estado: 'INFO', detalhe: 'certificados=1 (nao revogados 1) clientes=1 (vivos 1) cursos=1 (vivos 1) turmas=1 alunos=1' })
+  })
+
+  it('sem --final e sem nada SMOKE-GOLIVE: INFO com zeros', () => {
+    const e = rodar(cenarioBom().env)
+    expect(porNome(e.stdout).smoke).toEqual({ estado: 'INFO', detalhe: 'certificados=0 (nao revogados 0) clientes=0 (vivos 0) cursos=0 (vivos 0) turmas=0 alunos=0' })
+  })
+
+  it('--final com tudo limpo → OK e exit 0', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_SMOKE = arquivo(dir, 'smoke-3', smoke(SMOKE_LIMPO))
+    const e = rodar(env, ['--final'])
+    expect(e.status).toBe(0)
+    expect(porNome(e.stdout).smoke.estado).toBe('OK')
+  })
+
+  it.each([
+    ['nenhum certificado', { ...SMOKE_LIMPO, certificados: [0, 0] }, 'nenhum certificado SMOKE-GOLIVE'],
+    ['dois certificados, um sem revoked_at', { ...SMOKE_LIMPO, certificados: [2, 1] }, 'certificados nao revogados: 1'],
+    ['cliente ausente', { ...SMOKE_LIMPO, clientes: [0, 0] }, 'nenhum cliente SMOKE-GOLIVE'],
+    ['cliente vivo', { ...SMOKE_LIMPO, clientes: [1, 1] }, 'clientes nao arquivados: 1'],
+    ['curso ausente', { ...SMOKE_LIMPO, cursos: [0, 0] }, 'nenhum curso SMOKE-GOLIVE'],
+    ['curso vivo', { ...SMOKE_LIMPO, cursos: [1, 1] }, 'cursos nao arquivados: 1'],
+    ['turma ausente', { ...SMOKE_LIMPO, turmas: [0, 0] }, 'nenhuma turma SMOKE-GOLIVE'],
+    ['aluno ausente', { ...SMOKE_LIMPO, alunos: [0, 0] }, 'nenhum aluno SMOKE-GOLIVE'],
+  ] as [string, Record<string, [number, number]>, string][])('--final: %s → FALHA', (_nome, linhas, trecho) => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_SMOKE = arquivo(dir, `smoke-${_nome.replace(/\W+/g, '-')}`, smoke(linhas))
+    const l = reprovaSo(rodar(env, ['--final']), 'smoke')
+    expect(l.detalhe).toContain(trecho)
+  })
+
+  it('consulta com menos de cinco linhas → FALHA, com ou sem --final', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_SMOKE = arquivo(dir, 'smoke-curto', ['certificados\t0\t0'])
+    expect(reprovaSo(rodar(env), 'smoke').detalhe).toContain('esperava 5 linhas')
+    expect(reprovaSo(rodar(env, ['--final']), 'smoke').detalhe).toContain('esperava 5 linhas')
+  })
+
+  it('mysql fora → FALHA nomeando o mysql, com ou sem --final; o resto segue', () => {
+    const env = { ...cenarioBom().env, FAKE_MYSQL_FORA: '1' }
+    for (const args of [[], ['--final']]) {
+      const mapa = porNome(rodar(env, args).stdout)
+      expect(mapa.smoke).toEqual({ estado: 'FALHA', detalhe: 'leitor indisponivel: mysql' })
+      expect(mapa.env.estado).toBe('OK')
+      expect(mapa.backup.estado).toBe('OK')
+    }
+  })
+
+  it('a consulta procura o prefixo SMOKE-GOLIVE nas cinco entidades', () => {
+    const e = rodar(cenarioBom().env)
+    const consulta = chamadas(e.log).map((a) => a.join(' ')).find((a) => a.includes("'certificados'")) ?? ''
+    for (const entidade of ['certificados', 'clientes', 'cursos', 'turmas', 'alunos']) expect(consulta).toContain(`'${entidade}'`)
+    expect(consulta).toContain("LIKE 'SMOKE-GOLIVE%'")
+  })
+
+  it('argumento desconhecido sai 2 com uso', () => {
+    const e = rodar(cenarioBom().env, ['--tudo'])
+    expect(e.status).toBe(2)
+    expect(e.stderr).toContain('uso:')
   })
 })
