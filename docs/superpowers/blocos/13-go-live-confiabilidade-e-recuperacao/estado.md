@@ -2,10 +2,10 @@
 schema_version: 3
 id: 13
 slug: 13-go-live-confiabilidade-e-recuperacao
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: "resolve_blocker aguardando aceitação: itens 2, 5, 6"
+resume_state: ready_for_closure
 active_spec: docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/spec.md
 active_plan: docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/plano.md
 active_review: docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/revisao.md
@@ -17,10 +17,10 @@ branch: infra/13-go-live-confiabilidade-e-recuperacao
 worktree: ../lotus-13-go-live-confiabilidade-e-recuperacao
 offset: 1
 lane_base: 546be1f1
-commit: 685ccc6d
-blocker: null
-updated_at: 2026-10-06T09:00:54-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+commit: 3036a019
+blocker: "aguardando aceitação depois do merge: itens 2, 5, 6 da ## Verificação externa"
+updated_at: 2026-10-06T09:26:42-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 13 — estado

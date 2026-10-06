@@ -842,6 +842,10 @@ verificada em `create-email-identity`, runbook §13.1), e o João troca o e-mail
 que ele não recebe e-mail. Com production access (runbook §13.6, FUT-4) o problema da verificação
 some, mas a caixa com leitor continua sendo necessária.
 
+**Gatilho disparou em 2026-10-06, no fechamento do item 13** (`go-live-confiabilidade-e-recuperacao`),
+apontado pela `auditar-docs` do Passo 3. O João decidiu manter a ficha aberta e fora do bloco: ela
+segue com ele.
+
 ---
 
 # Travadas em decisão da Lotus

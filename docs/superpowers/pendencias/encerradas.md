@@ -33,33 +33,6 @@ não pago em 2026-09-20, fica registrado como decisão e não como dívida.
 
 **Bloco:** 13 · **Quem decidiu:** João, 2026-10-05 (brainstorming do bloco 13, P4).
 
-## P-99 — dois docs ficaram atrás do item 34: o comentário do canal `seguranca` e os pares da lição 19
-
-**Encerrada em 2026-10-05, no fechamento do `infra-producao-observabilidade` (item 34), pelo
-gatilho pago na rodada de correção do próprio bloco** (`e45d0ce1`; a lição 19 emendada em
-`607d9d50`). A `auditar-docs` do fechamento conferiu os quatro pares da lição 19 contra o disco,
-sem divergência.
-
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha na rodada de correção do item 34, se o
-João a levar junto do Q-1; senão, no primeiro bloco que tocar `backend/config/logging.php` ou a
-lição 19 de `docs/README.md`. Revisar em **2026-10-31**.
-
-Medido em 2026-10-05 na revisão do item 34 (`blocos/34-infra-producao-observabilidade/revisao.md`,
-Rodada 1, Q-4 e Q-5, os dois CONFIRMED pela lente 2):
-
-| Doc | Divergência | Evidência |
-|---|---|---|
-| `backend/config/logging.php:115-118` | O comentário do canal `seguranca` diz que o teto `json-file` 10 MB × 3 "É a política de retenção deste log". A emenda de 2026-10-04 do ADR-21 passou a política para 30 dias em `/lotus/prod/containers` no CloudWatch, e o teto local ficou só como complemento | `docs/adrs.md:441` |
-| `docs/README.md:127` (lição 19) | A lição lista os pares nominais até o item 32. Faltam os quatro do item 34: `deploy/aws/user-data.sh` ↔ `user-data.test.ts`, `deploy/bin/sondar-saude.sh` ↔ `sondar-saude.test.ts`, `deploy/aws/criar-observabilidade.sh` ↔ `criar-observabilidade.test.ts` e `docker/Dockerfile.prod` (estágio `app`) ↔ `imagem-excecoes.test.ts` | `frontend/tests/` |
-
-**Por que não é urgente:** nenhum dos dois muda comportamento. O custo é de quem lê. O comentário
-manda o leitor procurar a política no lugar errado, e a lição não avisa o próximo bloco que mexer
-num desses scripts de que já existe catraca a estender.
-
-**Paga em 2026-10-05, na rodada de correção do item 34:** o comentário de `config/logging.php`
-aponta o ADR-21 emendado (30 dias no CloudWatch, teto local como reserva), e a lição 19 ganhou a
-emenda do item 34 com os quatro pares. Sai para `encerradas.md` no fechamento do item 34.
-
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
 > por engano; as duas foram renumeradas no mesmo dia — a do item 25 para **`P-74`** e as do item 26
