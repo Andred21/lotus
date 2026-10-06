@@ -25,8 +25,12 @@ las decisiones ADR-09 y ADR-14 del repositorio.
 ## 4. Qué se pierde en una restauración
 
 Todo lo escrito después del último respaldo: hasta un día de certificados emitidos, matrículas y
-registros de auditoría. Un certificado emitido y luego perdido en una restauración tendría que
-**volver a emitirse**; el número de serie no se reutiliza.
+registros de auditoría. Un certificado emitido y luego perdido en una restauración deja de
+validarse por su código QR y tendría que **volver a emitirse**. Además, la numeración vuelve al
+valor del respaldo: el número visible de un certificado perdido (`LOT-<año>-<n>`) **puede
+asignarse de nuevo** a otro certificado emitido después de la restauración. Por eso, tras una
+restauración, los certificados perdidos se reemiten y quien tenga el documento original debe ser
+avisado de que ya no es válido.
 
 ## 5. Ruta futura de alta disponibilidad
 
