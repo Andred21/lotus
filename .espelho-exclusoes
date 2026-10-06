@@ -12,12 +12,15 @@
 .claude/
 .codex/
 .githooks/
+.impeccable/
 .playwright-cli/
 .superpowers/
 AGENTS.md
 CLAUDE.md
 CONTRIBUINDO.md
 INSTRUÇÕES-DO-PROJETO.md
+PRODUCT.md
+DESIGN.md
 docs/
 scripts/espelhar-corporativo.sh
 
