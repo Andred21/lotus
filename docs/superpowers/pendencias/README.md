@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (37)
+## Abertas (36)
 
 ### Agrupadas em bloco de execução
 
@@ -33,7 +33,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-90 | O gate `/up` do `deploy.sh` faz um `curl` só depois de o nginx ficar `healthy`; num deploy que recria o `app` e não o nginx, ele bate antes do php-fpm novo escutar e o botão sai 502 (botão 2 do item 32) | — | próximo commit em `deploy/bin/deploy.sh`, ou o próximo botão com `erro: /up respondeu 502`; revisar 2026-10-31 |
 | P-91 | `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401: o `Authenticate` monta o redirecionamento por `route('login')`, que não existe (medido em produção pelo item 32) | — | bloco que tocar `backend/bootstrap/app.php` ou o middleware de autenticação; revisar 2026-10-31 |
 | P-94 | O diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha (`frame 669 · scroll 672`): herda o piso default de 42rem, e o audit do item 23 só o mediu vazio | — | `medir.cjs` do item 23 medir `scroll` = `frame` na linha `DIALOGO` em 1024 com alumno que tenha turma, ou bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo ou o piso default do `AppDataTable`; revisar 2026-10-31 |
-| P-05 | Migrations "adicionais" não consolidadas nas originais | `go-live-confiabilidade-e-recuperacao` | antes de subir para produção — **disparado em 2026-09-20 e não pago** (a produção subiu com as 30 migrations); revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-95 | Doze pontas do harness que o item 35 deixou sem correção: seis Menores da revisão (Q-7, Q-8, Q-10 a Q-13) e seis do `rulings.md` (`context_required`/`closing` sem command, `lotus-ui-review` lendo o `state.md`, fluxo antigo no `backlog.md`, semente do `lane.sh` fora da invariante 6, catraca sem prompts nem `subagent_type`, `blocked` da rota codex sem artefato) | 36 | cada linha corrigida ou com veredito escrito; dispara no bloco que tocar `.claude/commands/`, `lane.sh`, `commands.tests.sh` ou `state.md` — **disparado em 2026-10-04 (item 36), não pago**; revisar 2026-10-31 |
 | P-96 | `AGENTS.md` e `INSTRUÇÕES-DO-PROJETO.md` listam quatro das seis rules (faltam `backend-lang` e `frontend-estilizacao`), e o `estrutura-monolito.md` não cita o `shared/ui/Timestamp/` | BD-15 | os três docs acompanharem; dispara no bloco que tocar qualquer um deles — **disparado em 2026-10-04 (item 36), não pago**; revisar 2026-10-31 |
@@ -129,10 +128,14 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (2)
 
-**Em rastro:** a **P-99**, encerrada pelo `infra-producao-observabilidade` (item 34) em 2026-10-05.
-Ficha completa em [`encerradas.md`](./encerradas.md).
+**Em rastro:** a **P-05** e a **P-100**, encerradas pelo `go-live-confiabilidade-e-recuperacao`
+(item 13) em 2026-10-06. Ficha completa em [`encerradas.md`](./encerradas.md).
+
+**A P-99 saiu no fechamento do item 13 (2026-10-06)**, o primeiro depois do item 34 que a encerrou
+em 2026-10-05. O rastro durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-93 saiu no fechamento do item 37 (2026-10-04)**, o primeiro depois do item 33 que a encerrou
 no mesmo dia. O rastro durável está nos commits e na linha de entrega em

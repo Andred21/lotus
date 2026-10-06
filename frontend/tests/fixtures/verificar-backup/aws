@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# `aws` de mentira do frontend/tests/verificar-backup.test.ts. Registra a chamada
+# em $FAKE_LOG e devolve o LastModified que o cenario pede; o publish so fica no
+# log.
+{
+  printf '%s\n' '---'
+  printf '%s\n' "$@"
+} >> "$FAKE_LOG"
+
+case " $* " in
+  *" s3api list-objects-v2 "*) echo "${FAKE_ULTIMO_BACKUP:-None}" ;;
+  *" sns publish "*) ;;
+  *) echo "aws falso: nao previsto: $*" >&2; exit 1 ;;
+esac

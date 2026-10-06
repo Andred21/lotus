@@ -7,32 +7,31 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-99 — dois docs ficaram atrás do item 34: o comentário do canal `seguranca` e os pares da lição 19
+## P-100 — a idade do backup era truncada em dias inteiros
 
-**Encerrada em 2026-10-05, no fechamento do `infra-producao-observabilidade` (item 34), pelo
-gatilho pago na rodada de correção do próprio bloco** (`e45d0ce1`; a lição 19 emendada em
-`607d9d50`). A `auditar-docs` do fechamento conferiu os quatro pares da lição 19 contra o disco,
-sem divergência.
+**Aberta e encerrada em 2026-10-06, no bloco `go-live-confiabilidade-e-recuperacao` (item 13).** A
+rodada 1 da revisão (Q-1) mediu que `verificar-backup.sh` e `conferir-golive.sh` dividiam a idade
+por 86400 antes de comparar: o alerta do SNS só saía com 72 h (o ADR-09 diz "passando de 2 dias"),
+e a linha de base do go-live só reprovava com 48 h, deixando uma noite falhada passar OK. Os dois
+passaram a comparar em segundos e a imprimir horas; as catracas ganharam a fronteira — 30 h reprova
+e 23 h passa no `conferir-golive.test.ts`, 47 h passa e 50 h publica no `verificar-backup.test.ts`,
+este agora executando o script com `aws` falso —, vistas reprovar contra os scripts antigos. A
+proposta à Lotus passou a dizer "supera 48 horas". Chega ao host pela reinstalação do runbook §7, a
+mesma do passo 1 do §15.
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha na rodada de correção do item 34, se o
-João a levar junto do Q-1; senão, no primeiro bloco que tocar `backend/config/logging.php` ou a
-lição 19 de `docs/README.md`. Revisar em **2026-10-31**.
+**Bloco:** 13 · **Quem decidiu:** João, 2026-10-06 (aprovou a correção da Q-1).
 
-Medido em 2026-10-05 na revisão do item 34 (`blocos/34-infra-producao-observabilidade/revisao.md`,
-Rodada 1, Q-4 e Q-5, os dois CONFIRMED pela lente 2):
+## P-05 — migrations "adicionais" não consolidadas
 
-| Doc | Divergência | Evidência |
-|---|---|---|
-| `backend/config/logging.php:115-118` | O comentário do canal `seguranca` diz que o teto `json-file` 10 MB × 3 "É a política de retenção deste log". A emenda de 2026-10-04 do ADR-21 passou a política para 30 dias em `/lotus/prod/containers` no CloudWatch, e o teto local ficou só como complemento | `docs/adrs.md:441` |
-| `docs/README.md:127` (lição 19) | A lição lista os pares nominais até o item 32. Faltam os quatro do item 34: `deploy/aws/user-data.sh` ↔ `user-data.test.ts`, `deploy/bin/sondar-saude.sh` ↔ `sondar-saude.test.ts`, `deploy/aws/criar-observabilidade.sh` ↔ `criar-observabilidade.test.ts` e `docker/Dockerfile.prod` (estágio `app`) ↔ `imagem-excecoes.test.ts` | `frontend/tests/` |
+**Encerrada em 2026-10-06, no bloco `go-live-confiabilidade-e-recuperacao` (item 13), por
+decisão D4 da spec: não consolidar.** As 30 migrations são histórico imutável — migration aplicada
+em produção nunca se reescreve, e a produção tem as 30 linhas na tabela `migrations` desde
+2026-09-04. O que a ficha realmente pedia ("banco = código") passa a ser provado pelo
+`deploy/bin/conferir-golive.sh` (verificação `migrations`, catraca em
+`frontend/tests/conferir-golive.test.ts`), e o gatilho "antes de subir para produção", disparado e
+não pago em 2026-09-20, fica registrado como decisão e não como dívida.
 
-**Por que não é urgente:** nenhum dos dois muda comportamento. O custo é de quem lê. O comentário
-manda o leitor procurar a política no lugar errado, e a lição não avisa o próximo bloco que mexer
-num desses scripts de que já existe catraca a estender.
-
-**Paga em 2026-10-05, na rodada de correção do item 34:** o comentário de `config/logging.php`
-aponta o ADR-21 emendado (30 dias no CloudWatch, teto local como reserva), e a lição 19 ganhou a
-emenda do item 34 com os quatro pares. Sai para `encerradas.md` no fechamento do item 34.
+**Bloco:** 13 · **Quem decidiu:** João, 2026-10-05 (brainstorming do bloco 13, P4).
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou

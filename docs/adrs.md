@@ -89,6 +89,10 @@ emenda o gatilho não tinha como disparar: o cron do backup escrevia num log loc
 host não tem MTA. O limite é 2 e não 7 para o gatilho do ADR chegar como decisão, com folga, e não
 como descoberta. Gatilho sem detecção é gatilho decorativo — lição 1 aplicada à própria regra.
 
+**Nota cruzada (2026-10-06, bloco `go-live-confiabilidade-e-recuperacao`).** O RTO/RPO desta
+revisão passa a ser **proposto à Lotus** como revisão do `RNF-DIS-02`: ver a emenda de 2026-10-06
+do ADR-14. Restore que falhar no go-live é o primeiro gatilho desta revisão disparando.
+
 ## ADR-10 — Polimorfismo com enforceMorphMap
 **Regra:** relações polimórficas do Eloquent (tabela `files`, `audits`) **sempre** com `Relation::enforceMorphMap()` (alias fixos: 'redator', 'cotacao'...) no AppServiceProvider. **Porquê:** sem morph map, o tipo guarda o namespace da classe; renomear/mover classe corrompe dados históricos. O map desacopla do código-fonte. Trade-off: integridade referencial fica na aplicação (aceitável — acesso só via Laravel, baixa concorrência).
 
@@ -203,6 +207,30 @@ Limites escritos:
 O procedimento, a leitura e a resposta a cada e-mail estão no runbook `deploy/aws/README.md`, §14.
 Se o `decisao-stack.md` do Drive ainda trouxer o texto original, **quem vence aqui é esta decisão
 posterior do João**, e o original não se apaga.
+
+**Emenda (2026-10-06, bloco `go-live-confiabilidade-e-recuperacao`) — status: proposta,
+aguardando aceite da Lotus.** O `RNF-DIS-02` do Drive (`requisitos-negocio.md`) exige *servidor
+redundante pronto para assumir em caso de queda*. **Uma EC2 única não atende esse requisito**, e
+nenhum texto anterior registrava aceite da Lotus para o rebaixamento que `arquitetura-aws-lotus.md`
+§4 fez sem data nem autor (e citando um snapshot que não existe). Esta emenda propõe a revisão e
+só vale como decisão depois do aceite:
+
+- **Sem redundância.** Uma EC2 em `sa-east-1`, MySQL 8 em contêiner (ADR-09, revisão 2026-09).
+- **RPO ≤ 24 h**, pelo dump diário às 06:10 UTC para o S3 (lifecycle 30 dias), vigiado pelo
+  `verificar-backup.sh`. Num desastre perde-se até um dia de registros, certificados inclusive. O
+  restore também desfaz as revogações posteriores ao dump (o certificado volta a *emitido* e a
+  validação pública o dá por válido): repetir a revogação. O
+  restore devolve `certificate_sequences` ao valor do dump: o número `LOT-<ano>-<n>` de um
+  certificado perdido pode ser reatribuído ao próximo emitido, e os perdidos se reemitem (runbook
+  §15).
+- **RTO = `<RTO medido>`**, medido no go-live pelo runbook §15 sobre o dump de `<data>` com
+  `<tamanho>` — restore manual pelo §8.1.1, sem snapshot EBS/AMI/RDS. Cresce com o volume.
+- **HA como trilha futura**: RDS multi-AZ + segunda EC2 atrás de ALB. **Gatilho**: a Lotus exigir
+  RTO/RPO menor, ou uma indisponibilidade real passar do RTO declarado.
+
+Proposta: `docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/proposta-dis02.md`.
+A lane de aceitação troca este status por *aceita em <data>* (ou *recusada*, e então HA vira ficha
+no backlog por PR de docs) e preenche os campos entre `<>` (RTO medido, custo estimado, data e tamanho).
 
 ## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
 

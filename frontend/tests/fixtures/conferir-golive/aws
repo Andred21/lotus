@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# `aws` de mentira do frontend/tests/conferir-golive.test.ts. Registra a chamada
+# em $FAKE_LOG e devolve o LastModified que o cenario pede.
+{
+  printf '%s\n' '---'
+  printf '%s\n' "$@"
+} >> "$FAKE_LOG"
+
+[ "${FAKE_AWS_FORA:-}" != 1 ] || { echo 'Unable to locate credentials' >&2; exit 255; }
+
+case " $* " in
+  *" s3api list-objects-v2 "*) echo "${FAKE_ULTIMO_BACKUP:-None}" ;;
+  *) echo "aws falso: nao previsto: $*" >&2; exit 1 ;;
+esac

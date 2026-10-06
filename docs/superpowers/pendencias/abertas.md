@@ -559,27 +559,6 @@ sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do
 > 2026-08-22: a decisão que as trava passa a se resolver no brainstorming do bloco indicado.
 > Agrupar segue não promovendo nada.
 
-## P-05 — migrations "adicionais" não consolidadas
-
-**Bloco:** go-live-confiabilidade-e-recuperacao · **Gatilho:** antes de subir para produção —
-**disparado em 2026-09-20 e não pago** (seção abaixo). Revisar em **2026-10-31**.
-
-Decisão do João no Bloco 2 — evitar inchaço do folder.
-
-### Gatilho disparado e não pago — 2026-09-20, `infra-producao-provisionamento-aws` (item 10 v2)
-
-A produção subiu. O `deploy.sh a5fc92bb` rodou as **30 migrations** sobre banco novo na EC2 em
-2026-09-04 e a aplicação atende em `http://18.230.53.197` desde então — o gatilho desta ficha era
-exatamente esse momento, e ele passou sem a consolidação.
-
-Decisão do João no gate de fechamento de 2026-09-20: **disparar sem pagar**, junto com os outros
-três itens herdados do bloco (a [P-80](#p-80--a-previsão-de-custo-estoura-o-teto-de-d8-e-o-resize-da-ec2-piora-a-conta) e a [P-81](#p-81--a-access-key-que-provisionou-a-produção-continua-ativa)). O gatilho **não se desarma** — mas mudou de
-natureza, e quem pegar a ficha precisa saber disso: consolidar agora não é mais só reescrever o
-folder. A produção já tem as 30 linhas na tabela `migrations`, então uma consolidação ou preserva
-esse estado à mão ou só vale para ambiente novo. É a diferença entre o que a ficha custava antes de
-2026-09-04 e o que ela custa hoje.
-
-
 ## P-83 — sete decisões de política dos guardas ficaram só no ledger, que é gitignorado
 
 *(nasceu `P-78` no fechamento do item 28 e foi renumerada na integração: o item 10 v2 fechou
@@ -862,6 +841,10 @@ verificada em `create-email-identity`, runbook §13.1), e o João troca o e-mail
 `tinker` — a troca é `update` do Eloquent, o model é `Auditable`; e verifica o redator, ou decide
 que ele não recebe e-mail. Com production access (runbook §13.6, FUT-4) o problema da verificação
 some, mas a caixa com leitor continua sendo necessária.
+
+**Gatilho disparou em 2026-10-06, no fechamento do item 13** (`go-live-confiabilidade-e-recuperacao`),
+apontado pela `auditar-docs` do Passo 3. O João decidiu manter a ficha aberta e fora do bloco: ela
+segue com ele.
 
 ---
 
