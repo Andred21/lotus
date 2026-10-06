@@ -140,7 +140,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 
 | Bloco | Itens pendentes | Desde |
 |---|---|---|
-| **34** `infra-producao-observabilidade` | 1, 2, 5, 6, 7 | 2026-10-05 |
+| **34** `infra-producao-observabilidade` | 7 | 2026-10-05 |
 
 ---
 
