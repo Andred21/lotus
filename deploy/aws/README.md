@@ -1467,7 +1467,7 @@ banco, nunca sobe contêiner e nunca mostra valor do `.env`.
 
    Sai 0, todo `OK`. Qualquer `FALHA` volta ao passo que a causou.
 
-9. **Proposta.** Preencher `<RTO medido>` em
+9. **Proposta.** Preencher `<RTO medido>` e `<costo estimado>` (calculadora da AWS, sa-east-1) em
    `docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/proposta-dis02.md`, enviar à
    Lotus e registrar a resposta na `aceitacao.md`. A lane de aceitação finaliza a emenda do
    ADR-14, encerra D-37 e P-44 e remove a ficha 13 do backlog.

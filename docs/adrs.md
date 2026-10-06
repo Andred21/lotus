@@ -230,7 +230,7 @@ só vale como decisão depois do aceite:
 
 Proposta: `docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/proposta-dis02.md`.
 A lane de aceitação troca este status por *aceita em <data>* (ou *recusada*, e então HA vira ficha
-no backlog por PR de docs) e preenche os três campos entre `<>`.
+no backlog por PR de docs) e preenche os campos entre `<>` (RTO medido, custo estimado, data e tamanho).
 
 ## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
 
