@@ -7,6 +7,18 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
+## P-05 — migrations "adicionais" não consolidadas
+
+**Encerrada em 2026-10-06, no bloco `go-live-confiabilidade-e-recuperacao` (item 13), por
+decisão D4 da spec: não consolidar.** As 30 migrations são histórico imutável — migration aplicada
+em produção nunca se reescreve, e a produção tem as 30 linhas na tabela `migrations` desde
+2026-09-04. O que a ficha realmente pedia ("banco = código") passa a ser provado pelo
+`deploy/bin/conferir-golive.sh` (verificação `migrations`, catraca em
+`frontend/tests/conferir-golive.test.ts`), e o gatilho "antes de subir para produção", disparado e
+não pago em 2026-09-20, fica registrado como decisão e não como dívida.
+
+**Bloco:** 13 · **Quem decidiu:** João, 2026-10-05 (brainstorming do bloco 13, P4).
+
 ## P-99 — dois docs ficaram atrás do item 34: o comentário do canal `seguranca` e os pares da lição 19
 
 **Encerrada em 2026-10-05, no fechamento do `infra-producao-observabilidade` (item 34), pelo
