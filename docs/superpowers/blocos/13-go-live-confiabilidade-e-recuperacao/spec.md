@@ -62,7 +62,7 @@ ADR-14**. Uma EC2 única não é declarada atendimento do RNF original em nenhum
 | D2 | O RTO sai **medido** do runbook §8.1.1 como está. Nenhum snapshot EBS, AMI ou RDS entra. | João, P2 |
 | D3 | O restore cronometrado roda **sobre o volume real de produção, antes do go-live**. Regra escrita: havendo dado real de cliente, o passo cai para contêiner descartável no host e o RTO é declarado parcial. | João, P3 |
 | D4 | P-05: **não consolidar**. As 30 migrations são histórico imutável; migration aplicada em prod nunca se reescreve. A conferência prova banco = código. A P-05 encerra no PR. | João, P4 |
-| D5 | Tudo que o smoke cria leva o prefixo `SMOKE-GOLIVE`. Depois da prova o certificado é **revogado** pela UI e o resto **arquivado**. Nada se apaga: auditoria e numeração ficam íntegras. | João, P5 |
+| D5 | Tudo que o smoke cria leva o prefixo `SMOKE-GOLIVE`. Depois da prova o certificado é **revogado** pela UI e o resto **arquivado**. Nada se apaga: auditoria e numeração ficam íntegras. **Emenda do plano (2026-10-05):** "o resto" é cliente e curso. A turma concluída não se arquiva (RN-15, guarda da `DeleteTurmaAction`) e aluno não tem ação de arquivar; os dois ficam vivos, identificados pelo prefixo. A revogação é exclusiva do `superadmin`. | João, P5 |
 | D6 | D-37 e P-44 encerram pela prova de que produção está limpa (nenhum registro anterior a 2026-08-18, nenhum e-mail de sonda de dev). O banco de dev não é tocado. | João, P6 |
 | D7 | Entrega = runbook §15 "Go-live" + `deploy/bin/conferir-golive.sh` só-leitura. O smoke é manual, pela UI, com admin real. | João, P7 |
 | D8 | A proposta à Lotus é escrita em espanhol, versionada na pasta do bloco. | João, seção 1 |
@@ -115,7 +115,7 @@ Invocação no host: `sudo /opt/lotus/bin/conferir-golive.sh [--final]`.
 | `sondas-dev` (P-44) | `users` com e-mail `e2e.gate%`, `gate.fechamento@lotus.cl` ou `gate-bd9@gate.cl` | zero linhas |
 | `env` | nomes de chave do `.env` × lista embutida no script | nenhuma chave da lista falta; chave a mais sai `AVISO`, não `FALHA` |
 | `backup` | idade do objeto mais recente em `s3://$LOTUS_BACKUP_BUCKET/backups/` | ≤ 1 dia |
-| `smoke` | entidades `SMOKE-GOLIVE` | sem `--final`: `INFO` com o que existe. Com `--final`: ao menos um certificado, todos com `revoked_at`, e cliente, curso, turma e aluno `SMOKE-GOLIVE` arquivados |
+| `smoke` | entidades `SMOKE-GOLIVE` | sem `--final`: `INFO` com o que existe. Com `--final`: ao menos um certificado, todos com `revoked_at`; cliente e curso `SMOKE-GOLIVE` presentes e arquivados; turma e aluno presentes (D5, emenda do plano) |
 
 A lista de chaves do `env` é embutida porque `env.prod.example` não vai ao host. A catraca prende
 a lista ao arquivo (§7, item 4): divergência reprova o CI.
@@ -167,9 +167,10 @@ Quem roda é o João; a sessão lê e confere. É a ordem do runbook §15.
 5. **Restore cronometrado sobre o volume real** (D3), pelo §8.1.1 com esse dump. Marcos: `t0`
    início do download; `t1` parada de `app`/`scheduler`; `t2` primeiro `/up` 200 depois da
    promoção. RTO declarado = `t2 − t0`; cada etapa anotada.
-6. **Pós-restore.** A validação pública do uuid continua emitido e o PDF baixa do S3. Prova que
+6. **Pós-restore.** A validação pública do uuid continua emitido e o PDF gera pela UI (sob demanda, pelo
+   Gotenberg — ADR-12; não há arquivo de certificado no S3). Prova que
    certificado emitido antes do dump sobrevive ao restore.
-7. **Limpeza.** Revogar o certificado pela UI e arquivar o resto (D5). A validação mostra revogado.
+7. **Limpeza.** Revogar o certificado pela UI, com `superadmin`, e arquivar cliente e curso (D5). A validação mostra revogado.
 8. **Final.** `conferir-golive.sh --final` sai 0, todo `OK`.
 9. **Proposta.** O João preenche o RTO, envia à Lotus e registra a resposta. A lane de aceitação
    finaliza a emenda do ADR-14, encerra D-37 e P-44 e remove a ficha 13 do backlog.
@@ -198,7 +199,8 @@ falsos no `PATH` e `LOTUS_BASE` temporário:
 3. Leitor indisponível (`docker`/`aws` falso saindo diferente de zero): `FALHA`, nunca `OK`.
 4. A lista embutida de chaves é igual às chaves de `deploy/aws/env.prod.example`.
 5. Sentinela secreta no valor de uma chave do `.env` nunca aparece em stdout nem em stderr.
-6. `--final`: certificado sem `revoked_at` ou entidade não arquivada → `FALHA`.
+6. `--final`: certificado sem `revoked_at`, cliente ou curso não arquivado, ou turma ou aluno
+   ausente → `FALHA`, cada condição com cenário próprio.
 7. Nenhum comando de escrita: os falsos registram as chamadas, e o teste reprova `INSERT`,
    `UPDATE`, `DELETE`, `DROP`, `run` e `up`.
 
