@@ -169,6 +169,32 @@ conferir_sondas_dev() {
   fi
 }
 
+# Mesma medida do verificar-backup.sh: a idade do objeto mais recente em
+# s3://$BUCKET/backups/. Limite 1 dia, nao 2: aqui e linha de base, nao alarme.
+conferir_backup() {
+  local bucket quando idade
+  bucket=$(chave LOTUS_BACKUP_BUCKET)
+  if [ -z "$bucket" ]; then
+    linha FALHA backup "LOTUS_BACKUP_BUCKET ausente ou vazio no .env"
+    return
+  fi
+  if ! quando=$(aws s3api list-objects-v2 --bucket "$bucket" --prefix backups/ \
+      --query 'sort_by(Contents,&LastModified)[-1].LastModified' --output text 2>/dev/null); then
+    linha FALHA backup "leitor indisponivel: aws s3api"
+    return
+  fi
+  if [ -z "$quando" ] || [ "$quando" = None ]; then
+    linha FALHA backup "nenhum objeto em s3://$bucket/backups/"
+    return
+  fi
+  idade=$(( ( $(date -u +%s) - $(date -u -d "$quando" +%s) ) / 86400 ))
+  if [ "$idade" -le "$LIMITE_BACKUP_DIAS" ]; then
+    linha OK backup "mais recente ha ${idade}d: $quando"
+  else
+    linha FALHA backup "mais recente ha ${idade}d (limite ${LIMITE_BACKUP_DIAS}d): $quando"
+  fi
+}
+
 conferir_env() {
   local presentes esperadas faltam sobram
   if [ ! -r "$BASE/.env" ]; then
@@ -193,5 +219,6 @@ conferir_rbac
 conferir_dados_antigos
 conferir_sondas_dev
 conferir_env
+conferir_backup
 
 exit $(( FALHAS > 0 ? 1 : 0 ))

@@ -29,7 +29,7 @@ const semComentarios = SCRIPT.split(/\r?\n/)
  * até as sete da spec: migrations, rbac, dados-antigos, sondas-dev, env,
  * backup, smoke. A "fixture boa" e o `reprovaSo` exigem exatamente esta lista.
  */
-const NOMES: string[] = ['migrations', 'rbac', 'dados-antigos', 'sondas-dev', 'env']
+const NOMES: string[] = ['migrations', 'rbac', 'dados-antigos', 'sondas-dev', 'env', 'backup']
 const SENTINELA = 'SENTINELA-NAO-VAZAR-9f3a'
 
 const ATRIBUICAO = /^[A-Za-z_][A-Za-z0-9_]*=/
@@ -220,8 +220,14 @@ describe('deploy/bin/conferir-golive.sh — env', () => {
   it('.env ilegível → FALHA', () => {
     const { env } = cenarioBom()
     rmSync(join(env.LOTUS_BASE, '.env'))
-    const l = reprovaSo(rodar(env), 'env')
-    expect(l.detalhe).toContain('.env')
+    const e = rodar(env)
+    const mapa = porNome(e.stdout)
+    expect(e.status).toBe(1)
+    expect(mapa.env.estado).toBe('FALHA')
+    expect(mapa.env.detalhe).toContain('.env')
+    // sem .env nao ha bucket: o backup tambem falha (nunca OK por omissao), e so ele alem do env
+    expect(mapa.backup.estado).toBe('FALHA')
+    for (const n of NOMES) if (n !== 'env' && n !== 'backup') expect(mapa[n].estado).not.toBe('FALHA')
   })
 })
 
@@ -364,5 +370,38 @@ describe('deploy/bin/conferir-golive.sh — sondas-dev (P-44)', () => {
     const mapa = porNome(e.stdout)
     expect(mapa['sondas-dev']).toEqual({ estado: 'FALHA', detalhe: 'leitor indisponivel: mysql' })
     expect(mapa.env.estado).toBe('OK')
+  })
+})
+
+describe('deploy/bin/conferir-golive.sh — backup', () => {
+  it('objeto mais recente com mais de 1 dia → FALHA com idade e limite', () => {
+    const l = reprovaSo(rodar({ ...cenarioBom().env, FAKE_ULTIMO_BACKUP: horasAtras(26 + 48) }), 'backup')
+    expect(l.detalhe).toContain('3d (limite 1d)')
+  })
+
+  it('bucket sem objeto (None) → FALHA', () => {
+    const l = reprovaSo(rodar({ ...cenarioBom().env, FAKE_ULTIMO_BACKUP: 'None' }), 'backup')
+    expect(l.detalhe).toContain('nenhum objeto')
+  })
+
+  it('aws sem credencial → FALHA nomeando o aws, nunca OK', () => {
+    const l = reprovaSo(rodar({ ...cenarioBom().env, FAKE_AWS_FORA: '1' }), 'backup')
+    expect(l.detalhe).toBe('leitor indisponivel: aws s3api')
+  })
+
+  it('LOTUS_BACKUP_BUCKET vazio no .env → FALHA sem chamar o aws', () => {
+    const { env } = cenarioBom()
+    writeFileSync(join(env.LOTUS_BASE, '.env'), CHAVES_MOLDE.map((k) => (k === 'LOTUS_BACKUP_BUCKET' ? `${k}=` : `${k}=x`)).join('\n') + '\n')
+    const e = rodar(env)
+    expect(porNome(e.stdout).backup.estado).toBe('FALHA')
+    expect(chamadas(e.log).some((a) => a[0] === 's3api')).toBe(false)
+  })
+
+  it('OK com 2 horas e consulta ao prefixo backups/ do bucket do .env', () => {
+    const e = rodar(cenarioBom().env)
+    expect(porNome(e.stdout).backup.estado).toBe('OK')
+    const s3 = chamadas(e.log).find((a) => a[0] === 's3api') ?? []
+    expect(s3).toContain('valor-lotus_backup_bucket')
+    expect(s3).toContain('backups/')
   })
 })
