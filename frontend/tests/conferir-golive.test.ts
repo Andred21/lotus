@@ -29,7 +29,7 @@ const semComentarios = SCRIPT.split(/\r?\n/)
  * até as sete da spec: migrations, rbac, dados-antigos, sondas-dev, env,
  * backup, smoke. A "fixture boa" e o `reprovaSo` exigem exatamente esta lista.
  */
-const NOMES: string[] = ['migrations', 'rbac', 'env']
+const NOMES: string[] = ['migrations', 'rbac', 'dados-antigos', 'sondas-dev', 'env']
 const SENTINELA = 'SENTINELA-NAO-VAZAR-9f3a'
 
 const ATRIBUICAO = /^[A-Za-z_][A-Za-z0-9_]*=/
@@ -306,5 +306,63 @@ describe('deploy/bin/conferir-golive.sh — rbac', () => {
   it('OK imprime contagem e roles', () => {
     const e = rodar(cenarioBom().env)
     expect(porNome(e.stdout).rbac).toEqual({ estado: 'OK', detalhe: '3 permissoes; roles admin,redator,superadmin; superadmin com todas' })
+  })
+})
+
+describe('deploy/bin/conferir-golive.sh — dados-antigos (D-37)', () => {
+  it('tabela com MIN(created_at) anterior a 2026-08-18 → FALHA nomeando tabela e data', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_DADOS_ANTIGOS = arquivo(dir, 'dados-antigos-2', [
+      'client_addresses\t-', 'client_contacts\t2026-07-30 09:00:00', 'users\t2026-09-10 12:00:00', 'course_modules\t-',
+      'course_certificate_templates\t-', 'quotes\t-', 'files\t-', 'enrollments\t-',
+    ])
+    const l = reprovaSo(rodar(env), 'dados-antigos')
+    expect(l.detalhe).toContain('client_contacts=2026-07-30')
+  })
+
+  it('consulta devolvendo menos de oito tabelas → FALHA (leitura incompleta nunca é OK)', () => {
+    const { env, dir } = cenarioBom()
+    env.FAKE_DADOS_ANTIGOS = arquivo(dir, 'dados-antigos-3', ['users\t-'])
+    const l = reprovaSo(rodar(env), 'dados-antigos')
+    expect(l.detalhe).toContain('esperava 8 tabelas')
+  })
+
+  it('a consulta cobre exatamente as oito tabelas de archived_with_parent', () => {
+    const e = rodar(cenarioBom().env)
+    const consulta = chamadas(e.log).map((a) => a.join(' ')).find((a) => a.includes('MIN(created_at)')) ?? ''
+    for (const t of ['client_addresses', 'client_contacts', 'users', 'course_modules', 'course_certificate_templates', 'quotes', 'files', 'enrollments']) {
+      expect(consulta).toContain(`FROM ${t}`)
+    }
+    expect(porNome(e.stdout)['dados-antigos']).toEqual({ estado: 'OK', detalhe: 'nenhum registro anterior a 2026-08-18 em 8 tabelas' })
+  })
+
+  it('mysql fora → FALHA nomeando o mysql; o resto segue', () => {
+    const e = rodar({ ...cenarioBom().env, FAKE_MYSQL_FORA: '1' })
+    const mapa = porNome(e.stdout)
+    expect(mapa['dados-antigos']).toEqual({ estado: 'FALHA', detalhe: 'leitor indisponivel: mysql' })
+    expect(mapa.env.estado).toBe('OK')
+  })
+})
+
+describe('deploy/bin/conferir-golive.sh — sondas-dev (P-44)', () => {
+  it('usuário de sonda presente → FALHA com a contagem', () => {
+    const l = reprovaSo(rodar({ ...cenarioBom().env, FAKE_SONDAS_N: '3' }), 'sondas-dev')
+    expect(l.detalhe).toContain('3 usuarios de sonda')
+  })
+
+  it('a consulta procura os três padrões de e-mail', () => {
+    const e = rodar(cenarioBom().env)
+    const consulta = chamadas(e.log).map((a) => a.join(' ')).find((a) => a.includes('FROM users WHERE email')) ?? ''
+    expect(consulta).toContain("'e2e.gate%'")
+    expect(consulta).toContain("'gate.fechamento@lotus.cl'")
+    expect(consulta).toContain("'gate-bd9@gate.cl'")
+    expect(porNome(e.stdout)['sondas-dev']).toEqual({ estado: 'OK', detalhe: 'nenhum usuario de sonda' })
+  })
+
+  it('mysql fora → FALHA nomeando o mysql; o resto segue', () => {
+    const e = rodar({ ...cenarioBom().env, FAKE_MYSQL_FORA: '1' })
+    const mapa = porNome(e.stdout)
+    expect(mapa['sondas-dev']).toEqual({ estado: 'FALHA', detalhe: 'leitor indisponivel: mysql' })
+    expect(mapa.env.estado).toBe('OK')
   })
 })

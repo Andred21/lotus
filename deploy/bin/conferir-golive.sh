@@ -130,6 +130,45 @@ conferir_rbac() {
   fi
 }
 
+# D-37: MIN(created_at) das oito tabelas de archived_with_parent. Toda tabela
+# tem created_at (timestamps() nas migrations). Tabela vazia devolve '-'.
+TABELAS_ARQUIVAMENTO="client_addresses client_contacts users course_modules course_certificate_templates quotes files enrollments"
+conferir_dados_antigos() {
+  local consulta='' t saida n antigas
+  for t in $TABELAS_ARQUIVAMENTO; do
+    consulta="$consulta${consulta:+ UNION ALL }SELECT '$t', IFNULL(MIN(created_at), '-') FROM $t"
+  done
+  if ! saida=$(sql "$consulta"); then
+    linha FALHA dados-antigos "leitor indisponivel: mysql"
+    return
+  fi
+  n=$(wc -l <<< "$saida" | tr -d ' ')
+  if [ "$n" != 8 ]; then
+    linha FALHA dados-antigos "esperava 8 tabelas, leu $n"
+    return
+  fi
+  antigas=$(awk -F'\t' -v lim="$LIMITE_NASCIMENTO" '$2 != "-" && $2 < lim { printf "%s=%s,", $1, substr($2, 1, 10) }' <<< "$saida")
+  if [ -n "$antigas" ]; then
+    linha FALHA dados-antigos "registro anterior a $LIMITE_NASCIMENTO: ${antigas%,}"
+  else
+    linha OK dados-antigos "nenhum registro anterior a $LIMITE_NASCIMENTO em 8 tabelas"
+  fi
+}
+
+# P-44: usuarios de sonda dos gates antigos. Conta inclusive soft-deletados.
+conferir_sondas_dev() {
+  local n
+  if ! n=$(sql "SELECT COUNT(*) FROM users WHERE email LIKE 'e2e.gate%' OR email IN ('gate.fechamento@lotus.cl', 'gate-bd9@gate.cl')"); then
+    linha FALHA sondas-dev "leitor indisponivel: mysql"
+    return
+  fi
+  if [ "$n" != 0 ]; then
+    linha FALHA sondas-dev "$n usuarios de sonda de dev no banco"
+  else
+    linha OK sondas-dev "nenhum usuario de sonda"
+  fi
+}
+
 conferir_env() {
   local presentes esperadas faltam sobram
   if [ ! -r "$BASE/.env" ]; then
@@ -151,6 +190,8 @@ conferir_env() {
 
 conferir_migrations
 conferir_rbac
+conferir_dados_antigos
+conferir_sondas_dev
 conferir_env
 
 exit $(( FALHAS > 0 ? 1 : 0 ))
