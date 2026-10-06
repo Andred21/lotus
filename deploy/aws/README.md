@@ -340,6 +340,11 @@ trilha de auditoria. No ensaio de 2026-09-26, um certificado emitido depois do d
 restaurar, pese a alternativa: promover para frente um SHA que corrija a release não perde nada.
 Restaure quando a release estiver corrompendo dado, ou quando não houver correção próxima.
 
+**Dois efeitos além da perda:** o número `LOT-<ano>-<n>` de um certificado perdido pode ser
+reatribuído ao próximo emitido, e uma revogação feita depois do dump se desfaz (o certificado volta
+a `emitido`). A cópia `antes-do-restore` do passo 3 é a fonte para listar o que mudou depois do
+dump. Detalhe e o que fazer: §15, *Numeração de certificado*.
+
 **O restore não é carregar o dump por cima.** O `mysqldump` sem `--databases` só derruba as tabelas
 que existiam quando o dump foi tirado. As tabelas criadas pelas migrations à frente ficam para
 trás, e o próximo deploy para frente morre no `migrate`. Isso foi medido no ensaio: `ERROR 1050
@@ -1399,6 +1404,7 @@ banco, nunca sobe contêiner e nunca mostra valor do `.env`.
      conferir de novo. `AVISO` por chave a mais não bloqueia.
    - `migrations`, `dados-antigos` ou `sondas-dev` em `FALHA` → **parar** e voltar ao bloco (spec
      §6): não promover nada.
+   - `backup` em `FALHA` → §9: consertar o cron do backup antes de seguir.
    - `smoke` sai `INFO`.
 
 3. **Smoke pela UI, sobre HTTPS, com admin real** (`https://app.lotusotec.cl`). Tudo com o
@@ -1413,7 +1419,8 @@ banco, nunca sobe contêiner e nunca mostra valor do `.env`.
    sudo cat /root/golive.txt      # s3://<bucket>/backups/lotus-<data>-golive.sql.gz
    ```
 
-   Conferir `certificates ≥ 1` pela contagem do §9.
+   Conferir `certificates ≥ 1`: rodar `sudo /opt/lotus/bin/conferir-golive.sh` e ler `INFO smoke
+   certificados=N`.
 
 5. **Restore cronometrado sobre o volume real.** É o §8.1.1 como está, com `DUMP=$(cat
    /root/golive.txt)`. Três marcos, anotados no momento:
@@ -1434,7 +1441,8 @@ banco, nunca sobe contêiner e nunca mostra valor do `.env`.
    cronometrar só a carga:
 
    ```bash
-   sudo docker run --rm -d --name lotus-restore-ensaio -e MYSQL_ROOT_PASSWORD=ensaio -e MYSQL_DATABASE=lotus mysql:8.0
+   sudo docker run --rm -d --memory 512m --name lotus-restore-ensaio -e MYSQL_ROOT_PASSWORD=ensaio -e MYSQL_DATABASE=lotus mysql:8.0
+   sleep 40          # o MySQL subir, como no §9
    date -u +%FT%TZ   # t0
    aws s3 cp "$(sudo cat /root/golive.txt)" /tmp/golive.sql.gz --only-show-errors
    gunzip -c /tmp/golive.sql.gz | sudo docker exec -i lotus-restore-ensaio mysql -uroot -pensaio lotus
@@ -1466,9 +1474,11 @@ banco, nunca sobe contêiner e nunca mostra valor do `.env`.
 
 **Numeração de certificado.** O restore devolve `certificate_sequences` ao valor do dump. Um
 certificado emitido depois do dump e perdido no restore deixa de validar pelo QR, e o número
-`LOT-<ano>-<n>` dele pode ser reatribuído ao próximo certificado emitido. Num restore real (não
-neste ensaio, em que o certificado `SMOKE-GOLIVE` está no dump), reemitir os perdidos e avisar
-quem tem o original (proposta, §4).
+`LOT-<ano>-<n>` dele pode ser reatribuído ao próximo certificado emitido. A revogação feita depois
+do dump também se perde: o certificado volta a `emitido` e a validação pública o dá por válido, então
+é preciso repetir a revogação. Num restore real (não neste ensaio, em que o certificado
+`SMOKE-GOLIVE` está no dump), reemitir os perdidos, repetir as revogações e avisar quem tem o
+original (proposta, §4).
 
 **Recuo.** Restore que falha no passo 5: repetir o passo 4 do §8.1.1 inteiro; persistindo, carregar
 o dump `antes-do-restore` pelo mesmo procedimento. Restore que falha é gatilho do ADR-09 e bloqueia

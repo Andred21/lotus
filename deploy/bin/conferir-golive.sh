@@ -13,8 +13,9 @@
 # nunca OK por omissao.
 #
 # Do .env saem so os NOMES das chaves e o valor de LOTUS_BACKUP_BUCKET. Nenhum
-# outro valor aparece na saida nem em erro: toda saida de mysql/docker/aws vai
-# para /dev/null, e o script nunca faz `source` do .env.
+# outro valor do .env aparece na saida nem em erro: o stderr de mysql/docker/aws
+# vai para /dev/null (onde reclamariam de senha ou credencial), e o script nunca
+# faz `source` do .env.
 #
 # Sem --final, `smoke` e INFO. Com --final, e a rede do passo 8 do runbook
 # secao 15: certificado SMOKE-GOLIVE revogado, cliente e curso arquivados,
@@ -172,7 +173,7 @@ conferir_sondas_dev() {
 # Mesma medida do verificar-backup.sh: a idade do objeto mais recente em
 # s3://$BUCKET/backups/. Limite 1 dia, nao 2: aqui e linha de base, nao alarme.
 conferir_backup() {
-  local bucket quando idade
+  local bucket quando epoch idade
   bucket=$(chave LOTUS_BACKUP_BUCKET)
   if [ -z "$bucket" ]; then
     linha FALHA backup "LOTUS_BACKUP_BUCKET ausente ou vazio no .env"
@@ -187,7 +188,11 @@ conferir_backup() {
     linha FALHA backup "nenhum objeto em s3://$bucket/backups/"
     return
   fi
-  idade=$(( ( $(date -u +%s) - $(date -u -d "$quando" +%s) ) / 86400 ))
+  if ! epoch=$(date -u -d "$quando" +%s 2>/dev/null); then
+    linha FALHA backup "data ilegivel: $quando"
+    return
+  fi
+  idade=$(( ( $(date -u +%s) - epoch ) / 86400 ))
   if [ "$idade" -le "$LIMITE_BACKUP_DIAS" ]; then
     linha OK backup "mais recente ha ${idade}d: $quando"
   else

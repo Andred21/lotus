@@ -218,6 +218,8 @@ só vale como decisão depois do aceite:
 - **Sem redundância.** Uma EC2 em `sa-east-1`, MySQL 8 em contêiner (ADR-09, revisão 2026-09).
 - **RPO ≤ 24 h**, pelo dump diário às 06:10 UTC para o S3 (lifecycle 30 dias), vigiado pelo
   `verificar-backup.sh`. Num desastre perde-se até um dia de registros, certificados inclusive. O
+  restore também desfaz as revogações posteriores ao dump (o certificado volta a *emitido* e a
+  validação pública o dá por válido): repetir a revogação. O
   restore devolve `certificate_sequences` ao valor do dump: o número `LOT-<ano>-<n>` de um
   certificado perdido pode ser reatribuído ao próximo emitido, e os perdidos se reemitem (runbook
   §15).
@@ -226,7 +228,7 @@ só vale como decisão depois do aceite:
 - **HA como trilha futura**: RDS multi-AZ + segunda EC2 atrás de ALB. **Gatilho**: a Lotus exigir
   RTO/RPO menor, ou uma indisponibilidade real passar do RTO declarado.
 
-Proposta enviada: `docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/proposta-dis02.md`.
+Proposta: `docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/proposta-dis02.md`.
 A lane de aceitação troca este status por *aceita em <data>* (ou *recusada*, e então HA vira ficha
 no backlog por PR de docs) e preenche os três campos entre `<>`.
 

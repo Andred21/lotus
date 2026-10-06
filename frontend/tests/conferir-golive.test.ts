@@ -384,6 +384,13 @@ describe('deploy/bin/conferir-golive.sh — backup', () => {
     expect(l.detalhe).toContain('nenhum objeto')
   })
 
+  it('data ilegivel → FALHA do backup com o valor, sem matar o script (smoke ainda sai)', () => {
+    const e = rodar({ ...cenarioBom().env, FAKE_ULTIMO_BACKUP: 'lixo' })
+    const l = reprovaSo(e, 'backup')
+    expect(l.detalhe).toBe('data ilegivel: lixo')
+    expect(porNome(e.stdout).smoke.estado).toBe('INFO')
+  })
+
   it('aws sem credencial → FALHA nomeando o aws, nunca OK', () => {
     const l = reprovaSo(rodar({ ...cenarioBom().env, FAKE_AWS_FORA: '1' }), 'backup')
     expect(l.detalhe).toBe('leitor indisponivel: aws s3api')
