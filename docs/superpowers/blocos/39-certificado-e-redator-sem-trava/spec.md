@@ -45,7 +45,7 @@ merge deste.
 | # | Tema | Decisão |
 |---|---|---|
 | D1 | Templates por curso | **Saem da emissão.** A porta 4 sai; a emissão não lê mais `course_certificate_templates`. A tabela, os dados, o model `CourseCertificateTemplate`, a relação `Course::certificateTemplates`, a cascata de arquivar/restaurar (`archived_with_parent`) e o alias `course_certificate_template` do morph map **ficam** (dado e trilha de auditoria). O CRUD da API sai (§4.2). Nenhuma migration. |
-| D2 | Cidade de emissão | Presencial: `turmas.local_aplicacao`, como hoje. Online: `config('app.certificate_issuer.city')`, chave nova ao lado de `name`/`rut`, env `CERTIFICATE_ISSUER_CITY`, default `Santiago`. Produção herda o default, sem mudar o `.env`. A porta 5 fica como defesa (online com a config vazia) e o motivo é renomeado: `plantilla_sin_ciudad` vira `sin_ciudad`. |
+| D2 | Cidade de emissão | Presencial: `turmas.local_aplicacao`, como hoje. Online: `config('app.certificate_issuer.city')`, chave nova ao lado de `name`/`rut`, env `CERTIFICATE_ISSUER_CITY`, default `Santiago`. Produção herda o default, sem mudar o `.env`. A env **não** entra em `deploy/aws/env.prod.example` nem na lista `CHAVES_ESPERADAS` do `deploy/bin/conferir-golive.sh`: a catraca `frontend/tests/conferir-golive.test.ts` prende os dois, e uma chave esperada nova exigiria escrita em produção. A porta 5 fica como defesa (online com a config vazia ou só com espaços) e o motivo é renomeado: `plantilla_sin_ciudad` vira `sin_ciudad`. |
 | D3 | Vigência | **Sempre nula** (`valido_ate = null`, vigência indeterminada, RN-CER-01). Divergência registrada: nos certificados da v1 a vigência é sempre `Fecha Curso + 23 meses` (ficha 38). O João decidiu manter nula. Vigência por curso ou global, se a Lotus pedir, é bloco próprio. |
 | D4 | Snapshot dos novos | Os certificados emitidos depois do bloco gravam `template: {version: null, city: null}`. `SnapshotTemplateData` (os dois campos já são nuláveis) e o `schema_version` do snapshot **não mudam**. A cidade impressa vem de `ciudad_emision`, congelada no ato, como hoje. |
 | D5 | Certificado já emitido | Intocado no dado e na leitura. Prova: §5, critérios 2 e 3. |
@@ -54,7 +54,7 @@ merge deste.
 | D8 | Aviso na tela | O picker lista todos os redatores não designados. O inidôneo vem com uma `AppTag` de aviso por motivo. Designar um inidôneo abre o `ConfirmDialog` ("¿Designar de todos modos?") com os motivos; cancelar não designa. O idôneo designa direto. |
 | D9 | Rastro | O backend aceita sempre e grava, **na mesma linha de audit da designação** (`PivotAudit`, `auditable_type` turma), os motivos daquele instante, em `new_values.inidoneidade = {<redator_id>: [<motivos>]}`. Designação idônea: a linha de audit sai idêntica à de hoje. Designação repetida (no-op) não grava, como hoje. |
 | D10 | Registro da regra | `ruling-rn09.md` nesta pasta, com a regra anterior, a decisão do João (2026-10-17), o rastro e a pendência no Drive. O Drive vence sobre os `/docs`: até o João refletir a mudança lá, o Drive descreve uma trava que o código não aplica (Verificação externa, item 1). |
-| D11 | `efeito_externo` | `sim`, com dois itens sem prova HTTP declarável (§7). |
+| D11 | `efeito_externo` | `sim`, com dois itens sem prova HTTP declarável (`## Verificação externa`). |
 | D12 | Permissão do preview | `certification.certificate.view`, que já existe. Nenhuma permissão nova, então a contagem do RBAC (41) e o `conferir-golive.sh` não mudam. **(Claude)** |
 
 ## 4. Desenho
@@ -63,7 +63,9 @@ merge deste.
 
 - **Portas.** `CertificateEligibility` e `EmissionPanelQuery` perdem a porta 4 (`assertTemplateDisponivel`
   e o ramo `SinPlantilla`). `EmissionBlockReason` fica com dois casos: `SinCiudad = 'sin_ciudad'` e
-  `SinRedactor = 'sin_redactor'`. A mensagem 422 da porta 5 continua saindo de `lang/`.
+  `SinRedactor = 'sin_redactor'`. A mensagem 422 da porta 5 sai da chave nova
+  `certification.eligibility.emission_city_missing`, no campo `turma`. A chave
+  `template_not_approved` sai.
 - **Cidade.** `CertificateTemplateResolver` é renomeado para `EmissionCityResolver`, sem
   `latestByCourse`: `local_aplicacao` quando não é nula, senão a cidade do emissor na config. Os
   consumidores atuais (`IssuanceContext`,
@@ -88,15 +90,17 @@ merge deste.
   - o `CourseTemplateController`, a `CreateCertificateTemplateAction` e o `CertificateTemplateData`;
   - o `CourseData::$templates` (entrada e saída), o sync de templates no `UpdateCourseAction` e o
     `certificateTemplates` do eager-load `CourseQueryBuilder::LISTING`.
-- **Fica:** tudo o que D1 lista. `CourseQueryBuilder::CASCADED` continua com `certificateTemplates`
-  (arquivar e restaurar o curso continuam cascateando).
+- **Fica:** tudo o que D1 lista. A cascata de arquivar e restaurar mora em `Course::booted()` e
+  continua. `CourseQueryBuilder::LISTING` e `CASCADED` perdem `certificateTemplates`, porque são
+  listas de projeção, e a projeção não lê mais template.
 
 ### 4.3 Operation (backend)
 
 - `RedatorIdoneidadeService`: `assertEligible` sai; entra `motivos(Redator, Course): list<MotivoInidoneidade>`.
   `isEligible` passa a ser `motivos() === []`. O enum novo `Operation\Enums\MotivoInidoneidade` é
-  backed, com `#[TypeScript]` e os casos `not_qualified` e `reuf_invalid`. O docblock do serviço
-  cita o `ruling-rn09.md`.
+  backed, com os casos `not_qualified` e `reuf_invalid`, e chega ao `generated.ts` pelo coletor de
+  enums, como os outros enums do projeto (nenhum deles leva `#[TypeScript]`). O docblock do
+  serviço cita o `ruling-rn09.md`.
 - `DesignateRedatorAction`: mantém a ordem estado → lock → (motivos) → escrita, sem lançar exceção
   por idoneidade, e passa os motivos ao `PivotAudit` quando houver.
 - `PivotAudit::syncWithoutDetaching` ganha um parâmetro opcional `array $contexto = []`, mesclado no
@@ -110,9 +114,17 @@ merge deste.
 
 - **Emissão.** `EmissionPanel` e `ReissueDialog` consomem a união nova do `generated.ts`. A chave
   `certificate.blocked.sin_plantilla` sai dos três locales e `plantilla_sin_ciudad` vira `sin_ciudad`.
+  O `ConfirmIssueDialog` mostra a vigência sempre como "Indefinida", e as chaves
+  `certificate.vigenciaMeses_*` saem.
 - **Preview.** `CourseRowActions` (Catalog) ganha a ação "Ver certificado de muestra", visível com
   `can('certification.certificate.view')`. O hook novo em `features/catalog/api/` chama a rota
   pelo `useBlobTabOpener` de `shared/hooks`. Nenhum import de `features/certification` (lei 6).
+  Com a ação visível, a coluna de ações da tabela de cursos passa de 9rem para 12rem no desktop
+  (três ícones, a mesma largura de Redactores). Abaixo de `sm` nada muda, porque a coluna vira um
+  menu só. **(Claude)**
+- **Redatores já designados.** A tag de cada um reflete os motivos: "Idóneo" só quando não há
+  motivo; com motivo, uma tag de aviso por motivo; com a lista de redatores não carregada, nenhuma
+  tag, para não afirmar uma idoneidade que não foi medida. **(Claude)**
 - **Picker.**
   - `eligibility.ts` ganha `motivosInidoneidade(redator, courseId): MotivoInidoneidade[]`, com o
     tipo do `generated.ts`; `isEligible` deriva dele.
@@ -139,8 +151,10 @@ merge deste.
    O painel não mostra `sin_plantilla` para turma nenhuma.
 2. **Emitido não muda.** Um certificado emitido com template (cidade e vigência do template, versão
    N) é relido depois da mudança, e o snapshot, o `valido_ate`, o `codigo` e o HTML do PDF saem
-   idênticos ao capturado antes. A cadeia viva difere do valor congelado em todo campo asserido
-   (rule `backend-ddd.md`, guarda de snapshot).
+   idênticos ao capturado antes. O HTML é comparado pelo sha256 capturado com o código de antes do
+   bloco, e o teste que guarda esse hash nasce antes de qualquer mudança de produção. **(Claude)**
+   A cadeia viva difere do valor congelado em todo campo asserido (rule `backend-ddd.md`, guarda
+   de snapshot).
 3. Nenhum leitor de certificado emitido toca `course_certificate_templates`: com a tabela esvaziada
    (incluindo os arquivados), o PDF, o `show` e a rota pública do QR respondem igual.
 4. O preview devolve PDF com a marca MUESTRA, e as contagens de `certificates`, `audits` e
@@ -168,7 +182,9 @@ A 38 está viva em paralelo e carrega o histórico 2026 em produção depois da 
 espera este bloco. A ordem esperada é 39 → aceitação do 13 → 38, então **a 38 rebaseia sobre a 39**.
 Para isso não virar conflito:
 
-- O 39 **não toca** `backend/database/seeders/**`, nenhum comando de carga nem a pasta
+- O 39 **não toca** `backend/database/seeders/**`, nenhum comando de carga
+  (`backend/app/Console/**`), nem `docs/estrutura-monolito.md`, que o plano da 38 edita (o
+  `lane.sh conferir` acusou o conflito no planejamento e o 39 abriu mão da edição), nem a pasta
   `docs/superpowers/blocos/38-*`.
 - **Contratos que a 38 consome e que o 39 mantém estáveis:**
   - `SnapshotTemplateData`: mesma forma, mesma nulabilidade;
@@ -183,10 +199,12 @@ Para isso não virar conflito:
   `backend/lang/*/operation.php` e `docs/superpowers/historico/progress.md`. As edições do 39 nesses
   arquivos são pontuais e localizadas. Quando os dois planos existirem, `lane.sh conferir` mede a
   interseção das listas `Files:`. Se ela não sair vazia, a sequência é decisão do João.
-- O helper de teste `tests/Support/CreatesCertificateTemplates.php` sai com o 39, porque todos os
-  consumidores dele são arquivos que o 39 toca. A 38 não o usa (curso sem template).
+- O helper de teste `tests/Support/CreatesCertificateTemplates.php` **fica**: os testes de cascata
+  (`CourseModelTest`, `ArchiveCascadeMarkTest`, `RestoreCascadeTest`, `CourseArchiveEndpointTest`)
+  continuam criando linhas de template. O que sai é o template que o `IssuableEnrollmentBuilder`
+  criava por padrão.
 
-## 7. Verificação externa
+## Verificação externa
 
 1. O Drive (requisitos, `Viagem Chile/Projetos/Lotus.cl/V2`) descreve a RN-09 como aviso que não
    trava a designação, conforme `ruling-rn09.md`. Ação do João.
@@ -197,7 +215,7 @@ Para isso não virar conflito:
    `uuid` só existe depois da emissão).
    - prova: nenhuma
 
-## 8. Não-objetivos
+## 7. Não-objetivos
 
 - Editor visual de template; UI de CRUD de template; vigência por curso.
 - Mudar o layout do certificado (`P-28` segue com a Lotus); assinatura PNG.
@@ -211,7 +229,7 @@ Para isso não virar conflito:
 `valido_ate` ou PDF mude; um preview sem a marca MUESTRA, ou que grave ou consuma número;
 `generated.ts` editado à mão; PrimeReact importado fora de `shared/ui`.
 
-## 9. Deferred
+## 8. Deferred
 
 - Unificar as duas definições de idoneidade no front (`redatorStatus.ts` × `eligibility.ts`).
 - Vigência configurável (global ou por curso), se a Lotus pedir.
