@@ -2,9 +2,9 @@
 schema_version: 3
 id: 38
 slug: 38-seeder-carga-inicial-producao
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/blocos/38-seeder-carga-inicial-producao/spec.md
 active_plan: docs/superpowers/blocos/38-seeder-carga-inicial-producao/plano.md
@@ -17,10 +17,10 @@ branch: feat/38-seeder-carga-inicial-producao
 worktree: ../lotus-38-seeder-carga-inicial-producao
 offset: 2
 lane_base: 0740843a
-commit: 6b6ec961
+commit: a7c76aac
 blocker: null
-updated_at: 2026-10-17T15:24:46-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+updated_at: 2026-10-17T15:58:32-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 38 — estado
