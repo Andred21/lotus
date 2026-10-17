@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Certification\Http\Controllers\CertificateController;
+use App\Domains\Certification\Http\Controllers\CertificatePreviewController;
 use App\Domains\Certification\Http\Controllers\PublicCertificateController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,11 @@ Route::middleware('auth.active')->group(function () {
     // bucket. É a rota mais cara do sistema, e o limitador é a contenção dela
     // (spec D6); persistir o PDF ficou fora do bloco de propósito.
     Route::get('certificates/{certificate}/pdf', [CertificateController::class, 'pdf'])
+        ->middleware('throttle:certificate-pdf');
+    // Amostra do certificado do curso: o mesmo Gotenberg por requisição do PDF
+    // real, então o mesmo limitador.
+    Route::get('courses/{course}/certificate-preview', [CertificatePreviewController::class, 'show'])
+        ->whereNumber('course')
         ->middleware('throttle:certificate-pdf');
     Route::get('certificates/{certificate}', [CertificateController::class, 'show']);
     Route::post('certificates/{certificate}/revoke', [CertificateController::class, 'revoke']);

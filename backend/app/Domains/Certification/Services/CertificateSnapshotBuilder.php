@@ -2,6 +2,7 @@
 
 namespace App\Domains\Certification\Services;
 
+use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseModule;
 use App\Domains\Certification\Data\Snapshot\CertificateSnapshotData;
 use App\Domains\Certification\Data\Snapshot\SnapshotCourseData;
@@ -43,21 +44,7 @@ class CertificateSnapshotBuilder
             // oficial (D-P9). Congelam aqui pelo mesmo motivo do template: o
             // certificado reimpresso em 2028 descreve a atividade de 2026, não
             // o curso que o catálogo virou depois.
-            curso: new SnapshotCourseData(
-                name: $course->name,
-                technical_name: $course->technical_name,
-                workload_hours: (int) $course->workload_hours,
-                description: $course->description,
-                modules: $course->modules
-                    ->sortBy('sort_order')
-                    ->map(fn (CourseModule $module) => new SnapshotModuleData(
-                        sort_order: (int) $module->sort_order,
-                        name: $module->name,
-                        contents: $module->contents,
-                    ))
-                    ->values()
-                    ->all(),
-            ),
+            curso: $this->curso($course),
             turma: new SnapshotTurmaData(
                 id: $turma->id,
                 start_date: $turma->start_date->format('Y-m-d'),
@@ -83,6 +70,30 @@ class CertificateSnapshotBuilder
             template: new SnapshotTemplateData(version: null, city: null),
             ciudad_emision: $ciudadEmision,
             emitido_em: $emitidoEm->toDateString(),
+        );
+    }
+
+    /**
+     * A projeção do curso para o documento, uma só: a emissão e a amostra do
+     * curso leem o mesmo SnapshotCourseData, senão a amostra mostraria um
+     * temário que o certificado real não tem.
+     */
+    public function curso(Course $course): SnapshotCourseData
+    {
+        return new SnapshotCourseData(
+            name: $course->name,
+            technical_name: $course->technical_name,
+            workload_hours: (int) $course->workload_hours,
+            description: $course->description,
+            modules: $course->modules
+                ->sortBy('sort_order')
+                ->map(fn (CourseModule $module) => new SnapshotModuleData(
+                    sort_order: (int) $module->sort_order,
+                    name: $module->name,
+                    contents: $module->contents,
+                ))
+                ->values()
+                ->all(),
         );
     }
 
