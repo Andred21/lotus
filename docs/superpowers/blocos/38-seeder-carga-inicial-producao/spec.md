@@ -73,9 +73,9 @@ redator**.
 
 **Duas peças (Claude):**
 
-1. **Extrator** versionado, sem dado embutido. Lê `REGISTROS`, `CURSOS` e as abas
-   `Aprendizajes Esperados` dos xlsx das COT, aplica o recorte e as exclusões do §2, e gera numa
-   pasta **fora da árvore do repositório**:
+1. **Extrator** versionado, sem dado embutido. Lê só a aba `REGISTROS` da planilha (o que vem
+   da aba `CURSOS` e das COT entra pelo complemento curado, item 2), aplica o recorte e as
+   exclusões do §2, e gera numa pasta **fora da árvore do repositório**:
    - `carga.json`: o arquivo canônico (formato versionado com `schema_version`);
    - `documentos/`: os PDFs dos redatores, um por documento, com o PDF do CZR já dividido por
      página;
@@ -129,8 +129,8 @@ Comando artisan `lotus:carga-inicial {pasta} {--simular}`, padrão `lotus:<verbo
 | Vínculo aluno↔cliente | `student_client_logs` aberto, com `started_on` = a primeira `Fecha Curso` do aluno no recorte; `students.current_client_id` = SWITCH (Claude) | `StudentClientLinkService` (só grava hoje) |
 | Redator | `users(type=redator, is_active=true)`, role `redator`, `redatores`; sem convite | `CreateRedatorAction` (convite fixo) |
 | Documento do redator | `files` com o tipo do mapa; mime e tamanho validados pelas regras de `ContentClass::Documento`; um por tipo | regras HTTP e ClamAV (origem local confiável) |
-| Habilitação | `course_redator` pela coluna de relatores da aba `CURSOS`: MAO nos 5 cursos, COO no 201 e 202, CZR no 201 | `CourseRedatorController` |
-| Curso | 6 cursos. `name` (§2 para 200#/051#; os outros pelo nome da aba `CURSOS`, e "Electricidad Básica" da COT-177); `technical_name` = NomCURSO só quando difere do `name` (200#/051#), senão nulo (Claude); `workload_hours` = HrCap (COT-177 para o 6º); `description` do docx quando houver (202#), senão nula (Claude); sem template de certificado | — |
+| Habilitação | `course_redator` pela coluna de relatores da aba `CURSOS`, transcrita no complemento: MAO nos 5 cursos, COO no 201 e 202, CZR no 201 | `CourseRedatorController` |
+| Curso | 6 cursos. `name` (§2 para 200#/051#; os outros pelo nome da aba `CURSOS`, e "Electricidad Básica" da COT-177, todos transcritos no complemento); `technical_name` = NomCURSO só quando difere do `name` (200#/051#), senão nulo (Claude); `workload_hours` = HrCap (COT-177 para o 6º); `description` do docx quando houver (202#), senão nula (Claude); sem template de certificado | — |
 | Módulo | `course_modules` em ordem: 200#/201#/202# do docx (horas 0); 035# da COT-180 (as horas do tópico em `theory_hours`, Claude); Electricidad Básica da aba `Aprendizajes Esperados` da COT-177; 051# nenhum | — |
 | Orçamento | 12 orçamentos: `budgets.id` = número da SCAP (176–187), `code` = `Scap n`, cliente SWITCH | `CreateBudgetAction` (id automático) |
 | Cotação | `seq_in_budget=1`. Com turma (10): `course_id` = o da turma (planilha), `student_count` = alunos importados da turma, `approved`, `approved_at` = `Fecha Curso`. Sem turma: 177 (Electricidad Básica) e 178 (051#), `pending`, `student_count` da COT (inteiro; se a COT não traz número, 1 com linha no relatório, Claude). `value_uf` conforme §2 | `CreateQuoteAction`, `ApproveQuoteAction` |
@@ -152,12 +152,13 @@ Decisão do João: o registro importado carrega a data do histórico, não a da 
 | Registro | Data |
 |---|---|
 | Certificado | `F.EMISION` |
-| Matrícula, turma, `turma_redator` | `Fecha Curso` (início da turma) |
+| Matrícula e turma | `Fecha Curso` (início da turma) |
 | Orçamento e cotação com turma | `Fecha Curso` da turma |
 | Orçamento e cotação sem turma (177, 178) | data da COT (complemento) |
 | Aluno, usuário do aluno, vínculo | a primeira `Fecha Curso` do aluno no recorte |
 | Cliente e usuário do cliente | a primeira `Fecha Curso` do recorte |
 | Curso, módulo, redator, habilitação, documento | o instante da carga (não há data histórica) |
+| `turma_redator` | o instante da carga: o `PivotAudit` não aceita atributo de pivot, e a lane 39 muda a assinatura dele; o vínculo não aparece em tela (Claude) |
 
 A tabela `audits` guarda o instante real da carga: a trilha não se retrodata. Instante gravado em
 UTC a partir da data de calendário de Santiago (`FusoDoNegocio`).
