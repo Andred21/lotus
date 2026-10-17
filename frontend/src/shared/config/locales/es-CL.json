@@ -463,6 +463,7 @@
     "contacts": "Contactos"
   },
   "course": {
+    "certificatePreview": "Ver certificado de muestra",
     "new": "Nuevo curso",
     "create": "Crear curso",
     "tabCourses": "Cursos",

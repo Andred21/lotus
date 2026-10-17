@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useTableFilter } from '@shared/hooks'
+import { usePermissions, useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
 import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
@@ -32,12 +32,15 @@ export function CoursesTable({
   onRetry?: () => void | Promise<unknown>
 }) {
   const { t } = useTranslation()
+  const { can } = usePermissions()
   const archived = mode === 'archived'
   const largura = courseWidths(archived)
   const table = useTableFilter(courses, (c) => [c.name, c.technical_name])
   // Abaixo de `sm` a linha carrega um controle só e a presa encolhe junto
   // (item 23, `D-65`).
-  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : '9rem')
+  // Com a amostra do certificado a linha ativa leva um terceiro botão.
+  const podeVerAmostra = can('certification.certificate.view')
+  const colunaDeAcoes = useCollapsibleActionsColumn(archived ? '10rem' : podeVerAmostra ? '12rem' : '9rem')
 
   return (
     <SearchableTableFrame

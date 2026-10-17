@@ -56,6 +56,16 @@ describe('CoursesTable — coluna de ações', () => {
     expect(larguraDaColunaDeAcoes()).toBe('9rem')
   })
 
+  it('com a amostra do certificado, os três botões cabem numa coluna de 12rem', () => {
+    comPermissoes(['catalog.course.delete', 'certification.certificate.view'])
+    montar('active')
+
+    expect(screen.getByRole('button', { name: 'course.certificatePreview' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'archive.archiveAction' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'common.view' })).toBeTruthy()
+    expect(larguraDaColunaDeAcoes()).toBe('12rem')
+  })
+
   it('em 390px, a linha tem UM botão de ações e a coluna encolhe para ele', () => {
     comPermissoes(['catalog.course.delete'])
     setViewportWidth(390)

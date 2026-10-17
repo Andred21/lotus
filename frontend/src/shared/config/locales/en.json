@@ -463,6 +463,7 @@
     "contacts": "Contacts"
   },
   "course": {
+    "certificatePreview": "View sample certificate",
     "new": "New course",
     "create": "Create course",
     "tabCourses": "Courses",
