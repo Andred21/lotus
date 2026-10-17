@@ -309,6 +309,7 @@ export type MonthlyCountData = {
 month: string,
 count: number,
 };
+export type MotivoInidoneidade = 'not_qualified' | 'reuf_invalid';
 export type MovedStudentData = {
 rut: string,
 name: string,

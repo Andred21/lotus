@@ -16,7 +16,7 @@ enum RedatorDocumentType: string
 
     /**
      * O REUF fica fora do self-service (spec D5): ele é a ÚNICA entrada do
-     * gate da RN-09 (`RedatorIdoneidadeService::temReufValido`), que lê
+     * gate da RN-09 (`RedatorIdoneidadeService::motivos()`), que lê
      * `valid_until`. Como a rota de upload aceita `valid_until` do corpo da
      * request, self-service nele deixaria o redator se auto-habilitar por
      * payload. CV, TÍTULO e POSTGRADO não entram em gate nenhum.

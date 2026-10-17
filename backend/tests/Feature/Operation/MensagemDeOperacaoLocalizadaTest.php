@@ -2,14 +2,13 @@
 
 namespace Tests\Feature\Operation;
 
-use App\Domains\Operation\Exceptions\RedatorNaoElegivelException;
 use App\Domains\Operation\Exceptions\TurmaConfiguracaoException;
 use App\Shared\Exceptions\TipoDeRecusa;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * As quatro recusas de Operation falam os três idiomas e declaram o tipo em
+ * As recusas de configuração de turma falam os três idiomas e declaram o tipo em
  * vez do status. Molde do `MensagemDeIdentidadeLocalizadaTest`.
  */
 class MensagemDeOperacaoLocalizadaTest extends TestCase
@@ -17,12 +16,10 @@ class MensagemDeOperacaoLocalizadaTest extends TestCase
     private const CHAVES = [
         'operation.turma.quote_not_approved',
         'operation.turma.already_exists',
-        'operation.redator.not_qualified',
-        'operation.redator.reuf_invalid',
     ];
 
     #[Test]
-    public function as_quatro_recusas_tem_tres_traducoes_distintas(): void
+    public function as_recusas_de_configuracao_tem_tres_traducoes_distintas(): void
     {
         foreach (self::CHAVES as $chave) {
             $valores = [];
@@ -49,24 +46,14 @@ class MensagemDeOperacaoLocalizadaTest extends TestCase
             __('operation.turma.already_exists'),
             TurmaConfiguracaoException::turmaJaExiste()->getMessage(),
         );
-        $this->assertSame(
-            __('operation.redator.not_qualified'),
-            RedatorNaoElegivelException::naoHabilitado()->getMessage(),
-        );
-        $this->assertSame(
-            __('operation.redator.reuf_invalid'),
-            RedatorNaoElegivelException::reufInvalido()->getMessage(),
-        );
     }
 
     #[Test]
-    public function as_quatro_recusam_por_regra_de_negocio(): void
+    public function as_recusas_de_configuracao_de_turma_sao_regra_de_negocio(): void
     {
         foreach ([
             TurmaConfiguracaoException::cotacaoNaoAprovada(),
             TurmaConfiguracaoException::turmaJaExiste(),
-            RedatorNaoElegivelException::naoHabilitado(),
-            RedatorNaoElegivelException::reufInvalido(),
         ] as $recusa) {
             $this->assertSame(TipoDeRecusa::RegraDeNegocio, $recusa->tipo());
             $this->assertSame(422, $recusa->tipo()->status());

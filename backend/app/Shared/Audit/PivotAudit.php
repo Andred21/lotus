@@ -71,8 +71,18 @@ final class PivotAudit
         self::gravar($model, $relation, 'sync', fn () => $model->{$relation}()->sync($desejado));
     }
 
-    /** Acréscimo idempotente ao conjunto. @param  array<int|string>  $ids */
-    public static function syncWithoutDetaching(Model&Auditable $model, string $relation, array $ids): void
+    /**
+     * Acréscimo idempotente ao conjunto.
+     *
+     * `$contexto` é mesclado no `new_values` da MESMA linha de audit (a
+     * designação com motivo de inidoneidade, bloco 39); a chave da relação
+     * sempre vence, então o contexto nunca altera o conjunto gravado. Sem
+     * mudança de conjunto não há audit, com ou sem contexto.
+     *
+     * @param  array<int|string>  $ids
+     * @param  array<string, mixed>  $contexto
+     */
+    public static function syncWithoutDetaching(Model&Auditable $model, string $relation, array $ids, array $contexto = []): void
     {
         $novos = array_values(array_diff(self::normalizar($ids), self::atuais($model, $relation)));
 
@@ -80,7 +90,7 @@ final class PivotAudit
             return;
         }
 
-        self::gravar($model, $relation, 'sync', fn () => $model->{$relation}()->syncWithoutDetaching($novos));
+        self::gravar($model, $relation, 'sync', fn () => $model->{$relation}()->syncWithoutDetaching($novos), $contexto);
     }
 
     /** @param  int|array<int|string>  $ids */
@@ -104,9 +114,10 @@ final class PivotAudit
      * caso da corrida em que outra sessão já aplicou a mesma mudança entre a
      * comparação e a transação.
      */
-    private static function gravar(Model&Auditable $model, string $relation, string $evento, callable $escrita): void
+    /** @param  array<string, mixed>  $contexto */
+    private static function gravar(Model&Auditable $model, string $relation, string $evento, callable $escrita, array $contexto = []): void
     {
-        DB::transaction(function () use ($model, $relation, $evento, $escrita) {
+        DB::transaction(function () use ($model, $relation, $evento, $escrita, $contexto) {
             $antes = self::atuais($model, $relation);
             $escrita();
             $depois = self::atuais($model, $relation);
@@ -118,7 +129,7 @@ final class PivotAudit
             $model->auditEvent = $evento;
             $model->isCustomEvent = true;
             $model->auditCustomOld = [$relation => $antes];
-            $model->auditCustomNew = [$relation => $depois];
+            $model->auditCustomNew = [$relation => $depois] + $contexto;
 
             Event::dispatch(new AuditCustom($model));
 
