@@ -2,11 +2,17 @@
 
 namespace Tests\Support\CargaInicial;
 
+use DateTimeImmutable;
 use DateTimeInterface;
 use OpenSpout\Common\Entity\Cell;
+use OpenSpout\Common\Entity\Cell\FormulaCell;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\Common\Helper\CellHelper;
+use OpenSpout\Writer\XLSX\Helper\DateHelper;
 use OpenSpout\Writer\XLSX\Writer;
+use RuntimeException;
+use ZipArchive;
 
 /**
  * Uma planilha `REGISTROS` inventada: RUTs fictícios com DV válido (gerados em
@@ -17,6 +23,8 @@ use OpenSpout\Writer\XLSX\Writer;
 final class PlanilhaSintetica
 {
     public const SEGREDO = 'SEGREDO-NAO-LER';
+
+    private const PRIMEIRA_LINHA_DE_DADOS = 6;
 
     /** Chave da linha lida => índice da coluna (B=1 … X=23). */
     public const COLUNAS = [
@@ -44,7 +52,7 @@ final class PlanilhaSintetica
         0 => 'N°',
         1 => 'Cº Certificado',
         2 => 'Nombre del curso',
-        3 => 'Realizado en',
+        3 => 'Realizado en:',
         4 => 'Modalidad',
         5 => 'HrCap',
         6 => 'RUT Cliente',
@@ -68,6 +76,16 @@ final class PlanilhaSintetica
         24 => 'Otra columna',
         25 => 'CLAVE',
     ];
+
+    /**
+     * Marca o valor de uma coluna como FÓRMULA com resultado em cache, como a
+     * planilha real traz HrCap, Instructor, Vigencia e F.EMISION (VLOOKUP e
+     * afins). `gravar` escreve `<f>` e `<v>`: o leitor tem de ler o `<v>`.
+     */
+    public static function formula(int|float|string|DateTimeImmutable $valor): FormulaCell
+    {
+        return new FormulaCell('=VLOOKUP(A1,Config!A:B,2,0)', $valor);
+    }
 
     /**
      * Uma linha válida, no formato que o `LeitorDeRegistros` devolve (datas em
@@ -129,6 +147,11 @@ final class PlanilhaSintetica
         // devolveria o número serial.
         $data = (new Style)->withFormat('dd/mm/yyyy');
 
+        // referência da célula => resultado em cache; o writer do OpenSpout grava
+        // `<f>` sem `<v>`, então o `<v>` entra depois, no XML da aba.
+        $emCache = [];
+        $numeroDaLinha = self::PRIMEIRA_LINHA_DE_DADOS;
+
         foreach ($linhas as $linha) {
             $celulas = array_fill(0, 26, null);
 
@@ -138,12 +161,61 @@ final class PlanilhaSintetica
 
             $celulas[25] = self::SEGREDO;
 
-            $writer->addRow(new Row(array_map(
-                fn (mixed $valor) => $valor instanceof DateTimeInterface ? Cell::fromValue($valor, $data) : Cell::fromValue($valor),
-                $celulas,
-            )));
+            $cells = [];
+
+            foreach ($celulas as $indice => $valor) {
+                if ($valor instanceof FormulaCell) {
+                    $resultado = $valor->getComputedValue();
+                    $emCache[CellHelper::getColumnLettersFromColumnIndex($indice).$numeroDaLinha] = $resultado;
+                    // O OpenSpout só grava `<f>`; o resultado entra depois, em `injetarResultados`.
+                    $cells[] = $resultado instanceof DateTimeInterface ? $valor->withStyle($data) : $valor;
+                } else {
+                    $cells[] = $valor instanceof DateTimeInterface ? Cell::fromValue($valor, $data) : Cell::fromValue($valor);
+                }
+            }
+
+            $writer->addRow(new Row($cells));
+            $numeroDaLinha++;
         }
 
         $writer->close();
+
+        if ($emCache !== []) {
+            self::injetarResultados($caminho, $emCache);
+        }
+    }
+
+    /**
+     * Acrescenta o `<v>` (e `t="str"` para texto) a cada célula de fórmula da
+     * aba `REGISTROS`, a segunda do arquivo.
+     *
+     * @param  array<string, int|float|string|DateTimeInterface>  $emCache
+     */
+    private static function injetarResultados(string $caminho, array $emCache): void
+    {
+        $zip = new ZipArchive;
+        $zip->open($caminho);
+        $aba = 'xl/worksheets/sheet2.xml';
+        $xml = $zip->getFromName($aba);
+
+        foreach ($emCache as $referencia => $valor) {
+            $texto = is_string($valor);
+            $v = $valor instanceof DateTimeInterface ? (string) DateHelper::toExcel($valor) : (string) $valor;
+
+            $xml = preg_replace(
+                '/<c r="'.$referencia.'"( s="\d+")?><f>(.*?)<\/f><\/c>/',
+                '<c r="'.$referencia.'"$1'.($texto ? ' t="str"' : '').'><f>$2</f><v>'.htmlspecialchars($v, ENT_XML1).'</v></c>',
+                $xml,
+                1,
+                $trocas,
+            );
+
+            if ($trocas !== 1) {
+                throw new RuntimeException('célula de fórmula '.$referencia.' não achada no XML da aba');
+            }
+        }
+
+        $zip->addFromString($aba, $xml);
+        $zip->close();
     }
 }

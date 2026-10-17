@@ -5,6 +5,8 @@ namespace App\Console\CargaInicial\Extracao;
 use App\Console\CargaInicial\CargaInvalidaException;
 use DateTimeImmutable;
 use DateTimeInterface;
+use OpenSpout\Common\Entity\Cell;
+use OpenSpout\Common\Entity\Cell\FormulaCell;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Exception\IOException;
 use OpenSpout\Reader\XLSX\Options;
@@ -56,7 +58,7 @@ final class LeitorDeRegistros
     private const CABECALHO = [
         1 => 'Cº Certificado',
         2 => 'Nombre del curso',
-        3 => 'Realizado en',
+        3 => 'Realizado en:',
         4 => 'Modalidad',
         5 => 'HrCap',
         6 => 'RUT Cliente',
@@ -120,7 +122,7 @@ final class LeitorDeRegistros
             }
 
             // O corte precede tudo: a partir daqui a coluna Z não existe.
-            $celulas = array_slice(array_replace(array_fill(0, self::COLUNAS_LIDAS, null), $linha->toArray()), 0, self::COLUNAS_LIDAS);
+            $celulas = array_slice(array_replace(array_fill(0, self::COLUNAS_LIDAS, null), $this->valores($linha)), 0, self::COLUNAS_LIDAS);
 
             if ($numero === self::LINHA_DO_CABECALHO) {
                 $this->conferirCabecalho($celulas);
@@ -141,6 +143,20 @@ final class LeitorDeRegistros
         }
 
         return $registros;
+    }
+
+    /**
+     * Célula de fórmula devolve o valor calculado, que o Excel guarda em cache:
+     * `getValue()` seria o texto da fórmula. Os índices de coluna se preservam.
+     *
+     * @return array<int, mixed>
+     */
+    private function valores(Row $linha): array
+    {
+        return array_map(
+            fn (Cell $celula) => $celula instanceof FormulaCell ? $celula->getComputedValue() : $celula->getValue(),
+            $linha->cells,
+        );
     }
 
     /** @param  array<int, mixed>  $celulas */

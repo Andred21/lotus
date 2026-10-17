@@ -133,6 +133,25 @@ class LeitorDeRegistrosTest extends TestCase
         $this->assertSame(['LOT-2026-001', 'LOT-2026-003'], array_column($linhas, 'codigo'));
     }
 
+    public function test_celula_de_formula_le_o_valor_calculado_e_nao_o_texto_da_formula(): void
+    {
+        // Na planilha real HrCap, Instructor, Vigencia e F.EMISION são VLOOKUP com valor em cache.
+        $linhas = (new LeitorDeRegistros)->ler($this->xlsx([
+            PlanilhaSintetica::linha([
+                'horas' => PlanilhaSintetica::formula(8),
+                'instrutor' => PlanilhaSintetica::formula('Relator Inventado Prueba'),
+                'vigencia' => PlanilhaSintetica::formula(new DateTimeImmutable('2028-01-14')),
+                'f_emision' => PlanilhaSintetica::formula(new DateTimeImmutable('2026-02-20')),
+            ]),
+        ]));
+
+        $this->assertSame(8, $linhas[0]['horas']);
+        $this->assertSame('Relator Inventado Prueba', $linhas[0]['instrutor']);
+        $this->assertSame('2028-01-14', $linhas[0]['vigencia']);
+        $this->assertSame('2026-02-20', $linhas[0]['f_emision']);
+        $this->assertStringNotContainsString(PlanilhaSintetica::SEGREDO, json_encode($linhas));
+    }
+
     public function test_cabecalho_divergente_aborta(): void
     {
         $this->expectException(CargaInvalidaException::class);
