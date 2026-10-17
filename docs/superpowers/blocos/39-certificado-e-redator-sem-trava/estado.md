@@ -2,9 +2,9 @@
 schema_version: 3
 id: 39
 slug: 39-certificado-e-redator-sem-trava
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/blocos/39-certificado-e-redator-sem-trava/spec.md
 active_plan: docs/superpowers/blocos/39-certificado-e-redator-sem-trava/plano.md
@@ -17,10 +17,10 @@ branch: feat/39-certificado-e-redator-sem-trava
 worktree: ../lotus-39-certificado-e-redator-sem-trava
 offset: 1
 lane_base: 0740843a
-commit: 451a1179
+commit: 56c6a991
 blocker: null
-updated_at: 2026-10-17T15:29:00-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+updated_at: 2026-10-17T15:58:49-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 39 — estado
