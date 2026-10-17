@@ -93,6 +93,9 @@
   o `33` e o `34` são os dois blocos que a spec do item 10 v2 prometeu como "bloco próprio, a criar
   pelo João no main tree" (`specs/archive/2026-09-02-infra-producao-provisionamento-aws-design.md:53-58`)
   e que nunca entraram nesta fila.
+  O `39` nasceu em 2026-10-17, aberto pelo João quando o smoke da aceitação do `13` recusou emitir
+  certificado em produção (`sin_plantilla`). **O `38` foi saltado**: a branch
+  `docs/backlog-ficha-38-carga-inicial-producao` já o reserva sem ficha aqui.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -119,10 +122,13 @@ central; o **33** entra logo atrás, porque produção não entrega e-mail nenhu
 segurança; o **34** entra antes do **13**, que é gate de medição e não constrói alarme. Os três são
 da frente Infra (lane-b) e não disputam árvore com os de Frontend (lane-c) — a ordem que vincula é a
 de cada frente. **Não promove nada** — promover segue sendo ato explícito no `state.md`. A fila
-abaixo está escrita nesta ordem.
+abaixo está escrita nesta ordem. **Emendada em 2026-10-17, por decisão do João:** o **39** entra na
+posição 1 — a aceitação do **13** parou no smoke porque produção recusa emitir certificado com
+`sin_plantilla`, e o 13 só volta depois que o 39 mesclar.
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
+| 1 | **39** `certificado-e-redator-sem-trava` | Cross-cutting | Destrava o smoke da aceitação do 13: produção não emite certificado sem modelo cadastrado por curso |
 | 2 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
@@ -145,6 +151,52 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 ---
 
 # Fila priorizada
+
+## 39. `certificado-e-redator-sem-trava`
+
+**Prioridade:** P0 (destrava a aceitação do 13) · **Frente:** Cross-cutting (Certification + Catalog + Operation, backend e frontend) · **Contexto:** sim · **Depende:** —
+**Fonte:** Drive (requisitos, RN-09); smoke do runbook `deploy/aws/README.md` §15, passo 3, em
+2026-10-17; `der-fisico.md` (`course_certificate_templates`); `CertificateTemplateResolver`,
+`EmissionPanelQuery::emissionBlockedFor`, `EmissionBlockReason`; `RedatorIdoneidadeService`.
+
+**Por que existe:** em produção a emissão recusa com `sin_plantilla`, porque nenhum curso tem
+registro em `course_certificate_templates`. A aceitação do 13 parou nisso, e a Fase B está pausada
+no smoke. A RN-09 trava a associação do redator, e o João quer que ela apenas avise.
+
+**Objetivo:** produção emite certificado de qualquer curso sem cadastro prévio, e a idoneidade do
+redator vira aviso em vez de trava.
+
+**Escopo:**
+- **Certificado sem modelo por curso:** todo curso emite pelo template Blade padrão
+  (`certification/certificate.blade.php`), e `sin_plantilla` deixa de bloquear a emissão; a tela do
+  curso pré-visualiza o certificado daquele curso.
+- Decidir no brainstorming: de onde vem a cidade da turma online sem template (porta 5,
+  `plantilla_sin_ciudad`); de onde vem a vigência (`validity_months` mora no template); se os
+  templates por curso já cadastrados continuam valendo como override ou saem.
+- **Certificado já emitido não muda.** Ele lê do snapshot, e um teste prova que a mudança não
+  altera nenhum certificado emitido.
+- **Idoneidade vira aviso:** `RedatorIdoneidadeService::assertEligible` deixa de travar. O aviso
+  aparece durante a associação e deixa seguir. O brainstorming decide se isso vale para a designação
+  redator→turma (`DesignateRedatorAction`), para a habilitação redator↔curso
+  (`CourseRedatorController`) ou para as duas.
+- Registro (ADR/ruling) do rebaixamento da RN-09, com a decisão explícita do João e o reflexo no
+  Drive, que vence sobre os `/docs`.
+- `generated.ts` regenerado se algum DTO mudar (lei 3); a UI do aviso e a do preview só usam
+  `shared/ui` (lei 6).
+
+**Fora:** editor visual de template; mudar o layout do certificado (`P-28` segue com a Lotus);
+mexer no bloco 13, que volta depois do merge deste; escrever dado em produção, que é ação só do
+João.
+
+**Restrições:** produção tem dado real de cliente, então nada de migration destrutiva.
+`efeito_externo` é decidido no planejamento: o efeito só chega à produção pelo espelho corporativo
+e pela promoção pelo botão.
+
+**DoD:** em teste, um curso sem template emite certificado e a pré-visualização dele renderiza; um
+certificado emitido antes da mudança continua idêntico (snapshot); a associação de um redator
+inidôneo passa e mostra o aviso; o ruling da RN-09 está registrado.
+
+---
 
 ## 9. `administracao-roles-permissoes-redesign`
 
