@@ -722,9 +722,16 @@
       "designate": "Designar redator",
       "remove": "Remover",
       "none": "Nenhum redator designado.",
-      "helpNote": "Só aparecem redatores habilitados a este curso e com documentação vigente.",
-      "pickerTitle": "Redatores idôneos",
-      "pickerEmpty": "Nenhum redator idôneo para este curso.",
+      "helpNote": "Todos os redatores aparecem. Quem não cumpre a idoneidade aparece com aviso e pede confirmação.",
+      "pickerTitle": "Designar redator",
+      "pickerEmpty": "Nenhum redator disponível para designar.",
+      "motivo": {
+        "not_qualified": "Não habilitado ao curso",
+        "reuf_invalid": "Sem REUF vigente"
+      },
+      "confirmIneligibleTitle": "Designar com aviso de idoneidade",
+      "confirmIneligibleMessage": "Não cumpre a idoneidade: {{motivos}}. Designar mesmo assim?",
+      "confirmIneligibleAction": "Designar mesmo assim",
       "pick": "Designar"
     },
     "enrollment": {

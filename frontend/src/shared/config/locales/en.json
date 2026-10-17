@@ -722,9 +722,16 @@
       "designate": "Assign redator",
       "remove": "Remove",
       "none": "No redator assigned.",
-      "helpNote": "Only redatores enabled for this course with valid documentation are shown.",
-      "pickerTitle": "Eligible redatores",
-      "pickerEmpty": "No eligible redatores for this course.",
+      "helpNote": "All redatores are listed. Those who do not meet suitability show a warning and ask for confirmation.",
+      "pickerTitle": "Assign redator",
+      "pickerEmpty": "No redatores available to assign.",
+      "motivo": {
+        "not_qualified": "Not enabled for the course",
+        "reuf_invalid": "No valid REUF"
+      },
+      "confirmIneligibleTitle": "Assign with suitability warning",
+      "confirmIneligibleMessage": "Does not meet suitability: {{motivos}}. Assign anyway?",
+      "confirmIneligibleAction": "Assign anyway",
       "pick": "Assign"
     },
     "enrollment": {
