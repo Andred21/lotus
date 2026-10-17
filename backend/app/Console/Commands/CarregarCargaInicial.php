@@ -8,8 +8,10 @@ use App\Console\CargaInicial\CargaInvalidaException;
 use App\Console\CargaInicial\CarregadorDeCadastros;
 use App\Console\CargaInicial\CarregadorDeHistorico;
 use App\Console\CargaInicial\Contagem;
+use App\Shared\Files\Actions\UploadFileAction;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -20,7 +22,8 @@ use Throwable;
  * que SEMPRE desfaz, sem subir documento ao disco: um conflito aparece ali e
  * não deixa arquivo órfão. `--simular` para depois do ensaio. A carga real
  * roda numa transação só; qualquer exceção desfaz as linhas, e o que já subiu
- * ao disco é reportado, porque a transação do banco não o alcança.
+ * ao disco é apagado em seguida (a transação do banco não o alcança). O que
+ * não for possível apagar é listado, porque é PDF com dado pessoal.
  */
 class CarregarCargaInicial extends Command
 {
@@ -111,9 +114,11 @@ class CarregarCargaInicial extends Command
         } catch (Throwable $e) {
             $this->error('A carga foi desfeita: '.$e->getMessage());
 
-            if ($contagem->arquivosGravados() !== []) {
-                $this->warn('Arquivos gravados no disco sem linha no banco:');
-                foreach ($contagem->arquivosGravados() as $path) {
+            $restantes = $this->descartar($contagem->arquivosGravados());
+
+            if ($restantes !== []) {
+                $this->warn('Arquivos gravados no disco sem linha no banco, que não foi possível apagar (contêm dado pessoal, apague à mão):');
+                foreach ($restantes as $path) {
                     $this->line("  - {$path}");
                 }
             }
@@ -125,6 +130,31 @@ class CarregarCargaInicial extends Command
         $this->imprimir($contagem);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Compensa o upload que a transação do banco não desfaz. O `discard` não
+     * propaga erro; por isso a conferência é pelo disco: o que ainda existe
+     * depois dele é devolvido.
+     *
+     * @param  list<string>  $paths
+     * @return list<string>
+     */
+    private function descartar(array $paths): array
+    {
+        $upload = app(UploadFileAction::class);
+        $disk = config('filesystems.default');
+        $restantes = [];
+
+        foreach ($paths as $path) {
+            $upload->discard($path, $disk);
+
+            if (Storage::disk($disk)->exists($path)) {
+                $restantes[] = $path;
+            }
+        }
+
+        return $restantes;
     }
 
     private function imprimir(Contagem $contagem): void

@@ -5,12 +5,18 @@ namespace Tests\Feature\CargaInicial;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Identity\Models\User;
+use App\Shared\Files\Actions\UploadFileAction;
+use App\Shared\Files\Models\File;
+use Carbon\CarbonInterface;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use OwenIt\Auditing\Models\Audit;
+use RuntimeException;
 use Tests\Support\CargaInicial\CargaSintetica;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -89,6 +95,54 @@ class CarregarCargaInicialCommandTest extends TestCase
             ->expectsOutputToContain('176')->assertExitCode(1);
         $this->assertSame(0, Certificate::count());
         $this->assertSame([], Storage::disk('s3')->allFiles());
+    }
+
+    public function test_falha_depois_do_upload_apaga_do_disco_o_que_ja_subiu(): void
+    {
+        // O segundo upload falha: o primeiro já está no disco, e a transação do banco não o alcança.
+        $this->app->instance(UploadFileAction::class, new class extends UploadFileAction
+        {
+            private int $chamadas = 0;
+
+            public function execute(Model $owner, UploadedFile $file, string $type, ?CarbonInterface $validUntil = null, ?string $disk = null): File
+            {
+                if (++$this->chamadas === 2) {
+                    throw new RuntimeException('disco indisponivel');
+                }
+
+                return parent::execute($owner, $file, $type, $validUntil, $disk);
+            }
+        });
+
+        $this->artisan('lotus:carga-inicial', ['pasta' => $this->pasta])
+            ->expectsOutputToContain('A carga foi desfeita')->assertExitCode(1);
+
+        $this->assertSame(0, Certificate::count());
+        $this->assertSame([], Storage::disk('s3')->allFiles());
+    }
+
+    public function test_arquivo_que_nao_se_apaga_e_listado_para_remocao_manual(): void
+    {
+        $this->app->instance(UploadFileAction::class, new class extends UploadFileAction
+        {
+            private int $chamadas = 0;
+
+            public function execute(Model $owner, UploadedFile $file, string $type, ?CarbonInterface $validUntil = null, ?string $disk = null): File
+            {
+                if (++$this->chamadas === 2) {
+                    throw new RuntimeException('disco indisponivel');
+                }
+
+                return parent::execute($owner, $file, $type, $validUntil, $disk);
+            }
+
+            public function discard(string $path, ?string $disk = null): void {}
+        });
+
+        $this->artisan('lotus:carga-inicial', ['pasta' => $this->pasta])
+            ->expectsOutputToContain('não foi possível apagar')->assertExitCode(1);
+
+        $this->assertCount(1, Storage::disk('s3')->allFiles());
     }
 
     public function test_arquivo_invalido_sai_com_erro(): void

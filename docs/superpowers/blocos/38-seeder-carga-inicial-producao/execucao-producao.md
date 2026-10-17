@@ -71,14 +71,16 @@ Do WSL, com o `.pem` da §6 do runbook:
 
 ```bash
 PEM=~/.ssh/<o .pem da §6>
-scp -i "$PEM" -r /home/jvbat/lotus-carga-inicial-38 ubuntu@<EIP>:/tmp/carga-inicial
+scp -i "$PEM" -r /home/jvbat/lotus-carga-inicial-38 ubuntu@<EIP>:~/carga-inicial
 ```
 
-No host:
+A cópia cai no home do `ubuntu`, não em `/tmp`: o `scp` cria os arquivos com 644 e `/tmp` é legível
+por qualquer usuário do host. No host, feche a pasta ANTES de movê-la:
 
 ```bash
+chmod -R go-rwx ~/carga-inicial
 sudo rm -rf /opt/lotus/carga-inicial
-sudo mv /tmp/carga-inicial /opt/lotus/carga-inicial
+sudo mv ~/carga-inicial /opt/lotus/carga-inicial
 sudo chown -R root:root /opt/lotus/carga-inicial
 sudo chmod -R a+rX /opt/lotus/carga-inicial
 ```
@@ -120,8 +122,10 @@ Esperado:
 - a segunda carga sai `0` com "A criar" = 0 em todas as linhas (a linha `modulos` não aparece:
   curso existente não toca os módulos).
 
-Se a carga real falhar, ela imprime "Arquivos gravados no disco sem linha no banco:" com os
-caminhos no S3; nada fica no banco. Mostre a saída a Claude antes de repetir.
+Se a carga real falhar, ela imprime "A carga foi desfeita: …", nada fica no banco e os documentos
+que já tinham subido ao S3 são apagados pela própria carga. Só se algum não puder ser apagado ela
+lista "Arquivos gravados no disco sem linha no banco, que não foi possível apagar", com os caminhos:
+são PDFs com dado pessoal, remova-os (ver Rollback). Mostre a saída a Claude antes de repetir.
 
 ## 7. Amostra: `/validar` e PDF
 
@@ -144,4 +148,15 @@ quando o João der a carga por aceita.
 ## Rollback
 
 Restaurar o dump do passo 5 pelo runbook `deploy/aws/README.md` §8.1.1. Os 8 documentos que a carga
-subiu ao S3 ficam órfãos depois do restore; são inofensivos.
+subiu ao S3 ficam órfãos depois do restore, **sem linha em `files`**, e NÃO são inofensivos: são
+PDFs com dado pessoal (CV, certidões) dos redatores. Remova-os. Antes do restore, anote os caminhos
+(depois dele a tabela `files` deixa de listá-los):
+
+```bash
+sudo -i sh -c '<COMPOSE> run --rm app php artisan tinker --execute="echo App\\Shared\\Files\\Models\\File::where(\"fileable_type\", \"redator\")->pluck(\"path\")->implode(PHP_EOL);"'
+```
+
+Depois do restore, apague cada caminho do bucket (`aws s3 rm "s3://<BUCKET>/<caminho>"`, com o
+perfil do runbook) e confira com `aws s3 ls "s3://<BUCKET>/redator/" --recursive` que nenhum dos
+caminhos anotados sobrou. Se a carga falhou e imprimiu caminhos que não conseguiu apagar, a remoção
+é a mesma, com esses caminhos.
