@@ -52,6 +52,14 @@ class ExtrairCargaInicial extends Command
             return self::FAILURE;
         }
 
+        // Sem sucesso completo não sobra arquivo canônico: um carga.json de
+        // execução anterior não pode ser carregado contra documentos novos.
+        foreach ([ArquivoDeCarga::ARQUIVO, 'relatorio.md'] as $antigo) {
+            if (is_file($dados.'/'.$antigo)) {
+                unlink($dados.'/'.$antigo);
+            }
+        }
+
         try {
             $linhas = (new LeitorDeRegistros)->ler($origem.'/'.$complemento['planilha']);
         } catch (CargaInvalidaException $e) {

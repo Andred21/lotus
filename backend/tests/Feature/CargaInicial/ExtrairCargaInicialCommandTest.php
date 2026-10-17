@@ -180,6 +180,20 @@ class ExtrairCargaInicialCommandTest extends TestCase
         $this->assertFileDoesNotExist($this->dados.'/carga.json');
     }
 
+    public function test_reexecucao_que_falha_nao_deixa_carga_nem_relatorio_antigos(): void
+    {
+        $this->executar()->assertExitCode(0);
+        $this->assertFileExists($this->dados.'/carga.json');
+        $this->assertFileExists($this->dados.'/relatorio.md');
+
+        unlink($this->origem.'/Instructores/R1/cv-r1.pdf');
+
+        $this->executar()->assertExitCode(1);
+
+        $this->assertFileDoesNotExist($this->dados.'/carga.json');
+        $this->assertFileDoesNotExist($this->dados.'/relatorio.md');
+    }
+
     public function test_complemento_ausente_sai_com_1(): void
     {
         unlink($this->dados.'/complemento.json');
