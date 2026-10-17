@@ -61,7 +61,7 @@ class ParentLockOnChildWriteTest extends TestCase
         'Operation/Actions/RemoveRedatorAction.php' => 'O `detach` REDUZ vínculo. A janela da P-49 é pousar filho ATIVO sob pai arquivado; remover não pousa nada.',
         'Operation/Actions/DeleteTurmaDocumentAction.php' => 'O `delete()` REDUZ. Mesmo motivo do `RemoveRedatorAction`.',
         'Certification/Actions/IssueCertificateAction.php' => 'Certificado não é filho de nenhuma das duas cascatas: `Turma::booted` varre `enrollments` e `files`, '.
-            '`Redator::booted` varre `documents` e `user`. O `Redator` aqui é LIDO pelas seis portas, não escrito.',
+            '`Redator::booted` varre `documents` e `user`. O `Redator` aqui é LIDO pelas cinco portas, não escrito.',
         'Certification/Actions/BatchIssueCertificatesAction.php' => 'Não escreve: delega item a item ao `IssueCertificateAction`, que já está declarado acima.',
     ];
 

@@ -108,7 +108,7 @@ class CertificateEligibility
      * O `withMessages` daqui recebe variáveis (`[$field => $message]`), então o
      * detector de `MensagemLiteralTest` não enxergava a frase — ela mora no
      * chamador, seis linhas acima, longe da janela dele. Foi por essa fresta
-     * que as seis recusas ficaram literais em es-CL depois de o bloco de i18n
+     * que as recusas ficaram literais em es-CL depois de o bloco de i18n
      * traduzir as outras 41 (Q-7 do review de 2026-09-03). A catraca agora
      * segue encaminhador: helper que repassa para `withMessages` é porta de
      * mensagem, e frase literal no chamador dele reprova igual.

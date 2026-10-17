@@ -148,7 +148,7 @@ final class IssuableEnrollmentBuilder
         // `code` fica null de propósito: é `unique`, e nenhuma asserção nos
         // 8 arquivos lê o código do orçamento — só o `client_id` importa aqui.
         // Um literal fixo colidiria assim que um teste materializasse mais de
-        // uma cadeia (ex.: CertificateEligibilityTest, sete cadeias por setUp).
+        // uma cadeia (ex.: CertificateEligibilityTest, cinco cadeias por setUp).
         $budget = Budget::create([
             'client_id' => $this->client->id,
             'code' => null,

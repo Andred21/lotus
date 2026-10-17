@@ -113,8 +113,9 @@ final class PivotAudit
      * significa que nada mudou — e o D12 diz que aí não há o que auditar. É o
      * caso da corrida em que outra sessão já aplicou a mesma mudança entre a
      * comparação e a transação.
+     *
+     * @param  array<string, mixed>  $contexto
      */
-    /** @param  array<string, mixed>  $contexto */
     private static function gravar(Model&Auditable $model, string $relation, string $evento, callable $escrita, array $contexto = []): void
     {
         DB::transaction(function () use ($model, $relation, $evento, $escrita, $contexto) {

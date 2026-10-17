@@ -171,7 +171,7 @@ class IssueCertificateTest extends TestCase
 
     /**
      * Spec §5.2: arquivar o redator não pode derrubar a emissão de uma turma
-     * que ele JÁ ministrou. Quem autoriza a emissão é a porta 6 — designação na
+     * que ele JÁ ministrou. Quem autoriza a emissão é a porta 5 — designação na
      * turma —, e a designação sobrevive ao arquivamento: `turma_redator` não
      * tem `deleted_at`. O `findOrFail` do controller, escopado por
      * `SoftDeletes`, recusava com 404 ANTES de o `CertificateEligibility`

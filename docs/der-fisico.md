@@ -111,7 +111,7 @@ entra pelo encerramento da OS, não pela turma.
 - **RUT único** em `users.rut` (validação = `ValidRut` de estrutura + `unique:users,rut` com `withTrashed` no check).
 - **Status derivado, não persistido:** `budgets` não tem coluna `status`/`total` — o `BudgetSummaryService` deriva das cotações (bcmath). Ao criar tabela futura, não "cachear" agregado sem necessidade real.
 - **Coleção nested no DTO é `Optional`, não `array = []`** (ADR-04/lição do Bloco 5): em
-  `CourseData`, `templates`/`modules` ausentes do payload significam "não mexe"; `[]` apaga. Um
+  `CourseData`, `modules` ausente do payload significa "não mexe"; `[]` apaga. Um
   default `[]` fazia o replace-total da Action apagar a coleção de quem só omitiu o campo — em
   silêncio. Toda coleção nested read-write futura nasce `Optional`.
   Desde 2026-08-13 a lei tem mecanismo, e não só convenção:

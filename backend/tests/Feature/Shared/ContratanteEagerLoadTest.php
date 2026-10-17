@@ -89,7 +89,7 @@ class ContratanteEagerLoadTest extends TestCase
         ]);
     }
 
-    /** Cadeia que passa nas seis portas do `CertificateEligibility`. */
+    /** Cadeia que passa nas cinco portas do `CertificateEligibility`. */
     private function makeEmitivel(): void
     {
         $n = ++$this->seq;

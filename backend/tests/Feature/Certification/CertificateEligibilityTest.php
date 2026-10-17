@@ -48,7 +48,7 @@ class CertificateEligibilityTest extends TestCase
      * que "alguma" ValidationException subiu, e passava a ser vacuoso assim que
      * duas portas fechassem no mesmo cenário: provado em 2026-08-08 removendo
      * `assertTurmaConcluida()` da face de emissão — o teste continuava verde,
-     * porque a porta 6 (redator não designado) recusava em seguida.
+     * porque a porta 5 (redator não designado) recusava em seguida.
      *
      * @var array<string, string>
      */
@@ -271,7 +271,7 @@ class CertificateEligibilityTest extends TestCase
     /**
      * Cada reprovada nasce da própria cadeia via o builder. Cliente e redator
      * saem com RUT nulo para não colidir com o índice único de `users.rut`
-     * entre os sete cenários deste setUp (o default do builder repetiria o
+     * entre os cinco cenários deste setUp (o default do builder repetiria o
      * mesmo RUT em cada instância). O ALUNO não pode: o `EmissionPanelQuery`
      * projeta toda turma concluída — as reprovadas inclusive — e
      * `EmissionPanelEnrollmentData::$student_rut` é `string` não-nulo, então
