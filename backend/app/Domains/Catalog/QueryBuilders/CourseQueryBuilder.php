@@ -6,21 +6,21 @@ use App\Shared\Concerns\LoadsCascadedChildren;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Projeção do curso: `CourseData::fromModel` lê `certificateTemplates`,
- * `redatores` e `modules`, e a lista do que carregar mora AQUI, não em cada
+ * Projeção do curso: `CourseData::fromModel` lê `redatores` e
+ * `modules`, e a lista do que carregar mora AQUI, não em cada
  * caller (B5).
  */
 class CourseQueryBuilder extends Builder
 {
     use LoadsCascadedChildren;
 
-    public const LISTING = ['certificateTemplates', 'redatores', 'modules'];
+    public const LISTING = ['redatores', 'modules'];
 
     /**
      * As coleções que a cascata leva junto. `redatores` fica fora: é habilitação
      * por pivot puro, que o arquivamento não toca.
      */
-    private const CASCADED = ['certificateTemplates', 'modules'];
+    private const CASCADED = ['modules'];
 
     public function withListingData(): static
     {

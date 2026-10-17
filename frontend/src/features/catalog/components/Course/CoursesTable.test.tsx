@@ -16,7 +16,7 @@ vi.mock('react-i18next', async (importOriginal) => {
 
 const CURSO = {
   id: 1, name: 'Alta tensión', technical_name: 'AT-01', description: null, workload_hours: 16,
-  templates: [], modules: [], redator_ids: [], modules_total_hours: 16,
+  modules: [], redator_ids: [], modules_total_hours: 16,
   archived_at: '2026-09-01T10:00:00Z', archived_by: 'Admin Lotus',
 } as unknown as CourseRow
 

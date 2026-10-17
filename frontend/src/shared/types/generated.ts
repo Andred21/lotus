@@ -151,12 +151,6 @@ por_vencer: number,
 vencido: number,
 revocado: number,
 };
-export type CertificateTemplateData = {
-id: undefined | number,
-version: undefined | number,
-layout_config: Record<string, any>,
-validity_months: undefined | number | null,
-};
 export type ClientAddressData = {
 id: undefined | number,
 line1: undefined | string | null,
@@ -195,7 +189,6 @@ name: string,
 technical_name: undefined | string | null,
 description: undefined | string | null,
 workload_hours: number,
-templates: CertificateTemplateData[] | undefined,
 modules: CourseModuleData[] | undefined,
 redator_ids: number[],
 modules_total_hours: undefined | number,

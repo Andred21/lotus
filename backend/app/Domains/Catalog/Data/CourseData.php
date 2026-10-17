@@ -16,10 +16,11 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * e saída); `modules_total_hours` é derivado em runtime — não existe coluna,
  * e é independente de `workload_hours` (contratado, não se ajusta à soma).
  *
- * `templates` e `modules` são `Optional` na ENTRADA: ausente = não mexe na
- * coleção; `[]` = apaga tudo (explícito). Sem o `Optional`, um payload que
- * apenas omite a coleção apagava todos os registros dela em silêncio — peso
- * legal. A saída (`fromModel`) sempre preenche as duas.
+ * `modules` é `Optional` na ENTRADA: ausente = não mexe na coleção; `[]` =
+ * apaga tudo (explícito). Sem o `Optional`, um payload que apenas omite a
+ * coleção apagava todos os registros dela em silêncio — peso legal. A saída
+ * (`fromModel`) sempre a preenche. Templates de certificado não fazem parte do
+ * contrato desde o bloco 39: chave `templates` no payload é ignorada.
  */
 #[TypeScript]
 class CourseData extends Data
@@ -32,9 +33,6 @@ class CourseData extends Data
         public string|Optional|null $description = new Optional,
         #[Required]
         public int $workload_hours = 0,
-        /** @var array<CertificateTemplateData>|Optional */
-        #[DataCollectionOf(CertificateTemplateData::class)]
-        public array|Optional $templates = new Optional,
         /** @var array<CourseModuleData>|Optional */
         #[DataCollectionOf(CourseModuleData::class)]
         public array|Optional $modules = new Optional,
@@ -54,7 +52,6 @@ class CourseData extends Data
             technical_name: $course->technical_name,
             description: $course->description,
             workload_hours: $course->workload_hours,
-            templates: CertificateTemplateData::collect($course->certificateTemplates->all()),
             modules: CourseModuleData::collect($course->modules->all()),
             redator_ids: $course->redatores->pluck('id')->all(),
             modules_total_hours: $course->modules->sum(

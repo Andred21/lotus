@@ -32,7 +32,7 @@ docker compose exec -T app php artisan typescript:transform
 - **Coleção nested read-write nasce `Optional`** (`array|Optional = new Optional`), com `|Optional`
   **no docblock `@var` também** — é ele que produz o `| undefined` no `generated.ts`. Ausente = não
   mexe; `[]` = apaga. Default `array = []` apaga a coleção de quem só omitiu o campo — em silêncio,
-  com peso legal. Ref.: `CourseData::$templates`/`$modules`, `ClientData::$addresses`/`$contacts`.
+  com peso legal. Ref.: `CourseData::$modules`, `ClientData::$addresses`/`$contacts`.
   **Coleção que só existe na saída leva `#[ReadOnlyCollection]`** (`App\Shared\Data\Attributes`).
   Guarda: `tests/Feature/Shared/PersistenceLawsTest.php`.
 - **Campo de escrita com default não-`Optional` rebaixa dado em silêncio** no PUT parcial.

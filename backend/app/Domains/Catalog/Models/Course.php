@@ -15,8 +15,9 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * Curso do catálogo. NÃO tem valor (preço vive na cotação). Templates de
- * certificado são config versionada (não `files`). Habilitação redator↔curso
- * (idoneidade) via pivot puro `course_redator`.
+ * certificado: legado desde o bloco 39 — nenhuma leitura nem escrita da
+ * aplicação; a relação e a cascata de arquivamento ficam por rastro.
+ * Habilitação redator↔curso (idoneidade) via pivot puro `course_redator`.
  */
 class Course extends Model implements Auditable
 {

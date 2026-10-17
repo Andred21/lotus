@@ -99,7 +99,7 @@ class ListQueryBudgetTest extends TestCase
         'api/publico/certificados/{uuid}' => 'validação pública de UM certificado pelo uuid',
         'api/turmas/{turma}' => 'detalhe de UMA turma — o que cresce ali são as listas aninhadas, cobertas em COM_PAI',
         'api/certificates/{certificate}' => 'detalhe de UM certificado, lido pelo snapshot congelado na emissão',
-        'api/courses/{course}' => 'detalhe de UM curso — módulos e templates são coleções bounded do próprio curso',
+        'api/courses/{course}' => 'detalhe de UM curso — módulos são coleções bounded do próprio curso',
         'api/clients/{client}' => 'detalhe de UM cliente com seus endereços e contatos, coleções bounded do cadastro',
         'api/budgets/{budget}' => 'detalhe de UM orçamento — as cotações dele têm cenário próprio em COM_PAI',
         'api/quotes/{quote}' => 'detalhe de UMA cotação, com os arquivos anexados a ela',

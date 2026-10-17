@@ -62,22 +62,21 @@ class CourseArchiveEndpointTest extends TestCase
         $this->postJson("/api/courses/{$course->id}/restore")->assertNotFound();
     }
 
-    public function test_arquivado_mostra_modulos_e_templates_que_a_cascata_levou(): void
+    public function test_arquivado_mostra_os_modulos_que_a_cascata_levou(): void
     {
         // Gêmeo do teste do cliente (Q-8): sem o eager load com `withTrashed()`
-        // o payload do arquivado chega com as duas coleções vazias, negando o
+        // o payload do arquivado chega com os módulos vazios, negando o
         // que o curso tinha no instante do arquivamento.
         $this->actingAsAdmin();
 
         $course = $this->makeCourse(['name' => 'Alta Tensión']);
-        $this->makeTemplate($course->id, ['version' => 1]);
         $course->modules()->create(['sort_order' => 1, 'name' => 'Módulo 1']);
 
         $course->delete();
 
         $this->getJson('/api/courses/archived')
             ->assertOk()
-            ->assertJsonCount(1, '0.course.templates')
+            ->assertJsonMissingPath('0.course.templates')
             ->assertJsonCount(1, '0.course.modules')
             ->assertJsonPath('0.course.modules.0.name', 'Módulo 1');
     }
