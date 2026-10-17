@@ -51,6 +51,11 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
+      # Os testes da carga inicial (DocumentosTest e ExtrairCargaInicialCommandTest)
+      # rodam pdfseparate e pdfunite; o ubuntu-latest nao traz o poppler.
+      - name: Instala poppler-utils
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
       # phpunit.xml ja fixa DB_CONNECTION=sqlite e DB_DATABASE=:memory:
       # (linhas 26-27), entao nenhum servico de banco sobe aqui.
       - name: Suite backend
