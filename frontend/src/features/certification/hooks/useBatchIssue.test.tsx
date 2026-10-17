@@ -45,7 +45,6 @@ function turmaWith(enrollments: EmissionPanelEnrollmentData[]): EmissionPanelTur
     course_name: 'Alta Tensión',
     client_name: 'Cliente X',
     end_date: '2026-01-01',
-    template_validity_months: null,
     emission_blocked: null,
     enrollments,
     redatores: [{ redator_id: 9, name: 'Redator Uno' }],

@@ -3,11 +3,10 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateSnapshotBuilder;
-use App\Domains\Certification\Services\CertificateTemplateResolver;
+use App\Domains\Certification\Services\EmissionCityResolver;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
@@ -33,8 +32,6 @@ class CertificateSnapshotTest extends TestCase
     private Quote $quote;
 
     private Course $course;
-
-    private CourseCertificateTemplate $template;
 
     private Turma $turma;
 
@@ -63,15 +60,10 @@ class CertificateSnapshotTest extends TestCase
                 'description' => 'abordó las responsabilidades del Jefe de Faena en la seguridad eléctrica.',
             ])
             ->turma(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => 'Santiago'])
-            ->template([
-                'version' => 2,
-                'layout_config' => ['orientation' => 'landscape', 'city' => 'Valparaíso'],
-            ])
             ->create();
 
         $this->client = $builder->clientModel();
         $this->course = $builder->courseModel();
-        $this->template = $builder->templateModel();
         $this->turma = $builder->turmaModel();
         $this->quote = $this->turma->quote;
         $this->budget = $this->quote->budget;
@@ -108,10 +100,7 @@ class CertificateSnapshotTest extends TestCase
      */
     private function emissionCity(): string
     {
-        return app(CertificateTemplateResolver::class)->emissionCityFor(
-            $this->turma->fresh(),
-            $this->template,
-        );
+        return app(EmissionCityResolver::class)->emissionCityFor($this->turma->fresh());
     }
 
     public function test_snapshot_tem_exatamente_as_chaves_e_valores_dos_models(): void
@@ -119,7 +108,6 @@ class CertificateSnapshotTest extends TestCase
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $this->enrollment,
             $this->redator,
-            $this->template,
             now(),
             $this->emissionCity(),
         );
@@ -162,12 +150,12 @@ class CertificateSnapshotTest extends TestCase
                 'approval_status' => 'aprobado',
                 'attendance_pct' => '87.50',
             ],
-            // Do `layout_config` só a `city` tem consumidor desde o D-P9, e é
-            // ela que congela nomeada (B2). Snapshot da versão 1 guardava o
-            // JSON inteiro, e a leitura aceita as duas formas.
+            // Bloco 39: o template deixou de existir na emissão. A chave
+            // segue no snapshot (schema 2) com `version` e `city` nulos, para
+            // o leitor dos certificados antigos e dos novos ser um só.
             'template' => [
-                'version' => 2,
-                'city' => 'Valparaíso',
+                'version' => null,
+                'city' => null,
             ],
             'ciudad_emision' => 'Santiago',
             'emitido_em' => '2026-08-05',
@@ -179,7 +167,6 @@ class CertificateSnapshotTest extends TestCase
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $this->enrollment,
             $this->redator,
-            $this->template,
             now(),
             $this->emissionCity(),
         );
@@ -210,7 +197,6 @@ class CertificateSnapshotTest extends TestCase
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $this->enrollment,
             $this->redator,
-            $this->template,
             now(),
             $this->emissionCity(),
         );
@@ -249,7 +235,6 @@ class CertificateSnapshotTest extends TestCase
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $freshEnrollment,
             $this->redator->fresh(),
-            $this->template,
             now(),
             $this->emissionCity(),
         );
@@ -258,44 +243,9 @@ class CertificateSnapshotTest extends TestCase
         $this->assertSame('76.123.456-7', $snapshot->cliente->rut);
     }
 
-    public function test_template_persistido_nao_muda_quando_template_e_editado_e_arquivado(): void
+    public function test_turma_online_usa_cidade_do_emissor_e_nao_endereco_do_cliente(): void
     {
-        $snapshot = app(CertificateSnapshotBuilder::class)->build(
-            $this->enrollment,
-            $this->redator,
-            $this->template,
-            now(),
-            $this->emissionCity(),
-        );
-        $certificate = Certificate::create([
-            'uuid' => (string) Str::uuid(),
-            'enrollment_id' => $this->enrollment->id,
-            'course_id' => $this->course->id,
-            'redator_id' => $this->redator->id,
-            'codigo' => 'LOT-2026-1000',
-            'snapshot' => $snapshot,
-            'valido_ate' => null,
-            'status' => CertificateStatus::Emitido,
-            'revoked_at' => null,
-            'revocation_reason' => null,
-        ]);
-
-        $this->template->update([
-            'version' => 3,
-            'layout_config' => ['orientation' => 'portrait', 'city' => 'Temuco'],
-        ]);
-        $this->template->delete();
-
-        $reloaded = Certificate::query()->findOrFail($certificate->id);
-
-        $this->assertSoftDeleted('course_certificate_templates', ['id' => $this->template->id]);
-        $this->assertSame(2, $reloaded->snapshot->template->version);
-        $this->assertSame('Valparaíso', $reloaded->snapshot->template->city);
-        $this->assertEquals($snapshot->toArray(), $reloaded->snapshot->toArray());
-    }
-
-    public function test_turma_online_usa_cidade_fixa_do_template_e_nao_endereco_do_cliente(): void
-    {
+        config(['app.certificate_issuer.city' => 'Temuco']);
         $this->client->addresses()->create([
             'city' => 'Ciudad del Cliente',
             'is_primary' => true,
@@ -308,18 +258,16 @@ class CertificateSnapshotTest extends TestCase
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $this->enrollment->fresh(),
             $this->redator,
-            $this->template,
             now(),
             $this->emissionCity(),
         );
 
-        $this->assertSame('Valparaíso', $snapshot->ciudad_emision);
+        $this->assertSame('Temuco', $snapshot->ciudad_emision);
         $this->assertNotSame('Ciudad del Cliente', $snapshot->ciudad_emision);
     }
 
     /**
-     * Mesma promessa da D12 que `test_template_persistido_…` faz pelo template:
-     * o temário impresso na página 2 é o do dia da emissão. Curso reescrito ou
+     * Promessa da D12: o temário impresso na página 2 é o do dia da emissão. Curso reescrito ou
      * módulo arquivado depois não pode reescrever certificado já assinado.
      */
     public function test_temario_e_narrativa_persistidos_nao_mudam_quando_o_curso_e_reescrito(): void
@@ -327,7 +275,6 @@ class CertificateSnapshotTest extends TestCase
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $this->enrollment,
             $this->redator,
-            $this->template,
             now(),
             $this->emissionCity(),
         );
@@ -371,7 +318,6 @@ class CertificateSnapshotTest extends TestCase
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $this->enrollment->fresh(),
             $this->redator,
-            $this->template,
             now(),
             $this->emissionCity(),
         );
@@ -390,7 +336,6 @@ class CertificateSnapshotTest extends TestCase
         $snapshot = app(CertificateSnapshotBuilder::class)->build(
             $this->enrollment->fresh(),
             $this->redator,
-            $this->template,
             now(),
             $this->emissionCity(),
         );

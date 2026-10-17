@@ -2,7 +2,6 @@
 
 namespace App\Domains\Certification\Services;
 
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Enums\TurmaStatus;
@@ -11,9 +10,9 @@ use App\Domains\Operation\Models\Turma;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Quem pode receber certificado — as SEIS portas, num lugar só. A DECISÃO mora
+ * Quem pode receber certificado — as CINCO portas, num lugar só. A DECISÃO mora
  * aqui; a tela de emissão não decide nada: o `EmissionPanelQuery` REPORTA os
- * mesmos motivos, pelos mesmos colaboradores (`CertificateTemplateResolver`,
+ * mesmos motivos, pelos mesmos colaboradores (`EmissionCityResolver`,
  * `CertificateVigenciaResolver`), e é a
  * `CertificateEligibilityTest` que prova que o que o painel apresenta como
  * emissível passa por estas portas. Divergência entre lista e POST é a classe
@@ -24,14 +23,13 @@ use Illuminate\Validation\ValidationException;
  * 1. turma concluída (RN-08)
  * 2. matrícula aprovada
  * 3. sem certificado vigente para a matrícula
- * 4. curso com template de certificado disponível
- * 5. template/turma com cidade de emissão válida
- * 6. redator designado na turma — AQUELE que a emissão recebeu (D11)
+ * 4. cidade de emissão válida (`local_aplicacao` ou a do emissor)
+ * 5. redator designado na turma — AQUELE que a emissão recebeu (D11)
  */
 class CertificateEligibility
 {
     public function __construct(
-        private readonly CertificateTemplateResolver $templates,
+        private readonly EmissionCityResolver $cities,
         private readonly CertificateVigenciaResolver $vigencia,
     ) {}
 
@@ -47,11 +45,10 @@ class CertificateEligibility
         $this->assertTurmaConcluida($turma);
         $this->assertMatriculaAprovada($enrollment);
         $this->assertSemCertificadoVigente($enrollment);
-        $template = $this->assertTemplateDisponivel($turma);
-        $ciudad = $this->assertCidadeDeEmissao($turma, $template);
+        $ciudad = $this->assertCidadeDeEmissao($turma);
         $this->assertRedatorDesignado($turma, $redator);
 
-        return new IssuanceContext($turma, $template, $ciudad);
+        return new IssuanceContext($turma, $ciudad);
     }
 
     // ── PORTA 1 — turma concluída (RN-08) ────────────────────────────────
@@ -83,35 +80,20 @@ class CertificateEligibility
         }
     }
 
-    // ── PORTA 4 — curso com template disponível ──────────────────────────
+    // ── PORTA 4 — cidade de emissão válida ───────────────────────────────
 
-    private function assertTemplateDisponivel(Turma $turma): CourseCertificateTemplate
+    private function assertCidadeDeEmissao(Turma $turma): string
     {
-        $template = $this->templates->latestForCourse($turma->course_id);
-
-        if ($template === null) {
-            $this->refuse('template', __('certification.eligibility.template_not_approved'));
-        }
-
-        return $template;
-    }
-
-    // ── PORTA 5 — cidade de emissão válida ───────────────────────────────
-
-    private function assertCidadeDeEmissao(
-        Turma $turma,
-        CourseCertificateTemplate $template,
-    ): string {
-        $ciudad = $this->templates->emissionCityFor($turma, $template);
+        $ciudad = $this->cities->emissionCityFor($turma);
 
         if ($ciudad === null) {
-            $this->refuse('template', __('certification.eligibility.template_city_invalid'));
+            $this->refuse('turma', __('certification.eligibility.emission_city_missing'));
         }
 
         return $ciudad;
     }
 
-    // ── PORTA 6 — redator designado ──────────────────────────────────────
+    // ── PORTA 5 — redator designado ──────────────────────────────────────
 
     private function assertRedatorDesignado(Turma $turma, Redator $redator): void
     {
@@ -121,7 +103,7 @@ class CertificateEligibility
     }
 
     /**
-     * As seis portas recusam pela MESMA saída, e a frase sempre sai de `lang/`.
+     * As cinco portas recusam pela MESMA saída, e a frase sempre sai de `lang/`.
      *
      * O `withMessages` daqui recebe variáveis (`[$field => $message]`), então o
      * detector de `MensagemLiteralTest` não enxergava a frase — ela mora no

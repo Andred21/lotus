@@ -217,7 +217,7 @@ export type DashboardAlertType = 'turma_overdue' | 'certificate_expiring_soon' |
 export type DashboardModule = 'commercial' | 'operation' | 'certification';
 export type DashboardSeverity = 'high' | 'medium' | 'normal';
 export type DocumentValidityStatus = 'vigente' | 'vence_em_breve' | 'vencido' | 'ausente';
-export type EmissionBlockReason = 'sin_plantilla' | 'plantilla_sin_ciudad' | 'sin_redactor';
+export type EmissionBlockReason = 'sin_ciudad' | 'sin_redactor';
 export type EmissionPanelCertificateData = {
 id: number,
 codigo: string,
@@ -242,7 +242,6 @@ turma_id: number,
 course_name: string,
 client_name: string,
 end_date: string,
-template_validity_months: number | null,
 emission_blocked: EmissionBlockReason | null,
 enrollments: EmissionPanelEnrollmentData[],
 redatores: EmissionPanelRedatorData[],

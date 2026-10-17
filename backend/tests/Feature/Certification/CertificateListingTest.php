@@ -25,13 +25,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
-use Tests\Support\CreatesCertificateTemplates;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 class CertificateListingTest extends TestCase
 {
-    use CreatesCertificateTemplates;
     use CreatesDomainRecords;
     use RefreshDatabase;
 
@@ -258,20 +256,12 @@ class CertificateListingTest extends TestCase
             '33.333.333-3',
         );
 
-        // A vigência sai do template MAIS NOVO do curso: o setUp cria a v1 com
-        // `validity_months` null, então 24 só aparece se a v2 vencer.
-        $this->makeTemplate($this->course->id, [
-            'version' => 2,
-            'layout_config' => ['city' => 'Santiago'],
-            'validity_months' => 24,
-        ]);
-
         $this->getJson('/api/certificates/emission-panel')
             ->assertOk()
             ->assertJsonCount(1)
             ->assertJsonStructure(['*' => [
                 'turma_id', 'course_name', 'client_name', 'end_date',
-                'template_validity_months', 'emission_blocked',
+                'emission_blocked',
                 'enrollments' => ['*' => [
                     'enrollment_id', 'student_name', 'student_rut',
                     'approval_status', 'attendance_pct', 'nota_final', 'certificate',
@@ -282,7 +272,7 @@ class CertificateListingTest extends TestCase
             ->assertJsonPath('0.course_name', 'Seguridad en Alta Tensión')
             ->assertJsonPath('0.client_name', 'Empresa Legal SpA')
             ->assertJsonPath('0.end_date', '2026-07-24')
-            ->assertJsonPath('0.template_validity_months', 24)
+            ->assertJsonMissingPath('0.template_validity_months')
             ->assertJsonPath('0.emission_blocked', null)
             ->assertJsonCount(3, '0.enrollments')
             // Alunos em ordem de NOME, não de inserção: 'Alumno Pendiente' <
@@ -395,11 +385,10 @@ class CertificateListingTest extends TestCase
     }
 
     /**
-     * D-P3: a turma sem template APARECE bloqueada, não some. Ocultá-la deixava
-     * o admin sem nada para clicar e sem nada para ler — falha visível ganha de
-     * turma escondida.
+     * Bloco 39: o template deixou de ser porta. O curso sem template aparece
+     * emitível, como qualquer outro.
      */
-    public function test_panel_mostra_turma_sem_template_bloqueada(): void
+    public function test_panel_nao_bloqueia_turma_sem_template(): void
     {
         $this->actingAsAdmin();
         $courseWithoutTemplate = $this->makeCourse(['name' => 'Curso sin plantilla']);
@@ -409,9 +398,7 @@ class CertificateListingTest extends TestCase
             $courseWithoutTemplate,
             '2026-07-25',
         );
-        // O redator entra para que só a porta do TEMPLATE fique fechada: com
-        // duas fechadas, `sin_plantilla` continuaria saindo por precedência e o
-        // cenário deixaria de provar qual porta o painel reportou.
+        // O redator entra para que nenhuma porta fique fechada.
         $turmaWithoutTemplate->redatores()->attach($this->redator);
         $matricula = $this->createEnrollment(
             $turmaWithoutTemplate,
@@ -424,22 +411,17 @@ class CertificateListingTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2)
             ->assertJsonPath('0.turma_id', $turmaWithoutTemplate->id)
-            ->assertJsonPath('0.emission_blocked', 'sin_plantilla')
-            ->assertJsonPath('0.template_validity_months', null)
+            ->assertJsonPath('0.emission_blocked', null)
             ->assertJsonPath('0.enrollments.0.enrollment_id', $matricula->id)
             ->assertJsonPath('1.turma_id', $this->turma->id)
             ->assertJsonPath('1.emission_blocked', null);
     }
 
-    public function test_panel_mostra_turma_online_sem_cidade_bloqueada(): void
+    public function test_panel_mostra_turma_online_sem_cidade_do_emissor_bloqueada(): void
     {
         $this->actingAsAdmin();
+        config(['app.certificate_issuer.city' => '']);
         $courseOnline = $this->makeCourse(['name' => 'Curso online sin ciudad']);
-        $this->makeTemplate($courseOnline->id, [
-            'version' => 1,
-            'layout_config' => [],
-            'validity_months' => null,
-        ]);
         $turmaOnline = $this->createTurma(TurmaStatus::Concluida, 2, $courseOnline, '2026-07-25');
         $turmaOnline->update([
             'modalidade' => TurmaModalidade::Online,
@@ -457,9 +439,11 @@ class CertificateListingTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2)
             ->assertJsonPath('0.turma_id', $turmaOnline->id)
-            ->assertJsonPath('0.emission_blocked', 'plantilla_sin_ciudad')
+            ->assertJsonPath('0.emission_blocked', 'sin_ciudad')
+            // A turma do setUp também é online: sem cidade do emissor, a mesma
+            // porta a fecha.
             ->assertJsonPath('1.turma_id', $this->turma->id)
-            ->assertJsonPath('1.emission_blocked', null);
+            ->assertJsonPath('1.emission_blocked', 'sin_ciudad');
     }
 
     public function test_panel_mostra_turma_sem_redator_bloqueada(): void

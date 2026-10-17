@@ -856,8 +856,7 @@
     "reprobado": "Reprobado",
     "pendiente": "Pendiente",
     "blocked": {
-      "sin_plantilla": "El curso no tiene plantilla de certificado",
-      "plantilla_sin_ciudad": "La plantilla no define ciudad de emisión",
+      "sin_ciudad": "Sin ciudad de emisión configurada",
       "sin_redactor": "La turma no tiene redactor designado"
     },
     "confirmTitle": "Confirmar emisión",
@@ -868,8 +867,6 @@
     "fieldVigencia": "Vigencia",
     "fieldRedator": "Redactor",
     "vigenciaIndefinida": "Indefinida",
-    "vigenciaMeses_one": "{{count}} mes",
-    "vigenciaMeses_other": "{{count}} meses",
     "confirmEmit": "Confirmar emisión",
     "issuedTitle": "Certificado emitido",
     "issuedHeading": "CERTIFICADO DE APROBACIÓN",

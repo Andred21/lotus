@@ -2,7 +2,6 @@
 
 namespace App\Domains\Certification\Services;
 
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Enums\EmissionBlockReason;
 use App\Domains\Certification\Models\Certificate;
@@ -19,8 +18,8 @@ use Illuminate\Support\Collection;
  * Não é uma segunda fonte de verdade sobre quem pode receber certificado — as
  * portas do `CertificateEligibility` continuam donas disso, e o POST continua
  * sendo quem decide. O que este serviço faz é REPORTAR o mesmo motivo, pelo
- * mesmo colaborador (`CertificateTemplateResolver`), para a tela não precisar
- * re-derivar nada: cidade de emissão (porta 5) e redator designado (porta 6)
+ * mesmo colaborador (`EmissionCityResolver`), para a tela não precisar
+ * re-derivar nada: cidade de emissão (porta 4) e redator designado (porta 5)
  * não são deriváveis do payload, e derivá-los no cliente é exatamente o bug que
  * as portas fecharam — a lista promete o que o POST recusa.
  */
@@ -39,15 +38,13 @@ class EmissionPanelQuery
     public const JANELA_MESES = 12;
 
     public function __construct(
-        private readonly CertificateTemplateResolver $templates,
+        private readonly EmissionCityResolver $cities,
         private readonly CertificateVigenciaResolver $vigencia,
     ) {}
 
     /** @return array<EmissionPanelTurmaData> */
     public function get(CarbonImmutable $desde): array
     {
-        $templates = $this->templates->latestByCourse();
-
         $turmas = Turma::query()
             ->where('status', TurmaStatus::Concluida)
             // A janela (spec D7). `DataSql::literal`, não `whereDate`: o
@@ -79,35 +76,26 @@ class EmissionPanelQuery
         $vigentes = $this->certificadosVigentes($turmas);
 
         return $turmas
-            ->map(function (Turma $turma) use ($templates, $vigentes): EmissionPanelTurmaData {
-                $template = $templates->get($turma->course_id);
-
-                return EmissionPanelTurmaData::fromModel(
-                    $turma,
-                    $template,
-                    $this->emissionBlockedFor($turma, $template),
-                    $vigentes,
-                );
-            })
+            ->map(fn (Turma $turma): EmissionPanelTurmaData => EmissionPanelTurmaData::fromModel(
+                $turma,
+                $this->emissionBlockedFor($turma),
+                $vigentes,
+            ))
             ->all();
     }
 
     /**
      * Por que a emissão recusaria esta turma inteira, ou `null`. A ordem é a das
-     * portas 4→5→6: sem template não há cidade que valha, e sem cidade o redator
-     * não salva o documento.
+     * portas 4→5: sem cidade não há documento a emitir, e sem redator ele não
+     * tem assinatura.
      *
      * As portas por MATRÍCULA (aprovação, certificado vigente) não entram aqui —
      * elas são visíveis linha a linha, em `approval_status` e `certificate`.
      */
-    private function emissionBlockedFor(Turma $turma, ?CourseCertificateTemplate $template): ?EmissionBlockReason
+    private function emissionBlockedFor(Turma $turma): ?EmissionBlockReason
     {
-        if ($template === null) {
-            return EmissionBlockReason::SinPlantilla;
-        }
-
-        if ($this->templates->emissionCityFor($turma, $template) === null) {
-            return EmissionBlockReason::PlantillaSinCiudad;
+        if ($this->cities->emissionCityFor($turma) === null) {
+            return EmissionBlockReason::SinCiudad;
         }
 
         if ($turma->redatores->isEmpty()) {

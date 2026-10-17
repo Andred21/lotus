@@ -3,13 +3,13 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateNumberService;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
+use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
@@ -18,6 +18,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\Support\CreatesCertificateTemplates;
 use Tests\TestCase;
@@ -45,11 +46,12 @@ class IssueCertificateTest extends TestCase
         config([
             'app.certificate_issuer.name' => 'OTEC Configurada SpA',
             'app.certificate_issuer.rut' => '76.900.900-9',
+            // Diferente do default (`Santiago`) e do template legado dos testes
+            // abaixo: é o que prova que a cidade impressa vem do emissor.
+            'app.certificate_issuer.city' => 'Temuco',
         ]);
 
-        // Sem template: cada teste decide a própria via `createTemplate()`
-        // (inclusive `test_sem_template_retorna_422`, que exige a ausência).
-        $builder = IssuableEnrollmentBuilder::make()->semTemplate()->create();
+        $builder = IssuableEnrollmentBuilder::make()->create();
         $this->course = $builder->courseModel();
         $this->turma = $builder->turmaModel();
         $this->enrollment = $builder->enrollmentModel();
@@ -66,8 +68,6 @@ class IssueCertificateTest extends TestCase
     public function test_admin_emite_certificado_com_codigo_e_snapshot_do_servidor(): void
     {
         $this->actingAsAdmin();
-        $this->createTemplate(['validity_months' => null]);
-
         $this->postJson($this->issueUrl(), [
             'redator_id' => $this->redator->id,
             'snapshot' => ['aluno' => ['name' => 'Dado controlado pelo cliente']],
@@ -83,9 +83,9 @@ class IssueCertificateTest extends TestCase
             ->assertJsonPath('snapshot.emissor.rut', '76.900.900-9')
             ->assertJsonPath('snapshot.redator.name', 'María Relatora')
             ->assertJsonPath('snapshot.schema_version', 2)
-            ->assertJsonPath('snapshot.template.version', 1)
-            ->assertJsonPath('snapshot.template.city', 'Santiago')
-            ->assertJsonPath('snapshot.ciudad_emision', 'Santiago')
+            ->assertJsonPath('snapshot.template.version', null)
+            ->assertJsonPath('snapshot.template.city', null)
+            ->assertJsonPath('snapshot.ciudad_emision', 'Temuco')
             ->assertJsonPath('snapshot.resultado.grades.final', 6.2)
             ->assertJsonPath('snapshot.resultado.approval_status', 'aprobado')
             ->assertJsonPath('snapshot.emitido_em', '2026-08-05');
@@ -157,7 +157,6 @@ class IssueCertificateTest extends TestCase
     public function test_redator_de_outra_turma_retorna_422(): void
     {
         $this->actingAsAdmin();
-        $this->createTemplate();
         $otherRedator = Redator::create([
             'user_id' => User::factory()->redator()->create()->id,
         ]);
@@ -181,7 +180,6 @@ class IssueCertificateTest extends TestCase
     public function test_redator_arquivado_ainda_emite_certificado_da_turma_que_ministrou(): void
     {
         $this->actingAsAdmin();
-        $this->createTemplate();
 
         $this->redator->delete();
 
@@ -203,72 +201,82 @@ class IssueCertificateTest extends TestCase
         $this->postJson($this->issueUrl(), $this->validPayload())->assertForbidden();
     }
 
-    public function test_template_mais_recente_com_validade_define_valido_ate(): void
+    public function test_curso_sem_template_emite_com_a_cidade_do_emissor(): void
     {
         $this->actingAsAdmin();
-        $this->createTemplate(['version' => 1, 'validity_months' => 3]);
-        $this->createTemplate(['version' => 2, 'validity_months' => 12]);
-        $deletedTemplate = $this->createTemplate(['version' => 3, 'validity_months' => 24]);
-        $deletedTemplate->delete();
 
         $this->postJson($this->issueUrl(), $this->validPayload())
             ->assertCreated()
-            ->assertJsonPath('valido_ate', '2027-08-05');
-
-        $certificate = Certificate::query()->sole();
-
-        $this->assertSame($this->enrollment->id, $certificate->enrollment_id);
-        $this->assertSame('2027-08-05', $certificate->valido_ate?->toDateString());
+            ->assertJsonPath('snapshot.ciudad_emision', 'Temuco')
+            ->assertJsonPath('valido_ate', null)
+            ->assertJsonPath('snapshot.template', ['version' => null, 'city' => null]);
     }
 
-    public function test_sem_template_retorna_422(): void
+    /**
+     * Review Focus 2: o template do curso virou legado. Ele ainda existe na
+     * tabela (nenhuma linha é apagada), mas nem a cidade nem a validade dele
+     * chegam ao documento novo.
+     */
+    public function test_template_legado_do_curso_e_ignorado(): void
     {
         $this->actingAsAdmin();
+        $this->makeTemplate($this->course->id, [
+            'version' => 2,
+            'layout_config' => ['city' => 'Valparaíso'],
+            'validity_months' => 12,
+        ]);
+
+        $this->postJson($this->issueUrl(), $this->validPayload())
+            ->assertCreated()
+            ->assertJsonPath('snapshot.ciudad_emision', 'Temuco')
+            ->assertJsonPath('valido_ate', null)
+            ->assertJsonPath('snapshot.template', ['version' => null, 'city' => null]);
+
+        $this->assertNull(Certificate::query()->sole()->valido_ate);
+    }
+
+    /** @return array<string, array{0: ?string}> */
+    public static function cidadesDoEmissorAusentes(): array
+    {
+        return [
+            'vazia' => [''],
+            'so com espacos' => ['   '],
+            'nula' => [null],
+        ];
+    }
+
+    /**
+     * Review Focus 1: sem cidade do emissor, a turma online não tem de onde
+     * tirar a cidade do documento — recusa em vez de imprimir lixo.
+     */
+    #[DataProvider('cidadesDoEmissorAusentes')]
+    public function test_turma_online_sem_cidade_do_emissor_retorna_422(?string $cidade): void
+    {
+        $this->actingAsAdmin();
+        config(['app.certificate_issuer.city' => $cidade]);
 
         $this->postJson($this->issueUrl(), $this->validPayload())
             ->assertUnprocessable()
             ->assertJsonPath(
-                'errors.template.0',
-                'El curso no tiene una plantilla de certificado aprobada.',
+                'errors.turma.0',
+                __('certification.eligibility.emission_city_missing'),
             );
 
         $this->assertDatabaseCount('certificates', 0);
     }
 
-    public function test_template_sem_validade_emite_com_valido_ate_nulo(): void
+    public function test_turma_presencial_emite_com_local_aplicacao_mesmo_sem_cidade_do_emissor(): void
     {
         $this->actingAsAdmin();
-        $this->createTemplate(['validity_months' => null]);
+        config(['app.certificate_issuer.city' => '']);
+        $this->turma->update([
+            'modalidade' => TurmaModalidade::Presencial,
+            'local_aplicacao' => 'Rancagua',
+        ]);
 
         $this->postJson($this->issueUrl(), $this->validPayload())
             ->assertCreated()
-            ->assertJsonPath('valido_ate', null);
-
-        $this->assertNull(Certificate::query()->sole()->valido_ate);
-    }
-
-    public function test_turma_online_com_template_sem_city_retorna_422(): void
-    {
-        $this->actingAsAdmin();
-        $this->createTemplate(['layout_config' => ['orientation' => 'landscape']]);
-
-        $this->assertInvalidTemplateCity();
-    }
-
-    public function test_turma_online_com_city_nula_no_template_retorna_422(): void
-    {
-        $this->actingAsAdmin();
-        $this->createTemplate(['layout_config' => ['city' => null]]);
-
-        $this->assertInvalidTemplateCity();
-    }
-
-    public function test_turma_online_com_city_vazia_no_template_retorna_422(): void
-    {
-        $this->actingAsAdmin();
-        $this->createTemplate(['layout_config' => ['city' => '']]);
-
-        $this->assertInvalidTemplateCity();
+            ->assertJsonPath('snapshot.ciudad_emision', 'Rancagua');
     }
 
     /**
@@ -279,7 +287,6 @@ class IssueCertificateTest extends TestCase
     public function test_emissao_que_atravessa_a_virada_do_ano_usa_um_instante_so(): void
     {
         $this->actingAsAdmin();
-        $this->createTemplate(['validity_months' => 12]);
         Carbon::setTestNow('2026-12-31 23:59:59');
 
         // Simula a espera no lockForUpdate: o relógio anda entre o instante em
@@ -300,7 +307,7 @@ class IssueCertificateTest extends TestCase
 
         $this->assertSame('LOT-2026-1000', $certificate->codigo);
         $this->assertSame('2026-12-31', $certificate->snapshot->emitido_em);
-        $this->assertSame('2027-12-31', $certificate->valido_ate->toDateString());
+        $this->assertNull($certificate->valido_ate);
     }
 
     /**
@@ -311,7 +318,6 @@ class IssueCertificateTest extends TestCase
     public function test_emissao_as_23h_de_santiago_grava_o_dia_local(): void
     {
         $this->actingAsAdmin();
-        $this->createTemplate(['validity_months' => 12]);
         Carbon::setTestNow(Carbon::parse('2026-09-25 02:00:00', 'UTC'));
 
         $this->postJson($this->issueUrl(), $this->validPayload())->assertCreated();
@@ -319,7 +325,7 @@ class IssueCertificateTest extends TestCase
         $certificate = Certificate::query()->sole();
 
         $this->assertSame('2026-09-24', $certificate->snapshot->emitido_em);
-        $this->assertSame('2027-09-24', $certificate->valido_ate->toDateString());
+        $this->assertNull($certificate->valido_ate);
     }
 
     /**
@@ -330,7 +336,6 @@ class IssueCertificateTest extends TestCase
     public function test_emissao_na_noite_de_31_12_em_santiago_usa_o_ano_local(): void
     {
         $this->actingAsAdmin();
-        $this->createTemplate(['validity_months' => 12]);
         Carbon::setTestNow(Carbon::parse('2027-01-01 02:30:00', 'UTC'));
 
         $this->postJson($this->issueUrl(), $this->validPayload())->assertCreated();
@@ -339,7 +344,7 @@ class IssueCertificateTest extends TestCase
 
         $this->assertSame('LOT-2026-1000', $certificate->codigo);
         $this->assertSame('2026-12-31', $certificate->snapshot->emitido_em);
-        $this->assertSame('2027-12-31', $certificate->valido_ate->toDateString());
+        $this->assertNull($certificate->valido_ate);
     }
 
     /**
@@ -354,7 +359,6 @@ class IssueCertificateTest extends TestCase
         // ambiente já é produção. E como o CSRF/stateful entra em vigor fora
         // de `testing`, todo POST depois da troca leva `Sec-Fetch-Site`.
         $this->actingAsAdmin();
-        $this->createTemplate();
         $this->app->detectEnvironment(fn (): string => 'production');
         $this->withHeader('Sec-Fetch-Site', 'same-origin');
         config([
@@ -381,7 +385,6 @@ class IssueCertificateTest extends TestCase
     public function test_emissao_grava_auditoria_com_o_usuario_que_emitiu(): void
     {
         $admin = $this->actingAsAdmin();
-        $this->createTemplate();
 
         $this->postJson($this->issueUrl(), $this->validPayload())->assertCreated();
 
@@ -401,28 +404,6 @@ class IssueCertificateTest extends TestCase
     private function issueUrl(): string
     {
         return "/api/enrollments/{$this->enrollment->id}/certificate";
-    }
-
-    private function assertInvalidTemplateCity(): void
-    {
-        $this->postJson($this->issueUrl(), $this->validPayload())
-            ->assertUnprocessable()
-            ->assertJsonPath(
-                'errors.template.0',
-                'La plantilla del curso no define una ciudad de emisión válida.',
-            );
-
-        $this->assertDatabaseCount('certificates', 0);
-    }
-
-    private function createTemplate(array $overrides = []): CourseCertificateTemplate
-    {
-        return $this->makeTemplate($this->course->id, [
-            'version' => 1,
-            'layout_config' => ['city' => 'Santiago'],
-            'validity_months' => null,
-            ...$overrides,
-        ]);
     }
 
     private function createCertificate(): Certificate

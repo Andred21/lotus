@@ -2,7 +2,6 @@
 
 namespace App\Domains\Certification\Services;
 
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Catalog\Models\CourseModule;
 use App\Domains\Certification\Data\Snapshot\CertificateSnapshotData;
 use App\Domains\Certification\Data\Snapshot\SnapshotCourseData;
@@ -21,13 +20,12 @@ class CertificateSnapshotBuilder
     /**
      * `$emitidoEm` e `$ciudadEmision` chegam de fora de propósito: quem emite
      * fixa o instante uma vez (todos os campos datados derivam dele) e já
-     * resolveu a cidade pelo `CertificateTemplateResolver`, que é a fonte única
+     * resolveu a cidade pelo `EmissionCityResolver`, que é a fonte única
      * dessa regra — duplicá-la aqui deixaria a lista e a emissão discordarem.
      */
     public function build(
         Enrollment $enrollment,
         Redator $redator,
-        CourseCertificateTemplate $template,
         CarbonInterface $emitidoEm,
         string $ciudadEmision,
     ): CertificateSnapshotData {
@@ -79,10 +77,10 @@ class CertificateSnapshotBuilder
                 rut: $redator->user->rut,
             ),
             resultado: $this->resultadoSnapshot($enrollment->academicResult()),
-            template: new SnapshotTemplateData(
-                version: (int) $template->version,
-                city: data_get($template->layout_config, 'city'),
-            ),
+            // Bloco 39: o template deixou de existir na emissão. A chave segue no
+            // snapshot (schema 2) com os dois campos nulos, para os certificados
+            // novos e os antigos terem um leitor só.
+            template: new SnapshotTemplateData(version: null, city: null),
             ciudad_emision: $ciudadEmision,
             emitido_em: $emitidoEm->toDateString(),
         );

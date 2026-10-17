@@ -20,8 +20,7 @@ class MensagemDeCertificadoLocalizadaTest extends TestCase
             'certification.eligibility.turma_not_concluded',
             'certification.eligibility.enrollment_not_approved',
             'certification.eligibility.certificate_already_active',
-            'certification.eligibility.template_not_approved',
-            'certification.eligibility.template_city_invalid',
+            'certification.eligibility.emission_city_missing',
             'certification.eligibility.redator_not_designated',
         ] as $chave) {
             $valores = [];

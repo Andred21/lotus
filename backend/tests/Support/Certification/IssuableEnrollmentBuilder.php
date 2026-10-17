@@ -3,7 +3,6 @@
 namespace Tests\Support\Certification;
 
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
@@ -15,12 +14,11 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
-use Tests\Support\CreatesCertificateTemplates;
 use Tests\Support\CreatesDomainRecords;
 
 /**
  * Cenário "matrícula emitível" nomeado pelas portas do `CertificateEligibility`
- * (B7). O default de `make()->create()` passa nas seis portas; cada método de
+ * (B7). O default de `make()->create()` passa nas cinco portas; cada método de
  * desvio nomeia a porta que ele fecha, uma de cada vez — é o que deixa um
  * teste dizer "este cenário falha por CAUSA DESTA porta" em vez de re-derivar
  * a cadeia inteira à mão.
@@ -31,7 +29,6 @@ use Tests\Support\CreatesDomainRecords;
  */
 final class IssuableEnrollmentBuilder
 {
-    use CreatesCertificateTemplates;
     use CreatesDomainRecords;
 
     /** @var array<string, mixed> */
@@ -52,16 +49,9 @@ final class IssuableEnrollmentBuilder
     /** @var array<string, mixed> */
     private array $redatorUserOverrides = [];
 
-    /** @var array<string, mixed> */
-    private array $templateOverrides = [];
-
     private bool $turmaConcluida = true;
 
     private bool $matriculaAprovada = true;
-
-    private bool $comTemplate = true;
-
-    private bool $templateComCidade = true;
 
     private bool $redatorDesignado = true;
 
@@ -74,8 +64,6 @@ final class IssuableEnrollmentBuilder
     private ?Enrollment $enrollment = null;
 
     private ?Redator $redator = null;
-
-    private ?CourseCertificateTemplate $template = null;
 
     public static function make(): self
     {
@@ -100,23 +88,7 @@ final class IssuableEnrollmentBuilder
         return $this;
     }
 
-    /** Porta 4: curso sem template de certificado. */
-    public function semTemplate(): self
-    {
-        $this->comTemplate = false;
-
-        return $this;
-    }
-
-    /** Porta 5 (turma online sem city): template sem cidade de emissão válida. */
-    public function templateSemCidade(): self
-    {
-        $this->templateComCidade = false;
-
-        return $this;
-    }
-
-    /** Porta 6: redator não designado na turma. */
+    /** Porta 5: redator não designado na turma. */
     public function semRedator(): self
     {
         $this->redatorDesignado = false;
@@ -158,13 +130,6 @@ final class IssuableEnrollmentBuilder
     public function redatorUser(array $userOverrides = []): self
     {
         $this->redatorUserOverrides = $userOverrides;
-
-        return $this;
-    }
-
-    public function template(array $overrides = []): self
-    {
-        $this->templateOverrides = $overrides;
 
         return $this;
     }
@@ -247,17 +212,6 @@ final class IssuableEnrollmentBuilder
             $this->turma->redatores()->attach($this->redator);
         }
 
-        if ($this->comTemplate) {
-            $layoutConfig = $this->templateComCidade ? ['city' => 'Santiago'] : [];
-
-            $this->template = $this->makeTemplate($this->course->id, [
-                'version' => 1,
-                'layout_config' => $layoutConfig,
-                'validity_months' => null,
-                ...$this->templateOverrides,
-            ]);
-        }
-
         return $this;
     }
 
@@ -271,7 +225,6 @@ final class IssuableEnrollmentBuilder
     {
         $colisoes = [
             'turmaNaoConcluida()' => ! $this->turmaConcluida && array_key_exists('status', $this->turmaOverrides),
-            'templateSemCidade()' => ! $this->templateComCidade && array_key_exists('layout_config', $this->templateOverrides),
         ];
 
         foreach (array_filter($colisoes) as $desvio => $_) {
@@ -306,10 +259,5 @@ final class IssuableEnrollmentBuilder
     public function clientModel(): Client
     {
         return $this->client;
-    }
-
-    public function templateModel(): ?CourseCertificateTemplate
-    {
-        return $this->template;
     }
 }

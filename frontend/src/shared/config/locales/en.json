@@ -856,8 +856,7 @@
     "reprobado": "Failed",
     "pendiente": "Pending",
     "blocked": {
-      "sin_plantilla": "The course has no certificate template",
-      "plantilla_sin_ciudad": "The template does not define an issuance city",
+      "sin_ciudad": "No issuing city configured",
       "sin_redactor": "The class has no designated redator"
     },
     "confirmTitle": "Confirm issuance",
@@ -868,8 +867,6 @@
     "fieldVigencia": "Validity",
     "fieldRedator": "Redator",
     "vigenciaIndefinida": "Indefinite",
-    "vigenciaMeses_one": "{{count}} month",
-    "vigenciaMeses_other": "{{count}} months",
     "confirmEmit": "Confirm issuance",
     "issuedTitle": "Certificate issued",
     "issuedHeading": "CERTIFICATE OF COMPLETION",
