@@ -136,6 +136,11 @@ class ArquivoDeCargaTest extends TestCase
 
                 return $p;
             }, 'approval_status'],
+            'certificado em matrícula não aprovada' => [function (array $p) {
+                $p['orcamentos'][0]['turma']['matriculas'][0]['approval_status'] = 'reprobado';
+
+                return $p;
+            }, 'LOT-2026-001'],
             'nota não numérica' => [function (array $p) {
                 $p['orcamentos'][0]['turma']['matriculas'][0]['nota'] = 'siete';
 

@@ -56,9 +56,10 @@ final class CarregadorDeCadastros
     }
 
     /**
-     * Contorna `CreateClientAction`: ela exige o ator logado e grava com a data
-     * da execução; a carga datar o cliente na primeira `Fecha Curso` do recorte.
-     * O cliente não loga (RN-01): `is_active=false` e senha aleatória.
+     * Contorna `CreateClientAction`: por baixo dela, `UserProvisioner::provision()`
+     * carimba o usuário com o instante da execução e não aceita `created_at`
+     * histórico, e a carga precisa datar o cliente na primeira `Fecha Curso` do
+     * recorte. O cliente não loga (RN-01): `is_active=false` e senha aleatória.
      */
     private function cliente(array $dados, Contagem $contagem): ?Client
     {
@@ -376,7 +377,9 @@ final class CarregadorDeCadastros
     /**
      * Contorna `CourseRedatorController`: a habilitação é o pivot gravado por
      * `PivotAudit` (a trilha de quem pode ser designado), só com os cursos que
-     * não estão em conflito. Acrescenta, nunca retira.
+     * não estão em conflito. Acrescenta, nunca retira. Habilita só o redator
+     * CRIADO nesta carga: o que já existia não se toca (spec §7), e a escrita
+     * auditada do pivot não aparece na `Contagem`.
      *
      * @param  list<array<string, mixed>>  $redatores
      * @param  array<string, Redator>  $mapaRedatores
@@ -387,7 +390,7 @@ final class CarregadorDeCadastros
         foreach ($redatores as $dados) {
             $redator = $mapaRedatores[$dados['chave']] ?? null;
 
-            if ($redator === null) {
+            if ($redator === null || ! $redator->wasRecentlyCreated) {
                 continue;
             }
 
@@ -408,6 +411,12 @@ final class CarregadorDeCadastros
     }
 
     /**
+     * Replica de propósito a unicidade (RUT e e-mail conferidos por quem chama,
+     * incluindo apagados) e o `is_active` do `UserProvisioner`, porque o
+     * provisioner (`provision()` e `create()`) carimba o instante da execução e
+     * não aceita `created_at` histórico. Não o "unifique" com ele sem resolver
+     * a data.
+     *
      * `$quando` nulo deixa o Eloquent carimbar o instante da carga. A senha é
      * aleatória e descartada: ninguém importado loga, e o redator define a dele
      * pelo fluxo normal de acesso.

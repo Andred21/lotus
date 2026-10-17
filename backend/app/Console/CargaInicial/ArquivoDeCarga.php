@@ -455,6 +455,19 @@ final class ArquivoDeCarga
                     $turma['start_date'],
                 );
             }
+
+            // Certificado tem peso legal: só matrícula aprovada o recebe (spec §5.1).
+            foreach ($turma['matriculas'] as $matricula) {
+                if ($matricula['approval_status'] !== EnrollmentApprovalStatus::Aprobado->value) {
+                    $erros[] = sprintf(
+                        'SCAP %d: o certificado %s está numa matrícula %s, e só matrícula %s recebe certificado',
+                        $orcamento['scap'],
+                        $matricula['certificado']['codigo'],
+                        $matricula['approval_status'],
+                        EnrollmentApprovalStatus::Aprobado->value,
+                    );
+                }
+            }
         }
 
         return $erros;

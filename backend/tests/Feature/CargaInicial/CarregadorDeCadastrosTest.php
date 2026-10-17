@@ -105,6 +105,18 @@ class CarregadorDeCadastrosTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_redator_existente_igual_nao_recebe_habilitacao_nem_audit_de_sync(): void
+    {
+        $r1 = $this->carregar()->redatores['R1'];
+        $r1->courses()->detach(); // o redator já existe, sem habilitação: a carga não a refaz
+        $syncs = Audit::where('event', 'sync')->count();
+
+        $this->carregar();
+
+        $this->assertSame(0, $r1->courses()->count());
+        $this->assertSame($syncs, Audit::where('event', 'sync')->count());
+    }
+
     public function test_cria_cursos_com_modulos_em_ordem(): void
     {
         $cad = $this->carregar();

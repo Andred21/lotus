@@ -122,7 +122,7 @@ final class LeitorDeRegistros
             }
 
             // O corte precede tudo: a partir daqui a coluna Z não existe.
-            $celulas = array_slice(array_replace(array_fill(0, self::COLUNAS_LIDAS, null), $this->valores($linha)), 0, self::COLUNAS_LIDAS);
+            $celulas = array_replace(array_fill(0, self::COLUNAS_LIDAS, null), $this->valores($linha));
 
             if ($numero === self::LINHA_DO_CABECALHO) {
                 $this->conferirCabecalho($celulas);
@@ -148,6 +148,8 @@ final class LeitorDeRegistros
     /**
      * Célula de fórmula devolve o valor calculado, que o Excel guarda em cache:
      * `getValue()` seria o texto da fórmula. Os índices de coluna se preservam.
+     * Só as `COLUNAS_LIDAS` primeiras entram: o corte vem ANTES do mapa, para que
+     * nenhuma célula além delas (a CLAVE, por exemplo) seja sequer avaliada.
      *
      * @return array<int, mixed>
      */
@@ -155,7 +157,7 @@ final class LeitorDeRegistros
     {
         return array_map(
             fn (Cell $celula) => $celula instanceof FormulaCell ? $celula->getComputedValue() : $celula->getValue(),
-            $linha->cells,
+            array_slice($linha->cells, 0, self::COLUNAS_LIDAS, true),
         );
     }
 
