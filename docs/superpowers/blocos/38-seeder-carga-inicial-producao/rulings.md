@@ -23,11 +23,11 @@ e relatório) foram do próprio João e não entram aqui.
 
 ## Complemento curado (fora do git, mostrado no checkpoint)
 
-- Cliente: razão social "Switch Chile Servicios Eléctricos Ltda." e giro "INSTALACIONES ELÉCTRICAS" do bloco de dados da COT-185; endereço La Concepción 81, Of. 114, Providencia, com cidade e região nulas (a COT só diz "Providencia, Chile"); contato Oscar Ibarra sem e-mail, telefone ou cargo — custo se errado: corrigir o cadastro do cliente pela tela.
+- Cliente: razão social "Switch Chile Servicios Eléctricos Ltda." e giro "INSTALACIONES ELÉCTRICAS" do bloco de dados da COT-185; endereço La Concepción 81, Of. 114, Providencia, com cidade e região nulas (a COT só diz "Providencia, Chile"); contato (o nome do docx) sem e-mail, telefone ou cargo — custo se errado: corrigir o cadastro do cliente pela tela.
 - COT-177: `student_count` 1 ("No limitado"), data 2026-02-10, 69,47 UF; COT-178: 10 pessoas, 2026-04-13, 33,85 UF — custo se errado: valor de cotação pendente a ajustar pela tela.
 - Módulos: nome = título sem o prefixo "Módulo N" e `contents` = os subitens do docx; Electricidad Básica com aprendizaje e horas teóricas/práticas da aba da COT-177; 035# com 1 h teórica por tópico; descrição do 202# copiada do docx sem o trecho de template — custo se errado: editar módulos pela tela.
 - Telefones dos redatores normalizados para `+56 9 XXXX XXXX`; e-mail de cada um é o do CV (o do MAO é `@switch-chile.cl`) — custo se errado: editar o redator pela tela.
 
-## Para o João decidir
+## Decisão do João
 
-- O nome do contato do cliente ("Oscar Ibarra") aparece em `spec.md` e `plano.md` deste bloco. Não é instrutor nem empresa, a exceção que a spec abre para dado público. Fica no git até você dizer o contrário.
+- O nome do contato do cliente saiu de `spec.md`, `plano.md` e deste arquivo por decisão do João (2026-10-19); ele só existe no `complemento.json`, fora do git. O histórico do git ainda o contém nos commits anteriores.

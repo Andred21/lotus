@@ -124,7 +124,7 @@ Comando artisan `lotus:carga-inicial {pasta} {--simular}`, padrão `lotus:<verbo
 
 | Entidade | Como nasce | Contorna |
 |---|---|---|
-| Cliente SWITCH | `users(type=cliente, is_active=false)`, RUT `77.117.942-8`, e-mail sintético; `clients` com `legal_name` e `business_activity` da COT; um endereço e um contato principal (Oscar Ibarra) da COT | `CreateClientAction` |
+| Cliente SWITCH | `users(type=cliente, is_active=false)`, RUT `77.117.942-8`, e-mail sintético; `clients` com `legal_name` e `business_activity` da COT; um endereço e um contato principal da COT | `CreateClientAction` |
 | Aluno | `users(type=aluno, is_active=false)` + `students`; nome = o da linha mais recente (Claude); e-mail sintético | `StudentResolver` (exige e-mail, D9) |
 | Vínculo aluno↔cliente | `student_client_logs` aberto, com `started_on` = a primeira `Fecha Curso` do aluno no recorte; `students.current_client_id` = SWITCH (Claude) | `StudentClientLinkService` (só grava hoje) |
 | Redator | `users(type=redator, is_active=true)`, role `redator`, `redatores`; sem convite | `CreateRedatorAction` (convite fixo) |

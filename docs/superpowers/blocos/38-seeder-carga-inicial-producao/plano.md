@@ -975,7 +975,7 @@ João. **Nada desta task com dado pessoal entra no git**; só o roteiro de produ
   - **`instrutores`:** `{"Magallanes Acuña Olate": "MAO"}`.
   - **`cliente`:**
     - RUT `77.117.942-8`, `name` = `SWITCH CHILE LTDA.` (o nome impresso);
-    - `legal_name`, giro, endereço e contato (Oscar Ibarra) do docx da COT-185.
+    - `legal_name`, giro, endereço e contato do docx da COT-185.
   - **`cursos`:**
 
     | chave | name | technical_name | horas | dias | módulos |
