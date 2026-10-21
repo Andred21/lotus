@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
  * da classe, não esquecimento:
  *
  * 1. Cada `IssueCertificateAction::execute()` já É a sua própria transação
- *    (seis portas + D9 + auditoria).
+ *    (cinco portas + D9 + auditoria).
  * 2. Uma transação por fora faria um item falho reverter os que já tinham sido
  *    commitados — documento de peso legal desaparecendo em silêncio.
  * 3. Pior: reverteria o `INSERT` sem devolver o número de sequência, gastando
@@ -40,7 +40,7 @@ class BatchIssueCertificatesAction
         // (D11), e resolvê-lo por item custaria um SELECT por matrícula.
         //
         // `withTrashed` pelo mesmo motivo do sítio individual: a designação na
-        // turma (porta 6) é que autoriza, e ela sobrevive ao arquivamento —
+        // turma (porta 5) é que autoriza, e ela sobrevive ao arquivamento —
         // `turma_redator` não tem `deleted_at`. Aqui o escopo de `SoftDeletes`
         // custava ainda mais caro: esta linha roda FORA do `try` por item, e a
         // `ModelNotFoundException` derrubava o request inteiro com 404 —
@@ -62,7 +62,7 @@ class BatchIssueCertificatesAction
             // `ModelNotFoundException` subiria sem `catch`, virando 404 pro
             // request inteiro — escondendo itens anteriores já commitados (não
             // há transação externa). Por isso vira `ValidationException`: mesmo
-            // formato de recusa das seis portas, capturado abaixo e reportado
+            // formato de recusa das cinco portas, capturado abaixo e reportado
             // como item, não como falha da requisição.
             $enrollment = Enrollment::query()->find($enrollmentId);
 

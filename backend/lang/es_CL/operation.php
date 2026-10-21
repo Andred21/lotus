@@ -12,10 +12,6 @@ return [
         'quote_not_approved' => 'La cotización debe estar aprobada para configurar la clase.',
         'already_exists' => 'Esta cotización ya tiene una clase configurada.',
     ],
-    'redator' => [
-        'not_qualified' => 'El relator no está habilitado para dictar este curso.',
-        'reuf_invalid' => 'El relator no tiene REUF válido (documento ausente o vencido).',
-    ],
     'document_type' => [
         'MANUAL' => 'Manual',
         'PRUEBAS' => 'Pruebas',

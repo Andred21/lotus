@@ -8,13 +8,11 @@ use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
 /**
- * Cria o curso + templates de certificado e módulos (nested) numa transação.
+ * Cria o curso + módulos (nested) numa transação.
  * Habilitação redator↔curso NÃO é tratada aqui — é por endpoint dedicado.
  */
 class CreateCourseAction
 {
-    public function __construct(private CreateCertificateTemplateAction $templates) {}
-
     public function execute(CourseData $data): Course
     {
         return DB::transaction(function () use ($data) {
@@ -27,12 +25,6 @@ class CreateCourseAction
 
             // Coleção ausente (Optional) = curso nasce sem ela. Mesma leitura do
             // UpdateCourseAction — `CreateX` sincroniza o que `UpdateX` sincroniza.
-            if (! $data->templates instanceof Optional) {
-                foreach ($data->templates as $template) {
-                    $this->templates->execute($course, $template);
-                }
-            }
-
             // sort_order é derivado do índice: reordenar = mandar o array na ordem
             // nova. O sort_order que venha no payload é ignorado de propósito.
             if (! $data->modules instanceof Optional) {

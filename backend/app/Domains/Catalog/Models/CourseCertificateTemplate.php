@@ -19,9 +19,11 @@ class CourseCertificateTemplate extends Model implements Auditable
     protected $table = 'course_certificate_templates';
 
     /**
-     * `version` fica FORA de propósito (spec D10): o número é derivado pelo
+     * `version` fica FORA de propósito (spec D10): o número era derivado pelo
      * `CreateCertificateTemplateAction`, sob lock, e gravado por atribuição
-     * explícita. Fora do fillable, `create(['version' => 2])` de qualquer outro
+     * explícita. Essa action saiu no bloco 39 (o template deixou de ser
+     * editável pela API) e este model ficou como legado/rastro das versões já
+     * gravadas; o raciocínio abaixo segue valendo para qualquer escrita futura. Fora do fillable, `create(['version' => 2])` de qualquer outro
      * ponto simplesmente não grava o número — o bypass morre no model. Mesmo
      * precedente do `created_at` de `LoginLog`: a data do acesso não se forja
      * por mass assignment, e o número de versão de um documento legal também

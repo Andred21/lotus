@@ -56,7 +56,6 @@ class CadastroAuthorizationTest extends TestCase
         $this->actingAsRedator();
 
         $this->postJson("/api/clients/{$client->id}/addresses", [])->assertForbidden();
-        $this->postJson("/api/courses/{$course->id}/templates", [])->assertForbidden();
         $this->putJson("/api/courses/{$course->id}/redatores", ['redator_ids' => []])->assertForbidden();
     }
 

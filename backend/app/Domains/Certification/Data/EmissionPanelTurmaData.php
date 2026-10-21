@@ -2,7 +2,6 @@
 
 namespace App\Domains\Certification\Data;
 
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Certification\Enums\EmissionBlockReason;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Identity\Models\Redator;
@@ -14,11 +13,11 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * A turma no painel de emissão. Toda turma concluída aparece — a bloqueada
- * também, com o motivo em `emission_blocked` (D-P1/D-P3): esconder a turma sem
- * template deixava o admin sem nada para clicar E sem nada para ler.
+ * também, com o motivo em `emission_blocked` (D-P1/D-P3): esconder a turma
+ * bloqueada deixava o admin sem nada para clicar E sem nada para ler.
  *
  * `emission_blocked` é calculado no SERVIDOR, pelo mesmo
- * `CertificateTemplateResolver` que as portas do `CertificateEligibility`
+ * `EmissionCityResolver` que as portas do `CertificateEligibility`
  * consultam. Re-derivar a cidade de emissão ou o redator no cliente é a mesma
  * classe de bug que as portas fecharam: a lista prometendo o que o POST recusa.
  */
@@ -30,7 +29,6 @@ class EmissionPanelTurmaData extends Data
         public string $course_name,
         public string $client_name,
         public string $end_date,
-        public ?int $template_validity_months,
         /** `null` quando a turma é emitível; o motivo da porta fechada quando não. */
         public ?EmissionBlockReason $emission_blocked,
         /** @var array<EmissionPanelEnrollmentData> */
@@ -42,7 +40,6 @@ class EmissionPanelTurmaData extends Data
     /** @param  Collection<int, Certificate>  $vigentesPorEnrollment  keyBy `enrollment_id` */
     public static function fromModel(
         Turma $turma,
-        ?CourseCertificateTemplate $template,
         ?EmissionBlockReason $emissionBlocked,
         Collection $vigentesPorEnrollment,
     ): self {
@@ -53,7 +50,6 @@ class EmissionPanelTurmaData extends Data
             // `{{EMPRESA}}` do documento oficial — o seam `Turma::contratante()`.
             client_name: $turma->contratante()->name,
             end_date: $turma->end_date->toDateString(),
-            template_validity_months: $template?->validity_months,
             emission_blocked: $emissionBlocked,
             enrollments: $turma->enrollments
                 ->map(fn (Enrollment $enrollment) => EmissionPanelEnrollmentData::fromModel(

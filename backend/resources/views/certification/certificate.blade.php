@@ -284,6 +284,9 @@
     </style>
 </head>
 <body>
+@if ($muestra !== null)
+<div style="position: fixed; top: 50%; left: 50%; z-index: 9999; width: 260mm; margin-left: -130mm; margin-top: -20mm; text-align: center; font-family: 'Montserrat', sans-serif; font-size: 44px; font-weight: 800; line-height: 1; white-space: nowrap; color: rgba(200, 0, 0, 0.28); transform: rotate(-35deg); pointer-events: none;">{{ $muestra }}</div>
+@endif
 <section class="page">
     <div class="identificacion">
         <img src="data:image/svg+xml;base64,{{ $qr }}" alt="QR">

@@ -315,7 +315,7 @@ class BatchIssueTest extends TestCase
         $this->actingAsAdmin();
         $enrollmentB = $this->segundaMatricula();
 
-        // Redator real, mas nunca designado NESTA turma (porta 6).
+        // Redator real, mas nunca designado NESTA turma (porta 5).
         $outroRedator = Redator::create([
             'user_id' => User::factory()->redator()->create()->id,
         ]);
@@ -370,7 +370,7 @@ class BatchIssueTest extends TestCase
      * um error-bag por campo — por isso o adapter achata a recusa com
      * `ValidationMessages::squash()` (`implode(' ')`), e não com `->first()`.
      *
-     * Hoje nenhuma das seis portas emite duas razões, então nenhum caminho de
+     * Hoje nenhuma das cinco portas emite duas razões, então nenhum caminho de
      * produção separa as duas formas: o unit test do seam prova o `squash`,
      * mas a FIAÇÃO dele no Action não tinha guarda nenhuma. Voltar aquela
      * linha para `->first()` deixava a suíte inteira verde e a recusa pela

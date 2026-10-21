@@ -98,6 +98,9 @@
   O `39` nasceu em 2026-10-17, aberto pelo João quando o smoke da aceitação do `13` recusou emitir
   certificado em produção (`sin_plantilla`). **O `38` foi saltado**: a branch
   `docs/backlog-ficha-38-carga-inicial-producao` já o reserva sem ficha aqui.
+  O `40` nasceu em 2026-10-19, aberto pelo João a partir da revisão do `39`: um certificado real
+  com nota e asistencia sai em 3 páginas, e a ficha junta a esse achado a revisão geral do
+  certificado e a pesquisa do que o torna válido para uma OTEC credenciada.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -130,7 +133,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **39** `certificado-e-redator-sem-trava` | Cross-cutting | Destrava o smoke da aceitação do 13: produção não emite certificado sem modelo cadastrado por curso |
 | 2 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
@@ -149,6 +151,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 |---|---|---|
 | **34** `infra-producao-observabilidade` | 7 | 2026-10-05 |
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
+| **39** `certificado-e-redator-sem-trava` | 1, 2 | 2026-10-20 |
 
 ---
 
@@ -197,6 +200,72 @@ e pela promoção pelo botão.
 **DoD:** em teste, um curso sem template emite certificado e a pré-visualização dele renderiza; um
 certificado emitido antes da mudança continua idêntico (snapshot); a associação de um redator
 inidôneo passa e mostra o aviso; o ruling da RN-09 está registrado.
+
+---
+
+## 40. `certificado-refinamento-e-validade`
+
+**Prioridade:** P1 (a posição na fila é do João) · **Frente:** Cross-cutting (Certification backend + Blade, Drive, Lotus) · **Contexto:** sim · **Depende:** 39
+**Fonte:** smoke e revisão do bloco 39 em 2026-10-19 (`blocos/39-certificado-e-redator-sem-trava/`);
+`backend/resources/views/certification/certificate.blade.php`; `docs/templates/certificado.pdf` (o
+aprovado: 2 páginas A4, fundo com logo, assinatura de Marcia de Batalha, `Res. SENCE N°0879
+08/03/2022` e `NCH 2728-2015` rasterizados);
+`specs/archive/2026-08-10-documentos-oficiais-template-e-docx-design.md` §1.1 e §7; `P-28`; os
+modelos da v1 (`200#`, `201#`, `202#`) levantados na ficha 38.
+
+**Por que existe:** a revisão do 39 achou, fora do escopo dele, que um certificado real com **nota e
+asistencia preenchidas sai com 3 páginas em vez de 2**, com a assinatura do redator sozinha numa
+página quase vazia. A causa é o layout do Blade, anterior ao 39 (o hash provou que o 39 não mudou o
+HTML real); os certificados do seed não mostram o defeito porque têm nota e asistencia vazias. O
+certificado tem peso legal, e o achado expôs que ninguém mediu ainda o documento contra o que o torna
+**válido**: o bloco de 2026-08-10 deixou de fora, de propósito, a assinatura da gerente, os carimbos
+SENCE/NCh e o selo de resolução ("o bloco não inventa peça de valor legal"), e a `P-28` segue aberta.
+
+**Objetivo:** o certificado emitido pelo Lotus sai paginado como o aprovado em qualquer combinação
+real de dados, e carrega o que uma OTEC credenciada precisa para que ele valha — com a lista desses
+requisitos levantada em fonte primária, não suposta.
+
+**Escopo:**
+- **Paginação (o achado):** o certificado com nota, asistencia e os textos mais longos que o domínio
+  aceita (nome do curso, do aluno, da empresa, módulos) cabe nas 2 páginas do aprovado, e a
+  assinatura do redator nunca cai sozinha. Prova por `pdfinfo` com o pior caso medido, não com o
+  seed. Decidir no brainstorming se o limite é de layout (quebra, tamanho de fonte, `page-break`) ou
+  de dado (teto de caracteres validado na entrada).
+- **Revisão geral do certificado:** comparar a saída atual, campo a campo, com o
+  `certificado.pdf` aprovado e com os modelos da v1 (`200#`, `201#`, `202#`) — o que falta, o que
+  sobra, o que diverge (texto, ordem, rótulos, formato de data, RUT, horas, vigência, QR, código).
+  A `P-28` (cunhas e fundo da página 2) entra aqui ou sai decidida com a Lotus.
+- **Pesquisa — o que torna válido o certificado de uma OTEC credenciada no Chile.** Levantamento em
+  fonte primária, registrado no bloco com citação de cada requisito. Perguntas de partida, todas a
+  verificar:
+  - o que o **SENCE** exige no certificado de um curso de OTEC registrada (a Lotus tem a
+    `Res. SENCE N°0879 08/03/2022`), com e sem franquia tributária: código SENCE do curso, número
+    de registro da OTEC, dados mínimos, assistência e nota mínimas, guarda;
+  - o que a **NCh 2728:2015** (sistema de gestão da OTEC) pede de controle e rastreabilidade do
+    documento emitido, e como o Lotus prova isso numa auditoria da certificadora;
+  - se a assinatura da gerente e do instrutor precisa ser **firma electrónica** (simples ou
+    avançada, Ley 19.799) para o PDF valer sem impressão, ou se a assinatura raster + o QR de
+    validação bastam;
+  - se o setor elétrico regulado (SEC ou exigência contratual dos clientes) pede algo além do
+    SENCE para o certificado de capacitação;
+  - o que a Lotus imprime hoje e por quê — confirmar com ela, porque a fonte de verdade do que ela
+    entrega ao cliente é ela.
+- Com a pesquisa em mãos, aplicar no template o que couber em código (dados, selos, assinaturas,
+  textos) e registrar como decisão (ADR ou ruling) o que depender da Lotus.
+
+**Fora:** reemitir ou alterar certificado já emitido — ele lê do snapshot e continua idêntico;
+editor visual de template; a carga dos certificados da v1 (é do 38); contratar certificadora ou
+provedor de firma electrónica avançada — se a pesquisa apontar que é preciso, vira decisão do João
+e ficha própria.
+
+**Restrições:** certificado emitido não muda (teste de snapshot, como no 39). Peça de valor legal
+(selo, assinatura, número de resolução) só entra com o asset e o texto entregues ou aprovados pela
+Lotus — o bloco não os inventa. `generated.ts` regenerado se algum DTO mudar (lei 3).
+
+**DoD:** o pior caso medido de dado real sai em 2 páginas, provado por `pdfinfo`, com a assinatura
+na mesma página do corpo; a tabela de divergências contra o aprovado está registrada e cada linha
+fechada ou decidida; a pesquisa de validade está registrada com fonte primária por requisito, e
+cada requisito está atendido no template ou registrado como decisão pendente da Lotus.
 
 ---
 

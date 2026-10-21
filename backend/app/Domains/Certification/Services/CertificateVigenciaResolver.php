@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
  * antiga face de lista dele e o painel de emissão), todas repetindo
  * `where('status', Emitido)`. Implementações repetidas da mesma regra são
  * respostas esperando para divergir num documento de peso legal — o mesmo
- * motivo pelo qual o `CertificateTemplateResolver` existe (B1).
+ * motivo pelo qual o `EmissionCityResolver` existe (B1).
  *
  * A divergência aqui é concreta, não hipotética: no dia em que "vigente" passar
  * a significar "emitido **e** dentro do `valido_ate`", as portas mudam e o

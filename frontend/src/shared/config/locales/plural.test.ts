@@ -28,7 +28,6 @@ const CHAVES = [
   'operation.pending.students',
   'operation.table.count',
   'operation.enrollment.footerCount',
-  'certificate.vigenciaMeses',
   'certificate.validation.hours',
 ] as const
 

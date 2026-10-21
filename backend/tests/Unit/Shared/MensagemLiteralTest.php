@@ -123,7 +123,7 @@ class MensagemLiteralTest extends TestCase
      * `ValidationException::withMessages([$field => $message])` — com
      * VARIÁVEIS. O detector de `withMessages` exige o par
      * `'campo' => '<texto>'` na janela dele, então não via nada; e a frase de
-     * verdade mora no chamador, seis linhas acima. As seis recusas de emissão
+     * verdade mora no chamador, seis linhas acima. As recusas de emissão
      * de certificado atravessaram assim o bloco de i18n que traduziu as outras
      * 41 (Q-7 do review de 2026-09-03).
      *

@@ -2,31 +2,27 @@
 
 namespace Tests\Feature\Certification;
 
-use App\Domains\Catalog\Models\Course;
 use App\Domains\Certification\Data\EmissionPanelEnrollmentData;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Enums\CertificateStatus;
+use App\Domains\Certification\Enums\EmissionBlockReason;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateEligibility;
-use App\Domains\Certification\Services\CertificateTemplateResolver;
 use App\Domains\Certification\Services\EmissionPanelQuery;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
+use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
-use Tests\Support\CreatesCertificateTemplates;
-use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
 /**
@@ -38,13 +34,9 @@ use Tests\TestCase;
  */
 class CertificateEligibilityTest extends TestCase
 {
-    use CreatesCertificateTemplates;
-    use CreatesDomainRecords;
     use RefreshDatabase;
 
     private Client $client;
-
-    private Course $course;
 
     private Redator $redator;
 
@@ -56,7 +48,7 @@ class CertificateEligibilityTest extends TestCase
      * que "alguma" ValidationException subiu, e passava a ser vacuoso assim que
      * duas portas fechassem no mesmo cenário: provado em 2026-08-08 removendo
      * `assertTurmaConcluida()` da face de emissão — o teste continuava verde,
-     * porque a porta 6 (redator não designado) recusava em seguida.
+     * porque a porta 5 (redator não designado) recusava em seguida.
      *
      * @var array<string, string>
      */
@@ -64,8 +56,6 @@ class CertificateEligibilityTest extends TestCase
         'turma não concluída' => 'La clase aún no fue concluida: no se puede emitir el certificado (RN-08).',
         'matrícula não aprovada' => 'El alumno no fue aprobado: no se puede emitir el certificado.',
         'certificado vigente' => 'Ya existe un certificado vigente para esta matrícula.',
-        'curso sem template' => 'El curso no tiene una plantilla de certificado aprobada.',
-        'sem cidade de emissão' => 'La plantilla del curso no define una ciudad de emisión válida.',
         'sem redator designado' => 'El relator no está designado en esta clase.',
     ];
 
@@ -76,11 +66,12 @@ class CertificateEligibilityTest extends TestCase
         parent::setUp();
 
         Carbon::setTestNow('2026-08-05 10:00:00');
+        // Diferente do default (`Santiago`): prova que a cidade vem da config.
+        config(['app.certificate_issuer.city' => 'Temuco']);
 
-        // A única que passa nas seis portas.
+        // A única que passa nas cinco portas.
         $emitivel = IssuableEnrollmentBuilder::make()->create();
         $this->client = $emitivel->clientModel();
-        $this->course = $emitivel->courseModel();
         $this->redator = $emitivel->redatorModel();
         $this->emitivel = $emitivel->turmaModel();
 
@@ -117,18 +108,6 @@ class CertificateEligibilityTest extends TestCase
         ]);
         $this->reprovadas['certificado vigente'] = $certificadoVigente->turmaModel();
 
-        $this->reprovadas['curso sem template'] = $this->reprovadaBuilder()
-            ->course(['name' => 'Curso sin plantilla'])
-            ->semTemplate()
-            ->create()
-            ->turmaModel();
-
-        $this->reprovadas['sem cidade de emissão'] = $this->reprovadaBuilder()
-            ->course(['name' => 'Curso sin ciudad'])
-            ->templateSemCidade()
-            ->create()
-            ->turmaModel();
-
         $this->reprovadas['sem redator designado'] = $this->reprovadaBuilder()
             ->semRedator()
             ->create()
@@ -157,7 +136,7 @@ class CertificateEligibilityTest extends TestCase
             $context = $eligibility->assert(Enrollment::query()->findOrFail($enrollmentId), $this->redator);
 
             $this->assertSame($this->emitivel->id, $context->turma->id);
-            $this->assertSame('Santiago', $context->ciudadEmision);
+            $this->assertSame('Temuco', $context->ciudadEmision);
         }
     }
 
@@ -215,29 +194,42 @@ class CertificateEligibilityTest extends TestCase
     }
 
     /**
-     * O template vigente de UM curso se resolve pela mesma fonte da lista, mas
-     * filtrando no SQL: a emissão roda dentro da transação, e carregar a tabela
-     * inteira de templates ali era o preço escondido da fonte única (B1).
+     * Spec D2: a cidade do emissor é a única que a turma online conhece. Sem
+     * ela, painel e emissão têm de recusar juntos (`SinCiudad` ↔
+     * `emission_city_missing`) — e a turma presencial segue, porque a cidade
+     * dela é o `local_aplicacao`.
      */
-    public function test_template_de_um_curso_e_filtrado_na_consulta_e_nao_em_php(): void
+    public function test_sem_cidade_do_emissor_painel_e_emissao_concordam_e_presencial_segue(): void
     {
-        $outro = $this->makeCourse(['name' => 'Otro Curso']);
-        $this->makeTemplate($outro->id, [
-            'version' => 1,
-            'layout_config' => ['city' => 'Valparaíso'],
-        ]);
-        $carregados = [];
-        DB::listen(function (QueryExecuted $query) use (&$carregados): void {
-            if (str_contains($query->sql, 'from "course_certificate_templates"')) {
-                $carregados[] = $query->sql;
-            }
-        });
+        config(['app.certificate_issuer.city' => '']);
+        $eligibility = app(CertificateEligibility::class);
 
-        $template = app(CertificateTemplateResolver::class)->latestForCourse($this->course->id);
+        $presencial = $this->reprovadaBuilder()
+            ->turma(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => 'Rancagua'])
+            ->create();
 
-        $this->assertSame($this->course->id, $template->course_id);
-        $this->assertCount(1, $carregados);
-        $this->assertStringContainsString('"course_id" = ?', $carregados[0]);
+        $painel = collect($this->painel());
+
+        $this->assertSame(
+            EmissionBlockReason::SinCiudad,
+            $painel->sole(fn (EmissionPanelTurmaData $t) => $t->turma_id === $this->emitivel->id)->emission_blocked,
+        );
+
+        try {
+            $eligibility->assert($this->emitivel->enrollments()->sole(), $this->redator);
+            $this->fail('A emissão aceitou a turma online sem cidade do emissor.');
+        } catch (ValidationException $exception) {
+            $this->assertSame(
+                [__('certification.eligibility.emission_city_missing')],
+                $exception->errors()['turma'] ?? null,
+            );
+        }
+
+        $this->assertNull(
+            $painel->sole(fn (EmissionPanelTurmaData $t) => $t->turma_id === $presencial->turmaModel()->id)->emission_blocked,
+        );
+        $context = $eligibility->assert($presencial->enrollmentModel(), $presencial->redatorModel());
+        $this->assertSame('Rancagua', $context->ciudadEmision);
     }
 
     /**
@@ -279,7 +271,7 @@ class CertificateEligibilityTest extends TestCase
     /**
      * Cada reprovada nasce da própria cadeia via o builder. Cliente e redator
      * saem com RUT nulo para não colidir com o índice único de `users.rut`
-     * entre os sete cenários deste setUp (o default do builder repetiria o
+     * entre os cinco cenários deste setUp (o default do builder repetiria o
      * mesmo RUT em cada instância). O ALUNO não pode: o `EmissionPanelQuery`
      * projeta toda turma concluída — as reprovadas inclusive — e
      * `EmissionPanelEnrollmentData::$student_rut` é `string` não-nulo, então

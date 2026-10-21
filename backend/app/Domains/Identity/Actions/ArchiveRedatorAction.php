@@ -25,7 +25,7 @@ use Illuminate\Validation\ValidationException;
  * O GATE recusa redator com turma em andamento: trabalho pendente não some da
  * operação sem aviso (spec D3). Turma CONCLUÍDA não bloqueia — arquivar quem já
  * terminou é o caso normal, e o certificado dela continua emitindo por DOIS
- * mecanismos: o `withTrashed()` de `Turma::redatores()` (a porta 6 do
+ * mecanismos: o `withTrashed()` de `Turma::redatores()` (a porta 5 do
  * `CertificateEligibility` enxerga a designação) e o `Redator::withTrashed()`
  * dos dois lookups de Certification, sem o qual o `findOrFail` recusa com 404
  * antes de qualquer porta rodar.

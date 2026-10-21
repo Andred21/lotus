@@ -1,0 +1,186 @@
+<?php
+
+namespace Tests\Feature\Certification;
+
+use App\Domains\Catalog\Models\CourseCertificateTemplate;
+use App\Domains\Certification\Enums\CertificateStatus;
+use App\Domains\Certification\Models\Certificate;
+use App\Shared\Pdf\HtmlToPdf;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Tests\Support\Certification\IssuableEnrollmentBuilder;
+use Tests\Support\CreatesCertificateTemplates;
+use Tests\Support\Pdf\FakeHtmlToPdf;
+use Tests\TestCase;
+
+/**
+ * Guarda do certificado já emitido: documento de peso legal não pode mudar de
+ * conteúdo, de PDF nem de linha por causa de nada que o bloco 39 faça com o
+ * template, o redator ou o cálculo de vigência.
+ */
+class CertificadoEmitidoIntactoTest extends TestCase
+{
+    use CreatesCertificateTemplates;
+    use RefreshDatabase;
+
+    /**
+     * sha256 do HTML que `main@0740843a` (antes do bloco 39) gera para este
+     * certificado. Mudar este valor é decidir que todo certificado já emitido
+     * reimprime diferente — decisão do João, registrada.
+     */
+    private const HTML_ANTES_DO_BLOCO_39 = '1323f813a6f9979f2daaba09e7986ac188ecf20e6b1e02011c6261ff158c94ac';
+
+    private const UUID = '3f6c2a1e-8b4d-4c7a-9e2f-5d1b0a9c8e7f';
+
+    private Certificate $certificate;
+
+    private FakeHtmlToPdf $pdf;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config([
+            'app.certificate_validation_url' => 'https://valida.lotus.test',
+            'app.certificate_issuer.name' => 'OTEC Viva SpA',
+            'app.certificate_issuer.rut' => '77.000.000-0',
+        ]);
+
+        // A cadeia viva só satisfaz as FKs: tudo o que o teste lê vem do
+        // snapshot congelado, e todo campo asserido do snapshot difere do
+        // valor vivo do builder (nome técnico, carga, datas e RUTs), para o
+        // hash provar a leitura do snapshot e não da cadeia.
+        $builder = IssuableEnrollmentBuilder::make()->create();
+
+        $this->makeTemplate($builder->courseModel()->id, [
+            'version' => 3,
+            'layout_config' => ['city' => 'Valparaíso'],
+            'validity_months' => 24,
+        ]);
+
+        // Relógio no passado: `updated_at` da linha nasce antigo e qualquer
+        // reescrita na leitura mudaria o valor medido.
+        Carbon::setTestNow('2026-08-05 10:00:00');
+
+        $this->certificate = Certificate::create([
+            'uuid' => self::UUID,
+            'enrollment_id' => $builder->enrollmentModel()->id,
+            'course_id' => $builder->courseModel()->id,
+            'redator_id' => $builder->redatorModel()->id,
+            'codigo' => 'LOT-2026-1001',
+            'snapshot' => [
+                'schema_version' => 2,
+                'emissor' => ['name' => 'OTEC Congelada SpA', 'rut' => '76.543.210-3'],
+                'aluno' => ['name' => 'Juan Pérez Congelado', 'rut' => '15.555.555-6'],
+                'curso' => [
+                    'name' => 'Seguridad Congelada',
+                    'technical_name' => 'Operación Segura AT Congelado',
+                    'workload_hours' => 24,
+                    'description' => 'abordó la narrativa congelada del curso.',
+                    'modules' => [
+                        [
+                            'sort_order' => 1,
+                            'name' => '1. Introducción Congelada',
+                            'contents' => "Objetivos congelados\nMarco congelado",
+                        ],
+                    ],
+                ],
+                'turma' => [
+                    'id' => $builder->turmaModel()->id,
+                    'start_date' => '2026-03-02',
+                    'end_date' => '2026-03-06',
+                    'modalidade' => 'presencial',
+                ],
+                'cliente' => ['name' => 'Empresa Congelada', 'rut' => '18.888.888-7'],
+                'redator' => ['name' => 'María Relatora Congelada', 'rut' => '13.131.313-6'],
+                'resultado' => [
+                    'grades' => null,
+                    'approval_status' => 'aprobado',
+                    'attendance_pct' => null,
+                ],
+                'template' => ['version' => 3, 'city' => 'Valparaíso'],
+                'ciudad_emision' => 'Valparaíso',
+                'emitido_em' => '2026-08-05',
+            ],
+            'valido_ate' => '2028-08-05',
+            'status' => CertificateStatus::Emitido,
+            'revoked_at' => null,
+            'revocation_reason' => null,
+        ]);
+
+        Carbon::setTestNow();
+
+        Http::preventStrayRequests();
+        $this->pdf = new FakeHtmlToPdf;
+        $this->app->instance(HtmlToPdf::class, $this->pdf);
+    }
+
+    public function test_html_do_certificado_emitido_e_o_mesmo_de_antes_do_bloco_39(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertSame(self::HTML_ANTES_DO_BLOCO_39, hash('sha256', $this->pdf->lastHtml()));
+    }
+
+    public function test_ler_o_certificado_emitido_nao_consulta_templates(): void
+    {
+        $this->actingAsAdmin();
+
+        CourseCertificateTemplate::withTrashed()->get()->each->forceDelete();
+
+        $sql = [];
+        DB::listen(function ($query) use (&$sql): void {
+            $sql[] = $query->sql;
+        });
+
+        $show = $this->getJson("/api/certificates/{$this->certificate->id}");
+        $show->assertOk();
+        $this->getJson('/api/publico/certificados/'.self::UUID)->assertOk();
+        $this->get($this->pdfUrl())->assertOk();
+
+        $consultaramTemplates = array_filter(
+            $sql,
+            fn (string $s): bool => str_contains($s, 'course_certificate_templates'),
+        );
+        $this->assertSame([], array_values($consultaramTemplates));
+        $this->assertSame(self::HTML_ANTES_DO_BLOCO_39, hash('sha256', $this->pdf->lastHtml()));
+        $show->assertJsonPath('snapshot.template.city', 'Valparaíso');
+        $this->assertSame('2028-08-05', $show->json('valido_ate'));
+    }
+
+    public function test_ler_o_certificado_emitido_nao_reescreve_a_linha(): void
+    {
+        $this->actingAsAdmin();
+        $campos = ['snapshot', 'valido_ate', 'codigo', 'status', 'updated_at'];
+        $antes = $this->crus($campos);
+
+        $this->getJson("/api/certificates/{$this->certificate->id}")->assertOk();
+        $this->getJson('/api/publico/certificados/'.self::UUID)->assertOk();
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertSame($antes, $this->crus($campos));
+    }
+
+    /**
+     * @param  list<string>  $campos
+     * @return array<string, mixed>
+     */
+    private function crus(array $campos): array
+    {
+        $linha = Certificate::query()->findOrFail($this->certificate->id);
+
+        return array_combine($campos, array_map(
+            fn (string $campo): mixed => $linha->getRawOriginal($campo),
+            $campos,
+        ));
+    }
+
+    private function pdfUrl(): string
+    {
+        return "/api/certificates/{$this->certificate->id}/pdf";
+    }
+}

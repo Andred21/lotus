@@ -334,6 +334,8 @@ reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estági
   `MAX(version)+1` com `lockForUpdate()` em transação no `CreateCertificateTemplateAction`, índice
   `UNIQUE(course_id, version)` como defesa extra, e `withTrashed()` na conta porque o replace nested
   do `UpdateCourseAction` arquiva e recria. Não é ADR nova: é este ADR aplicado de novo.
+  _Emenda 2026-10-17:_ o `CreateCertificateTemplateAction` saiu com o CRUD de template no bloco 39;
+  o padrão segue valendo.
 
 **Porquê:** separa a natural key (rastreio legível que o cliente pede por telefone/e-mail) da
 surrogate key (`id`). Evita reaproveitamento de número após soft-delete. Trade-off: lock
@@ -577,4 +579,4 @@ efeito a avisar ao site (D-54 de lá).
   exportação fria para Glacier segue opcional e sem requisito aprovado.
 
 ## Regras de negócio herdadas (referência)
-Soft delete nas entidades de negócio; certificados/manuais gerados sob demanda; templates como config versionada do curso; **financeiro não bloqueia ações**; RUT único; valor registrado na cotação; conclusão de turma em dois estágios (documentação habilita, admin confirma); **redator↔turma é N:N** (a v1 previa um redator por turma; superado no Bloco 6b, spec `2026-07-21-bloco6b-turma-designacao-design.md` D5 — pivot `turma_redator`); só admin e redator autenticam (RN-01).
+Soft delete nas entidades de negócio; certificados/manuais gerados sob demanda; templates como config versionada do curso (legado desde o bloco 39); **financeiro não bloqueia ações**; RUT único; valor registrado na cotação; conclusão de turma em dois estágios (documentação habilita, admin confirma); **redator↔turma é N:N** (a v1 previa um redator por turma; superado no Bloco 6b, spec `2026-07-21-bloco6b-turma-designacao-design.md` D5 — pivot `turma_redator`); só admin e redator autenticam (RN-01).

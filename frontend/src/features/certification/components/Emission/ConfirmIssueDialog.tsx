@@ -24,10 +24,8 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
     turma.redatores.length === 1 ? turma.redatores[0].redator_id : null,
   )
 
-  const vigencia =
-    turma.template_validity_months == null
-      ? t('certificate.vigenciaIndefinida')
-      : t('certificate.vigenciaMeses', { count: turma.template_validity_months })
+  // Bloco 39: o certificado novo nasce sem prazo (`valido_ate` nulo), sempre.
+  const vigencia = t('certificate.vigenciaIndefinida')
 
   const submit = () => {
     if (redatorId == null || issue.isPending) return

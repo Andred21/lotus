@@ -134,6 +134,45 @@ class PivotAuditTest extends TestCase
         $this->assertSame(1, $this->course->redatores()->count());
     }
 
+    public function test_sync_without_detaching_mescla_o_contexto_na_mesma_linha(): void
+    {
+        $r = $this->redator();
+
+        PivotAudit::syncWithoutDetaching($this->course, 'redatores', [$r->id], [
+            'inidoneidade' => [$r->id => ['reuf_invalid']],
+        ]);
+
+        $this->assertSame(1, $this->auditsDoCurso());
+        $this->assertSame(
+            ['redatores' => [$r->id], 'inidoneidade' => [(string) $r->id => ['reuf_invalid']]],
+            json_decode((string) $this->ultimaAuditDoCurso()->new_values, true),
+        );
+    }
+
+    public function test_contexto_nao_sobrescreve_o_conjunto(): void
+    {
+        $r = $this->redator();
+
+        PivotAudit::syncWithoutDetaching($this->course, 'redatores', [$r->id], ['redatores' => ['x']]);
+
+        $this->assertSame(
+            ['redatores' => [$r->id]],
+            json_decode((string) $this->ultimaAuditDoCurso()->new_values, true),
+        );
+    }
+
+    public function test_contexto_em_acrescimo_sem_mudanca_nao_grava(): void
+    {
+        $r = $this->redator();
+        PivotAudit::syncWithoutDetaching($this->course, 'redatores', [$r->id]);
+
+        PivotAudit::syncWithoutDetaching($this->course, 'redatores', [$r->id], [
+            'inidoneidade' => [$r->id => ['reuf_invalid']],
+        ]);
+
+        $this->assertSame(1, $this->auditsDoCurso());
+    }
+
     public function test_detach_grava_audit_com_evento_detach(): void
     {
         $r = $this->redator();

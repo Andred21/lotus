@@ -151,12 +151,6 @@ por_vencer: number,
 vencido: number,
 revocado: number,
 };
-export type CertificateTemplateData = {
-id: undefined | number,
-version: undefined | number,
-layout_config: Record<string, any>,
-validity_months: undefined | number | null,
-};
 export type ClientAddressData = {
 id: undefined | number,
 line1: undefined | string | null,
@@ -195,7 +189,6 @@ name: string,
 technical_name: undefined | string | null,
 description: undefined | string | null,
 workload_hours: number,
-templates: CertificateTemplateData[] | undefined,
 modules: CourseModuleData[] | undefined,
 redator_ids: number[],
 modules_total_hours: undefined | number,
@@ -217,7 +210,7 @@ export type DashboardAlertType = 'turma_overdue' | 'certificate_expiring_soon' |
 export type DashboardModule = 'commercial' | 'operation' | 'certification';
 export type DashboardSeverity = 'high' | 'medium' | 'normal';
 export type DocumentValidityStatus = 'vigente' | 'vence_em_breve' | 'vencido' | 'ausente';
-export type EmissionBlockReason = 'sin_plantilla' | 'plantilla_sin_ciudad' | 'sin_redactor';
+export type EmissionBlockReason = 'sin_ciudad' | 'sin_redactor';
 export type EmissionPanelCertificateData = {
 id: number,
 codigo: string,
@@ -242,7 +235,6 @@ turma_id: number,
 course_name: string,
 client_name: string,
 end_date: string,
-template_validity_months: number | null,
 emission_blocked: EmissionBlockReason | null,
 enrollments: EmissionPanelEnrollmentData[],
 redatores: EmissionPanelRedatorData[],
@@ -310,6 +302,7 @@ export type MonthlyCountData = {
 month: string,
 count: number,
 };
+export type MotivoInidoneidade = 'not_qualified' | 'reuf_invalid';
 export type MovedStudentData = {
 rut: string,
 name: string,

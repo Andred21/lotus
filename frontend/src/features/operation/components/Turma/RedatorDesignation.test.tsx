@@ -17,7 +17,9 @@ vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
   return {
     ...(await importOriginal<typeof import('react-i18next')>()),
-    useTranslation: mockUseTranslation(),
+    useTranslation: mockUseTranslation({
+      t: (k, o) => (o ? `${k}|${JSON.stringify(o)}` : k),
+    }),
   }
 })
 
@@ -53,8 +55,10 @@ function comPermissoes(permissions: string[]) {
 beforeEach(() => {
   comPermissoes(['operation.turma.assign_redator'])
   picker.current = {
-    eligible: [], loadingList: false, loadError: null,
-    reloadList: () => Promise.resolve(), designate: () => {}, remove: () => {},
+    options: [], motivosDe: () => [], pendingConfirmation: null,
+    pick: vi.fn(() => true), confirmPick: vi.fn(), cancelPick: vi.fn(),
+    loadingList: false, loadError: null,
+    reloadList: () => Promise.resolve(), remove: () => {},
     pending: false, error: undefined,
   }
 })

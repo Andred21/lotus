@@ -126,7 +126,7 @@ class Turma extends Model implements Auditable
      *
      * E este `withTrashed` sozinho NÃO salva a emissão: `CertificateController::store`
      * e `BatchIssueCertificatesAction` resolvem o redator por `findOrFail`, e sem o
-     * `Redator::withTrashed()` de lá o 404 vem ANTES de a porta 6 rodar. São três
+     * `Redator::withTrashed()` de lá o 404 vem ANTES de a porta 5 rodar. São três
      * peças, não duas — não reverta nenhuma achando que a outra cobre.
      *
      * `withTrashed()` não é método de `BelongsToMany`: é a macro que o
