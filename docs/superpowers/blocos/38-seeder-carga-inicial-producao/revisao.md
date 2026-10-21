@@ -2,10 +2,32 @@
 
 ## Em aberto
 
-- **Q-1** · Importante · CONFIRMED — o documento do redator sobe por `UploadFileAction::execute`
-  dentro da transação da carga, e o path só entra na `Contagem` depois do `register`; se o
-  `register` lançar, o PDF fica no bucket fora do `descartar()` e fora da lista "apague à mão".
-  Falta a **aprovação do João** para corrigir (ou adiar como ficha proposta).
+## Rodada 2 — `0740843a..19570b2b` — 2026-10-21 · Lente 1: opus · Lente 2: sonnet
+
+Correções da rodada 1, todas aprovadas pelo João, inclusive o Q-4 plausível: Q-1 em `0292fb2e`,
+Q-2 em `5b62ef18`, Q-3 em `a4cda8d0`, Q-5 em `c3747485` e Q-4 em `19570b2b`. A lente 1 releu cada
+uma e as deu como fechadas, sem regressão. Os testes de regressão do Q-1, do Q-3 e do Q-4 foram
+vistos reprovando antes da correção. A suíte backend inteira passou em `19570b2b`: 1369 passed e
+5 skipped. A lente Codex não foi tentada de novo, porque a recusa da rodada 1 vem da conta, não
+do bloco.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | A régua 2 da `MensagemLiteralTest` pula `app/Console` com a premissa de que esse código não chega ao `ProblemDetails`, e nenhuma catraca confere a premissa. Hoje nenhum código de `app/` fora de `app/Console` importa `App\Console\`, então a brecha não é usável agora, mas um import futuro passaria sem a régua ver. | CONFIRMED | `backend/tests/Unit/Shared/MensagemLiteralTest.php:71-72,81-86` | registrado, não bloqueia |
+| Q-2 | Menor | O contrato valida as horas de módulo com `numeric`, e o `CourseModuleData` declara `int`: `1.5` vira `1` em silêncio desde que o curso passou pela `CreateCourseAction`. O impacto é baixo, porque as horas de módulo não entram no snapshot e o complemento real usa horas inteiras. | CONFIRMED | `backend/app/Console/CargaInicial/ArquivoDeCarga.php:147-148`; `backend/app/Console/CargaInicial/CarregadorDeCadastros.php:362-368`; `backend/app/Domains/Catalog/Data/CourseModuleData.php:26,28` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 2 confirmados, 0 plausíveis, 0 refutados
+
+Observações da lente 1, sem achado:
+
+- O docblock do documento do redator diz "como o `StoreRedatorDocumentAction`". Aquele faz o
+  `put` fora da transação, e a carga faz o `put` dentro e compensa pelo comando. O resultado é o
+  mesmo.
+- O `plano.md` (R5 e R9) ainda descreve `Reprobado` como aceito. O plano é registro histórico; a
+  regra vigente é a do `a4cda8d0`.
+
+Padrão reincidente: nenhum.
 
 ## Rodada 1 — `0740843a..16d4f12f` — 2026-10-21 · Lente 1: opus · Lente 2: sonnet
 
