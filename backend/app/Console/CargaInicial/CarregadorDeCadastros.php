@@ -2,8 +2,9 @@
 
 namespace App\Console\CargaInicial;
 
+use App\Domains\Catalog\Actions\CreateCourseAction;
+use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Catalog\Models\CourseModule;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
 use App\Domains\Commercial\Models\ClientContact;
@@ -25,17 +26,20 @@ use Illuminate\Http\UploadedFile;
  * esta classe só grava e conta.
  *
  * Cada bloco contorna uma Action do fluxo vivo, e o motivo está ao lado dele
- * (spec §5.1, coluna "Contorna"). O que nenhum bloco contorna: a auditoria. Tudo
- * grava por Eloquent (`new Model` + `forceFill` + `save`), que aceita
- * `created_at`/`updated_at` explícitos e dispara o owen-it; o pivot grava só por
- * `PivotAudit`.
+ * (spec §5.1, coluna "Contorna"); só o curso passa pela Action. O que nenhum
+ * bloco contorna: a auditoria. Tudo grava por Eloquent (`new Model` +
+ * `forceFill` + `save`), que aceita `created_at`/`updated_at` explícitos e
+ * dispara o owen-it; o pivot grava só por `PivotAudit`.
  *
  * Casar com o que já existe nunca altera nada: registro igual é contado como
  * existente, registro diferente vira conflito e fica FORA do mapa devolvido.
  */
 final class CarregadorDeCadastros
 {
-    public function __construct(private readonly UploadFileAction $upload) {}
+    public function __construct(
+        private readonly UploadFileAction $upload,
+        private readonly CreateCourseAction $criarCurso,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $carga  o `carga.json` já conferido pelo `ArquivoDeCarga`
@@ -326,8 +330,9 @@ final class CarregadorDeCadastros
     }
 
     /**
-     * Sem Action do fluxo vivo para contornar: o curso entra pelo catálogo, sem
-     * template de certificado. Casa pelo `name`: as mesmas horas é o mesmo
+     * Não contorna: o curso nasce por `CreateCourseAction`, com os módulos em
+     * ordem e sem template de certificado, e leva o instante da carga (spec
+     * §5.2). Casa pelo `name`: as mesmas horas é o mesmo
      * curso (os módulos não se tocam); horas diferentes ou curso arquivado é
      * conflito, porque a carga nunca sobrescreve.
      *
@@ -354,22 +359,16 @@ final class CarregadorDeCadastros
                 continue;
             }
 
-            $course = new Course;
-            $course->forceFill([
+            $course = $this->criarCurso->execute(CourseData::from([
                 'name' => $dados['name'],
                 'technical_name' => $dados['technical_name'],
                 'description' => $dados['description'],
                 'workload_hours' => $dados['workload_hours'],
-            ])->save();
+                'modules' => $dados['modulos'],
+            ]));
             $contagem->criado('cursos');
 
-            foreach ($dados['modulos'] as $ordem => $modulo) {
-                $module = new CourseModule;
-                $module->forceFill([
-                    ...$modulo,
-                    'course_id' => $course->id,
-                    'sort_order' => $ordem + 1,
-                ])->save();
+            foreach ($dados['modulos'] as $_) {
                 $contagem->criado('modulos');
             }
 
