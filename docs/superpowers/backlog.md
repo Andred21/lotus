@@ -152,6 +152,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | **34** `infra-producao-observabilidade` | 7 | 2026-10-05 |
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **39** `certificado-e-redator-sem-trava` | 1, 2 | 2026-10-20 |
+| **38** `seeder-carga-inicial-producao` | 1, 2, 3, 4, 5 | 2026-10-21 |
 
 ---
 

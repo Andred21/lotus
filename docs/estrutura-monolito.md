@@ -79,6 +79,13 @@ backend/app/
                                 #   (`lotus:podar-logins`) — poda de `audits`/`login_logs` por
                                 #   `RetentionPolicy` (ADR-08). Agendados em `routes/console.php`,
                                 #   executados pelo serviço `scheduler` do `docker-compose.prod.yml`.
+                                #   CarregarCargaInicial (`lotus:carga-inicial`) e ExtrairCargaInicial
+                                #   (`lotus:extrair-carga-inicial`) — carga inicial do bloco 38, de uso
+                                #   único e manual, SEM agendamento.
+backend/app/Console/CargaInicial/   # classes de apoio dos dois comandos da carga inicial (bloco 38):
+                                #   contrato do `carga.json`, carregadores, `Contagem`; `Extracao/` guarda
+                                #   as do extrator. Fica fora de `Domains/` porque a carga atravessa
+                                #   cinco domínios (Identity, Catalog, Commercial, Operation, Certification).
 
 backend/database/
 ├── migrations/                 # FONTE ÚNICA — migrations são globais, NÃO por domínio

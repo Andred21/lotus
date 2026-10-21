@@ -7,31 +7,7 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-100 — a idade do backup era truncada em dias inteiros
-
-**Aberta e encerrada em 2026-10-06, no bloco `go-live-confiabilidade-e-recuperacao` (item 13).** A
-rodada 1 da revisão (Q-1) mediu que `verificar-backup.sh` e `conferir-golive.sh` dividiam a idade
-por 86400 antes de comparar: o alerta do SNS só saía com 72 h (o ADR-09 diz "passando de 2 dias"),
-e a linha de base do go-live só reprovava com 48 h, deixando uma noite falhada passar OK. Os dois
-passaram a comparar em segundos e a imprimir horas; as catracas ganharam a fronteira — 30 h reprova
-e 23 h passa no `conferir-golive.test.ts`, 47 h passa e 50 h publica no `verificar-backup.test.ts`,
-este agora executando o script com `aws` falso —, vistas reprovar contra os scripts antigos. A
-proposta à Lotus passou a dizer "supera 48 horas". Chega ao host pela reinstalação do runbook §7, a
-mesma do passo 1 do §15.
-
-**Bloco:** 13 · **Quem decidiu:** João, 2026-10-06 (aprovou a correção da Q-1).
-
-## P-05 — migrations "adicionais" não consolidadas
-
-**Encerrada em 2026-10-06, no bloco `go-live-confiabilidade-e-recuperacao` (item 13), por
-decisão D4 da spec: não consolidar.** As 30 migrations são histórico imutável — migration aplicada
-em produção nunca se reescreve, e a produção tem as 30 linhas na tabela `migrations` desde
-2026-09-04. O que a ficha realmente pedia ("banco = código") passa a ser provado pelo
-`deploy/bin/conferir-golive.sh` (verificação `migrations`, catraca em
-`frontend/tests/conferir-golive.test.ts`), e o gatilho "antes de subir para produção", disparado e
-não pago em 2026-09-20, fica registrado como decisão e não como dívida.
-
-**Bloco:** 13 · **Quem decidiu:** João, 2026-10-05 (brainstorming do bloco 13, P4).
+Nenhuma ficha em rastro.
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -52,6 +28,8 @@ não pago em 2026-09-20, fica registrado como decisão e não como dívida.
 > **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
 ## Rastro anterior, já removido
+
+**A P-100 e a P-05 saíram no fechamento do `seeder-carga-inicial-producao` (item 38, 2026-10-21)**, o primeiro depois do item 39, que passou sem removê-las. Ambas foram encerradas em 2026-10-06 pelo item 13: a P-100 pela correção da idade do backup (Q-1 da revisão, aprovada pelo João), a P-05 pela decisão D4 da spec — não consolidar as 30 migrations, com o "banco = código" provado pelo `deploy/bin/conferir-golive.sh`. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-84 e a P-92 saíram no fechamento do `infra-producao-email-ses` (item 33, 2026-10-04)**, o primeiro
 depois do item 35 que as encerrou em 2026-10-03: a P-84 pela seção HARNESS do

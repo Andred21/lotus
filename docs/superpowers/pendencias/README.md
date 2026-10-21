@@ -35,8 +35,8 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-94 | O diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha (`frame 669 · scroll 672`): herda o piso default de 42rem, e o audit do item 23 só o mediu vazio | — | `medir.cjs` do item 23 medir `scroll` = `frame` na linha `DIALOGO` em 1024 com alumno que tenha turma, ou bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo ou o piso default do `AppDataTable`; revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-95 | Doze pontas do harness que o item 35 deixou sem correção: seis Menores da revisão (Q-7, Q-8, Q-10 a Q-13) e seis do `rulings.md` (`context_required`/`closing` sem command, `lotus-ui-review` lendo o `state.md`, fluxo antigo no `backlog.md`, semente do `lane.sh` fora da invariante 6, catraca sem prompts nem `subagent_type`, `blocked` da rota codex sem artefato) | 36 | cada linha corrigida ou com veredito escrito; dispara no bloco que tocar `.claude/commands/`, `lane.sh`, `commands.tests.sh` ou `state.md` — **disparado em 2026-10-04 (item 36), não pago**; revisar 2026-10-31 |
-| P-96 | `AGENTS.md` e `INSTRUÇÕES-DO-PROJETO.md` listam quatro das seis rules (faltam `backend-lang` e `frontend-estilizacao`), e o `estrutura-monolito.md` não cita o `shared/ui/Timestamp/` | BD-15 | os três docs acompanharem; dispara no bloco que tocar qualquer um deles — **disparado em 2026-10-04 (item 36), não pago**; revisar 2026-10-31 |
-| P-97 | Dez divergências de coordenada e de mapa medidas pela `auditar-docs` do item 33: linhas de `operacao-segredos.md` §1/§2/§3/§5 deslocadas, o plano do item 10 arquivado em `deploy/aws/README.md`, `Shared/Logging/` incompleta no `estrutura-monolito.md` e `clamav` fora do `CLAUDE.md` §6 | — | bloco que tocar `operacao-segredos.md`, `estrutura-monolito.md` ou `deploy/aws/README.md` por outro motivo; revisar 2026-10-31 |
+| P-96 | `AGENTS.md` e `INSTRUÇÕES-DO-PROJETO.md` listam quatro das seis rules (faltam `backend-lang` e `frontend-estilizacao`), e o `estrutura-monolito.md` não cita o `shared/ui/Timestamp/` | BD-15 | os três docs acompanharem; dispara no bloco que tocar qualquer um deles — **disparado em 2026-10-04 (item 36) e em 2026-10-21 (item 38), não pago**; revisar 2026-10-31 |
+| P-97 | Dez divergências de coordenada e de mapa medidas pela `auditar-docs` do item 33: linhas de `operacao-segredos.md` §1/§2/§3/§5 deslocadas, o plano do item 10 arquivado em `deploy/aws/README.md`, `Shared/Logging/` incompleta no `estrutura-monolito.md` e `clamav` fora do `CLAUDE.md` §6 | — | bloco que tocar `operacao-segredos.md`, `estrutura-monolito.md` ou `deploy/aws/README.md` por outro motivo; **disparado em 2026-10-21 (item 38), não pago**; revisar 2026-10-31 |
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
@@ -128,10 +128,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (0)
 
-**Em rastro:** a **P-05** e a **P-100**, encerradas pelo `go-live-confiabilidade-e-recuperacao`
-(item 13) em 2026-10-06. Ficha completa em [`encerradas.md`](./encerradas.md).
+**A P-100 e a P-05 saíram no fechamento do item 38 (2026-10-21)**, o primeiro depois do item 39, que passou sem removê-las; o item 13 as encerrou em 2026-10-06. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-99 saiu no fechamento do item 13 (2026-10-06)**, o primeiro depois do item 34 que a encerrou
 em 2026-10-05. O rastro durável está nos commits e na linha de entrega em
