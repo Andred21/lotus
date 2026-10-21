@@ -104,13 +104,13 @@ class CarregarCargaInicialCommandTest extends TestCase
         {
             private int $chamadas = 0;
 
-            public function execute(Model $owner, UploadedFile $file, string $type, ?CarbonInterface $validUntil = null, ?string $disk = null): File
+            public function put(Model $owner, UploadedFile $file, ?string $disk = null): string
             {
                 if (++$this->chamadas === 2) {
                     throw new RuntimeException('disco indisponivel');
                 }
 
-                return parent::execute($owner, $file, $type, $validUntil, $disk);
+                return parent::put($owner, $file, $disk);
             }
         });
 
@@ -121,19 +121,36 @@ class CarregarCargaInicialCommandTest extends TestCase
         $this->assertSame([], Storage::disk('s3')->allFiles());
     }
 
+    public function test_falha_no_registro_depois_do_put_apaga_do_disco_o_que_acabou_de_subir(): void
+    {
+        // O binário já está no disco quando o insert em `files` lança: o path tem de estar na contagem antes dele.
+        $this->app->instance(UploadFileAction::class, new class extends UploadFileAction
+        {
+            public function register(Model $owner, string $path, array $meta, string $type, ?CarbonInterface $validUntil = null): File
+            {
+                throw new RuntimeException('insert em files falhou');
+            }
+        });
+
+        $this->artisan('lotus:carga-inicial', ['pasta' => $this->pasta])
+            ->expectsOutputToContain('A carga foi desfeita')->assertExitCode(1);
+
+        $this->assertSame([], Storage::disk('s3')->allFiles());
+    }
+
     public function test_arquivo_que_nao_se_apaga_e_listado_para_remocao_manual(): void
     {
         $this->app->instance(UploadFileAction::class, new class extends UploadFileAction
         {
             private int $chamadas = 0;
 
-            public function execute(Model $owner, UploadedFile $file, string $type, ?CarbonInterface $validUntil = null, ?string $disk = null): File
+            public function put(Model $owner, UploadedFile $file, ?string $disk = null): string
             {
                 if (++$this->chamadas === 2) {
                     throw new RuntimeException('disco indisponivel');
                 }
 
-                return parent::execute($owner, $file, $type, $validUntil, $disk);
+                return parent::put($owner, $file, $disk);
             }
 
             public function discard(string $path, ?string $disk = null): void {}

@@ -206,7 +206,10 @@ final class CarregadorDeCadastros
      *
      * O documento contorna as regras HTTP e o ClamAV (origem local confiável);
      * mime e tamanho se conferem em `conferirDocumentos`. Ele sobe por
-     * `UploadFileAction::execute`, a mesma porta do fluxo vivo.
+     * `put`/`register` separados, como o `StoreRedatorDocumentAction` (P-49):
+     * a carga está dentro de transação, e o path entra na contagem logo depois
+     * do `put`, antes do insert em `files`, para o comando apagar do disco o
+     * que subiu se qualquer passo seguinte falhar.
      *
      * @param  list<array<string, mixed>>  $redatores
      * @param  array<string, true>  $recusados  `<chave>|<tipo>` dos documentos que não passaram
@@ -277,8 +280,10 @@ final class CarregadorDeCadastros
             $arquivo = new UploadedFile($pasta.'/'.$documento['arquivo'], $documento['original_name'], null, null, true);
             $validade = $documento['valid_until'] === null ? null : CarbonImmutable::parse($documento['valid_until']);
 
-            $file = $this->upload->execute($redator, $arquivo, $documento['type'], $validade);
-            $contagem->arquivoGravado($file->path);
+            $meta = $this->upload->metadataOf($arquivo);
+            $path = $this->upload->put($redator, $arquivo);
+            $contagem->arquivoGravado($path);
+            $this->upload->register($redator, $path, $meta, $documento['type'], $validade);
         }
 
         $contagem->criado('documentos');
