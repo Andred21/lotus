@@ -364,6 +364,8 @@ do fechamento. O fechamento só escreve registros, e o João decidiu registrar e
 
 **Gatilho disparado e não pago — 2026-10-04, `harness-aceitacao-externa` (item 36).** O bloco tocou `AGENTS.md` e `docs/estrutura-monolito.md` (a seção HARNESS) por outro motivo. As rules `backend-lang` e `frontend-estilizacao` e o `shared/ui/Timestamp/` continuam fora dos três docs. Decisão do João no gate de fechamento: anotar e seguir. **As três linhas seguem válidas**; o gatilho não se desarma.
 
+**Gatilho disparado e não pago de novo — 2026-10-21, `seeder-carga-inicial-producao` (item 38).** O bloco tocou `docs/estrutura-monolito.md` (a árvore de `Console/`, com a carga inicial) por outro motivo. `backend-lang` e `frontend-estilizacao` seguem fora do `AGENTS.md` e do `INSTRUÇÕES-DO-PROJETO.md`, e o `shared/ui/Timestamp/` segue fora do `estrutura-monolito.md` (conferido por `grep` nesta data). **As três linhas seguem válidas**; o gatilho não se desarma.
+
 ## P-32 — a guarda da lição 13 confere path, não classe
 
 **Bloco:** BD-15 · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a
@@ -1235,3 +1237,5 @@ coordenada que envelheceu. Registradas sem correção, porque a skill reporta e 
 
 **A dependência fechou em 2026-10-04:** o ADR-23 cita o `FUT-4` do `backlog.md`, e a PR de docs da
 aceitação do item 33 o levou (spec §10).
+
+**Gatilho disparado e não pago — 2026-10-21, `seeder-carga-inicial-producao` (item 38).** O bloco tocou 
