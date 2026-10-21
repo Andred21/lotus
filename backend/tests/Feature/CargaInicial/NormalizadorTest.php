@@ -298,12 +298,13 @@ class NormalizadorTest extends TestCase
         $this->assertSame(6.5, $n->carga['orcamentos'][2]['turma']['matriculas'][0]['nota']);
     }
 
-    public function test_reprobado_sai_em_minusculas(): void
+    public function test_reprobado_e_erro_porque_toda_linha_traz_certificado(): void
     {
+        // O ArquivoDeCarga recusa certificado em matrícula não aprobada; o extrator não pode gerar o que o contrato recusa.
         $n = $this->normalizar([PlanilhaSintetica::linha(['estado_eval' => 'Reprobado', 'evaluacion' => 3])], $this->complementoSoComA176());
 
-        $this->assertSame([], $n->erros);
-        $this->assertSame('reprobado', $n->carga['orcamentos'][0]['turma']['matriculas'][0]['approval_status']);
+        $this->assertSame(['estado_eval fora de Aprobado: LOT-2026-001'], $n->erros);
+        $this->assertSame([], $n->carga);
     }
 
     public function test_cliente_vem_do_complemento_com_email_sintetico_e_desde_da_menor_data(): void

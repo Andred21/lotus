@@ -144,7 +144,8 @@ final class Normalizador
                 'RUT de cliente diferente do cliente do complemento' => Rut::parse((string) $linha['cliente_rut'])->format() !== $clienteRut,
                 'horas diferente do curso' => $curso !== null && $linha['horas'] !== (int) $curso['workload_hours'],
                 'modalidad diferente de Presencial' => mb_strtolower($this->colapsar($linha['modalidad'])) !== 'presencial',
-                'estado_eval fora de Aprobado/Reprobado' => ! in_array(mb_strtolower($this->colapsar($linha['estado_eval'])), ['aprobado', 'reprobado'], true),
+                // Toda linha traz certificado, e certificado só vai para matrícula aprobada (ArquivoDeCarga::erroDeTurma).
+                'estado_eval fora de Aprobado' => mb_strtolower($this->colapsar($linha['estado_eval'])) !== 'aprobado',
                 'evaluacion inválida' => is_string($linha['evaluacion']),
             ];
 
