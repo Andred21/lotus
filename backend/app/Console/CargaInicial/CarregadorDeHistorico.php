@@ -279,7 +279,7 @@ final class CarregadorDeHistorico
             return;
         }
 
-        $snapshot = $this->snapshot($dados, $enrollment, $turma, $curso, $redator, $cadastros->cliente);
+        $snapshot = $this->snapshot($dados, $enrollment, $turma, $curso, $redator);
 
         if (! $snapshot->isPresentable()) {
             $contagem->conflito(sprintf('certificado %s: o snapshot não é apresentável (aluno ou curso impresso em branco)', $codigo));
@@ -311,7 +311,7 @@ final class CarregadorDeHistorico
      *
      * @param  array<string, mixed>  $dados
      */
-    private function snapshot(array $dados, Enrollment $enrollment, Turma $turma, Course $curso, Redator $redator, Client $cliente): CertificateSnapshotData
+    private function snapshot(array $dados, Enrollment $enrollment, Turma $turma, Course $curso, Redator $redator): CertificateSnapshotData
     {
         $modulos = $curso->modules()->orderBy('sort_order')->get()
             ->map(fn ($m) => new SnapshotModuleData($m->sort_order, $m->name, $m->contents))

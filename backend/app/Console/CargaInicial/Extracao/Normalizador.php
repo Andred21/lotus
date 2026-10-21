@@ -2,6 +2,7 @@
 
 namespace App\Console\CargaInicial\Extracao;
 
+use App\Console\CargaInicial\ArquivoDeCarga;
 use App\Shared\Support\Rut;
 use DateTimeImmutable;
 
@@ -284,7 +285,7 @@ final class Normalizador
         ksort($orcamentos);
 
         return [
-            'schema_version' => 1,
+            'schema_version' => ArquivoDeCarga::SCHEMA_VERSION,
             'cliente' => $this->cliente($complemento, $dominio, $primeira),
             'cursos' => array_map($this->curso(...), $complemento['cursos']),
             'redatores' => array_map($this->redator(...), $complemento['redatores']),
