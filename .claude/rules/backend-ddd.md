@@ -14,7 +14,7 @@ existe**; o data-scoping segue outro molde (ver "RBAC" abaixo). PSR-4: `App\Doma
 Domínios (espelhados 1:1 pelas `features/` do front):
 - **Identity** — usuários, auth, redator, documentos do redator (`App\Domains\Identity`)
 - **Commercial** — clientes, orçamentos, cotações
-- **Catalog** — cursos, módulos, templates de certificado
+- **Catalog** — cursos, módulos (templates de certificado: legado, só rastro, desde o bloco 39)
 - **Operation** — turmas, matrículas, notas, designação
 - **Certification** — emissão on-demand, validação QR pública
 
@@ -62,7 +62,7 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
 - **Coleção nested read-write nasce `Optional` no DTO** (`array|Optional = new Optional`), e a Action
   pula o replace quando `Optional`. **Ausente = não mexe; `[]` = apaga.** Default `array = []` faz o
   replace-total apagar a coleção de quem só omitiu o campo — em silêncio, com peso legal. Ref.:
-  `CourseData::$templates`/`$modules`, `ClientData::$addresses`/`$contacts`.
+  `CourseData::$modules`, `ClientData::$addresses`/`$contacts`.
   **A lei tem catraca desde 2026-08-13:** `PersistenceLawsTest::test_colecao_nested_read_write_nasce_optional`
   varre por reflexão toda propriedade `#[DataCollectionOf]` e exige TIPO **e** DEFAULT `Optional` —
   `array|Optional = []` passaria pelo tipo e apagaria igual. Coleção que só existe na SAÍDA declara

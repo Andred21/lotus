@@ -12,10 +12,6 @@ return [
         'quote_not_approved' => 'A cotação precisa estar aprovada para configurar a turma.',
         'already_exists' => 'Esta cotação já tem uma turma configurada.',
     ],
-    'redator' => [
-        'not_qualified' => 'Redator não está habilitado a ministrar este curso.',
-        'reuf_invalid' => 'Redator não possui REUF válido (documento ausente ou vencido).',
-    ],
     'document_type' => [
         'MANUAL' => 'Manual',
         'PRUEBAS' => 'Provas',

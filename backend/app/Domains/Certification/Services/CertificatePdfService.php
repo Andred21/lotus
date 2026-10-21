@@ -9,6 +9,12 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CertificatePdfService
 {
+    /**
+     * A marca da amostra: impressa em diagonal no documento e gravada no QR no
+     * lugar da URL de validação, para a amostra nunca ser lida como real.
+     */
+    public const TEXTO_MUESTRA = 'MUESTRA — SIN VALIDEZ';
+
     public function __construct(
         private readonly HtmlToPdf $pdf,
         private readonly CertificateValidationUrl $validationUrl,
@@ -18,19 +24,33 @@ class CertificatePdfService
     {
         // `fromCss`: o tamanho do papel é declarado UMA vez, no `@page` do
         // Blade, onde o `min-height: 297mm` do documento já está calibrado.
-        return $this->pdf->render($this->html($certificate), PageOptions::fromCss());
+        return $this->pdf->render($this->html($certificate, false), PageOptions::fromCss());
     }
 
-    private function html(Certificate $certificate): string
+    /**
+     * Amostra do documento de um curso: o mesmo caminho do `render()`, com a
+     * marca d'água e um QR que não aponta para validação nenhuma.
+     */
+    public function renderMuestra(Certificate $certificate): string
+    {
+        return $this->pdf->render($this->html($certificate, true), PageOptions::fromCss());
+    }
+
+    private function html(Certificate $certificate, bool $muestra): string
     {
         // Um certificado com o nome do aluno em branco não é um certificado
         // incompleto — é um documento que atesta o que ninguém sabe.
         $certificate->snapshot->assertPresentable($certificate->codigo);
 
         // P-79: a base do QR é conteúdo de documento, com dono próprio — em
-        // produção, sem ela em https, o PDF não é montado.
-        $url = $this->validationUrl->para($certificate);
+        // produção, sem ela em https, o PDF não é montado. A amostra não tem
+        // o que validar, então o QR leva a marca.
+        $url = $muestra ? self::TEXTO_MUESTRA : $this->validationUrl->para($certificate);
+        // O default do gerador é ISO-8859-1, que não codifica o travessão da
+        // marca; a fachada é compartilhada, então os dois ramos fixam a
+        // codificação e uma amostra não vaza UTF-8 para o QR real seguinte.
         $qr = base64_encode((string) QrCode::format('svg')
+            ->encoding($muestra ? 'UTF-8' : 'ISO-8859-1')
             ->size(180)
             ->margin(0)
             ->generate($url));
@@ -38,6 +58,7 @@ class CertificatePdfService
         return view('certification.certificate', [
             'certificate' => $certificate,
             'qr' => $qr,
+            'muestra' => $muestra ? self::TEXTO_MUESTRA : null,
             // Embutida como o QR, e pelo mesmo motivo: o conversor recebe só o
             // HTML, então referência a arquivo ou URL do frontend não resolve.
             'logo' => base64_encode((string) file_get_contents(

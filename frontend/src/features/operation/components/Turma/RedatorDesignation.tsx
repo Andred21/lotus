@@ -1,53 +1,25 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { IdentityCell, AppButton, AppTag, AppDialog, AppErrorState, SectionLabel } from '@shared/ui'
-import type { TurmaData } from '@shared/types/generated'
+import { IdentityCell, AppButton, AppTag, AppDialog, ConfirmDialog, SectionLabel } from '@shared/ui'
+import type { MotivoInidoneidade, TurmaData } from '@shared/types/generated'
 import { usePermissions } from '@shared/hooks'
 import { useRedatorPicker } from '../../hooks/useRedatorPicker'
 import { registroAcademicoBloqueado } from '../../lib/turmaStatus'
 import { dangerText } from '@shared/styles/tokens'
-import { loadErrorHint, screenDetail } from '@shared/lib'
+import { RedatorPickerBody } from './RedatorPickerBody'
 
-type Picker = ReturnType<typeof useRedatorPicker>
-
-/** Corpo do diálogo do picker. A ordem das guardas é erro > carregando > vazio >
- * lista: invertê-la faria a falha de carga passar por "nenhum redator elegível"
- * (spec D16). Como guardas sequenciais a ordem é o próprio fluxo do código —
- * antes era um ternário de 4 níveis dentro do `return`. */
-function PickerBody({ picker, onPick }: { picker: Picker; onPick: (redatorId: number) => void }) {
+/** `[]` = idôneo; motivos = um aviso por motivo; `null` = lista não carregada,
+ * sem tag (afirmar "Idóneo" por omissão seria afirmar o que o front não sabe). */
+function TagsDeIdoneidade({ motivos }: { motivos: MotivoInidoneidade[] | null }) {
   const { t } = useTranslation()
-
-  if (picker.loadError)
-    return (
-      <AppErrorState
-        title={t('common.loadError')}
-        detail={screenDetail(picker.loadError) ?? t(loadErrorHint(picker.loadError))}
-        retryLabel={t('common.retry')}
-        onRetry={picker.reloadList}
-      />
-    )
-
-  if (picker.loadingList)
-    return <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('common.loading')}</p>
-
-  if (picker.eligible.length === 0)
-    return <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.pickerEmpty')}</p>
-
+  if (motivos === null) return null
+  if (motivos.length === 0) return <AppTag value={t('operation.redator.idoneo')} severity="success" />
   return (
-    <ul role="list" className="space-y-2">
-      {picker.eligible.map((r) => (
-        <li key={r.id} className="flex items-center justify-between gap-4 rounded-surface border p-3" style={{ borderColor: 'var(--surface-border)' }}>
-          <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
-          <AppButton
-            variant="primary"
-            label={t('operation.redator.pick')}
-            icon="pi pi-check"
-            disabled={picker.pending}
-            onClick={() => onPick(r.id!)}
-          />
-        </li>
+    <>
+      {motivos.map((m) => (
+        <AppTag key={m} value={t(`operation.redator.motivo.${m}`)} severity="warning" />
       ))}
-    </ul>
+    </>
   )
 }
 
@@ -86,7 +58,7 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
               * linha de texto, e o slot dela agora carrega o e-mail. */}
             <div className="flex items-center gap-3">
               <IdentityCell title={r.name} description={r.email} image={r.photo_url} />
-              <AppTag value={t('operation.redator.idoneo')} severity="success" />
+              <TagsDeIdoneidade motivos={picker.motivosDe(r.id)} />
             </div>
             {podeDesignar && (
               <AppButton
@@ -115,14 +87,30 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
       {picker.error && <p className="text-sm" style={{ color: dangerText }}>{picker.error}</p>}
 
       <AppDialog visible={open} header={t('operation.redator.pickerTitle')} onHide={() => setOpen(false)}>
-        <PickerBody
+        <RedatorPickerBody
           picker={picker}
           onPick={(redatorId) => {
-            picker.designate(redatorId)
-            setOpen(false)
+            if (picker.pick(redatorId)) setOpen(false)
           }}
         />
       </AppDialog>
+
+      <ConfirmDialog
+        visible={picker.pendingConfirmation !== null}
+        title={t('operation.redator.confirmIneligibleTitle')}
+        message={t('operation.redator.confirmIneligibleMessage', {
+          motivos: (picker.pendingConfirmation?.motivos ?? [])
+            .map((m) => t(`operation.redator.motivo.${m}`))
+            .join(', '),
+        })}
+        confirmLabel={t('operation.redator.confirmIneligibleAction')}
+        pending={picker.pending}
+        onConfirm={() => {
+          picker.confirmPick()
+          setOpen(false)
+        }}
+        onCancel={picker.cancelPick}
+      />
     </div>
   )
 }

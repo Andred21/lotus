@@ -4,24 +4,20 @@ namespace App\Domains\Catalog\Actions;
 
 use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Catalog\Models\CourseModule;
 use App\Shared\Data\WritableAttributes;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
 /**
- * Atualiza o curso + templates e módulos (nested). Ambos são substituídos
- * (replace) — simples e previsível para ~10 usuários internos. Habilitação
- * fica de fora.
+ * Atualiza o curso + módulos (nested). Os módulos são substituídos (replace)
+ * — simples e previsível para ~10 usuários internos. Habilitação fica de fora.
  *
  * Coleção `Optional` (ausente do payload) NÃO entra no replace: quem não
  * mandou a coleção não pediu para apagá-la. `[]` explícito apaga.
  */
 class UpdateCourseAction
 {
-    public function __construct(private CreateCertificateTemplateAction $templates) {}
-
     public function execute(Course $course, CourseData $data): Course
     {
         return DB::transaction(function () use ($course, $data) {
@@ -33,15 +29,8 @@ class UpdateCourseAction
                 'workload_hours' => $data->workload_hours,
             ]));
 
-            // Replace dos nested. Soft-delete por instância para a auditoria
+            // Replace dos módulos. Soft-delete por instância para a auditoria
             // registrar o que saiu (o builder emitiria UPDATE sem eventos).
-            if (! $data->templates instanceof Optional) {
-                $course->certificateTemplates()->get()->each(fn (CourseCertificateTemplate $t) => $t->delete());
-                foreach ($data->templates as $template) {
-                    $this->templates->execute($course, $template);
-                }
-            }
-
             // sort_order é derivado do índice: reordenar = mandar o array na ordem
             // nova. O sort_order que venha no payload é ignorado de propósito.
             if (! $data->modules instanceof Optional) {

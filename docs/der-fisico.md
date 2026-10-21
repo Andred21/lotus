@@ -31,7 +31,7 @@
 
 ### Catalog
 - **courses** — `id PK`, `name`, `technical_name` (nullable), `description` (text, nullable), `workload_hours` (smallint, carga horária), `deleted_at`.
-- **course_certificate_templates** — `id PK`, `course_id FK` → courses cascade, `version` (int, **derivado** por `MAX+1` sob `lockForUpdate` na Action — nunca input do cliente, mesmo padrão do `seq_in_budget`/ADR-17), `layout_config` (json), `validity_months` (smallint, nullable, vigência), `deleted_at`. **`UNIQUE(course_id, version)`** — índice cru, sem `deleted_at` na chave: número arquivado não se reaproveita, então a derivação conta os arquivados.
+- **course_certificate_templates** — **Legado desde o bloco 39 (2026-10-17):** nenhuma leitura nem escrita da aplicação; a emissão usa o Blade padrão. Tabela, dados e cascata ficam por rastro. `id PK`, `course_id FK` → courses cascade, `version` (int, **derivado** por `MAX+1` sob `lockForUpdate` na Action — nunca input do cliente, mesmo padrão do `seq_in_budget`/ADR-17), `layout_config` (json), `validity_months` (smallint, nullable, vigência), `deleted_at`. **`UNIQUE(course_id, version)`** — índice cru, sem `deleted_at` na chave: número arquivado não se reaproveita, então a derivação conta os arquivados.
 - **course_redator** — `id PK`, `course_id FK`, `redator_id FK` → redatores cascade, `unique(course_id, redator_id)`. Pivô N:N puro (idoneidade: quais redatores podem ministrar cada curso), **sem soft-delete**.
 - **course_modules** — `id PK`, `course_id FK` → courses cascade, `sort_order` (smallint, o "Item" 1..N — derivado do índice do array na Action, nunca do payload), `name`, `learnings` (text, nullable), `contents` (text, nullable, tópicos 1.1/1.2 em texto livre), `theory_hours` / `practice_hours` (smallint, default 0), `deleted_at`. Índice: `(course_id, sort_order)`. **Sem coluna de total** — horas do módulo e soma do curso são derivadas em runtime (`CourseModuleData`/`CourseData`); `courses.workload_hours` é a carga contratada, independente da soma (divergência é aviso de tela, não gate).
 
@@ -111,7 +111,7 @@ entra pelo encerramento da OS, não pela turma.
 - **RUT único** em `users.rut` (validação = `ValidRut` de estrutura + `unique:users,rut` com `withTrashed` no check).
 - **Status derivado, não persistido:** `budgets` não tem coluna `status`/`total` — o `BudgetSummaryService` deriva das cotações (bcmath). Ao criar tabela futura, não "cachear" agregado sem necessidade real.
 - **Coleção nested no DTO é `Optional`, não `array = []`** (ADR-04/lição do Bloco 5): em
-  `CourseData`, `templates`/`modules` ausentes do payload significam "não mexe"; `[]` apaga. Um
+  `CourseData`, `modules` ausente do payload significa "não mexe"; `[]` apaga. Um
   default `[]` fazia o replace-total da Action apagar a coleção de quem só omitiu o campo — em
   silêncio. Toda coleção nested read-write futura nasce `Optional`.
   Desde 2026-08-13 a lei tem mecanismo, e não só convenção:

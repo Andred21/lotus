@@ -61,9 +61,9 @@ class PermissionCatalog
             'commercial.quote.approve' => 'Aprovar cotação com aceite do cliente (Fluxo 2 — só superadmin)',
 
             // ---- Catalog ----
-            'catalog.course.view' => 'Ver cursos e templates de certificado',
+            'catalog.course.view' => 'Ver cursos',
             'catalog.course.create' => 'Criar cursos',
-            'catalog.course.update' => 'Editar cursos, templates e habilitação de redatores',
+            'catalog.course.update' => 'Editar cursos e habilitação de redatores',
             'catalog.course.delete' => 'Remover cursos',
             'catalog.course.restore' => 'Restaurar cursos arquivados',
 

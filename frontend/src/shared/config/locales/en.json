@@ -170,9 +170,9 @@
     "commercial_quote_delete": "Remove quotes",
     "commercial_quote_restore": "Restore archived quotes",
     "commercial_quote_approve": "Approve quote with client acceptance (Flow 2 — superadmin only)",
-    "catalog_course_view": "View courses and certificate templates",
+    "catalog_course_view": "View courses",
     "catalog_course_create": "Create courses",
-    "catalog_course_update": "Edit courses, templates and editor enablement",
+    "catalog_course_update": "Edit courses and editor enablement",
     "catalog_course_delete": "Remove courses",
     "catalog_course_restore": "Restore archived courses",
     "operation_turma_view": "View classes",
@@ -463,6 +463,7 @@
     "contacts": "Contacts"
   },
   "course": {
+    "certificatePreview": "View sample certificate",
     "new": "New course",
     "create": "Create course",
     "tabCourses": "Courses",
@@ -722,9 +723,16 @@
       "designate": "Assign redator",
       "remove": "Remove",
       "none": "No redator assigned.",
-      "helpNote": "Only redatores enabled for this course with valid documentation are shown.",
-      "pickerTitle": "Eligible redatores",
-      "pickerEmpty": "No eligible redatores for this course.",
+      "helpNote": "All redatores are listed. Those who do not meet suitability show a warning and ask for confirmation.",
+      "pickerTitle": "Assign redator",
+      "pickerEmpty": "No redatores available to assign.",
+      "motivo": {
+        "not_qualified": "Not enabled for the course",
+        "reuf_invalid": "No valid REUF"
+      },
+      "confirmIneligibleTitle": "Assign with suitability warning",
+      "confirmIneligibleMessage": "Does not meet suitability: {{motivos}}. Assign anyway?",
+      "confirmIneligibleAction": "Assign anyway",
       "pick": "Assign"
     },
     "enrollment": {
@@ -856,8 +864,7 @@
     "reprobado": "Failed",
     "pendiente": "Pending",
     "blocked": {
-      "sin_plantilla": "The course has no certificate template",
-      "plantilla_sin_ciudad": "The template does not define an issuance city",
+      "sin_ciudad": "No issuing city configured",
       "sin_redactor": "The class has no designated redator"
     },
     "confirmTitle": "Confirm issuance",
@@ -868,8 +875,6 @@
     "fieldVigencia": "Validity",
     "fieldRedator": "Redator",
     "vigenciaIndefinida": "Indefinite",
-    "vigenciaMeses_one": "{{count}} month",
-    "vigenciaMeses_other": "{{count}} months",
     "confirmEmit": "Confirm issuance",
     "issuedTitle": "Certificate issued",
     "issuedHeading": "CERTIFICATE OF COMPLETION",

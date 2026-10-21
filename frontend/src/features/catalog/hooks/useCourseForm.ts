@@ -9,8 +9,8 @@ export type CourseDialogMode = DialogMode
 /**
  * Só os campos que o formulário edita. `redator_ids` fica aqui para o multiselect
  * do create, mas NÃO vai no payload do curso (o backend ignora na escrita): é
- * sincronizado pelo endpoint dedicado. `templates` fica de fora (config à parte)
- * — e agora omiti-lo preserva os templates, em vez de apagá-los.
+ * sincronizado pelo endpoint dedicado. `templates` saiu do contrato no bloco 39
+ * (template de certificado é legado, sem leitura nem escrita da aplicação).
  *
  * `modules` é `Optional` no contrato (ausente = não mexe), mas aqui é array
  * sempre: esta tela é a dona do quadro de módulos e manda a coleção inteira.

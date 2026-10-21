@@ -87,7 +87,6 @@ class DomainDependencyTest extends TestCase
         // é `course_modules`, e o snapshot precisa congelá-lo no ato da emissão.
         'Certification' => [
             'Catalog\Models\Course',
-            'Catalog\Models\CourseCertificateTemplate',
             'Catalog\Models\CourseModule',
             'Identity\Models\Redator',
             'Operation\Enums\EnrollmentApprovalStatus',

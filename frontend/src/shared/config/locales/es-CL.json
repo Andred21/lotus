@@ -170,9 +170,9 @@
     "commercial_quote_delete": "Eliminar cotizaciones",
     "commercial_quote_restore": "Restaurar cotizaciones archivadas",
     "commercial_quote_approve": "Aprobar cotización con aceptación del cliente (Flujo 2 — solo superadmin)",
-    "catalog_course_view": "Ver cursos y plantillas de certificado",
+    "catalog_course_view": "Ver cursos",
     "catalog_course_create": "Crear cursos",
-    "catalog_course_update": "Editar cursos, plantillas y habilitación de redactores",
+    "catalog_course_update": "Editar cursos y habilitación de redactores",
     "catalog_course_delete": "Eliminar cursos",
     "catalog_course_restore": "Restaurar cursos archivados",
     "operation_turma_view": "Ver grupos",
@@ -463,6 +463,7 @@
     "contacts": "Contactos"
   },
   "course": {
+    "certificatePreview": "Ver certificado de muestra",
     "new": "Nuevo curso",
     "create": "Crear curso",
     "tabCourses": "Cursos",
@@ -722,9 +723,16 @@
       "designate": "Designar redactor",
       "remove": "Quitar",
       "none": "Ningún redactor asignado.",
-      "helpNote": "Solo se muestran redactores habilitados para este curso y con documentación vigente.",
-      "pickerTitle": "Redactores idóneos",
-      "pickerEmpty": "No hay redactores idóneos para este curso.",
+      "helpNote": "Se listan todos los redactores. Los que no cumplen la idoneidad aparecen con aviso y piden confirmación.",
+      "pickerTitle": "Designar redactor",
+      "pickerEmpty": "No hay redactores disponibles para designar.",
+      "motivo": {
+        "not_qualified": "No habilitado para el curso",
+        "reuf_invalid": "Sin REUF vigente"
+      },
+      "confirmIneligibleTitle": "Designar con aviso de idoneidad",
+      "confirmIneligibleMessage": "No cumple la idoneidad: {{motivos}}. ¿Designar de todos modos?",
+      "confirmIneligibleAction": "Designar de todos modos",
       "pick": "Designar"
     },
     "enrollment": {
@@ -856,8 +864,7 @@
     "reprobado": "Reprobado",
     "pendiente": "Pendiente",
     "blocked": {
-      "sin_plantilla": "El curso no tiene plantilla de certificado",
-      "plantilla_sin_ciudad": "La plantilla no define ciudad de emisión",
+      "sin_ciudad": "Sin ciudad de emisión configurada",
       "sin_redactor": "La turma no tiene redactor designado"
     },
     "confirmTitle": "Confirmar emisión",
@@ -868,8 +875,6 @@
     "fieldVigencia": "Vigencia",
     "fieldRedator": "Redactor",
     "vigenciaIndefinida": "Indefinida",
-    "vigenciaMeses_one": "{{count}} mes",
-    "vigenciaMeses_other": "{{count}} meses",
     "confirmEmit": "Confirmar emisión",
     "issuedTitle": "Certificado emitido",
     "issuedHeading": "CERTIFICADO DE APROBACIÓN",

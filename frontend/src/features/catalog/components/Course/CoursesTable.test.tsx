@@ -16,7 +16,7 @@ vi.mock('react-i18next', async (importOriginal) => {
 
 const CURSO = {
   id: 1, name: 'Alta tensión', technical_name: 'AT-01', description: null, workload_hours: 16,
-  templates: [], modules: [], redator_ids: [], modules_total_hours: 16,
+  modules: [], redator_ids: [], modules_total_hours: 16,
   archived_at: '2026-09-01T10:00:00Z', archived_by: 'Admin Lotus',
 } as unknown as CourseRow
 
@@ -54,6 +54,16 @@ describe('CoursesTable — coluna de ações', () => {
     expect(screen.getByRole('button', { name: 'archive.archiveAction' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'common.view' })).toBeTruthy()
     expect(larguraDaColunaDeAcoes()).toBe('9rem')
+  })
+
+  it('com a amostra do certificado, os três botões cabem numa coluna de 12rem', () => {
+    comPermissoes(['catalog.course.delete', 'certification.certificate.view'])
+    montar('active')
+
+    expect(screen.getByRole('button', { name: 'course.certificatePreview' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'archive.archiveAction' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'common.view' })).toBeTruthy()
+    expect(larguraDaColunaDeAcoes()).toBe('12rem')
   })
 
   it('em 390px, a linha tem UM botão de ações e a coluna encolhe para ele', () => {

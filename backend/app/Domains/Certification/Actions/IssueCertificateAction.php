@@ -39,14 +39,10 @@ class IssueCertificateAction
             // UTC as adiantava um dia das 21h à meia-noite locais.
             $now = FusoDoNegocio::agora();
 
-            // As seis portas. A decisão mora nelas; o painel de emissão só
+            // As cinco portas. A decisão mora nelas; o painel de emissão só
             // REPORTA os mesmos motivos (`EmissionPanelQuery`), e por isso a
             // tela não promete o que aqui se recusa.
             $context = $this->eligibility->assert($enrollment, $redator);
-
-            $validoAte = $context->template->validity_months === null
-                ? null
-                : $now->copy()->addMonths((int) $context->template->validity_months)->toDateString();
 
             return Certificate::create([
                 'uuid' => (string) Str::uuid(),
@@ -57,11 +53,10 @@ class IssueCertificateAction
                 'snapshot' => $this->snapshots->build(
                     $enrollment,
                     $redator,
-                    $context->template,
                     $now,
                     $context->ciudadEmision,
                 ),
-                'valido_ate' => $validoAte,
+                'valido_ate' => null,
                 'status' => CertificateStatus::Emitido,
                 'revoked_at' => null,
                 'revocation_reason' => null,

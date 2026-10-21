@@ -4,17 +4,31 @@ namespace Tests\Feature\Cadastros;
 
 use App\Domains\Catalog\Models\Course;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\CreatesCertificateTemplates;
 use Tests\TestCase;
 
 class CourseCrudTest extends TestCase
 {
-    use RefreshDatabase;
+    use CreatesCertificateTemplates, RefreshDatabase;
 
-    public function test_cria_curso_com_template(): void
+    public function test_rotas_de_template_respondem_404_e_nao_tocam_o_legado(): void
+    {
+        $this->actingAsAdmin();
+        $course = Course::create(['name' => 'Curso Legado', 'workload_hours' => 8]);
+        $template = $this->makeTemplate($course->id, ['version' => 1]);
+
+        $this->postJson("/api/courses/{$course->id}/templates", ['layout_config' => []])->assertNotFound();
+        $this->putJson("/api/templates/{$template->id}", ['layout_config' => []])->assertNotFound();
+        $this->deleteJson("/api/templates/{$template->id}")->assertNotFound();
+
+        $this->assertNotSoftDeleted('course_certificate_templates', ['id' => $template->id]);
+    }
+
+    public function test_payload_com_templates_nao_grava_template_nem_devolve_a_chave(): void
     {
         $this->actingAsAdmin();
 
-        $response = $this->postJson('/api/courses', [
+        $this->postJson('/api/courses', [
             'name' => 'Alta Tensão NR-10',
             'technical_name' => 'AT-NR10',
             'description' => 'Curso regulado de alta tensão.',
@@ -22,15 +36,25 @@ class CourseCrudTest extends TestCase
             'templates' => [
                 ['version' => 1, 'layout_config' => ['orientation' => 'landscape'], 'validity_months' => 24],
             ],
-        ]);
-
-        $response->assertCreated()
+        ])->assertCreated()
             ->assertJsonPath('name', 'Alta Tensão NR-10')
-            ->assertJsonPath('templates.0.version', 1)
-            ->assertJsonPath('templates.0.layout_config.orientation', 'landscape');
+            ->assertJsonMissingPath('templates');
 
         $this->assertDatabaseHas('courses', ['name' => 'Alta Tensão NR-10', 'workload_hours' => 40]);
-        $this->assertDatabaseHas('course_certificate_templates', ['version' => 1, 'validity_months' => 24]);
+        $this->assertDatabaseCount('course_certificate_templates', 0);
+    }
+
+    public function test_editar_curso_com_templates_vazio_nao_arquiva_o_legado(): void
+    {
+        $this->actingAsAdmin();
+        $course = Course::create(['name' => 'Curso Legado', 'workload_hours' => 8]);
+        $template = $this->makeTemplate($course->id, ['version' => 1]);
+
+        $this->putJson("/api/courses/{$course->id}", [
+            'name' => 'Curso Legado', 'workload_hours' => 8, 'templates' => [],
+        ])->assertOk()->assertJsonMissingPath('templates');
+
+        $this->assertNotSoftDeleted('course_certificate_templates', ['id' => $template->id]);
     }
 
     public function test_name_obrigatorio(): void
@@ -48,21 +72,17 @@ class CourseCrudTest extends TestCase
 
         $id = $this->postJson('/api/courses', [
             'name' => 'Curso X', 'workload_hours' => 8,
-            'templates' => [['version' => 1, 'layout_config' => ['orientation' => 'portrait']]],
         ])->json('id');
 
         $this->getJson('/api/courses')->assertOk()->assertJsonCount(1);
         $this->getJson("/api/courses/{$id}")->assertOk()->assertJsonPath('id', $id);
 
-        // update: replace templates
+        // update
         $this->putJson("/api/courses/{$id}", [
             'name' => 'Curso X Editado', 'workload_hours' => 16,
-            'templates' => [['version' => 2, 'layout_config' => ['color' => 'blue']]],
-        ])->assertOk()->assertJsonPath('name', 'Curso X Editado')
-            ->assertJsonPath('templates.0.version', 2);
+        ])->assertOk()->assertJsonPath('name', 'Curso X Editado');
 
         $this->assertDatabaseHas('courses', ['id' => $id, 'workload_hours' => 16]);
-        $this->assertSame(1, Course::find($id)->certificateTemplates()->count());
 
         $this->deleteJson("/api/courses/{$id}")->assertNoContent();
         $this->assertSoftDeleted('courses', ['id' => $id]);

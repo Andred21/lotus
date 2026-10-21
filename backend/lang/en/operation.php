@@ -12,10 +12,6 @@ return [
         'quote_not_approved' => 'The quote must be approved before configuring the class.',
         'already_exists' => 'This quote already has a class configured.',
     ],
-    'redator' => [
-        'not_qualified' => 'The instructor is not qualified to teach this course.',
-        'reuf_invalid' => 'The instructor has no valid REUF (document missing or expired).',
-    ],
     'document_type' => [
         'MANUAL' => 'Manual',
         'PRUEBAS' => 'Tests',

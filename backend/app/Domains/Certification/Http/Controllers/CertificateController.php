@@ -98,7 +98,7 @@ class CertificateController extends Controller implements HasMiddleware
         IssueCertificateAction $action,
     ): JsonResponse {
         // `withTrashed`: redator arquivado tem de continuar RESOLVÍVEL. Quem
-        // autoriza a emissão é a porta 6 do `CertificateEligibility` — estar
+        // autoriza a emissão é a porta 5 do `CertificateEligibility` — estar
         // designado na turma —, e a turma foi ministrada ANTES do
         // arquivamento. Escopado por `SoftDeletes`, este `findOrFail` recusava
         // com 404 antes de qualquer porta rodar, quebrando em silêncio o
