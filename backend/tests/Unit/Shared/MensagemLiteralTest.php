@@ -67,13 +67,24 @@ class MensagemLiteralTest extends TestCase
      * **silêncio reprova**. Sítio novo nasce vermelho e escolhe — traduzir ou
      * declarar. A lista não é permissão para crescer: é o inventário do que
      * ficou, e ela só encolhe.
+     *
+     * `app/Console/` fica fora: exceção de comando Artisan fala com o operador
+     * no terminal, em português, e não tem caminho até o `ProblemDetails`.
+     * Antes desta exclusão a carga inicial (bloco 38) escondia a frase num
+     * helper só para a régua não ver — o padrão que, copiado para um caminho
+     * HTTP, abriria uma quarta porta sem cobertura (Q-4 do review do bloco 38).
      */
     #[Test]
     public function nenhuma_excecao_nova_carrega_texto_literal(): void
     {
         $ofensores = [];
+        $console = base_path('app/Console').DIRECTORY_SEPARATOR;
 
         foreach ($this->arquivosPhp('app') as $caminho) {
+            if (str_starts_with($caminho, $console)) {
+                continue;
+            }
+
             // `new self(...)` só conta dentro de uma classe de exceção: é a
             // forma das factories (`CorruptedSnapshotException::missingFields`).
             // Fora delas, `new self` é DTO montando a si mesmo.

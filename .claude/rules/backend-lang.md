@@ -43,7 +43,10 @@ Frase que o usuário lê nunca nasce em `app/`. São três os caminhos, e o
 `MensagemLiteralTest` cobre os três:
 
 1. `ValidationException::withMessages(['campo' => ...])` — o par literal reprova;
-2. `new AlgumaException('...')` — literal reprova, salvo linha declarada em `DEBITO_CONHECIDO`;
+2. `new AlgumaException('...')` — literal reprova, salvo linha declarada em `DEBITO_CONHECIDO`.
+   `app/Console/` fica fora da régua: exceção de comando Artisan fala com o operador no terminal e
+   não chega ao HTTP. Fora dele, nunca esconda a frase num helper para a régua não ver; traduza ou
+   declare;
 3. **o helper que repassa para `withMessages`** — ex.: `CertificateEligibility::refuse()`, que
    recebe `[$field => $message]` em variáveis. A régua descobre o encaminhador pelo corpo (não pelo
    nome) e cobra a frase no CHAMADOR dele.

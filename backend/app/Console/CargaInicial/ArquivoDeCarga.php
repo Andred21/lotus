@@ -41,17 +41,17 @@ final class ArquivoDeCarga
         $caminho = $pasta.'/'.self::ARQUIVO;
 
         if (! is_file($caminho)) {
-            throw self::falha(sprintf('%s não existe em %s', self::ARQUIVO, $pasta));
+            throw new CargaInvalidaException([sprintf('%s não existe em %s', self::ARQUIVO, $pasta)]);
         }
 
         try {
             $carga = json_decode((string) file_get_contents($caminho), true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            throw self::falha(sprintf('%s não é JSON válido: %s', self::ARQUIVO, $e->getMessage()));
+            throw new CargaInvalidaException([sprintf('%s não é JSON válido: %s', self::ARQUIVO, $e->getMessage())]);
         }
 
         if (! is_array($carga)) {
-            throw self::falha(sprintf('%s deve conter um objeto JSON', self::ARQUIVO));
+            throw new CargaInvalidaException([sprintf('%s deve conter um objeto JSON', self::ARQUIVO)]);
         }
 
         $erros = self::validar($carga, $pasta);
@@ -61,12 +61,6 @@ final class ArquivoDeCarga
         }
 
         return $carga;
-    }
-
-    /** A mensagem nasce fora da chamada: a catraca `MensagemLiteralTest` não admite texto literal em `new ...Exception(`. */
-    private static function falha(string $mensagem): CargaInvalidaException
-    {
-        return new CargaInvalidaException([$mensagem]);
     }
 
     /**

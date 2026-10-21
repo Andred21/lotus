@@ -85,7 +85,7 @@ final class LeitorDeRegistros
     public function ler(string $xlsx): array
     {
         if (! is_file($xlsx)) {
-            throw $this->falha(sprintf('a planilha não existe em %s', $xlsx));
+            throw new CargaInvalidaException([sprintf('a planilha não existe em %s', $xlsx)]);
         }
 
         $reader = new Reader(new Options(SHOULD_PRESERVE_EMPTY_ROWS: true));
@@ -99,12 +99,12 @@ final class LeitorDeRegistros
                 }
             }
         } catch (IOException $e) {
-            throw $this->falha(sprintf('a planilha %s não abriu: %s', $xlsx, $e->getMessage()));
+            throw new CargaInvalidaException([sprintf('a planilha %s não abriu: %s', $xlsx, $e->getMessage())]);
         } finally {
             $reader->close();
         }
 
-        throw $this->falha(sprintf('a planilha não tem a aba %s', self::ABA));
+        throw new CargaInvalidaException([sprintf('a planilha não tem a aba %s', self::ABA)]);
     }
 
     /**
@@ -139,7 +139,7 @@ final class LeitorDeRegistros
         }
 
         if (! $conferiu) {
-            throw $this->falha(sprintf('a aba %s não tem o cabeçalho na linha %d', self::ABA, self::LINHA_DO_CABECALHO));
+            throw new CargaInvalidaException([sprintf('a aba %s não tem o cabeçalho na linha %d', self::ABA, self::LINHA_DO_CABECALHO)]);
         }
 
         return $registros;
@@ -300,11 +300,5 @@ final class LeitorDeRegistros
         }
 
         return $texto;
-    }
-
-    /** A mensagem nasce fora da chamada: a catraca `MensagemLiteralTest` não admite texto literal em `new ...Exception(`. */
-    private function falha(string $mensagem): CargaInvalidaException
-    {
-        return new CargaInvalidaException([$mensagem]);
     }
 }
