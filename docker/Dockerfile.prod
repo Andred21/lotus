@@ -7,7 +7,9 @@
 # depois puxa uma base atualizada e produz um digest diferente sob a mesma tag
 # de SHA — a imutabilidade valeria só enquanto ninguém reconstruísse.
 #
-# Digests capturados em 2026-08-25. Para atualizar uma base, resolva o digest
+# Digests capturados em 2026-08-25; `php` e `node` trocados em 2026-10-23 pelo
+# hotfix do PHP2Shell, com a versão exata na tag — `frontend/tests/imagem-base.test.ts`
+# guarda o piso de segurança das duas. Para atualizar uma base, resolva o digest
 # novo e troque a linha (nunca edite o digest à mão):
 #
 #   docker buildx imagetools inspect <imagem:tag> --format '{{.Manifest.Digest}}'
@@ -48,7 +50,7 @@ RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 # à mão. O mesmo estágio em amd64 fechou em ~1 min. O `dist/` é HTML/CSS/JS
 # estático: construí-lo na plataforma do construtor dá o mesmo artefato sem
 # passar Node por emulador.
-FROM --platform=$BUILDPLATFORM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 AS spa
+FROM --platform=$BUILDPLATFORM node:22.23.4-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914 AS spa
 WORKDIR /spa
 # O package.json vem ANTES do corepack de propósito: `corepack prepare
 # --activate` resolve a versão pelo campo `packageManager`, então o arquivo
@@ -65,7 +67,7 @@ ENV VITE_API_URL=""
 RUN pnpm build
 
 # ── app ───────────────────────────────────────────────────────────────────────
-FROM php:8.3-fpm-alpine@sha256:bf90236449d333cef008b1f01c72a3d4f11a6470a74629665e4c6b6158f03fc8 AS app
+FROM php:8.3.36-fpm-alpine@sha256:aaf1ad25fc6484613be770743d1038e98e3e7e07409d78b97410eccdf3628f75 AS app
 # Decisão do João (2026-08-22): headers de compilação (-dev) só servem para o
 # docker-php-ext-install rodar — mantê-los na camada final não beneficia o
 # runtime, só infla a imagem e o tempo de `pull` a cada deploy. Por isso
@@ -83,6 +85,7 @@ COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
 COPY docker/php/memory-cli.ini /usr/local/etc/php/conf.d/zz-memory-cli.ini
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY docker/php/excecoes.ini /usr/local/etc/php/conf.d/zz-excecoes.ini
+COPY docker/php/seguranca.ini /usr/local/etc/php/conf.d/zz-seguranca.ini
 COPY docker/php/www.conf /usr/local/etc/php-fpm.d/zz-www.conf
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint
 
