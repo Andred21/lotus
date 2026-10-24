@@ -103,7 +103,8 @@ export function useRegisterResult(
 
     return {
       grades: hasGrades ? (grades as unknown as EnrollmentResultData['grades']) : null,
-      attendance_pct: form.attendance_pct.trim() === '' ? null : form.attendance_pct,
+      // A API valida `numeric`: a vírgula chilena vira ponto só no corpo do PUT.
+      attendance_pct: form.attendance_pct.trim() === '' ? null : form.attendance_pct.trim().replace(',', '.'),
       approval_status: form.approval_status,
     }
   }

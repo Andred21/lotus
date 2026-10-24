@@ -96,6 +96,20 @@ describe('useRegisterResult', () => {
     expect(body.grades).toBeNull()
   })
 
+  it('envia a presença com ponto decimal e sem espaços quando digitada com vírgula', async () => {
+    put.mockResolvedValue({ data: {} })
+    const enrollment = { ...enrollmentWith(null), attendance_pct: null }
+
+    const { result } = renderHook(() => useRegisterResult(1, enrollment, true, undefined), { wrapper })
+
+    act(() => result.current.setAttendance(' 87,5 '))
+    act(() => result.current.submit())
+
+    await waitFor(() => expect(put).toHaveBeenCalled())
+    // A API valida `numeric`: `87,5` cru voltaria 422.
+    expect((put.mock.calls[0][1] as { attendance_pct: string }).attendance_pct).toBe('87.5')
+  })
+
   describe('com a regra mínima da turma', () => {
     const RULE: ApprovalRuleData = { min_grade: 4, min_attendance_pct: 70 }
     const vazia = (): EnrollmentData => ({ ...enrollmentWith(null), attendance_pct: null })

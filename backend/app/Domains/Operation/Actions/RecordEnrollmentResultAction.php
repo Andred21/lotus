@@ -21,9 +21,15 @@ use Illuminate\Validation\ValidationException;
  * `assertAcademicallyWritable()`.
  *
  * `isLockedForUpdate` é a mesma leitura (com `lockForUpdate`) da porta 3 da
- * emissão: em MySQL ela serializa a correção com uma emissão concorrente, que
- * não consegue mais passar entre a checagem e o `save()`. Em sqlite o lock é
- * no-op, então a corrida não tem teste automatizado.
+ * emissão, e o lock só garante UM sentido: com a emissão já dentro da sua
+ * transação, a correção espera e, ao ler o certificado vigente, recebe 422.
+ * O sentido inverso fica com uma janela: o `IssueCertificateAction` decide a
+ * porta 2 (`approval_status`) e monta o snapshot a partir do `$enrollment`
+ * carregado ANTES da transação; se a correção commitar nessa janela, a emissão
+ * espera o lock, não vê certificado e emite com o resultado antigo. Fechar a
+ * janela exige reler a matrícula com `lockForUpdate` dentro da transação da
+ * emissão — fora do bloco 41, pendência registrada. Em sqlite o lock é no-op,
+ * então a corrida não tem teste automatizado.
  */
 class RecordEnrollmentResultAction
 {
