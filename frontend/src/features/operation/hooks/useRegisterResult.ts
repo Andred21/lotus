@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { EnrollmentApprovalStatus, EnrollmentData, EnrollmentResultData } from '@shared/types/generated'
+import type { ApprovalRuleData, EnrollmentApprovalStatus, EnrollmentData, EnrollmentResultData } from '@shared/types/generated'
 import { useMutationErrors } from '@shared/hooks'
 import { useRecordResult } from '../api/useEnrollments'
+import { suggestedStatus } from '../lib/approvalRule'
 
 type FormState = {
   approval_status: EnrollmentApprovalStatus
@@ -41,9 +42,19 @@ function initialForm(enrollment: EnrollmentData | null): FormState {
  * um único componente reaberto para matrículas diferentes, então tanto trocar
  * de aluno quanto reabrir para o MESMO aluno depois de cancelar precisa
  * partir dos valores atuais da matrícula, nunca do rascunho anterior.
+ *
+ * Regra mínima da turma (`rule`): digitar nota ou presença grava no
+ * `approval_status` o que a regra indica; abrir/resetar o form não recalcula, e
+ * sugestão nula (valor apagado ou ilegível) deixa o status como estava. Escolher
+ * o status à mão sempre vale: a divergência só vira `ruleWarning`, nunca bloqueia.
  */
-export function useRegisterResult(turmaId: number, enrollment: EnrollmentData | null, visible: boolean) {
-  const { t } = useTranslation()
+export function useRegisterResult(
+  turmaId: number,
+  enrollment: EnrollmentData | null,
+  visible: boolean,
+  rule: ApprovalRuleData | undefined,
+) {
+  const { t, i18n } = useTranslation()
   const [form, setForm] = useState<FormState>(() => initialForm(enrollment))
   const [prev, setPrev] = useState({ id: enrollment?.id ?? null, visible })
 
@@ -55,6 +66,21 @@ export function useRegisterResult(turmaId: number, enrollment: EnrollmentData | 
 
   const mutation = useRecordResult(turmaId)
   const { fieldErrors, message } = useMutationErrors([mutation.error])
+
+  const withSuggestion = (next: FormState): FormState => {
+    const suggestion = suggestedStatus(next.finalGrade, next.attendance_pct, rule)
+    return suggestion === null ? next : { ...next, approval_status: suggestion }
+  }
+
+  const suggestion = suggestedStatus(form.finalGrade, form.attendance_pct, rule)
+  const ruleWarning = suggestion === null || rule === undefined || suggestion === form.approval_status
+    ? null
+    : t(suggestion === 'aprobado' ? 'certificate.result.ruleSuggestsApproved' : 'certificate.result.ruleSuggestsFailed', {
+        grade: form.finalGrade.trim(),
+        attendance: form.attendance_pct.trim(),
+        minGrade: new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rule.min_grade),
+        minAttendance: new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 0 }).format(rule.min_attendance_pct),
+      })
 
   const statusOptions = (['aprobado', 'reprobado', 'pendiente'] as const).map((value) => ({
     label: t(`certificate.${value}`),
@@ -90,8 +116,9 @@ export function useRegisterResult(turmaId: number, enrollment: EnrollmentData | 
   return {
     form,
     setStatus: (v: EnrollmentApprovalStatus) => setForm((f) => ({ ...f, approval_status: v })),
-    setFinalGrade: (v: string) => setForm((f) => ({ ...f, finalGrade: v })),
-    setAttendance: (v: string) => setForm((f) => ({ ...f, attendance_pct: v })),
+    setFinalGrade: (v: string) => setForm((f) => withSuggestion({ ...f, finalGrade: v })),
+    setAttendance: (v: string) => setForm((f) => withSuggestion({ ...f, attendance_pct: v })),
+    ruleWarning,
     statusOptions,
     submit,
     submitting: mutation.isPending,

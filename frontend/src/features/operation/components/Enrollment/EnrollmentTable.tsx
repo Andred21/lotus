@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, IdentityCell, AppTag, AppEmptyState, ConfirmDialog, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppDataTable, AppColumn, IdentityCell, AppTag, AppEmptyState, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn } from '@shared/ui'
 import { enrollmentWidths } from './enrollmentColumns'
 import { AttendanceCell, GradeCell } from './EnrollmentResultCells'
 import { useTableFilter, usePermissions } from '@shared/hooks'
-import type { EnrollmentData } from '@shared/types/generated'
+import type { ApprovalRuleData, EnrollmentData } from '@shared/types/generated'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
 import { RegisterResultDialog } from './RegisterResultDialog'
 import { EnrollmentRowActions } from './EnrollmentRowActions'
+import { RemoveEnrollmentDialog } from './RemoveEnrollmentDialog'
 
 type Props = {
   turmaId: number
@@ -16,6 +17,8 @@ type Props = {
    * esta tabela recebe `turmaId`, não a turma — derivar aqui exigiria um dado
    * que ela não tem, e o dono da regra é `lib/turmaStatus`. */
   registroBloqueado: boolean
+  /** Regra mínima da turma (`TurmaData.approval_rule`), repassada ao diálogo de resultado. */
+  approvalRule?: ApprovalRuleData
   enrollments: EnrollmentData[]
   loading: boolean
   onRemove: (enrollmentId: number, options?: { onSuccess?: () => void }) => void
@@ -32,7 +35,7 @@ type Props = {
 // cliente, já mostrado no cabeçalho da página) — desvio consciente da spec
 // (§3), não uma lacuna.
 export function EnrollmentTable({
-  turmaId, registroBloqueado, enrollments, loading, onRemove, removing, removeError,
+  turmaId, registroBloqueado, approvalRule, enrollments, loading, onRemove, removing, removeError,
   onResetRemove, error, onRetry,
 }: Props) {
   const { t, i18n } = useTranslation()
@@ -121,27 +124,19 @@ export function EnrollmentTable({
         )}
       </AppDataTable>
 
-      <ConfirmDialog
-        visible={pending !== null}
-        title={t('operation.enrollment.removeTitle')}
-        message={t('operation.enrollment.removeConfirm', { name: pending?.name ?? '' })}
-        confirmLabel={t('operation.enrollment.remove')}
-        severity="danger"
-        pending={removing}
-        error={removeError}
-        onConfirm={() => {
-          if (pending?.id == null || removing) return
-          onRemove(pending.id, { onSuccess: () => setPending(null) })
-        }}
-        onCancel={() => {
-          onResetRemove()
-          setPending(null)
-        }}
+      <RemoveEnrollmentDialog
+        pending={pending}
+        setPending={setPending}
+        onRemove={onRemove}
+        removing={removing}
+        removeError={removeError}
+        onResetRemove={onResetRemove}
       />
 
       <RegisterResultDialog
         turmaId={turmaId}
         enrollment={resultTarget}
+        approvalRule={approvalRule}
         visible={resultTarget !== null}
         onHide={() => setResultTarget(null)}
       />

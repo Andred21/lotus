@@ -937,7 +937,9 @@
       "title": "Resultado acadêmico",
       "finalGrade": "Nota final",
       "attendance": "Presença (%)",
-      "status": "Estado acadêmico"
+      "status": "Estado acadêmico",
+      "ruleSuggestsApproved": "Nota {{grade}} e presença {{attendance}} % atingem o mínimo ({{minGrade}} e {{minAttendance}} %): a regra indica Aprovado. Você pode salvar assim mesmo.",
+      "ruleSuggestsFailed": "Nota {{grade}} ou presença {{attendance}} % abaixo do mínimo ({{minGrade}} e {{minAttendance}} %): a regra indica Reprovado. Você pode salvar assim mesmo."
     }
   },
   "archive": {

@@ -937,7 +937,9 @@
       "title": "Academic result",
       "finalGrade": "Final grade",
       "attendance": "Attendance (%)",
-      "status": "Academic status"
+      "status": "Academic status",
+      "ruleSuggestsApproved": "Grade {{grade}} and attendance {{attendance}} % meet the minimum ({{minGrade}} and {{minAttendance}} %): the rule indicates Approved. You can save anyway.",
+      "ruleSuggestsFailed": "Grade {{grade}} or attendance {{attendance}} % below the minimum ({{minGrade}} and {{minAttendance}} %): the rule indicates Failed. You can save anyway."
     }
   },
   "archive": {

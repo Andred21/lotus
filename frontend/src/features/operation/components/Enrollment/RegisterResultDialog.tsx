@@ -1,21 +1,23 @@
 import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, AppDropdown, AppInputText, FormField, FormErrorBanner } from '@shared/ui'
-import type { EnrollmentData } from '@shared/types/generated'
+import type { ApprovalRuleData, EnrollmentData } from '@shared/types/generated'
+import { warningSurface, warningText } from '@shared/styles/tokens'
 import { useRegisterResult } from '../../hooks/useRegisterResult'
 
 type Props = {
   turmaId: number
   enrollment: EnrollmentData | null
   visible: boolean
+  approvalRule?: ApprovalRuleData
   onHide: () => void
 }
 
 /** Registro do resultado acadêmico por matrícula (Task 10): nota, presença e
  * estado de aprovação. É o que fecha o loop com a Certificação — sem ele a
  * matrícula nunca aparece pendente no painel de emissão. */
-export function RegisterResultDialog({ turmaId, enrollment, visible, onHide }: Props) {
+export function RegisterResultDialog({ turmaId, enrollment, visible, approvalRule, onHide }: Props) {
   const { t } = useTranslation()
-  const r = useRegisterResult(turmaId, enrollment, visible)
+  const r = useRegisterResult(turmaId, enrollment, visible, approvalRule)
 
   // Fechar fica bloqueado com o PUT em voo (mesmo gate do `ConfirmIssueDialog`
   // e do `closeBlocked` do CrudDialog): cancelar durante o pending e reabrir
@@ -43,6 +45,20 @@ export function RegisterResultDialog({ turmaId, enrollment, visible, onHide }: P
         <FormField label={t('certificate.result.attendance')} error={r.fieldErrors?.attendance_pct?.[0]}>
           <AppInputText value={r.form.attendance_pct} onChange={(e) => r.setAttendance(e.target.value)} />
         </FormField>
+
+        {/* Aviso, não erro: âmbar e sem role="alert" (o FormErrorBanner é vermelho e
+            para 422). NUNCA bloqueia o salvar — registro não bloqueia ação. */}
+        {r.ruleWarning && (
+          <p
+            className="rounded-control px-3 py-2 text-sm"
+            style={{
+              background: warningSurface,
+              color: warningText,
+            }}
+          >
+            {r.ruleWarning}
+          </p>
+        )}
 
         <div className="flex justify-end gap-2">
           <AppButton label={t('common.cancel')} outlined disabled={r.submitting} onClick={close} />
