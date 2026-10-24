@@ -151,58 +151,11 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 |---|---|---|
 | **34** `infra-producao-observabilidade` | 7 | 2026-10-05 |
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
-| **39** `certificado-e-redator-sem-trava` | 1, 2 | 2026-10-20 |
 | **38** `seeder-carga-inicial-producao` | 1, 2, 3, 4, 5 | 2026-10-21 |
 
 ---
 
 # Fila priorizada
-
-## 39. `certificado-e-redator-sem-trava`
-
-**Prioridade:** P0 (destrava a aceitação do 13) · **Frente:** Cross-cutting (Certification + Catalog + Operation, backend e frontend) · **Contexto:** sim · **Depende:** —
-**Fonte:** Drive (requisitos, RN-09); smoke do runbook `deploy/aws/README.md` §15, passo 3, em
-2026-10-17; `der-fisico.md` (`course_certificate_templates`); `CertificateTemplateResolver`,
-`EmissionPanelQuery::emissionBlockedFor`, `EmissionBlockReason`; `RedatorIdoneidadeService`.
-
-**Por que existe:** em produção a emissão recusa com `sin_plantilla`, porque nenhum curso tem
-registro em `course_certificate_templates`. A aceitação do 13 parou nisso, e a Fase B está pausada
-no smoke. A RN-09 trava a associação do redator, e o João quer que ela apenas avise.
-
-**Objetivo:** produção emite certificado de qualquer curso sem cadastro prévio, e a idoneidade do
-redator vira aviso em vez de trava.
-
-**Escopo:**
-- **Certificado sem modelo por curso:** todo curso emite pelo template Blade padrão
-  (`certification/certificate.blade.php`), e `sin_plantilla` deixa de bloquear a emissão; a tela do
-  curso pré-visualiza o certificado daquele curso.
-- Decidir no brainstorming: de onde vem a cidade da turma online sem template (porta 5,
-  `plantilla_sin_ciudad`); de onde vem a vigência (`validity_months` mora no template); se os
-  templates por curso já cadastrados continuam valendo como override ou saem.
-- **Certificado já emitido não muda.** Ele lê do snapshot, e um teste prova que a mudança não
-  altera nenhum certificado emitido.
-- **Idoneidade vira aviso:** `RedatorIdoneidadeService::assertEligible` deixa de travar. O aviso
-  aparece durante a associação e deixa seguir. O brainstorming decide se isso vale para a designação
-  redator→turma (`DesignateRedatorAction`), para a habilitação redator↔curso
-  (`CourseRedatorController`) ou para as duas.
-- Registro (ADR/ruling) do rebaixamento da RN-09, com a decisão explícita do João e o reflexo no
-  Drive, que vence sobre os `/docs`.
-- `generated.ts` regenerado se algum DTO mudar (lei 3); a UI do aviso e a do preview só usam
-  `shared/ui` (lei 6).
-
-**Fora:** editor visual de template; mudar o layout do certificado (`P-28` segue com a Lotus);
-mexer no bloco 13, que volta depois do merge deste; escrever dado em produção, que é ação só do
-João.
-
-**Restrições:** produção tem dado real de cliente, então nada de migration destrutiva.
-`efeito_externo` é decidido no planejamento: o efeito só chega à produção pelo espelho corporativo
-e pela promoção pelo botão.
-
-**DoD:** em teste, um curso sem template emite certificado e a pré-visualização dele renderiza; um
-certificado emitido antes da mudança continua idêntico (snapshot); a associação de um redator
-inidôneo passa e mostra o aviso; o ruling da RN-09 está registrado.
-
----
 
 ## 40. `certificado-refinamento-e-validade`
 
