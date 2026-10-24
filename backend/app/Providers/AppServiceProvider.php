@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Catalog\Models\CourseModule;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Services\CertificateVigenciaResolver;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
@@ -16,6 +17,7 @@ use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\ResultLock;
 use App\Shared\Files\ClamAvScanner;
 use App\Shared\Files\MalwareScanner;
 use App\Shared\Files\Models\File;
@@ -49,6 +51,11 @@ class AppServiceProvider extends ServiceProvider
         // Antivírus (RNF-SEC-08): serviço `clamav` do compose, INSTREAM na
         // 3310. Nos testes o binding troca pelo `FakeMalwareScanner`.
         $this->app->bind(MalwareScanner::class, ClamAvScanner::class);
+
+        // "Este resultado já está trancado por certificado vigente?" — Operation
+        // pergunta pela interface; quem sabe responder é Certification (a
+        // direção de dependência é Certification -> Operation).
+        $this->app->bind(ResultLock::class, CertificateVigenciaResolver::class);
     }
 
     /**

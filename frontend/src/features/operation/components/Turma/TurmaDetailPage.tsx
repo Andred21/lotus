@@ -72,8 +72,10 @@ export function TurmaDetailPage() {
       <TurmaDetailHeader back={back} turma={turma} onGoToBudget={d.goToBudget} />
 
       {/* Um cartão para a PÁGINA, não um por aba: o bloqueio vale para o
-        * registro acadêmico inteiro (configuração, matrícula, resultado,
-        * redator e documentação), e as abas que escondem os controles precisam
+        * registro acadêmico (configuração, matrícula, redator e documentação;
+        * o resultado — nota, presença e status — segue corrigível pelo admin
+        * enquanto a matrícula não tem certificado vigente), e as abas que
+        * escondem os controles precisam
         * dizer por quê num lugar só — repetido em cada aba, o mesmo motivo
         * apareceria de novo a cada troca de painel. Fica ACIMA das abas porque
         * é o que explica os controles que sumiram lá dentro. */}

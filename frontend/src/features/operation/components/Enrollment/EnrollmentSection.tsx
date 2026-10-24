@@ -79,6 +79,7 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
           /* A tabela recebe `turmaId`, não a turma — o bloqueio viaja como
              booleano explícito para ela não precisar derivar o que não tem. */
           registroBloqueado={bloqueado}
+          approvalRule={turma.approval_rule}
           enrollments={s.enrollments}
           loading={s.loading}
           onRemove={s.remove}

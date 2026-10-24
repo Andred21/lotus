@@ -16,9 +16,10 @@ use Tests\TestCase;
  * Catraca de paridade (spec D4, §4.3): `whereDisplayStatus()` em SQL tem de
  * devolver o MESMO conjunto que a derivação de domínio — `concluida` pelo
  * status, `habilitada` pela `HabilitacaoStatus` da RN-16, `em_andamento` o
- * resto. Cinco turmas: concluída; em andamento com os três documentos; com
- * dois; com nenhum; com os três, um deles arquivado (não conta). Mais a lista
- * de arquivados, onde a leitura é "como estava no instante do arquivamento"
+ * resto. Oito turmas: concluída; em andamento com os três documentos; com
+ * dois; com nenhum; com os três, um deles arquivado (não conta); com os três
+ * mas sem redator; com os três e presencial sem local, nulo ou só de espaços
+ * (nenhuma das três habilita). Mais a lista de arquivados, onde a leitura é "como estava no instante do arquivamento"
  * (`asOfArchiving`): documento levado pela cascata conta, documento arquivado
  * ANTES do pai não.
  */
@@ -48,9 +49,13 @@ class TurmaStatusParityTest extends TestCase
         $this->turma(concluida: false, docs: []);
         $comDocArquivado = $this->turma(concluida: false, docs: TurmaDocumentType::cases());
         $comDocArquivado->files()->where('type', TurmaDocumentType::EVALUACION_REDATOR->value)->first()->delete();
+        // Gate de conclusão (RN-16 ampliada): redator e local da presencial.
+        $this->turma(concluida: false, docs: TurmaDocumentType::cases(), redator: false);
+        $this->turma(concluida: false, docs: TurmaDocumentType::cases(), local: null);
+        $this->turma(concluida: false, docs: TurmaDocumentType::cases(), local: '   ');
 
         $todas = Turma::query()->withListingData()->get();
-        $this->assertCount(5, $todas);
+        $this->assertCount(8, $todas);
 
         foreach (TurmaDisplayStatus::cases() as $status) {
             $esperado = $todas->filter(fn (Turma $t) => $this->derivada($t) === $status)->pluck('id')->sort()->values()->all();
@@ -89,7 +94,7 @@ class TurmaStatusParityTest extends TestCase
     }
 
     /** @param  array<TurmaDocumentType>  $docs */
-    private function turma(bool $concluida, array $docs): Turma
+    private function turma(bool $concluida, array $docs, bool $redator = true, ?string $local = 'Santiago'): Turma
     {
         $n = ++$this->seq;
         $builder = IssuableEnrollmentBuilder::make()
@@ -97,7 +102,11 @@ class TurmaStatusParityTest extends TestCase
             ->course(['name' => "Curso {$n}"])
             ->student(['rut' => '2.000.'.str_pad((string) $n, 3, '0', STR_PAD_LEFT).'-0'])
             ->redatorUser(['rut' => '3.000.'.str_pad((string) $n, 3, '0', STR_PAD_LEFT).'-0'])
-            ->turma(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => 'Santiago']);
+            ->turma(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => $local]);
+
+        if (! $redator) {
+            $builder->semRedator();
+        }
 
         if (! $concluida) {
             $builder->turmaNaoConcluida();

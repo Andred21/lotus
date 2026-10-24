@@ -96,6 +96,11 @@ class DomainDependencyTest extends TestCase
             // B6: o resultado acadêmico tem dono em Operation; o snapshot congela a
             // partir do VO, não das colunas cruas da matrícula.
             'Operation\Services\AcademicResult',
+            // Bloco 41: Certification IMPLEMENTA `ResultLock` (o resolver de
+            // vigência responde "esta matrícula tem certificado vigente?"), e
+            // Operation depende só da interface — Operation não importa classe
+            // de Certification.
+            'Operation\Services\ResultLock',
         ],
         'Commercial' => [
             'Catalog\Models\Course',
