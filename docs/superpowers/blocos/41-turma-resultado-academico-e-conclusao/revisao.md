@@ -2,6 +2,10 @@
 
 ## Em aberto
 
+- **Q-1** (Menor, rodada 1) — correção aprovada pelo João em 2026-10-24, por aplicar: na turma em
+  andamento a linha oferece "Registrar resultado" a quem tem `operation.enrollment.record_result` e
+  "Remover" só a quem tem `operation.enrollment.manage`. Fecha na rodada 2.
+
 ## Rodada 1 — `dfa34847..d170d0a2` — 2026-10-24 · Lente 1: opus · Lente 2: sonnet
 
 Bloco classificado como alto risco (`generated.ts`, vigência de certificado, resultado acadêmico).
