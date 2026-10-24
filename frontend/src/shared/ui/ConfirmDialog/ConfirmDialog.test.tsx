@@ -33,3 +33,16 @@ describe('ConfirmDialog — botão de confirmar', () => {
     expect(botao.className).not.toContain('border-[var(--brand-ink)]')
   })
 })
+
+describe('ConfirmDialog — children', () => {
+  it('mostra o conteúdo extra no corpo, junto da mensagem', () => {
+    render(
+      <ConfirmDialog {...base}>
+        <ul role="list"><li>Detalhe extra</li></ul>
+      </ConfirmDialog>,
+    )
+
+    expect(screen.getByText('¿Seguro?')).toBeTruthy()
+    expect(screen.getByText('Detalhe extra')).toBeTruthy()
+  })
+})

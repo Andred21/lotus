@@ -5,6 +5,7 @@ import { formatDate, turmaDocumentTypeLabel } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { useConclusionSection } from '../../hooks/useConclusionSection'
 import { turmaStatusSeverity } from '../../lib/turmaStatus'
+import { IncompleteResultsList } from './IncompleteResultsList'
 
 export function ConcludePanel({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
@@ -35,6 +36,9 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
             <AppCard tone="warning" className="px-3 py-2 text-sm">
               <p>{t('operation.conclusion.missingTitle')}</p>
               <ul role="list" className="mt-1 list-inside list-disc">
+                {s.missingRequirements.map((req) => (
+                  <li key={req}>{t(`operation.conclusion.requirement.${req}`)}</li>
+                ))}
                 {s.missingTypes.map((type) => (
                   <li key={type}>{turmaDocumentTypeLabel(type, t)}</li>
                 ))}
@@ -75,7 +79,11 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
           s.resetConclude()
           setConfirming(false)
         }}
-      />
+      >
+        {s.incompleteStudents.length > 0 && (
+          <div className="mt-3"><IncompleteResultsList students={s.incompleteStudents} /></div>
+        )}
+      </ConfirmDialog>
     </div>
   )
 }

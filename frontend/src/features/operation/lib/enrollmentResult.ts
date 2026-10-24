@@ -24,3 +24,11 @@ export function formatGrade(raw: string, locale: string): string {
 export function formatAttendance(pct: string, locale: string): string {
   return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(Number(pct))} %`
 }
+
+/** O que falta no resultado da matrícula. Não bloqueia a conclusão: só alimenta o aviso. */
+export function missingResultFields(e: EnrollmentData): Array<'grade' | 'attendance'> {
+  const missing: Array<'grade' | 'attendance'> = []
+  if (finalGradeOf(e) === null) missing.push('grade')
+  if (e.attendance_pct == null || String(e.attendance_pct).trim() === '') missing.push('attendance')
+  return missing
+}

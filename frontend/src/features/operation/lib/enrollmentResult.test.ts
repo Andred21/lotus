@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { EnrollmentData } from '@shared/types/generated'
-import { finalGradeOf, formatAttendance, formatGrade } from './enrollmentResult'
+import { finalGradeOf, formatAttendance, formatGrade, missingResultFields } from './enrollmentResult'
 
 const comGrades = (grades: unknown) => ({ grades }) as EnrollmentData
 
@@ -33,5 +33,33 @@ describe('finalGradeOf', () => {
   it('devolve a nota como texto', () => {
     expect(finalGradeOf(comGrades({ final: 6.2 }))).toBe('6.2')
     expect(finalGradeOf(comGrades({ final: '6,4' }))).toBe('6,4')
+  })
+})
+
+describe('missingResultFields', () => {
+  const matricula = (grades: unknown, attendance_pct: string | null | undefined) =>
+    ({ grades, attendance_pct }) as EnrollmentData
+
+  it('resultado completo não falta nada', () => {
+    expect(missingResultFields(matricula({ final: '5,0' }, '80'))).toEqual([])
+  })
+
+  it('aponta só a nota quando falta a nota', () => {
+    expect(missingResultFields(matricula(null, '80'))).toEqual(['grade'])
+    expect(missingResultFields(matricula({ final: '  ' }, '80'))).toEqual(['grade'])
+  })
+
+  it('aponta só a presença quando falta a presença', () => {
+    expect(missingResultFields(matricula({ final: '5' }, null))).toEqual(['attendance'])
+    expect(missingResultFields(matricula({ final: '5' }, undefined))).toEqual(['attendance'])
+    expect(missingResultFields(matricula({ final: '5' }, ' '))).toEqual(['attendance'])
+  })
+
+  it('presença 0 é presença registrada, não falta', () => {
+    expect(missingResultFields(matricula({ final: '5' }, '0'))).toEqual([])
+  })
+
+  it('aponta os dois, nota primeiro', () => {
+    expect(missingResultFields(matricula(null, null))).toEqual(['grade', 'attendance'])
   })
 })

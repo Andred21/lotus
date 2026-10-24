@@ -825,15 +825,27 @@
         "habilitada": "Enabled",
         "concluida": "Concluded"
       },
-      "missingTitle": "Documents missing to enable the class:",
+      "missingTitle": "Missing to conclude the class:",
       "ready": "The class is ready to be concluded.",
-      "warning": "On confirmation, grades and attendance become immutable and certificates for approved students become available for issuing. This action cannot be undone.",
+      "warning": "On confirmation, certificates for approved students become available for issuing. After that, only an administrator can correct grade, attendance and status, and only for students without a certificate. This action cannot be undone.",
       "confirm": "Confirm completion",
       "confirmTitle": "Confirm class completion",
       "confirmBody": "This action is irreversible. Confirm the completion of this class?",
       "success": "Completion confirmed. Certificates available for issuing.",
       "concludedAt": "Concluded on {{date}}",
-      "noPermission": "You do not have permission to conclude classes."
+      "noPermission": "You do not have permission to conclude classes.",
+      "requirement": {
+        "redator": "Assigned redator",
+        "local_aplicacao": "Venue (in-person class)"
+      },
+      "incomplete": {
+        "title": "Students without grade or attendance:",
+        "row": "{{name}} — {{missing}}",
+        "grade": "no grade",
+        "attendance": "no attendance",
+        "both": "no grade or attendance",
+        "hint": "They do not block the conclusion; the result can be corrected later, while there is no certificate."
+      }
     }
   },
   "certificate": {
