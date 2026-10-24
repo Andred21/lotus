@@ -7,6 +7,7 @@ use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\ApprovalRule;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
@@ -46,6 +47,8 @@ class TurmaData extends Data
         public string|null|Optional $quote_code = new Optional,
         public string|null|Optional $budget_code = new Optional,
         public int|null|Optional $budget_id = new Optional,
+        /** Regra mínima de aprovação (saída): o front sugere, o admin declara. */
+        public ApprovalRuleData|Optional $approval_rule = new Optional,
         /** RUT do contratante. Mesmo `ContratanteData` de onde sai o
          * `client_name` — o valor já vinha e era descartado. */
         public string|null|Optional $client_rut = new Optional,
@@ -96,6 +99,7 @@ class TurmaData extends Data
             quote_code: $turma->quote->code,
             budget_code: $turma->quote->budget->code,
             budget_id: $turma->quote->budget->id,
+            approval_rule: ApprovalRuleData::fromRule(ApprovalRule::forTurma($turma)),
             client_rut: $turma->contratante()->rut,
             client_photo_url: $turma->contratanteClient()->user->photo_path,
         );

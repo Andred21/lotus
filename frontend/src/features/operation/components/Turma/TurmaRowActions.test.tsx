@@ -35,7 +35,8 @@ const turma: TurmaData = {
   start_date: '2026-01-01', end_date: '2026-02-01', status: 'em_andamento', habilitada: false,
   missing_document_types: [], concluded_at: null, redatores: [], course_name: 'Curso',
   client_name: 'Cliente', enrolled_count: 3, quote_code: 'COT-1', budget_code: 'ORC-1',
-  budget_id: 1, client_rut: '11.111.111-1', client_photo_url: null,
+  budget_id: 1, approval_rule: { min_grade: 4, min_attendance_pct: 70 },
+  client_rut: '11.111.111-1', client_photo_url: null,
 }
 
 function montar(archived: boolean) {

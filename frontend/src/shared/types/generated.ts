@@ -41,6 +41,10 @@ description: string,
 date: string | null,
 navigation: Record<string, number>,
 };
+export type ApprovalRuleData = {
+min_grade: number,
+min_attendance_pct: number,
+};
 export type ArchivedBudgetData = {
 budget: BudgetData,
 archived_at: string,
@@ -656,6 +660,7 @@ enrolled_count: undefined | number,
 quote_code: undefined | string | null,
 budget_code: undefined | string | null,
 budget_id: undefined | number | null,
+approval_rule: ApprovalRuleData | undefined,
 client_rut: undefined | string | null,
 client_photo_url: string | null,
 };

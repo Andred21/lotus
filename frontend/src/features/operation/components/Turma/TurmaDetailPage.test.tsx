@@ -96,7 +96,8 @@ const TURMA = {
   start_date: '2026-01-05', end_date: '2026-02-05', status: 'em_andamento', habilitada: false,
   missing_document_types: [], concluded_at: null, redatores: [], course_name: 'Alta Tensión',
   client_name: 'Transelec', enrolled_count: 15, quote_code: 'COT-1', budget_code: 'ORC-1',
-  budget_id: null, client_rut: '11.111.111-1', client_photo_url: null,
+  budget_id: null, approval_rule: { min_grade: 4, min_attendance_pct: 70 },
+  client_rut: '11.111.111-1', client_photo_url: null,
 } as TurmaData
 
 describe('TurmaDetailPage anuncia o registro acadêmico trancado (UI-01)', () => {
