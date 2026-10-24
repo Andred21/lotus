@@ -4,7 +4,10 @@ namespace Tests\Feature\Operation;
 
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaModalidade;
+use App\Domains\Operation\Enums\TurmaRequirement;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
@@ -38,6 +41,9 @@ class TurmaHabilitacaoServiceTest extends TestCase
             'start_date' => '2026-08-01', 'end_date' => '2026-08-10',
             'status' => TurmaStatus::EmAndamento,
         ]);
+        // Redator designado: os casos de documento seguem isolados do requisito.
+        $redator = User::factory()->redator()->create()->redator()->create([]);
+        $this->turma->redatores()->attach($redator->id);
         $this->service = app(TurmaHabilitacaoService::class);
     }
 
@@ -121,5 +127,88 @@ class TurmaHabilitacaoServiceTest extends TestCase
         // guarda que trava o gate de status dentro do VO — se ele sair de lá,
         // este teste reprova.
         $this->assertFalse($this->service->for($this->turma->fresh())->isHabilitada());
+    }
+
+    private function completarDocs(): void
+    {
+        foreach (TurmaDocumentType::cases() as $type) {
+            $this->addDoc($type);
+        }
+    }
+
+    public function test_sem_redator_lista_requisito_e_nao_habilita(): void
+    {
+        $this->completarDocs();
+        $this->turma->redatores()->detach();
+
+        $status = $this->service->for($this->turma->fresh());
+
+        $this->assertSame([TurmaRequirement::Redator], $status->missingRequirements());
+        $this->assertFalse($status->isHabilitada());
+    }
+
+    public function test_presencial_sem_local_lista_requisito(): void
+    {
+        $this->completarDocs();
+        $this->turma->update(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => null]);
+
+        $status = $this->service->for($this->turma->fresh());
+
+        $this->assertSame([TurmaRequirement::LocalAplicacao], $status->missingRequirements());
+        $this->assertFalse($status->isHabilitada());
+    }
+
+    public function test_presencial_com_local_so_espacos_lista_requisito(): void
+    {
+        $this->completarDocs();
+        $this->turma->update(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => '   ']);
+
+        $this->assertSame(
+            [TurmaRequirement::LocalAplicacao],
+            $this->service->for($this->turma->fresh())->missingRequirements(),
+        );
+    }
+
+    public function test_presencial_com_local_preenchido_nao_lista_requisito(): void
+    {
+        $this->completarDocs();
+        $this->turma->update(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => 'Santiago']);
+
+        $status = $this->service->for($this->turma->fresh());
+
+        $this->assertSame([], $status->missingRequirements());
+        $this->assertTrue($status->isHabilitada());
+    }
+
+    public function test_online_sem_local_nao_e_requisito(): void
+    {
+        $this->completarDocs();
+
+        $status = $this->service->for($this->turma->fresh());
+
+        $this->assertSame([], $status->missingRequirements());
+        $this->assertTrue($status->isHabilitada());
+    }
+
+    public function test_redator_arquivado_designado_conta(): void
+    {
+        $this->completarDocs();
+        $this->turma->redatores()->first()->delete();   // soft-delete; o pivot permanece
+
+        $status = $this->service->for($this->turma->fresh());
+
+        $this->assertSame([], $status->missingRequirements());
+        $this->assertTrue($status->isHabilitada());
+    }
+
+    public function test_sem_redator_e_presencial_sem_local_lista_na_ordem_do_enum(): void
+    {
+        $this->turma->redatores()->detach();
+        $this->turma->update(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => null]);
+
+        $this->assertSame(
+            [TurmaRequirement::Redator, TurmaRequirement::LocalAplicacao],
+            $this->service->for($this->turma->fresh())->missingRequirements(),
+        );
     }
 }

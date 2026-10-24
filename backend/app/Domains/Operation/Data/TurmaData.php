@@ -5,6 +5,7 @@ namespace App\Domains\Operation\Data;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
+use App\Domains\Operation\Enums\TurmaRequirement;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\ApprovalRule;
@@ -38,6 +39,8 @@ class TurmaData extends Data
         public bool|Optional $habilitada,
         /** @var TurmaDocumentType[]|Optional */
         public array|Optional $missing_document_types,
+        /** @var TurmaRequirement[]|Optional */
+        public array|Optional $missing_requirements,
         public string|null|Optional $concluded_at,
         /** @var TurmaRedatorData[] */
         public array|Optional $redatores = [],
@@ -91,6 +94,7 @@ class TurmaData extends Data
             status: $turma->status,
             habilitada: $habilitacaoStatus->isHabilitada(),
             missing_document_types: $habilitacaoStatus->missingTypes(),
+            missing_requirements: $habilitacaoStatus->missingRequirements(),
             concluded_at: $turma->concluded_at?->toISOString(),
             redatores: $turma->redatores->map(fn (Redator $r) => TurmaRedatorData::fromModel($r))->all(),
             course_name: $turma->course->name,

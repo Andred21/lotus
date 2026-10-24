@@ -9,8 +9,13 @@ return [
         'restore_conflict' => 'Já existe uma turma ativa para esta cotação: arquive-a antes de restaurar esta.',
         'restore_redator_archived' => 'Um redator desta turma está arquivado: restaure-o antes de restaurar a turma.',
         'documents_incomplete' => 'Documentação obrigatória incompleta (RN-16). Falta: :tipos.',
+        'requirements_incomplete' => 'Falta para concluir a turma: :itens.',
         'quote_not_approved' => 'A cotação precisa estar aprovada para configurar a turma.',
         'already_exists' => 'Esta cotação já tem uma turma configurada.',
+    ],
+    'requirement' => [
+        'redator' => 'redator designado',
+        'local_aplicacao' => 'local de aplicação (turma presencial)',
     ],
     'document_type' => [
         'MANUAL' => 'Manual',

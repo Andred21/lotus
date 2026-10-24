@@ -3,6 +3,7 @@
 namespace App\Domains\Operation\Actions;
 
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaRequirement;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Conclusão da turma (RN-16: doc habilita, admin confirma). TERMINAL (D5):
+ * Conclusão da turma (RN-16: documentação e configuração completas habilitam, admin confirma). TERMINAL (D5):
  * não existe caminho de reversão — erro raro se corrige via suporte, com
  * auditoria. Habilita a emissão de certificados (RN-08, Sprint 4).
  */
@@ -28,18 +29,32 @@ class ConcludeTurmaAction
             // carregado (é o que `loadListingData()` faz) decidiria sobre o
             // cache — e um documento arquivado depois daquela carga concluiria
             // a turma, em escrita terminal, sem a documentação da RN-16.
-            $turma->load('documentacaoObrigatoria');
+            // O mesmo vale para os redatores (requisito de configuração).
+            $turma->load(['documentacaoObrigatoria', 'redatores']);
 
-            $missing = $this->habilitacao->for($turma)->missingTypes();
-            if ($missing !== []) {
-                throw ValidationException::withMessages([
-                    'documents' => __('operation.turma.documents_incomplete', [
-                        'tipos' => implode(', ', array_map(
-                            fn (TurmaDocumentType $doc): string => __('operation.document_type.'.$doc->value),
-                            $missing,
-                        )),
-                    ]),
+            $habilitacao = $this->habilitacao->for($turma);
+            $messages = [];
+
+            if ($habilitacao->missingTypes() !== []) {
+                $messages['documents'] = __('operation.turma.documents_incomplete', [
+                    'tipos' => implode(', ', array_map(
+                        fn (TurmaDocumentType $doc): string => __('operation.document_type.'.$doc->value),
+                        $habilitacao->missingTypes(),
+                    )),
                 ]);
+            }
+
+            if ($habilitacao->missingRequirements() !== []) {
+                $messages['requirements'] = __('operation.turma.requirements_incomplete', [
+                    'itens' => implode(', ', array_map(
+                        fn (TurmaRequirement $req): string => __('operation.requirement.'.$req->value),
+                        $habilitacao->missingRequirements(),
+                    )),
+                ]);
+            }
+
+            if ($messages !== []) {
+                throw ValidationException::withMessages($messages);
             }
 
             $turma->status = TurmaStatus::Concluida;

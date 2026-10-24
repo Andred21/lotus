@@ -652,6 +652,7 @@ end_date: string,
 status: TurmaStatus | undefined,
 habilitada: undefined | boolean,
 missing_document_types: TurmaDocumentType[] | undefined,
+missing_requirements: TurmaRequirement[] | undefined,
 concluded_at: undefined | string | null,
 redatores: TurmaRedatorData[],
 course_name: undefined | string,
@@ -682,6 +683,7 @@ name: string,
 email: string | null,
 photo_url: string | null,
 };
+export type TurmaRequirement = 'redator' | 'local_aplicacao';
 export type TurmaStatus = 'em_andamento' | 'concluida';
 export type UserData = {
 id: undefined | number,
