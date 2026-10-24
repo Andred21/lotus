@@ -270,6 +270,51 @@ cada requisito está atendido no template ou registrado como decisão pendente d
 
 ---
 
+## 41. `turma-resultado-academico-e-conclusao`
+
+**Prioridade:** P1 (a posição na fila é do João) · **Frente:** Cross-cutting (Operation backend e frontend) · **Contexto:** não · **Depende:** —
+**Fonte:** pedido do João em 2026-10-24, com captura da aba Alunos de uma turma concluída em
+produção (sem colunas de nota e presença) e do aviso amarelo da soma de módulos do curso;
+`RegisterResultDialog`, `enrollmentColumns.ts`, `ConcludePanel`, `ImportResultSummary`;
+o aviso de idoneidade do redator do bloco 39 (avisa, não bloqueia).
+
+**Por que existe:** a tabela de alunos da turma mostrava nota e presença e deixou de mostrar em
+produção. O status de matrícula é escolhido à mão mesmo quando nota e presença já dizem o resultado,
+e a turma concluída tranca o registro acadêmico inteiro, inclusive a correção de nota ou presença de
+aluno ainda sem certificado. A conclusão também não avisa de aluno sem nota ou presença.
+
+**Objetivo:** nota e presença visíveis na tabela de alunos; o status sugere `aprobado` pela regra
+mínima e avisa, sem bloquear, quando a escolha manual diverge dela; nota, presença e status
+editáveis depois da conclusão enquanto o certificado do aluno não foi emitido; a confirmação da
+conclusão lista os alunos sem nota ou presença, sem bloquear.
+
+**Escopo:**
+- **Regressão:** nota e presença voltam à tabela da aba Alunos (incluindo turma concluída). Achar
+  a causa antes de corrigir.
+- **Regra mínima:** nota ≥ 7 e presença ≥ 70 %, fixas por enquanto, num ponto único que no futuro
+  vire `courses.note_min` / `courses.presence_min` (fora deste bloco). Atingidas as duas, o
+  combobox de status do diálogo do aluno passa a `aprobado` sozinho; a escolha manual continua
+  livre, e a divergência da regra aparece no estilo do aviso da soma de módulos — avisa, não trava.
+- **Pós-conclusão:** com a turma concluída, nota, presença e status seguem editáveis para o aluno
+  sem certificado emitido; aluno com certificado emitido fica trancado.
+- **Conclusão:** o que hoje bloqueia (redator, informações, documentos) continua bloqueando; sem
+  bloqueio, o diálogo de confirmação lista no corpo os alunos sem nota e/ou presença, no aspecto do
+  resumo da importação de alunos, sem impedir a conclusão.
+- `generated.ts` regenerado se algum DTO mudar (lei 3); UI só via `shared/ui` (lei 6).
+
+**Fora:** `note_min`/`presence_min` na entidade `courses`; mudar certificado já emitido; mudar o
+que bloqueia a conclusão.
+
+**Restrições:** certificado emitido não muda e trava a edição do aluno dele; toda alteração
+pós-conclusão é auditada (lei 2).
+
+**DoD:** em teste e no navegador, a tabela da turma concluída mostra nota e presença; nota 7 e
+presença 70 % põem o status em `aprobado`, e a escolha divergente mostra o aviso sem impedir o
+salvar; a edição pós-conclusão passa para aluno sem certificado e recusa para aluno com
+certificado; a conclusão com aluno incompleto mostra a lista e conclui.
+
+---
+
 ## 9. `administracao-roles-permissoes-redesign`
 
 **Prioridade:** P1 · **Frente:** Frontend · **Contexto:** sim
