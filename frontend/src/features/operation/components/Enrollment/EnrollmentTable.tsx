@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDataTable, AppColumn, IdentityCell, AppTag, AppEmptyState, ConfirmDialog, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn } from '@shared/ui'
 import { enrollmentWidths } from './enrollmentColumns'
+import { AttendanceCell, GradeCell } from './EnrollmentResultCells'
 import { useTableFilter, usePermissions } from '@shared/hooks'
 import type { EnrollmentData } from '@shared/types/generated'
 import { enrollmentStatusLabelKey, enrollmentStatusSeverity } from '@shared/lib'
@@ -10,9 +11,10 @@ import { EnrollmentRowActions } from './EnrollmentRowActions'
 
 type Props = {
   turmaId: number
-  /** RN-15: registro acadêmico fechado (turma concluída). Chega como booleano
-   * porque esta tabela recebe `turmaId`, não a turma — derivar aqui exigiria um
-   * dado que ela não tem, e o dono da regra é `lib/turmaStatus`. */
+  /** Turma concluída: matricular e remover ficam fechados; só o admin corrige o
+   * resultado (e só de matrícula sem certificado). Chega como booleano porque
+   * esta tabela recebe `turmaId`, não a turma — derivar aqui exigiria um dado
+   * que ela não tem, e o dono da regra é `lib/turmaStatus`. */
   registroBloqueado: boolean
   enrollments: EnrollmentData[]
   loading: boolean
@@ -33,20 +35,17 @@ export function EnrollmentTable({
   turmaId, registroBloqueado, enrollments, loading, onRemove, removing, removeError,
   onResetRemove, error, onRetry,
 }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { can } = usePermissions()
   const [pending, setPending] = useState<EnrollmentData | null>(null)
-  // Alvo do diálogo de resultado: estado local, igual ao `pending` da
-  // remoção acima — os dois são ação por LINHA, então a linha que abre o
-  // diálogo é quem sabe qual matrícula está em jogo (EnrollmentSection só
-  // guarda o estado dos diálogos que não dependem de uma linha: Agregar e
-  // Importar).
+  // Alvo do diálogo de resultado: estado local, como o `pending` da remoção — ação
+  // por LINHA; EnrollmentSection só guarda os diálogos sem linha (Agregar, Importar).
   const [resultTarget, setResultTarget] = useState<EnrollmentData | null>(null)
   const canManage = can('operation.enrollment.manage')
-  // Aba sem busca (decisão do protótipo): o hook entra pelo estado de página e
-  // pelo clamp, que estavam copiados aqui linha a linha.
+  // Aba sem busca (decisão do protótipo): o hook entra pela página e pelo clamp.
   const table = useTableFilter(enrollments)
-  const largura = enrollmentWidths(!registroBloqueado)
+  const mostraAcoes = !registroBloqueado || canManage
+  const largura = enrollmentWidths(mostraAcoes)
   const colunaDeAcoes = useCollapsibleActionsColumn('9rem')
   return (
     <>
@@ -57,8 +56,8 @@ export function EnrollmentTable({
         onRetry={onRetry}
         first={table.first}
         onPage={table.onPage}
-        // Piso de 390 medido (item 23, audit §5): 292px de 1ª coluna contra 204px livres.
-        pt={narrowFloorTablePt('31.5rem')}
+        // Piso medido (item 23, audit §5); NOTA e PRESENÇA o subiram de 31.5rem.
+        pt={narrowFloorTablePt('40rem')}
         footerCount={t('operation.enrollment.footerCount', { count: table.rows.length })}
         emptyMessage={
           // Sem ação: matricular é o botão da toolbar, logo acima.
@@ -81,6 +80,16 @@ export function EnrollmentTable({
         />
         <AppColumn header={t('operation.enrollment.table.rut')} field="rut" style={largura.rut} />
         <AppColumn
+          header={t('operation.enrollment.table.grade')}
+          body={(e: EnrollmentData) => <GradeCell enrollment={e} locale={i18n.language} />}
+          style={largura.grade}
+        />
+        <AppColumn
+          header={t('operation.enrollment.table.attendance')}
+          body={(e: EnrollmentData) => <AttendanceCell enrollment={e} locale={i18n.language} />}
+          style={largura.attendance}
+        />
+        <AppColumn
           header={t('operation.enrollment.table.status')}
           body={(e: EnrollmentData) =>
             e.approval_status ? (
@@ -92,15 +101,15 @@ export function EnrollmentTable({
           }
           style={largura.status}
         />
-        {/* A coluna inteira sai, não só os botões: `RecordEnrollmentResultAction`
-          * e `RemoveEnrollmentAction` recusam a escrita com 422 no registro
-          * fechado, e uma faixa de 6rem vazia em toda linha só rouba largura das
-          * colunas de dado, que é o que sobra para ler. O `sticky` da UI-02 acompanha a coluna. */}
-        {!registroBloqueado && (
+        {/* Na turma concluída a coluna só existe para quem corrige o resultado: sem
+          * `manage` não sobra ação, e uma faixa vazia em toda linha só rouba largura
+          * das colunas de dado. O `sticky` da UI-02 acompanha a coluna. */}
+        {mostraAcoes && (
           <AppColumn
             body={(e: EnrollmentData) => (
               <EnrollmentRowActions
-                canManage={canManage}
+                canResult={canManage && !(registroBloqueado && e.result_locked)}
+                canRemove={!registroBloqueado}
                 removing={removing}
                 onResult={() => setResultTarget(e)}
                 onRemove={() => setPending(e)}

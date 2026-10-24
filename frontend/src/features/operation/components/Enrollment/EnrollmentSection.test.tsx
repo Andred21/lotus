@@ -106,7 +106,7 @@ describe('EnrollmentSection numa turma concluída (UI-01)', () => {
     section.current = { ...section.current, enrollments: [ALUNO] }
   })
 
-  it('em curso, os quatro controles de escrita estão lá — é o que a turma concluída precisa esconder', () => {
+  it('em curso, os quatro controles de escrita estão lá — a turma concluída esconde três e deixa a correção do resultado', () => {
     montar()
 
     expect(screen.getByRole('button', { name: /operation\.enrollment\.importSheet/i })).toBeTruthy()
@@ -115,13 +115,14 @@ describe('EnrollmentSection numa turma concluída (UI-01)', () => {
     expect(screen.getByLabelText('operation.enrollment.remove')).toBeTruthy()
   })
 
-  it('concluída, os quatro somem e a lista continua legível — o que sai é a escrita, não a leitura', () => {
+  it('concluída, matricular, importar e remover somem; o admin ainda corrige o resultado e a lista segue legível', () => {
     montar(TURMA_CONCLUIDA)
 
     expect(screen.queryByRole('button', { name: /operation\.enrollment\.importSheet/i })).toBeNull()
     expect(screen.queryByRole('button', { name: /operation\.enrollment\.addStudent/i })).toBeNull()
-    expect(screen.queryByLabelText('certificate.result.action')).toBeNull()
     expect(screen.queryByLabelText('operation.enrollment.remove')).toBeNull()
+    // Correção de nota, presença e status: só o admin, só de matrícula sem certificado.
+    expect(screen.getByLabelText('certificate.result.action')).toBeTruthy()
     expect(screen.getByText('Ana Rojas')).toBeTruthy()
     expect(screen.getByRole('button', { name: /archive\.archived/i })).toBeTruthy()
   })

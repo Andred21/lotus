@@ -32,12 +32,12 @@ function comPermissoes(permissions: string[]) {
 const larguraDaColunaDeAcoes = () =>
   (document.querySelector('thead tr th:last-child') as HTMLTableCellElement).style.width
 
-const montar = () =>
+const montar = (over: { registroBloqueado?: boolean; enrollments?: EnrollmentData[] } = {}) =>
   renderWithProviders(
     <EnrollmentTable
       turmaId={1}
-      registroBloqueado={false}
-      enrollments={[MATRICULA]}
+      registroBloqueado={over.registroBloqueado ?? false}
+      enrollments={over.enrollments ?? [MATRICULA]}
       loading={false}
       onRemove={() => {}}
       removing={false}
@@ -93,6 +93,54 @@ describe('EnrollmentTable — ações da linha', () => {
 
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('sm:min-w-[42rem]')
-    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('31.5rem')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('40rem')
+  })
+})
+
+describe('EnrollmentTable — nota e presença', () => {
+  it('mostra nota e presença no locale ativo; ausência é travessão', () => {
+    comPermissoes([])
+    montar({
+      enrollments: [
+        { ...MATRICULA, id: 1, grades: { final: '6,4' } as never, attendance_pct: '87.50' },
+        { ...MATRICULA, id: 2, name: 'Sin Nota' },
+      ],
+    })
+
+    expect(screen.getByText('6,4')).toBeTruthy()
+    expect(screen.getByText('87,5 %')).toBeTruthy()
+    expect(screen.getAllByText('—')).toHaveLength(2)
+    const cabecalhos = Array.from(document.querySelectorAll('thead th')).map((th) => th.textContent)
+    expect(cabecalhos).toContain('operation.enrollment.table.grade')
+    expect(cabecalhos).toContain('operation.enrollment.table.attendance')
+  })
+})
+
+describe('EnrollmentTable — turma concluída', () => {
+  const concluida = (result_locked: boolean) =>
+    montar({ registroBloqueado: true, enrollments: [{ ...MATRICULA, result_locked }] })
+
+  it('admin corrige o resultado de matrícula sem certificado, e não remove', () => {
+    comPermissoes(['operation.enrollment.manage'])
+    concluida(false)
+
+    expect(screen.getByRole('button', { name: 'certificate.result.action' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'operation.enrollment.remove' })).toBeNull()
+  })
+
+  it('matrícula com certificado vigente não oferece correção', () => {
+    comPermissoes(['operation.enrollment.manage'])
+    concluida(true)
+
+    expect(screen.queryByRole('button', { name: 'certificate.result.action' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'operation.enrollment.remove' })).toBeNull()
+  })
+
+  it('sem manage a coluna de ações não existe: o último th é o de status', () => {
+    comPermissoes([])
+    concluida(false)
+
+    const ultimo = document.querySelector('thead tr th:last-child') as HTMLTableCellElement
+    expect(ultimo.textContent).toContain('operation.enrollment.table.status')
   })
 })

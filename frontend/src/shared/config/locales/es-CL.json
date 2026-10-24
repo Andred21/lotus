@@ -697,7 +697,7 @@
         "conclusion": "Conclusión"
       },
       "lock": {
-        "concluida": "La turma está concluida: el registro académico quedó bloqueado."
+        "concluida": "La turma está concluida: solo se pueden corregir la nota, la asistencia y el estado de alumnos aún sin certificado."
       },
       "comingSoon": "Disponible en la próxima entrega."
     },
@@ -745,6 +745,8 @@
       "table": {
         "name": "NOMBRE",
         "rut": "RUT",
+        "grade": "NOTA",
+        "attendance": "ASISTENCIA",
         "client": "CLIENTE",
         "status": "ESTADO MATRÍCULA"
       },

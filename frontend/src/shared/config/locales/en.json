@@ -697,7 +697,7 @@
         "conclusion": "Conclusion"
       },
       "lock": {
-        "concluida": "The class is concluded: the academic record is locked."
+        "concluida": "The class is concluded: only the grade, attendance and status of students without a certificate can still be corrected."
       },
       "comingSoon": "Available in the next delivery."
     },
@@ -745,6 +745,8 @@
       "table": {
         "name": "NAME",
         "rut": "RUT",
+        "grade": "GRADE",
+        "attendance": "ATTENDANCE",
         "client": "CLIENT",
         "status": "ENROLLMENT STATUS"
       },
