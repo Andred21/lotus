@@ -98,9 +98,10 @@ describe('EnrollmentTable — ações da linha', () => {
 })
 
 describe('EnrollmentTable — nota e presença', () => {
-  it('mostra nota e presença no locale ativo; ausência é travessão', () => {
+  it.each([false, true])('mostra nota e presença no locale ativo; ausência é travessão (registroBloqueado=%s)', (registroBloqueado) => {
     comPermissoes([])
     montar({
+      registroBloqueado,
       enrollments: [
         { ...MATRICULA, id: 1, grades: { final: '6,4' } as never, attendance_pct: '87.50' },
         { ...MATRICULA, id: 2, name: 'Sin Nota' },

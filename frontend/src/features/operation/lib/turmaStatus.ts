@@ -15,10 +15,11 @@ export function turmaDisplayStatus(turma: TurmaData): TurmaDisplayStatus {
   return 'em_andamento'
 }
 
-/** RN-15: turma concluída tranca o REGISTRO ACADÊMICO inteiro — matrícula,
- * resultado, redator e configuração —, não só a documentação. Do lado do
- * servidor são sete Actions passando por `assertAcademicallyWritable()`, todas
- * devolvendo 422; oferecer o controle e recusar a escrita depois esconde do
+/** RN-15: turma concluída tranca o REGISTRO ACADÊMICO — matrícula, redator e
+ * configuração —, não só a documentação. O resultado (nota, presença e status)
+ * é a exceção: o admin o corrige enquanto a matrícula não tem certificado
+ * vigente. Do lado do servidor as demais escritas passam por
+ * `assertAcademicallyWritable()`, todas devolvendo 422; oferecer o controle e recusar a escrita depois esconde do
  * operador que aquele registro está fechado, num sistema em que ele tem peso
  * legal. Dono único da derivação: cada consumidor que a escrevesse à mão
  * (`turma.status === 'concluida'`) é um sítio a mais para a regra divergir

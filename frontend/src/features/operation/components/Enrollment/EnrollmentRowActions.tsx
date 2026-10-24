@@ -4,9 +4,10 @@ import { RowActions, type RowAction } from '@shared/ui'
 /**
  * As ações da linha da matrícula: registrar resultado (com
  * `operation.enrollment.manage`) e remover. Na turma concluída a tabela
- * desliga a remoção e, por matrícula, a correção (certificado vigente). Já eram ícones, montados à mão
- * fora do `RowActions` — e por isso não colapsavam: em 390x844 a presa de 9rem
- * cobria 172px do nome (item 23, `D-65`).
+ * desliga a remoção e, por matrícula, a correção (certificado vigente). Já
+ * eram ícones, montados à mão fora do `RowActions` — e por isso não
+ * colapsavam: em 390x844 a presa de 9rem cobria 172px do nome (item 23,
+ * `D-65`).
  *
  * `canResult` e `canRemove` chegam como booleanos: quem lê a permissão e o
  * estado da turma é a tabela.
