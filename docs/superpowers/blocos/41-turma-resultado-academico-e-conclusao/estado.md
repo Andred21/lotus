@@ -2,9 +2,9 @@
 schema_version: 3
 id: 41
 slug: 41-turma-resultado-academico-e-conclusao
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/blocos/41-turma-resultado-academico-e-conclusao/spec.md
 active_plan: docs/superpowers/blocos/41-turma-resultado-academico-e-conclusao/plano.md
@@ -17,10 +17,10 @@ branch: feat/41-turma-resultado-academico-e-conclusao
 worktree: ../lotus-41-turma-resultado-academico-e-conclusao
 offset: 1
 lane_base: dfa34847
-commit: 1c87c04a
+commit: 6055ea64
 blocker: null
-updated_at: 2026-10-24T14:45:44-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-10-24T16:10:31-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 41 — estado
