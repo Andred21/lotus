@@ -53,11 +53,11 @@ describe('ConcludePanel', () => {
     section = base({ incompleteStudents: [{ name: 'Bruno', missing: ['grade'] }] })
     renderPanel()
 
-    expect(screen.queryByText('operation.conclusion.incomplete.title')).toBeNull()
+    expect(screen.queryByText(/operation\.conclusion\.incomplete\.title/)).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: /operation.conclusion.confirm/ }))
 
     const dialog = screen.getByRole('dialog')
-    expect(within(dialog).getByText('operation.conclusion.incomplete.title')).toBeTruthy()
+    expect(within(dialog).getByText('operation.conclusion.incomplete.title|{"count":1}')).toBeTruthy()
     expect((within(dialog).getByRole('button', { name: /operation.conclusion.confirm/ }) as HTMLButtonElement).disabled).toBe(false)
   })
 
@@ -66,6 +66,6 @@ describe('ConcludePanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /operation.conclusion.confirm/ }))
 
     expect(screen.getByRole('dialog')).toBeTruthy()
-    expect(screen.queryByText('operation.conclusion.incomplete.title')).toBeNull()
+    expect(screen.queryByText(/operation\.conclusion\.incomplete\.title/)).toBeNull()
   })
 })

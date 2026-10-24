@@ -839,7 +839,7 @@
         "local_aplicacao": "Lugar de aplicación (turma presencial)"
       },
       "incomplete": {
-        "title": "Alumnos sin nota o asistencia:",
+        "title": "Alumnos sin nota o asistencia ({{count}}):",
         "row": "{{name}} — {{missing}}",
         "grade": "sin nota",
         "attendance": "sin asistencia",

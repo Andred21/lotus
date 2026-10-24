@@ -839,7 +839,7 @@
         "local_aplicacao": "Venue (in-person class)"
       },
       "incomplete": {
-        "title": "Students without grade or attendance:",
+        "title": "Students without grade or attendance ({{count}}):",
         "row": "{{name}} — {{missing}}",
         "grade": "no grade",
         "attendance": "no attendance",

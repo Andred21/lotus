@@ -21,7 +21,7 @@ describe('IncompleteResultsList', () => {
   it('mostra o título, um item por aluno e a dica, numa lista com role="list"', () => {
     render(<IncompleteResultsList students={students} />)
 
-    expect(screen.getByText('operation.conclusion.incomplete.title')).toBeTruthy()
+    expect(screen.getByText('operation.conclusion.incomplete.title|{"count":2}')).toBeTruthy()
     const items = within(screen.getByRole('list')).getAllByRole('listitem')
     expect(items).toHaveLength(2)
     expect(items[0].textContent).toContain('"name":"Bruno"')

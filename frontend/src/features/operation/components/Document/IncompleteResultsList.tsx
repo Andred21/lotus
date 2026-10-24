@@ -10,7 +10,7 @@ export function IncompleteResultsList({ students }: { students: { name: string; 
 
   return (
     <div className="space-y-1 text-sm">
-      <p className="font-medium">{t('operation.conclusion.incomplete.title')}</p>
+      <p className="font-medium">{t('operation.conclusion.incomplete.title', { count: students.length })}</p>
       <ul role="list" className="list-disc pl-5" style={{ color: 'var(--text-color-secondary)' }}>
         {students.map((s, i) => (
           <li key={i}>{t('operation.conclusion.incomplete.row', { name: s.name, missing: label(s.missing) })}</li>
