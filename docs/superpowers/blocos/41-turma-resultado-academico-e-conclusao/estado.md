@@ -2,9 +2,9 @@
 schema_version: 3
 id: 41
 slug: 41-turma-resultado-academico-e-conclusao
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings Q-1 aprovado, aplicar e repetir a revisao
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/blocos/41-turma-resultado-academico-e-conclusao/spec.md
 active_plan: docs/superpowers/blocos/41-turma-resultado-academico-e-conclusao/plano.md
@@ -17,9 +17,9 @@ branch: feat/41-turma-resultado-academico-e-conclusao
 worktree: ../lotus-41-turma-resultado-academico-e-conclusao
 offset: 1
 lane_base: dfa34847
-commit: 06f978c0
+commit: 29ed378e
 blocker: null
-updated_at: 2026-10-24T17:06:27-03:00
+updated_at: 2026-10-24T17:41:51-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 

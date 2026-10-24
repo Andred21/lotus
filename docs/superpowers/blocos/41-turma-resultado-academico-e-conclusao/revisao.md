@@ -2,9 +2,31 @@
 
 ## Em aberto
 
-- **Q-1** (Menor, rodada 1) — correção aprovada pelo João em 2026-10-24, por aplicar: na turma em
-  andamento a linha oferece "Registrar resultado" a quem tem `operation.enrollment.record_result` e
-  "Remover" só a quem tem `operation.enrollment.manage`. Fecha na rodada 2.
+## Rodada 2 — `dfa34847..29ed378e` — 2026-10-24 · Lente 1: opus · Lente 2: sonnet
+
+A lente Codex não rodou de novo. A tentativa desta rodada caiu no mesmo `model_not_found` do
+`gpt-5.5` da rodada 1, e o João informou que o Codex está sem cota. A rodada ficou só com o
+`revisor-bloco`.
+
+O **Q-1 da rodada 1 foi corrigido em `29ed378e`.** A lente 1 conferiu a correção contra:
+
+- a rota, `EnrollmentController.php:38`, que exige `record_result`;
+- a action, `RecordEnrollmentResultAction.php:43`, que exige `manage` na turma concluída;
+- o seeder, `RolePermissionSeeder.php:76-82`, que dá ao redator só `record_result`.
+
+A tela agora oferece exatamente o que a API aceita, e os testes cobrem admin e redator nos dois
+estados da turma.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-3 | Menor | Turma concluída com todas as matrículas com certificado vigente: o admin tem as duas permissões, então `mostraAcoes` é `true` e a coluna de ações de 9rem é montada. Toda linha sai sem ação, porque `RowActions` devolve `null` com a lista vazia. A faixa fica vazia em todas as linhas e tira largura de nota e presença. O comentário das linhas 110-112 promete o contrário. A lógica vem da rodada 1, e o `29ed378e` reescreveu essa condição e esse comentário. | CONFIRMED | `frontend/src/features/operation/components/Enrollment/EnrollmentTable.tsx:53,110-118`; `frontend/src/features/operation/components/Enrollment/EnrollmentRowActions.tsx:35,38`; `frontend/src/shared/ui/RowActions/RowActions.tsx:94` | registrado; não bloqueia. Correção sugerida: na turma concluída, `mostraAcoes` exige também `enrollments.some((e) => !e.result_locked)`, com um caso de teste para o admin com todas as matrículas travadas. Corrigir ou não fica a critério do João. |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+Verificação da lente 1: `vitest run src/features/operation` passou com 22 arquivos e 129 testes, e
+`pnpm lint` saiu limpo. O backend não mudou desde a rodada 1. Antes desta rodada, o gate completo do
+frontend no `29ed378e` passou: build ok, lint ok, 177 arquivos e 1228 testes.
 
 ## Rodada 1 — `dfa34847..d170d0a2` — 2026-10-24 · Lente 1: opus · Lente 2: sonnet
 
