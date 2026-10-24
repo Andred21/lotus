@@ -220,7 +220,7 @@ class SoftDeletedRelationProjectionTest extends TestCase
 
         $student->user->delete();
 
-        $data = EnrollmentData::fromModel($enrollment->fresh(['student.user']));
+        $data = EnrollmentData::fromModel($enrollment->fresh()->loadListingData());
 
         $this->assertSame('Pedro Soto', $data->name);
     }

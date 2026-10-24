@@ -17,6 +17,7 @@ use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -105,7 +106,7 @@ class EnrollmentResultTest extends TestCase
      */
     public function test_result_nao_lazy_loada_apos_refresh(): void
     {
-        $this->actingAsAdmin();
+        $admin = $this->actingAsAdmin();
 
         // Segunda matrícula só para o hydrate() abaixo vir com >1 linha.
         app(EnrollStudentAction::class)->execute(
@@ -118,6 +119,9 @@ class EnrollmentResultTest extends TestCase
 
         $enrollment = Enrollment::query()->get()->firstWhere('id', $this->enrollment->id);
 
+        $request = Request::create('/');
+        $request->setUserResolver(fn () => $admin);
+
         $result = app(EnrollmentController::class)->result(
             new EnrollmentResultData(
                 grades: ['final' => 6.5],
@@ -126,6 +130,7 @@ class EnrollmentResultTest extends TestCase
             ),
             $this->turma,
             $enrollment,
+            $request,
             app(RecordEnrollmentResultAction::class),
         );
 
@@ -133,9 +138,15 @@ class EnrollmentResultTest extends TestCase
         $this->assertSame('11.111.111-1', $result->rut);
     }
 
-    public function test_turma_concluida_recusa_resultado_com_rn15(): void
+    public function test_turma_concluida_recusa_resultado_do_redator_com_rn15(): void
     {
-        $this->actingAsAdmin();
+        // Bloco 41: o admin passou a corrigir turma concluída
+        // (`EnrollmentResultAfterConclusionTest`); a recusa RN-15 é do redator.
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->redator()->create(['is_active' => true]);
+        $user->assignRole('redator');
+        $this->turma->redatores()->attach($user->redator()->create([])->id);
+        $this->actingAs($user, 'web');
         $this->turma->update(['status' => TurmaStatus::Concluida]);
 
         $this->putJson($this->resultUrl(), $this->validPayload())

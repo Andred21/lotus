@@ -40,7 +40,7 @@ const TURMA_CONCLUIDA = { ...TURMA, status: 'concluida' } as TurmaData
 
 const ALUNO = {
   id: 10, turma_id: 1, student_id: 5, name: 'Ana Rojas', rut: '11.111.111-1', email: null, phone: null,
-  approval_status: 'pendiente', attendance_pct: null, grades: null, photo_url: null,
+  approval_status: 'pendiente', attendance_pct: null, grades: null, result_locked: false, photo_url: null,
 } as EnrollmentData
 /** A MESMA matrícula na visão arquivada, com o rastro que o `useArchivedPage` achata. */
 const ARQUIVADA = { ...ALUNO, archived_at: '2026-08-01T12:00:00Z', archived_by: 'Quien Sea' }

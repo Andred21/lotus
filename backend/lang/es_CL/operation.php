@@ -13,6 +13,9 @@ return [
         'quote_not_approved' => 'La cotización debe estar aprobada para configurar la clase.',
         'already_exists' => 'Esta cotización ya tiene una clase configurada.',
     ],
+    'enrollment' => [
+        'result_locked' => 'Esta matrícula ya tiene certificado emitido: el resultado ya no se puede modificar.',
+    ],
     'requirement' => [
         'redator' => 'relator designado',
         'local_aplicacao' => 'lugar de aplicación (clase presencial)',

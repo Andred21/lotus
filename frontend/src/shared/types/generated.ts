@@ -263,6 +263,7 @@ phone: string | null,
 approval_status: EnrollmentApprovalStatus | undefined,
 attendance_pct: undefined | string | null,
 grades: undefined | Array<any> | null,
+result_locked: undefined | boolean,
 photo_url: string | null,
 };
 export type EnrollmentResultData = {

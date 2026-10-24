@@ -13,6 +13,9 @@ return [
         'quote_not_approved' => 'A cotação precisa estar aprovada para configurar a turma.',
         'already_exists' => 'Esta cotação já tem uma turma configurada.',
     ],
+    'enrollment' => [
+        'result_locked' => 'Esta matrícula já tem certificado emitido: o resultado não pode mais ser alterado.',
+    ],
     'requirement' => [
         'redator' => 'redator designado',
         'local_aplicacao' => 'local de aplicação (turma presencial)',

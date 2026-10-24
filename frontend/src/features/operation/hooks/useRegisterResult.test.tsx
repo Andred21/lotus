@@ -28,6 +28,7 @@ function enrollmentWith(grades: Record<string, unknown> | null): EnrollmentData 
     approval_status: 'pendiente',
     attendance_pct: '80',
     grades: grades as unknown as EnrollmentData['grades'],
+    result_locked: false,
     photo_url: null,
   }
 }

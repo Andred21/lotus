@@ -102,11 +102,12 @@ class EnrollmentController extends Controller implements HasMiddleware
         EnrollmentResultData $data,
         Turma $turma,
         Enrollment $enrollment,
+        Request $request,
         RecordEnrollmentResultAction $action,
     ): EnrollmentData {
         $enrollment->setRelation('turma', $turma); // o binding aninhado não seta o pai
 
-        return EnrollmentData::fromModel($action->execute($enrollment, $data)->loadListingData());
+        return EnrollmentData::fromModel($action->execute($enrollment, $data, $request->user())->loadListingData());
     }
 
     public function destroy(Turma $turma, Enrollment $enrollment, RemoveEnrollmentAction $action): Response

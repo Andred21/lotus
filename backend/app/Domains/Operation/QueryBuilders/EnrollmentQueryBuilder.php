@@ -3,6 +3,7 @@
 namespace App\Domains\Operation\QueryBuilders;
 
 use App\Domains\Identity\Models\Student;
+use App\Domains\Operation\Models\Enrollment;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -14,7 +15,28 @@ class EnrollmentQueryBuilder extends Builder
 {
     public const LISTING = ['student.user'];
 
+    /**
+     * Além do eager-load, marca `result_locked` nos models hidratados
+     * (`afterQuery`, uma consulta à vigência por lista, não por linha). O
+     * `afterQuery` roda no `get()` do Eloquent Builder — inclusive quando a
+     * chamada vem de uma relação (`$turma->enrollments()`), de `onlyTrashed()`
+     * e do eager-load aninhado do painel de emissão (`Relation::getEager()`
+     * termina em `get()`); os testes de listagem, arquivados e orçamento de
+     * queries provam. Por isso o controller NÃO marca à mão.
+     */
     public function withListingData(): static
+    {
+        return $this->withStudentData()
+            ->afterQuery(fn ($enrollments) => Enrollment::markResultLocks($enrollments));
+    }
+
+    /**
+     * Só o eager-load do aluno, SEM a marca `result_locked`: para quem projeta
+     * a matrícula em outro DTO e não lê o trancamento (o painel de emissão já
+     * resolve a vigência por conta própria; marcar de novo custaria uma
+     * consulta a `certificates` a mais, que `CertificateListingTest` proíbe).
+     */
+    public function withStudentData(): static
     {
         return $this->with(self::LISTING);
     }

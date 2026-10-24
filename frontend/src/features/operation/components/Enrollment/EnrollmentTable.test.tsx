@@ -16,7 +16,7 @@ vi.mock('react-i18next', async (importOriginal) => {
 
 const MATRICULA: EnrollmentData = {
   id: 5, turma_id: 1, student_id: 9, name: 'Ana Torres', rut: '11.111.111-1', email: null, phone: null,
-  approval_status: undefined, attendance_pct: null, grades: null, photo_url: null,
+  approval_status: undefined, attendance_pct: null, grades: null, result_locked: false, photo_url: null,
 }
 
 function comPermissoes(permissions: string[]) {
