@@ -102,7 +102,7 @@ describe('EnrollmentSection e o switch local da D5', () => {
 
 describe('EnrollmentSection numa turma concluída (UI-01)', () => {
   beforeEach(() => {
-    comPermissoes(['operation.enrollment.manage', 'operation.enrollment.restore'])
+    comPermissoes(['operation.enrollment.manage', 'operation.enrollment.record_result', 'operation.enrollment.restore'])
     section.current = { ...section.current, enrollments: [ALUNO] }
   })
 

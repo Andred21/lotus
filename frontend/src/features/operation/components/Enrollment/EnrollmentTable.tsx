@@ -44,10 +44,13 @@ export function EnrollmentTable({
   // Alvo do diálogo de resultado: estado local, como o `pending` da remoção — ação
   // por LINHA; EnrollmentSection só guarda os diálogos sem linha (Agregar, Importar).
   const [resultTarget, setResultTarget] = useState<EnrollmentData | null>(null)
+  // RN-02: `record_result` lança nota e presença (redator e admin); `manage` é o
+  // Fluxo 3 do admin (remover) e, na turma concluída, a correção do resultado.
+  const canRecord = can('operation.enrollment.record_result')
   const canManage = can('operation.enrollment.manage')
   // Aba sem busca (decisão do protótipo): o hook entra pela página e pelo clamp.
   const table = useTableFilter(enrollments)
-  const mostraAcoes = !registroBloqueado || canManage
+  const mostraAcoes = registroBloqueado ? canManage && canRecord : canRecord || canManage
   const largura = enrollmentWidths(mostraAcoes)
   const colunaDeAcoes = useCollapsibleActionsColumn('9rem')
   return (
@@ -104,15 +107,15 @@ export function EnrollmentTable({
           }
           style={largura.status}
         />
-        {/* Na turma concluída a coluna só existe para quem corrige o resultado: sem
-          * `manage` não sobra ação, e uma faixa vazia em toda linha só rouba largura
+        {/* A coluna só existe para quem tem alguma ação: na turma concluída, só para
+          * quem corrige o resultado. Uma faixa vazia em toda linha só rouba largura
           * das colunas de dado. O `sticky` da UI-02 acompanha a coluna. */}
         {mostraAcoes && (
           <AppColumn
             body={(e: EnrollmentData) => (
               <EnrollmentRowActions
-                canResult={canManage && !(registroBloqueado && e.result_locked)}
-                canRemove={!registroBloqueado}
+                canResult={canRecord && (!registroBloqueado || (canManage && !e.result_locked))}
+                canRemove={canManage && !registroBloqueado}
                 removing={removing}
                 onResult={() => setResultTarget(e)}
                 onRemove={() => setPending(e)}
