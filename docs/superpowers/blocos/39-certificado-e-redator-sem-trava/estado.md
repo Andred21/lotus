@@ -2,10 +2,10 @@
 schema_version: 3
 id: 39
 slug: 39-certificado-e-redator-sem-trava
-workflow_state: blocked
+workflow_state: closed
 next_owner: joao
-next_action: "resolve_blocker aguardando aceitação: itens 1, 2"
-resume_state: ready_for_closure
+next_action: none
+resume_state: null
 active_spec: docs/superpowers/blocos/39-certificado-e-redator-sem-trava/spec.md
 active_plan: docs/superpowers/blocos/39-certificado-e-redator-sem-trava/plano.md
 active_review: docs/superpowers/blocos/39-certificado-e-redator-sem-trava/revisao.md
@@ -13,16 +13,18 @@ active_acceptance: docs/superpowers/blocos/39-certificado-e-redator-sem-trava/ac
 context_packet: docs/superpowers/blocos/39-certificado-e-redator-sem-trava/context.md
 efeito_externo: sim
 executor: claude
-branch: feat/39-certificado-e-redator-sem-trava
+branch: docs/39-certificado-e-redator-sem-trava
 worktree: ../lotus-39-certificado-e-redator-sem-trava
-offset: 1
-lane_base: 0740843a
-commit: f3c9697f
-blocker: "aguardando aceitação depois do merge: itens 1, 2 da ## Verificação externa"
-updated_at: 2026-10-20T23:03:21-03:00
+offset: 2
+lane_base: dfa34847
+commit: 26c21ee8
+blocker: null
+updated_at: 2026-10-24T14:50:30-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 39 — estado
 
 Aberto por lane.sh abrir. O contrato dos campos esta em docs/superpowers/state.md.
+
+Reaberto em 2026-10-24 pelo lane.sh aceitar, na branch docs/39-certificado-e-redator-sem-trava; a branch do bloco era feat/39-certificado-e-redator-sem-trava.
