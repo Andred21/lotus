@@ -2,27 +2,39 @@
 schema_version: 3
 id: 42
 slug: 42-infra-producao-higiene-e-manutencao
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
-active_spec: null
-active_plan: null
+active_spec: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/spec.md
+active_plan: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/plano.md
 active_review: null
-active_acceptance: null
+active_acceptance: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/aceitacao.md
 context_packet: null
-efeito_externo: null
-executor: null
+efeito_externo: sim
+executor: claude
 branch: infra/42-infra-producao-higiene-e-manutencao
 worktree: ../lotus-42-infra-producao-higiene-e-manutencao
 offset: 2
 lane_base: 68790dac
-commit: 68790dac
+commit: 3e704fb2
 blocker: null
-updated_at: 2026-10-25T14:05:40-03:00
+updated_at: 2026-10-25T15:13:45-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 42 — estado
 
 Aberto por lane.sh abrir. O contrato dos campos esta em docs/superpowers/state.md.
+
+## Desvios decididos pelo João
+
+- **Ficha pela PR da própria lane (2026-10-25).** A ficha 42 entrou nesta branch, sem PR de docs
+  separada (invariante 10). O portão do `lane.sh abrir` leu uma cópia provisória no `backlog.md` do
+  main tree, desfeita assim que a lane abriu. Registro também no `## Fluxo` do backlog.
+- **`lane.sh conferir 42` saiu 1 e o bloco seguiu (2026-10-25).** O conflito apontado foi com o
+  plano do bloco 13: `deploy/aws/README.md` e `docs/adrs.md`. É falso positivo. A lane 13 é de
+  aceitação, o código dela já está na `main`, e o diff real dela contra a `main`
+  (`git diff --stat main...docs/13-go-live-confiabilidade-e-recuperacao`, HEAD `7bbef4be`) toca só
+  `aceitacao.md`, `estado.md` e `proposta-dis02.md`, na pasta do próprio bloco. O `conferir` compara
+  as listas de arquivos dos planos, não o que cada lane ainda vai mudar.
