@@ -3,7 +3,7 @@
 # Deploy por SHA no host de produção (spec v2 do item 10, §11; item 12).
 # Sequência: cadeado -> login -> manifestos -> pull -> gate de schema -> dump
 # (só com migration pendente) -> ledger `inicio` -> migrate -> up -> /up ->
-# digests -> CURRENT_SHA -> ledger `fim`.
+# digests -> CURRENT_SHA -> poda de imagens -> ledger `fim`.
 # Rollback: promover o SHA anterior. Com o banco à frente do alvo o gate recusa,
 # e o que vem antes de promover de novo é o restore do runbook §8.1.1.
 #
@@ -228,4 +228,10 @@ NOVO=$(mktemp "$BASE/.current_sha.XXXXXX")
 printf '%s\n' "$SHA" > "$NOVO"
 chmod 644 "$NOVO"
 mv -f "$NOVO" "$BASE/CURRENT_SHA"
+
+# Poda das imagens velhas (bloco 42): so depois do CURRENT_SHA, porque antes
+# disso a promocao ainda pode falhar e a imagem antiga e a rede. A falha da poda
+# vira aviso: a promocao ja aconteceu, e o trap registra o `fim` como ok.
+echo "==> poda de imagens"
+"$BASE/bin/podar-imagens.sh" "$SHA" || echo "aviso: a poda de imagens falhou; a promocao segue OK" >&2
 echo "==> DEPLOY OK: $SHA"

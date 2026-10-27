@@ -61,6 +61,22 @@ describe('deploy/bin/deploy.sh', () => {
     expect(semComentarios).not.toMatch(/> "\$BASE\/CURRENT_SHA"/)
   })
 
+  it('poda as imagens depois do CURRENT_SHA, e a falha da poda vira aviso', () => {
+    // Spec do bloco 42, §4: antes do CURRENT_SHA a promoção ainda pode falhar e a
+    // imagem antiga é a rede; depois dele, falha da poda não derruba a promoção.
+    // O deploy.sh não roda em teste (BASE fixo), então a catraca prende a linha
+    // inteira: tirar o `||`, ou trocar o aviso por `exit`, reprova.
+    const mv = indiceDe('mv -f "$NOVO" "$BASE/CURRENT_SHA"')
+    const poda = indiceDe('"$BASE/bin/podar-imagens.sh"')
+    expect(mv).toBeGreaterThan(-1)
+    expect(poda).toBeGreaterThan(mv)
+    expect(poda).toBeLessThan(indiceDe('DEPLOY OK'))
+    expect(linhas[poda].trim()).toBe(
+      '"$BASE/bin/podar-imagens.sh" "$SHA" || echo "aviso: a poda de imagens falhou; a promocao segue OK" >&2',
+    )
+    expect(linhas.filter((linha) => linha.includes('podar-imagens.sh'))).toHaveLength(1)
+  })
+
   it('mantém a conferência de digest puxado contra digest em execução', () => {
     expect(semComentarios).toContain('ID_PUXADO')
     expect(semComentarios).toContain('ID_RODANDO')
