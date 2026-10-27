@@ -31,16 +31,20 @@ describe('deploy/aws/README.md — higiene da produção (bloco 42)', () => {
     expect(s7).toMatch(/^sudo mv .*\/tmp\/podar-imagens\.sh/m)
   })
 
-  it('§3: lifecycle, login da raiz e só então a política, dos arquivos versionados', () => {
+  it('§3: lifecycle, prova da saída pelo IAM e só então a política, dos arquivos versionados', () => {
     const s3 = secao('\n## 3. ', '\n### 3.1 ')
     const lifecycle = s3.indexOf('--lifecycle-configuration file://deploy/aws/s3-lifecycle.json')
-    const raiz = s3.indexOf('login da raiz')
+    const saida = s3.indexOf('--action-names s3:PutBucketPolicy s3:DeleteBucketPolicy')
+    const chave = s3.indexOf('--action-names iam:CreateAccessKey')
     const politica = s3.indexOf('--policy file://deploy/aws/s3-politica.json')
     expect(lifecycle).toBeGreaterThan(-1)
-    expect(raiz).toBeGreaterThan(lifecycle)
-    expect(politica).toBeGreaterThan(raiz)
+    expect(saida).toBeGreaterThan(lifecycle)
+    expect(chave).toBeGreaterThan(saida)
+    expect(politica).toBeGreaterThan(chave)
     expect(s3).toContain('https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-conflicts.html')
-    expect(s3).toContain('Permissions → Bucket policy → Delete')
+    expect(s3).toContain('aws s3api delete-bucket-policy --bucket lotus-prod-760144413534')
+    // ruling 6 do bloco 42: o João não tem as credenciais da raiz da conta
+    expect(s3).not.toContain('login da raiz')
   })
 
   it('§3.1 desfaz um apagão copiando a versão anterior por cima da chave', () => {

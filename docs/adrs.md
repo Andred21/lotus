@@ -114,8 +114,12 @@ aplicadas pelo runbook `deploy/aws/README.md` §3:
 - **Quem apaga:** só o app (`lotus-ec2`) e o `lotus-infra`. Os outros admins da conta e as roles da
   conta-mãe leem e gravam, mas não apagam.
 - **Quem mexe na proteção:** só o `lotus-infra` (política, versioning, lifecycle, bloqueio
-  público, criptografia, ownership e apagar o bucket), sem MFA por enquanto. A saída de
-  emergência é a raiz da conta, que sempre consegue apagar a política.
+  público, criptografia, ownership e apagar o bucket), sem MFA por enquanto.
+- **Saída de emergência pelo IAM, não pela raiz** (o João não tem as credenciais dela, decisão de
+  2026-10-27). O `lotus-infra` desfaz a política; perdida a chave, o `JoaoVBA` cria outra; apagado
+  o usuário, recriá-lo com o mesmo nome devolve o acesso, porque o `aws:PrincipalArn` é comparado
+  como texto. A raiz só volta a ser necessária se todo acesso de administrador ao IAM se perder.
+  O runbook prova esse caminho pelo simulador antes de toda aplicação da política.
 
 Decisão do João na spec do bloco 42.
 

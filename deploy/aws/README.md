@@ -77,18 +77,43 @@ Aplicar da raiz do repositório, com o perfil `lotus` (`lotus-infra`), nesta ord
 ```bash
 aws s3api put-bucket-lifecycle-configuration --bucket lotus-prod-760144413534 \
   --lifecycle-configuration file://deploy/aws/s3-lifecycle.json --profile lotus
-# antes da política: login da raiz da conta 760144413534 no console, com MFA (a saída de emergência)
-# e a identidade do perfil: tem de imprimir arn:aws:iam::760144413534:user/lotus-infra
+# antes da política, a identidade do perfil: tem de imprimir arn:aws:iam::760144413534:user/lotus-infra
 # (outro ARN → não aplique: o ProtecaoSoInfra trancaria o próprio operador)
 aws sts get-caller-identity --profile lotus --query Arn --output text
+# e a saída de emergência, pelo simulador (só leitura), contra o JSON ainda não aplicado:
+# o lotus-infra desfaz a política — as duas linhas têm de dar allowed
+aws iam simulate-principal-policy --profile lotus \
+  --policy-source-arn arn:aws:iam::760144413534:user/lotus-infra \
+  --action-names s3:PutBucketPolicy s3:DeleteBucketPolicy \
+  --resource-arns arn:aws:s3:::lotus-prod-760144413534 \
+  --resource-policy file://deploy/aws/s3-politica.json \
+  --context-entries "ContextKeyName=aws:SecureTransport,ContextKeyValues=true,ContextKeyType=boolean" \
+    "ContextKeyName=aws:PrincipalArn,ContextKeyValues=arn:aws:iam::760144413534:user/lotus-infra,ContextKeyType=string" \
+  --query 'EvaluationResults[].[EvalActionName,EvalDecision]' --output text
+# o JoaoVBA cria chave do lotus-infra (allowed), e cabe uma nova (a conta tem de dar menos de 2)
+aws iam simulate-principal-policy --profile lotus \
+  --policy-source-arn arn:aws:iam::760144413534:user/JoaoVBA \
+  --action-names iam:CreateAccessKey \
+  --resource-arns arn:aws:iam::760144413534:user/lotus-infra \
+  --query 'EvaluationResults[].[EvalActionName,EvalDecision]' --output text
+aws iam list-access-keys --user-name lotus-infra --profile lotus --query 'length(AccessKeyMetadata)'
 aws s3api put-bucket-policy --bucket lotus-prod-760144413534 \
   --policy file://deploy/aws/s3-politica.json --profile lotus
 ```
 
-**Saída de emergência.** A raiz da conta sempre consegue apagar a política de um bucket, mesmo
-quando a política a nega. Perder o `lotus-infra` (a chave, o usuário ou a permissão) cai aqui:
-console como raiz, com MFA → S3 → `lotus-prod-760144413534` → Permissions → Bucket policy → Delete.
-Por isso o login da raiz é conferido antes de toda aplicação da política.
+**Saída de emergência.** É o IAM, não a raiz: o João não tem as credenciais da raiz da conta
+`760144413534` (ruling 6 do bloco 42). Perder o `lotus-infra` cai aqui:
+- **a chave:** o `JoaoVBA` entra no console → IAM → Users → `lotus-infra` → Create access key,
+  põe a chave nova no perfil `lotus` e roda
+  `aws s3api delete-bucket-policy --bucket lotus-prod-760144413534 --profile lotus`. O limite é
+  duas chaves por usuário: com duas, desative e apague a perdida antes;
+- **o usuário:** recriar o `lotus-infra` com o mesmo nome, pelo §1, devolve o acesso, porque a
+  política compara o `aws:PrincipalArn` como texto. Depois, o caso da chave;
+- **todo acesso de administrador ao IAM:** só a raiz, ou o `AssumeRoot` da conta gestora da
+  Organization, apaga a política. Nesse caso a raiz já seria necessária com ou sem a política.
+
+Por isso o simulador roda antes de toda aplicação da política. O `JoaoVBA` está sem MFA, e ele é a
+saída: o MFA dele fica recomendado.
 
 Prova: `get-bucket-versioning` → `Enabled`; `get-public-access-block` → os quatro `true`;
 `get-bucket-lifecycle-configuration` e `get-bucket-policy` → iguais aos dois arquivos;
