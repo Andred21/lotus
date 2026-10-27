@@ -103,6 +103,22 @@ do ADR-14. Restore que falhar no go-live é o primeiro gatilho desta revisão di
 
 **Porquê:** cliente baixa direto do S3 (não sobrecarrega o servidor); URLs efêmeras não compartilháveis indefinidamente. Descartados: Google Drive (legado v1, amador), binário no banco/servidor.
 
+**Emenda (2026-10-25, bloco `infra-producao-higiene-e-manutencao`).** O bucket de produção ganha
+política e retenção versionadas, `deploy/aws/s3-politica.json` e `deploy/aws/s3-lifecycle.json`,
+aplicadas pelo runbook `deploy/aws/README.md` §3:
+- **Ninguém apaga de vez.** `s3:DeleteObjectVersion` é negado a todos, o `lotus-infra` inclusive.
+  Quem apaga versão é só o lifecycle, que não passa pela política.
+- **Todo apagar se desfaz.** Apagar vira marca de exclusão, e a versão anterior fica 7 dias para
+  documento e 1 dia para foto: a spec J-02 já mandava apagar foto sem retenção, e 1 dia é o mínimo
+  do S3. O passo a passo está no runbook, §3.1.
+- **Quem apaga:** só o app (`lotus-ec2`) e o `lotus-infra`. Os outros admins da conta e as roles da
+  conta-mãe leem e gravam, mas não apagam.
+- **Quem mexe na proteção:** só o `lotus-infra` (política, versioning, lifecycle, bloqueio
+  público, criptografia, ownership e apagar o bucket), sem MFA por enquanto. A saída de
+  emergência é a raiz da conta, que sempre consegue apagar a política.
+
+Decisão do João na spec do bloco 42.
+
 ## ADR-12 — PDF: Spatie Laravel PDF + Gotenberg (Chromium headless)
 **Regra:** Spatie Laravel PDF com driver **Gotenberg** (container separado). Geração **sob demanda**, stream direto para S3, sem escrever em `/tmp`. **Porquê:** renderização fiel de CSS moderno e QR; isola a carga pesada de PDF do servidor da app (evita memory exhausted do DomPDF em lote). Descartados: DomPDF (CSS limitado, estoura memória), Snappy/wkhtmltopdf (defasado).
 
@@ -231,6 +247,21 @@ só vale como decisão depois do aceite:
 Proposta: `docs/superpowers/blocos/13-go-live-confiabilidade-e-recuperacao/proposta-dis02.md`.
 A lane de aceitação troca este status por *aceita em <data>* (ou *recusada*, e então HA vira ficha
 no backlog por PR de docs) e preenche os campos entre `<>` (RTO medido, custo estimado, data e tamanho).
+
+**Emenda (2026-10-25, bloco `infra-producao-higiene-e-manutencao`).** Duas partes do *patching SO*
+e da operação passam a acontecer sozinhas:
+- **Reboot automático.** O `unattended-upgrades` segue só com a origem de segurança. O repositório
+  do Docker fica fora, porque o upgrade dele reinicia o daemon e derruba os contêineres. Quando a
+  atualização pede reboot, o host reinicia sozinho às 08:30 UTC, depois do backup e da
+  conferência. Atualização fora de segurança continua manual, numa janela pelo runbook
+  `deploy/aws/README.md` §16.4.
+- **Poda de imagens no deploy.** O `deploy/bin/deploy.sh` chama o `deploy/bin/podar-imagens.sh`
+  depois de gravar o `CURRENT_SHA`. O host guarda as imagens do SHA atual e do anterior, que é o
+  alvo de rollback. A falha da poda vira aviso e não derruba a promoção. Rollback para um SHA mais
+  antigo volta por `docker pull`, porque o GHCR guarda todos.
+
+O teto de 200 MB do journal e a limpeza semanal do cache do apt também passam a ser versionados no
+`deploy/aws/user-data.sh`.
 
 ## ADR-15 — i18n: ES-CL / PT-BR / EN, dicionários separados por camada
 
