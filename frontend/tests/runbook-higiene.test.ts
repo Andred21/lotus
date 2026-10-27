@@ -41,6 +41,12 @@ describe('deploy/aws/README.md — higiene da produção (bloco 42)', () => {
     expect(saida).toBeGreaterThan(lifecycle)
     expect(chave).toBeGreaterThan(saida)
     expect(politica).toBeGreaterThan(chave)
+    // sem a política de recurso, o simulador avalia só a de identidade e dá allowed sempre
+    const simulacao = s3.slice(saida, chave)
+    expect(simulacao).toContain('--resource-policy file://deploy/aws/s3-politica.json')
+    expect(simulacao).toContain(
+      'ContextKeyName=aws:PrincipalArn,ContextKeyValues=arn:aws:iam::760144413534:user/lotus-infra',
+    )
     expect(s3).toContain('https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-conflicts.html')
     expect(s3).toContain('aws s3api delete-bucket-policy --bucket lotus-prod-760144413534')
     // ruling 6 do bloco 42: o João não tem as credenciais da raiz da conta
@@ -63,6 +69,9 @@ describe('deploy/aws/README.md — higiene da produção (bloco 42)', () => {
   it('§16: a poda à mão, os três arquivos do user-data e a janela manual', () => {
     const s16 = secao('\n## 16. ', '')
     expect(s16).toContain(`sudo sh -c '/opt/lotus/bin/podar-imagens.sh "$(cat /opt/lotus/CURRENT_SHA)"'`)
+    // a saída 1 do podar-imagens.sh também vem de listagem ou prune que falham
+    expect(s16).toContain('erro: docker image ls falhou')
+    expect(s16).toContain('erro: docker image prune falhou')
     for (const arquivo of [
       '/etc/systemd/journald.conf.d/lotus.conf',
       '/etc/apt/apt.conf.d/52lotus-limpeza',

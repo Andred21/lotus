@@ -1621,9 +1621,13 @@ anterior. O `-n` sai com 1 sem esperar se um deploy segura o cadeado; tente de n
 
 O `sudo sh -c` não é enfeite: o `/opt/lotus` é `750 root:root`, e o `$(cat …)` expandido no shell
 do `ubuntu` chegaria vazio. A primeira linha diz o que fica (`mantidas: <atual> <anterior>`), e
-cada `removida:` é uma imagem que saiu. Saída 1 quer dizer imagem presa a contêiner, mesmo parado,
-e `sudo docker ps -a --format '{{.Names}} {{.Image}} {{.Status}}'` mostra qual. Nunca
-`docker image rm -f`. O espaço pode demorar a aparecer no `df`, porque o containerd solta os
+cada `removida:` é uma imagem que saiu. Saída 1 tem três causas, e o stderr diz qual:
+- `recusada: <repo>:<tag>` é imagem presa a contêiner, mesmo parado, e
+  `sudo docker ps -a --format '{{.Names}} {{.Image}} {{.Status}}'` mostra qual;
+- `erro: docker image ls falhou` é a listagem que falhou, e nada foi removido;
+- `erro: docker image prune falhou` é a limpeza das camadas soltas que falhou, depois das remoções.
+
+Nas duas últimas, `sudo docker info` diz se o daemon responde. Nunca `docker image rm -f`. O espaço pode demorar a aparecer no `df`, porque o containerd solta os
 snapshots depois (`sudo docker system df`).
 
 ### 16.2 Journal e cache do apt
