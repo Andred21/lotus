@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# `aws` de mentira do frontend/tests/backup-db.test.ts. Anota cada chamada em
+# $FAKE_DIR/aws.log, com a folga de IMDS que recebeu, e falha como o CLI falhou
+# no backup de 2026-10-07 enquanto o numero da chamada for <= $FAKE_FALHAS.
+printf '%s|imds=%s/%s\n' "$*" "${AWS_METADATA_SERVICE_NUM_ATTEMPTS:-}" "${AWS_METADATA_SERVICE_TIMEOUT:-}" >> "$FAKE_DIR/aws.log"
+n=$(wc -l < "$FAKE_DIR/aws.log")
+if [ "$n" -le "${FAKE_FALHAS:-0}" ]; then
+  echo 'Unable to locate credentials. You can configure credentials by running "aws configure".' >&2
+  exit 255
+fi
+case " $* " in
+  *" s3 cp "*) ;;
+  *) echo "aws falso: nao previsto: $*" >&2; exit 1 ;;
+esac
