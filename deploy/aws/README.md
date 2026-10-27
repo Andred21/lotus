@@ -78,6 +78,9 @@ Aplicar da raiz do repositório, com o perfil `lotus` (`lotus-infra`), nesta ord
 aws s3api put-bucket-lifecycle-configuration --bucket lotus-prod-760144413534 \
   --lifecycle-configuration file://deploy/aws/s3-lifecycle.json --profile lotus
 # antes da política: login da raiz da conta 760144413534 no console, com MFA (a saída de emergência)
+# e a identidade do perfil: tem de imprimir arn:aws:iam::760144413534:user/lotus-infra
+# (outro ARN → não aplique: o ProtecaoSoInfra trancaria o próprio operador)
+aws sts get-caller-identity --profile lotus --query Arn --output text
 aws s3api put-bucket-policy --bucket lotus-prod-760144413534 \
   --policy file://deploy/aws/s3-politica.json --profile lotus
 ```
@@ -1584,8 +1587,12 @@ Rollback para um SHA mais antigo volta por `docker pull`: o GHCR guarda todos.
 À mão, com a mesma regra:
 
 ```bash
-sudo sh -c '/opt/lotus/bin/podar-imagens.sh "$(cat /opt/lotus/CURRENT_SHA)"'
+sudo flock -n /opt/lotus/.deploy.lock sudo sh -c '/opt/lotus/bin/podar-imagens.sh "$(cat /opt/lotus/CURRENT_SHA)"'
 ```
+
+O `flock` é o mesmo cadeado do `deploy.sh` (`/opt/lotus/.deploy.lock`): uma promoção pelo botão
+durante a poda à mão apagaria as imagens recém-puxadas, que ainda não são o `CURRENT_SHA` nem o
+anterior. O `-n` sai com 1 sem esperar se um deploy segura o cadeado; tente de novo depois.
 
 O `sudo sh -c` não é enfeite: o `/opt/lotus` é `750 root:root`, e o `$(cat …)` expandido no shell
 do `ubuntu` chegaria vazio. A primeira linha diz o que fica (`mantidas: <atual> <anterior>`), e
@@ -1601,7 +1608,8 @@ Os dois ficam versionados no `deploy/aws/user-data.sh`:
 - `/etc/systemd/journald.conf.d/lotus.conf`, com `SystemMaxUse=200M`. Para conferir:
   `journalctl --disk-usage`.
 - `/etc/apt/apt.conf.d/52lotus-limpeza`, com `APT::Periodic::AutocleanInterval "7";`, a limpeza
-  semanal do cache. Para conferir: `apt-config dump | grep AutocleanInterval`.
+  semanal do cache, mas só dos `.deb` obsoletos (por isso o §16.4 roda `apt-get clean` depois do
+  upgrade). Para conferir: `apt-config dump | grep AutocleanInterval`.
 
 ### 16.3 Reboot automático
 
@@ -1625,7 +1633,8 @@ Quando o João decidir aplicar o que não é de segurança:
 
 1. Listar o pendente: `apt list --upgradable`.
 2. Desligar as ações dos alarmes (§14.7).
-3. Aplicar: `sudo apt-get update && sudo apt-get -y upgrade`. Pergunta de arquivo de configuração
+3. Aplicar: `sudo apt-get update && sudo apt-get -y upgrade && sudo apt-get clean`
+   (o `AutocleanInterval` só remove `.deb` obsoleto; os baixados no upgrade ficariam no disco). Pergunta de arquivo de configuração
    fica com a versão instalada (o default). O que ficar retido (`apt list --upgradable` de novo) vai
    para o registro e para o João decidir. O upgrade do Docker reinicia os contêineres no meio: é
    por isso que os alarmes estão desligados.
