@@ -40,7 +40,9 @@ describe('deploy/bin/verificar-backup.sh', () => {
 
   it('olha o EFEITO no S3, não o log local nem o processo', () => {
     expect(semComentarios).toContain('aws s3api list-objects-v2')
-    expect(semComentarios).toContain('sort_by(Contents,&LastModified)[-1].LastModified')
+    // `Contents || []`: sem ele, o prefixo vazio faz o sort_by receber null e o
+    // CLI sair 255 (medido em 2026-10-25), e o vazio viraria "consulta falhou".
+    expect(semComentarios).toContain('sort_by(Contents || `[]`, &LastModified)[-1].LastModified')
     expect(semComentarios).not.toContain('/var/log/lotus-backup.log')
   })
 
@@ -139,5 +141,65 @@ describe('deploy/bin/verificar-backup.sh — fronteira dos 2 dias', () => {
     expect(e.status).toBe(1)
     expect(e.stderr).toContain('tem 50 h (limite 2 dias)')
     expect(e.log).toContain('publish')
+  })
+})
+
+/**
+ * Consulta que falha não é bucket vazio (bloco 42, spec §9). Até o bloco 42 o
+ * `|| echo None` lia qualquer falha da consulta (credencial, rede, permissão)
+ * como "nenhum backup", o alerta mais grave do ADR-09, e o backup de 2026-10-07
+ * mostrou que a falha de credencial acontece. Os dois casos alertam e saem 1;
+ * o que muda é o que o João lê no e-mail.
+ */
+describe('deploy/bin/verificar-backup.sh — consulta que falha e bucket vazio', () => {
+  const FAKES = join(__dirname, 'fixtures', 'verificar-backup')
+  let base: string
+  let contador = 0
+
+  beforeAll(() => {
+    base = mkdtempSync(join(tmpdir(), 'verificar-backup-consulta-'))
+    writeFileSync(
+      join(base, '.env'),
+      'LOTUS_BACKUP_BUCKET=bucket-falso\nLOTUS_ALERT_TOPIC_ARN=arn:aws:sns:sa-east-1:000000000000:lotus-alertas\n',
+    )
+  })
+
+  afterAll(() => {
+    rmSync(base, { recursive: true, force: true })
+  })
+
+  const rodar = (cenario: Record<string, string>) => {
+    contador += 1
+    const log = join(base, `chamadas-${contador}.log`)
+    writeFileSync(log, '')
+    const r = spawnSync('bash', [CAMINHO], {
+      env: { ...process.env, LOTUS_BASE: base, FAKE_LOG: log, ...cenario, PATH: `${FAKES}:${process.env.PATH ?? ''}` },
+      encoding: 'utf8',
+    })
+    return { status: r.status, stderr: r.stderr, log: readFileSync(log, 'utf8') }
+  }
+
+  it('consulta que falha alerta a consulta, nunca "nenhum backup"', () => {
+    const e = rodar({ FAKE_CONSULTA_FALHA: '1' })
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain(
+      'Lotus: a consulta dos backups em s3://bucket-falso/backups/ falhou. Nao da para afirmar que ha copia; confira as credenciais da instancia.',
+    )
+    expect(e.stderr).not.toContain('nenhum backup')
+    expect(e.log).toContain('a consulta dos backups em s3://bucket-falso/backups/ falhou')
+  })
+
+  it('bucket vazio segue com o gatilho do ADR-09', () => {
+    const e = rodar({ FAKE_ULTIMO_BACKUP: 'None' })
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain('Lotus: nenhum backup em s3://bucket-falso/backups/')
+    expect(e.log).toContain('publish')
+  })
+
+  it('a consulta e o publish saem com a folga de IMDS', () => {
+    const e = rodar({ FAKE_CONSULTA_FALHA: '1' })
+    const chamadas = e.log.split('---\n').filter(Boolean)
+    expect(chamadas).toHaveLength(2)
+    for (const c of chamadas) expect(c).toContain('imds=3/5')
   })
 })

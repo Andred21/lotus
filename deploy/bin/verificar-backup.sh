@@ -24,6 +24,10 @@
 set -euo pipefail
 umask 077
 
+# Mesma folga de IMDS do backup-db.sh: o default do CLI (1 tentativa de 1 s)
+# derrubou o backup de 2026-10-07 com `Unable to locate credentials`.
+export AWS_METADATA_SERVICE_NUM_ATTEMPTS=3 AWS_METADATA_SERVICE_TIMEOUT=5
+
 # Mesmo gancho do LOTUS_ENV_FILE do compose de producao: o default aponta para
 # o caminho de producao, e a prova local sobrescreve a variavel. E o que permite
 # este script ser EXECUTADO numa sonda, e nao so conferido por texto.
@@ -57,8 +61,16 @@ gritar() {
   exit 1
 }
 
-QUANDO=$(aws s3api list-objects-v2 --bucket "$BUCKET" --prefix backups/ \
-  --query 'sort_by(Contents,&LastModified)[-1].LastModified' --output text 2>/dev/null || echo None)
+# Consulta que falha nao e bucket vazio. Ate o bloco 42 o `|| echo None` lia
+# qualquer falha (credencial, rede, permissao) como "nenhum backup", o alerta
+# mais grave do ADR-09. O `Contents || []` mantem o vazio legivel: sem ele o
+# sort_by recebe null e o CLI sai 255 com o prefixo vazio (medido em
+# 2026-10-25), e o vazio viraria "consulta falhou". O stderr do CLI segue para o
+# log do cron, que e onde se le o motivo.
+if ! QUANDO=$(aws s3api list-objects-v2 --bucket "$BUCKET" --prefix backups/ \
+    --query 'sort_by(Contents || `[]`, &LastModified)[-1].LastModified' --output text); then
+  gritar "Lotus: a consulta dos backups em s3://$BUCKET/backups/ falhou. Nao da para afirmar que ha copia; confira as credenciais da instancia."
+fi
 
 [ -n "$QUANDO" ] && [ "$QUANDO" != "None" ] \
   || gritar "Lotus: nenhum backup em s3://$BUCKET/backups/. O banco de producao esta sem copia. ADR-09: gatilho de reversao ao RDS."

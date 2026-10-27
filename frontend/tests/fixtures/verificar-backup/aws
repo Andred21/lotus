@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
 #
 # `aws` de mentira do frontend/tests/verificar-backup.test.ts. Registra a chamada
-# em $FAKE_LOG e devolve o LastModified que o cenario pede; o publish so fica no
-# log.
+# em $FAKE_LOG, com a folga de IMDS que recebeu, e devolve o LastModified que o
+# cenario pede; o publish so fica no log. FAKE_CONSULTA_FALHA=1 faz a consulta
+# falhar como o CLI falhou no backup de 2026-10-07.
 {
   printf '%s\n' '---'
   printf '%s\n' "$@"
+  printf 'imds=%s/%s\n' "${AWS_METADATA_SERVICE_NUM_ATTEMPTS:-}" "${AWS_METADATA_SERVICE_TIMEOUT:-}"
 } >> "$FAKE_LOG"
 
 case " $* " in
-  *" s3api list-objects-v2 "*) echo "${FAKE_ULTIMO_BACKUP:-None}" ;;
+  *" s3api list-objects-v2 "*)
+    if [ "${FAKE_CONSULTA_FALHA:-}" = 1 ]; then
+      echo 'Unable to locate credentials. You can configure credentials by running "aws configure".' >&2
+      exit 255
+    fi
+    echo "${FAKE_ULTIMO_BACKUP:-None}"
+    ;;
   *" sns publish "*) ;;
   *) echo "aws falso: nao previsto: $*" >&2; exit 1 ;;
 esac
