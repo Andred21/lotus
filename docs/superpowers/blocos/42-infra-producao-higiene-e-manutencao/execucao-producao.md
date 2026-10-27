@@ -126,14 +126,147 @@ Conferido por Claude, por SSH, às 18:48 UTC:
 
 ### Lifecycle
 
+2026-10-27, por volta de 18:55 UTC.
+
+Antes, lido por Claude:
+- O versionamento estava `Enabled`.
+- O lifecycle só tinha a regra `expira-backups`, idêntica à do `deploy/aws/s3-lifecycle.json`.
+- O `put` só acrescenta as regras `fotos` e `documentos`. A retenção dos backups não muda.
+
+O João rodou da raiz da lane:
+`aws s3api put-bucket-lifecycle-configuration --bucket lotus-prod-760144413534 --lifecycle-configuration file://deploy/aws/s3-lifecycle.json --profile lotus`.
+A CLI respondeu `{"TransitionDefaultMinimumObjectSize": "all_storage_classes_128K"}`, o eco normal
+da versão nova da AWS CLI.
+
+Conferido por Claude com `get-bucket-lifecycle-configuration`:
+- Saem as três regras: `expira-backups`, `fotos` e `documentos`.
+- Comparadas pelo `ID` com o JSON versionado, as três são iguais. O filtro vazio da `documentos`
+  voltou como `{}`.
+- A única chave a mais é a `TransitionDefaultMinimumObjectSize`, uma normalização da AWS.
+
 ### Login da raiz
+
+Não houve login da raiz. O João entra na AWS só como usuário IAM e não tem as credenciais da raiz
+da conta `760144413534`. Por decisão do João, em 2026-10-27, a saída de emergência da política
+passou a ser o IAM. Ela foi provada antes do Step 3 por Claude, com o simulador e só leitura:
+
+- **O `lotus-infra` desfaz a política.** O `simulate-principal-policy` contra o
+  `deploy/aws/s3-politica.json` local, ainda não aplicado, dá `allowed` em `s3:PutBucketPolicy`,
+  `s3:DeleteBucketPolicy` e `s3:GetBucketPolicy`.
+- **Se a chave do `lotus-infra` se perder.** O `JoaoVBA`, que tem login no console e está no grupo
+  `administrador2`, recebe `allowed` em `iam:CreateAccessKey` e `iam:ListAccessKeys` sobre o
+  `user/lotus-infra`. O `lotus-infra` tem uma chave ativa, de 2026-09-04, e o limite é duas, então
+  cabe uma nova. O caminho é console → IAM → `lotus-infra` → criar chave →
+  `aws s3api delete-bucket-policy --bucket lotus-prod-760144413534`.
+- **Se o usuário `lotus-infra` for apagado.** A política compara o `aws:PrincipalArn` como texto.
+  Recriar o usuário com o mesmo nome devolve o acesso.
+- **O que fica sem saída.** Ficar trancado fora exigiria perder também todo acesso de
+  administrador ao IAM. Nesse caso, a raiz já seria necessária com ou sem a política.
+
+À parte, o `JoaoVBA` está sem MFA, e ele é agora a saída de emergência. O MFA dele fica como
+recomendação.
 
 ### Política
 
+2026-10-27, por volta de 19:05 UTC. Antes de aplicar, o `aws sts get-caller-identity --profile lotus`
+deu `arn:aws:iam::760144413534:user/lotus-infra`, e o bucket não tinha política
+(`NoSuchBucketPolicy`).
+
+O João rodou da raiz da lane:
+`aws s3api put-bucket-policy --bucket lotus-prod-760144413534 --policy file://deploy/aws/s3-politica.json --profile lotus`.
+O comando não imprimiu nada. Em seguida, abriu documentos no app pela URL pré-assinada, e eles
+abriram.
+
+Claude leu a política de volta com `get-bucket-policy` e comparou como JSON com o
+`deploy/aws/s3-politica.json`: `igual`.
+
 ### Negações
+
+**Simulador.** Rodado por Claude com o `simulate-principal-policy`, contra o JSON versionado, com
+`aws:SecureTransport=true` e o `aws:PrincipalArn` de cada principal. Nenhum dos três ARNs de role tem
+caminho (`get-role`). As 18 células batem com a tabela do plano.
+
+| Principal | DeleteObject | DeleteObjectVersion | PutBucketPolicy |
+|---|---|---|---|
+| `user/gabriel` | explicitDeny | explicitDeny | explicitDeny |
+| `user/JoaoVBA` | explicitDeny | explicitDeny | explicitDeny |
+| `role/OrganizationAccountAccessRole` | explicitDeny | explicitDeny | explicitDeny |
+| `role/administrador` | explicitDeny | explicitDeny | explicitDeny |
+| `role/lotus-ec2` | allowed | explicitDeny | explicitDeny |
+| `user/lotus-infra` | allowed | explicitDeny | allowed |
+
+**Chamada real.** O João, como `lotus-infra`, subiu o `probes/bloco42-teste.txt` (versão
+`5M81xKWGAHNjm5gm2sJJN9BTle.AZ2xA`) e tentou apagar essa versão com
+`delete-object --version-id`. Resposta:
+`An error occurred (AccessDenied) when calling the DeleteObject operation: User: arn:aws:iam::760144413534:user/lotus-infra is not authorized to perform: s3:DeleteObjectVersion on resource: "arn:aws:s3:::lotus-prod-760144413534/probes/bloco42-teste.txt" with an explicit deny in a resource-based policy`.
+Claude conferiu em seguida, às 19:04 UTC: a versão continua lá, como `IsLatest`, sem marca de
+exclusão por cima.
 
 ### Órfãos
 
+**A lista.** Calculada por Claude às 19:04 UTC, só com leitura:
+- Chaves atuais do S3 (`list-objects-v2`), sem `backups/` e sem `probes/`: 29.
+- Caminhos do banco (`SELECT path FROM files UNION SELECT photo_path FROM users WHERE photo_path IS NOT NULL`),
+  lidos por SSH no contêiner do MySQL, com todas as linhas, arquivadas inclusive: 17.
+  - Hoje eram 11. A diferença é a carga do bloco 38.
+  - Todos os 17 existem no S3.
+- `comm -23`: 12 órfãos. São os mesmos 12 da medição, nas mesmas categorias.
+- Nenhum órfão divide prefixo de entidade com um caminho do banco.
+- O mais novo é de 2026-10-24.
+
+| LastModified (UTC) | Bytes | Chave |
+|---|---|---|
+| 2026-09-30T22:41:46 | 2222195 | `budget/2/3lffuel60mKnHI9usZMdUuUtsmutkQrh20kXYiuf.pdf` |
+| 2026-09-30T22:40:05 | 655027 | `quote/2/94I32lPOlaDJA2ny8ZCwRQGPM2Luo3ifEXskyibc.pdf` |
+| 2026-09-30T22:40:50 | 74931 | `quote/2/MyFoVJpF6quor5o6dHPszrQM6fidevXCvcSnKBGO.pdf` |
+| 2026-09-30T22:55:37 | 3431994 | `quote/2/epYHfbh3BHLdX2l9kbGbH2SdmUm0kEYgiyYmBJkH.pdf` |
+| 2026-09-30T22:56:52 | 3431994 | `quote/2/q3rqWP0SvXKvY2d7zJiVmuAJlneYi98p80kpHB4g.pdf` |
+| 2026-10-24T16:59:23 | 842813 | `turma/1/M3nkFvOQuKubVEhCddDGJIT2UtuF2nMyuu7BNAnI.pdf` |
+| 2026-10-24T16:59:06 | 451151 | `turma/1/T4yRbHphBvhvUZJXKSQeP3M8X46iBYLE9MA7Ztjk.pdf` |
+| 2026-10-24T16:59:20 | 842813 | `turma/1/qIW0vYKjylXtxFNCnpQtw4jslnitGwnR4flxEw8g.pdf` |
+| 2026-10-17T16:14:18 | 76083 | `turma/2/4zjtlY0vIffaIZ0PTPKD9BVFEDXIygWGp07KZ1Ot.pdf` |
+| 2026-10-17T16:14:26 | 76083 | `turma/2/8gFQ5RoPbTsXRbqSi8wVMPplWujgNdKy38wKhupl.pdf` |
+| 2026-10-17T16:14:22 | 76083 | `turma/2/SatFiUaAIirtjszR31Ax5jg9g6wmD5sAzCIvAMp0.pdf` |
+| 2026-09-09T21:49:42 | 1877301 | `user-photos/4/H8owXWk5tBTzhiuZvOFv85fueUygzmjnx2WCRWD3.png` |
+
+**A remoção.** O João aprovou a lista e rodou um `aws s3 rm "s3://lotus-prod-760144413534/<chave>"`
+por chave, nas 12 chaves acima, entre 19:04 e 19:08 UTC. A remoção foi em horário comercial, por
+decisão dele. O risco de pegar um upload no meio era nulo: todos os órfãos ficam em prefixos de
+entidades que já não existem.
+
+**A conferência.** Claude recalculou às 19:08 UTC, relendo o S3 e o banco:
+- 17 chaves atuais no S3, sem contar `backups/` e `probes/`, e 17 caminhos no banco.
+- Chaves no S3 sem caminho no banco: 0. A lista de órfãos saiu vazia.
+- Caminhos do banco sem chave no S3: 0. Nenhum arquivo em uso saiu.
+- Os 12 órfãos têm uma marca de exclusão como versão atual. Dá para desfazer pelo §3.1: 7 dias, ou 1
+  dia para a foto.
+
 ### Desfazer
 
+2026-10-27, às 19:07 UTC. O João rodou o §3.1 do runbook no `probes/bloco42-teste.txt`:
+- `aws s3 rm`: o comando respondeu `delete: s3://lotus-prod-760144413534/probes/bloco42-teste.txt`.
+- `head-object`: `An error occurred (404) when calling the HeadObject operation: Not Found`, porque
+  a marca de exclusão estava por cima.
+- `copy-object` com `versionId=5M81xKWGAHNjm5gm2sJJN9BTle.AZ2xA`: virou a versão nova
+  `jO2yIhtlE8W4NPG1mN0Yt1x2AGcxz7CF`.
+- `aws s3 cp … -`: devolveu `bloco 42 2026-10-27T19:02:40Z`, o mesmo texto do
+  `/tmp/bloco42-teste.txt`.
+- `aws s3 rm` final: o objeto de teste fica para o lifecycle.
+- `rm /tmp/bloco42-teste.txt`.
+
+Lido por Claude às 19:08 UTC:
+- Duas versões não atuais: `jO2y…` e `5M81…`.
+- Duas marcas de exclusão, a atual por cima.
+- A regra `documentos` expira o que sobrou em 7 dias.
+
 ### Leitura de volta
+
+2026-10-27, às 19:08 UTC, por Claude:
+- **Política.** O `get-bucket-policy`, comparado como JSON com o `deploy/aws/s3-politica.json`, deu
+  `igual`.
+- **Lifecycle.** O `get-bucket-lifecycle-configuration`, comparado pelo `ID` com o
+  `deploy/aws/s3-lifecycle.json`, deu as três regras iguais. O filtro vazio da `documentos` voltou
+  como `{}`. A única chave a mais é a `TransitionDefaultMinimumObjectSize`, uma normalização da AWS.
+- **Fica para um ou dois dias depois.** Rodar
+  `list-object-versions --prefix user-photos/4/` e confirmar que o lifecycle expirou a versão da
+  foto órfã apesar do `Deny` em `s3:DeleteObjectVersion`. Isso só a produção prova.
