@@ -2,9 +2,29 @@
 
 ## Em aberto
 
-- **Q-1 · Importante** — o runbook e a emenda do ADR-11 ainda dão a raiz da conta como saída de
-  emergência da política, contra o ruling 6, e a catraca prende o texto antigo. Falta a aprovação
-  do João para corrigir.
+## Rodada 2 — `68790dac..fb16bb9e` — 2026-10-27 · Lente 1: opus · Lente 2: sonnet
+
+O Q-1 da rodada 1 foi aprovado pelo João e corrigido em `fb16bb9e`:
+- o runbook §3 e a emenda do ADR-11 dão o IAM como saída de emergência;
+- antes do `put`, o simulador prova que o `lotus-infra` desfaz a política e que o `JoaoVBA` cria
+  chave do `lotus-infra`;
+- a catraca recusa `login da raiz`.
+
+Os três comandos novos foram rodados contra a conta, só leitura, antes do commit:
+- `s3:PutBucketPolicy` e `s3:DeleteBucketPolicy` dão `allowed` para o `lotus-infra`;
+- `iam:CreateAccessKey` dá `allowed` para o `JoaoVBA`;
+- o `lotus-infra` tem 1 chave;
+- controle negativo: o `JoaoVBA` recebe `explicitDeny` em `s3:DeleteBucketPolicy`.
+
+A lente 1 conferiu que o Q-1 fechou. A lente Codex segue fora pelo mesmo `model_not_found` da
+rodada 1.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-2 | Menor | A catraca do §3 ancora só `--action-names s3:PutBucketPolicy s3:DeleteBucketPolicy` e a ordem; nenhuma asserção exige `--resource-policy file://deploy/aws/s3-politica.json` no comando do simulador. Uma edição que tire esse argumento esvazia a prova da saída de emergência, porque o simulador passa a avaliar só a política de identidade do `lotus-infra`, e a suíte segue verde. | CONFIRMED | `frontend/tests/runbook-higiene.test.ts:37`, contra `deploy/aws/README.md:89` | registrado; não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
 
 ## Rodada 1 — `68790dac..4870316f` — 2026-10-27 · Lente 1: opus · Lente 2: sonnet
 
