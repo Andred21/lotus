@@ -2,13 +2,13 @@
 schema_version: 3
 id: 42
 slug: 42-infra-producao-higiene-e-manutencao
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: reviewing
+next_owner: joao
+next_action: approve_review_findings Q-1
 resume_state: null
 active_spec: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/spec.md
 active_plan: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/plano.md
-active_review: null
+active_review: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/revisao.md
 active_acceptance: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/aceitacao.md
 context_packet: null
 efeito_externo: sim
@@ -17,9 +17,9 @@ branch: infra/42-infra-producao-higiene-e-manutencao
 worktree: ../lotus-42-infra-producao-higiene-e-manutencao
 offset: 2
 lane_base: 68790dac
-commit: c63d3da0
+commit: 4870316f
 blocker: null
-updated_at: 2026-10-27T16:11:17-03:00
+updated_at: 2026-10-27T16:20:28-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
