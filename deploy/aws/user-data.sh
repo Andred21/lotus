@@ -179,3 +179,38 @@ WantedBy=timers.target
 UNIT
 systemctl daemon-reload
 systemctl enable --now lotus-sonda.timer
+
+# Higiene do host (bloco 42, spec §6 e §7). Tres arquivos proprios, cada um
+# gravado so quando o conteudo muda: reexecutar no host vivo nao mexe em nada.
+# - O journal usava o teto default (cerca de 10% do disco) e chegou a 183 MB.
+# - O cache do apt (332 MB) nunca era limpo; a limpeza passa a semanal.
+# - O kernel novo esperava reboot desde a instalacao. O unattended-upgrades segue
+#   so com a origem de seguranca (o repositorio do Docker fica fora: o upgrade
+#   dele reinicia o daemon e derruba os conteineres) e passa a reiniciar sozinho
+#   as 08:30 do relogio do host, que e UTC: depois do backup (06:10), da
+#   conferencia (06:40), das podas do banco (03:10 e 03:40 em Santiago) e do
+#   apt-daily-upgrade. O 53 vence o 50unattended-upgrades pela ordem do nome.
+gravar_se_mudou() {
+  # $1 = destino; o conteudo vem pelo stdin. Devolve 0 se gravou, 1 se ja estava igual.
+  cat > "$1.novo"
+  if cmp -s "$1.novo" "$1"; then
+    rm -f "$1.novo"
+    return 1
+  fi
+  mv "$1.novo" "$1"
+}
+install -d -m 0755 /etc/systemd/journald.conf.d
+if gravar_se_mudou /etc/systemd/journald.conf.d/lotus.conf <<'JOURNAL'
+[Journal]
+SystemMaxUse=200M
+JOURNAL
+then
+  systemctl restart systemd-journald
+fi
+gravar_se_mudou /etc/apt/apt.conf.d/52lotus-limpeza <<'LIMPEZA' || true
+APT::Periodic::AutocleanInterval "7";
+LIMPEZA
+gravar_se_mudou /etc/apt/apt.conf.d/53lotus-reboot <<'REBOOT' || true
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "08:30";
+REBOOT
