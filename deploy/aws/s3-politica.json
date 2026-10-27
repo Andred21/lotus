@@ -1,0 +1,57 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SoHttps",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::lotus-prod-760144413534",
+        "arn:aws:s3:::lotus-prod-760144413534/*"
+      ],
+      "Condition": { "Bool": { "aws:SecureTransport": "false" } }
+    },
+    {
+      "Sid": "NinguemApagaDeVez",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:DeleteObjectVersion",
+      "Resource": "arn:aws:s3:::lotus-prod-760144413534/*"
+    },
+    {
+      "Sid": "ApagarSoAppEInfra",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:DeleteObject",
+      "Resource": "arn:aws:s3:::lotus-prod-760144413534/*",
+      "Condition": {
+        "ArnNotEquals": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::760144413534:role/lotus-ec2",
+            "arn:aws:iam::760144413534:user/lotus-infra"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ProtecaoSoInfra",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": [
+        "s3:PutBucketPolicy",
+        "s3:DeleteBucketPolicy",
+        "s3:PutBucketVersioning",
+        "s3:PutLifecycleConfiguration",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:PutEncryptionConfiguration",
+        "s3:PutBucketOwnershipControls",
+        "s3:DeleteBucket"
+      ],
+      "Resource": "arn:aws:s3:::lotus-prod-760144413534",
+      "Condition": {
+        "ArnNotEquals": { "aws:PrincipalArn": "arn:aws:iam::760144413534:user/lotus-infra" }
+      }
+    }
+  ]
+}
