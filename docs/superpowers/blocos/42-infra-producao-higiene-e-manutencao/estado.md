@@ -2,10 +2,10 @@
 schema_version: 3
 id: 42
 slug: 42-infra-producao-higiene-e-manutencao
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: "resolve_blocker aguardando aceitação: itens 6, 7, 8"
+resume_state: ready_for_closure
 active_spec: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/spec.md
 active_plan: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/plano.md
 active_review: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/revisao.md
@@ -17,10 +17,10 @@ branch: infra/42-infra-producao-higiene-e-manutencao
 worktree: ../lotus-42-infra-producao-higiene-e-manutencao
 offset: 2
 lane_base: 68790dac
-commit: 870fbbf7
-blocker: null
-updated_at: 2026-10-27T16:50:36-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+commit: 22e40493
+blocker: "aguardando aceitação depois do merge: itens 6, 7, 8 da ## Verificação externa"
+updated_at: 2026-10-27T16:54:56-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 42 — estado

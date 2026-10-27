@@ -1211,6 +1211,11 @@ healthcheck do `app` esperado junto com o do nginx —, com catraca em `deploy-s
 reprovar pela sonda que devolve o `curl` único. Pela **P-87**, a correção só chega ao host pela
 reinstalação do runbook §7.
 
+**Gatilho disparado e não pago — 2026-10-27, `infra-producao-higiene-e-manutencao` (item 42).** O
+bloco mudou o `deploy/bin/deploy.sh` para podar as imagens depois do `CURRENT_SHA`
+(`deploy.sh:232-236`). Não tocou no gate do `/up`, que segue com o `curl` único, porque ele ficou
+fora da spec do 42.
+
 ## P-97 — dez divergências de coordenada e de mapa que a `auditar-docs` do item 33 mediu
 
 **Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar
@@ -1234,11 +1239,17 @@ coordenada que envelheceu. Registradas sem correção, porque a skill reporta e 
 | `deploy/aws/README.md:5` | O plano do item 10 foi arquivado; o caminho citado é o antigo | `docs/superpowers/plans/archive/2026-09-02-infra-producao-provisionamento-aws.md` |
 | `docs/estrutura-monolito.md:63` | A árvore de `Shared/Logging/` lista só `EventoDeSeguranca`; a pasta tem também `RegistraEventoDeErro` e `FalhaDeObservabilidade` | `backend/app/Shared/Logging/` (3 arquivos) |
 | `CLAUDE.md` §6 | A lista de serviços do Compose omite `clamav` (o `mailpit` já está na P-53) | `docker-compose.yml:27,53,69` |
+| `deploy/bin/podar-imagens.sh:15` | O comentário diz que o rollback está no §8.1.1, que é "Restaurar o dump"; o rollback é o §8.1. Corrigir muda o sha256 de `bin/`, que o `deploy.yml` compara com o host, então a correção vai junto da próxima mudança real no script (item 42) | `deploy/aws/README.md:373,418` |
+| `deploy/aws/README.md` §9 | "06:10 UTC = 03:10 no Chile" vale só no verão; no inverno são 02:10. O §16.3 do mesmo runbook já trata o fuso como variável (medido no fechamento do item 42) | `deploy/aws/README.md:571` |
 
 **A dependência fechou em 2026-10-04:** o ADR-23 cita o `FUT-4` do `backlog.md`, e a PR de docs da
 aceitação do item 33 o levou (spec §10).
 
 **Gatilho disparado e não pago — 2026-10-21, `seeder-carga-inicial-producao` (item 38).** O bloco tocou 
+
+**Gatilho disparado e não pago — 2026-10-27, `infra-producao-higiene-e-manutencao` (item 42).** O
+bloco mudou o `deploy/aws/README.md` (§3, §3.1 e §16) e não reconciliou a tabela, porque ela ficou
+fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-docs` do fechamento.
 
 ## P-101 — o RUT quebra no hífen na tabela de alunos a 390 px
 
