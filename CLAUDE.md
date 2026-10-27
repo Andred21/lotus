@@ -162,6 +162,9 @@ pnpm lint     # eslint .
 pnpm test     # vitest run (jsdom) — hooks de shared/; pnpm test:watch para iterar
 ```
 
+Node novo no nvm vem sem o pnpm: rode `corepack enable pnpm` (a versão sai do `packageManager` de
+`frontend/package.json`). Sem ele, o `lane.sh abrir` recusa no portão.
+
 Inspeção visual de PDF (Poppler disponível no host e no container `app`):
 
 ```bash
