@@ -9,10 +9,10 @@ sobrescreve o que estiver escrito nela. O item manual é do João: feita a açã
 
 | # | Item | Prova | Resultado | Data |
 |---|---|---|---|---|
-| 1 | Limpeza única feita: só dois SHAs por imagem do Lotus no host; volume `901f0f78…` e `/opt/lotus/prova-certificado.php` removidos; `lotus-prod-disco` em OK. | manual |  |  |
-| 2 | journald com teto de 200 MB e apt com limpeza periódica, aplicados no host. | manual |  |  |
-| 3 | Janela manual feita: pacotes aplicados, kernel novo rodando, seis contêineres de pé, alarmes religados. | `producao GET /up -> 200` |  |  |
-| 4 | Reboot automático ligado no host, às 08:30 UTC, depois da janela. | manual |  |  |
+| 1 | Limpeza única feita: só dois SHAs por imagem do Lotus no host; volume `901f0f78…` e `/opt/lotus/prova-certificado.php` removidos; `lotus-prod-disco` em OK. | manual | Poda com o script da lane: ficaram `61dde89d` (atual) e `e28fdc52` (rollback) nos três repositórios, 34 imagens saíram; volume `901f0f78…` e `prova-certificado.php` removidos; disco de 88% para 56%; `lotus-prod-disco` em OK às 18:40 UTC. | 2026-10-27 |
+| 2 | journald com teto de 200 MB e apt com limpeza periódica, aplicados no host. | manual | `lotus.conf` (`SystemMaxUse=200M`) e `52lotus-limpeza` (`AutocleanInterval "7"`) iguais ao `user-data.sh`; journal em 198,9M; cache do apt de 117M para 12K. | 2026-10-27 |
+| 3 | Janela manual feita: pacotes aplicados, kernel novo rodando, seis contêineres de pé, alarmes religados. | `producao GET /up -> 200` | `200`, esperado `200`: OK | 2026-10-27 |
+| 4 | Reboot automático ligado no host, às 08:30 UTC, depois da janela. | manual | `53lotus-reboot` gravado às 18:48 UTC, depois da janela: `Automatic-Reboot "true"` às 08:30, fuso `Etc/UTC`, `WithUsers` no default (`true`); nada agendado. | 2026-10-27 |
 | 5 | S3: lifecycle e política aplicados e lidos de volta; negações provadas; órfãos removidos com a lista registrada; desfazer provado num objeto de teste. | manual |  |  |
 | 6 | Scripts de `deploy/bin/` reinstalados no host depois do merge. | manual |  |  |
 | 7 | Promoção real depois do merge, com o host guardando só dois SHAs por imagem do Lotus. | manual |  |  |
