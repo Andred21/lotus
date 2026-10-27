@@ -17,6 +17,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * Contrato da matrícula. Entrada (individual): rut+name obrigatórios, email
  * opcional (o Action exige email só p/ aluno NOVO — D9). Resultado acadêmico
  * (grades/attendance/approval) é read-only aqui; escrita é 6d.
+ * `result_locked` também é só saída: certificado vigente tranca a correção.
  */
 #[TypeScript]
 class EnrollmentData extends Data
@@ -32,6 +33,7 @@ class EnrollmentData extends Data
         public EnrollmentApprovalStatus|Optional $approval_status,
         public string|Optional|null $attendance_pct,
         public array|Optional|null $grades,
+        public bool|Optional $result_locked,
         #[Computed]
         #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
@@ -61,6 +63,7 @@ class EnrollmentData extends Data
             approval_status: $e->approval_status,
             attendance_pct: $e->attendance_pct,
             grades: $e->grades,
+            result_locked: $e->resultLocked(),
             photo_url: $e->student->user->photo_path,
         );
     }

@@ -1239,3 +1239,61 @@ coordenada que envelheceu. Registradas sem correção, porque a skill reporta e 
 aceitação do item 33 o levou (spec §10).
 
 **Gatilho disparado e não pago — 2026-10-21, `seeder-carga-inicial-producao` (item 38).** O bloco tocou 
+
+## P-101 — o RUT quebra no hífen na tabela de alunos a 390 px
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar
+`EnrollmentTable.tsx` ou `ArchivedEnrollmentsList.tsx` por outro motivo; dispara de qualquer forma se
+a Lotus reclamar do RUT quebrado no celular. Revisar em **2026-11-07**.
+
+Medido no smoke do item 41 (`blocos/41-turma-resultado-academico-e-conclusao/smoke.md`): a 390 px a
+tabela fica no piso de `40rem` e rola dentro do wrapper, e o RUT quebra em "16.200.021-" / "7" nas dez
+linhas. A coluna é `field="rut"` sem `identifierClass`, desde antes do bloco: ela tinha cerca de
+105 px no piso antigo (`31.5rem`) e 95 px agora, e o RUT em mono precisa de cerca de 133 px. Nem
+`48rem` evita a quebra (115 px medidos). A correção é dar `identifierClass` à coluna RUT nas duas
+tabelas, fora do plano do 41.
+
+## P-102 — o `CompliancePanel` e o dashboard não mostram os requisitos novos da conclusão
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
+`CompliancePanel` ou `OperationMetricsQuery::pendencias()`; dispara se a Lotus perguntar por que uma
+turma presencial "não está habilitada". Revisar em **2026-11-07**.
+
+O item 41 passou a bloquear a conclusão também por redator ausente e por presencial sem
+`local_aplicacao` (`TurmaData.missing_requirements`), e o `ConcludePanel` lista cada pendência. Duas
+telas ficaram para trás:
+
+- o `CompliancePanel` mostra "Habilitada: No" com "—" quando falta redator ou local, sem dizer o quê;
+- `OperationMetricsQuery::pendencias()` sinaliza "turma sem redator", mas não "presencial sem local":
+  a turma nessa situação sai de "aguardando conclusão" sem pendência visível no dashboard.
+
+## P-103 — a emissão do certificado decide a porta 2 e o snapshot fora da transação, e a correção de resultado pode entrar na janela
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
+`IssueCertificateAction`; dispara antes de a correção pós-conclusão ter uso real em produção, e de
+qualquer forma se aparecer certificado com resultado diferente da matrícula. Revisar em **2026-11-07**.
+
+Achado I-2 da revisão final do item 41 (`rulings.md`). A correção de resultado pós-conclusão
+(`RecordEnrollmentResultAction`) lê o certificado vigente com `lockForUpdate`, a mesma leitura da
+porta 3 da emissão. O lock garante **um** sentido: com a emissão já dentro da transação, a correção
+espera e recebe 422. O sentido inverso tem uma janela: o `IssueCertificateAction` decide a porta 2
+(`approval_status`) e monta o snapshot a partir da matrícula carregada **antes** da transação. Se a
+correção commitar nessa janela, a emissão espera o lock, não vê certificado e emite com o resultado
+antigo. **Certificado tem peso legal.**
+
+A correção é reler a matrícula com `lockForUpdate` dentro da transação da emissão, nos dois lados, com
+a porta 2 dentro da transação. Fica fora do 41 porque mexe no núcleo de Certification, fora dos
+`Files:` do plano. Em sqlite o lock é no-op, então a corrida não tem teste automatizado: a prova
+exige MySQL. Mesma família da **P-49** (`lockForWrite()` nos escritores).
+
+## P-104 — o diálogo de conclusão diz "irreversível", e o aviso da turma concluída diz que o admin ainda corrige o resultado
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha quando o João decidir o texto; dispara no
+próximo bloco que tocar `operation.conclusion.confirmBody` ou `operation.detail.lock.concluida`. Revisar em
+**2026-11-07**.
+
+Depois do item 41 a conclusão deixa de trancar o resultado: o admin corrige nota, presença e status
+de matrícula sem certificado vigente. O `ConfirmDialog` da conclusão (`confirmBody`, "Esta acción es
+irreversible. ¿Confirmas la conclusión de la turma?") segue dizendo o contrário do aviso da aba Alumnos.
+É decisão de copy, nas três locales: o que de fato é irreversível (matricular, remover, o resultado
+com certificado emitido) e o que não é.

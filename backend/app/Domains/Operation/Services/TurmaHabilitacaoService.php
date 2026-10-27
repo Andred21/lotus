@@ -3,6 +3,8 @@
 namespace App\Domains\Operation\Services;
 
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaModalidade;
+use App\Domains\Operation\Enums\TurmaRequirement;
 use App\Domains\Operation\Models\Turma;
 
 /**
@@ -18,7 +20,8 @@ use App\Domains\Operation\Models\Turma;
  * `present()`), custa zero; não carregada, o Eloquent busca. A consequência é
  * que a resposta herda o cache da relação — quem precisa de leitura fresca
  * declara a carga antes de perguntar, e é o que o `ConcludeTurmaAction` faz
- * dentro da transação (o gate da RN-16 não pode decidir sobre estado velho).
+ * dentro da transação (o gate da RN-16 não pode decidir sobre estado velho). Vale
+ * o mesmo para `redatores`, lido como propriedade pelos requisitos.
  */
 class TurmaHabilitacaoService
 {
@@ -34,6 +37,29 @@ class TurmaHabilitacaoService
             fn (TurmaDocumentType $case): bool => ! in_array($case->value, $present, true),
         ));
 
-        return new HabilitacaoStatus($turma->status, $missing);
+        return new HabilitacaoStatus($turma->status, $missing, $this->missingRequirements($turma));
+    }
+
+    /**
+     * Redator: qualquer designado conta, arquivado inclusive (a relação é
+     * `withTrashed()`, a mesma leitura do `EmissionPanelQuery`). Local: só a
+     * presencial exige, e texto só de espaços (dado legado) é vazio. O SQL de
+     * `TurmaQueryBuilder::whereDisplayStatus()` escreve a mesma pergunta.
+     *
+     * @return array<TurmaRequirement>
+     */
+    private function missingRequirements(Turma $turma): array
+    {
+        $missing = [];
+
+        if ($turma->redatores->isEmpty()) {
+            $missing[] = TurmaRequirement::Redator;
+        }
+
+        if ($turma->modalidade === TurmaModalidade::Presencial && blank($turma->local_aplicacao)) {
+            $missing[] = TurmaRequirement::LocalAplicacao;
+        }
+
+        return $missing;
     }
 }

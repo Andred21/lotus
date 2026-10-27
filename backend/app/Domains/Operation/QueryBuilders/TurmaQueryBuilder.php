@@ -5,6 +5,7 @@ namespace App\Domains\Operation\QueryBuilders;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaDisplayStatus;
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Shared\Concerns\LoadsCascadedChildren;
 use App\Shared\Pagination\Paginates;
@@ -122,9 +123,12 @@ class TurmaQueryBuilder extends Builder
 
     /**
      * O status de exibição em SQL (spec §4.2): `concluida` pelo status;
-     * `habilitada` = em andamento E um doc de CADA `TurmaDocumentType`;
-     * `em_andamento` = em andamento e algum tipo faltando. É a `HabilitacaoStatus`
-     * escrita como `whereHas`, e a paridade é catraca (`TurmaStatusParityTest`).
+     * `habilitada` = em andamento E um doc de CADA `TurmaDocumentType` E redator
+     * designado E, na presencial, local não vazio; `em_andamento` = em andamento
+     * e algo disso faltando. É a `HabilitacaoStatus` escrita como `whereHas`, e a
+     * paridade é catraca (`TurmaStatusParityTest`). O pivot `turma_redator` não é
+     * cascateado, então os requisitos valem igual com e sem `$asOfArchiving`.
+     * `trim(coalesce(...))` é o `blank()` do domínio para `local_aplicacao`.
      *
      * `$asOfArchiving` é a lista de Arquivados: o documento conta como no
      * instante do arquivamento — o predicado de `LoadsCascadedChildren` escrito
@@ -142,13 +146,22 @@ class TurmaQueryBuilder extends Builder
                     foreach (TurmaDocumentType::cases() as $type) {
                         $w->whereHas('documentacaoObrigatoria', fn (Builder $d) => $this->documentoDoTipo($d, $type, $asOfArchiving));
                     }
-                }),
+                })
+                ->whereHas('redatores')
+                ->where(fn (Builder $w) => $w
+                    ->where('turmas.modalidade', '<>', TurmaModalidade::Presencial)
+                    ->orWhereRaw("trim(coalesce(turmas.local_aplicacao, '')) <> ''")),
             TurmaDisplayStatus::EmAndamento => $this
                 ->where('turmas.status', TurmaStatus::EmAndamento)
                 ->where(function (Builder $w) use ($asOfArchiving): void {
                     foreach (TurmaDocumentType::cases() as $type) {
                         $w->orWhereDoesntHave('documentacaoObrigatoria', fn (Builder $d) => $this->documentoDoTipo($d, $type, $asOfArchiving));
                     }
+
+                    $w->orWhereDoesntHave('redatores')
+                        ->orWhere(fn (Builder $l) => $l
+                            ->where('turmas.modalidade', TurmaModalidade::Presencial)
+                            ->whereRaw("trim(coalesce(turmas.local_aplicacao, '')) = ''"));
                 }),
         };
     }

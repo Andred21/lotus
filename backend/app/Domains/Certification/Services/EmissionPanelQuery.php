@@ -59,12 +59,14 @@ class EmissionPanelQuery
                 // um SELECT por turma — guarda em `ContratanteEagerLoadTest`.
                 'quote.budget.client.user',
                 'redatores.user',
-                // `withListingData()` e não `with('student.user')`: a lista do
+                // `withStudentData()` e não `with('student.user')`: a lista do
                 // que a projeção de matrícula carrega é do `EnrollmentQueryBuilder`.
+                // Não é `withListingData()`: este marca `result_locked` com mais
+                // uma consulta a `certificates`, e o painel já resolve a vigência.
                 // `orderByStudentName()` pelo mesmo motivo — a travessia
                 // matrícula→aluno→user é de Operation, e ordenar no ORDER BY do
                 // eager-load não custa consulta nenhuma a mais.
-                'enrollments' => fn ($query) => $query->withListingData()->orderByStudentName(),
+                'enrollments' => fn ($query) => $query->withStudentData()->orderByStudentName(),
             ])
             ->orderByDesc('end_date')
             // Desempate: turmas concluídas no mesmo dia sairiam em ordem

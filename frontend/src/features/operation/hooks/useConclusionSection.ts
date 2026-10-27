@@ -2,7 +2,9 @@ import { useTranslation } from 'react-i18next'
 import type { TurmaData } from '@shared/types/generated'
 import { useMutationErrors, usePermissions } from '@shared/hooks'
 import { useToast } from '@shared/ui'
+import { useEnrollments } from '../api/useEnrollments'
 import { useConcludeTurma } from '../api/useTurmas'
+import { missingResultFields } from '../lib/enrollmentResult'
 import { registroAcademicoBloqueado, turmaDisplayStatus } from '../lib/turmaStatus'
 
 /** Orquestra a aba Conclusión. Nenhuma regra de habilitação é recalculada aqui:
@@ -14,6 +16,8 @@ export function useConclusionSection(turma: TurmaData) {
   const mutation = useConcludeTurma()
   const { message: error } = useMutationErrors([mutation.error])
 
+  const enrollments = useEnrollments(turma.id!)
+
   const concluida = registroAcademicoBloqueado(turma)
   const habilitada = turma.habilitada === true
 
@@ -22,6 +26,12 @@ export function useConclusionSection(turma: TurmaData) {
     habilitada,
     concluida,
     missingTypes: turma.missing_document_types ?? [],
+    missingRequirements: turma.missing_requirements ?? [],
+    // Só com a lista carregada: sem dado (carregando ou falha) não há como afirmar
+    // quem está completo, então a lista some em vez de sugerir "todos completos".
+    incompleteStudents: (enrollments.isSuccess ? enrollments.data : [])
+      .map((e) => ({ name: e.name, missing: missingResultFields(e) }))
+      .filter((s) => s.missing.length > 0),
     // `can()` é conveniência de interface; a API é que autoriza (ADR-07).
     canComplete: can('operation.turma.complete'),
     concludedAt: turma.concluded_at ?? null,

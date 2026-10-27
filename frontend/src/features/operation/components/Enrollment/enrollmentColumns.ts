@@ -4,13 +4,17 @@ import { COL, tableWidths } from '@shared/ui'
  * Classificação das colunas da `EnrollmentTable`.
  *
  * `actions` é parâmetro e não constante porque a coluna de ação desta tabela sai
- * inteira no registro fechado (`registroBloqueado`): as duas ações recusam a
- * escrita com 422 e uma faixa vazia em toda linha só roubaria largura de quem
- * carrega dado. Sem o parâmetro, os 10% reservados a ela virariam faixa sem dono
- * no registro fechado, e faixa sem dono reescala tudo o que sobra.
+ * inteira no registro fechado (`registroBloqueado`) para quem não corrige o
+ * resultado (sem `manage`): sem ação sobrando, uma faixa vazia em toda linha só
+ * roubaria largura de quem carrega dado. Sem o parâmetro, os 10% reservados a
+ * ela virariam faixa sem dono nesse estado, e faixa sem dono reescala tudo o
+ * que sobra.
  */
 export const enrollmentWidths = (actions: boolean) =>
-  tableWidths({ name: COL.identity, rut: COL.rut, status: COL.tag }, { actions })
+  tableWidths(
+    { name: COL.identity, rut: COL.rut, grade: COL.count, attendance: COL.tag, status: COL.tag },
+    { actions },
+  )
 
 /**
  * A lista de matrículas arquivadas é SEMPRE arquivada — o rastreio não é

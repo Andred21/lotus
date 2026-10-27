@@ -78,6 +78,8 @@ class TurmaQueryBuilderTest extends TestCase
             'start_date' => '2026-08-01', 'end_date' => '2026-08-10',
             'status' => TurmaStatus::EmAndamento,
         ]);
+        // "Habilitada" exige redator designado (gate de conclusão).
+        $turma->redatores()->attach(User::factory()->redator()->create()->redator()->create([])->id);
 
         foreach ($docs as $type) {
             $turma->files()->create([

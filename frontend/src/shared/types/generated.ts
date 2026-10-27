@@ -41,6 +41,10 @@ description: string,
 date: string | null,
 navigation: Record<string, number>,
 };
+export type ApprovalRuleData = {
+min_grade: number,
+min_attendance_pct: number,
+};
 export type ArchivedBudgetData = {
 budget: BudgetData,
 archived_at: string,
@@ -259,6 +263,7 @@ phone: string | null,
 approval_status: EnrollmentApprovalStatus | undefined,
 attendance_pct: undefined | string | null,
 grades: undefined | Array<any> | null,
+result_locked: undefined | boolean,
 photo_url: string | null,
 };
 export type EnrollmentResultData = {
@@ -648,6 +653,7 @@ end_date: string,
 status: TurmaStatus | undefined,
 habilitada: undefined | boolean,
 missing_document_types: TurmaDocumentType[] | undefined,
+missing_requirements: TurmaRequirement[] | undefined,
 concluded_at: undefined | string | null,
 redatores: TurmaRedatorData[],
 course_name: undefined | string,
@@ -656,6 +662,7 @@ enrolled_count: undefined | number,
 quote_code: undefined | string | null,
 budget_code: undefined | string | null,
 budget_id: undefined | number | null,
+approval_rule: ApprovalRuleData | undefined,
 client_rut: undefined | string | null,
 client_photo_url: string | null,
 };
@@ -677,6 +684,7 @@ name: string,
 email: string | null,
 photo_url: string | null,
 };
+export type TurmaRequirement = 'redator' | 'local_aplicacao';
 export type TurmaStatus = 'em_andamento' | 'concluida';
 export type UserData = {
 id: undefined | number,

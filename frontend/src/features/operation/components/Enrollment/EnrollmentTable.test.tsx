@@ -16,7 +16,7 @@ vi.mock('react-i18next', async (importOriginal) => {
 
 const MATRICULA: EnrollmentData = {
   id: 5, turma_id: 1, student_id: 9, name: 'Ana Torres', rut: '11.111.111-1', email: null, phone: null,
-  approval_status: undefined, attendance_pct: null, grades: null, photo_url: null,
+  approval_status: undefined, attendance_pct: null, grades: null, result_locked: false, photo_url: null,
 }
 
 function comPermissoes(permissions: string[]) {
@@ -29,19 +29,18 @@ function comPermissoes(permissions: string[]) {
   })
 }
 
-const larguraDaColunaDeAcoes = () =>
-  (document.querySelector('thead tr th:last-child') as HTMLTableCellElement).style.width
+const ADMIN = ['operation.enrollment.manage', 'operation.enrollment.record_result']
+const REDATOR = ['operation.enrollment.record_result'] // RN-02: lança o resultado; remover é do admin
 
-const montar = () =>
+const ultimoCabecalho = () => document.querySelector('thead tr th:last-child') as HTMLTableCellElement
+const larguraDaColunaDeAcoes = () => ultimoCabecalho().style.width
+
+const montar = (over: { registroBloqueado?: boolean; enrollments?: EnrollmentData[] } = {}) =>
   renderWithProviders(
     <EnrollmentTable
-      turmaId={1}
-      registroBloqueado={false}
-      enrollments={[MATRICULA]}
-      loading={false}
-      onRemove={() => {}}
-      removing={false}
-      onResetRemove={() => {}}
+      turmaId={1} loading={false} removing={false} onRemove={() => {}} onResetRemove={() => {}}
+      registroBloqueado={over.registroBloqueado ?? false}
+      enrollments={over.enrollments ?? [MATRICULA]}
     />,
   )
 
@@ -52,7 +51,7 @@ afterEach(() => {
 /** Item 23 (`D-65`): a presa de 9rem cobria 172px do nome em 390x844. */
 describe('EnrollmentTable — ações da linha', () => {
   it('no desktop, resultado e remover são ícones soltos; remover é de perigo; coluna de 9rem', () => {
-    comPermissoes(['operation.enrollment.manage'])
+    comPermissoes(ADMIN)
     montar()
 
     expect(screen.getByRole('button', { name: 'certificate.result.action' })).toBeTruthy()
@@ -61,7 +60,7 @@ describe('EnrollmentTable — ações da linha', () => {
   })
 
   it('em 390px, a linha tem UM botão de ações e a coluna encolhe para ele', () => {
-    comPermissoes(['operation.enrollment.manage'])
+    comPermissoes(ADMIN)
     setViewportWidth(390)
     montar()
 
@@ -70,17 +69,18 @@ describe('EnrollmentTable — ações da linha', () => {
     expect(larguraDaColunaDeAcoes()).toBe('4.5rem')
   })
 
-  it('sem manage, só remover: em 390px ele fica solto, sem menu', () => {
-    comPermissoes([])
+  it('redator lança o resultado e não remove: em 390px a ação única fica solta, sem menu', () => {
+    comPermissoes(REDATOR)
     setViewportWidth(390)
     montar()
 
-    expect(screen.getByRole('button', { name: 'operation.enrollment.remove' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'certificate.result.action' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'operation.enrollment.remove' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'common.moreActions' })).toBeNull()
   })
 
   it('remover continua abrindo a confirmação', async () => {
-    comPermissoes([])
+    comPermissoes(ADMIN)
     montar()
 
     fireEvent.click(screen.getByRole('button', { name: 'operation.enrollment.remove' }))
@@ -88,11 +88,61 @@ describe('EnrollmentTable — ações da linha', () => {
   })
 
   it('abaixo de sm, o piso é o medido para esta visão (item 23, audit §5)', () => {
-    comPermissoes(['operation.enrollment.manage'])
+    comPermissoes(ADMIN)
     montar()
 
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('sm:min-w-[42rem]')
-    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('31.5rem')
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('40rem')
+  })
+})
+
+describe('EnrollmentTable — nota e presença', () => {
+  // Sem permissão de matrícula nenhuma ação sobra: a coluna de ações não existe nos dois estados.
+  it.each([false, true])('mostra nota e presença no locale ativo; ausência é travessão (registroBloqueado=%s)', (registroBloqueado) => {
+    comPermissoes([])
+    montar({
+      registroBloqueado,
+      enrollments: [
+        { ...MATRICULA, id: 1, grades: { final: '6,4' } as never, attendance_pct: '87.50' },
+        { ...MATRICULA, id: 2, name: 'Sin Nota' },
+      ],
+    })
+
+    expect(screen.getByText('6,4')).toBeTruthy()
+    expect(screen.getByText('87,5 %')).toBeTruthy()
+    expect(screen.getAllByText('—')).toHaveLength(2)
+    const cabecalhos = Array.from(document.querySelectorAll('thead th')).map((th) => th.textContent)
+    expect(cabecalhos).toContain('operation.enrollment.table.grade')
+    expect(cabecalhos).toContain('operation.enrollment.table.attendance')
+    expect(cabecalhos.at(-1)).toBe('operation.enrollment.table.status')
+  })
+})
+
+describe('EnrollmentTable — turma concluída', () => {
+  const concluida = (result_locked: boolean) =>
+    montar({ registroBloqueado: true, enrollments: [{ ...MATRICULA, result_locked }] })
+
+  it('admin corrige o resultado de matrícula sem certificado, e não remove', () => {
+    comPermissoes(ADMIN)
+    concluida(false)
+
+    expect(screen.getByRole('button', { name: 'certificate.result.action' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'operation.enrollment.remove' })).toBeNull()
+  })
+
+  it('matrícula com certificado vigente não oferece correção', () => {
+    comPermissoes(ADMIN)
+    concluida(true)
+
+    expect(screen.queryByRole('button', { name: 'certificate.result.action' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'operation.enrollment.remove' })).toBeNull()
+  })
+
+  it('para o redator a coluna de ações não existe: o último th é o de status', () => {
+    comPermissoes(REDATOR)
+    concluida(false)
+
+    expect(ultimoCabecalho().textContent).toContain('operation.enrollment.table.status')
   })
 })

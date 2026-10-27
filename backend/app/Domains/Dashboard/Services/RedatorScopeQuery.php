@@ -208,7 +208,7 @@ class RedatorScopeQuery
     {
         return $this->emAndamento[$redator->id] ??= $this->scoped($redator)
             ->where('status', TurmaStatus::EmAndamento)
-            ->with(['documentacaoObrigatoria', 'course'])
+            ->with(['documentacaoObrigatoria', 'redatores', 'course'])
             ->orderBy('start_date')
             ->orderBy('id')
             ->get();

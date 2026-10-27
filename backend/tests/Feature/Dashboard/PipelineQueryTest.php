@@ -231,7 +231,7 @@ class PipelineQueryTest extends TestCase
     {
         $today = CarbonImmutable::today();
 
-        return Turma::create([
+        $turma = Turma::create([
             'quote_id' => $this->createQuote('approved')->id,
             'course_id' => $this->course->id,
             'modalidade' => 'online',
@@ -242,6 +242,11 @@ class PipelineQueryTest extends TestCase
                 : $today->addDays(5)->toDateString(),
             'status' => $status,
         ]);
+
+        // "Habilitada" exige redator designado (gate de conclusão).
+        $turma->redatores()->attach(User::factory()->redator()->create()->redator()->create([])->id);
+
+        return $turma;
     }
 
     private function createTurmaDocument(Turma $turma, TurmaDocumentType $type): File

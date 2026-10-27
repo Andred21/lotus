@@ -697,7 +697,7 @@
         "conclusion": "Conclusión"
       },
       "lock": {
-        "concluida": "La turma está concluida: el registro académico quedó bloqueado."
+        "concluida": "La turma está concluida: solo se pueden corregir la nota, la asistencia y el estado de alumnos aún sin certificado."
       },
       "comingSoon": "Disponible en la próxima entrega."
     },
@@ -745,6 +745,8 @@
       "table": {
         "name": "NOMBRE",
         "rut": "RUT",
+        "grade": "NOTA",
+        "attendance": "ASISTENCIA",
         "client": "CLIENTE",
         "status": "ESTADO MATRÍCULA"
       },
@@ -823,15 +825,27 @@
         "habilitada": "Habilitada",
         "concluida": "Concluida"
       },
-      "missingTitle": "Faltan documentos para habilitar la turma:",
+      "missingTitle": "Falta para concluir la turma:",
       "ready": "La turma está lista para concluir.",
-      "warning": "Al confirmar, notas y asistencias quedan inmutables y los certificados de los alumnos aprobados pasan a estar disponibles para emisión. La acción no se puede deshacer.",
+      "warning": "Al confirmar, los certificados de los alumnos aprobados pasan a estar disponibles para emisión. Después, solo el administrador corrige nota, asistencia y estado, y solo de alumnos aún sin certificado. La acción no se puede deshacer.",
       "confirm": "Confirmar conclusión",
       "confirmTitle": "Confirmar conclusión de la turma",
       "confirmBody": "Esta acción es irreversible. ¿Confirmas la conclusión de la turma?",
       "success": "Conclusión confirmada. Certificados disponibles para emisión.",
       "concludedAt": "Concluida el {{date}}",
-      "noPermission": "No tienes permiso para concluir turmas."
+      "noPermission": "No tienes permiso para concluir turmas.",
+      "requirement": {
+        "redator": "Redactor designado",
+        "local_aplicacao": "Lugar de aplicación (turma presencial)"
+      },
+      "incomplete": {
+        "title": "Alumnos sin nota o asistencia ({{count}}):",
+        "row": "{{name}} — {{missing}}",
+        "grade": "sin nota",
+        "attendance": "sin asistencia",
+        "both": "sin nota ni asistencia",
+        "hint": "No bloquean la conclusión; el resultado se puede corregir después, mientras no haya certificado."
+      }
     }
   },
   "certificate": {
@@ -935,7 +949,9 @@
       "title": "Resultado académico",
       "finalGrade": "Nota final",
       "attendance": "Asistencia (%)",
-      "status": "Estado académico"
+      "status": "Estado académico",
+      "ruleSuggestsApproved": "Nota {{grade}} y asistencia {{attendance}} % alcanzan el mínimo ({{minGrade}} y {{minAttendance}} %): la regla indica Aprobado. Puedes guardar de todas formas.",
+      "ruleSuggestsFailed": "Nota {{grade}} o asistencia {{attendance}} % bajo el mínimo ({{minGrade}} y {{minAttendance}} %): la regla indica Reprobado. Puedes guardar de todas formas."
     }
   },
   "archive": {

@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (36)
+## Abertas (40)
 
 ### Agrupadas em bloco de execução
 
@@ -127,6 +127,10 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-62 | A `main` dos dois repositórios não tem branch protection — plano free recusa a API; a régua é compensada em três camadas. Desde o item 12, a mesma raiz deixa o botão de promoção sem Environment | João | orçamento para GitHub Team (ou decisão de abrir o repositório); revisar 2026-10-31 |
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
+| P-101 | O RUT quebra no hífen na tabela de alunos (`EnrollmentTable`, `ArchivedEnrollmentsList`) a 390 px — a coluna não tem `identifierClass` | João | bloco que tocar uma das duas tabelas por outro motivo, ou reclamação da Lotus no celular; revisar em 2026-11-07 |
+| P-102 | O `CompliancePanel` e `OperationMetricsQuery::pendencias()` não mostram os requisitos novos da conclusão (redator, `local_aplicacao` do presencial) | João | bloco que tocar o `CompliancePanel` ou o `pendencias()`; revisar em 2026-11-07 |
+| P-103 | A emissão do certificado decide a porta 2 e o snapshot fora da transação, e a correção de resultado pode entrar na janela — o certificado sai com o resultado antigo | João | bloco que tocar o `IssueCertificateAction`; antes de a correção pós-conclusão ter uso real; revisar em 2026-11-07 |
+| P-104 | O diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado | João | o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`; revisar em 2026-11-07 |
 
 ## Encerradas (0)
 

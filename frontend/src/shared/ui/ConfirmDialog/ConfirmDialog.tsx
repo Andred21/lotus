@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDialog } from '../AppDialog'
 import { AppButton } from '../AppButton'
@@ -6,11 +7,13 @@ import { FormErrorBanner } from '../FormField'
 /** Confirmação de ação irreversível ou de peso legal (aprovar uma cotação libera
  * a turma na Operação). Apresentacional puro: não conhece feature nem mutação. */
 export function ConfirmDialog({
-  visible, title, message, confirmLabel, severity, pending, error, onConfirm, onCancel,
+  visible, title, message, children, confirmLabel, severity, pending, error, onConfirm, onCancel,
 }: {
   visible: boolean
   title: string
   message: string
+  /** Conteúdo extra do corpo, depois da mensagem (ex.: lista de detalhes). */
+  children?: ReactNode
   confirmLabel?: string
   severity?: 'danger'
   pending?: boolean
@@ -51,6 +54,7 @@ export function ConfirmDialog({
     >
       <FormErrorBanner message={error} />
       <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{message}</p>
+      {children}
     </AppDialog>
   )
 }

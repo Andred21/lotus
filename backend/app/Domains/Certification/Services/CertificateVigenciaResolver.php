@@ -4,6 +4,7 @@ namespace App\Domains\Certification\Services;
 
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Operation\Services\ResultLock;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -21,7 +22,7 @@ use Illuminate\Support\Collection;
  * painel continua exibindo um certificado vencido como atual — a lista
  * prometendo o que o POST recusa. Mudar `vigentes()` muda todos de uma vez.
  */
-class CertificateVigenciaResolver
+class CertificateVigenciaResolver implements ResultLock
 {
     /**
      * Os certificados vigentes das matrículas dadas, indexados por
@@ -38,6 +39,34 @@ class CertificateVigenciaResolver
             ->whereIn('enrollment_id', $enrollmentIds)
             ->get()
             ->keyBy('enrollment_id');
+    }
+
+    /**
+     * `ResultLock`: das matrículas dadas, as que têm certificado vigente. Uma
+     * consulta só, sem repetição (a matrícula tem no máximo um vigente, mas o
+     * `array_values(array_unique(...))` não confia nisso).
+     *
+     * @param  list<int>  $enrollmentIds
+     * @return list<int>
+     */
+    public function lockedAmong(array $enrollmentIds): array
+    {
+        if ($enrollmentIds === []) {
+            return [];
+        }
+
+        return $this->vigentes()
+            ->whereIn('enrollment_id', $enrollmentIds)
+            ->pluck('enrollment_id')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /** `ResultLock`: a correção do resultado lê a vigência pela mesma porta da emissão. */
+    public function isLockedForUpdate(int $enrollmentId): bool
+    {
+        return $this->existeVigenteForUpdate($enrollmentId);
     }
 
     /**

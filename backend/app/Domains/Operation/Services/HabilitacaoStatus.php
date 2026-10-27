@@ -3,11 +3,13 @@
 namespace App\Domains\Operation\Services;
 
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaRequirement;
 use App\Domains\Operation\Enums\TurmaStatus;
 
 /**
- * Resposta única da RN-16 sobre uma turma: quais tipos obrigatórios faltam e,
- * a partir disso, se ela está habilitada.
+ * Resposta única da RN-16 sobre uma turma: quais tipos obrigatórios e quais
+ * requisitos de configuração (redator, local da presencial) faltam e, a partir
+ * disso, se ela está habilitada.
  *
  * O status entra no VO de propósito (D-B1): "habilitada" nunca foi só
  * documentação — turma concluída não é habilitada, ainda que tenha os três
@@ -17,20 +19,32 @@ use App\Domains\Operation\Enums\TurmaStatus;
  */
 final class HabilitacaoStatus
 {
-    /** @param  array<TurmaDocumentType>  $missingTypes  tipos obrigatórios sem doc ativo. */
+    /**
+     * @param  array<TurmaDocumentType>  $missingTypes  tipos obrigatórios sem doc ativo.
+     * @param  array<TurmaRequirement>  $missingRequirements  configuração que falta na turma.
+     */
     public function __construct(
         private readonly TurmaStatus $status,
         private readonly array $missingTypes,
+        private readonly array $missingRequirements,
     ) {}
 
     public function isHabilitada(): bool
     {
-        return $this->status === TurmaStatus::EmAndamento && $this->missingTypes === [];
+        return $this->status === TurmaStatus::EmAndamento
+            && $this->missingTypes === []
+            && $this->missingRequirements === [];
     }
 
     /** @return array<TurmaDocumentType> */
     public function missingTypes(): array
     {
         return $this->missingTypes;
+    }
+
+    /** @return array<TurmaRequirement> */
+    public function missingRequirements(): array
+    {
+        return $this->missingRequirements;
     }
 }
