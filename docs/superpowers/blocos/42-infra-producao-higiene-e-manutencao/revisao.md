@@ -2,6 +2,28 @@
 
 ## Em aberto
 
+## Rodada 3 — `68790dac..870fbbf7` — 2026-10-27 · Lente 1: opus · Lente 2: sonnet
+
+Aberta pelo `/finalizar-bloco`. O João aprovou corrigir o Q-2 da rodada 2 e duas divergências que a
+`auditar-docs` do fechamento mediu em texto do próprio bloco. O `870fbbf7`:
+- faz a catraca do §3 exigir o `--resource-policy` e o `aws:PrincipalArn` no simulador do
+  `lotus-infra`. Uma sonda que tirou o argumento do README reprovou o teste, e o README voltou de
+  uma cópia (`cmp` idêntico);
+- faz o §16.1 nomear as três causas da saída 1 do `podar-imagens.sh`, com catraca no §16.
+
+A terceira divergência, o comentário de `deploy/bin/podar-imagens.sh:15` que cita o §8.1.1 em vez
+do §8.1, ficou de propósito. Mudar o script muda o sha256 de `bin/`, que o passo "O host esta
+alinhado ao SHA alvo" do `deploy.yml` compara com o host, e isso travaria o botão até a
+reinstalação pelo §7. Ela vai para a P-97. A lente 1 conferiu que o Q-2 fechou. A lente Codex segue
+fora pelo mesmo `model_not_found`.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-3 | Menor | O §16.1 e a catraca do runbook citam `erro: docker image prune falhou`, mas o teste "prune falhando" do script confere só o `status` e as remoções, não o stderr. Renomear a mensagem em `podar-imagens.sh:87` deixa a suíte verde e o runbook procurando uma frase que o script não imprime. A da listagem está conferida dos dois lados. | CONFIRMED | `frontend/tests/podar-imagens.test.ts:192-196`, contra `deploy/bin/podar-imagens.sh:87` e `frontend/tests/runbook-higiene.test.ts:74` | registrado; não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
 ## Rodada 2 — `68790dac..fb16bb9e` — 2026-10-27 · Lente 1: opus · Lente 2: sonnet
 
 O Q-1 da rodada 1 foi aprovado pelo João e corrigido em `fb16bb9e`:
