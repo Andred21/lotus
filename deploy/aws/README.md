@@ -41,27 +41,109 @@ Console S3, região `sa-east-1`, bucket `lotus-prod-<ACCOUNT_ID>`:
 
 - **Block Public Access**: tudo marcado;
 - **Bucket Versioning**: `Enabled` (documento tem peso legal);
-- **Lifecycle rule** `expira-backups`: prefixo `backups/`, expiração em **30 dias** (o requisito
-  de retenção mínima é 7 — a folga é deliberada). **Com versioning ligado, `Expiration` sozinha
-  não apaga nada**: ela só põe delete marker e a versão antiga fica ocupando (e custando) para
-  sempre. Medido em 2026-09-04 — a regra tem de ter as três cláusulas:
+- **Lifecycle**: `deploy/aws/s3-lifecycle.json`, três regras.
 
-  ```json
-  {"Rules": [{"ID": "expira-backups", "Status": "Enabled",
-    "Filter": {"Prefix": "backups/"},
-    "Expiration": {"Days": 30},
-    "NoncurrentVersionExpiration": {"NoncurrentDays": 7},
-    "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 7}}]}
-  ```
+  | Regra | Filtro | Versão atual | Versão antiga | Outras |
+  |---|---|---|---|---|
+  | `expira-backups` | `backups/` | expira em 30 dias | 7 dias | multipart incompleto em 7 dias |
+  | `fotos` | `user-photos/` | — | 1 dia | a marca de exclusão que sobra sozinha sai |
+  | `documentos` | vazio: o bucket inteiro | — | 7 dias | a marca de exclusão que sobra sozinha sai; multipart incompleto em 7 dias |
 
-  O `Filter` limita ao prefixo `backups/`: documento de aluno, que tem peso legal, não é tocado.
+  **Com versioning ligado, `Expiration` sozinha não apaga nada**: ela só põe delete marker, e a
+  versão antiga fica ocupando (e custando) para sempre. Medido em 2026-09-04; por isso a regra dos
+  backups tem as três cláusulas (o requisito de retenção mínima é 7 dias, e os 30 são folga
+  deliberada). A regra `documentos` tem filtro vazio e alcança também `backups/`, `user-photos/` e
+  qualquer prefixo que o app venha a criar. Na sobreposição vale o prazo menor: *"if two expiration
+  policies overlap, the shorter expiration policy is honored"*
+  (https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-conflicts.html). É por isso que
+  a foto expira em 1 dia, e não em 7.
+- **Bucket policy**: `deploy/aws/s3-politica.json`, quatro `Deny` e nenhum `Allow`:
+  - `SoHttps`: nada passa sem TLS, nem no bucket nem nos objetos;
+  - `NinguemApagaDeVez`: `s3:DeleteObjectVersion` é negado a todos, o `lotus-infra` inclusive. Quem
+    apaga versão é só o lifecycle, que não passa pela política. Todo apagar vira marca de exclusão
+    e se desfaz pelo §3.1 enquanto a versão anterior existir: 7 dias para documento, 1 dia para
+    foto;
+  - `ApagarSoAppEInfra`: só o app (`lotus-ec2`) e o `lotus-infra` apagam. `gabriel`, `JoaoVBA` e as
+    roles `OrganizationAccountAccessRole` e `administrador`, da conta-mãe, leem e gravam, mas não
+    apagam. É o pedido do João (spec do bloco 42);
+  - `ProtecaoSoInfra`: política, versioning, lifecycle, bloqueio público, criptografia, ownership e
+    apagar o bucket são só do `lotus-infra`, que por enquanto age sem MFA (decisão do João,
+    2026-10-25).
 - **CORS**: nenhum. Upload passa pela API e download é URL pré-assinada por GET simples; só uma
   medição que prove necessidade justifica acrescentar.
 
+Aplicar da raiz do repositório, com o perfil `lotus` (`lotus-infra`), nesta ordem:
+
+```bash
+aws s3api put-bucket-lifecycle-configuration --bucket lotus-prod-760144413534 \
+  --lifecycle-configuration file://deploy/aws/s3-lifecycle.json --profile lotus
+# antes da política, a identidade do perfil: tem de imprimir arn:aws:iam::760144413534:user/lotus-infra
+# (outro ARN → não aplique: o ProtecaoSoInfra trancaria o próprio operador)
+aws sts get-caller-identity --profile lotus --query Arn --output text
+# e a saída de emergência, pelo simulador (só leitura), contra o JSON ainda não aplicado:
+# o lotus-infra desfaz a política — as duas linhas têm de dar allowed
+aws iam simulate-principal-policy --profile lotus \
+  --policy-source-arn arn:aws:iam::760144413534:user/lotus-infra \
+  --action-names s3:PutBucketPolicy s3:DeleteBucketPolicy \
+  --resource-arns arn:aws:s3:::lotus-prod-760144413534 \
+  --resource-policy file://deploy/aws/s3-politica.json \
+  --context-entries "ContextKeyName=aws:SecureTransport,ContextKeyValues=true,ContextKeyType=boolean" \
+    "ContextKeyName=aws:PrincipalArn,ContextKeyValues=arn:aws:iam::760144413534:user/lotus-infra,ContextKeyType=string" \
+  --query 'EvaluationResults[].[EvalActionName,EvalDecision]' --output text
+# o JoaoVBA cria chave do lotus-infra (allowed), e cabe uma nova (a conta tem de dar menos de 2)
+aws iam simulate-principal-policy --profile lotus \
+  --policy-source-arn arn:aws:iam::760144413534:user/JoaoVBA \
+  --action-names iam:CreateAccessKey \
+  --resource-arns arn:aws:iam::760144413534:user/lotus-infra \
+  --query 'EvaluationResults[].[EvalActionName,EvalDecision]' --output text
+aws iam list-access-keys --user-name lotus-infra --profile lotus --query 'length(AccessKeyMetadata)'
+aws s3api put-bucket-policy --bucket lotus-prod-760144413534 \
+  --policy file://deploy/aws/s3-politica.json --profile lotus
+```
+
+**Saída de emergência.** É o IAM, não a raiz: o João não tem as credenciais da raiz da conta
+`760144413534` (ruling 6 do bloco 42). Perder o `lotus-infra` cai aqui:
+- **a chave:** o `JoaoVBA` entra no console → IAM → Users → `lotus-infra` → Create access key,
+  põe a chave nova no perfil `lotus` e roda
+  `aws s3api delete-bucket-policy --bucket lotus-prod-760144413534 --profile lotus`. O limite é
+  duas chaves por usuário: com duas, desative e apague a perdida antes;
+- **o usuário:** recriar o `lotus-infra` com o mesmo nome, pelo §1, devolve o acesso, porque a
+  política compara o `aws:PrincipalArn` como texto. Depois, o caso da chave;
+- **todo acesso de administrador ao IAM:** só a raiz, ou o `AssumeRoot` da conta gestora da
+  Organization, apaga a política. Nesse caso a raiz já seria necessária com ou sem a política.
+
+Por isso o simulador roda antes de toda aplicação da política. O `JoaoVBA` está sem MFA, e ele é a
+saída: o MFA dele fica recomendado.
+
 Prova: `get-bucket-versioning` → `Enabled`; `get-public-access-block` → os quatro `true`;
-`get-bucket-lifecycle-configuration` → a regra acima; `get-bucket-location` → `sa-east-1`.
+`get-bucket-lifecycle-configuration` e `get-bucket-policy` → iguais aos dois arquivos;
+`get-bucket-location` → `sa-east-1`.
 Pela CLI, `create-bucket` em `sa-east-1` **exige** `--create-bucket-configuration
 LocationConstraint=sa-east-1`; sem isso o bucket nasce em `us-east-1`.
+
+### 3.1 Desfazer um apagão
+
+Apagar sem versão (`aws s3 rm`, ou o app) põe uma marca de exclusão por cima da chave, e a versão
+anterior fica guardada: 7 dias para documento, 1 dia para foto (§3). Para trazer de volta, copia-se
+a versão anterior por cima da chave, e a cópia vira a versão atual. Remover a marca de exclusão
+exigiria `s3:DeleteObjectVersion`, que a política nega a todos.
+
+```bash
+aws s3api list-object-versions --bucket lotus-prod-760144413534 --prefix '<chave>' --profile lotus \
+  --query '{versoes: Versions[].[Key,VersionId,LastModified,IsLatest], marcas: DeleteMarkers[].[Key,VersionId,LastModified,IsLatest]}'
+aws s3api copy-object --bucket lotus-prod-760144413534 --key '<chave>' --profile lotus \
+  --copy-source "lotus-prod-760144413534/<chave>?versionId=<id>"
+aws s3 cp 's3://lotus-prod-760144413534/<chave>' /tmp/conferir --profile lotus
+```
+
+O `<id>` é o `VersionId` da versão de `LastModified` mais recente entre as `versoes`, a que a marca
+cobriu. O `--prefix` traz também as chaves que começam igual: confira a `Key`. Chave com caractere
+fora de `[A-Za-z0-9/._-]` vai URL-encoded no `--copy-source`. Só dê por desfeito depois de conferir
+o conteúdo baixado em `/tmp/conferir`, e apague a cópia local.
+
+O objeto volta ao S3, não ao banco: se a linha em `files` (ou o `photo_path` do usuário) também
+saiu, o app não o enxerga até a linha voltar. O desfazer cobre o apagão no bucket: um órfão
+removido por engano, um `aws s3 rm` errado.
 
 ## 4. IAM — role da EC2 (least-privilege)
 
@@ -198,7 +280,7 @@ Do WSL, com o `.pem` da §6 (sem o `-i`, o `scp` oferece a chave padrão do WSL 
 ```bash
 PEM=~/.ssh/<o .pem da §6>
 scp -i "$PEM" docker-compose.prod.yml docker-compose.prod-tls.yml ubuntu@<EIP>:/tmp/
-scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh deploy/bin/sondar-saude.sh deploy/bin/conferir-golive.sh ubuntu@<EIP>:/tmp/
+scp -i "$PEM" deploy/bin/deploy.sh deploy/bin/backup-db.sh deploy/bin/verificar-backup.sh deploy/bin/recarregar-nginx.sh deploy/bin/sondar-saude.sh deploy/bin/conferir-golive.sh deploy/bin/podar-imagens.sh ubuntu@<EIP>:/tmp/
 scp -i "$PEM" deploy/nginx/tls.conf ubuntu@<EIP>:/tmp/
 ```
 
@@ -207,7 +289,7 @@ root:root`, e o shell do `ubuntu` não o lê — expandido fora, o glob chega li
 
 ```bash
 sudo mv /tmp/docker-compose.prod*.yml /opt/lotus/
-sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /tmp/sondar-saude.sh /tmp/conferir-golive.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
+sudo mv /tmp/deploy.sh /tmp/backup-db.sh /tmp/verificar-backup.sh /tmp/recarregar-nginx.sh /tmp/sondar-saude.sh /tmp/conferir-golive.sh /tmp/podar-imagens.sh /opt/lotus/bin/ && sudo sh -c 'chmod +x /opt/lotus/bin/*.sh'
 sudo mv /tmp/tls.conf /opt/lotus/nginx/
 sudo mkdir -p /opt/lotus/certbot && sudo chmod 755 /opt/lotus/certbot
 ```
@@ -489,6 +571,11 @@ sudo crontab -e
 06:10 UTC = 03:10 no Chile. Rodar uma vez à mão para provar: `sudo /opt/lotus/bin/backup-db.sh`
 deve imprimir `backup ok: s3://…`.
 
+O upload tenta três vezes, com 30 s e depois 60 s de espera, e cada falha deixa no log a linha
+`aviso: upload falhou (tentativa N de 3)`. Três falhas saem 1 com `erro: upload falhou 3 vezes`. O
+script também dá ao CLI três tentativas de 5 s no IMDS: o backup de 2026-10-07 caiu num soluço
+dele, com `Unable to locate credentials`.
+
 **A segunda linha é a DETECÇÃO, e ela não é opcional.** A revisão 2026-09 do ADR-09 pagou o
 descarte do RDS com "backup provado" e escreveu o gatilho de volta — *backup > 7 dias sem sucesso,
 volta-se ao RDS*. Sem esta linha ninguém saberia que passaram 7 dias: a primeira linha manda o
@@ -499,6 +586,11 @@ O `verificar-backup.sh` olha o **efeito**, não o processo: a idade do objeto ma
 qualquer coisa, quando o cron some, ou quando a instância é recriada sem o crontab. Passando de
 **2 dias** ele publica no tópico SNS da §10 e sai 1 — 2 e não 7, para o gatilho do ADR chegar como
 decisão e não como descoberta.
+
+Consulta que falha não vira "nenhum backup". Se o S3 não responde (credencial, rede, permissão), o
+e-mail diz que **a consulta falhou** e que não dá para afirmar que há cópia: é a instância que não
+alcança o S3, não o backup que sumiu. Comece pelas credenciais da instance role
+(`aws sts get-caller-identity` no host).
 
 Duas chaves no `.env` o sustentam: `LOTUS_BACKUP_BUCKET` (já existe) e `LOTUS_ALERT_TOPIC_ARN`, o
 ARN do tópico da §10. **Sem o ARN ele recusa rodar** em vez de degradar para o silêncio, que é
@@ -530,7 +622,7 @@ docker exec restore-prova mysql -uroot -pprova -N -e \
 ```
 
 As contagens têm de bater com o mesmo `SELECT` no mysql de produção. Limpar:
-`docker rm -f restore-prova && rm /tmp/dump.sql.gz`.
+`docker rm -fv restore-prova && rm /tmp/dump.sql.gz`.
 
 ## 10. Alertas — custo pelo Budgets, backup pelo SNS
 
@@ -1295,9 +1387,10 @@ sudo docker system df
 sudo du -xh --max-depth=2 /var/lib /opt /var/log /tmp 2>/dev/null | sort -h | tail -15
 ```
 
-Os logs dos contêineres têm teto (10 MB × 3 cada), e o swap é fixo. O que cresce é imagem de
-release antiga e o volume do MySQL. Limpar imagem é decisão do João: o rollback do §8.1 precisa da
-imagem anterior.
+Os logs dos contêineres têm teto (10 MB × 3 cada), o journal tem teto de 200 MB (§16.2) e o swap é
+fixo. Desde o bloco 42 o deploy guarda só as imagens do SHA atual e do anterior (§16.1), e o que
+cresce é o volume do MySQL. Imagem velha acumulada quer dizer poda falhando: procure
+`aviso: a poda de imagens falhou` na saída do último deploy e rode a poda à mão (§16.1).
 
 **`lotus-prod-certificado`.** O certificado **servido** na 443 vence em menos de 21 dias. Ou a
 renovação falhou nove dias seguidos, ou ela renovou e o nginx não recarregou.
@@ -1430,7 +1523,7 @@ banco, nunca sobe contêiner e nunca mostra valor do `.env`.
    sudo sh -c 'gunzip -c /root/golive-prova.sql.gz | docker exec -i lotus-golive-prova mysql -uroot -pprova lotus'
    sudo docker exec lotus-golive-prova mysql -uroot -pprova -N -e \
      "SELECT COUNT(*) FROM lotus.certificates c JOIN lotus.courses co ON co.id = c.course_id WHERE co.name LIKE 'SMOKE-GOLIVE%'"
-   sudo docker rm -f lotus-golive-prova && sudo rm /root/golive-prova.sql.gz
+   sudo docker rm -fv lotus-golive-prova && sudo rm /root/golive-prova.sql.gz
    ```
 
    O número tem de ser ≥ 1 e igual ao `certificados=N` do `INFO smoke` de
@@ -1462,7 +1555,7 @@ banco, nunca sobe contêiner e nunca mostra valor do `.env`.
    aws s3 cp "$(sudo cat /root/golive.txt)" /tmp/golive.sql.gz --only-show-errors
    gunzip -c /tmp/golive.sql.gz | sudo docker exec -i lotus-restore-ensaio mysql -uroot -pensaio lotus
    date -u +%FT%TZ   # t2 (parcial: sem parada nem promoção)
-   sudo docker rm -f lotus-restore-ensaio && rm /tmp/golive.sql.gz
+   sudo docker rm -fv lotus-restore-ensaio && rm /tmp/golive.sql.gz
    ```
 
    O RTO fica declarado **parcial** na proposta e no ADR-14.
@@ -1498,3 +1591,93 @@ original (proposta, §4).
 **Recuo.** Restore que falha no passo 5: repetir o passo 4 do §8.1.1 inteiro; persistindo, carregar
 o dump `antes-do-restore` pelo mesmo procedimento. Restore que falha é gatilho do ADR-09 e bloqueia
 o go-live: registrar e parar.
+
+## 16. Manutenção do host
+
+O que acontece sozinho: o backup (§9), a poda do banco (agendada no app), a renovação do
+certificado (§11.5), a poda das imagens a cada deploy (16.1) e as atualizações de segurança, com
+reboot automático (16.3). O que passa pela mão do João é a atualização fora de segurança, numa
+janela (16.4). Avisar que há pendência é papel do painel central de observabilidade, que é ficha
+própria.
+
+### 16.1 Imagens
+
+O `deploy.sh` chama o `podar-imagens.sh` depois de gravar o `CURRENT_SHA`, e o host guarda as
+imagens de dois SHAs: o atual e o anterior, que é o alvo do rollback do §8.1. O anterior sai do
+ledger (§8.2), e não do `CURRENT_SHA`: promover o mesmo SHA de novo não apaga o alvo de rollback.
+Imagem fora de `lotus-app`, `lotus-web` e `lotus-clamav` não sai. A falha da poda vira a linha
+`aviso: a poda de imagens falhou; a promocao segue OK`, e a promoção continua registrada como ok.
+Rollback para um SHA mais antigo volta por `docker pull`: o GHCR guarda todos.
+
+À mão, com a mesma regra:
+
+```bash
+sudo flock -n /opt/lotus/.deploy.lock sudo sh -c '/opt/lotus/bin/podar-imagens.sh "$(cat /opt/lotus/CURRENT_SHA)"'
+```
+
+O `flock` é o mesmo cadeado do `deploy.sh` (`/opt/lotus/.deploy.lock`): uma promoção pelo botão
+durante a poda à mão apagaria as imagens recém-puxadas, que ainda não são o `CURRENT_SHA` nem o
+anterior. O `-n` sai com 1 sem esperar se um deploy segura o cadeado; tente de novo depois.
+
+O `sudo sh -c` não é enfeite: o `/opt/lotus` é `750 root:root`, e o `$(cat …)` expandido no shell
+do `ubuntu` chegaria vazio. A primeira linha diz o que fica (`mantidas: <atual> <anterior>`), e
+cada `removida:` é uma imagem que saiu. Saída 1 tem três causas, e o stderr diz qual:
+- `recusada: <repo>:<tag>` é imagem presa a contêiner, mesmo parado, e
+  `sudo docker ps -a --format '{{.Names}} {{.Image}} {{.Status}}'` mostra qual;
+- `erro: docker image ls falhou` é a listagem que falhou, e nada foi removido;
+- `erro: docker image prune falhou` é a limpeza das camadas soltas que falhou, depois das remoções.
+
+Nas duas últimas, `sudo docker info` diz se o daemon responde. Nunca `docker image rm -f`. O espaço pode demorar a aparecer no `df`, porque o containerd solta os
+snapshots depois (`sudo docker system df`).
+
+### 16.2 Journal e cache do apt
+
+Os dois ficam versionados no `deploy/aws/user-data.sh`:
+
+- `/etc/systemd/journald.conf.d/lotus.conf`, com `SystemMaxUse=200M`. Para conferir:
+  `journalctl --disk-usage`.
+- `/etc/apt/apt.conf.d/52lotus-limpeza`, com `APT::Periodic::AutocleanInterval "7";`, a limpeza
+  semanal do cache, mas só dos `.deb` obsoletos (por isso o §16.4 roda `apt-get clean` depois do
+  upgrade). Para conferir: `apt-config dump | grep AutocleanInterval`.
+
+### 16.3 Reboot automático
+
+O `/etc/apt/apt.conf.d/53lotus-reboot` liga o reboot do `unattended-upgrades` às 08:30 do relógio
+do host, que é UTC (`timedatectl`): 05:30 em Santiago no horário de verão e 04:30 no de inverno.
+Fica depois do backup (06:10), da conferência (06:40), das podas do banco (03:10 e 03:40 em
+Santiago) e do `apt-daily-upgrade`. O host só reinicia quando a atualização pede
+(`/var/run/reboot-required`). O 53 vence o `50unattended-upgrades` pela ordem do nome. Só a origem
+de segurança entra: o repositório do Docker fica fora, porque o upgrade dele reinicia o daemon e
+derruba os contêineres. Os contêineres voltam sozinhos depois do boot, porque todo serviço do
+compose de produção tem `restart: unless-stopped`.
+
+O `lotus-prod-up` só dispara com 3 minutos sem resposta em 5, e um reboot normal passa sem alarme.
+O tempo fora medido na primeira janela está no `execucao-producao.md` do bloco 42
+(`docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/`). Um reboot agendado aparece em
+`/run/systemd/shutdown/scheduled`, e `sudo shutdown -c` o cancela.
+
+### 16.4 Janela manual: atualização de versão
+
+Quando o João decidir aplicar o que não é de segurança:
+
+1. Listar o pendente: `apt list --upgradable`.
+2. Desligar as ações dos alarmes (§14.7).
+3. Aplicar: `sudo apt-get update && sudo apt-get -y upgrade && sudo apt-get clean`
+   (o `AutocleanInterval` só remove `.deb` obsoleto; os baixados no upgrade ficariam no disco). Pergunta de arquivo de configuração
+   fica com a versão instalada (o default). O que ficar retido (`apt list --upgradable` de novo) vai
+   para o registro e para o João decidir. O upgrade do Docker reinicia os contêineres no meio: é
+   por isso que os alarmes estão desligados.
+4. Reiniciar, se `ls /var/run/reboot-required` mostrar o arquivo: `sudo reboot`.
+5. Conferir:
+
+   ```bash
+   uname -r
+   sudo docker ps --filter label=com.docker.compose.project=lotus --format '{{.Names}} {{.Status}}'
+   curl -s -o /dev/null -w '%{http_code}\n' https://app.lotusotec.cl/up
+   sudo docker logs --since 20m "$(sudo docker ps -qf label=com.docker.compose.service=mysql)" 2>&1 \
+     | grep -iE 'crash recovery|not shut ?down normally'
+   ```
+
+   Os seis contêineres (`app`, `scheduler`, `mysql`, `nginx`, `gotenberg`, `clamav`) em `Up`, o
+   `/up` em 200 e nenhuma linha do `grep`: o MySQL parou limpo, sem recuperação do InnoDB no boot.
+6. Religar as ações dos alarmes (§14.7) e conferir o `ActionsEnabled`.

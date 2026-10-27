@@ -323,6 +323,11 @@ verbo_abrir() {
   local offset
   offset=$(offset_livre) || recusar "nenhum offset livre de 1 a 3: $(descrever_offsets)"
 
+  # 8. o pnpm existe. O pnpm install so roda depois de criar branch e arvore, e
+  # sem pnpm a lane nascia pela metade (bloco 42: node novo no nvm vem sem ele).
+  command -v "$PNPM" >/dev/null 2>&1 \
+    || recusar "pnpm ausente no PATH ($PNPM): rode corepack enable pnpm e abra de novo"
+
   printf 'PORTAO OK: %s pode abrir em %s, offset +%s\n' "$branch" "$arvore" "$offset"
 
   local base pasta="$nn-$slug"

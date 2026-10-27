@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#
+# `docker` de mentira do frontend/tests/backup-db.test.ts. Responde o `ps -q
+# mysql` do compose e o `exec` do mysqldump com um dump que passa nas duas
+# guardas do script: mais de 10 KiB e o rodape do mysqldump.
+case " $* " in
+  *" ps -q mysql "*) echo mysql-falso ;;
+  *" exec mysql-falso "*)
+    for i in $(seq 1 300); do echo "INSERT INTO t VALUES ($i, 'linha de dump falso para passar do piso de 10 KiB');"; done
+    echo '-- Dump completed on 2026-10-25  6:10:00'
+    ;;
+  *) echo "docker falso: nao previsto: $*" >&2; exit 1 ;;
+esac

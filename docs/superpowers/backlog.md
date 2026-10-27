@@ -101,6 +101,11 @@
   O `40` nasceu em 2026-10-19, aberto pelo João a partir da revisão do `39`: um certificado real
   com nota e asistencia sai em 3 páginas, e a ficha junta a esse achado a revisão geral do
   certificado e a pesquisa do que o torna válido para uma OTEC credenciada.
+  O `42` nasceu em 2026-10-25, aberto pelo João a partir da medição de saúde da infra daquele dia
+  (`audits/2026-10-25-saude-infra.md`). **Entrou pela PR da própria lane, sem PR de docs
+  separada**: desvio da invariante 10 decidido pelo João, para não abrir duas branches, duas
+  worktrees e duas PRs. O portão do `lane.sh abrir` leu a ficha de uma cópia provisória no
+  `backlog.md` do main tree, desfeita assim que a lane abriu.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -151,10 +156,59 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 |---|---|---|
 | **34** `infra-producao-observabilidade` | 7 | 2026-10-05 |
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
+| **42** `infra-producao-higiene-e-manutencao` | 6, 7, 8 | 2026-10-27 |
 
 ---
 
 # Fila priorizada
+
+## 42. `infra-producao-higiene-e-manutencao`
+
+**Prioridade:** P1, urgente · **Frente:** Infra · **Contexto:** não · **Depende:** —
+**Fonte:** medição só leitura de 2026-10-25 (`audits/2026-10-25-saude-infra.md`); Q-1 da revisão do
+item 13, PLAUSIBLE na revisão e confirmado em produção pelo volume anônimo `901f0f78…`;
+`deploy/bin/deploy.sh`, `deploy/bin/backup-db.sh`, `deploy/bin/verificar-backup.sh`,
+`deploy/aws/user-data.sh`, `deploy/aws/README.md`.
+
+**Por que existe:** a produção acumula lixo que ninguém recolhe. O disco está em 87% de 19 GB, com
+o alarme `lotus-prod-disco` em ALARM desde 2026-10-24, porque cada promoção deixa três imagens e o
+deploy nunca apaga as velhas: 14 SHAs no host, 5,4 GB recuperáveis. O runbook deixa volume com
+cópia do banco (`docker rm -f` sem `-v`), o kernel novo espera reboot, versões antigas de dado
+pessoal no S3 nunca expiram fora de `backups/`, e o backup de 2026-10-07 falhou por IMDS sem que
+ninguém fosse avisado.
+
+**Escopo:**
+- **poda de imagens no deploy:** o `deploy.sh` mantém o `CURRENT_SHA` e o anterior (rollback) de
+  `lotus-app`, `lotus-web` e `lotus-clamav` e remove o resto; inclui a limpeza única dos 12 SHAs
+  que sobram hoje;
+- **Q-1:** corrigir `deploy/aws/README.md:533`, `:1433` e `:1465` (`-v`/`--rm`, ou volume nomeado
+  com remoção explícita); remover o volume anônimo `901f0f78…` e o `/opt/lotus/prova-certificado.php`;
+- **journald e apt:** teto de `SystemMaxUse` e limpeza do cache do apt, versionados no
+  `user-data.sh` e aplicados no host atual;
+- **política de kernel e reboot:** decidir entre `Automatic-Reboot` com janela e reboot manual com
+  runbook; aplicar o reboot pendente (kernel do `1012` para o `1014`) e os pacotes fora de
+  segurança (`docker-ce`, `containerd.io`, `docker-compose-plugin`) numa janela;
+- **S3:** estender a expiração de versões antigas ao bucket inteiro, com prazo decidido no
+  brainstorming (documento tem peso legal); remover os 12 órfãos com a lista como evidência;
+  registrar o comando de lifecycle no README;
+- **retry no backup:** o `backup-db.sh` tenta o upload de novo com backoff; revisar o limiar de 2
+  dias do `verificar-backup.sh`;
+- **pnpm no portão (harness):** o `lane.sh abrir` confere o `pnpm` antes do `PORTAO OK` e recusa
+  sem criar branch nem árvore, com a instrução (`corepack enable pnpm`); hoje ele só descobre no
+  meio e deixa a lane pela metade, como aconteceu duas vezes na abertura deste bloco. Uma linha no
+  `CLAUDE.md` §6.
+
+**Fora:** tudo do Komit (instância, SG com a 22 aberta, peso no orçamento); MFA dos IAM; filtro do
+budget `lotus-prod-teto`; memória e swap do ClamAV; aumentar o EBS; backup de host/AMI. São decisões
+do João fora do Lotus ou bloco próprio.
+
+**DoD:** `lotus-prod-disco` volta a OK com o uso medido; depois de uma promoção real, o host guarda
+só dois SHAs por imagem; zero volumes anônimos; kernel novo rodando depois do reboot, com os seis
+contêineres de pé e `/up` 200; lifecycle aplicado e lido de volta; zero órfãos contra `files.path`
+∪ `users.photo_path`; retry provado por teste com falha de credencial simulada; medição antes e
+depois na pasta do bloco. Escrita em produção segue duas mãos: o João roda, o Claude verifica.
+
+---
 
 ## 40. `certificado-refinamento-e-validade`
 

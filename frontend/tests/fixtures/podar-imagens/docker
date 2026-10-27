@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#
+# `docker` de mentira do frontend/tests/podar-imagens.test.ts. Registra cada
+# chamada em $FAKE_LOG (uma linha `---` e um argumento por linha) e responde o
+# minimo que o deploy/bin/podar-imagens.sh le:
+# - `image ls` imprime $FAKE_IMAGENS, uma `repositorio:tag` por linha;
+# - `image rm <ref>` recusa as refs de $FAKE_RM_RECUSA, como o daemon recusa
+#   imagem presa a conteiner;
+# - FAKE_LS_FALHA=1 e FAKE_PRUNE_FALHA=1 derrubam a listagem e o prune.
+{
+  printf '%s\n' '---'
+  printf '%s\n' "$@"
+} >> "$FAKE_LOG"
+
+case "${1:-} ${2:-}" in
+  'image ls')
+    [ "${FAKE_LS_FALHA:-}" != 1 ] || { echo 'Cannot connect to the Docker daemon at unix:///var/run/docker.sock' >&2; exit 1; }
+    cat "$FAKE_IMAGENS"
+    ;;
+  'image rm')
+    ref="${*: -1}"
+    if grep -qxF -- "$ref" "$FAKE_RM_RECUSA"; then
+      echo "Error response from daemon: conflict: unable to remove repository reference \"$ref\" (must force) - container 0123456789ab is using its referenced image" >&2
+      exit 1
+    fi
+    echo "Untagged: $ref"
+    ;;
+  'image prune')
+    [ "${FAKE_PRUNE_FALHA:-}" != 1 ] || exit 1
+    echo 'Total reclaimed space: 0B'
+    ;;
+  *) echo "docker falso: nao previsto: $*" >&2; exit 1 ;;
+esac

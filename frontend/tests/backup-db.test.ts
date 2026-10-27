@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import { readFileSync, statSync } from 'node:fs'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { spawnSync } from 'node:child_process'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 /**
@@ -146,5 +148,101 @@ describe('deploy/bin/backup-db.sh', () => {
       .find((linha) => linha.includes('LOTUS_BACKUP_SAIDA') && linha.includes('printf'))
     expect(escrita).toBeDefined()
     expect(escrita).toMatch(/\|\|\s*\{\s*echo "erro:.*\$LOTUS_BACKUP_SAIDA.*>&2;\s*exit 1;\s*\}$/)
+  })
+})
+
+/**
+ * Execução de verdade, com `docker` e `aws` falsos no PATH (bloco 42, spec §9).
+ * O backup de 2026-10-07 caiu num soluço do IMDS (`Unable to locate
+ * credentials`): tentou uma vez, e ninguém soube. O upload agora tenta três
+ * vezes, e o CLI recebe mais folga no IMDS. O script grava no /tmp fixo do host;
+ * cada caso usa um rótulo único para achar os próprios arquivos lá.
+ */
+describe('deploy/bin/backup-db.sh — upload com retry', () => {
+  const FAKES = join(__dirname, 'fixtures', 'backup-db')
+  let base: string
+  let contador = 0
+
+  beforeAll(() => {
+    base = mkdtempSync(join(tmpdir(), 'backup-db-'))
+    writeFileSync(join(base, '.env'), 'LOTUS_BACKUP_BUCKET=balde-falso\n')
+  })
+
+  afterAll(() => {
+    rmSync(base, { recursive: true, force: true })
+  })
+
+  const rodar = (falhas: number, extra: Record<string, string> = {}) => {
+    contador += 1
+    const dir = join(base, `caso-${contador}`)
+    mkdirSync(dir)
+    const rotulo = `t42-${process.pid}-${contador}`
+    const saida = join(dir, 'chave')
+    const r = spawnSync('bash', [CAMINHO], {
+      env: {
+        ...process.env,
+        LOTUS_BASE: base,
+        LOTUS_BACKUP_ESPERA_S: '0',
+        LOTUS_BACKUP_ROTULO: rotulo,
+        LOTUS_BACKUP_SAIDA: saida,
+        FAKE_DIR: dir,
+        FAKE_FALHAS: String(falhas),
+        ...extra,
+        PATH: `${FAKES}:${process.env.PATH ?? ''}`,
+      },
+      encoding: 'utf8',
+    })
+    const log = join(dir, 'aws.log')
+    return {
+      status: r.status,
+      stdout: r.stdout,
+      stderr: r.stderr,
+      aws: existsSync(log) ? readFileSync(log, 'utf8').split('\n').filter(Boolean) : [],
+      saida,
+      rotulo,
+      sobras: readdirSync('/tmp').filter((nome) => nome.includes(rotulo)),
+    }
+  }
+
+  it('os falsos são executáveis', () => {
+    for (const nome of ['docker', 'aws']) expect(statSync(join(FAKES, nome)).mode & 0o111, nome).not.toBe(0)
+  })
+
+  it('duas falhas e o upload sai na terceira', () => {
+    const e = rodar(2)
+    expect(e.status, e.stderr).toBe(0)
+    expect(e.aws).toHaveLength(3)
+    expect(e.stderr).toContain('aviso: upload falhou (tentativa 1 de 3)')
+    expect(e.stderr).toContain('aviso: upload falhou (tentativa 2 de 3)')
+    expect(e.stderr).not.toContain('tentativa 3 de 3')
+    expect(e.stderr).not.toContain('erro:')
+    const chave = new RegExp(`^s3://balde-falso/backups/lotus-[0-9T-]+-${e.rotulo}\\.sql\\.gz$`)
+    expect(e.stdout.trim().replace(/^backup ok: /, '')).toMatch(chave)
+    expect(readFileSync(e.saida, 'utf8').trim()).toMatch(chave)
+    expect(e.sobras).toEqual([])
+  })
+
+  it('três falhas: sai 1, não publica chave e não deixa o dump no /tmp', () => {
+    const e = rodar(3)
+    expect(e.status).toBe(1)
+    expect(e.aws).toHaveLength(3)
+    for (const n of [1, 2, 3]) expect(e.stderr).toContain(`aviso: upload falhou (tentativa ${n} de 3)`)
+    expect(e.stderr).toContain('erro: upload falhou 3 vezes')
+    expect(e.stdout).not.toContain('backup ok')
+    expect(existsSync(e.saida)).toBe(false)
+    expect(e.sobras).toEqual([])
+  })
+
+  it('o upload sai com a folga de IMDS: 3 tentativas de 5 s', () => {
+    const e = rodar(1)
+    expect(e.aws).toHaveLength(2)
+    for (const linha of e.aws) expect(linha.endsWith('|imds=3/5'), linha).toBe(true)
+  })
+
+  it('espera fora de [0-9] sai 1 antes do dump', () => {
+    const e = rodar(0, { LOTUS_BACKUP_ESPERA_S: 'trinta' })
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain('erro: LOTUS_BACKUP_ESPERA_S fora de [0-9]: trinta')
+    expect(e.aws).toEqual([])
   })
 })

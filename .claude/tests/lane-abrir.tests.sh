@@ -146,6 +146,14 @@ rodar_lane "$_ab7" abrir 33 chore harness-sinal-de-contexto-cheio
 assert_recusa 'offset livre' 'offsets 1 a 3 ocupados pelo main e por orfas'
 nada_criado "$_ab7" 'sem offset livre'
 
+# --- 8. pnpm no PATH (bloco 42): sem ele a lane nascia pela metade, com
+# branch e arvore criadas antes do pnpm install falhar
+_ab8=$(criar_main_lane); registrar_descarte "$(dirname "$_ab8")"
+FAKE_PNPM=/nao/existe/pnpm rodar_lane "$_ab8" abrir 33 chore harness-sinal-de-contexto-cheio
+assert_recusa 'pnpm ausente no PATH (/nao/existe/pnpm)' 'pnpm fora do PATH'
+assert_contem "$SAIDA_LANE" 'rode corepack enable pnpm' 'pnpm fora do PATH: diz como resolver'
+nada_criado "$_ab8" 'pnpm fora do PATH'
+
 # --- portao limpo
 _abok=$(criar_main_lane); registrar_descarte "$(dirname "$_abok")"
 rodar_lane "$_abok" abrir 33 chore harness-sinal-de-contexto-cheio

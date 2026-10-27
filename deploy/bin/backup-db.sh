@@ -13,7 +13,15 @@ set -euo pipefail
 # REMOÇÃO, não permissão (Q-8 do review de 2026-09-20).
 umask 077
 
-BASE=/opt/lotus
+# O CLI desiste do IMDS no default (1 tentativa de 1 s) e sai com `Unable to
+# locate credentials`: foi assim que o backup de 2026-10-07 falhou, sem retry e
+# sem aviso. Tres tentativas de 5 s cobrem o soluco do IMDS. O deploy.sh chama
+# este script para o dump pre-deploy e herda a folga.
+export AWS_METADATA_SERVICE_NUM_ATTEMPTS=3 AWS_METADATA_SERVICE_TIMEOUT=5
+
+# Mesmo gancho do verificar-backup.sh: o default e o caminho de producao, e a
+# prova local sobrescreve a variavel para EXECUTAR o script com falsos.
+BASE="${LOTUS_BASE:-/opt/lotus}"
 # Só a chave que este script consome — sem `source` do .env inteiro.
 # O `|| true` não é ruído: com `set -euo pipefail`, grep sem match sai 1,
 # `pipefail` propaga pelo `cut` e a ATRIBUIÇÃO sai 1 — `set -e` matava o script
@@ -38,6 +46,11 @@ ROTULO="${LOTUS_BACKUP_ROTULO:-}"
 case "$ROTULO" in
   *[!a-z0-9-]*) echo "erro: LOTUS_BACKUP_ROTULO fora de [a-z0-9-]: $ROTULO" >&2; exit 1 ;;
 esac
+# Espera antes da segunda tentativa; dobra antes da terceira. So o teste a muda.
+ESPERA="${LOTUS_BACKUP_ESPERA_S:-30}"
+case "$ESPERA" in
+  ''|*[!0-9]*) echo "erro: LOTUS_BACKUP_ESPERA_S fora de [0-9]: $ESPERA" >&2; exit 1 ;;
+esac
 ARQ="lotus-$(date -u +%Y-%m-%dT%H-%M-%S)${ROTULO:+-$ROTULO}.sql.gz"
 BRUTO="/tmp/${ARQ%.gz}"
 # Dump de produção não fica no /tmp do host nem quando o script morre no meio.
@@ -57,7 +70,20 @@ docker exec "$MYSQL" sh -c 'exec mysqldump --single-transaction --routines --tri
 tail -1 "$BRUTO" | grep -q '^-- Dump completed' || { echo "erro: dump truncado (sem o rodape do mysqldump)" >&2; exit 1; }
 
 gzip -c "$BRUTO" > "/tmp/$ARQ"
-aws s3 cp "/tmp/$ARQ" "s3://$BUCKET/backups/$ARQ" --only-show-errors
+# Ate tres tentativas, com espera crescente (30 s, depois 60 s). O dump ja esta
+# no /tmp e o trap so o apaga no fim, entao so o upload se repete. Cada falha vai
+# para o stderr, que o cron manda para o /var/log/lotus-backup.log.
+TENTATIVA=1
+until aws s3 cp "/tmp/$ARQ" "s3://$BUCKET/backups/$ARQ" --only-show-errors; do
+  echo "aviso: upload falhou (tentativa $TENTATIVA de 3)" >&2
+  if [ "$TENTATIVA" -ge 3 ]; then
+    echo "erro: upload falhou 3 vezes" >&2
+    exit 1
+  fi
+  sleep "$ESPERA"
+  ESPERA=$(( ESPERA * 2 ))
+  TENTATIVA=$(( TENTATIVA + 1 ))
+done
 # O deploy.sh (item 12, §7) precisa da CHAVE, nao da frase. Contrato por
 # variavel em vez de parsing de stdout: o cron do host continua vendo
 # exatamente a mesma linha, e quem quer o dado pede o arquivo.

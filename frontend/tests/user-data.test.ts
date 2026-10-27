@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -220,5 +220,73 @@ describe('deploy/aws/user-data.sh', () => {
     const rotacao = semComentarios.match(/\/var\/log\/lotus\/sonda\.log \{([\s\S]*?)\}/)
     expect(rotacao?.[1]).toMatch(/^\s*daily$/m)
     expect(rotacao?.[1]).toMatch(/^\s*rotate 7$/m)
+  })
+
+  // O trecho da higiene RODA (bloco 42), com o `set` do topo, os caminhos de
+  // /etc trocados por um diretório temporário e um `systemctl` que só anota.
+  // É ele que prova que reexecutar no host vivo não reinicia o journald à toa
+  // e que arquivo igual não derruba o `set -e`.
+  it('higiene: grava os três arquivos e só reinicia o journald quando o dele muda', () => {
+    const set = LINHAS.find((l) => /^set -/.test(l))
+    const inicio = indice((l) => l === 'gravar_se_mudou() {')
+    const fim = indice((l) => l === 'REBOOT', inicio)
+    expect(set).toBeDefined()
+    expect(inicio).toBeGreaterThan(-1)
+    expect(fim).toBeGreaterThan(inicio)
+
+    const dir = mkdtempSync(join(tmpdir(), 'user-data-higiene-'))
+    try {
+      const bin = join(dir, 'bin')
+      const journald = join(dir, 'journald.conf.d')
+      const apt = join(dir, 'apt.conf.d')
+      const log = join(dir, 'systemctl.log')
+      mkdirSync(bin)
+      mkdirSync(apt)
+      writeFileSync(join(bin, 'systemctl'), `#!/usr/bin/env bash\necho "$*" >> '${log}'\n`)
+      chmodSync(join(bin, 'systemctl'), 0o755)
+      const trecho = LINHAS.slice(inicio, fim + 1)
+        .join('\n')
+        .replace(/\/etc\/systemd\/journald\.conf\.d/g, journald)
+        .replace(/\/etc\/apt\/apt\.conf\.d/g, apt)
+      const rodar = () =>
+        spawnSync('bash', ['-c', `${set}\n${trecho}\n`], {
+          encoding: 'utf8',
+          env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+        })
+      const reinicios = () => (existsSync(log) ? readFileSync(log, 'utf8').split('\n').filter(Boolean) : [])
+      const JOURNAL = '[Journal]\nSystemMaxUse=200M\n'
+
+      const primeira = rodar()
+      expect(primeira.status, primeira.stderr).toBe(0)
+      expect(readFileSync(join(journald, 'lotus.conf'), 'utf8')).toBe(JOURNAL)
+      expect(readFileSync(join(apt, '52lotus-limpeza'), 'utf8')).toBe('APT::Periodic::AutocleanInterval "7";\n')
+      expect(readFileSync(join(apt, '53lotus-reboot'), 'utf8')).toBe(
+        'Unattended-Upgrade::Automatic-Reboot "true";\nUnattended-Upgrade::Automatic-Reboot-Time "08:30";\n',
+      )
+      expect(reinicios()).toEqual(['restart systemd-journald'])
+
+      // Reexecução no host vivo: nada muda, nada reinicia, nenhum .novo sobra.
+      const segunda = rodar()
+      expect(segunda.status, segunda.stderr).toBe(0)
+      expect(reinicios()).toEqual(['restart systemd-journald'])
+      expect(readdirSync(apt).sort()).toEqual(['52lotus-limpeza', '53lotus-reboot'])
+      expect(readdirSync(journald)).toEqual(['lotus.conf'])
+
+      // Alguém mexeu no teto: a reexecução devolve o valor e reinicia de novo.
+      writeFileSync(join(journald, 'lotus.conf'), '[Journal]\nSystemMaxUse=999M\n')
+      const terceira = rodar()
+      expect(terceira.status, terceira.stderr).toBe(0)
+      expect(readFileSync(join(journald, 'lotus.conf'), 'utf8')).toBe(JOURNAL)
+      expect(reinicios()).toEqual(['restart systemd-journald', 'restart systemd-journald'])
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('higiene: o reboot automático não abre origem nova nem sobe pacote fora da janela', () => {
+    // O unattended-upgrades segue só com noble-security: o Docker fica fora (o
+    // upgrade dele derruba os contêineres) e o user-data não faz upgrade geral.
+    expect(semComentarios).not.toContain('Allowed-Origins')
+    expect(semComentarios).not.toMatch(/apt-get\s+(-y\s+)?(dist-|full-)?upgrade/)
   })
 })
