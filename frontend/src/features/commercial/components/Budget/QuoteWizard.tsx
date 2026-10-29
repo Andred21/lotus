@@ -43,6 +43,7 @@ export function QuoteWizard({
 
   return (
     <AppDialog
+      size="lg"
       header={
         <div className="flex items-center justify-between gap-4">
           <span>{quote ? t('quote.edit') : t('quote.new')}</span>

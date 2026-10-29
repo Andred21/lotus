@@ -42,6 +42,7 @@ export function RoleDialog({
 
   return (
     <CrudDialog
+      size="md"
       visible={visible}
       mode={mode}
       title={mode === 'create' ? t('role.new') : roleLabel(form.name, t)}

@@ -16,6 +16,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
 
   return (
     <AppDialog
+      size="sm"
       visible={visible}
       header={t('operation.enrollment.import.title')}
       onHide={f.close}

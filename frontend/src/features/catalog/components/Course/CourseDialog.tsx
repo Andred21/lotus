@@ -27,6 +27,7 @@ export function CourseDialog({
 
   return (
     <CrudDialog
+      size="md"
       visible={visible}
       mode={mode}
       title={isCreate ? t('course.new') : form.name}

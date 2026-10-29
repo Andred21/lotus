@@ -86,7 +86,7 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
       <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.redator.helpNote')}</p>
       {picker.error && <p className="text-sm" style={{ color: dangerText }}>{picker.error}</p>}
 
-      <AppDialog visible={open} header={t('operation.redator.pickerTitle')} onHide={() => setOpen(false)}>
+      <AppDialog size="sm" visible={open} header={t('operation.redator.pickerTitle')} onHide={() => setOpen(false)}>
         <RedatorPickerBody
           picker={picker}
           onPick={(redatorId) => {

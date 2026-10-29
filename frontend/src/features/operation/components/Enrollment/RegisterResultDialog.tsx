@@ -30,7 +30,7 @@ export function RegisterResultDialog({ turmaId, enrollment, visible, approvalRul
   }
 
   return (
-    <AppDialog visible={visible} header={t('certificate.result.title')} onHide={close} closable={!r.submitting}>
+    <AppDialog size="sm" visible={visible} header={t('certificate.result.title')} onHide={close} closable={!r.submitting}>
       <div className="space-y-4">
         <FormErrorBanner message={r.message} />
 

@@ -345,3 +345,49 @@ html.dark
 .lotus-language-menu .p-menuitem.p-highlight .p-menuitem-text {
   font-weight: 600;
 }
+
+/* Moldura navy do diálogo padrão (bloco 43, spec §4.1). Header e footer do
+ * `AppDialog` vestem a superfície FIXA do shell — a mesma do sidebar e do
+ * navbar, que não acompanha o tema —, então a tinta é a do shell, não a do
+ * tema, e o traço de foco é redeclarado celeste como no `Sidebar.tsx`: um
+ * traço navy sobre navy seria foco invisível. A tinta secundária do tema
+ * também é redeclarada com a do shell: o "Paso 1 de 2" do `QuoteWizard` lê
+ * `--text-color-secondary`, que no claro (#475569) mediria 1,9:1 sobre o navy.
+ *
+ * Escopada em `.lotus-dialog`, que o `appDialogPt` crava no root: a
+ * `ConfirmDialog` não a recebe e fica com a superfície do tema — as duas
+ * famílias se distinguem à primeira vista. Fora de layer, como o resto desta
+ * folha: vence o `@layer primereact` do Lara sem depender de especificidade, e
+ * por isso a cor sem estado vale também no hover e no active. Só o FUNDO do
+ * hover precisa de regra própria: o do Lara é um cinza claro sobre o qual a
+ * tinta do shell some. */
+.lotus-dialog .p-dialog-header,
+.lotus-dialog .p-dialog-footer {
+  background: var(--brand-navy);
+  color: var(--shell-ink);
+  --focus-stroke: var(--brand);
+  --text-color-secondary: var(--shell-ink-muted);
+}
+
+.lotus-dialog .p-dialog-header {
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.lotus-dialog .p-dialog-footer {
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.lotus-dialog .p-dialog-header .p-dialog-title,
+.lotus-dialog .p-dialog-header .p-dialog-header-icon {
+  color: var(--shell-ink);
+}
+
+.lotus-dialog .p-dialog-footer .p-button.p-button-text {
+  color: var(--shell-ink);
+}
+
+.lotus-dialog .p-dialog-header .p-dialog-header-icon:enabled:hover,
+.lotus-dialog .p-dialog-footer .p-button.p-button-text:not(:disabled):hover,
+.lotus-dialog .p-dialog-footer .p-button.p-button-text:not(:disabled):active {
+  background: rgb(255 255 255 / 0.1);
+}

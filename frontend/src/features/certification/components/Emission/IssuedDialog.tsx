@@ -56,7 +56,7 @@ export function IssuedDialog({
   )
 
   return (
-    <AppDialog visible header={t('certificate.issuedTitle')} onHide={onHide} footer={footer}>
+    <AppDialog size="md" visible header={t('certificate.issuedTitle')} onHide={onHide} footer={footer}>
       {loading && <AppSkeleton height="10rem" />}
 
       {error && (

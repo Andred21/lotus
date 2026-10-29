@@ -35,7 +35,7 @@ export function ReissueDialog({
 
   if (panelLoading) {
     return (
-      <AppDialog visible header={t('certificate.reissue')} onHide={onHide}>
+      <AppDialog size="sm" visible header={t('certificate.reissue')} onHide={onHide}>
         <AppSkeleton height="10rem" />
       </AppDialog>
     )
@@ -43,7 +43,7 @@ export function ReissueDialog({
 
   if (panelError) {
     return (
-      <AppDialog visible header={t('certificate.reissue')} onHide={onHide}>
+      <AppDialog size="sm" visible header={t('certificate.reissue')} onHide={onHide}>
         <AppErrorState
           title={t('common.loadError')}
           detail={screenDetail(panelError) ?? t(loadErrorHint(panelError))}
@@ -61,7 +61,7 @@ export function ReissueDialog({
       </div>
     )
     return (
-      <AppDialog visible header={t('certificate.reissue')} onHide={onHide} footer={footer}>
+      <AppDialog size="sm" visible header={t('certificate.reissue')} onHide={onHide} footer={footer}>
         <AppTag
           severity="warning"
           value={

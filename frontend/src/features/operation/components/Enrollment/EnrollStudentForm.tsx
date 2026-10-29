@@ -23,7 +23,7 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
   const err = (key: string) => f.fieldErrors?.[key]?.[0]
 
   return (
-    <AppDialog visible={visible} header={t('operation.enrollment.form.title')} onHide={close}>
+    <AppDialog size="sm" visible={visible} header={t('operation.enrollment.form.title')} onHide={close}>
       <div className="space-y-4">
         <FormErrorSummary errors={f.fieldErrors} mapped={['rut', 'name', 'email', 'phone']} />
 
