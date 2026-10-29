@@ -17,9 +17,9 @@ branch: feat/43-frontend-dialogos-proporcionais-e-tipo-de-documento
 worktree: ../lotus-43-frontend-dialogos-proporcionais-e-tipo-de-documento
 offset: 3
 lane_base: 0c09fa4f
-commit: d98fa419
+commit: bff558db
 blocker: null
-updated_at: 2026-10-28T23:08:04-03:00
+updated_at: 2026-10-28T23:26:19-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
