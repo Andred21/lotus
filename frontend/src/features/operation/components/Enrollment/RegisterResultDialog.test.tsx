@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import type { ApprovalRuleData, EnrollmentData } from '@shared/types/generated'
 import { RegisterResultDialog } from './RegisterResultDialog'
@@ -38,5 +38,18 @@ describe('RegisterResultDialog — aviso da regra mínima', () => {
     montar({ ...DIVERGENTE, approval_status: 'aprobado' })
 
     expect(screen.queryByText('certificate.result.ruleSuggestsApproved')).toBeNull()
+  })
+})
+
+/** Bloco 43: os botões moravam no corpo, e o footer navy ficava vazio. */
+describe('RegisterResultDialog — footer', () => {
+  it('cancelar e salvar vivem no footer', () => {
+    montar(DIVERGENTE)
+
+    const rodape = document.querySelector('.p-dialog-footer') as HTMLElement
+    expect(within(rodape).getByRole('button', { name: 'common.save' })).toBeTruthy()
+    expect(within(rodape).getByRole('button', { name: 'common.cancel' })).toBeTruthy()
+    const corpo = document.querySelector('.p-dialog-content') as HTMLElement
+    expect(within(corpo).queryByRole('button', { name: 'common.save' })).toBeNull()
   })
 })

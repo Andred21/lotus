@@ -29,28 +29,51 @@ export function RegisterResultDialog({ turmaId, enrollment, visible, approvalRul
     onHide()
   }
 
-  return (
-    <AppDialog size="sm" visible={visible} header={t('certificate.result.title')} onHide={close} closable={!r.submitting}>
-      <div className="space-y-4">
-        <FormErrorBanner message={r.message} />
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <AppButton label={t('common.cancel')} text disabled={r.submitting} onClick={close} />
+      <AppButton
+        variant="primary"
+        label={t('common.save')}
+        disabled={r.submitting}
+        onClick={() => r.submit({ onSuccess: close })}
+      />
+    </div>
+  )
 
-        <FormField label={t('certificate.result.status')} error={r.fieldErrors?.approval_status?.[0]}>
-          <AppDropdown value={r.form.approval_status} options={r.statusOptions} onChange={(e) => r.setStatus(e.value)} />
-        </FormField>
+  return (
+    <AppDialog
+      size="sm"
+      visible={visible}
+      header={t('certificate.result.title')}
+      onHide={close}
+      closable={!r.submitting}
+      footer={footer}
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="empty:hidden sm:col-span-2">
+          <FormErrorBanner message={r.message} />
+        </div>
+
+        <div className="sm:col-span-2">
+          <FormField label={t('certificate.result.status')} error={r.fieldErrors?.approval_status?.[0]}>
+            <AppDropdown value={r.form.approval_status} options={r.statusOptions} onChange={(e) => r.setStatus(e.value)} />
+          </FormField>
+        </div>
 
         <FormField label={t('certificate.result.finalGrade')} error={r.fieldErrors?.['grades.final']?.[0]}>
-          <AppInputText value={r.form.finalGrade} onChange={(e) => r.setFinalGrade(e.target.value)} />
+          <AppInputText className="w-full" value={r.form.finalGrade} onChange={(e) => r.setFinalGrade(e.target.value)} />
         </FormField>
 
         <FormField label={t('certificate.result.attendance')} error={r.fieldErrors?.attendance_pct?.[0]}>
-          <AppInputText value={r.form.attendance_pct} onChange={(e) => r.setAttendance(e.target.value)} />
+          <AppInputText className="w-full" value={r.form.attendance_pct} onChange={(e) => r.setAttendance(e.target.value)} />
         </FormField>
 
         {/* Aviso, não erro: âmbar e sem role="alert" (o FormErrorBanner é vermelho e
             para 422). NUNCA bloqueia o salvar — registro não bloqueia ação. */}
         {r.ruleWarning && (
           <p
-            className="rounded-control px-3 py-2 text-sm"
+            className="rounded-control px-3 py-2 text-sm sm:col-span-2"
             style={{
               background: warningSurface,
               color: warningText,
@@ -59,16 +82,6 @@ export function RegisterResultDialog({ turmaId, enrollment, visible, approvalRul
             {r.ruleWarning}
           </p>
         )}
-
-        <div className="flex justify-end gap-2">
-          <AppButton label={t('common.cancel')} outlined disabled={r.submitting} onClick={close} />
-          <AppButton
-            variant="primary"
-            label={t('common.save')}
-            disabled={r.submitting}
-            onClick={() => r.submit({ onSuccess: close })}
-          />
-        </div>
       </div>
     </AppDialog>
   )
