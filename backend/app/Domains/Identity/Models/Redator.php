@@ -92,11 +92,15 @@ class Redator extends Model implements Auditable
      */
     public function firma(): MorphOne
     {
+        // O filtro tem de entrar na SUBQUERY do MAX (closure do `ofMany`), não
+        // só na query externa: sem isso o MAX(id) sai de TODOS os `files` do
+        // redator e qualquer arquivo posterior (de outro tipo, ou apagado) faz
+        // a firma vigente sumir. O `withTrashed()` vem antes para valer nas duas.
         return $this->morphOne(File::class, 'fileable')
-            ->where('type', 'FIRMA')
             ->withTrashed()
-            ->where(fn ($q) => $q->whereNull('deleted_at')->orWhere('archived_with_parent', true))
-            ->ofMany('id', 'max');
+            ->ofMany(['id' => 'max'], fn ($q) => $q
+                ->where('type', 'FIRMA')
+                ->where(fn ($w) => $w->whereNull('deleted_at')->orWhere('archived_with_parent', true)));
     }
 
     /** Cursos que este redator está habilitado a ministrar (idoneidade). */

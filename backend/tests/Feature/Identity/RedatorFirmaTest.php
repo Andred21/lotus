@@ -47,6 +47,15 @@ class RedatorFirmaTest extends TestCase
         ]);
     }
 
+    private function outroDocumento(int $redatorId, string $tipo = 'CV'): File
+    {
+        return File::create([
+            'fileable_type' => 'redator', 'fileable_id' => $redatorId, 'type' => $tipo,
+            'path' => "redator/{$redatorId}/{$tipo}.pdf", 'original_name' => "{$tipo}.pdf",
+            'mime' => 'application/pdf', 'size' => 10,
+        ]);
+    }
+
     public function test_admin_sobe_firma_png_e_ela_vira_a_firma_do_redator(): void
     {
         Storage::fake('s3');
@@ -199,6 +208,52 @@ class RedatorFirmaTest extends TestCase
         $carregado = Redator::withTrashed()->with('firma')->findOrFail($arquivado->id);
         $this->assertTrue($carregado->relationLoaded('firma'));
         $this->assertTrue($carregado->firma->is($marcada));
+    }
+
+    public function test_firma_vigente_ignora_arquivos_de_outro_tipo_com_id_maior(): void
+    {
+        // (a) CV e REUF criados DEPOIS da firma não a escondem.
+        $redator = $this->makeRedator();
+        $firma = $this->firma($redator->id);
+        $this->outroDocumento($redator->id, 'CV');
+        $this->outroDocumento($redator->id, 'REUF');
+        $this->assertTrue($redator->fresh()->firma->is($firma));
+
+        // (b) Arquivo de outro tipo, soft-deletado e com id maior, também não.
+        $this->outroDocumento($redator->id, 'TITULO')->delete();
+        $this->assertTrue($redator->fresh()->firma->is($firma));
+    }
+
+    public function test_firma_marcada_pela_cascata_vence_a_apagada_pelo_admin_com_id_maior(): void
+    {
+        // (c) A marcada (id menor) vale; a apagada pelo admin SEM marca, com
+        // id maior, não entra na disputa.
+        $redator = $this->makeRedator();
+        $marcada = $this->firma($redator->id, 'marcada.png');
+        $marcada->archived_with_parent = true;
+        $marcada->saveQuietly();
+        $marcada->delete();
+        $this->firma($redator->id, 'apagada.png')->delete();
+        $this->outroDocumento($redator->id, 'CV');
+
+        $this->assertTrue($redator->fresh()->firma->is($marcada));
+    }
+
+    public function test_eager_load_da_firma_com_varios_redatores_e_outros_documentos_depois(): void
+    {
+        // (d) N=2: cada um com a própria firma e outros documentos criados depois.
+        $a = $this->makeRedator();
+        $b = $this->makeRedator();
+        $firmaA = $this->firma($a->id, 'a.png');
+        $firmaB = $this->firma($b->id, 'b.png');
+        $this->outroDocumento($a->id, 'CV');
+        $this->outroDocumento($b->id, 'REUF');
+        $this->outroDocumento($a->id, 'TITULO')->delete();
+
+        $carregados = Redator::with('firma')->whereKey([$a->id, $b->id])->get()->keyBy('id');
+
+        $this->assertTrue($carregados[$a->id]->firma->is($firmaA));
+        $this->assertTrue($carregados[$b->id]->firma->is($firmaB));
     }
 
     public function test_firma_fica_fora_dos_tipos_de_compliance(): void
