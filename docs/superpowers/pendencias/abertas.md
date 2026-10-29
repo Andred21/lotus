@@ -1319,6 +1319,45 @@ fundo de 15% do `severityTone`, que é o da tag `AppTag` e o do ícone circular 
 Só um par reprova: `danger` no tema escuro, com `--red-400` (#ff6259) sobre
 `color-mix(--red-500 15%, --surface-card)`, a 4,36:1. O defeito é anterior ao bloco: o `AppTag`
 danger já pinta o texto assim no escuro. Na `ConfirmDialog` a tinta só pinta o ícone, que é
-decorativo (`aria-hidden`). O João decidiu em 2026-10-29 pular o par no teste (J10) e registrar.
+decorativo (`aria-hidden`). O João decidiu em 2026-10-29, na Task 2 do item 43, pular o par no teste e registrar.
 O caminho candidato é clarear a tinta do escuro para `--red-300` (#ff8780), o que muda o `AppTag`
 em todas as telas.
+
+## P-106 — a lixeira de um documento do orçamento remove sem confirmação
+
+**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar `useBudgetDetail.ts` ou o
+`BudgetDocumentsCard`. Revisar em **2026-11-07**.
+
+O smoke do item 43 viu que a lixeira de um documento no detalhe do orçamento chama
+`removeFile.mutate` direto (`frontend/src/features/commercial/hooks/useBudgetDetail.ts:99`), sem
+`ConfirmDialog`. Um clique errado tira do orçamento uma OC, factura ou comprobante, que têm peso
+legal. O soft delete preserva o metadado e o arquivo fica no bucket, mas o documento some da tela.
+O `TurmaDocuments` já confirma a remoção com `severity="danger"`, e o orçamento deveria fazer o
+mesmo.
+
+## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
+
+**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
+(`Shared/Files`) ou os atributos de validação do `lang/`. Revisar em **2026-11-07**.
+
+O item 43 enviou um arquivo de tipo recusado ao upload do orçamento, e o erro dentro do diálogo
+saiu "El campo **file** debe ser…": o backend não traduz o nome do atributo `file`. Vale para todos
+os uploads que validam `file`, não só para o orçamento. Parente da P-76 (frases ao usuário fora da
+catraca de idioma).
+
+## P-108 — em 1024, o RUT do cliente passa por baixo do "Agregar cotización"
+
+**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar o cabeçalho do detalhe do
+orçamento. Revisar em **2026-11-07**.
+
+O smoke do item 43 viu, em 1024×768, o RUT do cliente sobreposto pelo botão "Agregar cotización"
+no cabeçalho do detalhe do orçamento. É anterior ao bloco, que não tocou o cabeçalho.
+
+## P-109 — o paginador das tabelas tem nomes acessíveis em inglês
+
+**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar o `AppDataTable` ou o `pt` do
+paginador. Revisar em **2026-11-07**.
+
+O `lotus-ui-review` do item 43 viu o paginador expor "Previous Page", "Next Page" e "Page N" a
+leitor de tela num produto es-CL. É o `aria-label` padrão do PrimeReact, que o `locale` do Lotus não
+sobrescreve. Anterior ao bloco.
