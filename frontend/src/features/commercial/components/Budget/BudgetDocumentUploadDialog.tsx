@@ -43,7 +43,7 @@ export function BudgetDocumentUploadDialog({ u }: { u: ReturnType<typeof useBudg
 
         <div role="group" aria-label={t('budget.fileTypeLabel')} className="space-y-2">
           <SectionLabel as="h3" rule={false}>{t('budget.fileTypeLabel')}</SectionLabel>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="flex flex-col gap-2">
             {BUDGET_DOCUMENT_TYPES.map((tipo) => (
               <AppSelectableCard
                 key={tipo}

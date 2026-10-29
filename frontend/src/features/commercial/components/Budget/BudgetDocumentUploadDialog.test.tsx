@@ -45,6 +45,16 @@ describe('BudgetDocumentUploadDialog', () => {
     ])
   })
 
+  /** Revisão final I-1: em 32rem três colunas cortam "Comprobante" e quebram
+   * "Orden de compra"; os cartões se empilham, um sob o outro. */
+  it('os cartões se empilham numa coluna só', () => {
+    renderWithProviders(<BudgetDocumentUploadDialog u={upload()} />)
+
+    const lista = screen.getByRole('button', { name: 'budget.documentType.invoice' }).parentElement?.parentElement
+    expect(lista?.className).toContain('flex-col')
+    expect(lista?.className).not.toMatch(/grid-cols/)
+  })
+
   it('clicar num cartão escolhe o tipo', () => {
     const setType = vi.fn()
     renderWithProviders(<BudgetDocumentUploadDialog u={upload({ setType })} />)
