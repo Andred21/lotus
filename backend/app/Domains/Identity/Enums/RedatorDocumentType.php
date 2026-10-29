@@ -2,6 +2,8 @@
 
 namespace App\Domains\Identity\Enums;
 
+use App\Shared\Files\ContentClass;
+
 /**
  * Tipos de documento de idoneidade do redator. Vive no domínio (não é global):
  * a tabela `files` é polimórfica e o `type` é string livre; este enum só
@@ -13,6 +15,7 @@ enum RedatorDocumentType: string
     case REUF = 'REUF';
     case TITULO = 'TITULO';
     case POSTGRADO = 'POSTGRADO';
+    case FIRMA = 'FIRMA';
 
     /**
      * O REUF fica fora do self-service (spec D5): ele é a ÚNICA entrada do
@@ -24,6 +27,29 @@ enum RedatorDocumentType: string
     public function isSelfService(): bool
     {
         return $this !== self::REUF;
+    }
+
+    /**
+     * Os quatro primeiros são documento de idoneidade (compliance): têm
+     * validade e alimentam os alertas do dashboard. A FIRMA é a imagem da
+     * assinatura impressa no certificado (spec D1/D2 do bloco 40): não vence e
+     * não é idoneidade.
+     */
+    public function isCompliance(): bool
+    {
+        return $this !== self::FIRMA;
+    }
+
+    /** A classe de conteúdo que o upload deste tipo pede (`UploadPolicyRatchetTest`). */
+    public function conteudo(): ContentClass
+    {
+        return $this->isCompliance() ? ContentClass::Documento : ContentClass::Assinatura;
+    }
+
+    /** `valid_until` só faz sentido em documento de compliance. */
+    public function aceitaValidade(): bool
+    {
+        return $this->isCompliance();
     }
 
     /** @return array<int, string> */
@@ -48,6 +74,9 @@ enum RedatorDocumentType: string
      */
     public static function values(): array
     {
-        return array_column(self::cases(), 'value');
+        return array_values(array_map(
+            fn (self $type) => $type->value,
+            array_filter(self::cases(), fn (self $type) => $type->isCompliance()),
+        ));
     }
 }

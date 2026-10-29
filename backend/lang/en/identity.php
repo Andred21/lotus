@@ -43,5 +43,6 @@ return [
         'REUF' => 'REUF',
         'TITULO' => 'Degree',
         'POSTGRADO' => 'Postgraduate',
+        'FIRMA' => 'Signature',
     ],
 ];

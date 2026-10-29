@@ -39,14 +39,14 @@ class ProfileDataTest extends TestCase
         $this->assertSame($user->email, $data->email);
     }
 
-    public function test_redator_tem_sempre_quatro_slots_na_ordem_do_enum(): void
+    public function test_redator_tem_sempre_cinco_slots_na_ordem_do_enum_com_firma_por_ultimo(): void
     {
         $redator = $this->makeRedator();
 
         $data = ProfileData::fromUser($redator->user);
 
         $this->assertNotNull($data->redator);
-        $this->assertCount(4, $data->redator->documentos);
+        $this->assertCount(5, $data->redator->documentos);
         $this->assertSame(
             array_map(fn (RedatorDocumentType $t) => $t->value, RedatorDocumentType::cases()),
             array_map(fn ($d) => $d->type->value, $data->redator->documentos),

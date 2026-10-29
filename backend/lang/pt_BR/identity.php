@@ -43,5 +43,6 @@ return [
         'REUF' => 'REUF',
         'TITULO' => 'Diploma',
         'POSTGRADO' => 'Pós-graduação',
+        'FIRMA' => 'Assinatura',
     ],
 ];

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Validation\ValidationException;
@@ -79,6 +80,23 @@ class Redator extends Model implements Auditable
     public function documents(): MorphMany
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+
+    /**
+     * A assinatura vigente (spec D19 do bloco 40): a FIRMA ativa OU a que a
+     * cascata do arquivamento levou junto (`archived_with_parent`), a de maior
+     * `id`. `withTrashed()` porque o redator arquivado ainda precisa dela para
+     * a emissão de certificados antigos; a condição deixa de fora a que o admin
+     * apagou de propósito antes (essa não volta) e a substituída (soft-deletada
+     * sem a marca).
+     */
+    public function firma(): MorphOne
+    {
+        return $this->morphOne(File::class, 'fileable')
+            ->where('type', 'FIRMA')
+            ->withTrashed()
+            ->where(fn ($q) => $q->whereNull('deleted_at')->orWhere('archived_with_parent', true))
+            ->ofMany('id', 'max');
     }
 
     /** Cursos que este redator está habilitado a ministrar (idoneidade). */

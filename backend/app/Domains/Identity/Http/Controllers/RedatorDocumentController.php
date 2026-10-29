@@ -7,7 +7,6 @@ use App\Domains\Identity\Data\RedatorDocumentData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
-use App\Shared\Files\ContentClass;
 use App\Shared\Files\Models\File;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -18,15 +17,20 @@ class RedatorDocumentController extends Controller
 {
     public function store(Request $request, Redator $redator, StoreRedatorDocumentAction $action): RedatorDocumentData
     {
-        $validated = $request->validate([
+        // O tipo vem primeiro porque é ele quem escolhe a regra do arquivo e a
+        // do `valid_until` (a assinatura não é o documento de idoneidade).
+        $tipo = RedatorDocumentType::from($request->validate([
             'type' => ['required', new Enum(RedatorDocumentType::class)],
-            'file' => ContentClass::Documento->regras(),
-            'valid_until' => ['nullable', 'date'],
+        ])['type']);
+
+        $validated = $request->validate([
+            'file' => $tipo->conteudo()->regras(),
+            'valid_until' => $tipo->aceitaValidade() ? ['nullable', 'date'] : ['prohibited'],
         ]);
 
         $file = $action->execute(
             $redator,
-            RedatorDocumentType::from($validated['type']),
+            $tipo,
             $request->file('file'),
             isset($validated['valid_until']) ? Carbon::parse($validated['valid_until']) : null,
         );

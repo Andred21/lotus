@@ -56,7 +56,7 @@ class ProfileReadTest extends TestCase
 
         $this->getJson('/api/profile')
             ->assertOk()
-            ->assertJsonCount(4, 'redator.documentos')
+            ->assertJsonCount(5, 'redator.documentos')
             ->assertJsonPath('redator.documentos.0.status', 'ausente')
             ->assertJsonPath('redator.cursos_habilitados', 0);
     }

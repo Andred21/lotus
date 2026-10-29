@@ -473,7 +473,7 @@ valid_until: string | null,
 created_at: string | null,
 download_url: string,
 };
-export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
+export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO' | 'FIRMA';
 export type RedatorHistoricoData = {
 turmas_concluidas: number,
 certificados_emitidos: number,
