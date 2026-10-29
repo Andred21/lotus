@@ -40,16 +40,19 @@ export class UnsupportedImageError extends Error {
 }
 
 /**
- * Limiares, calibrados em 2026-10-29 (spec §8) com rasters sintéticos que
- * reproduzem os três casos que a assinatura real traz:
+ * Limiares. ATENÇÃO: calibrados SÓ com rasters sintéticos, não com assinatura
+ * real. Os casos que os testes reproduzem são:
  *  - caneta preta em papel branco (distância ~255);
  *  - caneta fraca, luminância ~170 em papel 250 (distância ~80), que precisa
  *    ficar VISÍVEL (alfa ~165 com os defaults);
- *  - foto de celular, fundo cinza 180 com ruído de ±10 (distância máxima ~18
- *    sobre o papel estimado), que precisa sumir por inteiro.
- * O piso fica em 28: acima do ruído medido (18) com folga para sombra suave, e
- * abaixo da caneta fraca. O teto da rampa em 120 deixa o traço de caneta
- * comum (distância > 120) totalmente opaco.
+ *  - fundo cinza 180 com ruído de ±10 (distância máxima ~18 sobre o papel
+ *    estimado), que precisa sumir por inteiro.
+ * O piso fica em 28 (acima do ruído sintético, abaixo da caneta fraca) e o teto
+ * da rampa em 120.
+ * Falta a amostra real que a spec §8 pede (assinaturas do protótipo e foto de
+ * celular): ela sai do smoke do bloco 40 (Task 14), onde foto de celular e scan
+ * são subidos pelo navegador. O ajuste, se for preciso, é nestes defaults, em
+ * `CleanSignatureOptions`, sem mexer no resto.
  */
 export interface CleanSignatureOptions {
   /** Percentil da luminância que representa o papel (0..1). */
@@ -60,6 +63,12 @@ export interface CleanSignatureOptions {
   inkFull: number
   /** Alfa mínimo para o pixel contar como tinta no recorte (descarta poeira). */
   cropMinAlpha: number
+  /**
+   * Pixels de tinta que uma linha (ou coluna) precisa ter para contar na caixa
+   * do recorte. Poeira, borda de foto e artefato de JPEG são de 1 ou 2 pixels e
+   * não esticam a caixa; um traço, mesmo fino, tem espessura de vários pixels.
+   */
+  cropMinInkPerLine: number
   /** Margem, em px da imagem de origem, entre a tinta e a borda do recorte. */
   margin: number
   maxWidth: number
@@ -70,6 +79,7 @@ export const DEFAULT_CLEAN_OPTIONS: CleanSignatureOptions = {
   inkFloor: 28,
   inkFull: 120,
   cropMinAlpha: 32,
+  cropMinInkPerLine: 3,
   margin: 8,
   maxWidth: SIGNATURE_MAX_WIDTH,
 }
@@ -136,6 +146,18 @@ function downscale(src: Raster, width: number): Raster {
   return { width, height, data: out }
 }
 
+/** Primeiro e último índice com tinta suficiente; [-1, -1] se nenhum. */
+function inkSpan(counts: Uint32Array, minInk: number): [number, number] {
+  let first = -1
+  let last = -1
+  for (let i = 0; i < counts.length; i++) {
+    if (counts[i] < minInk) continue
+    if (first < 0) first = i
+    last = i
+  }
+  return [first, last]
+}
+
 export function cleanSignature(
   input: Raster,
   options: Partial<CleanSignatureOptions> = {},
@@ -149,19 +171,19 @@ export function cleanSignature(
   const paper = estimatePaper(lums, o.paperPercentile)
 
   const alpha = new Uint8Array(pixels)
-  let minX = width, minY = height, maxX = -1, maxY = -1
+  const inkPerRow = new Uint32Array(height)
+  const inkPerCol = new Uint32Array(width)
   for (let p = 0; p < pixels; p++) {
     const a = rampAlpha(paper - lums[p], o)
     alpha[p] = a
     if (a < o.cropMinAlpha) continue
     const x = p % width
-    const y = (p - x) / width
-    if (x < minX) minX = x
-    if (x > maxX) maxX = x
-    if (y < minY) minY = y
-    if (y > maxY) maxY = y
+    inkPerCol[x]++
+    inkPerRow[(p - x) / width]++
   }
-  if (maxX < 0) throw new EmptySignatureError()
+  const [minY, maxY] = inkSpan(inkPerRow, o.cropMinInkPerLine)
+  const [minX, maxX] = inkSpan(inkPerCol, o.cropMinInkPerLine)
+  if (maxX < 0 || maxY < 0) throw new EmptySignatureError()
 
   const x0 = Math.max(0, minX - o.margin)
   const y0 = Math.max(0, minY - o.margin)

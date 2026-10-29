@@ -92,6 +92,37 @@ describe('cleanSignature', () => {
     expect(saida.height).toBe(100)
   })
 
+  it('pixels pretos isolados longe da assinatura nao esticam o recorte', () => {
+    // Poeira, borda de foto, sombra de dedo, artefato de JPEG: um ou dois pixels
+    // de tinta num canto nao podem arrastar a caixa ate la.
+    const r = papel(200, 100, 255)
+    retangulo(r, 80, 40, 40, 20, 0)
+    retangulo(r, 2, 2, 2, 1, 0) // dois pixels lado a lado
+    retangulo(r, 197, 97, 1, 1, 0) // um pixel so
+
+    const saida = cleanSignature(r, { margin: 5 })
+
+    expect(saida.width).toBe(40 + 2 * 5)
+    expect(saida.height).toBe(20 + 2 * 5)
+  })
+
+  it('so poeira, sem traco, lanca EmptySignatureError', () => {
+    const r = papel(100, 100, 255)
+    retangulo(r, 10, 10, 2, 1, 0)
+
+    expect(() => cleanSignature(r)).toThrow(EmptySignatureError)
+  })
+
+  it('caneta fraca e fina (3 px de espessura) nao e tratada como poeira', () => {
+    const r = papel(300, 100, 250)
+    retangulo(r, 50, 50, 200, 3, 170)
+
+    const saida = cleanSignature(r, { margin: 0 })
+
+    expect(saida.width).toBe(200)
+    expect(saida.height).toBe(3)
+  })
+
   it('o minimo do servidor e a largura maxima sao os do contrato', () => {
     expect(SIGNATURE_MIN_WIDTH).toBe(600)
     expect(SIGNATURE_MAX_WIDTH).toBe(1600)
