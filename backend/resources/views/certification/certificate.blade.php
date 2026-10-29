@@ -271,12 +271,12 @@
              nunca fica sozinho no fim da página. --}}
         .temario { border: 1px solid #c9c9c9; }
         .temario-cabecera { border-bottom: 1px solid #c9c9c9; display: flex; font-weight: 600; }
-        .temario-cabecera > div { font-size: 10.7px; line-height: 1.5; padding: 2.7mm 3.4mm; }
+        .temario-cabecera > div { font-size: 11.2px; line-height: 1.3; padding: 2.5mm 3.4mm; }
         .temario-cabecera > div:first-child { align-items: center; border-right: 1px solid #c9c9c9; display: flex; flex: 0 0 34%; font-weight: 700; }
         .temario-cabecera > div:last-child { flex: 1 1 0; min-width: 0; }
         .temario-cuerpo { padding: 0 4mm 7mm; }
-        .modulo { break-inside: avoid; margin-top: 1.3mm; }
-        .modulo + .modulo { margin-top: 2.7mm; }
+        .modulo { break-inside: avoid; margin-top: 2.8mm; }
+        .modulo + .modulo { margin-top: 2.5mm; }
         .modulo-titulo { break-after: avoid; font-size: 10.7px; font-weight: 600; }
         .modulo ul { list-style: disc; margin: 1.25mm 0 0; padding-left: 6mm; }
         .modulo li { font-size: 10.8px; line-height: 1.47; }
