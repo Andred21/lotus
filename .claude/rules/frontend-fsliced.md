@@ -32,7 +32,9 @@ Composição cruzada acontece na camada `app`/rota ou via API (ex.: `coursesApi`
 preenchido. Ref.: `app/pages/Administracion/AdministracionRoute.tsx` monta
 `<AdministracionPage configuracion={…<ConfiguracionTab />} />` com a aba de `features/certification`
 (`components/Settings/`). Nenhuma das duas features importa a outra; submódulo novo de Configuración
-entra no `ConfiguracionTab`, com a navegação lateral `AppSubNav` (`shared/ui`). **Validação QR pública** é a rota
+entra no `ConfiguracionTab`, com a navegação lateral `AppSubNav` (`shared/ui`).
+
+**Validação QR pública** é a rota
 `/validar/:uuid` desta SPA, fora do ramo protegido e do `SessionBootstrap` (spec D14/D19 da
 certificação); a API pública `/api/publico/certificados/{uuid}` responde sem cookie.
 

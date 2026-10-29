@@ -15,8 +15,10 @@ e atualizar este arquivo.
 - **Descrição depois:** com todos os nomes no teto, mais nota, asistencia e vigência, recebe o maior
   comprimento de `TextoRealista::prosa()` em que as assinaturas ficam na página 1. Temário de 8
   módulos de 3 marcadores (o "tamanho do aprovado").
-- Texto adversário (sem espaço, glifo `W`) fica fora do cálculo: pode levar as assinaturas para a
-  página 2, mas nunca perde texto.
+- Texto adversário (sem espaço, com o glifo largo próprio de cada campo) fica fora do cálculo: pode
+  levar as assinaturas para a página 2, mas nunca perde texto.
+- Os "máximos medidos" da tabela abaixo foram medidos com o texto anterior, antes de cada campo ganhar
+  o glifo e o passo de palavras próprios; não foram remedidos.
 
 ## Tetos
 
@@ -38,6 +40,10 @@ arredondamento à dezena deixa uma folga de 1 a 9 caracteres.
 ## Produção
 
 pendente — leitura de produção recusada pelo auto mode; o João roda scratchpad/medir-prod.php e o controlador preenche
+
+**Portão de merge.** Antes do merge, o João roda `medir-prod.php`; o controlador confere as folgas
+(nomes >= 1,5x o maior de produção; descrição >= maior de produção); se algum dado passar do teto, o
+bloco para e volta ao João.
 
 A coluna "maior de produção" acima e a conferência das folgas (nomes: teto >= 1,5x o maior valor de
 produção; descrição: teto >= o maior valor) ficam pendentes até lá. Se algum dado de produção passar

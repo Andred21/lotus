@@ -121,7 +121,7 @@ entra pelo encerramento da OS, não pela turma.
 - **Contexto total:** 28 tabelas — 21 de domínio, **todas implementadas** + 7 RBAC/transversal (as
   5 do Spatie mais `files` e `audits`, que esta lista classifica como Transversal). O número caiu de
   28 para 27 no merge de 2026-08-22: `feedbacks` era a única "no papel" e deixou de existir como
-  tabela por decisão do `feedbacks-resolver-escopo` (ver `### Feedback` acima). Implementadas:
+  tabela por decisão do `feedbacks-resolver-escopo` (ver `### Feedback` acima). Esse "caiu de 28 para 27" é histórico: o número atual é 28, depois de `certificate_settings` (bloco 40). Implementadas:
   users, clients, client_addresses, client_contacts, redatores, **students**,
   **student_client_logs**, **login_logs**, **invitation_tokens**, courses,
   course_certificate_templates, course_modules, course_redator, budgets, quotes, files, audits,

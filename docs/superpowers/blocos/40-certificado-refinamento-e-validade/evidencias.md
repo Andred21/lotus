@@ -1,6 +1,7 @@
 # Bloco 40 — Evidências
 
-> Registro da Task 14, 2026-10-29, sobre `dcf04675` (HEAD da lane na hora da medição). Stack da lane
+> Registro da Task 14, 2026-10-29, sobre `dcf04675`, atualizado na onda de correção da revisão final
+> (achado A refeito com o código final, gates no HEAD final). Stack da lane
 > no offset +1 (front `http://localhost:5174`, backend via nginx `http://localhost:8081`), Gotenberg
 > `8.36.0` (Chromium 151). O que é prova de teste aponta o teste; o que é inspeção visual diz o
 > comando e o que se viu. Os PNGs e as capturas do smoke ficam em `/tmp/task14/`, fora do repositório.
@@ -16,12 +17,14 @@
   fica na lista da Lotus da `validade.md`. O resto dos fatos 6 e 7 se sustentou, com uma ressalva
   de redação no art. 5 da Ley 19.799 (original vs vigente) descrita na `validade.md` §3.
 - **Medição de produção da Task 6: pendente.** Leitura de produção recusada pelo auto mode;
-  aguardando o João. Enquanto não vier, a coluna "maior de produção" da `matriz.md` segue
-  "pendente", e a conferência das folgas (nomes: teto >= 1,5x o maior valor de produção;
-  descrição: teto >= o maior valor) não foi feita. Se algum dado existente passar de um teto, o
-  bloco para e a decisão é do João (spec §4.5).
-- **Calibração da limpeza da assinatura com foto de celular real: fica para a aceitação do João.**
-  Não havia foto real; o smoke usou imagens sintéticas (§4). Os limiares estão em
+  aguardando o João. **É portão de merge:** antes do merge, o João roda `medir-prod.php`; o
+  controlador confere as folgas (nomes >= 1,5x o maior de produção; descrição >= maior de produção);
+  se algum dado passar do teto, o bloco para e volta ao João. Enquanto não vier, a coluna
+  "maior de produção" da `matriz.md` segue "pendente", e a conferência das folgas não foi feita (spec §4.5).
+- **Calibração da limpeza da assinatura com foto de celular real: item 4 da Verificação externa
+  (`aceitacao.md`), do João.** Não havia foto real; o smoke usou imagens sintéticas (§4), e a foto
+  sintética de gradiente forte, que falhava na Task 14, passa limpa com o código final (achado A,
+  resolvido nas rodadas 3 e 4 da Task 8, `7dadbe4b` e `ce7257f2`). Os limiares estão em
   `CleanSignatureOptions` (`shared/lib/signature/cleanSignature.ts`) e se ajustam sem mexer no resto.
 
 ## 2. Inspeção visual do layout v5 (Task 5)
@@ -147,28 +150,33 @@ Roteiro e resultado:
 | # | Passo | Resultado | Captura |
 |---|---|---|---|
 | 1 | Superadmin em Administración | aba **Settings** visível (rótulo EN de Configuración) | `/tmp/task14/02-admin.png`, `03-config.png` |
-| 2 | Gerente: `assinatura-foto.png` (foto, gradiente forte) | prévia transparente, mas **sobra o retângulo cinza do gradiente à direita e a sombra do canto**; recorte não é rente à tinta (ver achado A) | `04-gerente-previa-foto.png` |
+| 2 | Gerente: `assinatura-foto.png` (foto, gradiente forte) | **antes de `7dadbe4b`:** prévia transparente, mas sobrava o retângulo cinza do gradiente à direita e a sombra do canto (achado A). Não repetido na tela da gerente; o código é o mesmo e o passo 11 refaz o caminho com a mesma foto | `04-gerente-previa-foto.png` |
 | 3 | Gerente: `assinatura-foto-suave.png`, "Use this signature" | prévia limpa, fundo transparente, recorte rente à tinta (as manchas de 4 a 16 px ficam e alargam o recorte à direita); aceita pelo servidor, 64 KB, "Settings saved" e "Signature saved" | `05-gerente-previa-foto-suave.png`, `06-gerente-salva.png` |
-| 4 | Dialog do redator (People › Instructors › Juan Morales › Edit): foto forte | mesma prévia do passo 2 (cinza e sombra) | `10-dialog-previa-foto-forte.png` |
+| 4 | Dialog do redator (People › Instructors › Juan Morales › Edit): foto forte | **antes de `7dadbe4b`:** mesma prévia do passo 2 (cinza e sombra); refeito no passo 11 | `10-dialog-previa-foto-forte.png` |
 | 5 | Dialog do redator: `assinatura-scan.png`, "Use this signature" | prévia limpa e rente, fundo transparente; aceita, 24 KB; slot "Signature" sem tag de status | `11-dialog-previa-scan.png`, `12-dialog-firma-salva.png` |
-| 6 | Meu Perfil (Pedro Soto, papel redator): foto forte, "Use this signature" | o slot "Signature" existe no perfil; a imagem é aceita pelo servidor (737 KB, abaixo do teto de 1 MB), "Document uploaded", **com o cinza e a sombra do achado A** | `14-perfil-previa-foto-forte.png`, `15-perfil-firma-salva.png` |
+| 6 | Meu Perfil (Pedro Soto, papel redator): foto forte, "Use this signature" | o slot "Signature" existe no perfil; a imagem é aceita pelo servidor (737 KB, abaixo do teto de 1 MB), "Document uploaded", **com o cinza e a sombra do achado A** (código anterior a `7dadbe4b`; o passo 11 substituiu essa assinatura) | `14-perfil-previa-foto-forte.png`, `15-perfil-firma-salva.png` |
 | 7 | Admin comum (`admin2@lotus.cl`) em Administración | só a aba **Users**; sem **Settings** (a aba Roles também some, só do superadmin); `GET /api/certificate-settings` devolve **403** | `16-admin-sem-aba.png` |
 | 8 | Painel de emissão (Certificates › Issuance), turma "Seguridad en alta tensión · Enel Distribución", aluna Camila Gallardo, redator Ana Reyes (sem `FIRMA`) | aviso amarelo: "Ana Reyes has no signature uploaded. The certificate will come out with a blank space above the line and the name below it, to be signed by hand." A emissão segue (botão "Confirm issuance") | `21-emision-dialog.png` |
 | 9 | Emissão | `LOT-2026-1002` emitido, "Download PDF" | `22-emitido.png` |
 | 10 | Assinatura viva (D5): sobe a `FIRMA` (scan) de Ana Reyes pelo dialog e baixa de novo o PDF de `LOT-2026-1002` | o mesmo certificado, já emitido, agora sai com a assinatura dela | `23-ana-firma.png`, `/tmp/task14/cert3b-1.png` |
 
-A foto de celular **real** não foi testada (decisão do controlador); o resultado com a foto sintética
-de gradiente forte abaixo é o motivo de a aceitação do João precisar de uma.
+| 11 | Refeito com o código final (`ce7257f2`), na onda de correção da revisão final: dialog do redator (People › Instructors › Pedro Soto › Edit › Replace signature), `assinatura-foto.png` (3000x1100, gradiente forte), "Use this signature"; depois `GET /api/certificates/2/pdf` de `LOT-2026-1001` (instrutor Pedro Soto) e `pdftoppm -r 110` | prévia sem fundo cinza, sem sombra e com o traço inteiro (1600x560 de saída; 737 KB viraram 63 KB no servidor, que substituiu a `FIRMA` antiga, soft-deleted); o PDF sai com a assinatura limpa (achado A, resolvido) | `/tmp/task14/i1-previa-foto.png`, `i1-dialog-subiu.png`, `i1-cert-1.png`, `i1-cert-2.png`, `i1-zoom2-1.png` |
 
-**Achado A (limpeza de foto com iluminação desigual).** Com `assinatura-foto.png` a limpeza deixa uma
-mancha cinza em retângulo à direita do traço e a sombra escura do canto, porque o papel é estimado como
-um valor único (percentil 90 da luminância, ver `task-8-report.md`) e o gradiente forte passa da rampa
-(`inkFloor = 28`). Isso chega ao PDF: em `LOT-2026-1001` (instrutor Pedro Soto, que subiu essa foto) o
-bloco cinza e a sombra aparecem atrás do traço, mesmo com `mix-blend-mode: multiply` (ver §5). O caso
-sintético é severo (o papel cai ~85 níveis de cinza de um canto ao outro; foto de celular com luz
-razoável tende a cair bem menos); com o gradiente suave o resultado foi limpo. A decisão de ajustar o
-algoritmo (papel adaptativo, por região) ou os limiares, e com que foto, é da aceitação do João. A
-rampa é configurável em `CleanSignatureOptions`.
+A foto de celular **real** não foi testada (decisão do controlador); ela é o item 4 da Verificação
+externa (`aceitacao.md`), do João.
+
+**Achado A (limpeza de foto com iluminação desigual): resolvido.** Na Task 14, com
+`assinatura-foto.png` (o papel cai ~85 níveis de cinza de um canto ao outro, mais uma sombra no canto
+inferior esquerdo) a limpeza deixava um retângulo cinza à direita do traço e a sombra, porque o papel
+era estimado como um valor único (percentil 90) e o gradiente passava da rampa (`inkFloor = 28`); o
+defeito chegava ao PDF de `LOT-2026-1001`. Os commits `7dadbe4b` (papel estimado por região, manchas
+pequenas apagadas) e `ce7257f2` (limiar de mancha relativo à espessura do traço) trocaram a limpeza.
+Refeito no passo 11 com o código final: a prévia sai transparente, sem cinza e sem sombra, com o traço
+inteiro e o recorte rente à tinta; e o PDF de `LOT-2026-1001` mostra a assinatura de Pedro Soto limpa
+sobre o traço, sem retângulo nem sombra (§5). Sobram ~7 pontos soltos de 1 a 2 px perto do traço
+(visíveis só a 220 dpi); são a poeira do papel sintético que ficou acima do limiar relativo. O caso
+sintético é mais severo que uma foto razoável de celular, mas só uma foto real prova a calibração:
+item 4 da Verificação externa, do João. Os parâmetros estão em `CleanSignatureOptions`.
 
 **Achado B (visual, menor).** Em Administración › Settings, o conteúdo do submódulo (a frase "This
 setting applies to all certificates…") encosta na linha da barra de abas, sem respiro no topo
@@ -200,14 +208,18 @@ O que se viu, lendo os PNGs:
 - **Cidade:** "Santiago" vem de `config('app.certificate_issuer.city')`; não há local da turma na
   frase (D9, D13).
 - **Gerente:** em todos, "Marcia de Batalha / Gerente OTEC" à esquerda, com a assinatura da foto suave
-  sobre o traço, fundo transparente (sem retângulo). O recorte inclui as manchas pequenas: aparecem
-  alguns pontinhos soltos perto do traço (achado da prévia, passo 3).
+  sobre o traço, fundo transparente (sem retângulo). Esses PDFs são da Task 14, com a gerente subida
+  antes de `7dadbe4b`: o recorte incluía as manchas pequenas, e aparecem alguns pontinhos soltos perto
+  do traço. No `LOT-2026-1001` refeito (passo 11) a gerente ainda é essa assinatura antiga.
 - **Instrutor, à direita, "Instructor" sob o nome:**
   - `LOT-2026-1000` e `LOT-2026-1002` (primeiro download): caixa vazia sobre o traço, nome e cargo
     embaixo, para assinar à mão (D6). O resto da página não se move.
-  - `LOT-2026-1001`: assinatura de Pedro Soto (foto forte) sobre o traço, **com o retângulo cinza do
-    gradiente e a sombra do canto visíveis atrás do traço** (achado A). Com `multiply` o cinza fica
-    mais claro, mas continua visível sobre o fundo claro do certificado.
+  - `LOT-2026-1001`: na Task 14, a assinatura de Pedro Soto (foto forte) saía com o retângulo cinza e
+    a sombra do canto atrás do traço (achado A). **Refeito com o código final (passo 11):** reimpresso
+    depois de subir a mesma foto, o PDF (2 páginas) mostra a assinatura de Pedro Soto limpa sobre o
+    traço, sem cinza, sem sombra e sem perder traço, com uns 7 pontos soltos de 1 a 2 px ao redor
+    (`/tmp/task14/i1-cert-1.png`, ampliada em `i1-zoom2-1.png`). A tabela acima segue com a linha
+    original; a `FIRMA` de Pedro Soto agora é a do passo 11.
   - `LOT-2026-1002` depois de a `FIRMA` (scan) ser subida: a assinatura aparece, limpa, sem fundo,
     apoiada no traço. O mesmo certificado, emitido sem ela, sai com ela sem nenhuma mudança no
     snapshot (D5).
@@ -218,16 +230,19 @@ O que se viu, lendo os PNGs:
 
 ## 6. Gates
 
-Rodados na lane em `dcf04675` + as edições de docs desta task (nenhuma toca PHP ou TS).
+Medidos no HEAD final da branch, depois da onda de correção da revisão final: o código está em
+`6c6864f5` (`fix(40): sonda do Gotenberg falha em vez de pular...`) e os commits seguintes só tocam
+docs, então os números valem para o HEAD. Antes da onda (Task 14, `dcf04675`): suíte `1567 passed`,
+frontend `1388 passed`.
 
 | Gate | Comando | Resultado |
 |---|---|---|
-| Suíte backend inteira | `docker compose exec -T app php artisan test` | `Tests: 5 skipped, 1567 passed (12328 assertions)`, 107,04 s |
-| Matriz no Gotenberg real | `... --filter=CertificadoMatrizGotenbergTest` | `47 passed (2078 assertions)` |
-| Emitido intacto | `... --filter=CertificadoEmitidoIntactoTest` | `3 passed (13 assertions)` |
-| Pint nos PHP tocados pelo bloco | `git diff --name-only --diff-filter=AM 0c09fa4f..HEAD -- 'backend/*.php'` (82 arquivos), de dentro de `backend/`, `./vendor/bin/pint --test <arquivos>` | 79 arquivos: `{"result":"passed"}`. Os 3 `lang/{en,es_CL,pt_BR}/validation.php` reprovam em `binary_operator_spaces` (o alinhamento do `=>`), **igual no `0c09fa4f`**: conferi o arquivo da base e ele reprova do mesmo jeito. O bloco acrescentou 4 linhas no mesmo estilo alinhado do arquivo; reformatar tocaria o arquivo todo, fora do escopo |
-| `pnpm build` | de `frontend/` | `✓ built in 1.33s` (só o aviso de chunk grande que já existia) |
+| Suíte backend inteira | `docker compose exec -T app php artisan test` | `Tests: 5 skipped, 1568 passed (12336 assertions)`, 124,95 s |
+| Matriz no Gotenberg real | `... --filter=CertificadoMatrizGotenbergTest` | `47 passed (2078 assertions)`. A sonda agora falha (não pula) com o host resolvendo e o serviço fora do ar: provado com `GOTENBERG_URL=http://nginx:9` (falha com a mensagem) e `http://nao-existe-xyz:3000` (host não resolve: pulado) |
+| Auditoria da firma da gerente | `... --filter=CertificateSettingsTest` | `10 passed (47 assertions)`; o teste novo passou de primeira, porque o código já audita (`created`, `deleted` na troca e na remoção) |
+| Pint nos PHP tocados pela onda | de dentro de `backend/`, `./vendor/bin/pint tests/Support/ProbesGotenberg.php tests/Feature/Certification/CertificateSettingsTest.php config/app.php` | `{"result":"passed"}`. Os 3 `lang/{en,es_CL,pt_BR}/validation.php` seguem reprovando o `--test`, igual no `0c09fa4f` (preexistente, fora do escopo) |
+| `pnpm build` | de `frontend/` | `✓ built in 1.22s`, exit 0 |
 | `pnpm lint` | de `frontend/` | `eslint .`, saída vazia, exit 0 |
-| `pnpm test` | de `frontend/` | `Test Files 195 passed (195)`, `Tests 1388 passed (1388)`, 82 s. O `tests/sondar-saude.test.ts` passou de primeira |
+| `pnpm test` | de `frontend/` | `Test Files 195 passed (195)`, `Tests 1397 passed (1397)`, exit 0 |
 
-Docs: `lane.sh` e a auditoria de docs não foram rodados nesta task (fora do brief).
+Docs: `lane.sh` e a auditoria de docs não foram rodados nesta onda (fora do brief).

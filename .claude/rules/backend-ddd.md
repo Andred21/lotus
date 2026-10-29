@@ -25,7 +25,8 @@ de serviço. Ver `docs/der-fisico.md` §Feedback. Não crie o domínio.
 
 **Estado atual:** Identity, Commercial, Catalog, Operation e Certification têm código real.
 `Certification/` tem Actions (emissão, lote, revogação, `CertificateSettings` da gerente), Services
-(PDF via Gotenberg, snapshot, assinaturas vivas, tetos do texto impresso), Models, Data e a rota
+(PDF via Gotenberg, snapshot, assinaturas vivas; os tetos do texto impresso moram em
+`App\Shared\Support\TetosImpressos`), Models, Data e a rota
 pública de validação (bloco 40: layout v5, `FIRMA` do redator, Configuración › Certificados). Crie a
 estrutura de um domínio só quando ele entra em desenvolvimento.
 

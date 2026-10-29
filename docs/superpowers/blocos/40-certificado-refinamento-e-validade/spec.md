@@ -333,6 +333,10 @@ depender só da cidade do emissor (D9): se a config estiver vazia, continua recu
 3. Depois do deploy, um certificado já emitido em produção é reimpresso e sai em 2 páginas, com as
    duas assinaturas, no layout v5 (smoke do João; o PDF exige sessão).
    - prova: nenhuma
+4. Depois do deploy, a assinatura da Marcia e a de um redator real são subidas a partir de uma foto
+   de celular. A prévia sai sem fundo cinza, sem sombra e sem perder traço. Se não sair, ajuste
+   `CleanSignatureOptions` (o comentário em `cleanSignature.ts` diz quais parâmetros).
+   - prova: nenhuma
 
 ## 6. Não-objetivos
 
