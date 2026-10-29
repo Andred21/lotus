@@ -106,6 +106,9 @@
   separada**: desvio da invariante 10 decidido pelo João, para não abrir duas branches, duas
   worktrees e duas PRs. O portão do `lane.sh abrir` leu a ficha de uma cópia provisória no
   `backlog.md` do main tree, desfeita assim que a lane abriu.
+  O `43` nasceu em 2026-10-28, aberto pelo João a partir do diálogo de matrícula da Operación, que
+  empilhava os campos: a moldura dos diálogos e o tipo dos documentos do orçamento. Entrou pela PR
+  da própria lane, com o mesmo desvio da invariante 10 e a mesma cópia provisória do `42`.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -161,6 +164,62 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 ---
 
 # Fila priorizada
+
+## 43. `frontend-dialogos-proporcionais-e-tipo-de-documento`
+
+**Prioridade:** P2 (a posição na fila é do João) · **Frente:** Frontend (+ Comercial, backend leve) · **Contexto:** não · **Depende:** —
+**Fonte:** pedido do João em 2026-10-28; levantamento só leitura contra `main@0c09fa4f`:
+`shared/ui/AppDialog/style.ts:6-11`, `AppDialog.tsx:58`, `ConfirmDialog.tsx:32-39`,
+`StudentIdentifyFields.tsx:21`, `FormPhotoRow.tsx:25-39`, `EnrollStudentForm.tsx:27-66`,
+`MoveConfirmDialog.tsx:26-37`, `brand-theme.css:11,24-25`, `BudgetDocumentsCard.tsx:36-52`,
+`BudgetFileController.php:23`, `useCommercialFiles.ts:9`; `P-94`.
+
+**Por que existe:** todo diálogo herda a mesma moldura: o `AppDialog` liga `maximizable` fixo e uma
+largura única (`95vw / 85vw / 70vw`), então uma confirmação de duas linhas abre do tamanho de um
+formulário e maximiza. O `ConfirmDialog` só conhece marca e `danger`; o único aviso
+(`MoveConfirmDialog`) é feito à mão. Formulários empilham: o diálogo de Alumno põe nome e RUT em
+`sm:grid-cols-1` (o docblock promete 2×2), o `FormPhotoRow` é coluna abaixo de `lg`, e o
+`EnrollStudentForm` da Operación não tem grade. Header e footer usam `--surface-section` (branco no
+claro), enquanto sidebar e navbar usam `--brand-navy`. No orçamento, o tipo do documento se escolhe
+num `AppDropdown` ao lado do upload, e a lista não mostra o tipo depois.
+
+**Objetivo:** diálogos com tamanho proporcional ao conteúdo, em famílias distinguíveis à primeira
+vista — padrão, confirmação, aviso, destrutivo — e documento do orçamento etiquetado pelo tipo
+escolhido num diálogo, com a tag visível na lista.
+
+**Escopo:**
+- **Diálogo padrão:** header e footer na cor do shell (`--brand-navy` + `--shell-ink`, foco
+  redeclarado como no sidebar), nos dois temas; largura por variante no lugar dos 70vw únicos;
+  decidir se o maximizar fica só no grande.
+- **Diálogo compacto de confirmação:** primitivo em `shared/ui`, pequeno, sem maximizar, variantes
+  `confirm`, `warning` e `danger` (delete/arquivar), diferenciadas por ícone, cor e rótulo, não só
+  pelo botão. Migrar `ConfirmDialog`, `ArchiveConfirmDialog`, `MoveConfirmDialog`,
+  `ConfirmIssueDialog`, `RevokeDialog` e demais consumidores.
+- **Proporção dos formulários:** grade organizada no diálogo de Alumno (`StudentIdentityFields`,
+  `StudentClientField`, `FormPhotoRow`) e no `EnrollStudentForm`, e nos que empilham sem motivo
+  (`RedatorIdentityFields`, `RegisterResultDialog`, `ImportDialog`); botões no `footer`, não no
+  corpo. Paga a `P-94`.
+- **Tipo do documento do orçamento:** o `AppDropdown` vira um diálogo de escolha do tipo no
+  upload; o arquivo sobe com o tipo em `files.type` e a lista mostra o tipo como `AppTag`. Decidir no
+  brainstorming: (a) se `orden de compra` vira tipo de arquivo (hoje é só o texto
+  `quotes.purchase_order`; o backend aceita só `invoice` e `receipt`); (b) se a validação sai do
+  `in:` literal para um enum do domínio Comercial, no molde do `TurmaDocumentType`, com
+  `generated.ts` regenerado e o `BudgetFileType` escrito à mão removido.
+
+**Fora:** conteúdo das telas atrás dos diálogos; o fluxo do `QuoteWizard`; o documento da cotação
+(`quote_document`); o texto da `P-104`.
+
+**Restrições:** lei 6 (sem PrimeReact nas features); lei 3 (`generated.ts` só regenerado); lei 7 /
+RN-14 (anexo ausente nunca bloqueia aprovar); tinta sobre o navy passa AA (régua do
+`tone-ink.test.ts`).
+
+**DoD:** vitest do primitivo prova tamanho, ausência de maximizar no compacto e severidade; nenhuma
+confirmação usa a moldura de formulário; diálogo de Alumno e `EnrollStudentForm` medidos em 1024x768
+e 1440 sem nome/RUT empilhados e sem rolagem lateral (fecha a P-94); header/footer no navy com
+contraste AA medido nos dois temas; factura e comprobante sobem pelo diálogo, gravam o tipo e
+aparecem com a tag na lista, com teste Feature e vitest; `lotus-ui-review` nas telas tocadas.
+
+---
 
 ## 42. `infra-producao-higiene-e-manutencao`
 
