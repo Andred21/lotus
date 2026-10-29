@@ -24,7 +24,37 @@ function retangulo(r: Raster, x0: number, y0: number, w: number, h: number, cinz
   }
 }
 
+/** Disco de diametro `d` centrado em (cx, cy): o pixel entra se o centro dele cai dentro. */
+function disco(r: Raster, cx: number, cy: number, d: number, cinza: number) {
+  const raio = d / 2
+  for (let y = Math.floor(cy - raio); y <= Math.ceil(cy + raio); y++) {
+    for (let x = Math.floor(cx - raio); x <= Math.ceil(cx + raio); x++) {
+      if ((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2 <= raio * raio) {
+        r.data.set([cinza, cinza, cinza, 255], (y * r.width + x) * 4)
+      }
+    }
+  }
+}
+
 const alfaEm = (r: Raster, x: number, y: number) => r.data[(y * r.width + x) * 4 + 3]
+
+/**
+ * Foto de 3400 px com caneta de 11 px. Corpo em L com o pe dominante (caixa de
+ * 3200 x 512, x 100..3299, y 199..710), pingo de i de 1,5 w de diametro (208
+ * px, ~1,7 w2) 31 px acima da base, e manchas de 2, 3 e 4 px de lado (4, 9 e 16
+ * px, todas abaixo de 0,5 w2 = 60). Sem margem, o recorte de 3200 px sai pela
+ * METADE: o ponto (x, y) da foto vai a ((x - 100) / 2, (y - 199) / 2).
+ */
+function fotoComPingo(): Raster {
+  const r = papel(3400, 800, 250)
+  retangulo(r, 100, 700, 3200, 11, 20) // linha de base
+  retangulo(r, 100, 199, 11, 501, 20) // haste, ligada a base
+  disco(r, 1700, 661, 16.5, 20) // pingo: sai em (800, 231)
+  retangulo(r, 900, 401, 2, 2, 20) // manchas: saem em (400, 101), (1100, 126) e (1400, 51)
+  retangulo(r, 2300, 451, 3, 3, 20)
+  retangulo(r, 2900, 301, 4, 4, 20)
+  return r
+}
 
 /** Papel com luz desigual: `de` num canto e `ate` no oposto, mais sombra opcional num canto. */
 function papelComSombra(width: number, height: number, de: number, ate: number, sombra = 0): Raster {
@@ -150,14 +180,16 @@ describe('cleanSignature', () => {
   })
 
   it('parte desconexa pequena (pingo de i, 4x4) fica dentro da caixa', () => {
+    // Caneta de 4 px: o pingo 4x4 vale 1 w2. Com o corpo de 20 px de antes ele
+    // seria 0,04 w2, poeira para a regra da rodada 4.
     const r = papel(300, 200, 255)
-    retangulo(r, 50, 100, 100, 20, 0)
+    retangulo(r, 50, 100, 100, 4, 0)
     retangulo(r, 230, 40, 4, 4, 0) // pingo longe do corpo
 
     const saida = cleanSignature(r, { margin: 0 })
 
     expect(saida.width).toBe(234 - 50)
-    expect(saida.height).toBe(120 - 40)
+    expect(saida.height).toBe(104 - 40)
   })
 
   it('gradiente forte de sombra (250 a 150): fundo inteiro some e o recorte fica rente', () => {
@@ -219,28 +251,81 @@ describe('cleanSignature', () => {
     expect(sobra).toBe(0)
   })
 
-  it('numa foto grande a mancha de ate ~100 px de area tambem some, o traco nao', () => {
+  it('mancha do tamanho do traco (10x10 com caneta de 10 px) fica: por area e um pingo de i', () => {
+    // A rodada 3 apagava esta mancha pela area da caixa do corpo. 1 w2 ja passa
+    // do toque da caneta no papel (disco de diametro w, ~0,8 w2): perder tinta
+    // e pior que deixar poeira (ruling da rodada 4).
     const r = papel(1600, 600, 255)
     retangulo(r, 50, 50, 1500, 10, 0) // corpo em L: caixa de 1500 x 500
     retangulo(r, 50, 50, 10, 500, 0)
-    retangulo(r, 800, 300, 10, 10, 0) // mancha de 100 px dentro da caixa
+    retangulo(r, 800, 300, 10, 10, 0) // 100 px = 1 w2, dentro da caixa
 
     const saida = cleanSignature(r, { margin: 0 })
 
     expect(saida.width).toBe(1500)
     expect(saida.height).toBe(500)
-    expect(alfaEm(saida, 750, 250)).toBe(0) // a mancha
+    expect(alfaEm(saida, 755, 255)).toBe(255) // a mancha
     expect(alfaEm(saida, 5, 250)).toBe(255) // o traco vertical
   })
 
-  it('o pingo 4x4 de um i continua la, com alfa pleno', () => {
-    const r = papel(300, 200, 255)
-    retangulo(r, 50, 100, 100, 20, 0)
-    retangulo(r, 230, 40, 4, 4, 0)
+  it('foto de 3400 px com caneta de 11 px: o pingo do i (1,5 w) continua, com alfa pleno', () => {
+    // A rodada 3 apagava tudo abaixo de 2e-4 x a caixa do corpo (328 px aqui),
+    // e o pingo de 208 px sumia. Agora o limiar e 0,5 x 11^2 = 60,5 px.
+    const saida = cleanSignature(fotoComPingo(), { margin: 0 })
+
+    expect(saida.width).toBe(1600)
+    expect(saida.height).toBe(256)
+    expect(alfaEm(saida, 800, 231)).toBe(255)
+  })
+
+  it('na mesma foto, as manchas de 2 a 4 px (menos de 0,5 w2) somem, sem resto visivel', () => {
+    const saida = cleanSignature(fotoComPingo(), { margin: 0 })
+
+    // Fora da haste (x < 6), da base (y >= 250) e do pingo nao sobra nada visivel.
+    let sobra = 0
+    for (let y = 0; y < 250; y++) {
+      for (let x = 6; x < saida.width; x++) {
+        const noPingo = x >= 795 && x < 806 && y >= 226 && y < 237
+        if (!noPingo && alfaEm(saida, x, y) > 0) sobra++
+      }
+    }
+    expect(sobra).toBe(0)
+    expect(alfaEm(saida, 2, 120)).toBe(255) // a haste continua
+  })
+
+  it('traco fino de 2 px numa caixa grande: vale o piso, o pingo 4x4 fica e a poeira de 1 a 4 px some', () => {
+    // Haste dominante (vertical) de 2 px: w = 2, k x w2 = 2 e o piso 6 decide.
+    // A rodada 3 cobrava 2e-4 x a caixa de 200 x 600 (24 px) e apagava o pingo.
+    const r = papel(400, 800, 255)
+    retangulo(r, 100, 50, 2, 600, 0) // haste: x 100..101, y 50..649
+    retangulo(r, 100, 648, 200, 2, 0) // pe: x 100..299, y 648..649
+    retangulo(r, 200, 300, 4, 4, 0) // pingo 4x4 (16 px)
+    retangulo(r, 150, 200, 1, 1, 0) // poeira de 1, 2 e 4 px
+    retangulo(r, 250, 450, 2, 1, 0)
+    retangulo(r, 180, 550, 2, 2, 0)
 
     const saida = cleanSignature(r, { margin: 0 })
 
-    expect(alfaEm(saida, 232 - 50, 42 - 40)).toBe(255)
+    expect(saida.width).toBe(200)
+    expect(saida.height).toBe(600)
+    expect(alfaEm(saida, 101, 251)).toBe(255) // o pingo
+    expect(alfaEm(saida, 50, 150)).toBe(0) // a poeira
+    expect(alfaEm(saida, 150, 400)).toBe(0)
+    expect(alfaEm(saida, 151, 400)).toBe(0)
+    expect(alfaEm(saida, 81, 501)).toBe(0)
+  })
+
+  it('o corpo (a maior mancha) nunca e apagado, nem com o limiar relativo exagerado', () => {
+    const r = papel(300, 200, 255)
+    retangulo(r, 50, 100, 200, 10, 0) // corpo: 2000 px, caneta de 10 px
+    retangulo(r, 50, 150, 100, 10, 0) // segunda peca: 1000 px
+
+    // 100 w2 = 10000 px: as duas pecas ficam abaixo, mas so a segunda pode cair.
+    const saida = cleanSignature(r, { margin: 0, cropMinComponentStrokeArea: 100 })
+
+    expect(saida.width).toBe(200)
+    expect(saida.height).toBe(10)
+    expect(alfaEm(saida, 100, 5)).toBe(255)
   })
 
   it('so poeira, sem traco, lanca EmptySignatureError', () => {

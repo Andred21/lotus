@@ -49,12 +49,13 @@ export class UnsupportedImageError extends Error {
  *    estimado), que precisa sumir por inteiro.
  * O piso fica em 28 (acima do ruído sintético, abaixo da caneta fraca) e o teto
  * da rampa em 120. Desde o smoke da Task 14 o papel é um MAPA por blocos de 32
- * px (gradiente de luz e sombra de dedo), e as manchas pequenas são apagadas.
- * Validado nas três imagens SINTÉTICAS do smoke (foto com gradiente forte e
- * sombra no canto, foto com gradiente suave, scan): fundo transparente, sem
- * retângulo cinza e recorte rente. Segue faltando assinatura de papel real,
- * fotografada por celular; o ajuste, se for preciso, é nestes defaults, em
- * `CleanSignatureOptions`, sem mexer no resto.
+ * px (gradiente de luz e sombra de dedo), e as manchas menores que meio quadrado
+ * da caneta são apagadas. Nas três imagens SINTÉTICAS do smoke (foto com
+ * gradiente forte e sombra no canto, foto com gradiente suave, scan) o fundo sai
+ * transparente, sem retângulo cinza, e a assinatura sai inteira; nas duas fotos
+ * ficam as manchas do tamanho do traço (`cropMinComponentStrokeArea`). Segue
+ * faltando assinatura de papel real, fotografada por celular; o ajuste, se for
+ * preciso, é nestes defaults, em `CleanSignatureOptions`, sem mexer no resto.
  */
 export interface CleanSignatureOptions {
   /** Percentil da luminância, dentro de cada bloco, que representa o papel (0..1). */
@@ -63,7 +64,7 @@ export interface CleanSignatureOptions {
    * Lado mínimo, em px, do bloco em que o papel é estimado. O papel é um MAPA,
    * não um número: foto de celular tem gradiente de luz e sombra de dedo, e um
    * valor único deixava um retângulo cinza atrás da assinatura (smoke da Task
-   * 14). Em imagem grande o bloco cresce para a grade não passar de 64 células
+   * 14). Em imagem grande o bloco cresce para a grade não passar de 256 células
    * no lado maior.
    */
   paperBlock: number
@@ -83,20 +84,26 @@ export interface CleanSignatureOptions {
   cropMinAlpha: number
   /**
    * Tamanho mínimo, em pixels, de uma mancha de tinta (componente conexo, vizinhança
-   * 8). Piso absoluto: poeira de 1 a 4 px (e 5) cai; um pingo de i de 3x3 (~9 px)
-   * fica. Traço fino ligado ao corpo é do mesmo componente e nunca é cortado.
+   * 8). Piso absoluto: poeira de 1 a 5 px cai sempre; um pingo de i de 3x3 (~9 px)
+   * fica. Traço fino ligado ao corpo é do mesmo componente e nunca é cortado. Se
+   * nem o corpo chega a este piso, a imagem só tem poeira.
    */
   cropMinComponentPx: number
   /**
-   * Mínimo RELATIVO da mancha: fração da área da caixa da maior mancha (o corpo
-   * da assinatura). Foto de celular tem pontinhos de 4 a 16 px de diâmetro (até
-   * ~200 px de área em 3000 px de largura), que o piso absoluto não pega. O
-   * limiar efetivo é max(`cropMinComponentPx`, razão x área da caixa do corpo):
-   * em 600 px de largura dá o próprio piso, em 3000 px dá ~250 px de área (cai
-   * mancha de até ~17 px de diâmetro). O custo é o pingo de i abaixo disso, que
-   * também cai: a razão é o botão se o smoke mostrar pingo sumindo.
+   * Mínimo RELATIVO da mancha, em múltiplos de w², onde w é a espessura da caneta
+   * medida no corpo (a maior mancha). O limiar efetivo é
+   * max(`cropMinComponentPx`, k x w²), e o corpo nunca cai por ele.
+   * Calibração (rodada 4): o menor ponto que a caneta deixa é um disco de
+   * diâmetro w (~0,8 w²) e o pingo de um i tem ~1,5 a 2 w²; poeira tem menos que
+   * w². Com k = 0,5 cai só o que não chega a meio quadrado da caneta. O w medido
+   * lê até ~1,4 w num traço a 45°, e aí o limiar efetivo vai a ~1 w²: ainda
+   * abaixo do pingo. O que fica entre o limiar e o pingo é mancha do tamanho do
+   * traço, que por área não se separa de tinta: perder tinta é pior que deixar
+   * poeira, e a prévia mostra o que ficou. Nas fotos do smoke (w medido 9, limiar
+   * 40 px) caem as 5 manchas de 13 e 37 px; as 9 de 57 a 221 px (0,7 a 2,7 w²)
+   * ficam visíveis e alargam o recorte, que é a união das manchas que sobram.
    */
-  cropMinComponentRatio: number
+  cropMinComponentStrokeArea: number
   /** Margem, em px da imagem de origem, entre a tinta e a borda do recorte. */
   margin: number
   maxWidth: number
@@ -110,7 +117,7 @@ export const DEFAULT_CLEAN_OPTIONS: CleanSignatureOptions = {
   inkFull: 120,
   cropMinAlpha: 32,
   cropMinComponentPx: 6,
-  cropMinComponentRatio: 2e-4,
+  cropMinComponentStrokeArea: 0.5,
   margin: 8,
   maxWidth: SIGNATURE_MAX_WIDTH,
 }
@@ -248,13 +255,67 @@ interface InkBlob {
 }
 
 /**
- * Caixa da união das manchas de tinta, ou null. Descarta a poeira e as manchas
- * pequenas APAGANDO-AS de `alpha` (com o halo de borda): o que fica dentro do
- * recorte aparece no PNG, então só tirá-las da caixa não bastava.
+ * Espessura da caneta (w), medida no corpo: em cada pixel dele, a menor das duas
+ * corridas de tinta (horizontal e vertical) que passam por ali; w é a mediana
+ * sobre os pixels. A menor corrida atravessa o traço, e a mediana por PIXEL dá o
+ * peso ao miolo dele: borda serrilhada de foto parte as corridas da borda em
+ * pedaços, mas eles somam poucos pixels. Medido com ruído de ±2 px na borda, a
+ * mediana por corrida e a transformada de distância desabavam para ~2 px numa
+ * caneta de 11, e esta ficava entre 10 e 13. Num traço a 45° ela lê ~1,4 w.
+ * O(pixels da caixa do corpo), com 1 byte por pixel dessa caixa.
+ */
+function strokeWidth(body: InkBlob, members: Int32Array, width: number): number {
+  const bw = body.x1 - body.x0 + 1
+  const bh = body.y1 - body.y0 + 1
+  // 1 = pixel do corpo; o passe horizontal troca pela corrida dele (saturada em 255).
+  const runs = new Uint8Array(bw * bh)
+  for (let k = body.start; k < body.start + body.count; k++) {
+    const x = members[k] % width
+    const y = (members[k] - x) / width
+    runs[(y - body.y0) * bw + (x - body.x0)] = 1
+  }
+  for (let y = 0; y < bh; y++) {
+    let start = -1
+    for (let x = 0; x <= bw; x++) {
+      const ink = x < bw && runs[y * bw + x] > 0
+      if (ink && start < 0) start = x
+      if (!ink && start >= 0) {
+        runs.fill(Math.min(255, x - start), y * bw + start, y * bw + x)
+        start = -1
+      }
+    }
+  }
+  const histogram = new Uint32Array(256)
+  for (let x = 0; x < bw; x++) {
+    let start = -1
+    for (let y = 0; y <= bh; y++) {
+      const ink = y < bh && runs[y * bw + x] > 0
+      if (ink && start < 0) start = y
+      if (!ink && start >= 0) {
+        const vertical = Math.min(255, y - start)
+        for (let yy = start; yy < y; yy++) histogram[Math.min(vertical, runs[yy * bw + x])]++
+        start = -1
+      }
+    }
+  }
+  let acc = 0
+  for (let v = 1; v < 256; v++) {
+    acc += histogram[v]
+    if (2 * acc >= body.count) return v
+  }
+  return 255
+}
+
+/**
+ * Caixa da união das manchas de tinta, ou null se só houver poeira. Descarta a
+ * poeira e as manchas menores que max(`cropMinComponentPx`, k x w²) APAGANDO-AS
+ * de `alpha` (com o halo de borda): o que fica dentro do recorte aparece no PNG,
+ * então só tirá-las da caixa não bastava. O corpo, a maior mancha, nunca cai
+ * pelo limiar relativo: w sai dele.
  * Rotulagem por inundação ITERATIVA (pilha em Int32Array, sem recursão: imagem
  * de 12 MP estouraria a pilha de chamadas), O(pixels): cada pixel entra na pilha
- * uma só vez, marcado ao empilhar. Memória: 1 byte por pixel de `visited` e 8
- * por pixel de tinta (pilha e lista de membros).
+ * uma só vez, marcado ao empilhar. Memória: 1 byte por pixel de `visited`, 8 por
+ * pixel de tinta (pilha e lista de membros) e 1 por pixel da caixa do corpo.
  */
 function inkBox(alpha: Uint8Array, width: number, height: number, o: CleanSignatureOptions) {
   const minAlpha = o.cropMinAlpha
@@ -300,12 +361,13 @@ function inkBox(alpha: Uint8Array, width: number, height: number, o: CleanSignat
   if (!blobs.length) return null
 
   const body = blobs.reduce((a, b) => (b.count > a.count ? b : a))
-  const bodyArea = (body.x1 - body.x0 + 1) * (body.y1 - body.y0 + 1)
-  const minPx = Math.max(o.cropMinComponentPx, Math.round(o.cropMinComponentRatio * bodyArea))
+  if (body.count < o.cropMinComponentPx) return null
+  const w = strokeWidth(body, members, width)
+  const minPx = Math.max(o.cropMinComponentPx, o.cropMinComponentStrokeArea * w * w)
 
   let minX = width, minY = height, maxX = -1, maxY = -1
   for (const blob of blobs) {
-    if (blob.count >= minPx) {
+    if (blob === body || blob.count >= minPx) {
       minX = Math.min(minX, blob.x0)
       maxX = Math.max(maxX, blob.x1)
       minY = Math.min(minY, blob.y0)
@@ -348,7 +410,7 @@ export function cleanSignature(
     }
   }
   const box = inkBox(alpha, width, height, o)
-  if (!box || box.maxX < 0) throw new EmptySignatureError()
+  if (!box) throw new EmptySignatureError()
   const { minX, minY, maxX, maxY } = box
 
   const x0 = Math.max(0, minX - o.margin)
