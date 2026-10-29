@@ -27,7 +27,7 @@ export function FormPhotoRow({
 }) {
   return (
     <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-      <div className="flex shrink-0 justify-center sm:w-40">
+      <div className="flex shrink-0 justify-center sm:w-44">
         <AppPhotoField
           name={name}
           url={photo.url}
