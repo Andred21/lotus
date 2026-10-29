@@ -194,12 +194,12 @@ class CertificateEligibilityTest extends TestCase
     }
 
     /**
-     * Spec D2: a cidade do emissor é a única que a turma online conhece. Sem
-     * ela, painel e emissão têm de recusar juntos (`SinCiudad` ↔
-     * `emission_city_missing`) — e a turma presencial segue, porque a cidade
-     * dela é o `local_aplicacao`.
+     * Spec D9 (bloco 40): a frase do certificado usa só a cidade do emissor,
+     * então sem ela painel e emissão recusam JUNTOS (`SinCiudad` ↔
+     * `emission_city_missing`) — online ou presencial. O `local_aplicacao`
+     * deixou de abrir a porta: antes (D2 do bloco 39) a presencial seguia.
      */
-    public function test_sem_cidade_do_emissor_painel_e_emissao_concordam_e_presencial_segue(): void
+    public function test_sem_cidade_do_emissor_painel_e_emissao_concordam_inclusive_na_presencial(): void
     {
         config(['app.certificate_issuer.city' => '']);
         $eligibility = app(CertificateEligibility::class);
@@ -210,25 +210,49 @@ class CertificateEligibilityTest extends TestCase
 
         $painel = collect($this->painel());
 
-        $this->assertSame(
-            EmissionBlockReason::SinCiudad,
-            $painel->sole(fn (EmissionPanelTurmaData $t) => $t->turma_id === $this->emitivel->id)->emission_blocked,
-        );
-
-        try {
-            $eligibility->assert($this->emitivel->enrollments()->sole(), $this->redator);
-            $this->fail('A emissão aceitou a turma online sem cidade do emissor.');
-        } catch (ValidationException $exception) {
+        foreach ([$this->emitivel->id, $presencial->turmaModel()->id] as $turmaId) {
             $this->assertSame(
-                [__('certification.eligibility.emission_city_missing')],
-                $exception->errors()['turma'] ?? null,
+                EmissionBlockReason::SinCiudad,
+                $painel->sole(fn (EmissionPanelTurmaData $t) => $t->turma_id === $turmaId)->emission_blocked,
             );
         }
 
-        $this->assertNull(
-            $painel->sole(fn (EmissionPanelTurmaData $t) => $t->turma_id === $presencial->turmaModel()->id)->emission_blocked,
-        );
-        $context = $eligibility->assert($presencial->enrollmentModel(), $presencial->redatorModel());
+        $enrollments = [
+            'online' => [$this->emitivel->enrollments()->sole(), $this->redator],
+            'presencial' => [$presencial->enrollmentModel(), $presencial->redatorModel()],
+        ];
+
+        foreach ($enrollments as $modalidade => [$enrollment, $redator]) {
+            try {
+                $eligibility->assert($enrollment, $redator);
+                $this->fail("A emissão aceitou a turma {$modalidade} sem cidade do emissor.");
+            } catch (ValidationException $exception) {
+                // A porta 4 recusou, e não outra: a mensagem é a nomeada.
+                $this->assertSame(
+                    [__('certification.eligibility.emission_city_missing')],
+                    $exception->errors()['turma'] ?? null,
+                    "A turma {$modalidade} foi recusada por outra porta.",
+                );
+            }
+        }
+    }
+
+    /**
+     * O `ciudad_emision` do snapshot continua vindo do `local_aplicacao` quando
+     * a turma tem (D12 do bloco 40: o snapshot é imutável e segue o que já
+     * gravava); só a PORTA é que olha a cidade do emissor.
+     */
+    public function test_com_cidade_do_emissor_a_presencial_segue_e_o_snapshot_guarda_o_local(): void
+    {
+        config(['app.certificate_issuer.city' => 'Santiago']);
+
+        $presencial = $this->reprovadaBuilder()
+            ->turma(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => 'Rancagua'])
+            ->create();
+
+        $context = app(CertificateEligibility::class)
+            ->assert($presencial->enrollmentModel(), $presencial->redatorModel());
+
         $this->assertSame('Rancagua', $context->ciudadEmision);
     }
 

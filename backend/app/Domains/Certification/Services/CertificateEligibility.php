@@ -23,7 +23,8 @@ use Illuminate\Validation\ValidationException;
  * 1. turma concluída (RN-08)
  * 2. matrícula aprovada
  * 3. sem certificado vigente para a matrícula
- * 4. cidade de emissão válida (`local_aplicacao` ou a do emissor)
+ * 4. cidade do emissor configurada (a frase do certificado só usa ela — D9 do
+ *    bloco 40; o `local_aplicacao` deixou de abrir esta porta)
  * 5. redator designado na turma — AQUELE que a emissão recebeu (D11)
  */
 class CertificateEligibility
@@ -84,13 +85,16 @@ class CertificateEligibility
 
     private function assertCidadeDeEmissao(Turma $turma): string
     {
-        $ciudad = $this->cities->emissionCityFor($turma);
+        // A porta olha SÓ a cidade do emissor (D9): é ela que o PDF imprime. O
+        // `emissionCityFor()` segue alimentando o `ciudad_emision` do snapshot
+        // (D12), mas já não decide se a emissão acontece.
+        $emissor = $this->cities->issuerCity();
 
-        if ($ciudad === null) {
+        if ($emissor === null) {
             $this->refuse('turma', __('certification.eligibility.emission_city_missing'));
         }
 
-        return $ciudad;
+        return $this->cities->emissionCityFor($turma) ?? $emissor;
     }
 
     // ── PORTA 5 — redator designado ──────────────────────────────────────

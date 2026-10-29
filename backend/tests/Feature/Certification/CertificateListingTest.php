@@ -7,6 +7,7 @@ use App\Domains\Certification\Data\CertificateData;
 use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Models\CertificateSettings;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
@@ -18,6 +19,7 @@ use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Files\Models\File;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -261,12 +263,12 @@ class CertificateListingTest extends TestCase
             ->assertJsonCount(1)
             ->assertJsonStructure(['*' => [
                 'turma_id', 'course_name', 'client_name', 'end_date',
-                'emission_blocked',
+                'emission_blocked', 'manager_signature_missing',
                 'enrollments' => ['*' => [
                     'enrollment_id', 'student_name', 'student_rut',
                     'approval_status', 'attendance_pct', 'nota_final', 'certificate',
                 ]],
-                'redatores' => ['*' => ['redator_id', 'name']],
+                'redatores' => ['*' => ['redator_id', 'name', 'has_firma']],
             ]])
             ->assertJsonPath('0.turma_id', $this->turma->id)
             ->assertJsonPath('0.course_name', 'Seguridad en Alta Tensión')
@@ -464,6 +466,123 @@ class CertificateListingTest extends TestCase
             ->assertJsonPath('0.emission_blocked', 'sin_redactor')
             ->assertJsonPath('1.turma_id', $this->turma->id)
             ->assertJsonPath('1.emission_blocked', null);
+    }
+
+    /**
+     * D6/D19: os avisos de assinatura são DADO do painel, não bloqueio. O
+     * relator sem `FIRMA` e a gerente sem assinatura aparecem como flags, e
+     * `emission_blocked` segue `null` — a emissão não trava.
+     */
+    public function test_painel_marca_relator_sem_firma_e_gerente_sem_firma(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson('/api/certificates/emission-panel')
+            ->assertOk()
+            ->assertJsonPath('0.redatores.0.has_firma', false)
+            ->assertJsonPath('0.manager_signature_missing', true)
+            ->assertJsonPath('0.emission_blocked', null);
+
+        $this->criarFirma('redator', $this->redator->id, 'FIRMA');
+        $this->criarFirma('certificate_settings', CertificateSettings::atual()->id, CertificateSettings::TIPO_FIRMA);
+
+        $this->getJson('/api/certificates/emission-panel')
+            ->assertOk()
+            ->assertJsonPath('0.redatores.0.has_firma', true)
+            ->assertJsonPath('0.manager_signature_missing', false);
+    }
+
+    /**
+     * D19: redator arquivado que terminou o curso é o caso normal. A `FIRMA`
+     * que a cascata arquivou segue valendo e não gera aviso; a que o admin
+     * apagou ANTES de arquivar não volta.
+     */
+    public function test_relator_arquivado_com_firma_arquivada_pela_cascata_nao_gera_aviso(): void
+    {
+        $this->actingAsAdmin();
+
+        $comFirma = $this->makeRedator(['name' => 'Relator Arquivado Com Firma']);
+        $semFirma = $this->makeRedator(['name' => 'Relator Arquivado Sem Firma']);
+        $this->turma->redatores()->attach([$comFirma->id, $semFirma->id]);
+
+        $this->criarFirma('redator', $comFirma->id, 'FIRMA');
+        $this->criarFirma('redator', $semFirma->id, 'FIRMA')->delete();
+        $comFirma->delete();
+        $semFirma->delete();
+
+        $this->assertTrue(File::withTrashed()->where('fileable_id', $comFirma->id)->sole()->archived_with_parent);
+
+        $porNome = collect($this->getJson('/api/certificates/emission-panel')->assertOk()->json('0.redatores'))
+            ->keyBy('name');
+
+        $this->assertTrue($porNome['Relator Arquivado Com Firma']['has_firma']);
+        $this->assertFalse($porNome['Relator Arquivado Sem Firma']['has_firma']);
+    }
+
+    /**
+     * A firma dos relatores entra por UM eager-load do painel inteiro e a
+     * assinatura da gerente é lida UMA vez por requisição — não por turma nem
+     * por relator. (`preventLazyLoading` já derruba o lazy; isto prova a
+     * contagem, e a catraca `ListQueryBudgetTest` prova que N=2 e N=20 custam
+     * o mesmo.)
+     */
+    public function test_painel_nao_faz_n_mais_1_com_a_firma(): void
+    {
+        $this->actingAsSuperadmin();
+
+        foreach ([2, 3, 4] as $seq) {
+            $turma = $this->createTurma(TurmaStatus::Concluida, $seq, null, '2026-07-2'.$seq);
+            $outro = $this->makeRedator(['name' => "Relator {$seq}"]);
+            $turma->redatores()->attach([$this->redator->id, $outro->id]);
+            $this->criarFirma('redator', $outro->id, 'FIRMA');
+        }
+
+        $consultas = ['certificate_settings' => 0, 'files' => 0];
+        DB::listen(function (QueryExecuted $query) use (&$consultas): void {
+            foreach (array_keys($consultas) as $tabela) {
+                if (str_contains($query->sql, "from \"{$tabela}\"")) {
+                    $consultas[$tabela]++;
+                }
+            }
+        });
+
+        $this->getJson('/api/certificates/emission-panel')->assertOk()->assertJsonCount(4);
+
+        $this->assertSame(1, $consultas['certificate_settings']);
+        // Uma para as firmas dos relatores e uma para a assinatura da gerente.
+        $this->assertSame(2, $consultas['files']);
+    }
+
+    /**
+     * D9: a presencial com `local_aplicacao` deixou de ter cidade própria na
+     * impressão — o certificado sai com a cidade do emissor. Config vazia
+     * recusa a turma inteira, presencial ou online.
+     */
+    public function test_turma_presencial_com_local_e_cidade_do_emissor_vazia_e_bloqueada_no_painel(): void
+    {
+        $this->actingAsAdmin();
+        config(['app.certificate_issuer.city' => '']);
+        $this->turma->update(['modalidade' => TurmaModalidade::Presencial, 'local_aplicacao' => 'Rancagua']);
+
+        $this->getJson('/api/certificates/emission-panel')
+            ->assertOk()
+            ->assertJsonPath('0.emission_blocked', 'sin_ciudad');
+    }
+
+    private function makeRedator(array $userAttrs = []): Redator
+    {
+        $user = User::factory()->create(['type' => 'redator', 'is_active' => true] + $userAttrs);
+
+        return Redator::create(['user_id' => $user->id]);
+    }
+
+    private function criarFirma(string $dono, int $donoId, string $tipo): File
+    {
+        return File::create([
+            'fileable_type' => $dono, 'fileable_id' => $donoId, 'type' => $tipo,
+            'path' => "{$dono}/{$donoId}/firma.png", 'original_name' => 'firma.png',
+            'mime' => 'image/png', 'size' => 10,
+        ]);
     }
 
     private function createTurma(

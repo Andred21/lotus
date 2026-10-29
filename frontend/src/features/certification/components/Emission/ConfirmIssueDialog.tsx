@@ -4,6 +4,7 @@ import { ConfirmDialog, AppDropdown, FormField } from '@shared/ui'
 import type { CertificateData, EmissionPanelEnrollmentData, EmissionPanelTurmaData } from '@shared/types/generated'
 import { useMutationErrors } from '@shared/hooks'
 import { useIssueCertificate } from '../../api/certificatesApi'
+import { RedatorFirmaWarning } from './EmissionWarnings'
 
 type Props = {
   enrollment: EmissionPanelEnrollmentData
@@ -67,6 +68,7 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
             onChange={(e) => setRedatorId(e.value)}
           />
         </FormField>
+        <RedatorFirmaWarning turma={turma} redatorId={redatorId} />
       </div>
     </ConfirmDialog>
   )

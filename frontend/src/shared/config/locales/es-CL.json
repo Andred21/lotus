@@ -928,6 +928,10 @@
       "sin_ciudad": "Sin ciudad de emisión configurada",
       "sin_redactor": "La turma no tiene redactor designado"
     },
+    "warnings": {
+      "managerSignatureMissing": "La firma de la gerente no está cargada. Los certificados saldrán con el espacio en blanco sobre la línea, para firmar a mano. Se carga en Configuración › Certificados.",
+      "redatorWithoutFirma": "{{name}} no tiene firma cargada. El certificado saldrá con el espacio en blanco sobre la línea y el nombre debajo, para firmar a mano."
+    },
     "confirmTitle": "Confirmar emisión",
     "confirmBody": "Se generará y registrará el certificado para este alumno.",
     "fieldAlumno": "Alumno",

@@ -35,6 +35,12 @@ class EmissionPanelTurmaData extends Data
         public array $enrollments,
         /** @var array<EmissionPanelRedatorData> */
         public array $redatores,
+        /**
+         * Aviso (D6), não bloqueio: a assinatura da gerente não está
+         * configurada. Vale para o painel inteiro — o mesmo valor em toda turma,
+         * lido uma vez por requisição.
+         */
+        public bool $manager_signature_missing,
     ) {}
 
     /** @param  Collection<int, Certificate>  $vigentesPorEnrollment  keyBy `enrollment_id` */
@@ -42,6 +48,7 @@ class EmissionPanelTurmaData extends Data
         Turma $turma,
         ?EmissionBlockReason $emissionBlocked,
         Collection $vigentesPorEnrollment,
+        bool $managerSignatureMissing,
     ): self {
         return new self(
             turma_id: $turma->id,
@@ -60,6 +67,7 @@ class EmissionPanelTurmaData extends Data
             redatores: $turma->redatores
                 ->map(fn (Redator $redator) => EmissionPanelRedatorData::fromModel($redator))
                 ->all(),
+            manager_signature_missing: $managerSignatureMissing,
         );
     }
 }

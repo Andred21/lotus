@@ -928,6 +928,10 @@
       "sin_ciudad": "No issuing city configured",
       "sin_redactor": "The class has no designated redator"
     },
+    "warnings": {
+      "managerSignatureMissing": "The manager signature is not uploaded. Certificates will come out with a blank space above the line, to be signed by hand. Upload it in Settings › Certificates.",
+      "redatorWithoutFirma": "{{name}} has no signature uploaded. The certificate will come out with a blank space above the line and the name below it, to be signed by hand."
+    },
     "confirmTitle": "Confirm issuance",
     "confirmBody": "The certificate will be generated and registered for this student.",
     "fieldAlumno": "Student",

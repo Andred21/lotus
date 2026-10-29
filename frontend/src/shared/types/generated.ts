@@ -245,6 +245,7 @@ student_photo_url: string | null,
 export type EmissionPanelRedatorData = {
 redator_id: number,
 name: string,
+has_firma: boolean,
 };
 export type EmissionPanelTurmaData = {
 turma_id: number,
@@ -254,6 +255,7 @@ end_date: string,
 emission_blocked: EmissionBlockReason | null,
 enrollments: EmissionPanelEnrollmentData[],
 redatores: EmissionPanelRedatorData[],
+manager_signature_missing: boolean,
 };
 export type EnrollPreviewData = {
 exists: boolean,
