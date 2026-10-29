@@ -69,6 +69,14 @@ describe('ConfirmDialog — confirmação compacta', () => {
     expect(document.querySelector('[data-severity-icon]')?.className).toContain(classeDoIcone)
   })
 
+  /** O `.pi` do primeicons é CSS sem camada e vence o `grid` do Tailwind; sem o
+   * `!` o círculo vira bloco e o glifo cai no canto superior esquerdo. */
+  it('o ícone força `grid!` para o glifo ficar centrado no círculo', () => {
+    render(<ConfirmDialog {...base} severity="danger" />)
+
+    expect(document.querySelector('[data-severity-icon]')?.classList.contains('grid!')).toBe(true)
+  })
+
   it('não maximiza nem herda a moldura navy', () => {
     render(<ConfirmDialog {...base} />)
 
