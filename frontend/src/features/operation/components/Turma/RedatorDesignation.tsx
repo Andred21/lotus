@@ -104,6 +104,7 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
             .join(', '),
         })}
         confirmLabel={t('operation.redator.confirmIneligibleAction')}
+        severity="warning"
         pending={picker.pending}
         onConfirm={() => {
           picker.confirmPick()

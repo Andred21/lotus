@@ -76,7 +76,7 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
   describe.each([
     { tema: 'claro', bloco: blocoClaro, folha: temaClaro },
     { tema: 'escuro', bloco: blocoRaiz, folha: temaEscuro },
-  ])('tema $tema', ({ bloco, folha }) => {
+  ])('tema $tema', ({ tema, bloco, folha }) => {
     const card = hex(folha, '--surface-card')
 
     it.each(tintasDe(bloco, folha))(
@@ -92,6 +92,20 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
       ({ tom, tinta }) => {
         const { hue, parte } = TONS[tom as keyof typeof TONS]
         expect(contraste(tinta, tingido(hex(folha, `--${hue}-500`), card, parte))).toBeGreaterThanOrEqual(4.5)
+      },
+    )
+
+    /** Bloco 43: o fundo de 15% do `AppTag` (`severityTone`) é também o do ícone
+     * da `ConfirmDialog`, e só o `accent` era medido nessa proporção.
+     * Fora só o par `danger` + escuro: o `AppTag` danger já media 4,36:1 ali
+     * antes do bloco (J10/P-74, registrado como pendência), e o bloco não o corrige. */
+    it.each(
+      tintasDe(bloco, folha).filter(({ tom }) => tom !== 'accent' && !(tom === 'danger' && tema === 'escuro')),
+    )(
+      'o tom $tom passa AA sobre o fundo de 15% do `severityTone`',
+      ({ tom, tinta }) => {
+        const { hue } = TONS[tom as keyof typeof TONS]
+        expect(contraste(tinta, tingido(hex(folha, `--${hue}-500`), card, 0.15))).toBeGreaterThanOrEqual(4.5)
       },
     )
   })

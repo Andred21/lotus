@@ -773,8 +773,7 @@
       "move": {
         "title": "El alumno pertenece a otro cliente",
         "body": "{{name}} está vinculado a {{previous}}. Al matricularlo aquí pasará a {{current}}.",
-        "confirm": "Sí, mover y continuar",
-        "cancel": "Cancelar"
+        "confirm": "Sí, mover y continuar"
       },
       "import": {
         "title": "Importar planilla",

@@ -773,8 +773,7 @@
       "move": {
         "title": "Student belongs to another client",
         "body": "{{name}} is linked to {{previous}}. Enrolling here will move them to {{current}}.",
-        "confirm": "Yes, move and continue",
-        "cancel": "Cancel"
+        "confirm": "Yes, move and continue"
       },
       "import": {
         "title": "Import sheet",
