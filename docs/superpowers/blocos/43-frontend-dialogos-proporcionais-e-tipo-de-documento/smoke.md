@@ -101,7 +101,7 @@ uploads e o 422 vêm do smoke acima.
 - **Detalhe do orçamento com upload:**
   - B, bloco: "Comprobante" sai cortado no cartão de tipo (`sm:grid-cols-3` dentro dos 32rem do
     `sm`), e "Orden de compra" quebra a linha (`$T/shots/3-upload-dialog-preenchido-1024-light.png`).
-    Registrado para o João, sem correção: é escolha de layout (empilhar ou `md`).
+    O João decidiu empilhar; corrigido em `d31869dc` (uma coluna, o diálogo segue `sm`). A captura é anterior à correção.
   - B: o 422 do tipo recusado diz "El campo **file** debe ser…", porque o backend não traduz o
     nome do atributo.
   - B, fora do bloco: em 1024 o RUT do cliente passa por baixo do "Agregar cotización" no
