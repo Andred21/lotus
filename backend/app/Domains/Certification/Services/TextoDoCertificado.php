@@ -35,6 +35,10 @@ final class TextoDoCertificado
             return 'el '.self::fechaLarga($termino);
         }
 
+        if ($anoI === $anoT && $mesI === $mesT) {
+            return "entre el {$diaI} y el {$diaT} de ".self::MESES[$mesT]." de {$anoT}";
+        }
+
         if ($anoI === $anoT) {
             return "entre el {$diaI} de ".self::MESES[$mesI]." y el {$diaT} de ".self::MESES[$mesT]." de {$anoT}";
         }
@@ -58,6 +62,13 @@ final class TextoDoCertificado
 
         if ($descricao !== null) {
             $descricao = trim($descricao);
+        }
+
+        if ($descricao === '') {
+            $descricao = null;
+        }
+
+        if ($descricao !== null) {
             if (! str_ends_with($descricao, '.') && ! str_ends_with($descricao, '!') && ! str_ends_with($descricao, '?')) {
                 $descricao .= '.';
             }

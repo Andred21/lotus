@@ -91,4 +91,26 @@ class TextoDoCertificadoTest extends TestCase
     {
         $this->assertNull(TextoDoCertificado::parrafo(null, null, null, null));
     }
+
+    public function test_periodo_no_mesmo_mes_nao_repete_o_mes(): void
+    {
+        $this->assertSame(
+            'entre el 13 y el 20 de julio de 2026',
+            TextoDoCertificado::periodo('2026-07-13', '2026-07-20'),
+        );
+    }
+
+    public function test_parrafo_descricao_vazia_ou_so_espacos_vale_como_ausente(): void
+    {
+        $this->assertNull(TextoDoCertificado::parrafo(null, '', null, null));
+        $this->assertNull(TextoDoCertificado::parrafo(null, '  ', null, null));
+        $this->assertSame(
+            'La actividad fue realizada el 13 de julio de 2026.',
+            TextoDoCertificado::parrafo('el 13 de julio de 2026', '  ', null, null),
+        );
+        $this->assertSame(
+            'El trabajador logró aprobar el curso con nota 6.',
+            TextoDoCertificado::parrafo(null, '', '6', null),
+        );
+    }
 }
