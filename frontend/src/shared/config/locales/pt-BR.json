@@ -102,12 +102,17 @@
     },
     "administracion": {
       "title": "Administração",
-      "description": "Usuários internos, papéis e permissões"
+      "description": "Usuários internos, papéis, permissões e configuração"
     }
   },
   "admin": {
     "tabUsers": "Usuários",
     "tabRoles": "Perfis e permissões",
+    "tabConfiguracion": "Configuração",
+    "configuracion": {
+      "navLabel": "Submódulos de configuração",
+      "certificados": "Certificados"
+    },
     "new": "Novo usuário",
     "create": "Criar",
     "empty": "Sem usuários",
@@ -372,6 +377,22 @@
   },
   "placeholder": {
     "module": "Módulo em construção."
+  },
+  "certificateSettings": {
+    "help": "Esta configuração vale para todos os certificados, inclusive os já emitidos.",
+    "managerName": "Nome",
+    "managerTitle": "Cargo",
+    "signature": "Assinatura",
+    "noSignature": "Nenhuma assinatura enviada",
+    "sendSignature": "Enviar assinatura",
+    "replaceSignature": "Substituir assinatura",
+    "removeSignature": "Remover assinatura",
+    "removeTitle": "Remover a assinatura",
+    "removeMessage": "Os certificados sairão sem a assinatura da gerência, inclusive os já emitidos, até que você envie outra.",
+    "removeConfirm": "Remover assinatura",
+    "save": "Salvar",
+    "saved": "Configuração salva.",
+    "loadError": "Não foi possível carregar a configuração"
   },
   "profile": {
     "title": "Meu perfil",

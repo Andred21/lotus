@@ -102,12 +102,17 @@
     },
     "administracion": {
       "title": "Administración",
-      "description": "Usuarios internos, roles y permisos"
+      "description": "Usuarios internos, roles, permisos y configuración"
     }
   },
   "admin": {
     "tabUsers": "Usuarios",
     "tabRoles": "Roles y permisos",
+    "tabConfiguracion": "Configuración",
+    "configuracion": {
+      "navLabel": "Submódulos de configuración",
+      "certificados": "Certificados"
+    },
     "new": "Nuevo usuario",
     "create": "Crear",
     "empty": "Sin usuarios",
@@ -372,6 +377,22 @@
   },
   "placeholder": {
     "module": "Módulo en construcción."
+  },
+  "certificateSettings": {
+    "help": "Esta configuración se aplica a todos los certificados, incluidos los ya emitidos.",
+    "managerName": "Nombre",
+    "managerTitle": "Cargo",
+    "signature": "Firma",
+    "noSignature": "Sin firma cargada",
+    "sendSignature": "Cargar firma",
+    "replaceSignature": "Reemplazar firma",
+    "removeSignature": "Quitar firma",
+    "removeTitle": "Quitar la firma",
+    "removeMessage": "Los certificados saldrán sin la firma de la gerencia, incluidos los ya emitidos, hasta que cargues otra.",
+    "removeConfirm": "Quitar firma",
+    "save": "Guardar",
+    "saved": "Configuración guardada.",
+    "loadError": "No se pudo cargar la configuración"
   },
   "profile": {
     "title": "Mi perfil",

@@ -102,12 +102,17 @@
     },
     "administracion": {
       "title": "Administration",
-      "description": "Internal users, roles and permissions"
+      "description": "Internal users, roles, permissions and settings"
     }
   },
   "admin": {
     "tabUsers": "Users",
     "tabRoles": "Roles & permissions",
+    "tabConfiguracion": "Settings",
+    "configuracion": {
+      "navLabel": "Settings sections",
+      "certificados": "Certificates"
+    },
     "new": "New user",
     "create": "Create",
     "empty": "No users",
@@ -372,6 +377,22 @@
   },
   "placeholder": {
     "module": "Module under construction."
+  },
+  "certificateSettings": {
+    "help": "This setting applies to all certificates, including those already issued.",
+    "managerName": "Name",
+    "managerTitle": "Title",
+    "signature": "Signature",
+    "noSignature": "No signature uploaded",
+    "sendSignature": "Upload signature",
+    "replaceSignature": "Replace signature",
+    "removeSignature": "Remove signature",
+    "removeTitle": "Remove the signature",
+    "removeMessage": "Certificates will come out without the manager signature, including those already issued, until you upload another.",
+    "removeConfirm": "Remove signature",
+    "save": "Save",
+    "saved": "Settings saved.",
+    "loadError": "Could not load the settings"
   },
   "profile": {
     "title": "My profile",

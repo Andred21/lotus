@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
 import { usePermissions } from '@shared/hooks'
@@ -10,7 +10,12 @@ import { UsersTable } from './Admin/UsersTable'
 import { StaffUserDialog } from './Admin/StaffUserDialog'
 import { RolesTab } from './Admin/RolesTab'
 
-export function AdministracionPage() {
+/**
+ * `configuracion` é um slot: a aba Configuración hospeda submódulos de OUTRAS
+ * features (hoje Certificados), e feature não importa feature (lei 6). Quem
+ * compõe é a camada `app/`, que também decide se o usuário a enxerga.
+ */
+export function AdministracionPage({ configuracion }: { configuracion?: ReactNode }) {
   const { t } = useTranslation()
   const { can } = usePermissions()
   const canManage = can('identity.access.manage')
@@ -49,6 +54,7 @@ export function AdministracionPage() {
               <RolesTab />
             </ModuleTab>
           )}
+          {configuracion && <ModuleTab header={t('admin.tabConfiguracion')}>{configuracion}</ModuleTab>}
         </ModuleTabs>
       </AppCard>
 
