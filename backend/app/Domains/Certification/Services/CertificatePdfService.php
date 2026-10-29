@@ -18,12 +18,14 @@ class CertificatePdfService
     public function __construct(
         private readonly HtmlToPdf $pdf,
         private readonly CertificateValidationUrl $validationUrl,
+        private readonly CertificateSignatures $signatures,
+        private readonly EmissionCityResolver $city,
     ) {}
 
     public function render(Certificate $certificate): string
     {
-        // `fromCss`: o tamanho do papel é declarado UMA vez, no `@page` do
-        // Blade, onde o `min-height: 297mm` do documento já está calibrado.
+        // `fromCss`: o tamanho do papel e a margem da página são declarados UMA
+        // vez, no `@page` do Blade, onde o layout está calibrado.
         return $this->pdf->render($this->html($certificate, false), PageOptions::fromCss());
     }
 
@@ -59,17 +61,28 @@ class CertificatePdfService
             'certificate' => $certificate,
             'qr' => $qr,
             'muestra' => $muestra ? self::TEXTO_MUESTRA : null,
+            // Vivas, lidas na hora de imprimir: a assinatura de quem assina
+            // hoje (D5) e a cidade do emissor (D13). O snapshot não muda.
+            'assinaturas' => $this->signatures->para($certificate),
+            'cidade' => $this->city->issuerCity(),
+            // Os métodos são estáticos: o Blade recebe o nome da classe.
+            'texto' => TextoDoCertificado::class,
             // Embutida como o QR, e pelo mesmo motivo: o conversor recebe só o
             // HTML, então referência a arquivo ou URL do frontend não resolve.
             'logo' => base64_encode((string) file_get_contents(
                 resource_path('images/lotus-logo.png'),
             )),
-            // Embutida como o QR e o logo, e pelo mesmo motivo: o conversor
+            // Embutidos como o QR e o logo, e pelo mesmo motivo: o conversor
             // recebe só o HTML. JPEG e não PNG — o mesmo fundo, nas mesmas
             // dimensões, pesa 98.258 bytes dentro do certificado aprovado pela
-            // Lotus contra 1.245.172 do PNG entregue.
+            // Lotus contra 1.245.172 do PNG entregue. O da primeira página tem
+            // as barras; o das continuações é o mesmo padrão, sem barras nem
+            // logo (o logo vem do cabeçalho, igual em toda página).
             'fundo' => base64_encode((string) file_get_contents(
                 resource_path('images/fundo-certificado.jpg'),
+            )),
+            'fundoContinuacion' => base64_encode((string) file_get_contents(
+                resource_path('images/fundo-certificado-continuacao.jpg'),
             )),
             // Fontes VARIÁVEIS: um arquivo cobre 400/700/800 do Lexend, então
             // são duas faces e não quatro. Subset latino (~39 KB + ~19 KB).

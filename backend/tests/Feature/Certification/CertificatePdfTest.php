@@ -2,10 +2,15 @@
 
 namespace Tests\Feature\Certification;
 
+use App\Domains\Catalog\Models\Course;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Exceptions\ValidacaoDeCertificadoNaoConfigurada;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Models\CertificateSettings;
+use App\Domains\Certification\Services\CertificatePdfService;
+use App\Domains\Certification\Services\CertificatePreviewBuilder;
 use App\Domains\Identity\Models\User;
+use App\Shared\Files\Models\File;
 use App\Shared\Pdf\HtmlToPdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Exceptions;
@@ -15,11 +20,13 @@ use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
+use Tests\Support\Files\BuildsRealUploads;
 use Tests\Support\Pdf\FakeHtmlToPdf;
 use Tests\TestCase;
 
 class CertificatePdfTest extends TestCase
 {
+    use BuildsRealUploads;
     use RefreshDatabase;
 
     private const RECUSA_DE_URL = 'La dirección de validación de certificados no está configurada con https. Ningún certificado se emite ni se descarga hasta que el administrador del sistema la configure.';
@@ -31,6 +38,8 @@ class CertificatePdfTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Storage::fake(config('filesystems.default'));
 
         // A cadeia viva só existe para satisfazer as FKs: cada asserção deste
         // arquivo lê do snapshot congelado abaixo, nunca das relações vivas
@@ -134,16 +143,15 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        $this->assertHtml(function (string $html): bool {
-            return str_contains($html, 'LOT-2026-1000')
-                && str_contains($html, 'Juan Pérez Congelado')
-                && str_contains($html, 'Seguridad Congelada')
-                && ! str_contains($html, 'Alumno Vivo')
-                && ! str_contains($html, 'Curso Vivo')
-                && ! str_contains($html, 'El trabajador logró aprobar el curso con nota')
-                && ! str_contains($html, 'Asistencia registrada:')
-                && ! str_contains($html, 'Este certificado es válido hasta el');
-        });
+        $texto = $this->textoDoDocumento();
+        $this->assertStringContainsString('LOT-2026-1000', $texto);
+        $this->assertStringContainsString('Juan Pérez Congelado', $texto);
+        $this->assertStringContainsString('Seguridad Congelada', $texto);
+        $this->assertStringNotContainsString('Alumno Vivo', $texto);
+        $this->assertStringNotContainsString('Curso Vivo', $texto);
+        $this->assertStringNotContainsString('con nota', $texto);
+        $this->assertStringNotContainsString('asistencia de', $texto);
+        $this->assertStringNotContainsString('Válido hasta', $texto);
 
         // Controle positivo: prende as negativas aos rótulos que o Blade usa
         // de fato, para elas não voltarem a passar por vacuidade após reescrita.
@@ -157,12 +165,9 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        $this->assertHtml(function (string $html): bool {
-            return str_contains($html, 'El trabajador logró aprobar el curso con nota 6.2.')
-                && str_contains($html, 'Asistencia registrada: 87.50%.')
-                && str_contains($html, 'Este certificado es válido hasta el')
-                && str_contains($html, '05-08-2027');
-        });
+        $texto = $this->textoDoDocumento();
+        $this->assertStringContainsString('con nota 6,2 y una asistencia de 87,5 %.', $texto);
+        $this->assertStringContainsString('Válido hasta el 5 de agosto de 2027', $texto);
     }
 
     /**
@@ -185,10 +190,10 @@ class CertificatePdfTest extends TestCase
                 // `{{RUTemp}}`: o RUT da empresa estava no snapshot e não era impresso.
                 && str_contains($html, '76.123.456-7')
                 && str_contains($html, 'abordó la narrativa congelada del curso.')
-                && str_contains($html, 'El N° de Registro de este documento es el')
+                && str_contains($html, 'N° de registro')
                 && str_contains($html, 'Instructor')
                 && str_contains($html, 'María Relatora Congelada')
-                && str_contains($html, 'Temario del Curso')
+                && str_contains($html, 'Temario del curso')
                 && str_contains($html, '1. Introducción Congelada')
                 && str_contains($html, 'Objetivos congelados')
                 && str_contains($html, 'reconocimiento de relación jurídica alguna con la persona identificada')
@@ -209,10 +214,10 @@ class CertificatePdfTest extends TestCase
         $this->get($this->pdfUrl())->assertOk();
 
         $this->assertHtml(function (string $html): bool {
-            return ! str_contains($html, 'Temario del Curso')
+            return ! str_contains($html, 'Temario del curso')
                 && str_contains(
-                    $html,
-                    'La actividad fue realizada entre el 20-07-2026 y el 24-07-2026.',
+                    $this->textoDoDocumento(),
+                    'La actividad fue realizada entre el 20 y el 24 de julio de 2026.',
                 )
                 && ! str_contains($html, 'abordó los siguientes contenidos:')
                 && str_contains($html, 'CERTIFICADO DE CAPACITACIÓN');
@@ -231,9 +236,9 @@ class CertificatePdfTest extends TestCase
         $this->get($this->pdfUrl())->assertOk();
 
         $this->assertHtml(function (string $html): bool {
-            return ! str_contains($html, 'La actividad realizada')
+            return ! str_contains($html, 'La actividad, realizada')
                 && ! str_contains($html, 'La actividad fue realizada')
-                && str_contains($html, 'abordó la narrativa congelada del curso.');
+                && str_contains($html, 'La actividad abordó los siguientes contenidos: abordó la narrativa congelada del curso.');
         });
     }
 
@@ -285,14 +290,14 @@ class CertificatePdfTest extends TestCase
         $this->assertHtml(function (string $html): bool {
             return str_contains($html, 'OTEC Config Legado SpA [77.111.111-1] certifica que:')
                 && str_contains(
-                    $html,
-                    'La actividad fue realizada entre el 20-07-2026 y el 24-07-2026.',
+                    $this->textoDoDocumento(),
+                    'La actividad fue realizada entre el 20 y el 24 de julio de 2026.',
                 )
                 && ! str_contains($html, 'Nombre técnico vivo')
                 && ! str_contains($html, 'Operación Segura AT')
                 && ! str_contains($html, 'El trabajador de la empresa RUT:')
                 && ! str_contains($html, 'abordó los siguientes contenidos:')
-                && ! str_contains($html, 'Temario del Curso');
+                && ! str_contains($html, 'Temario del curso');
         });
     }
 
@@ -322,7 +327,7 @@ class CertificatePdfTest extends TestCase
 
         $this->assertHtml(function (string $html): bool {
             return str_contains($html, 'OTEC Fallback SpA [77.222.222-2] certifica que:')
-                && ! str_contains($html, 'Temario del Curso')
+                && ! str_contains($html, 'Temario del curso')
                 && ! str_contains($html, 'El trabajador de la empresa RUT:')
                 && str_contains($html, 'CERTIFICADO DE CAPACITACIÓN');
         });
@@ -344,7 +349,7 @@ class CertificatePdfTest extends TestCase
 
         $this->get($this->pdfUrl())->assertOk();
 
-        $this->assertHtml(fn (string $html): bool => ! str_contains($html, 'Temario del Curso')
+        $this->assertHtml(fn (string $html): bool => ! str_contains($html, 'Temario del curso')
             && str_contains($html, 'CERTIFICADO DE CAPACITACIÓN'));
     }
 
@@ -455,11 +460,11 @@ class CertificatePdfTest extends TestCase
     }
 
     /**
-     * O nome diz o que as asserções provam: o rodapé sai do fluxo do documento
-     * ou não sai. **Comprimento de texto aqui é cenário, não asserção** — o
-     * teste passa igual com uma frase curta (medido), porque HTML falso não
-     * pagina. Que a descrição longa não empurre o rodapé para fora da página só
-     * se prova no PDF real, e essa prova é do gate (R-4).
+     * O nome diz o que as asserções provam: as assinaturas e o aviso saem do
+     * fluxo do documento, logo abaixo do corpo, e não em posição absoluta.
+     * **Comprimento de texto aqui é cenário, não asserção** — HTML falso não
+     * pagina. Que a descrição longa não leve nada para fora da página só se
+     * prova no PDF real, e essa prova é a inspeção visual e a matriz (R-4).
      */
     public function test_rodape_e_qr_ficam_no_fluxo_e_nao_em_posicao_absoluta(): void
     {
@@ -473,36 +478,34 @@ class CertificatePdfTest extends TestCase
 
         $this->assertHtml(function (string $html): bool {
             $descriptionPosition = strpos($html, 'Contenido técnico extenso.');
-            $footerPosition = strpos($html, 'class="certificate-footer"');
+            $registroPosition = strpos($html, 'class="registro');
+            $firmasPosition = strpos($html, 'class="firmas"');
+            $avisoPosition = strpos($html, 'class="aviso-legal"');
 
             return $descriptionPosition !== false
-                && $footerPosition !== false
-                && $descriptionPosition < $footerPosition
-                && preg_match('/\.page\s*\{[^}]*display:\s*flex;/s', $html) === 1
-                && preg_match('/\.certificate-footer\s*\{[^}]*margin-top:\s*auto;/s', $html) === 1
-                && preg_match('/\.(?:signature|qr|disclaimer)\s*\{[^}]*position:\s*absolute;/s', $html) === 0;
+                && $descriptionPosition < $registroPosition
+                && $registroPosition < $firmasPosition
+                && $firmasPosition < $avisoPosition
+                // O `margin-top: auto` do aviso o leva ao pé da folha; as
+                // assinaturas ficam logo abaixo do corpo, sem ele.
+                && preg_match('/\.firmas\s*\{[^}]*margin-top:\s*auto/s', $html) === 0
+                && preg_match('/\.(?:firmas|firma|aviso-legal)\s*\{[^}]*position:\s*(?:absolute|fixed)/s', $html) === 0;
         });
     }
 
     /**
-     * 297mm é a altura da folha A4, e só `min-height` pode carregá-la. Com
-     * `height` a folha vira uma caixa que não pagina e o Chromium pinta o
-     * excedente POR CIMA da página seguinte: medido em 2026-08-08 com nome de
-     * curso de 147 caracteres, o QR, a assinatura e o aviso legal saíram
-     * sobrepostos ao temário. Documento corrompido, sem nenhum aviso.
+     * Com altura DEFINIDA a folha vira uma caixa que não pagina e o Chromium
+     * pinta o excedente POR CIMA da página seguinte: medido em 2026-08-08 com
+     * nome de curso de 147 caracteres, o QR, a assinatura e o aviso legal
+     * saíram sobrepostos ao temário. Documento corrompido, sem nenhum aviso.
      *
-     * A varredura é do documento INTEIRO, e não da regra `.page`, porque a
-     * regressão que este teste existe para barrar (`c7585bd`) não morava no
-     * `.page` — ele seguia com `min-height: 297mm`. Morava numa regra IRMÃ,
-     * `.page--certificado { height: 297mm; }`, aplicada à primeira `<section>`.
-     * Guarda que só inspecionasse `.page` passaria contra exatamente o código
-     * que ela deve pegar.
-     *
-     * `max-height: 297mm` recorta igual e entra na mesma rede. Por isso o teste
-     * não procura uma proibição nomeada: ele COLETA toda propriedade que prende
-     * a folha em 297mm — em regra, em `style=` inline, onde for — e exige que a
-     * lista inteira seja `min-height`. A lista vazia também reprova; sem isso,
-     * apagar a altura mínima passaria batido.
+     * A varredura é do documento INTEIRO e não de uma regra, porque a regressão
+     * que este teste existe para barrar (`c7585bd`) morava numa regra IRMÃ,
+     * `.page--certificado { height: 297mm; }`. Ela COLETA toda propriedade que
+     * prende uma altura em 297mm — em regra, em `style=` inline, onde for — e
+     * exige que a lista seja vazia: no layout v5 a folha cresce com o conteúdo
+     * (`min-height` menor que a página, para o aviso descer ao pé) e o fundo é
+     * pintado pela página, nunca por uma caixa de 297mm.
      */
     public function test_nenhuma_regra_do_documento_prende_a_folha_em_297mm(): void
     {
@@ -520,93 +523,270 @@ class CertificatePdfTest extends TestCase
         // A mensagem nomeia o culpado: sem ela a falha vira "false is true" num
         // documento com peso legal, e quem herdar o teste não sabe o que caiu.
         $this->assertSame(
-            ['min-height'],
-            array_values(array_unique($pinned[1])),
-            'Só `min-height` pode prender a folha do certificado em 297mm. '
-                .'O documento declara: '
-                .(implode(' | ', $pinned[0]) ?: '(nenhuma altura de 297mm)'),
+            [],
+            $pinned[0],
+            'Nenhuma altura do certificado pode ser fixada em 297mm. O documento declara: '
+                .implode(' | ', $pinned[0]),
         );
+
+        // A lista vazia sozinha passaria também sem folha nenhuma: a folha tem
+        // altura mínima, e é ela que deixa o aviso legal chegar ao pé.
+        $this->assertMatchesRegularExpression('/\.hoja\s*\{[^}]*min-height:\s*\d+mm/s', $this->pdf->lastHtml());
     }
 
     /**
-     * A elisão da descrição é o único corte tolerado no documento, e tem de ser
-     * VISÍVEL. `-webkit-line-clamp` com inteiro é o único mecanismo que este
-     * Chromium marca com reticências (medido: `line-clamp: auto`,
-     * `block-ellipsis` e `text-overflow` cortam mudos, no meio do glifo).
-     *
-     * O clamp mora em `.narrative--contenidos`, NÃO em `.narrative`: nota,
-     * assistência e vigência também são `.narrative` e nenhuma delas pode ser
-     * cortada. Mover o clamp para a classe genérica é uma regressão de peso
-     * legal, e a última asserção é o que a pega.
+     * A abertura usa a cidade do EMISSOR lida na hora (D13) e a data de emissão
+     * por extenso (D9) — não o local da turma congelado em `ciudad_emision`, que
+     * só serve de reserva. Emissor e RUT continuam vindo do snapshot.
      */
-    public function test_so_a_descricao_do_curso_e_elidida_e_a_elisao_e_marcada(): void
+    public function test_abertura_usa_a_cidade_do_emissor_e_a_data_por_extenso(): void
     {
         $snapshot = $this->rawSnapshot();
-        $snapshot['resultado']['grades'] = ['final' => '6,4'];
-        $snapshot['resultado']['attendance_pct'] = '95.00';
+        $snapshot['ciudad_emision'] = 'Valparaíso';
+        $snapshot['emitido_em'] = '2026-08-05';
+        $snapshot['emissor'] = ['name' => 'OTEC Congelada SpA', 'rut' => '76.543.210-3'];
+        $snapshot['schema_version'] = 2;
+        $this->certificate->update(['snapshot' => $snapshot]);
+        config(['app.certificate_issuer.city' => 'Santiago']);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertStringContainsString(
+            'En Santiago, a 5 de agosto de 2026, OTEC Congelada SpA [76.543.210-3] certifica que:',
+            $this->textoDoDocumento(),
+        );
+        $this->assertStringNotContainsString('Valparaíso', $this->textoDoDocumento());
+    }
+
+    /** Sem cidade configurada, a reserva é a do snapshot; sem as duas, a frase abre em "A {data}". */
+    public function test_abertura_cai_para_a_cidade_do_snapshot_e_depois_para_sem_cidade(): void
+    {
+        $snapshot = $this->rawSnapshot();
+        $snapshot['ciudad_emision'] = 'Valparaíso';
+        $snapshot['emitido_em'] = '2026-08-05';
+        $this->certificate->update(['snapshot' => $snapshot]);
+        config(['app.certificate_issuer.city' => '   ']);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+        $this->assertStringContainsString('En Valparaíso, a 5 de agosto de 2026, ', $this->textoDoDocumento());
+
+        $snapshot['ciudad_emision'] = null;
+        $this->certificate->update(['snapshot' => $snapshot]);
+
+        $this->get($this->pdfUrl())->assertOk();
+        $this->assertStringContainsString('A 5 de agosto de 2026, ', $this->textoDoDocumento());
+        $this->assertStringNotContainsString('En , a', $this->textoDoDocumento());
+    }
+
+    /** A ordem do corpo é a da v5: cada bloco abaixo do anterior. */
+    public function test_corpo_segue_a_ordem_da_v5(): void
+    {
+        $snapshot = $this->rawSnapshot();
+        $snapshot['resultado']['grades'] = ['final' => 6.5];
+        $this->certificate->update(['snapshot' => $snapshot, 'valido_ate' => '2028-08-05']);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $html = $this->pdf->lastHtml();
+        $corpo = substr($html, (int) strpos($html, '<body'));
+        $posicoes = [];
+        foreach ([
+            'título' => 'CERTIFICADO DE CAPACITACIÓN',
+            'abertura' => 'certifica que:',
+            'aluno' => 'Juan Pérez Congelado',
+            'rótulo do curso' => 'El trabajador participó en el curso:',
+            'curso' => 'Seguridad Congelada',
+            'parágrafo' => 'La actividad, realizada entre',
+            'empresa' => 'Empresa Congelada',
+            'registro' => 'N° de registro',
+        ] as $nome => $trecho) {
+            $posicoes[$nome] = strpos($corpo, $trecho);
+            $this->assertNotFalse($posicoes[$nome], "{$nome} ({$trecho}) não saiu no documento.");
+        }
+
+        $ordenadas = $posicoes;
+        asort($ordenadas);
+        $this->assertSame(array_keys($posicoes), array_keys($ordenadas), 'O corpo saiu fora da ordem da v5.');
+    }
+
+    /** O "%" do resultado não cai sozinho na linha de baixo: o espaço antes dele é duro. */
+    public function test_percentual_da_asistencia_nao_quebra_da_linha_do_numero(): void
+    {
+        $snapshot = $this->rawSnapshot();
+        $snapshot['resultado']['attendance_pct'] = '92.50';
         $this->certificate->update(['snapshot' => $snapshot]);
         $this->actingAsAdmin();
         $this->fakeGotenberg();
 
         $this->get($this->pdfUrl())->assertOk();
 
-        $this->assertHtml(function (string $html): bool {
-            preg_match('/\.narrative--contenidos\s*\{([^}]*)\}/s', $html, $clamped);
-            preg_match('/\.narrative\s*\{([^}]*)\}/s', $html, $generic);
-            $clampedBody = $clamped[1] ?? '';
-            $genericBody = $generic[1] ?? '';
+        $this->assertStringContainsString("asistencia de 92,5\u{00A0}%.", $this->pdf->lastHtml());
+    }
 
-            return preg_match('/-webkit-line-clamp:\s*\d+;/', $clampedBody) === 1
-                && preg_match('/display:\s*-webkit-box;/', $clampedBody) === 1
-                && preg_match('/overflow:\s*hidden;/', $clampedBody) === 1
-                // a descrição do curso é o único parágrafo que leva o clamp
-                && preg_match_all('/class="narrative narrative--contenidos/', $html) === 1
-                // nota e assistência saem, e saem SEM clamp
-                && str_contains($html, 'nota 6,4')
-                && str_contains($html, 'Asistencia registrada: 95.00%')
-                // a regra genérica TEM de existir: renomeá-la faria a negativa
-                // abaixo passar contra um corpo vazio, que é o modo de falha
-                // que ela existe para pegar
-                && str_contains($genericBody, 'line-height')
-                && preg_match('/-webkit-line-clamp|overflow:\s*hidden/', $genericBody) === 0;
-        });
+    public function test_registro_traz_codigo_e_validade_por_extenso(): void
+    {
+        $this->certificate->update(['valido_ate' => '2028-08-05']);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertStringContainsString(
+            'N° de registro LOT-2026-1000 · Válido hasta el 5 de agosto de 2028',
+            $this->textoDoDocumento(),
+        );
+
+        $this->certificate->update(['valido_ate' => null]);
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertStringContainsString('N° de registro LOT-2026-1000', $this->textoDoDocumento());
+        $this->assertStringNotContainsString('Válido hasta', $this->textoDoDocumento());
     }
 
     /**
-     * O clamp (CSS) e o limiar de caracteres (PHP) são UM ajuste só: o limiar
-     * troca o corpo para 9px antes de o clamp de 11px morder. Se divergirem, uma
-     * descrição logo abaixo do limiar é clampada a 11px e perde texto que o tier
-     * de 9px mostraria inteiro.
-     *
-     * Os números estão fixados aqui de propósito. 546 = 7 linhas × 78 caracteres,
-     * e o 78 saiu de medição no PDF real (busca binária do comprimento da
-     * descrição até as reticências aparecerem, 2026-08-10, com o corpo já em
-     * Lexend): DENTRO do espanhol real a menor capacidade das 7 linhas de 11px é
-     * 548 caracteres (palavras de 24; 25, a ordem das mais longas do idioma,
-     * comporta 566); prosa comum comporta 871. Fora desse perfil o modelo não
-     * vale — com palavras de 33 caracteres a capacidade é 505 e a descrição é
-     * elidida ainda a 11px, com reticências —, e o Blade registra essa faixa de
-     * validade junto do número. Mexer no clamp, na fonte ou no limiar sem
-     * remedir quebra este teste, que é o ponto.
+     * O PDF nunca corta texto (D10, Review Focus 1): nenhuma regra elide, e os
+     * campos impressos quebram em qualquer ponto em vez de estourar a coluna.
+     * Os termos proibidos ficam fora até dos comentários do CSS.
      */
-    public function test_limiar_troca_o_corpo_antes_de_o_clamp_de_11px_morder(): void
+    public function test_nenhum_texto_do_documento_e_clampado(): void
     {
         $this->actingAsAdmin();
+        $this->fakeGotenberg();
 
-        $noLimiar = $this->renderComDescricaoDe(546);
-        $acimaDoLimiar = $this->renderComDescricaoDe(547);
+        $this->get($this->pdfUrl())->assertOk();
 
-        // o clamp impresso no CSS é o mesmo que deriva o limiar
-        $this->assertMatchesRegularExpression(
-            '/\.narrative--contenidos\s*\{[^}]*-webkit-line-clamp:\s*7;/s',
-            $noLimiar,
-        );
-        $this->assertMatchesRegularExpression(
-            '/\.narrative--compact\s*\{[^}]*-webkit-line-clamp:\s*10;/s',
-            $noLimiar,
-        );
-        $this->assertStringNotContainsString('narrative--compact"', $noLimiar);
-        $this->assertStringContainsString('narrative--compact"', $acimaDoLimiar);
+        $this->assertHtml(fn (string $html): bool => ! str_contains($html, 'line-clamp')
+            && ! str_contains($html, 'text-overflow')
+            && ! str_contains($html, 'overflow: hidden')
+            && str_contains($html, 'overflow-wrap: anywhere'));
+    }
+
+    public function test_assinaturas_lado_a_lado_com_imagem_quando_existe(): void
+    {
+        $gerente = $this->pngDeLargura(900, 300);
+        $instrutor = $this->pngDeLargura(800, 250);
+        $this->subirFirma('certificate_settings', CertificateSettings::atual()->id, CertificateSettings::TIPO_FIRMA, $gerente, 'gerente.png');
+        $this->subirFirma('redator', $this->certificate->redator_id, 'FIRMA', $instrutor, 'firma.png');
+        CertificateSettings::atual()->update(['manager_name' => 'Ana Gerente', 'manager_title' => 'Directora OTEC']);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(function (string $html) use ($gerente, $instrutor): bool {
+            $gerenteB64 = 'data:image/png;base64,'.base64_encode($gerente);
+            $instrutorB64 = 'data:image/png;base64,'.base64_encode($instrutor);
+
+            return substr_count($html, $gerenteB64) === 1
+                && substr_count($html, $instrutorB64) === 1
+                // gerente à esquerda do instrutor, nome e cargo de cada um
+                && strpos($html, $gerenteB64) < strpos($html, $instrutorB64)
+                && strpos($html, 'Ana Gerente') < strpos($html, 'María Relatora Congelada')
+                && strpos($html, 'Directora OTEC') < strpos($html, '>Instructor<')
+                && preg_match('/\.firma-caja img\s*\{[^}]*mix-blend-mode:\s*multiply/s', $html) === 1;
+        });
+    }
+
+    /** D6 e Review Focus 5: sem assinatura a caixa fica vazia e traço, nome e cargo ficam. */
+    public function test_sem_assinatura_a_caixa_fica_vazia_e_traco_e_nome_ficam(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $html = $this->pdf->lastHtml();
+        $this->assertSame(2, substr_count($html, '<div class="firma-caja"></div>'));
+        $this->assertSame(2, substr_count($html, 'class="firma-linea"'));
+        $this->assertStringNotContainsString('alt="Firma', $html);
+        $this->assertStringContainsString('Marcia de Batalha', $html);
+        $this->assertStringContainsString('Gerente OTEC', $html);
+        $this->assertStringContainsString('María Relatora Congelada', $html);
+        $this->assertStringContainsString('>Instructor<', $html);
+    }
+
+    /** A rota do preview monta um certificado sem redator real: a amostra sem instrutor renderiza. */
+    public function test_amostra_sem_instrutor_renderiza(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+        $curso = Course::findOrFail($this->certificate->course_id);
+        $amostra = app(CertificatePreviewBuilder::class)->build($curso);
+
+        $this->assertNull($amostra->redator_id);
+        app(CertificatePdfService::class)->renderMuestra($amostra);
+
+        $html = $this->pdf->lastHtml();
+        $this->assertStringContainsString('MUESTRA — SIN VALIDEZ', $html);
+        $this->assertSame(2, substr_count($html, '<div class="firma-caja"></div>'));
+        $this->assertStringContainsString('NOMBRE DEL RELATOR', $html);
+        $this->assertStringContainsString('>Instructor<', $html);
+    }
+
+    /** O aviso legal sai uma vez só, no pé da última página — com e sem temário. */
+    public function test_aviso_legal_sai_uma_vez(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+        $this->assertSame(1, substr_count($this->pdf->lastHtml(), 'no implica un reconocimiento'));
+
+        $snapshot = $this->rawSnapshot();
+        $snapshot['curso']['modules'] = [];
+        $this->certificate->update(['snapshot' => $snapshot]);
+
+        $this->get($this->pdfUrl())->assertOk();
+        $this->assertSame(1, substr_count($this->pdf->lastHtml(), 'no implica un reconocimiento'));
+    }
+
+    /** O rodapé técnico é uma caixa da margem da página: sai em toda página física, com o total certo. */
+    public function test_rodape_tecnico_e_uma_caixa_de_margem_com_o_total_de_paginas(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $this->assertHtml(fn (string $html): bool => str_contains($html, 'content: "LOT-2026-1000 · Página " counter(page) " de " counter(pages);'));
+    }
+
+    /**
+     * D5, critério 5: trocar a assinatura muda a reimpressão e NADA no registro.
+     * O snapshot e o `valido_ate` ficam byte a byte iguais.
+     */
+    public function test_trocar_a_firma_muda_a_reimpressao_sem_mudar_o_snapshot(): void
+    {
+        $this->certificate->update(['valido_ate' => '2028-08-05']);
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+        $antes = [
+            'snapshot' => $this->certificate->fresh()->getRawOriginal('snapshot'),
+            'valido_ate' => $this->certificate->fresh()->getRawOriginal('valido_ate'),
+        ];
+
+        $this->get($this->pdfUrl())->assertOk();
+        $semFirma = $this->pdf->lastHtml();
+
+        $png = $this->pngDeLargura(800, 250);
+        $this->subirFirma('redator', $this->certificate->redator_id, 'FIRMA', $png, 'firma.png');
+
+        $this->get($this->pdfUrl())->assertOk();
+        $comFirma = $this->pdf->lastHtml();
+
+        $this->assertStringNotContainsString(base64_encode($png), $semFirma);
+        $this->assertStringContainsString(base64_encode($png), $comFirma);
+        $this->assertSame($antes, [
+            'snapshot' => $this->certificate->fresh()->getRawOriginal('snapshot'),
+            'valido_ate' => $this->certificate->fresh()->getRawOriginal('valido_ate'),
+        ]);
     }
 
     public function test_qr_aponta_para_frontend_url_e_uuid(): void
@@ -750,39 +930,55 @@ class CertificatePdfTest extends TestCase
     }
 
     /**
-     * O base64 do fundo aparece UMA vez. Duas ocorrências dobram o HTML, e é
+     * Cada imagem pesada aparece UMA vez no HTML (P-28): o fundo da primeira
+     * página, o das continuações e o logo. Duas ocorrências dobram o HTML — e é
      * exatamente essa classe de excesso que produziu o "visualizador travado".
-     * `background-image` num `.page` compartilhado é o que garante a unicidade;
-     * um `<img>` por página a quebraria — e reintroduziria a ancoragem absoluta
-     * que a `.accent-bottom` já provou frágil.
+     * O fundo mora numa variável CSS e é reusado pelas caixas da margem; o logo
+     * mora no cabeçalho que a tabela repete em toda página física.
      */
-    public function test_fundo_embutido_uma_unica_vez(): void
+    public function test_cada_fundo_e_o_logo_embutidos_uma_unica_vez(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+        $html = $this->pdf->lastHtml();
+
+        foreach ([
+            'images/fundo-certificado.jpg' => 'fundo da primeira página',
+            'images/fundo-certificado-continuacao.jpg' => 'fundo de continuação',
+            'images/lotus-logo.png' => 'logo',
+        ] as $arquivo => $nome) {
+            $this->assertSame(
+                1,
+                substr_count($html, base64_encode((string) file_get_contents(resource_path($arquivo)))),
+                "O {$nome} não foi embutido uma única vez.",
+            );
+        }
+    }
+
+    /**
+     * O fundo com as barras só existe na página 1 e o de continuação, sem elas,
+     * em toda outra página física: duas imagens, duas regras de página.
+     */
+    public function test_fundo_com_barras_so_na_primeira_pagina(): void
     {
         $this->actingAsAdmin();
         $this->fakeGotenberg();
 
         $this->get($this->pdfUrl())->assertOk();
 
-        $jpeg = base64_encode((string) file_get_contents(resource_path('images/fundo-certificado.jpg')));
-
-        $this->assertSame(
-            1,
-            substr_count($this->pdf->lastHtml(), $jpeg),
-            'O fundo foi embutido mais de uma vez.',
-        );
-        $this->assertHtml(fn (string $html): bool => str_contains($html, 'background-repeat: repeat-y')
-            && str_contains($html, 'background-size: 100% 297mm'));
+        $this->assertHtml(fn (string $html): bool => preg_match('/@page\s*:first\s*\{[^@]*@bottom-center/s', $html) === 1
+            && str_contains($html, '--fundo-primera-pagina')
+            && str_contains($html, '--fundo-continuacion')
+            && str_contains($html, 'background-size: 210mm 297mm'));
     }
 
     /**
-     * O QR sobe para o topo ESQUERDO e leva o par código/emissão junto — mudança
-     * de LUGAR, não de conteúdo. O que a rota pública valida é o UUID dentro do
-     * QR, e ele não muda; esta guarda existe para que a realocação não apague
-     * silenciosamente um dos dois campos de identificação.
-     *
-     * O lado é assertado porque foi decisão do João no gate visual, contra a
-     * `§3.4` da spec: quem manda é o `docs/templates/certificado.pdf`, e nele o
-     * retângulo do QR abre a folha à esquerda, não à direita.
+     * O bloco de verificação abre a página 1 à esquerda do logo: QR, "N° …",
+     * "Emitido el dd-mm-aaaa" e a instrução numa linha só. O que a rota pública
+     * valida é o UUID dentro do QR, e ele não muda; esta guarda existe para que
+     * a realocação não apague silenciosamente um dos campos de identificação.
      */
     public function test_qr_e_identificacao_formam_um_bloco_no_topo(): void
     {
@@ -794,20 +990,18 @@ class CertificatePdfTest extends TestCase
 
         $this->assertStringContainsString('class="identificacion"', $html);
         $this->assertStringContainsString('N° LOT-2026-1000', $html);
-        $this->assertStringContainsString('Emisión:', $html);
+        $this->assertStringContainsString('Emitido el 05-08-2026', $html);
+        $this->assertStringContainsString('Verifique la autenticidad escaneando el código.', $html);
+        $this->assertStringNotContainsString('Emisión:', $html);
 
-        // O QR encolheu: 32mm no rodapé viram 22mm no topo.
-        $this->assertMatchesRegularExpression('/\.identificacion img\s*\{[^}]*width:\s*22mm;/s', $html);
-
-        // Lado esquerdo: o bloco é filho flex da folha, então o lado é o `align-self`.
-        $this->assertMatchesRegularExpression('/\.identificacion\s*\{[^}]*align-self:\s*flex-start;/s', $html);
-
-        // O bloco abre a folha, antes do logo; o rodapé fica só com a assinatura.
+        // O bloco abre a folha, antes do corpo, e o QR sai do SVG embutido.
         $this->assertLessThan(
-            strpos($html, 'class="brand"'),
+            strpos($html, 'class="cabecalho"'),
             strpos($html, 'class="identificacion"'),
         );
-        $this->assertStringNotContainsString('class="qr"', $html);
+        $this->assertMatchesRegularExpression('/\.identificacion\s*\{[^}]*left:\s*\d+mm;/s', $html);
+        $this->assertMatchesRegularExpression('/\.identificacion img\s*\{[^}]*width:\s*22mm;/s', $html);
+        $this->assertMatchesRegularExpression('/class="identificacion">\s*<img src="data:image\/svg\+xml;base64,/', $html);
     }
 
     /**
@@ -849,24 +1043,28 @@ class CertificatePdfTest extends TestCase
             && ! str_contains($html, 'linear-gradient'));
     }
 
-    /**
-     * Renderiza o documento com uma descrição de comprimento exato, para o
-     * teste do limiar poder falar em caracteres.
-     */
-    private function renderComDescricaoDe(int $chars): string
+    /** O texto visível do documento: sem tags, entidades decodificadas e espaço normalizado. */
+    private function textoDoDocumento(): string
     {
-        $snapshot = $this->rawSnapshot();
-        $snapshot['curso']['description'] = mb_substr(
-            str_repeat('Contenido técnico del curso de alta tensión. ', 40),
-            0,
-            $chars,
+        $corpo = substr($this->pdf->lastHtml(), (int) strpos($this->pdf->lastHtml(), '<body'));
+
+        return (string) preg_replace(
+            '/\s+/u',
+            ' ',
+            str_replace("\u{00A0}", ' ', html_entity_decode(strip_tags($corpo))),
         );
-        $this->certificate->update(['snapshot' => $snapshot]);
-        $this->fakeGotenberg();
+    }
 
-        $this->get($this->pdfUrl())->assertOk();
+    /** Grava o binário no disco E a linha em `files`, como o upload real faz. */
+    private function subirFirma(string $dono, int $donoId, string $tipo, string $bytes, string $nome): void
+    {
+        $path = "{$dono}/{$donoId}/{$nome}";
+        Storage::disk(config('filesystems.default'))->put($path, $bytes);
 
-        return $this->pdf->lastHtml();
+        File::create([
+            'fileable_type' => $dono, 'fileable_id' => $donoId, 'type' => $tipo,
+            'path' => $path, 'original_name' => $nome, 'mime' => 'image/png', 'size' => strlen($bytes),
+        ]);
     }
 
     /** @return array<int, string> */

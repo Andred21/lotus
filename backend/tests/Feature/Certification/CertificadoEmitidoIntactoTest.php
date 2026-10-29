@@ -26,11 +26,19 @@ class CertificadoEmitidoIntactoTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * sha256 do HTML que `main@0740843a` (antes do bloco 39) gera para este
-     * certificado. Mudar este valor é decidir que todo certificado já emitido
-     * reimprime diferente — decisão do João, registrada.
+     * sha256 do HTML que o layout v5 do bloco 40 gera para este certificado.
+     *
+     * Valor anterior: `1323f813…94ac`, o HTML de `main@0740843a` (antes do
+     * bloco 39). Trocá-lo é decidir que todo certificado já emitido reimprime
+     * diferente — e é a decisão do João, de 2026-10-29 (D5 e D8 da spec do bloco
+     * 40): todo certificado emitido reimprime no layout v5, com as assinaturas
+     * vivas da gerente e do instrutor.
+     *
+     * O que NÃO muda é o registro: o snapshot e o `valido_ate` seguem
+     * imutáveis (D12), e `test_ler_o_certificado_emitido_nao_reescreve_a_linha`
+     * é a prova. Só o PDF, que é regerado do snapshot a cada leitura, muda.
      */
-    private const HTML_ANTES_DO_BLOCO_39 = '1323f813a6f9979f2daaba09e7986ac188ecf20e6b1e02011c6261ff158c94ac';
+    private const HTML_LAYOUT_V5_BLOCO_40 = 'db9181358f5c2cd214bd103d45216037bcacb1a6245eb70f84098033e9e68fd1';
 
     private const UUID = '3f6c2a1e-8b4d-4c7a-9e2f-5d1b0a9c8e7f';
 
@@ -46,6 +54,8 @@ class CertificadoEmitidoIntactoTest extends TestCase
             'app.certificate_validation_url' => 'https://valida.lotus.test',
             'app.certificate_issuer.name' => 'OTEC Viva SpA',
             'app.certificate_issuer.rut' => '77.000.000-0',
+            // A abertura lê a cidade do emissor na hora (D13): fixa-a para o sha não depender do .env.
+            'app.certificate_issuer.city' => 'Santiago',
         ]);
 
         // A cadeia viva só satisfaz as FKs: tudo o que o teste lê vem do
@@ -117,13 +127,13 @@ class CertificadoEmitidoIntactoTest extends TestCase
         $this->app->instance(HtmlToPdf::class, $this->pdf);
     }
 
-    public function test_html_do_certificado_emitido_e_o_mesmo_de_antes_do_bloco_39(): void
+    public function test_html_do_certificado_emitido_e_o_do_layout_v5_do_bloco_40(): void
     {
         $this->actingAsAdmin();
 
         $this->get($this->pdfUrl())->assertOk();
 
-        $this->assertSame(self::HTML_ANTES_DO_BLOCO_39, hash('sha256', $this->pdf->lastHtml()));
+        $this->assertSame(self::HTML_LAYOUT_V5_BLOCO_40, hash('sha256', $this->pdf->lastHtml()));
     }
 
     public function test_ler_o_certificado_emitido_nao_consulta_templates(): void
@@ -147,7 +157,7 @@ class CertificadoEmitidoIntactoTest extends TestCase
             fn (string $s): bool => str_contains($s, 'course_certificate_templates'),
         );
         $this->assertSame([], array_values($consultaramTemplates));
-        $this->assertSame(self::HTML_ANTES_DO_BLOCO_39, hash('sha256', $this->pdf->lastHtml()));
+        $this->assertSame(self::HTML_LAYOUT_V5_BLOCO_40, hash('sha256', $this->pdf->lastHtml()));
         $show->assertJsonPath('snapshot.template.city', 'Valparaíso');
         $this->assertSame('2028-08-05', $show->json('valido_ate'));
     }
