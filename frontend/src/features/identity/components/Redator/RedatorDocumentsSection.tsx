@@ -13,8 +13,9 @@ import {
   useRemoveDocument,
 } from "../../api/useRedatorDocuments";
 import type { RedatorDialogMode } from "../../hooks/useRedatorForm";
-import { DOC_TYPES, type DocType } from "@shared/lib";
+import { COMPLIANCE_DOC_TYPES, type DocType } from "@shared/lib";
 import { RedatorDocumentSlot } from "./RedatorDocumentSlot";
+import { RedatorSignatureSlot } from "./RedatorSignatureSlot";
 
 /** Seção de documentos do `RedatorDialog`: upload, staging (create) e
  * preview. Fica à parte porque tem hooks e handlers próprios — as mutations
@@ -64,6 +65,15 @@ export function RedatorDocumentsSection({
     e.options.clear();
   }
 
+  // `true` = aceito pelo servidor: é o que libera o slot a remontar o seletor.
+  function uploadSignature(file: File): Promise<boolean> {
+    setSizeError(null);
+    if (!redatorId) return Promise.resolve(false);
+    return upload
+      .mutateAsync({ redatorId, type: "FIRMA", file })
+      .then(() => true, () => false);
+  }
+
   function handleStage(type: DocType, e: FileUploadHandlerEvent) {
     setSizeError(null);
     const file = e.files[0];
@@ -76,7 +86,7 @@ export function RedatorDocumentsSection({
       <FormSection title={t("redator.sectionDocuments")} spaced />
       <FormErrorBanner message={docError} />
       <FormErrorBanner message={sizeError} />
-      {DOC_TYPES.map((type) => (
+      {COMPLIANCE_DOC_TYPES.map((type) => (
         <RedatorDocumentSlot
           key={type}
           type={type}
@@ -96,6 +106,21 @@ export function RedatorDocumentsSection({
           onSizeReject={setSizeError}
         />
       ))}
+      <RedatorSignatureSlot
+        mode={mode}
+        doc={existing.find((d) => d.type === "FIRMA")}
+        staged={stagedDocs.FIRMA}
+        uploading={upload.isPending && upload.variables?.type === "FIRMA"}
+        onStage={(file) => stageDoc("FIRMA", file)}
+        onUnstage={() => unstageDoc("FIRMA")}
+        onUpload={uploadSignature}
+        onRemoveDoc={
+          redatorId != null
+            ? (fileId) => removeDoc.mutate({ redatorId, fileId })
+            : undefined
+        }
+        onPreview={preview.open}
+      />
       <AppFilePreviewDialog
         file={preview.file}
         visible={preview.visible}

@@ -107,4 +107,30 @@ describe('useProfileDocuments', () => {
     await waitFor(() => expect(result.current.error).toBe('Archivo rechazado'))
     expect(result.current.uploadingTypes).toEqual([])
   })
+
+  it('uploadFile envia o File pronto com o tipo e resolve true no sucesso', async () => {
+    limpo()
+    const { result } = renderHook(() => useProfileDocuments(), { wrapper })
+    const firma = new File(['png'], 'firma.png', { type: 'image/png' })
+
+    let resultado: Promise<boolean> | undefined
+    act(() => { resultado = result.current.uploadFile('FIRMA', firma) })
+
+    expect(envios.vars).toEqual([{ type: 'FIRMA', file: firma }])
+    await waitFor(() => expect(result.current.uploadingTypes).toEqual(['FIRMA']))
+    await act(async () => envios.pendentes[0].resolve())
+    await expect(resultado).resolves.toBe(true)
+  })
+
+  it('uploadFile resolve false na falha e expõe o erro', async () => {
+    limpo()
+    const { result } = renderHook(() => useProfileDocuments(), { wrapper })
+
+    let resultado: Promise<boolean> | undefined
+    act(() => { resultado = result.current.uploadFile('FIRMA', arquivo('firma.png')) })
+    await act(async () => envios.pendentes[0].reject({ detail: 'Ancho mínimo 600 px', status: 422 }))
+
+    await expect(resultado).resolves.toBe(false)
+    await waitFor(() => expect(result.current.error).toBe('Ancho mínimo 600 px'))
+  })
 })

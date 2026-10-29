@@ -405,6 +405,8 @@
       "title": "Documentación profesional",
       "hint": "Puedes subir y reemplazar tus documentos. No se eliminan: el nuevo reemplaza al anterior.",
       "send": "Subir documento",
+      "sendSignature": "Subir firma",
+      "replaceSignature": "Reemplazar firma",
       "replace": "Reemplazar",
       "sendNamed": "Subir {{tipo}}",
       "replaceNamed": "Reemplazar {{tipo}}",
@@ -612,6 +614,8 @@
     "name": "Nombre completo",
     "sectionUser": "Datos de usuario",
     "sectionDocuments": "Documentos",
+    "signatureChoose": "Subir firma",
+    "signatureReplace": "Reemplazar firma",
     "sectionCourses": "Cursos habilitados",
     "enabledCourses": "Cursos habilitados",
     "suitability": "Idoneidad",
@@ -658,7 +662,8 @@
     "CV": "Currículum (CV)",
     "REUF": "Certificado REUF",
     "TITULO": "Título universitario",
-    "POSTGRADO": "Post-Grado"
+    "POSTGRADO": "Post-Grado",
+    "FIRMA": "Firma"
   },
   "documentStatus": {
     "sin_venc": "Sin vencimiento",

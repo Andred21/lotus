@@ -19,9 +19,17 @@ export function docStatus(validUntil: string | null): DocStatus {
 
 export type Idoneidade = 'idoneo' | 'por_vencer' | 'no_idoneo'
 
-/** Idoneidade provisória (visual). Regra canônica + gate por policy = futuro (RN-09). */
+/** Documentos de compliance: têm validade e entram na idoneidade. A `FIRMA` não
+ * é um deles — é imagem de assinatura, sem validade (spec D2 do bloco 40). */
+export const COMPLIANCE_DOC_TYPES = ['CV', 'REUF', 'TITULO', 'POSTGRADO'] as const
+
+/** Idoneidade provisória (visual). Regra canônica + gate por policy = futuro (RN-09).
+ * Só os documentos de compliance contam: a `FIRMA` presente não torna ninguém idôneo
+ * e a ausente não o torna inidôneo. */
 export function idoneidade(r: RedatorData): Idoneidade {
-  const docs = r.documents ?? []
+  const docs = (r.documents ?? []).filter((d) =>
+    (COMPLIANCE_DOC_TYPES as readonly string[]).includes(d.type),
+  )
   const statuses = docs.map((d: RedatorDocumentData) => docStatus(d.valid_until))
   if (docs.length === 0 || statuses.includes('vencido') || r.course_ids.length === 0) return 'no_idoneo'
   if (statuses.includes('por_vencer')) return 'por_vencer'
@@ -30,7 +38,7 @@ export function idoneidade(r: RedatorData): Idoneidade {
 
 /** Tipos de documento do redator. Vocabulário do backend (`documents[<tipo>]`),
  * não constante de componente. */
-export const DOC_TYPES = ['CV', 'REUF', 'TITULO', 'POSTGRADO'] as const
+export const DOC_TYPES = [...COMPLIANCE_DOC_TYPES, 'FIRMA'] as const
 export type DocType = (typeof DOC_TYPES)[number]
 
 /** Convenção única de cor para idoneidade e para status de documento.
