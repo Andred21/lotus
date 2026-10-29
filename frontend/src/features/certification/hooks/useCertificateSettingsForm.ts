@@ -25,6 +25,13 @@ export type ManagerSignatureControl = {
   confirmRemove: () => void
 }
 
+/** Avisos de sucesso: a tela decide o texto, o hook só diz QUANDO. */
+export type CertificateSettingsNotices = {
+  onSaved?: () => void
+  onSignatureSaved?: () => void
+  onSignatureRemoved?: () => void
+}
+
 function toFields(settings: CertificateSettingsData): Campos {
   return { manager_name: settings.manager_name, manager_title: settings.manager_title }
 }
@@ -38,7 +45,7 @@ function toFields(settings: CertificateSettingsData): Campos {
  * valor salvo. Nome e cargo salvam por PUT; a firma tem rota própria e sobe
  * assim que é confirmada — não espera o "Guardar".
  */
-export function useCertificateSettingsForm(onSaved?: () => void) {
+export function useCertificateSettingsForm({ onSaved, onSignatureSaved, onSignatureRemoved }: CertificateSettingsNotices = {}) {
   const state = useResourceState(useCertificateSettings())
   const update = useUpdateCertificateSettings()
   const upload = useUploadManagerSignature()
@@ -58,7 +65,10 @@ export function useCertificateSettingsForm(onSaved?: () => void) {
     upload: (file) =>
       upload
         .mutateAsync(file)
-        .then(() => true)
+        .then(() => {
+          onSignatureSaved?.()
+          return true
+        })
         .catch(() => false),
     confirmingRemove,
     removing: remove.isPending,
@@ -68,7 +78,12 @@ export function useCertificateSettingsForm(onSaved?: () => void) {
       setConfirmingRemove(true)
     },
     cancelRemove: () => setConfirmingRemove(false),
-    confirmRemove: () => remove.mutate(undefined, { onSuccess: () => setConfirmingRemove(false) }),
+    confirmRemove: () => remove.mutate(undefined, {
+        onSuccess: () => {
+          setConfirmingRemove(false)
+          onSignatureRemoved?.()
+        },
+      }),
   }
 
   return {

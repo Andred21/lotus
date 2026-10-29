@@ -12,6 +12,7 @@ import {
 import { dangerText } from '../../styles/tokens'
 import { AppButton } from '../AppButton'
 import { AppFileUpload } from '../AppFileUpload'
+import { signatureCheckerboard } from './checkerboard'
 import type { FileUploadHandlerEvent } from '../AppFileUpload'
 
 export interface AppSignatureUploadProps {
@@ -32,12 +33,6 @@ interface Preview {
 // A foto de celular crua passa fácil dos 10 MB dos documentos; o que sobe é o
 // PNG limpo (teto próprio, `SIGNATURE_MAX_BYTES`), então o original tem folga.
 const MAX_ORIGINAL_BYTES = 25 * 1024 * 1024
-
-// Xadrez com as cores do tema: é o que deixa o fundo transparente ENXERGÁVEL.
-const CHECKERBOARD = {
-  backgroundImage: 'repeating-conic-gradient(var(--surface-border) 0% 25%, var(--surface-card) 0% 50%)',
-  backgroundSize: '16px 16px',
-}
 
 /**
  * Escolha de assinatura com limpeza no navegador (spec D16 do bloco 40): escolhe,
@@ -92,7 +87,7 @@ export function AppSignatureUpload({ label, onConfirm, disabled = false, busy = 
     <div className="flex flex-col gap-3">
       {preview ? (
         <>
-          <div className="rounded-md border p-3" style={{ borderColor: 'var(--surface-border)', ...CHECKERBOARD }}>
+          <div className="rounded-md border p-3" style={{ borderColor: 'var(--surface-border)', ...signatureCheckerboard }}>
             <img src={preview.url} alt={t('signature.previewAlt')} className="mx-auto max-h-32 max-w-full" />
           </div>
           <div className="flex flex-wrap gap-2">

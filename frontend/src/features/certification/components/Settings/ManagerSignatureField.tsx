@@ -8,6 +8,7 @@ import {
   AppSignatureUpload,
   ConfirmDialog,
   FormErrorBanner,
+  signatureCheckerboard,
 } from '@shared/ui'
 import type { PreviewableFile } from '@shared/ui'
 import type { ManagerSignatureControl } from '../../hooks/useCertificateSettingsForm'
@@ -30,24 +31,35 @@ export function ManagerSignatureField({ control }: { control: ManagerSignatureCo
       <p id={labelId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
         {t('certificateSettings.signature')}
       </p>
+      {/* O seletor diz "verás el resultado antes de guardar" e o Guardar está logo
+          abaixo; sem esta linha a firma parece rascunho, e ela já vale para todos
+          os certificados, inclusive os emitidos (D5). */}
+      <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
+        {t('certificateSettings.signatureHelp')}
+      </p>
 
       <FormErrorBanner message={control.uploadError} />
 
       {current ? (
-        <AppFileRow
-          name={current.original_name}
-          size={current.size}
-          createdAt={current.created_at}
-          actions={
-            <AppFileActions
-              file={current}
-              onPreview={preview.open}
-              onRemove={control.askRemove}
-              removing={control.removing}
-              removeLabel={t('certificateSettings.removeSignature')}
-            />
-          }
-        />
+        <>
+          <div className="rounded-surface border p-3" style={{ borderColor: 'var(--surface-border)', ...signatureCheckerboard }}>
+            <img src={current.download_url} alt={current.original_name} className="mx-auto max-h-24 max-w-full object-contain" />
+          </div>
+          <AppFileRow
+            name={current.original_name}
+            size={current.size}
+            createdAt={current.created_at}
+            actions={
+              <AppFileActions
+                file={current}
+                onPreview={preview.open}
+                onRemove={control.askRemove}
+                removing={control.removing}
+                removeLabel={t('certificateSettings.removeSignature')}
+              />
+            }
+          />
+        </>
       ) : (
         <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
           {t('certificateSettings.noSignature')}

@@ -6,6 +6,7 @@ import {
   AppInputText,
   FormErrorBanner,
   FormErrorSummary,
+  InlineLoadState,
   useFormField,
   useToast,
 } from '@shared/ui'
@@ -20,7 +21,11 @@ import { ManagerSignatureField } from './ManagerSignatureField'
 export function CertificateSettingsPanel() {
   const { t } = useTranslation()
   const toast = useToast()
-  const f = useCertificateSettingsForm(() => toast.success(t('certificateSettings.saved')))
+  const f = useCertificateSettingsForm({
+    onSaved: () => toast.success(t('certificateSettings.saved')),
+    onSignatureSaved: () => toast.success(t('certificateSettings.signatureSaved')),
+    onSignatureRemoved: () => toast.success(t('certificateSettings.signatureRemoved')),
+  })
   const { state, submit, saving, fieldErrors, generalError } = f
   const campo = useFormField(f)
 
@@ -45,6 +50,14 @@ export function CertificateSettingsPanel() {
       }}
       className="flex max-w-xl flex-col gap-4"
     >
+      {/* Falha de refetch com dado em cache: a tela segue utilizável e o que o
+          usuário digitou fica. Só `failedWithoutData` troca a tela (frontend-fsliced). */}
+      <InlineLoadState
+        error={state.isError && state.data ? loadMessage(state, t) : null}
+        retryLabel={t('common.retry')}
+        onRetry={state.refetch}
+      />
+
       <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
         {t('certificateSettings.help')}
       </p>
