@@ -106,6 +106,9 @@
   separada**: desvio da invariante 10 decidido pelo João, para não abrir duas branches, duas
   worktrees e duas PRs. O portão do `lane.sh abrir` leu a ficha de uma cópia provisória no
   `backlog.md` do main tree, desfeita assim que a lane abriu.
+  O `43` nasceu em 2026-10-28, aberto pelo João a partir do diálogo de matrícula da Operación, que
+  empilhava os campos: a moldura dos diálogos e o tipo dos documentos do orçamento. Entrou pela PR
+  da própria lane, com o mesmo desvio da invariante 10 e a mesma cópia provisória do `42`.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -161,6 +164,8 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 ---
 
 # Fila priorizada
+
+---
 
 ## 42. `infra-producao-higiene-e-manutencao`
 

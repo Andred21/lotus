@@ -76,7 +76,7 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
   describe.each([
     { tema: 'claro', bloco: blocoClaro, folha: temaClaro },
     { tema: 'escuro', bloco: blocoRaiz, folha: temaEscuro },
-  ])('tema $tema', ({ bloco, folha }) => {
+  ])('tema $tema', ({ tema, bloco, folha }) => {
     const card = hex(folha, '--surface-card')
 
     it.each(tintasDe(bloco, folha))(
@@ -92,6 +92,22 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
       ({ tom, tinta }) => {
         const { hue, parte } = TONS[tom as keyof typeof TONS]
         expect(contraste(tinta, tingido(hex(folha, `--${hue}-500`), card, parte))).toBeGreaterThanOrEqual(4.5)
+      },
+    )
+
+    /** Bloco 43: o fundo de 15% do `AppTag` (`severityTone`) é também o do ícone
+     * da `ConfirmDialog`, e só o `accent` era medido nessa proporção.
+     * Fora só o par `danger` + escuro: o `AppTag` danger já media 4,36:1 ali
+     * antes do bloco, e o bloco não o corrige. O par está registrado como a P-105
+     * (`docs/superpowers/pendencias/abertas.md`): o filtro do par danger+escuro sai
+     * quando a P-105 for paga. */
+    it.each(
+      tintasDe(bloco, folha).filter(({ tom }) => tom !== 'accent' && !(tom === 'danger' && tema === 'escuro')),
+    )(
+      'o tom $tom passa AA sobre o fundo de 15% do `severityTone`',
+      ({ tom, tinta }) => {
+        const { hue } = TONS[tom as keyof typeof TONS]
+        expect(contraste(tinta, tingido(hex(folha, `--${hue}-500`), card, 0.15))).toBeGreaterThanOrEqual(4.5)
       },
     )
   })
@@ -312,5 +328,53 @@ describe('botão `warning` filled e outlined (P-30)', () => {
   it('o laranja de stock do Lara reprova, e a troca degrau a degrau reprova pior', () => {
     expect(contraste('#ffffff', '#f97316')).toBeLessThan(3)
     expect(contraste('#5e4803', '#a47d06')).toBeLessThan(3)
+  })
+})
+
+/**
+ * Bloco 43, spec §4.1: header e footer do diálogo padrão vestem a superfície
+ * FIXA do shell — a do sidebar e do navbar. A pintura mora em `brand-theme.css`,
+ * fora de layer, e por isso um seletor sem estado vence também o hover e o
+ * active do Lara; a premissa só vale enquanto o tema viver em `@layer primereact`.
+ */
+describe('moldura navy do diálogo padrão (bloco 43)', () => {
+  /** O corpo da regra cujo seletor é exatamente `seletor`. */
+  const regra = (seletor: string) =>
+    camadaDeMarca.match(new RegExp(`${seletor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`))?.[1] ?? ''
+
+  it('o tema vive em layer — é o que deixa a folha de marca vencer sem especificidade', () => {
+    expect(temaClaro).toContain('@layer primereact')
+    expect(temaEscuro).toContain('@layer primereact')
+  })
+
+  it('header e footer pintam o navy, com a tinta do shell e o foco celeste', () => {
+    const corpo = regra('.lotus-dialog .p-dialog-header,\n.lotus-dialog .p-dialog-footer')
+
+    expect(corpo).toMatch(/background:\s*var\(--brand-navy\)/)
+    expect(corpo).toMatch(/color:\s*var\(--shell-ink\)/)
+    expect(corpo).toMatch(/--focus-stroke:\s*var\(--brand\)/)
+    expect(corpo).toMatch(/--text-color-secondary:\s*var\(--shell-ink-muted\)/)
+  })
+
+  it('as tintas do shell passam AA sobre o navy', () => {
+    // As duas são `slate` copiado literal (comentário do `:root`): `--shell-ink`
+    // é o 300 (#cbd5e1) e `--shell-ink-muted` o 400 (#94a3b8).
+    const navy = hex(camadaDeMarca, '--brand-navy')
+    expect(navy).toBe('#0f2b3d')
+    expect(camadaDeMarca).toMatch(/--shell-ink:\s*oklch\(86\.9% 0\.022 252\.894\);/)
+    expect(camadaDeMarca).toMatch(/--shell-ink-muted:\s*oklch\(70\.4% 0\.04 256\.788\);/)
+    expect(contraste('#cbd5e1', navy)).toBeGreaterThanOrEqual(4.5)
+    expect(contraste('#94a3b8', navy)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('o botão primário de marca se destaca do navy (3:1, contorno)', () => {
+    expect(contraste(hex(camadaDeMarca, '--brand'), hex(camadaDeMarca, '--brand-navy'))).toBeGreaterThanOrEqual(3)
+  })
+
+  it.each([
+    '.lotus-dialog .p-dialog-header .p-dialog-title,\n.lotus-dialog .p-dialog-header .p-dialog-header-icon',
+    '.lotus-dialog .p-dialog-footer .p-button.p-button-text',
+  ])('%s lê a tinta do shell', (seletor) => {
+    expect(regra(seletor)).toMatch(/color:\s*var\(--shell-ink\)/)
   })
 })

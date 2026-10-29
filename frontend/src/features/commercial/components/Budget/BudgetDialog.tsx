@@ -26,6 +26,7 @@ export function BudgetDialog({
 
   return (
     <CrudDialog
+      size="md"
       visible={visible}
       mode={mode}
       title={isCreate ? t('budget.new') : (budget?.code ?? '')}

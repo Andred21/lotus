@@ -52,6 +52,7 @@ export function ClientDialog({
 
   return (
     <CrudDialog
+      size="lg"
       visible={visible}
       mode={mode}
       title={mode === "create" ? t("client.new") : form.legal_name || form.name}

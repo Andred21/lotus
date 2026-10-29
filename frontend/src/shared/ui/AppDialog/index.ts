@@ -1,3 +1,2 @@
 export { AppDialog } from './AppDialog'
-export type { AppDialogProps } from './AppDialog'
-export { appDialogPt } from './style'
+export type { AppDialogProps, AppDialogSize } from './AppDialog'

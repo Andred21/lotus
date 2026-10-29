@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppDropdown, FormField, FormErrorBanner } from '@shared/ui'
+import { ConfirmDialog, AppDropdown, FormField } from '@shared/ui'
 import type { CertificateData, EmissionPanelEnrollmentData, EmissionPanelTurmaData } from '@shared/types/generated'
 import { useMutationErrors } from '@shared/hooks'
 import { useIssueCertificate } from '../../api/certificatesApi'
@@ -15,7 +15,8 @@ type Props = {
 /** Confirmação de emissão individual. Reusado pelo Reemitir (Task 8) — por
  * isso a interface fica só nos 3 dados de domínio (`enrollment`/`turma`/
  * `onIssued`); quem monta decide como abre e fecha. Sem linha Código: o
- * código nasce dentro da transação do POST (D9), não existe antes dele. */
+ * código nasce dentro da transação do POST (D9), não existe antes dele.
+ * Confirmação compacta `confirm` (bloco 43). */
 export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Props) {
   const { t } = useTranslation()
   const issue = useIssueCertificate()
@@ -35,26 +36,19 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
     )
   }
 
-  const footer = (
-    <div className="flex justify-end gap-2">
-      <AppButton label={t('common.cancel')} text disabled={issue.isPending} onClick={onHide} />
-      <AppButton
-        variant="primary"
-        label={t('certificate.confirmEmit')}
-        icon="pi pi-check"
-        disabled={redatorId == null}
-        loading={issue.isPending}
-        onClick={submit}
-      />
-    </div>
-  )
-
   return (
-    <AppDialog visible header={t('certificate.confirmTitle')} onHide={onHide} footer={footer} closable={!issue.isPending}>
-      <div className="space-y-4">
-        <FormErrorBanner message={message} />
-        <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('certificate.confirmBody')}</p>
-
+    <ConfirmDialog
+      visible
+      title={t('certificate.confirmTitle')}
+      message={t('certificate.confirmBody')}
+      confirmLabel={t('certificate.confirmEmit')}
+      confirmDisabled={redatorId == null}
+      pending={issue.isPending}
+      error={message}
+      onConfirm={submit}
+      onCancel={onHide}
+    >
+      <div className="mt-4 space-y-4">
         {/* Campos de confirmação: nascem só-leitura, então não há controle a
             montar — `readOnly` sem filho. Input desabilitado cortava o nome
             longo e derrubava o contraste (spec BD-3 §4). */}
@@ -74,6 +68,6 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
           />
         </FormField>
       </div>
-    </AppDialog>
+    </ConfirmDialog>
   )
 }

@@ -7,6 +7,7 @@ use App\Domains\Commercial\Models\Quote;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -70,6 +71,46 @@ class CommercialFilesTest extends TestCase
 
         $this->postJson("/api/budgets/{$budget->id}/files", [
             'type' => 'random',
+            'file' => UploadedFile::fake()->create('x.pdf', 1, 'application/pdf'),
+        ])->assertStatus(422)->assertJsonValidationErrors('type');
+    }
+
+    /** @return array<string, array{string}> */
+    public static function tiposDoOrcamento(): array
+    {
+        return [
+            'orden de compra' => ['purchase_order'],
+            'factura' => ['invoice'],
+            'comprobante' => ['receipt'],
+        ];
+    }
+
+    #[DataProvider('tiposDoOrcamento')]
+    public function test_upload_de_cada_tipo_do_orcamento(string $tipo): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+
+        $this->postJson("/api/budgets/{$budget->id}/files", [
+            'type' => $tipo,
+            'file' => UploadedFile::fake()->create('anexo.pdf', 20, 'application/pdf'),
+        ])->assertCreated()->assertJsonPath('type', $tipo);
+
+        $this->assertDatabaseHas('files', [
+            'fileable_type' => 'budget', 'fileable_id' => $budget->id, 'type' => $tipo,
+        ]);
+    }
+
+    /** O tipo da cotação tem rota própria; no orçamento ele é recusado. */
+    public function test_tipo_da_cotacao_rejeitado_no_orcamento(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+
+        $this->postJson("/api/budgets/{$budget->id}/files", [
+            'type' => 'quote_document',
             'file' => UploadedFile::fake()->create('x.pdf', 1, 'application/pdf'),
         ])->assertStatus(422)->assertJsonValidationErrors('type');
     }

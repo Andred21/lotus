@@ -15,7 +15,7 @@ describe('AppDialog', () => {
     // O de maximizar ja tinha nome traduzido; o de FECHAR caia no
     // `localeOption('close')` do Prime (`dialog.cjs.js:835`), isto e "Close",
     // em todo dialogo da aplicacao.
-    render(<AppDialog visible header="Nuevo cliente" onHide={() => {}} />)
+    render(<AppDialog size="lg" visible header="Nuevo cliente" onHide={() => {}} />)
 
     expect(screen.getByRole('button', { name: 'Cerrar' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Maximizar diálogo' })).toBeTruthy()
@@ -27,6 +27,7 @@ describe('AppDialog', () => {
     // nome acessivel, e o pin nao apaga a customizacao dele.
     render(
       <AppDialog
+        size="lg"
         visible
         header="Nuevo cliente"
         onHide={() => {}}
@@ -36,5 +37,53 @@ describe('AppDialog', () => {
 
     const fechar = screen.getByRole('button', { name: 'Cerrar' })
     expect(fechar.className).toContain('marcador-do-chamador')
+  })
+})
+
+/** Bloco 43, spec §4.1: o tamanho decide o teto de largura e se maximiza. */
+describe('AppDialog — tamanho', () => {
+  it.each([
+    ['sm', 'max-w-[32rem]'],
+    ['md', 'max-w-[48rem]'],
+    ['lg', 'max-w-[64rem]'],
+  ] as const)('%s crava o teto %s e a moldura navy', (size, teto) => {
+    render(<AppDialog size={size} visible header="Diálogo" onHide={() => {}} />)
+
+    const raiz = document.querySelector('.p-dialog')
+    expect(raiz?.className).toContain('w-[95vw]')
+    expect(raiz?.className).toContain(teto)
+    expect(raiz?.className).toContain('lotus-dialog')
+  })
+
+  it.each(['sm', 'md'] as const)('%s não maximiza', (size) => {
+    render(<AppDialog size={size} visible header="Diálogo" onHide={() => {}} />)
+
+    expect(document.querySelector('.p-dialog-header-maximize')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeTruthy()
+  })
+
+  it('lg maximiza', () => {
+    render(<AppDialog size="lg" visible header="Diálogo" onHide={() => {}} />)
+
+    expect(screen.getByRole('button', { name: 'Maximizar diálogo' })).toBeTruthy()
+  })
+
+  it('o lg maximizado não fica preso ao teto', () => {
+    render(<AppDialog size="lg" visible header="Diálogo" onHide={() => {}} />)
+
+    expect(document.querySelector('.p-dialog')?.className).toContain('[&.p-dialog-maximized]:max-w-none')
+  })
+
+  it('o footer navy tem respiro em cima e embaixo', () => {
+    render(<AppDialog size="md" visible header="Diálogo" footer={<span>rodapé</span>} onHide={() => {}} />)
+
+    expect(document.querySelector('.p-dialog-footer')?.className).toContain('py-3')
+  })
+
+  it('o chamador não religa o maximizar fora do lg', () => {
+    // @ts-expect-error -- `maximizable` saiu do tipo: quem decide é o tamanho.
+    render(<AppDialog size="sm" maximizable visible header="Diálogo" onHide={() => {}} />)
+
+    expect(document.querySelector('.p-dialog-header-maximize')).toBeNull()
   })
 })

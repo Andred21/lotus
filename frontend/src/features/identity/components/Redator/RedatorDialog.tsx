@@ -62,6 +62,7 @@ export function RedatorDialog({
 
   return (
     <CrudDialog
+      size="lg"
       visible={visible}
       mode={mode}
       title={mode === "create" ? t("redator.new") : form.name}

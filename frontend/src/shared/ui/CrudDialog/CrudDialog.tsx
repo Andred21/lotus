@@ -1,12 +1,13 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog } from '../AppDialog'
+import { AppDialog, type AppDialogSize } from '../AppDialog'
 import { AppButton } from '../AppButton'
 import type { DialogMode } from '@shared/lib'
 
 /**
  * Dialog unificado de cadastro: visualização, edição e criação são o mesmo
- * componente — no create os campos vêm vazios. Maximizable.
+ * componente — no create os campos vêm vazios. O tamanho é do chamador
+ * (bloco 43): `md` ou `lg` nos cadastros; maximiza só no `lg`.
  *
  * Os botões vivem no footer, inclusive o "Editar" do modo view: o header fica
  * só com título e conteúdo contextual (`headerExtra`).
@@ -33,8 +34,10 @@ import type { DialogMode } from '@shared/lib'
  * o efeito rodaria o conteúdo do portal ainda não está no documento.
  */
 export function CrudDialog({
-  visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, submitLabel, headerExtra, children,
+  size, visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, submitLabel, headerExtra, children,
 }: {
+  /** Teto de largura e maximizar (bloco 43) — repassado ao `AppDialog`. */
+  size: AppDialogSize
   visible: boolean
   mode: DialogMode
   title: string
@@ -115,6 +118,7 @@ export function CrudDialog({
 
   return (
     <AppDialog
+      size={size}
       header={header}
       visible={visible}
       onHide={onHide}

@@ -49,6 +49,7 @@ export function StudentDialog({
 
   return (
     <CrudDialog
+      size="lg"
       visible={visible}
       mode={mode}
       title={mode === "create" ? t("student.new") : form.name}

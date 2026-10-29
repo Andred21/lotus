@@ -537,8 +537,13 @@
     "uploadDocument": "Upload document",
     "noDocuments": "No documents",
     "fileTypeLabel": "Document type",
-    "fileTypeInvoice": "Invoice",
-    "fileTypeReceipt": "Receipt",
+    "uploadTitle": "Upload document",
+    "chooseFile": "Choose file",
+    "documentType": {
+      "purchase_order": "Purchase order",
+      "invoice": "Invoice",
+      "receipt": "Receipt"
+    },
     "confirmDeleteTitle": "Delete budget?",
     "confirmDeleteBody": "Its quotes are archived along with it. You can restore it from Archived."
   },
@@ -773,8 +778,7 @@
       "move": {
         "title": "Student belongs to another client",
         "body": "{{name}} is linked to {{previous}}. Enrolling here will move them to {{current}}.",
-        "confirm": "Yes, move and continue",
-        "cancel": "Cancel"
+        "confirm": "Yes, move and continue"
       },
       "import": {
         "title": "Import sheet",
