@@ -50,6 +50,14 @@ foram tomadas. Cada linha diz o que custa se estiver errada.
     embora o DoD 9 esteja cumprido. *Se estiver errada:* um corpo grande (o motivo do Revoke, a
     lista do Issue) fica apertado. Ficam apontados para o `lotus-ui-review` do `/revisar-bloco`.
 
+## Decisão durante o `/revisar-bloco`
+
+12. **`ClientDialog`, `StudentDialog`, `RedatorDialog` e o picker do `RedatorDesignation` em `lg`**
+    (decisão do João, 2026-10-29, pedida durante a rodada 1 da revisão). Antes eram `md`, e o picker
+    era `sm`; a tabela §4.3 da spec foi corrigida junto. O `lg` liga o maximizar nos quatro, porque
+    o `AppDialog` decide o maximizar pelo tamanho. *Se estiver errada:* os cadastros abrem a
+    64rem, com campos mais largos que o conteúdo pede.
+
 ## Minors adiados pelas revisões de task
 
 A revisão final fez a triagem e concluiu que todos podem ficar.

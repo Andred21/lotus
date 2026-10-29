@@ -98,9 +98,9 @@ que o builder pode corrigir com motivo:
 
 | Família | Consumidores |
 |---|---|
-| `sm` | `EnrollStudentForm`, `RegisterResultDialog`, `ImportDialog`, `RedatorDesignation` (picker), `ReissueDialog`, `BatchIssueDialog` |
-| `md` | `BudgetDialog`, `ClientDialog`, `CourseDialog`, `RoleDialog`, `StaffUserDialog`, `StudentDialog`, `RedatorDialog`, `IssuedDialog` |
-| `lg` | `QuoteWizard`, `AppFilePreviewDialog` (e quem o usa: `FileList`, `DocumentTypeCard`, `RedatorDocumentsSection`, `ProfileDocumentsSection`), `CertificateViewDialog` |
+| `sm` | `EnrollStudentForm`, `RegisterResultDialog`, `ImportDialog`, `ReissueDialog`, `BatchIssueDialog` |
+| `md` | `BudgetDialog`, `CourseDialog`, `RoleDialog`, `StaffUserDialog`, `IssuedDialog` |
+| `lg` | `ClientDialog`, `StudentDialog`, `RedatorDialog`, `RedatorDesignation` (picker) — decisão do João, rulings item 12 —, `QuoteWizard`, `AppFilePreviewDialog` (e quem o usa: `FileList`, `DocumentTypeCard`, `RedatorDocumentsSection`, `ProfileDocumentsSection`), `CertificateViewDialog` |
 | confirmação `confirm` | `ConfirmIssueDialog`, `BudgetOverlays` (`approve`) |
 | confirmação `warning` | `MoveConfirmDialog`, `RedatorDesignation` (designar inelegível, J12) |
 | confirmação `danger` | `RemoveEnrollmentDialog`, `TurmaDocuments`, `ConcludePanel`, `BudgetOverlays` (demais ações), `RevokeDialog`, `ArchiveConfirmDialog` (`CatalogPage`, `OperationPage`, `CommercialPage`, `AdministracionPage`, `RedatoresTab`) |

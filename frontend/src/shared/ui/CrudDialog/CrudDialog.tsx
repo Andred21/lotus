@@ -7,7 +7,7 @@ import type { DialogMode } from '@shared/lib'
 /**
  * Dialog unificado de cadastro: visualização, edição e criação são o mesmo
  * componente — no create os campos vêm vazios. O tamanho é do chamador
- * (bloco 43): `md` nos cadastros; maximiza só no `lg`.
+ * (bloco 43): `md` ou `lg` nos cadastros; maximiza só no `lg`.
  *
  * Os botões vivem no footer, inclusive o "Editar" do modo view: o header fica
  * só com título e conteúdo contextual (`headerExtra`).
