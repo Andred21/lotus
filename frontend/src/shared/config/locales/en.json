@@ -188,7 +188,8 @@
     "operation_turma_submit_docs": "Upload class documentation (Flow 1/4 — editor action)",
     "certification_certificate_view": "View certificates",
     "certification_certificate_issue": "Issue certificate (Flow 5)",
-    "certification_certificate_revoke": "Revoke certificate (Flow 6 — sensitive, legal weight)"
+    "certification_certificate_revoke": "Revoke certificate (Flow 6 — sensitive, legal weight)",
+    "certification_settings_manage": "Configure certificates: manager, title and signature (superadmin only)"
   },
   "role": {
     "new": "New role",

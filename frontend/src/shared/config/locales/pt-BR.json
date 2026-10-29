@@ -188,7 +188,8 @@
     "operation_turma_submit_docs": "Subir documentação da turma (Fluxo 1/4 — ação do redator)",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado (Fluxo 5)",
-    "certification_certificate_revoke": "Revogar certificado (Fluxo 6 — sensível, peso legal)"
+    "certification_certificate_revoke": "Revogar certificado (Fluxo 6 — sensível, peso legal)",
+    "certification_settings_manage": "Configurar certificados: gerente, cargo e assinatura (só superadmin)"
   },
   "role": {
     "new": "Novo perfil",

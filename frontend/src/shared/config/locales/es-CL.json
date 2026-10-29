@@ -188,7 +188,8 @@
     "operation_turma_submit_docs": "Subir documentación del grupo (Flujo 1/4 — acción del redactor)",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado (Flujo 5)",
-    "certification_certificate_revoke": "Revocar certificado (Flujo 6 — sensible, peso legal)"
+    "certification_certificate_revoke": "Revocar certificado (Flujo 6 — sensible, peso legal)",
+    "certification_settings_manage": "Configurar certificados: gerente, cargo y firma (solo superadmin)"
   },
   "role": {
     "new": "Nuevo rol",

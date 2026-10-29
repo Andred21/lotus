@@ -136,6 +136,17 @@ total: number,
 last_page: number,
 total_unfiltered: number,
 };
+export type CertificateSettingsData = {
+manager_name: string,
+manager_title: string,
+signature: CertificateSignatureFileData | null,
+};
+export type CertificateSignatureFileData = {
+original_name: string,
+size: number,
+created_at: string | null,
+download_url: string,
+};
 export type CertificateSnapshotData = {
 schema_version: number,
 aluno: SnapshotPartyData,

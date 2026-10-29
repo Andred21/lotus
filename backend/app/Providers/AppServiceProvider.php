@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Catalog\Models\CourseCertificateTemplate;
 use App\Domains\Catalog\Models\CourseModule;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Models\CertificateSettings;
 use App\Domains\Certification\Services\CertificateVigenciaResolver;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
@@ -101,6 +102,7 @@ class AppServiceProvider extends ServiceProvider
             'course_certificate_template' => CourseCertificateTemplate::class,
             'course_module' => CourseModule::class,
             'certificate' => Certificate::class,
+            'certificate_settings' => CertificateSettings::class,
             'turma' => Turma::class,
             'enrollment' => Enrollment::class,
             'budget' => Budget::class,

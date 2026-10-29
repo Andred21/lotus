@@ -61,6 +61,7 @@ class UploadPolicyRatchetTest extends TestCase
         'app/Domains/Identity/Actions/CreateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorController::documentsFromRequest`, um a um.',
         'app/Domains/Identity/Actions/UpdateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorController::documentsFromRequest`, um a um.',
         'app/Domains/Identity/Actions/StoreRedatorDocumentAction.php' => 'Recebe o arquivo já validado pelos controllers de documento de redator e de perfil.',
+        'app/Domains/Certification/Actions/StoreManagerSignatureAction.php' => 'Recebe o arquivo já validado pelo `CertificateSettingsController::storeSignature`, que pede a classe Assinatura.',
         'app/Domains/Identity/Data/RedatorData.php' => 'DTO de leitura e escrita do redator: o campo multipart `documents` é validado no controller, não aqui.',
         'app/Providers/AppServiceProvider.php' => 'A chave `file` que casa aqui é a entrada do morph map do ADR-10, e não tem nada com upload.',
         'app/Shared/Files/Rules/LarguraMinimaDeImagem.php' => 'É a regra de largura que a própria peça de política publica (só a classe Assinatura a inclui): roda dentro dela, depois do tipo e do tamanho.',
