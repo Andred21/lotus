@@ -109,6 +109,7 @@ quotes: QuoteData[],
 payment_terms: undefined | string | null,
 files: FileData[],
 };
+export type BudgetDocumentType = 'purchase_order' | 'invoice' | 'receipt';
 export type CertificateData = {
 id: number,
 uuid: string,

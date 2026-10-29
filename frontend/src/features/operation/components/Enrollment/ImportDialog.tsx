@@ -14,14 +14,23 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
   const { t } = useTranslation()
   const f = useImportStudentsFlow(turmaId, onHide)
 
+  // O Cerrar só existe depois do resultado, como antes; antes dele, a saída é o X.
+  const footer = f.result ? (
+    <div className="flex justify-end">
+      <AppButton label={t('operation.enrollment.import.close')} text onClick={f.close} />
+    </div>
+  ) : undefined
+
   return (
     <AppDialog
+      size="sm"
       visible={visible}
       header={t('operation.enrollment.import.title')}
       onHide={f.close}
       closable={!f.pending}
       closeOnEscape={!f.pending}
       dismissableMask={false}
+      footer={footer}
     >
       <div className="space-y-4">
         {!f.result && (
@@ -40,14 +49,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
           </>
         )}
 
-        {f.result && (
-          <>
-            <ImportResultSummary result={f.result} />
-            <div className="flex justify-end">
-              <AppButton label={t('operation.enrollment.import.close')} text onClick={f.close} />
-            </div>
-          </>
-        )}
+        {f.result && <ImportResultSummary result={f.result} />}
 
         {(f.sizeError || f.message) && (
           <p className="text-sm" style={{ color: dangerText }}>

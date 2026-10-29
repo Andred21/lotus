@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppTextarea, FormField, FormErrorBanner } from '@shared/ui'
+import { ConfirmDialog, AppTextarea, FormField } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { useMutationErrors } from '@shared/hooks'
 import { useRevokeCertificate } from '../../api/certificatesApi'
@@ -13,10 +13,10 @@ type Props = {
 }
 
 /** Confirmação de revogação — ação irreversível, peso legal (RN de
- * certificação). Motivo obrigatório (`RevokeCertificateData::rules()`:
- * `required|string|max:255`); o disable do botão evita a viagem ao backend
- * para o caso óbvio, mas o 422 real (motivo vazio ou too-long) sobe pelo
- * banner igual. */
+ * certificação), por isso `danger`. Motivo obrigatório
+ * (`RevokeCertificateData::rules()`: `required|string|max:255`); o disable do
+ * botão evita a viagem ao backend para o caso óbvio, mas o 422 real (motivo
+ * vazio ou too-long) sobe pelo banner igual. */
 export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
   const { t } = useTranslation()
   const revoke = useRevokeCertificate()
@@ -28,38 +28,27 @@ export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
     revoke.mutate({ certificateId: certificate.id, reason }, { onSuccess: onRevoked })
   }
 
-  const footer = (
-    <div className="flex justify-end gap-2">
-      <AppButton label={t('common.cancel')} text disabled={revoke.isPending} onClick={onHide} />
-      <AppButton
-        label={t('certificate.revokeConfirm')}
-        icon="pi pi-ban"
-        severity="danger"
-        disabled={reason.trim() === ''}
-        loading={revoke.isPending}
-        onClick={submit}
-      />
-    </div>
-  )
-
   return (
-    <AppDialog
+    <ConfirmDialog
       visible
-      header={t('certificate.revokeTitle')}
-      onHide={onHide}
-      footer={footer}
-      closable={!revoke.isPending}
+      severity="danger"
+      title={t('certificate.revokeTitle')}
+      message={t('certificate.revokeBody')}
+      confirmLabel={t('certificate.revokeConfirm')}
+      confirmIcon="pi pi-ban"
+      confirmDisabled={reason.trim() === ''}
+      pending={revoke.isPending}
+      error={message}
+      onConfirm={submit}
+      onCancel={onHide}
     >
-      <div className="space-y-4">
-        <FormErrorBanner message={message} />
-        <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('certificate.revokeBody')}</p>
-
+      <div className="mt-4 space-y-4">
         <CertificateIdentityFields certificate={certificate} />
 
         <FormField label={t('certificate.revokeReason')} error={fieldErrors?.reason?.[0]}>
           <AppTextarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} autoResize className="w-full" />
         </FormField>
       </div>
-    </AppDialog>
+    </ConfirmDialog>
   )
 }

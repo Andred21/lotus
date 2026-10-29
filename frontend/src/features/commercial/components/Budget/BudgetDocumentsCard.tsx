@@ -1,29 +1,24 @@
 import { useTranslation } from 'react-i18next'
-import {
-  AppCard, AppCardHeader, AppDropdown, AppFileUpload, FormErrorBanner,
-  type FileUploadHandlerEvent,
-} from '@shared/ui'
+import { AppButton, AppCard, AppCardHeader, FormErrorBanner } from '@shared/ui'
 import type { FileData } from '@shared/types/generated'
-import type { BudgetFileType } from '../../api/useCommercialFiles'
+import { useBudgetDocumentUpload } from '../../hooks/useBudgetDocumentUpload'
+import { BudgetDocumentUploadDialog } from './BudgetDocumentUploadDialog'
 import { FileList } from './FileList'
 
-/** Card de documentos do orçamento: tipo, upload, erros e lista. Toda a
- * orquestração continua no `useBudgetDetail` — este componente só consome. */
+/** Card de documentos do orçamento: o botão de subir, o erro de remoção e a
+ * lista com a tag do tipo. Subir é um diálogo (bloco 43), cujo estado mora no
+ * `useBudgetDocumentUpload`; este componente só consome. */
 export function BudgetDocumentsCard({
-  files, fileType, onFileTypeChange, uploadPending,
-  onUpload, onSizeReject, onRemove, fileError, fileSizeError,
+  budgetId, files, onRemove, fileError,
 }: {
+  budgetId: number
   files: FileData[]
-  fileType: BudgetFileType
-  onFileTypeChange: (type: BudgetFileType) => void
-  uploadPending: boolean
-  onUpload: (e: FileUploadHandlerEvent) => void
-  onSizeReject: (message: string) => void
   onRemove: (fileId: number) => void
+  /** Erro de REMOÇÃO de anexo; o do upload aparece dentro do diálogo. */
   fileError: string | null
-  fileSizeError: string | null
 }) {
   const { t } = useTranslation()
+  const upload = useBudgetDocumentUpload(budgetId)
 
   return (
     <AppCard>
@@ -31,33 +26,14 @@ export function BudgetDocumentsCard({
         title={t('budget.documents')}
         count={files.length}
         actions={
-          <>
-            <div className="w-44">
-              <AppDropdown
-                aria-label={t('budget.fileTypeLabel')}
-                value={fileType}
-                options={[
-                  { label: t('budget.fileTypeInvoice'), value: 'invoice' },
-                  { label: t('budget.fileTypeReceipt'), value: 'receipt' },
-                ]}
-                onChange={(e) => onFileTypeChange(e.value as BudgetFileType)}
-              />
-            </div>
-            <AppFileUpload
-              chooseOptions={{ icon: 'pi pi-upload' }}
-              chooseLabel={t('budget.uploadDocument')}
-              disabled={uploadPending}
-              onSizeReject={onSizeReject}
-              uploadHandler={onUpload}
-            />
-          </>
+          <AppButton variant="compact" icon="pi pi-upload" label={t('budget.uploadDocument')} onClick={upload.open} />
         }
       />
       <div className="mx-4 mt-4 empty:m-0">
         <FormErrorBanner message={fileError} />
-        {fileSizeError && <FormErrorBanner message={fileSizeError} />}
       </div>
-      <FileList files={files} onRemove={onRemove} />
+      <FileList files={files} onRemove={onRemove} showType />
+      <BudgetDocumentUploadDialog u={upload} />
     </AppCard>
   )
 }

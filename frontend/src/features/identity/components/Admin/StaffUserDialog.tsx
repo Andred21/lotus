@@ -54,6 +54,7 @@ export function StaffUserDialog({
 
   return (
     <CrudDialog
+      size="md"
       visible={visible}
       mode={mode}
       title={mode === "create" ? t("admin.new") : form.name}

@@ -9,7 +9,7 @@ beforeAll(async () => {
 
 function Harness({ pending, invalido }: { pending: boolean; invalido: boolean }) {
   return (
-    <CrudDialog visible mode="create" title="Curso" onHide={() => {}} onSubmit={() => {}} pending={pending}>
+    <CrudDialog size="md" visible mode="create" title="Curso" onHide={() => {}} onSubmit={() => {}} pending={pending}>
       <input aria-label="Nombre" aria-invalid={invalido || undefined} />
     </CrudDialog>
   )
@@ -60,7 +60,7 @@ describe('CrudDialog — foco na abertura', () => {
 
   it('corpo sem controle recebe o foco no próprio container, nunca no <body>', async () => {
     render(
-      <CrudDialog visible mode="view" title="Curso" onHide={() => {}}>
+      <CrudDialog size="md" visible mode="view" title="Curso" onHide={() => {}}>
         <p>Sin controles</p>
       </CrudDialog>,
     )

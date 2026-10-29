@@ -40,6 +40,7 @@ export function BatchIssueDialog({ turma, onHide }: Props) {
 
   return (
     <AppDialog
+      size="sm"
       visible
       header={t(batch.report ? 'certificate.batchResultTitle' : 'certificate.batchConfirmTitle')}
       onHide={onHide}

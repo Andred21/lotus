@@ -537,8 +537,13 @@
     "uploadDocument": "Enviar documento",
     "noDocuments": "Sem documentos",
     "fileTypeLabel": "Tipo de documento",
-    "fileTypeInvoice": "Fatura",
-    "fileTypeReceipt": "Comprovante",
+    "uploadTitle": "Enviar documento",
+    "chooseFile": "Escolher arquivo",
+    "documentType": {
+      "purchase_order": "Ordem de compra",
+      "invoice": "Fatura",
+      "receipt": "Comprovante"
+    },
     "confirmDeleteTitle": "Excluir orçamento?",
     "confirmDeleteBody": "As cotações dele são arquivadas junto. Você poderá restaurá-lo em Arquivados."
   },
@@ -773,8 +778,7 @@
       "move": {
         "title": "O aluno pertence a outro cliente",
         "body": "{{name}} está vinculado a {{previous}}. Ao matriculá-lo aqui, passará para {{current}}.",
-        "confirm": "Sim, mover e continuar",
-        "cancel": "Cancelar"
+        "confirm": "Sim, mover e continuar"
       },
       "import": {
         "title": "Importar planilha",

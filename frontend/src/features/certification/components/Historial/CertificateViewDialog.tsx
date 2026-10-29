@@ -48,7 +48,7 @@ export function CertificateViewDialog({ certificateId, certificate, loading, err
   )
 
   return (
-    <AppDialog visible header={t('certificate.viewTitle')} onHide={onHide} footer={footer}>
+    <AppDialog size="lg" visible header={t('certificate.viewTitle')} onHide={onHide} footer={footer}>
       {loading && <AppSkeleton height="14rem" />}
 
       {error && (

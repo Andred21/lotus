@@ -2,11 +2,12 @@ import { useTranslation } from 'react-i18next'
 import { AppDropdown, AppInputText, type FieldComponent } from '@shared/ui'
 import type { RedatorFormFields } from '../../hooks/useRedatorForm'
 
-/** Os quatro campos de identificação do redator, no grid 2×2 de sempre.
+/** Os quatro campos de identificação do redator, em duas colunas a partir de
+ * `sm`: Nome │ RUT e E-mail │ Teléfono (bloco 43).
  *
  * Não é um `PersonFields` genérico de propósito: os grids de Redator, Aluno e
- * Staff divergem (o aluno tem nome em linha inteira e empresa ao lado do
- * telefone), e unificá-los mudaria o que três telas renderizam.
+ * Staff divergem (o redator tem o acesso abaixo do telefone; o aluno, a
+ * empresa fora do grid), e unificá-los mudaria o que três telas renderizam.
  *
  * `form` entra além do `Field` por UM motivo: o campo de acesso só existe em
  * redator já existente (`form.id !== undefined`), e essa condição — e o
@@ -22,7 +23,7 @@ export function RedatorIdentityFields({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-1">
+      <div className="grid gap-4 sm:grid-cols-2">
         <Field name="name" label={t('redator.name')}>
           <AppInputText className="w-full" />
         </Field>

@@ -78,8 +78,8 @@ export function AppFilePreviewDialog({ file, visible, onHide }: AppFilePreviewDi
     <AppDialog
       visible={visible}
       onHide={onHide}
+      size="lg"
       header={file.original_name}
-      style={{ width: '70vw' }}
       // Desligado de propósito: o `focusOnShow` do Prime foca o primeiro
       // FOCÁVEL, que no caminho do PDF é o `<iframe>` — ver o docblock. O foco
       // é posto no contêiner, no `onShow`, que é quando o diálogo já está no

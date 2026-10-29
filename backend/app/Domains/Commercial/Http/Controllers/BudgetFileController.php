@@ -2,6 +2,7 @@
 
 namespace App\Domains\Commercial\Http\Controllers;
 
+use App\Domains\Commercial\Enums\BudgetDocumentType;
 use App\Domains\Commercial\Models\Budget;
 use App\Http\Controllers\Controller;
 use App\Shared\Files\Actions\UploadFileAction;
@@ -10,17 +11,19 @@ use App\Shared\Files\Data\FileData;
 use App\Shared\Files\Models\File;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rules\Enum;
 
 /**
- * Anexos do orçamento: fatura (`invoice`) e comprovante (`receipt`). Registro
- * financeiro — NÃO bloqueia nenhuma ação (RN-14).
+ * Anexos do orçamento: orden de compra, fatura e comprovante
+ * (`BudgetDocumentType`). Registro financeiro — NÃO bloqueia nenhuma ação
+ * (RN-14).
  */
 class BudgetFileController extends Controller
 {
     public function store(Request $request, Budget $budget, UploadFileAction $action): FileData
     {
         $validated = $request->validate([
-            'type' => ['required', 'in:invoice,receipt'],
+            'type' => ['required', new Enum(BudgetDocumentType::class)],
             'file' => ContentClass::Documento->regras(),
         ]);
 

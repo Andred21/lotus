@@ -11,6 +11,10 @@ type Props = {
   onHide: () => void
 }
 
+/** Matrícula de aluno na turma, em dois passos: o RUT primeiro (o backend diz
+ * se o aluno existe e de qual cliente é) e os dados depois. Grade de duas
+ * colunas a partir de `sm` — RUT │ Nome, E-mail │ Teléfono — e botões no
+ * footer, que muda com o passo (bloco 43). */
 export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }: Props) {
   const { t } = useTranslation()
   const f = useEnrollStudentFlow(turmaId, turmaClientName, onHide)
@@ -22,62 +26,66 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
 
   const err = (key: string) => f.fieldErrors?.[key]?.[0]
 
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <AppButton label={t('operation.enrollment.form.cancel')} text onClick={close} />
+      {f.step === 'rut' ? (
+        <AppButton
+          variant="primary"
+          label={t('operation.enrollment.form.verify')}
+          disabled={!f.rut || f.previewing}
+          onClick={f.runPreview}
+        />
+      ) : (
+        <AppButton
+          variant="primary"
+          label={t('operation.enrollment.form.submit')}
+          disabled={!f.details.name || f.submitting}
+          onClick={f.submit}
+        />
+      )}
+    </div>
+  )
+
   return (
-    <AppDialog visible={visible} header={t('operation.enrollment.form.title')} onHide={close}>
-      <div className="space-y-4">
-        <FormErrorSummary errors={f.fieldErrors} mapped={['rut', 'name', 'email', 'phone']} />
+    <AppDialog size="sm" visible={visible} header={t('operation.enrollment.form.title')} onHide={close} footer={footer}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="empty:hidden sm:col-span-2">
+          <FormErrorSummary errors={f.fieldErrors} mapped={['rut', 'name', 'email', 'phone']} />
+        </div>
 
-        <FormField label={t('operation.enrollment.form.rutLabel')} error={err('rut')}>
-          <AppInputText
-            value={f.rut}
-            onChange={(e) => f.setRut(e.target.value)}
-            disabled={f.step === 'details'}
-          />
-        </FormField>
-
-        {f.step === 'rut' && (
-          <div className="flex justify-end gap-2">
-            <AppButton label={t('operation.enrollment.form.cancel')} outlined onClick={close} />
-            <AppButton
-              variant="primary"
-              label={t('operation.enrollment.form.verify')}
-              disabled={!f.rut || f.previewing}
-              onClick={f.runPreview}
+        <div className={f.step === 'rut' ? 'sm:col-span-2' : undefined}>
+          <FormField label={t('operation.enrollment.form.rutLabel')} error={err('rut')}>
+            <AppInputText
+              className="w-full"
+              value={f.rut}
+              onChange={(e) => f.setRut(e.target.value)}
+              disabled={f.step === 'details'}
             />
-          </div>
-        )}
+          </FormField>
+        </div>
 
         {f.step === 'details' && (
           <>
             <FormField label={t('operation.enrollment.form.nameLabel')} error={err('name')}>
-              <AppInputText value={f.details.name} onChange={(e) => f.setField('name', e.target.value)} />
+              <AppInputText className="w-full" value={f.details.name} onChange={(e) => f.setField('name', e.target.value)} />
             </FormField>
-            <FormField
-              label={t('operation.enrollment.form.emailLabel')}
-              error={err('email')}
-            >
-              <AppInputText value={f.details.email} onChange={(e) => f.setField('email', e.target.value)} />
+            <FormField label={t('operation.enrollment.form.emailLabel')} error={err('email')}>
+              <AppInputText className="w-full" value={f.details.email} onChange={(e) => f.setField('email', e.target.value)} />
+            </FormField>
+            <FormField label={t('operation.enrollment.form.phoneLabel')} error={err('phone')}>
+              <AppInputText className="w-full" value={f.details.phone} onChange={(e) => f.setField('phone', e.target.value)} />
             </FormField>
             {f.isNewStudent && (
-              <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('operation.enrollment.form.emailHintNew')}</p>
+              <p className="text-sm sm:col-span-2" style={{ color: 'var(--text-color-secondary)' }}>
+                {t('operation.enrollment.form.emailHintNew')}
+              </p>
             )}
-            <FormField label={t('operation.enrollment.form.phoneLabel')} error={err('phone')}>
-              <AppInputText value={f.details.phone} onChange={(e) => f.setField('phone', e.target.value)} />
-            </FormField>
-            <div className="flex justify-end gap-2">
-              <AppButton label={t('operation.enrollment.form.cancel')} outlined onClick={close} />
-              <AppButton
-                variant="primary"
-                label={t('operation.enrollment.form.submit')}
-                disabled={!f.details.name || f.submitting}
-                onClick={f.submit}
-              />
-            </div>
           </>
         )}
 
         {f.message && (
-          <p className="text-sm" style={{ color: dangerText }}>
+          <p className="text-sm sm:col-span-2" style={{ color: dangerText }}>
             {f.message}
           </p>
         )}
