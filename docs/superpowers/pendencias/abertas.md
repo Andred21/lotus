@@ -1308,3 +1308,17 @@ de matrícula sem certificado vigente. O `ConfirmDialog` da conclusão (`confirm
 irreversible. ¿Confirmas la conclusión de la turma?") segue dizendo o contrário do aviso da aba Alumnos.
 É decisão de copy, nas três locales: o que de fato é irreversível (matricular, remover, o resultado
 com certificado emitido) e o que não é.
+
+## P-105 — a tinta `danger` do tema escuro reprova AA sobre o fundo de 15% do `AppTag`
+
+**Bloco:** — · **Quem decide:** João · **Gatilho:** bloco que tocar `--tone-danger-ink`
+(`brand-theme.css`), o `severityTone` do `AppTag` ou a P-74. Revisar em **2026-11-07**.
+
+O item 43 passou a medir no `frontend/tests/tone-ink.test.ts` cada tinta de severidade sobre o
+fundo de 15% do `severityTone`, que é o da tag `AppTag` e o do ícone circular da `ConfirmDialog`.
+Só um par reprova: `danger` no tema escuro, com `--red-400` (#ff6259) sobre
+`color-mix(--red-500 15%, --surface-card)`, a 4,36:1. O defeito é anterior ao bloco: o `AppTag`
+danger já pinta o texto assim no escuro. Na `ConfirmDialog` a tinta só pinta o ícone, que é
+decorativo (`aria-hidden`). O João decidiu em 2026-10-29 pular o par no teste (J10) e registrar.
+O caminho candidato é clarear a tinta do escuro para `--red-300` (#ff8780), o que muda o `AppTag`
+em todas as telas.

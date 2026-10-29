@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (40)
+## Abertas (41)
 
 ### Agrupadas em bloco de execução
 
@@ -131,6 +131,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-102 | O `CompliancePanel` e `OperationMetricsQuery::pendencias()` não mostram os requisitos novos da conclusão (redator, `local_aplicacao` do presencial) | João | bloco que tocar o `CompliancePanel` ou o `pendencias()`; revisar em 2026-11-07 |
 | P-103 | A emissão do certificado decide a porta 2 e o snapshot fora da transação, e a correção de resultado pode entrar na janela — o certificado sai com o resultado antigo | João | bloco que tocar o `IssueCertificateAction`; antes de a correção pós-conclusão ter uso real; revisar em 2026-11-07 |
 | P-104 | O diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado | João | o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`; revisar em 2026-11-07 |
+| P-105 | A tinta `danger` do tema escuro (`--tone-danger-ink` = `--red-400`) mede 4,36:1 sobre o fundo de 15% do `severityTone` — o do `AppTag` danger e do ícone da `ConfirmDialog` —, abaixo de 4,5:1; o caso do `tone-ink.test.ts` do item 43 o pula | João | bloco que tocar `--tone-danger-ink`, `severityTone` ou a P-74; revisar 2026-11-07 |
 
 ## Encerradas (0)
 
