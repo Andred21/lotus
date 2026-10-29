@@ -1,21 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
-import type { FileData } from '@shared/types/generated'
+import type { BudgetDocumentType, FileData } from '@shared/types/generated'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { postMultipart } from '@shared/api/postMultipart'
-
-/** Tipos aceitos pelo backend: orçamento = fatura/comprovante; cotação = documento. */
-export type BudgetFileType = 'invoice' | 'receipt'
 
 function useInvalidate() {
   const qc = useQueryClient()
   return () => qc.invalidateQueries({ queryKey: budgetsApi.keys.all })
 }
 
+/** Anexo do orçamento; o tipo é o enum do domínio Comercial. A cotação sobe o
+ * dela por `useUploadQuoteFile`, com `quote_document` fixo. */
 export function useUploadBudgetFile() {
   const invalidate = useInvalidate()
-  return useMutation<FileData, ProblemDetails, { budgetId: number; type: BudgetFileType; file: File }>({
+  return useMutation<FileData, ProblemDetails, { budgetId: number; type: BudgetDocumentType; file: File }>({
     mutationFn: ({ budgetId, type, file }) =>
       postMultipart<FileData>(`/api/budgets/${budgetId}/files`, { type, file }),
     onSuccess: invalidate,

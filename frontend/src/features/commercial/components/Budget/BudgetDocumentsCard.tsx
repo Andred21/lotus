@@ -3,8 +3,7 @@ import {
   AppCard, AppCardHeader, AppDropdown, AppFileUpload, FormErrorBanner,
   type FileUploadHandlerEvent,
 } from '@shared/ui'
-import type { FileData } from '@shared/types/generated'
-import type { BudgetFileType } from '../../api/useCommercialFiles'
+import type { BudgetDocumentType, FileData } from '@shared/types/generated'
 import { FileList } from './FileList'
 
 /** Card de documentos do orçamento: tipo, upload, erros e lista. Toda a
@@ -14,8 +13,8 @@ export function BudgetDocumentsCard({
   onUpload, onSizeReject, onRemove, fileError, fileSizeError,
 }: {
   files: FileData[]
-  fileType: BudgetFileType
-  onFileTypeChange: (type: BudgetFileType) => void
+  fileType: BudgetDocumentType
+  onFileTypeChange: (type: BudgetDocumentType) => void
   uploadPending: boolean
   onUpload: (e: FileUploadHandlerEvent) => void
   onSizeReject: (message: string) => void
@@ -40,7 +39,7 @@ export function BudgetDocumentsCard({
                   { label: t('budget.fileTypeInvoice'), value: 'invoice' },
                   { label: t('budget.fileTypeReceipt'), value: 'receipt' },
                 ]}
-                onChange={(e) => onFileTypeChange(e.value as BudgetFileType)}
+                onChange={(e) => onFileTypeChange(e.value as BudgetDocumentType)}
               />
             </div>
             <AppFileUpload

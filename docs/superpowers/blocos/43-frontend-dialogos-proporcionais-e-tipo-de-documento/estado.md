@@ -2,9 +2,9 @@
 schema_version: 3
 id: 43
 slug: 43-frontend-dialogos-proporcionais-e-tipo-de-documento
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/blocos/43-frontend-dialogos-proporcionais-e-tipo-de-documento/spec.md
 active_plan: docs/superpowers/blocos/43-frontend-dialogos-proporcionais-e-tipo-de-documento/plano.md
@@ -17,10 +17,10 @@ branch: feat/43-frontend-dialogos-proporcionais-e-tipo-de-documento
 worktree: ../lotus-43-frontend-dialogos-proporcionais-e-tipo-de-documento
 offset: 3
 lane_base: 0c09fa4f
-commit: a1dca9cb
+commit: bf061746
 blocker: null
-updated_at: 2026-10-28T23:51:28-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+updated_at: 2026-10-28T23:54:16-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 43 — estado

@@ -4,9 +4,9 @@ import type { FileUploadHandlerEvent } from '@shared/ui'
 import { usePermissions, useMutationErrors, loadFailure } from '@shared/hooks'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
-import type { QuoteData } from '@shared/types/generated'
+import type { BudgetDocumentType, QuoteData } from '@shared/types/generated'
 import { useApproveQuote, useRejectQuote, useRemoveQuote } from '../api/useQuotes'
-import { useUploadBudgetFile, useRemoveBudgetFile, type BudgetFileType } from '../api/useCommercialFiles'
+import { useUploadBudgetFile, useRemoveBudgetFile } from '../api/useCommercialFiles'
 
 type ConfirmAction = 'approve' | 'reject' | 'remove'
 
@@ -24,7 +24,7 @@ export function useBudgetDetail(budgetId: number) {
   const [wizard, setWizard] = useState<{ quote: QuoteData | null } | null>(null)
   const [confirm, setConfirm] = useState<{ action: ConfirmAction; quote: QuoteData } | null>(null)
   const [confirmDeleteBudget, setConfirmDeleteBudget] = useState(false)
-  const [fileType, setFileType] = useState<BudgetFileType>('invoice')
+  const [fileType, setFileType] = useState<BudgetDocumentType>('invoice')
   // Rejeição por tamanho é local (não passa pela API): o AppFileUpload barra o
   // arquivo antes de qualquer request, então não vira erro de mutação.
   const [fileSizeError, setFileSizeError] = useState<string | null>(null)
