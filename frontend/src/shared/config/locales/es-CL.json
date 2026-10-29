@@ -40,6 +40,7 @@
     "yes": "Sí",
     "no": "No",
     "close": "Cerrar",
+    "charCount": "{{count}} / {{max}}",
     "edit": "Editar",
     "rut": "RUT",
     "lastLogin": "Último acceso",

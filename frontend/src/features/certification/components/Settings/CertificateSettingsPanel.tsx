@@ -11,6 +11,7 @@ import {
   useToast,
 } from '@shared/ui'
 import { loadMessage } from '@shared/lib'
+import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import { useCertificateSettingsForm } from '../../hooks/useCertificateSettingsForm'
 import { ManagerSignatureField } from './ManagerSignatureField'
 
@@ -66,10 +67,10 @@ export function CertificateSettingsPanel() {
       <FormErrorSummary errors={fieldErrors} mapped={['manager_name', 'manager_title']} />
 
       <campo.Field name="manager_name" label={t('certificateSettings.managerName')}>
-        <AppInputText className="w-full" disabled={saving} />
+        <AppInputText className="w-full" maxLength={TETOS_IMPRESSOS.nomeAssinante} disabled={saving} />
       </campo.Field>
       <campo.Field name="manager_title" label={t('certificateSettings.managerTitle')}>
-        <AppInputText className="w-full" disabled={saving} />
+        <AppInputText className="w-full" maxLength={TETOS_IMPRESSOS.cargoAssinante} disabled={saving} />
       </campo.Field>
 
       <ManagerSignatureField control={f.signature} />

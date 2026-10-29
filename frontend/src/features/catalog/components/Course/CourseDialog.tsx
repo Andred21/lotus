@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppInputText, AppTextarea, useFormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
+import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { CourseData } from '@shared/types/generated'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
 import { useCourseRedatores } from '../../hooks/useCourseRedatores'
@@ -45,14 +46,22 @@ export function CourseDialog({
         <FormSection title={t('course.sectionGeneral')} />
 
         <campo.Field name="name" label={t('course.name')}>
-          <AppInputText placeholder={t('course.namePlaceholder')} className="w-full" />
+          <AppInputText
+            placeholder={t('course.namePlaceholder')}
+            className="w-full"
+            maxLength={TETOS_IMPRESSOS.nomeCurso}
+          />
         </campo.Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           {/* technical_name chega null do backend: quem cuida é o `?? ''` do
               wrapper (Task 3), não a tela. */}
           <campo.Field name="technical_name" label={t('course.technicalName')}>
-            <AppInputText placeholder={t('course.technicalNamePlaceholder')} className="w-full" />
+            <AppInputText
+              placeholder={t('course.technicalNamePlaceholder')}
+              className="w-full"
+              maxLength={TETOS_IMPRESSOS.nomeTecnico}
+            />
           </campo.Field>
           {/* workload_hours converte nos dois sentidos (string de dígitos <->
               number): o Field sozinho só passaria o valor cru do form, então
@@ -74,7 +83,7 @@ export function CourseDialog({
 
         {/* description chega null do backend: mesma razão do technical_name. */}
         <campo.Field name="description" label={t('course.description')}>
-          <AppTextarea rows={3} className="w-full" />
+          <AppTextarea rows={3} className="w-full" maxLength={TETOS_IMPRESSOS.descricaoCurso} showCount />
         </campo.Field>
 
         <FormSection title={t('courseModule.section')} spaced />

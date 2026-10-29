@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppInputText, type FieldComponent } from '@shared/ui'
+import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { StudentFormFields } from '../../hooks/useStudentForm'
 
 /** Os quatro campos de identificação do aluno, em duas colunas a partir de
@@ -21,7 +22,7 @@ export function StudentIdentityFields({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Field name="name" label={t('student.name')}>
-        <AppInputText className="w-full" />
+        <AppInputText className="w-full" maxLength={TETOS_IMPRESSOS.nomeAluno} />
       </Field>
 
       <Field name="rut" label={t('common.rut')}>

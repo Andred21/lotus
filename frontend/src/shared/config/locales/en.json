@@ -40,6 +40,7 @@
     "yes": "Yes",
     "no": "No",
     "close": "Close",
+    "charCount": "{{count}} / {{max}}",
     "edit": "Edit",
     "rut": "RUT",
     "lastLogin": "Last login",
