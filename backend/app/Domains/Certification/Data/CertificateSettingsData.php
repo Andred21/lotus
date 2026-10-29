@@ -4,6 +4,7 @@ namespace App\Domains\Certification\Data;
 
 use App\Domains\Certification\Models\CertificateSettings;
 use App\Shared\Data\ComputedFields;
+use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Required;
@@ -18,9 +19,9 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class CertificateSettingsData extends Data
 {
     public function __construct(
-        #[Required, Max(255)]
+        #[Required, Max(TetosImpressos::NOME_ASSINANTE)]
         public string $manager_name,
-        #[Required, Max(255)]
+        #[Required, Max(TetosImpressos::CARGO_ASSINANTE)]
         public string $manager_title,
         #[Computed]
         public ?CertificateSignatureFileData $signature = null,

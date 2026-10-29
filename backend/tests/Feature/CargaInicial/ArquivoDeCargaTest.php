@@ -5,6 +5,7 @@ namespace Tests\Feature\CargaInicial;
 use App\Console\CargaInicial\ArquivoDeCarga;
 use App\Console\CargaInicial\CargaInvalidaException;
 use App\Console\CargaInicial\Instante;
+use App\Shared\Support\TetosImpressos;
 use Carbon\CarbonImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\CargaInicial\CargaSintetica;
@@ -221,6 +222,56 @@ class ArquivoDeCargaTest extends TestCase
 
                 return $p;
             }, 'cliente: RUT'],
+            'nome de aluno acima do teto' => [function (array $p) {
+                $p['alunos'][0]['name'] = str_repeat('a', TetosImpressos::NOME_ALUNO + 1);
+
+                return $p;
+            }, 'alunos.0.name'],
+            'aluno_impresso acima do teto' => [function (array $p) {
+                $p['orcamentos'][0]['turma']['matriculas'][0]['certificado']['aluno_impresso'] = str_repeat('a', TetosImpressos::NOME_ALUNO + 1);
+
+                return $p;
+            }, 'certificado.aluno_impresso'],
+            'curso_impresso acima do teto' => [function (array $p) {
+                $p['orcamentos'][0]['turma']['matriculas'][0]['certificado']['curso_impresso'] = str_repeat('a', TetosImpressos::NOME_CURSO + 1);
+
+                return $p;
+            }, 'certificado.curso_impresso'],
+            'cliente_impresso acima do teto' => [function (array $p) {
+                $p['orcamentos'][0]['turma']['matriculas'][0]['certificado']['cliente_impresso'] = str_repeat('a', TetosImpressos::RAZAO_SOCIAL + 1);
+
+                return $p;
+            }, 'certificado.cliente_impresso'],
+            'redator_impresso acima do teto' => [function (array $p) {
+                $p['orcamentos'][0]['turma']['matriculas'][0]['certificado']['redator_impresso'] = str_repeat('a', TetosImpressos::NOME_ASSINANTE + 1);
+
+                return $p;
+            }, 'certificado.redator_impresso'],
+            'razão social do cliente acima do teto' => [function (array $p) {
+                $p['cliente']['legal_name'] = str_repeat('a', TetosImpressos::RAZAO_SOCIAL + 1);
+
+                return $p;
+            }, 'cliente.legal_name'],
+            'nome do curso acima do teto' => [function (array $p) {
+                $p['cursos'][0]['name'] = str_repeat('a', TetosImpressos::NOME_CURSO + 1);
+
+                return $p;
+            }, 'cursos.0.name'],
+            'nome técnico do curso acima do teto' => [function (array $p) {
+                $p['cursos'][0]['technical_name'] = str_repeat('a', TetosImpressos::NOME_TECNICO + 1);
+
+                return $p;
+            }, 'cursos.0.technical_name'],
+            'descrição do curso acima do teto' => [function (array $p) {
+                $p['cursos'][0]['description'] = str_repeat('a', TetosImpressos::DESCRICAO_CURSO + 1);
+
+                return $p;
+            }, 'cursos.0.description'],
+            'nome de redator acima do teto' => [function (array $p) {
+                $p['redatores'][0]['name'] = str_repeat('a', TetosImpressos::NOME_ASSINANTE + 1);
+
+                return $p;
+            }, 'redatores.0.name'],
             'RUT de redator inválido' => [function (array $p) {
                 $p['redatores'][0]['rut'] = '15.111.111-0';
 
@@ -236,6 +287,25 @@ class ArquivoDeCargaTest extends TestCase
         $erros = implode("\n", ArquivoDeCarga::validar($alterar(CargaSintetica::payload())));
 
         $this->assertStringContainsString($esperado, $erros);
+    }
+
+    public function test_validar_aceita_os_campos_impressos_exatamente_no_teto(): void
+    {
+        $p = CargaSintetica::payload();
+        $certificado = &$p['orcamentos'][0]['turma']['matriculas'][0]['certificado'];
+        $certificado['aluno_impresso'] = str_repeat('a', TetosImpressos::NOME_ALUNO);
+        $certificado['curso_impresso'] = str_repeat('a', TetosImpressos::NOME_CURSO);
+        $certificado['cliente_impresso'] = str_repeat('a', TetosImpressos::RAZAO_SOCIAL);
+        $certificado['redator_impresso'] = str_repeat('a', TetosImpressos::NOME_ASSINANTE);
+        unset($certificado);
+        $p['alunos'][0]['name'] = str_repeat('a', TetosImpressos::NOME_ALUNO);
+        $p['cliente']['legal_name'] = str_repeat('a', TetosImpressos::RAZAO_SOCIAL);
+        $p['cursos'][0]['name'] = str_repeat('a', TetosImpressos::NOME_CURSO);
+        $p['cursos'][0]['technical_name'] = str_repeat('a', TetosImpressos::NOME_TECNICO);
+        $p['cursos'][0]['description'] = str_repeat('a', TetosImpressos::DESCRICAO_CURSO);
+        $p['redatores'][0]['name'] = str_repeat('a', TetosImpressos::NOME_ASSINANTE);
+
+        $this->assertSame([], ArquivoDeCarga::validar($p));
     }
 
     public function test_ler_recusa_json_malformado_e_pasta_sem_carga(): void

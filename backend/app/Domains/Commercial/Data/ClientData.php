@@ -7,10 +7,12 @@ use App\Domains\Commercial\Rules\UmContatoPrincipal;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
+use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\In;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
@@ -38,7 +40,7 @@ class ClientData extends Data
         #[Required, Email]
         public string $email,
         public string|Optional|null $phone,
-        #[Required]
+        #[Required, Max(TetosImpressos::RAZAO_SOCIAL)]
         public string $legal_name,
         #[In('client', 'provider', 'other')]
         public string $type = 'client',
