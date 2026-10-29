@@ -106,6 +106,36 @@ describe('cleanSignature', () => {
     expect(saida.height).toBe(20 + 2 * 5)
   })
 
+  it.each([
+    ['horizontal de 1 px', 'h', 1],
+    ['horizontal de 2 px', 'h', 2],
+    ['vertical de 1 px', 'v', 1],
+    ['vertical de 2 px', 'v', 2],
+  ])('traco %s ligado ao corpo sai inteiro', (_nome, eixo, espessura) => {
+    // Regressao da rodada 1: o minimo por linha/coluna cortava o traco fino que
+    // sai de um corpo grande, e o pedaco fora da caixa sumia do PNG.
+    const r = papel(500, 300, 255)
+    retangulo(r, 50, 100, 100, 40, 0) // corpo: x 50..149, y 100..139
+    if (eixo === 'h') retangulo(r, 150, 100, 200, espessura as number, 0) // +200 px para a direita
+    else retangulo(r, 100, 140, espessura as number, 80, 0) // +80 px para baixo
+
+    const saida = cleanSignature(r, { margin: 0 })
+
+    expect(saida.width).toBe(eixo === 'h' ? 300 : 100)
+    expect(saida.height).toBe(eixo === 'h' ? 40 : 120)
+  })
+
+  it('parte desconexa pequena (pingo de i, 4x4) fica dentro da caixa', () => {
+    const r = papel(300, 200, 255)
+    retangulo(r, 50, 100, 100, 20, 0)
+    retangulo(r, 230, 40, 4, 4, 0) // pingo longe do corpo
+
+    const saida = cleanSignature(r, { margin: 0 })
+
+    expect(saida.width).toBe(234 - 50)
+    expect(saida.height).toBe(120 - 40)
+  })
+
   it('so poeira, sem traco, lanca EmptySignatureError', () => {
     const r = papel(100, 100, 255)
     retangulo(r, 10, 10, 2, 1, 0)

@@ -64,11 +64,13 @@ export interface CleanSignatureOptions {
   /** Alfa mínimo para o pixel contar como tinta no recorte (descarta poeira). */
   cropMinAlpha: number
   /**
-   * Pixels de tinta que uma linha (ou coluna) precisa ter para contar na caixa
-   * do recorte. Poeira, borda de foto e artefato de JPEG são de 1 ou 2 pixels e
-   * não esticam a caixa; um traço, mesmo fino, tem espessura de vários pixels.
+   * Tamanho mínimo, em pixels, de uma mancha de tinta (componente conexo, vizinhança
+   * 8) para entrar na caixa do recorte. Poeira, borda de foto e artefato de JPEG
+   * são de 1 a 4 px e caem; um pingo de i tem dezenas de pixels em resolução de
+   * foto (3x3 já dá ~9) e fica. Traço fino ligado ao corpo é parte do mesmo
+   * componente, então nunca é cortado, por mais fino que seja.
    */
-  cropMinInkPerLine: number
+  cropMinComponentPx: number
   /** Margem, em px da imagem de origem, entre a tinta e a borda do recorte. */
   margin: number
   maxWidth: number
@@ -79,7 +81,7 @@ export const DEFAULT_CLEAN_OPTIONS: CleanSignatureOptions = {
   inkFloor: 28,
   inkFull: 120,
   cropMinAlpha: 32,
-  cropMinInkPerLine: 3,
+  cropMinComponentPx: 6,
   margin: 8,
   maxWidth: SIGNATURE_MAX_WIDTH,
 }
@@ -146,16 +148,56 @@ function downscale(src: Raster, width: number): Raster {
   return { width, height, data: out }
 }
 
-/** Primeiro e último índice com tinta suficiente; [-1, -1] se nenhum. */
-function inkSpan(counts: Uint32Array, minInk: number): [number, number] {
-  let first = -1
-  let last = -1
-  for (let i = 0; i < counts.length; i++) {
-    if (counts[i] < minInk) continue
-    if (first < 0) first = i
-    last = i
+/**
+ * Caixa da união das manchas de tinta com pelo menos `minPx` pixels, ou null.
+ * Rotulagem por inundação ITERATIVA (pilha em Int32Array, sem recursão: imagem
+ * de 12 MP estouraria a pilha de chamadas), O(pixels): cada pixel entra na pilha
+ * uma só vez, marcado ao empilhar. Memória: 1 byte por pixel de `visited` e 4
+ * por pixel de tinta da pilha.
+ */
+function inkBox(alpha: Uint8Array, width: number, height: number, minAlpha: number, minPx: number) {
+  let inkPixels = 0
+  for (let p = 0; p < alpha.length; p++) if (alpha[p] >= minAlpha) inkPixels++
+  const visited = new Uint8Array(alpha.length)
+  const stack = new Int32Array(inkPixels)
+  let minX = width, minY = height, maxX = -1, maxY = -1
+
+  for (let seed = 0; seed < alpha.length; seed++) {
+    if (alpha[seed] < minAlpha || visited[seed]) continue
+    let top = 0
+    stack[top++] = seed
+    visited[seed] = 1
+    let count = 0
+    let cx0 = width, cy0 = height, cx1 = -1, cy1 = -1
+    while (top > 0) {
+      const p = stack[--top]
+      const x = p % width
+      const y = (p - x) / width
+      count++
+      if (x < cx0) cx0 = x
+      if (x > cx1) cx1 = x
+      if (y < cy0) cy0 = y
+      if (y > cy1) cy1 = y
+      for (let dy = -1; dy <= 1; dy++) {
+        const ny = y + dy
+        if (ny < 0 || ny >= height) continue
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx
+          if (nx < 0 || nx >= width) continue
+          const n = ny * width + nx
+          if (visited[n] || alpha[n] < minAlpha) continue
+          visited[n] = 1
+          stack[top++] = n
+        }
+      }
+    }
+    if (count < minPx) continue
+    if (cx0 < minX) minX = cx0
+    if (cx1 > maxX) maxX = cx1
+    if (cy0 < minY) minY = cy0
+    if (cy1 > maxY) maxY = cy1
   }
-  return [first, last]
+  return maxX < 0 ? null : { minX, minY, maxX, maxY }
 }
 
 export function cleanSignature(
@@ -171,19 +213,10 @@ export function cleanSignature(
   const paper = estimatePaper(lums, o.paperPercentile)
 
   const alpha = new Uint8Array(pixels)
-  const inkPerRow = new Uint32Array(height)
-  const inkPerCol = new Uint32Array(width)
-  for (let p = 0; p < pixels; p++) {
-    const a = rampAlpha(paper - lums[p], o)
-    alpha[p] = a
-    if (a < o.cropMinAlpha) continue
-    const x = p % width
-    inkPerCol[x]++
-    inkPerRow[(p - x) / width]++
-  }
-  const [minY, maxY] = inkSpan(inkPerRow, o.cropMinInkPerLine)
-  const [minX, maxX] = inkSpan(inkPerCol, o.cropMinInkPerLine)
-  if (maxX < 0 || maxY < 0) throw new EmptySignatureError()
+  for (let p = 0; p < pixels; p++) alpha[p] = rampAlpha(paper - lums[p], o)
+  const box = inkBox(alpha, width, height, o.cropMinAlpha, o.cropMinComponentPx)
+  if (!box) throw new EmptySignatureError()
+  const { minX, minY, maxX, maxY } = box
 
   const x0 = Math.max(0, minX - o.margin)
   const y0 = Math.max(0, minY - o.margin)
