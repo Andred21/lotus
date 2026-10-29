@@ -10,8 +10,10 @@ namespace Tests\Support\Certification;
  * - `nome()` — nome de pessoa, curso ou empresa em MAIÚSCULAS espanholas, a pior
  *   realista para a largura (maiúscula é mais larga que caixa mista);
  * - `prosa()` — a descrição do curso, espanhol corrido;
- * - `adversario()` — sem espaço e com o glifo mais largo: fora do cálculo dos
- *   tetos, só prova que o PDF nunca perde texto.
+ * - `adversario()` — sem espaço e com um glifo largo: fora do cálculo dos
+ *   tetos, só prova que o PDF nunca perde texto. O glifo é parâmetro para cada
+ *   campo ter o seu: com o mesmo glifo em todos, o run de um campo curto é
+ *   substring do run de um longo, e cortar o curto passaria despercebido.
  */
 final class TextoRealista
 {
@@ -32,10 +34,23 @@ final class TextoRealista
         'Además se abordan la selección y el mantenimiento de los elementos de protección personal y de las herramientas aislantes.',
     ];
 
-    /** Nome em MAIÚSCULAS com exatamente `$chars` caracteres, sem espaço nas pontas. */
-    public static function nome(int $chars): string
+    /**
+     * Nome em MAIÚSCULAS com exatamente `$chars` caracteres, sem espaço nas pontas.
+     *
+     * `$passo` é de quantas em quantas palavras do corpus o nome anda (coprimo de 39,
+     * o tamanho do corpus, para passar por todas). Passos diferentes dão sequências
+     * diferentes de palavras: nenhum nome é substring de outro, mesmo com o mais
+     * curto sendo um prefixo do mais longo.
+     */
+    public static function nome(int $chars, int $passo = 1): string
     {
-        return self::ciclar(self::PALAVRAS, $chars, 'A');
+        $palavras = [];
+
+        for ($i = 0; $i < count(self::PALAVRAS); $i++) {
+            $palavras[] = self::PALAVRAS[($i * $passo) % count(self::PALAVRAS)];
+        }
+
+        return self::ciclar($palavras, $chars, 'A');
     }
 
     /** Espanhol corrido com exatamente `$chars` caracteres. */
@@ -45,9 +60,9 @@ final class TextoRealista
     }
 
     /** Uma "palavra" só, de glifo largo: nenhum ponto de quebra natural. */
-    public static function adversario(int $chars): string
+    public static function adversario(int $chars, string $glifo = 'W'): string
     {
-        return str_repeat('W', $chars);
+        return str_repeat($glifo, $chars);
     }
 
     /**

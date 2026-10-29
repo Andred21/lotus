@@ -46,7 +46,7 @@ de um teto, as Tasks 7 e 11 esperam a decisão do João.
 ## A matriz
 
 Páginas, página das assinaturas (`Instructor`), página do `Temario del curso`, página do aviso legal e
-reticências (`…`) de cada caso, gerados pelo medidor nesta execução. Toda página de todo caso traz o
+reticências (`…`) de cada caso, gerados pelo medidor (tabela regenerada na rodada de correção 1, com os textos distintos por campo). Toda página de todo caso traz o
 rodapé `LOT-2026-1001 · Página p de n` e o logo, e nenhuma entrada perde texto.
 
 | caso | páginas | assinaturas (pág.) | temário (pág.) | aviso legal (pág.) | reticências |
@@ -72,7 +72,7 @@ rodapé `LOT-2026-1001 · Página p de n` e o logo, e nenhuma entrada perde text
 | adversario no teto: razao | 2 | 1 | 2 | 2 | nenhuma |
 | adversario no teto: cargo | 2 | 1 | 2 | 2 | nenhuma |
 | adversario no teto: assinantes | 2 | 1 | 2 | 2 | nenhuma |
-| adversario no teto: descricao | 3 | 2 | 3 | 3 | nenhuma |
+| adversario no teto: descricao | 2 | 1 | 2 | 2 | nenhuma |
 | adversario no teto: todos os campos | 3 | 2 | 3 | 3 | nenhuma |
 | EXTRA: temario de 18 modulos | 3 | 1 | 2 | 3 | nenhuma |
 | EXTRA: temario de 24 modulos | 4 | 1 | 2 | 4 | nenhuma |
@@ -81,9 +81,11 @@ As duas linhas `EXTRA` não são casos do teste; medem onde o temário passa de 
 
 ## Achados
 
-1. **Adversário leva as assinaturas para a página 2** (descrição e "todos os campos" no teto: 3 páginas,
-   assinaturas na 2). Dentro da D15: o adversário só garante que nenhum texto se perde. Os outros
-   adversários, no teto de um campo só, ainda fecham em 2 páginas com as assinaturas na 1.
+1. **Adversário leva as assinaturas para a página 2** ("todos os campos" no teto: 3 páginas, assinaturas
+   na 2). Dentro da D15: o adversário só garante que nenhum texto se perde. Os adversários de um campo
+   só, inclusive a descrição, fecham em 2 páginas com as assinaturas na 1. Cada campo adversário tem
+   o glifo largo próprio (W, M, Q, O, D, H, N, X), e cada nome realista o seu passo de palavras: nenhum
+   texto é substring de outro, então cortar um campo não passa pela busca no PDF inteiro.
 2. **Sem temário, tudo no teto: o aviso legal desce sozinho para a página 2** (2 páginas). Sem temário o
    aviso divide a página 1 com as assinaturas, e a descrição só cabe com ~280 caracteres para o
    documento fechar em 1 página (contra o teto de 620, medido com o temário). As assinaturas ficam na

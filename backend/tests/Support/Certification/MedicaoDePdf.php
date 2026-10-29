@@ -68,6 +68,12 @@ final class MedicaoDePdf
         return str_contains($this->textoSemEspacos(), self::semEspacos($trecho));
     }
 
+    /** O trecho inteiro está NESTA página (1-based)? Para o campo que o PDF repete (o nome do curso). */
+    public function contemNaPagina(int $pagina, string $trecho): bool
+    {
+        return str_contains(self::semEspacos($this->textoBrutoPorPagina[$pagina - 1] ?? ''), self::semEspacos($trecho));
+    }
+
     /** Todo o texto do PDF, sem nenhum espaço: a forma de provar que nada se perdeu. */
     public function textoSemEspacos(): string
     {
@@ -80,7 +86,7 @@ final class MedicaoDePdf
         return $this->textoPorPagina[$numero - 1] ?? '';
     }
 
-    private static function semEspacos(string $texto): string
+    public static function semEspacos(string $texto): string
     {
         return (string) preg_replace('/[\s\x{00A0}\x{200B}]+/u', '', $texto);
     }

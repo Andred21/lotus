@@ -18,6 +18,10 @@ use Tests\TestCase;
  * realista dentro dos tetos, 1 sem temário, e NUNCA texto perdido — nem com o
  * adversário (sem espaço, glifo largo), que pode levar as assinaturas à página 2.
  *
+ * Cada campo tem o SEU texto (passo de palavras no realista, glifo no adversário):
+ * um texto que fosse substring do de outro campo deixaria um corte passar. O
+ * `test_as_entradas_de_cada_caso_sao_distinguiveis` guarda isso.
+ *
  * É pulado fora do container (sem Gotenberg). Trocar a tag do Gotenberg nos
  * composes obriga a rodar esta matriz de novo (D17), e o `matriz.md` do bloco
  * guarda a última saída conferida.
@@ -32,7 +36,24 @@ class CertificadoMatrizGotenbergTest extends TestCase
 
     private const MODULOS_GRANDE = 16;
 
-    /** A gerente e o instrutor do cenário-base: valores curtos e reais. */
+    private const TETOS = [
+        'aluno' => TetosImpressos::NOME_ALUNO,
+        'curso' => TetosImpressos::NOME_CURSO,
+        'tecnico' => TetosImpressos::NOME_TECNICO,
+        'razao' => TetosImpressos::RAZAO_SOCIAL,
+        'redator' => TetosImpressos::NOME_ASSINANTE,
+        'gerente' => TetosImpressos::NOME_ASSINANTE,
+        'cargo' => TetosImpressos::CARGO_ASSINANTE,
+        'desc' => TetosImpressos::DESCRICAO_CURSO,
+    ];
+
+    /** De quantas em quantas palavras do corpus cada nome anda: sequências distintas, sem substring entre campos. */
+    private const PASSOS = ['aluno' => 1, 'curso' => 2, 'tecnico' => 4, 'razao' => 5, 'redator' => 7, 'gerente' => 8, 'cargo' => 10];
+
+    /** O glifo largo de cada campo adversário: nenhum run é substring de outro. */
+    private const GLIFOS = ['aluno' => 'W', 'curso' => 'M', 'tecnico' => 'Q', 'razao' => 'O', 'redator' => 'D', 'gerente' => 'H', 'cargo' => 'N', 'desc' => 'X'];
+
+    /** O cenário-base: valores curtos e reais. */
     private const BASE = [
         'aluno' => 'SEBASTIÁN GALLARDO',
         'curso' => 'MANTENIMIENTO DE SUBESTACIONES',
@@ -44,15 +65,37 @@ class CertificadoMatrizGotenbergTest extends TestCase
         'desc' => 'Mantenimiento preventivo y correctivo de subestaciones: inspección de equipos, ensayos y puesta en servicio.',
     ];
 
+    /** Os campos que a regra dos tetos mede em linhas (a descrição não: ela é medida pela página das assinaturas). */
+    private const NOMES = ['aluno', 'curso', 'tecnico', 'razao', 'redator', 'gerente', 'cargo'];
+
+    /**
+     * O certificado de `referencia-layout-p1.png` e `-p2.png` (v5 aprovada), com o
+     * temário DELA: 5 módulos e 16 marcadores, no máximo 4 por módulo. A referência
+     * mostra no quadro do temário o nome de OUTRO curso (um mock); aqui o nome é o
+     * da página 1, o único que o snapshot tem.
+     */
     public function test_o_certificado_da_referencia_ocupa_duas_paginas(): void
     {
         $this->skipUnlessGotenberg();
 
-        $caso = self::caso();
-        $medicao = $this->app->make(MedidorDeCertificado::class)
-            ->medir(self::snapshot($caso), self::validoAte($caso), self::gerente($caso));
+        $caso = self::caso([
+            'campos' => [
+                'aluno' => 'Sebastián Gallardo',
+                'curso' => 'Mantenimiento de subestaciones',
+                'tecnico' => 'Mantenimiento preventivo y correctivo de subestaciones eléctricas',
+                'razao' => 'Transelec',
+                'redator' => 'Pedro Soto',
+                'gerente' => 'Marcia de Batalha',
+            ],
+            'modulos' => self::modulosDaReferencia(),
+            'opcionais' => false,
+        ]);
+        $medicao = $this->medir($caso);
 
         $this->assertSame(2, $medicao->paginas);
+        $this->assertSame(1, $medicao->paginaDe('Instructor'));
+        $this->assertSame(2, $medicao->paginaDe('Temario del curso'));
+        $this->assertNenhumTextoPerdido($medicao, $caso);
     }
 
     /** @param array<string, mixed> $caso */
@@ -62,8 +105,7 @@ class CertificadoMatrizGotenbergTest extends TestCase
         $this->skipUnlessGotenberg();
 
         $caso = self::caso($caso);
-        $medicao = $this->app->make(MedidorDeCertificado::class)
-            ->medir(self::snapshot($caso), self::validoAte($caso), self::gerente($caso));
+        $medicao = $this->medir($caso);
 
         $this->assertCadaPaginaTemRodapeELogo($medicao);
         $this->assertSemReticencias($medicao);
@@ -76,6 +118,31 @@ class CertificadoMatrizGotenbergTest extends TestCase
             'temario_grande' => $this->assertTituloColadoAoPrimeiroMarcador($medicao, $caso),
             'adversario' => null,
         };
+
+        if ($caso['tipo'] !== 'adversario') {
+            $this->assertNomesEmNoMaximoDuasLinhas($medicao, $caso);
+        }
+    }
+
+    /**
+     * Se o texto de um campo fosse substring do de outro, cortar o primeiro passaria
+     * despercebido pela busca no PDF inteiro. Não precisa do Gotenberg.
+     *
+     * @param  array<string, mixed>  $caso
+     */
+    #[DataProvider('casos')]
+    public function test_as_entradas_de_cada_caso_sao_distinguiveis(array $caso): void
+    {
+        $campos = self::caso($caso)['campos'] + self::BASE;
+        $entradas = array_map(MedicaoDePdf::semEspacos(...), $campos);
+
+        foreach ($entradas as $a => $textoA) {
+            foreach ($entradas as $b => $textoB) {
+                if ($a !== $b) {
+                    $this->assertFalse(str_contains($textoA, $textoB), "o campo {$b} é substring do campo {$a}");
+                }
+            }
+        }
     }
 
     /**
@@ -83,36 +150,23 @@ class CertificadoMatrizGotenbergTest extends TestCase
      */
     public static function casos(): array
     {
-        $nome = fn (int $teto): string => TextoRealista::nome($teto);
-        $largo = fn (int $teto): string => TextoRealista::adversario($teto);
-
-        $tetos = [
-            'aluno' => TetosImpressos::NOME_ALUNO,
-            'curso' => TetosImpressos::NOME_CURSO,
-            'tecnico' => TetosImpressos::NOME_TECNICO,
-            'razao' => TetosImpressos::RAZAO_SOCIAL,
-            'cargo' => TetosImpressos::CARGO_ASSINANTE,
-        ];
-
         $casos = [];
 
-        foreach ($tetos as $campo => $teto) {
-            $casos["{$campo} no teto, sozinho"] = [['campos' => [$campo => $nome($teto)]]];
+        foreach (['aluno', 'curso', 'tecnico', 'razao', 'cargo'] as $campo) {
+            $casos["{$campo} no teto, sozinho"] = [['campos' => [$campo => self::nome($campo)]]];
         }
 
         $casos['assinantes no teto, sozinhos'] = [['campos' => [
-            'redator' => $nome(TetosImpressos::NOME_ASSINANTE),
-            'gerente' => $nome(TetosImpressos::NOME_ASSINANTE),
+            'redator' => self::nome('redator'),
+            'gerente' => self::nome('gerente'),
         ]]];
         $casos['todos os nomes no teto juntos, com nota, asistencia e vigencia'] = [['campos' => self::nomesNoTeto()]];
-        $casos['descricao no teto'] = [['campos' => ['desc' => TextoRealista::prosa(TetosImpressos::DESCRICAO_CURSO)]]];
-        $casos['todos os nomes e a descricao no teto'] = [['campos' => self::nomesNoTeto() + [
-            'desc' => TextoRealista::prosa(TetosImpressos::DESCRICAO_CURSO),
-        ]]];
+        $casos['descricao no teto'] = [['campos' => ['desc' => self::prosaNoTeto()]]];
+        $casos['todos os nomes e a descricao no teto'] = [['campos' => self::nomesNoTeto() + ['desc' => self::prosaNoTeto()]]];
         $casos['temario do tamanho do aprovado (8 modulos)'] = [['modulos' => self::MODULOS_APROVADO]];
         $casos['temario do tamanho do aprovado, com tudo no teto'] = [[
             'modulos' => self::MODULOS_APROVADO,
-            'campos' => self::nomesNoTeto() + ['desc' => TextoRealista::prosa(TetosImpressos::DESCRICAO_CURSO)],
+            'campos' => self::nomesNoTeto() + ['desc' => self::prosaNoTeto()],
         ]];
         $casos['temario grande (16 modulos)'] = [['modulos' => self::MODULOS_GRANDE, 'tipo' => 'temario_grande']];
         $casos['sem campos opcionais'] = [['opcionais' => false]];
@@ -123,30 +177,22 @@ class CertificadoMatrizGotenbergTest extends TestCase
         $casos['sem temario, com tudo no teto'] = [[
             'modulos' => 0,
             'tipo' => 'sem_temario_no_limite',
-            'campos' => self::nomesNoTeto() + ['desc' => TextoRealista::prosa(TetosImpressos::DESCRICAO_CURSO)],
+            'campos' => self::nomesNoTeto() + ['desc' => self::prosaNoTeto()],
         ]];
 
-        foreach ($tetos as $campo => $teto) {
-            $casos["adversario no teto: {$campo}"] = [['tipo' => 'adversario', 'campos' => [$campo => $largo($teto)]]];
+        foreach (['aluno', 'curso', 'tecnico', 'razao', 'cargo'] as $campo) {
+            $casos["adversario no teto: {$campo}"] = [['tipo' => 'adversario', 'campos' => [$campo => self::largo($campo)]]];
         }
 
         $casos['adversario no teto: assinantes'] = [['tipo' => 'adversario', 'campos' => [
-            'redator' => $largo(TetosImpressos::NOME_ASSINANTE),
-            'gerente' => $largo(TetosImpressos::NOME_ASSINANTE),
+            'redator' => self::largo('redator'),
+            'gerente' => self::largo('gerente'),
         ]]];
-        $casos['adversario no teto: descricao'] = [['tipo' => 'adversario', 'campos' => [
-            'desc' => $largo(TetosImpressos::DESCRICAO_CURSO),
-        ]]];
-        $casos['adversario no teto: todos os campos'] = [['tipo' => 'adversario', 'campos' => [
-            'aluno' => $largo(TetosImpressos::NOME_ALUNO),
-            'curso' => $largo(TetosImpressos::NOME_CURSO),
-            'tecnico' => $largo(TetosImpressos::NOME_TECNICO),
-            'razao' => $largo(TetosImpressos::RAZAO_SOCIAL),
-            'redator' => $largo(TetosImpressos::NOME_ASSINANTE),
-            'gerente' => $largo(TetosImpressos::NOME_ASSINANTE),
-            'cargo' => $largo(TetosImpressos::CARGO_ASSINANTE),
-            'desc' => $largo(TetosImpressos::DESCRICAO_CURSO),
-        ]]];
+        $casos['adversario no teto: descricao'] = [['tipo' => 'adversario', 'campos' => ['desc' => self::largo('desc')]]];
+        $casos['adversario no teto: todos os campos'] = [['tipo' => 'adversario', 'campos' => array_combine(
+            array_keys(self::TETOS),
+            array_map(self::largo(...), array_keys(self::TETOS)),
+        )]];
 
         return $casos;
     }
@@ -181,13 +227,35 @@ class CertificadoMatrizGotenbergTest extends TestCase
         }
     }
 
-    /** O PDF nunca corta texto: toda entrada impressa está inteira no PDF, sem contar espaços. */
+    /**
+     * O PDF nunca corta texto: toda entrada impressa está inteira no PDF, sem contar
+     * espaços. O nome do curso sai duas vezes (página 1 e cabeçalho do temário), então
+     * a presença dele é conferida na página 1 SOZINHA: um corte lá passaria pelo
+     * cabeçalho.
+     */
     private function assertNenhumTextoPerdido(MedicaoDePdf $medicao, array $caso): void
     {
         $campos = $caso['campos'] + self::BASE;
 
-        foreach (['aluno', 'curso', 'tecnico', 'razao', 'redator', 'gerente', 'cargo', 'desc'] as $campo) {
+        foreach (array_keys(self::TETOS) as $campo) {
             $this->assertTrue($medicao->contem($campos[$campo]), "o campo {$campo} perdeu texto no PDF");
+        }
+
+        $this->assertTrue($medicao->contemNaPagina(1, $campos['curso']), 'o nome do curso perdeu texto na página 1');
+    }
+
+    /** A regra que define os tetos: cada nome, na própria caixa, ocupa no máximo 2 linhas. */
+    private function assertNomesEmNoMaximoDuasLinhas(MedicaoDePdf $medicao, array $caso): void
+    {
+        $campos = $caso['campos'] + self::BASE;
+
+        foreach (self::NOMES as $campo) {
+            // A caixa do técnico leva o " · N horas cronológicas" na mesma linha.
+            $trecho = $campo === 'tecnico' ? $campos[$campo].' · 32 horas cronológicas' : $campos[$campo];
+            $linhas = $medicao->linhasDe($trecho);
+
+            $this->assertGreaterThan(0, $linhas, "não achei o campo {$campo} no PDF para contar linhas");
+            $this->assertLessThanOrEqual(2, $linhas, "o campo {$campo} ocupa {$linhas} linhas, acima das 2 da regra dos tetos");
         }
     }
 
@@ -242,6 +310,13 @@ class CertificadoMatrizGotenbergTest extends TestCase
 
     // ── cenário ──────────────────────────────────────────────────────────────
 
+    /** @param array<string, mixed> $caso */
+    private function medir(array $caso): MedicaoDePdf
+    {
+        return $this->app->make(MedidorDeCertificado::class)
+            ->medir(self::snapshot($caso), self::validoAte($caso), self::gerente($caso));
+    }
+
     /**
      * @param  array<string, mixed>  $caso
      * @return array<string, mixed>
@@ -251,18 +326,25 @@ class CertificadoMatrizGotenbergTest extends TestCase
         return $caso + ['campos' => [], 'modulos' => self::MODULOS_APROVADO, 'opcionais' => true, 'tipo' => 'realista'];
     }
 
+    private static function nome(string $campo): string
+    {
+        return TextoRealista::nome(self::TETOS[$campo], self::PASSOS[$campo]);
+    }
+
+    private static function largo(string $campo): string
+    {
+        return TextoRealista::adversario(self::TETOS[$campo], self::GLIFOS[$campo]);
+    }
+
+    private static function prosaNoTeto(): string
+    {
+        return TextoRealista::prosa(TetosImpressos::DESCRICAO_CURSO);
+    }
+
     /** @return array<string, string> */
     private static function nomesNoTeto(): array
     {
-        return [
-            'aluno' => TextoRealista::nome(TetosImpressos::NOME_ALUNO),
-            'curso' => TextoRealista::nome(TetosImpressos::NOME_CURSO),
-            'tecnico' => TextoRealista::nome(TetosImpressos::NOME_TECNICO),
-            'razao' => TextoRealista::nome(TetosImpressos::RAZAO_SOCIAL),
-            'redator' => TextoRealista::nome(TetosImpressos::NOME_ASSINANTE),
-            'gerente' => TextoRealista::nome(TetosImpressos::NOME_ASSINANTE),
-            'cargo' => TextoRealista::nome(TetosImpressos::CARGO_ASSINANTE),
-        ];
+        return array_combine(self::NOMES, array_map(self::nome(...), self::NOMES));
     }
 
     /**
@@ -289,12 +371,36 @@ class CertificadoMatrizGotenbergTest extends TestCase
     }
 
     /**
+     * O temário de `referencia-layout-p2.png`: 5 módulos, 16 marcadores.
+     *
+     * @return list<array{sort_order: int, name: string, contents: string}>
+     */
+    private static function modulosDaReferencia(): array
+    {
+        $temario = [
+            '1. Introducción y marco normativo' => ['Reglamento de seguridad para trabajos en líneas energizadas', 'Normativa SEC aplicable', 'Responsabilidades del jefe de faena'],
+            '2. Métodos de trabajo en tensión' => ['Método a distancia', 'Método a potencial', 'Método de contacto', 'Selección del método según nivel de tensión'],
+            '3. Equipos y herramientas' => ['Pértigas aislantes y accesorios', 'Equipos de protección personal dieléctricos', 'Ensayos dieléctricos y mantenimiento de herramientas'],
+            '4. Procedimientos y control de riesgos' => ['Análisis de riesgos antes del trabajo', 'Charla de 5 minutos', 'Distancias mínimas de seguridad', 'Plan de rescate en altura'],
+            '5. Práctica supervisada en terreno' => ['Maniobras en estructura de 220 kV', 'Evaluación práctica individual'],
+        ];
+        $modulos = [];
+
+        foreach ($temario as $titulo => $marcadores) {
+            $modulos[] = ['sort_order' => count($modulos) + 1, 'name' => $titulo, 'contents' => implode("\n", $marcadores)];
+        }
+
+        return $modulos;
+    }
+
+    /**
      * @param  array<string, mixed>  $caso
      * @return array<string, mixed>
      */
     private static function snapshot(array $caso): array
     {
         $campos = $caso['campos'] + self::BASE;
+        $modulos = is_array($caso['modulos']) ? $caso['modulos'] : self::modulos($caso['modulos']);
 
         return [
             'schema_version' => 2,
@@ -304,7 +410,7 @@ class CertificadoMatrizGotenbergTest extends TestCase
                 'technical_name' => $campos['tecnico'],
                 'workload_hours' => 32,
                 'description' => $campos['desc'],
-                'modules' => self::modulos($caso['modulos']),
+                'modules' => $modulos,
             ],
             'turma' => ['id' => null, 'start_date' => '2026-07-13', 'end_date' => '2026-08-07', 'modalidade' => 'presencial'],
             'cliente' => ['name' => $campos['razao'], 'rut' => '78.987.654-1'],
