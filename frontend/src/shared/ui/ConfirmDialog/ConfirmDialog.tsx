@@ -37,12 +37,16 @@ export function ConfirmDialog({
   const { t } = useTranslation()
   const s = confirmSeverityStyle[severity]
 
+  // `grid!`: o `.pi` do primeicons é CSS sem camada e crava `display:
+  // inline-block`, que vence qualquer utilitário do Tailwind (camada
+  // `utilities`); sem o `!`, o círculo vira bloco e o glifo cai no canto
+  // superior esquerdo (visto no smoke do bloco 43).
   const header = (
     <div data-severity={severity} className="flex items-center gap-3 pr-6">
       <span
         aria-hidden
         data-severity-icon
-        className={`${s.icon} grid size-10 shrink-0 place-items-center rounded-full text-xl`}
+        className={`${s.icon} grid! size-10 shrink-0 place-items-center rounded-full text-xl`}
         style={{ background: s.background, color: s.color }}
       />
       <span>{title}</span>
