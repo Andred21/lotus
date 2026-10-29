@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (45)
+## Abertas (44)
 
 ### Agrupadas em bloco de execução
 
@@ -32,7 +32,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade); o `cicd-host-alinhado-ao-sha` (item 31) fechou em 2026-09-26 sem pagar o gatilho | — | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
 | P-90 | O gate `/up` do `deploy.sh` faz um `curl` só depois de o nginx ficar `healthy`; num deploy que recria o `app` e não o nginx, ele bate antes do php-fpm novo escutar e o botão sai 502 (botão 2 do item 32) | — | próximo commit em `deploy/bin/deploy.sh`, ou o próximo botão com `erro: /up respondeu 502`; **disparado em 2026-10-27 (item 42), não pago**; revisar 2026-10-31 |
 | P-91 | `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401: o `Authenticate` monta o redirecionamento por `route('login')`, que não existe (medido em produção pelo item 32) | — | bloco que tocar `backend/bootstrap/app.php` ou o middleware de autenticação; revisar 2026-10-31 |
-| P-94 | O diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha (`frame 669 · scroll 672`): herda o piso default de 42rem, e o audit do item 23 só o mediu vazio | — | `medir.cjs` do item 23 medir `scroll` = `frame` na linha `DIALOGO` em 1024 com alumno que tenha turma, ou bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo ou o piso default do `AppDataTable`; revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-95 | Doze pontas do harness que o item 35 deixou sem correção: seis Menores da revisão (Q-7, Q-8, Q-10 a Q-13) e seis do `rulings.md` (`context_required`/`closing` sem command, `lotus-ui-review` lendo o `state.md`, fluxo antigo no `backlog.md`, semente do `lane.sh` fora da invariante 6, catraca sem prompts nem `subagent_type`, `blocked` da rota codex sem artefato) | 36 | cada linha corrigida ou com veredito escrito; dispara no bloco que tocar `.claude/commands/`, `lane.sh`, `commands.tests.sh` ou `state.md` — **disparado em 2026-10-04 (item 36), não pago**; revisar 2026-10-31 |
 | P-96 | `AGENTS.md` e `INSTRUÇÕES-DO-PROJETO.md` listam quatro das seis rules (faltam `backend-lang` e `frontend-estilizacao`), e o `estrutura-monolito.md` não cita o `shared/ui/Timestamp/` | BD-15 | os três docs acompanharem; dispara no bloco que tocar qualquer um deles — **disparado em 2026-10-04 (item 36) e em 2026-10-21 (item 38), não pago**; revisar 2026-10-31 |
@@ -46,6 +45,8 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-109 | O paginador das tabelas expõe "Previous Page"/"Next Page" em inglês a leitor de tela | — | bloco que tocar o `AppDataTable` ou o `pt` do paginador; revisar 2026-11-07 |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
+>
+> **O item 43 (`frontend-dialogos-proporcionais-e-tipo-de-documento`) fechou em 2026-10-29 a P-94**, pela medição do `smoke.md`, e abriu a **P-105** a **P-109** na execução: a tinta `danger` do tema escuro sobre o `AppTag`, a lixeira de documento sem confirmação, o 422 de upload em "campo file", o RUT do cliente sob o botão de cotação em 1024 e o paginador em inglês. Quatro Menores da revisão (Q-1, Q-2, Q-4 e a Q-3, já corrigida na spec) ficaram só no `revisao.md`.
 >
 > **O item 35 (`harness-commands-de-bloco`) fechou em 2026-10-03 a P-84 e a P-92**, as duas que
 > hospedava: a P-84 pela seção HARNESS do `estrutura-monolito.md`, e a P-92 pela invariante 10
@@ -137,7 +138,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-104 | O diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado | João | o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`; revisar em 2026-11-07 |
 | P-105 | A tinta `danger` do tema escuro (`--tone-danger-ink` = `--red-400`) mede 4,36:1 sobre o fundo de 15% do `severityTone` — o do `AppTag` danger e do ícone da `ConfirmDialog` —, abaixo de 4,5:1; o caso do `tone-ink.test.ts` do item 43 o pula | João | bloco que tocar `--tone-danger-ink`, `severityTone` ou a P-74; revisar 2026-11-07 |
 
-## Encerradas (0)
+## Encerradas (1)
+
+**A P-94 fechou no item 43 (2026-10-29)**, pela medição do `smoke.md` do bloco: `scroll` = `frame` na linha `DIALOGO` em 1024x768 e em 1440x900. Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
 
 **A P-100 e a P-05 saíram no fechamento do item 38 (2026-10-21)**, o primeiro depois do item 39, que passou sem removê-las; o item 13 as encerrou em 2026-10-06. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

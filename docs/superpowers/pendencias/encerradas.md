@@ -7,7 +7,27 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-Nenhuma ficha em rastro.
+## P-94 — o diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha
+
+**Bloco:** — · **Gatilho:** fecha quando o `medir.cjs` do audit do item 23 (Apêndice A), com um
+alumno que tenha turma, medir `scroll` = `frame` na linha `DIALOGO` em 1024x768. O mesmo vale para
+qualquer bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo do Alumno ou o piso
+default do `AppDataTable/style.ts`. Revisar em **2026-10-31**.
+
+Medido em 2026-09-28, no fechamento do item 23 (`frontend-tabelas-reserva-e-rolagem`), em
+`7f829137`, offset +2, es-CL. A tabela de turmas do diálogo do Alumno (consumidora 15 da spec do
+item 23) mede `frame 669 · scroll 672 · table 672` em 1024x768. A régua da spec §3 pede
+`scrollWidth == clientWidth`, e reprova por 3px.
+
+A causa é o piso default de 42rem (672px) da §4.1, que o diálogo herda como toda consumidora sem
+`pt` próprio. A moldura do diálogo em 1024 tem 669px, 3px a menos. O audit do item 23 mediu o
+diálogo só vazio, com `rows 0` e `min-width` 0px, e concluiu que ele "não tem piso". A seção 9 do
+audit corrige isso. Antes do bloco, o piso era 48rem, e o mesmo diálogo com dado teria rolado 99px.
+
+Ficou aberta por decisão do João no gate de fechamento do item 23. O bloco fechou com o resíduo
+registrado, sem reabrir a execução.
+
+**ENCERRADA em 2026-10-29, no `frontend-dialogos-proporcionais-e-tipo-de-documento` (item 43).** O gatilho venceu pela medição: o `medir.cjs` do Apêndice A do audit do item 23, com o primeiro alumno da lista (uma turma, `rows 1`), mede `frame 720 · scroll 720 · table 720` em 1024x768 e em 1440x900 (`blocos/43-frontend-dialogos-proporcionais-e-tipo-de-documento/smoke.md`, seção P-94). A moldura `md` de 48rem dá ao corpo 720px, acima do piso de 42rem (672px); o `StudentDialog.tsx` não precisou mudar. Na revisão o João passou o diálogo do Alumno para `lg` (`9bd0ec86`), que só alarga o corpo e não foi remedido.
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
