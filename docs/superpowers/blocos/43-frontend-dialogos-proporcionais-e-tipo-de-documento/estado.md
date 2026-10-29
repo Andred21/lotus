@@ -2,24 +2,24 @@
 schema_version: 3
 id: 43
 slug: 43-frontend-dialogos-proporcionais-e-tipo-de-documento
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
-active_spec: null
-active_plan: null
+active_spec: docs/superpowers/blocos/43-frontend-dialogos-proporcionais-e-tipo-de-documento/spec.md
+active_plan: docs/superpowers/blocos/43-frontend-dialogos-proporcionais-e-tipo-de-documento/plano.md
 active_review: null
 active_acceptance: null
 context_packet: null
-efeito_externo: null
-executor: null
+efeito_externo: nao
+executor: claude
 branch: feat/43-frontend-dialogos-proporcionais-e-tipo-de-documento
 worktree: ../lotus-43-frontend-dialogos-proporcionais-e-tipo-de-documento
 offset: 3
 lane_base: 0c09fa4f
-commit: 0c09fa4f
+commit: d98fa419
 blocker: null
-updated_at: 2026-10-28T22:16:56-03:00
+updated_at: 2026-10-28T23:08:04-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
