@@ -98,7 +98,7 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
     /** Bloco 43: o fundo de 15% do `AppTag` (`severityTone`) é também o do ícone
      * da `ConfirmDialog`, e só o `accent` era medido nessa proporção.
      * Fora só o par `danger` + escuro: o `AppTag` danger já media 4,36:1 ali
-     * antes do bloco (J10/P-74), e o bloco não o corrige. O par está registrado como a P-105
+     * antes do bloco, e o bloco não o corrige. O par está registrado como a P-105
      * (`docs/superpowers/pendencias/abertas.md`): o filtro do par danger+escuro sai
      * quando a P-105 for paga. */
     it.each(
