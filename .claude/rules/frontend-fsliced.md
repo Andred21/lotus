@@ -25,7 +25,14 @@ sincronizados.
 **Regra de dependência:** só aponta para baixo. Feature usa shared; shared NUNCA usa feature;
 feature NÃO importa outra feature — **nem para tipo** (union compartilhado vai para `shared/lib`).
 Composição cruzada acontece na camada `app`/rota ou via API (ex.: `coursesApi` read-only em
-`shared/api` para o redator consumir sem importar `catalog`). **Validação QR pública** é a rota
+`shared/api` para o redator consumir sem importar `catalog`).
+**Aba de uma feature dentro da página de outra** (bloco 40): a página hospedeira expõe um **slot**
+(prop `ReactNode` opcional, aqui `configuracion` do `AdministracionPage` de `identity`) e a camada
+`app/` entrega o conteúdo da feature dona, com o `can()` da permissão decidindo se o slot vai
+preenchido. Ref.: `app/pages/Administracion/AdministracionRoute.tsx` monta
+`<AdministracionPage configuracion={…<ConfiguracionTab />} />` com a aba de `features/certification`
+(`components/Settings/`). Nenhuma das duas features importa a outra; submódulo novo de Configuración
+entra no `ConfiguracionTab`, com a navegação lateral `AppSubNav` (`shared/ui`). **Validação QR pública** é a rota
 `/validar/:uuid` desta SPA, fora do ramo protegido e do `SessionBootstrap` (spec D14/D19 da
 certificação); a API pública `/api/publico/certificados/{uuid}` responde sem cookie.
 

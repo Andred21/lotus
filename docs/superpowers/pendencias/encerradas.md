@@ -7,6 +7,22 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
+## P-28 — o fundo do certificado não reproduz as cunhas nem separa a página 2
+
+**Bloco:** — · **Gatilho (original):** fecha quando o fundo passar a distinguir página 1 das seguintes **e** as cunhas existirem, ou quando a Lotus aprovar o documento como está. Revisar em 2026-10-31.
+
+O certificado renderizado não reproduzia duas coisas do `docs/templates/certificado.pdf`: (a) as cunhas diagonais azul/preta das quinas da página 1, e (b) a página 2, que herdava as faixas azul/preta das bordas (`repeat-y` da `.page`) e no aprovado é cinza limpo. Achado do gate visual de `documentos-oficiais-template-e-docx` (2026-08-10); o João aceitou "agora, tratar depois". Causa medida: as cunhas são vetor dentro do PDF aprovado, e o raster versionado só carrega o que é imagem.
+
+**ENCERRADA em 2026-10-29, no `certificado-refinamento-e-validade` (item 40), pela decisão D8 do João:** o layout v5, aprovado por ele em cima de PDFs do Gotenberg da lane, vale como o certificado e se aplica a todo certificado, inclusive os já emitidos. As cunhas das quinas **não** voltaram: a v5 tem as barras preto/azul no topo e no rodapé da página 1, e o João aprovou esse desenho (`referencia-layout-p1.png`). A parte (b) saiu por mecanismo: o fundo de continuação é um asset próprio sem as barras (`backend/resources/images/fundo-certificado-continuacao.jpg`), embutido uma vez e aplicado a toda página depois da primeira. Prova: `CertificatePdfTest` (fundos e logo embutidos uma única vez; barras só na página 1), `CertificadoMatrizGotenbergTest` no Gotenberg 8.36.0 (todo caso com rodapé e logo em toda página) e a inspeção visual da Task 5 (`blocos/40-certificado-refinamento-e-validade/evidencias.md`).
+
+## P-78 — a assinatura do relator cai para uma página própria quando a folha 1 cresce
+
+**Bloco:** infra-producao-provisionamento-aws (achado da Task 16, não do escopo) · **Gatilho (original):** fecha quando um certificado com dado real da Lotus fechar o rodapé na página 1 e isso for remedido, ou quando o João decidir o corte (clamp por comprimento de nome/descrição) e ele for implementado. Revisar em 2026-10-31.
+
+Medido em produção em 2026-09-20, no `LOT-2026-1000`: PDF com 3 páginas, a assinatura do relator e o aviso legal sozinhos na segunda. Era o trade-off do `min-height` da `.page` do Blade antigo: com `height` fixo o excedente se pintava por cima da página seguinte; com `min-height` a folha crescia. O que cortar era decisão de negócio, do João.
+
+**ENCERRADA em 2026-10-29, no `certificado-refinamento-e-validade` (item 40), pela segunda metade do gatilho (D10, D11, D15):** o João decidiu o corte, e ele está implementado como **teto de caracteres na entrada**, medido no Gotenberg real (`TetosImpressos`, nome do aluno 70, curso 110, técnico 160, razão social 150, assinante 60, cargo 70, descrição 620), com `max:` nos DTOs, no import de alunos e na carga histórica, e o clamp com reticências da descrição saiu do Blade. O Blade v5 deixa as assinaturas no fluxo logo abaixo do corpo, e `CertificadoMatrizGotenbergTest` prova 2 páginas com as assinaturas na página 1 para texto realista no teto (`blocos/40-certificado-refinamento-e-validade/matriz.md`); texto adversário pode levar as assinaturas à página 2, mas nunca perde texto. **O que segue aberto, e não é esta ficha:** a coluna "maior de produção" da matriz ainda está pendente (a leitura de produção foi recusada pelo auto mode), e o PDF reimpresso em produção é o item 3 da Verificação externa do bloco (`aceitacao.md`), do João.
+
 ## P-94 — o diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha
 
 **Bloco:** — · **Gatilho:** fecha quando o `medir.cjs` do audit do item 23 (Apêndice A), com um

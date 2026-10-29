@@ -23,9 +23,11 @@ Domínios (espelhados 1:1 pelas `features/` do front):
 `Operation\Enums\TurmaDocumentType` + gate da RN-16), e RF-FBK-03 pertence ao encerramento da ordem
 de serviço. Ver `docs/der-fisico.md` §Feedback. Não crie o domínio.
 
-**Estado atual:** Identity, Commercial, Catalog e Operation têm código real. `Certification/` existe
-como pastas sem nenhuma classe. Crie a estrutura de um domínio só quando ele entra em
-desenvolvimento.
+**Estado atual:** Identity, Commercial, Catalog, Operation e Certification têm código real.
+`Certification/` tem Actions (emissão, lote, revogação, `CertificateSettings` da gerente), Services
+(PDF via Gotenberg, snapshot, assinaturas vivas, tetos do texto impresso), Models, Data e a rota
+pública de validação (bloco 40: layout v5, `FIRMA` do redator, Configuración › Certificados). Crie a
+estrutura de um domínio só quando ele entra em desenvolvimento.
 
 **`App\Shared\`** = infra transversal: `Exceptions/ProblemDetails` (converte qualquer exceção em
 envelope RFC 7807, ligado em `bootstrap/app.php` para `api/*` e requests JSON — controllers não
