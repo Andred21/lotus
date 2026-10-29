@@ -22,4 +22,7 @@ return [
     'validation_url' => [
         'not_configured' => 'O endereço de validação de certificados não está configurado com https. Nenhum certificado é emitido nem baixado até que o administrador do sistema o configure.',
     ],
+    'signature' => [
+        'missing_binary' => 'A imagem da assinatura do arquivo :id não está no disco (:path).',
+    ],
 ];

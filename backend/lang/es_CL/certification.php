@@ -22,4 +22,7 @@ return [
     'validation_url' => [
         'not_configured' => 'La dirección de validación de certificados no está configurada con https. Ningún certificado se emite ni se descarga hasta que el administrador del sistema la configure.',
     ],
+    'signature' => [
+        'missing_binary' => 'La imagen de la firma del archivo :id no está en el disco (:path).',
+    ],
 ];
