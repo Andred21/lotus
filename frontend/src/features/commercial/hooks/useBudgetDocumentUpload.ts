@@ -43,8 +43,15 @@ export function useBudgetDocumentUpload(budgetId: number) {
     const escolhido = e.files[0]
     e.options.clear()
     if (!escolhido) return
+    // O erro do servidor é do arquivo (ou tipo) anterior: não fica ao lado do novo.
+    upload.reset()
     setFile(escolhido)
     setSizeError(null)
+  }
+
+  const chooseType = (novo: BudgetDocumentType) => {
+    upload.reset()
+    setType(novo)
   }
 
   const submit = () => {
@@ -65,7 +72,7 @@ export function useBudgetDocumentUpload(budgetId: number) {
     open: () => setVisible(true),
     close,
     type,
-    setType,
+    setType: chooseType,
     file,
     pickFile,
     sizeError,

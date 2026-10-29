@@ -100,4 +100,18 @@ describe('useBudgetDocumentUpload', () => {
     expect(result.current).toMatchObject({ visible: true, type: null, file: null, sizeError: null })
     expect(reset).toHaveBeenCalled()
   })
+
+  /** Revisão final M-1: o 422 é do arquivo/tipo anteriores; mudar qualquer um
+   * deles deixa o banner velho ao lado da escolha nova. */
+  it.each([
+    ['escolher outro arquivo', (r: ReturnType<typeof montar>) => r.current.pickFile(escolha(pdf))],
+    ['trocar o tipo', (r: ReturnType<typeof montar>) => r.current.setType('invoice')],
+  ])('%s limpa o erro do envio anterior', (_nome, agir) => {
+    const reset = vi.fn()
+    const result = montar(vi.fn(), reset)
+
+    act(() => agir(result))
+
+    expect(reset).toHaveBeenCalledTimes(1)
+  })
 })
