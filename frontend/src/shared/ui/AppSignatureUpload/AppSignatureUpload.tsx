@@ -87,7 +87,7 @@ export function AppSignatureUpload({ label, onConfirm, disabled = false, busy = 
     <div className="flex flex-col gap-3">
       {preview ? (
         <>
-          <div className="rounded-md border p-3" style={{ borderColor: 'var(--surface-border)', ...signatureCheckerboard }}>
+          <div className="rounded-control border p-3" style={{ borderColor: 'var(--surface-border)', ...signatureCheckerboard }}>
             <img src={preview.url} alt={t('signature.previewAlt')} className="mx-auto max-h-32 max-w-full" />
           </div>
           <div className="flex flex-wrap gap-2">

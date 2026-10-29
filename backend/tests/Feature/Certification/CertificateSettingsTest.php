@@ -99,6 +99,36 @@ class CertificateSettingsTest extends TestCase
         $this->assertNull($this->getJson('/api/certificate-settings')->json('signature'));
     }
 
+    public function test_subir_trocar_e_remover_a_assinatura_da_gerente_gera_auditoria_do_arquivo(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsSuperadmin();
+
+        $this->postJson('/api/certificate-settings/signature', ['file' => $this->assinatura()])->assertCreated();
+        $primeira = File::where('type', CertificateSettings::TIPO_FIRMA)->firstOrFail();
+
+        $criada = DB::table('audits')
+            ->where('auditable_type', 'file')
+            ->where('auditable_id', $primeira->id)
+            ->where('event', 'created')
+            ->first();
+        $this->assertNotNull($criada);
+        $this->assertSame(CertificateSettings::TIPO_FIRMA, json_decode($criada->new_values, true)['type']);
+
+        $this->postJson('/api/certificate-settings/signature', ['file' => $this->assinatura()])->assertCreated();
+        $segunda = File::where('type', CertificateSettings::TIPO_FIRMA)->firstOrFail();
+
+        $this->assertSame(1, DB::table('audits')
+            ->where('auditable_type', 'file')->where('auditable_id', $primeira->id)->where('event', 'deleted')->count());
+        $this->assertSame(1, DB::table('audits')
+            ->where('auditable_type', 'file')->where('auditable_id', $segunda->id)->where('event', 'created')->count());
+
+        $this->deleteJson('/api/certificate-settings/signature')->assertOk();
+
+        $this->assertSame(1, DB::table('audits')
+            ->where('auditable_type', 'file')->where('auditable_id', $segunda->id)->where('event', 'deleted')->count());
+    }
+
     public function test_assinatura_vigente_ignora_arquivo_mais_novo_de_outro_tipo_ou_apagado(): void
     {
         Storage::fake('s3');
