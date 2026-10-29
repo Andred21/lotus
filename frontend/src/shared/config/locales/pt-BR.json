@@ -929,7 +929,7 @@
       "sin_redactor": "A turma não tem redator designado"
     },
     "warnings": {
-      "managerSignatureMissing": "A assinatura da gerente não está cadastrada. Os certificados sairão com o espaço em branco sobre a linha, para assinar à mão. Ela é cadastrada em Configuração › Certificados.",
+      "managerSignatureMissing": "Falta a assinatura da gerente. Os certificados sairão sem ela até que o superadministrador a cadastre em Administração › Configuração › Certificados.",
       "redatorWithoutFirma": "{{name}} não tem assinatura cadastrada. O certificado sairá com o espaço em branco sobre a linha e o nome embaixo, para assinar à mão."
     },
     "confirmTitle": "Confirmar emissão",
