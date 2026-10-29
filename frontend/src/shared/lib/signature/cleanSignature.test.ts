@@ -26,6 +26,30 @@ function retangulo(r: Raster, x0: number, y0: number, w: number, h: number, cinz
 
 const alfaEm = (r: Raster, x: number, y: number) => r.data[(y * r.width + x) * 4 + 3]
 
+/** Papel com luz desigual: `de` num canto e `ate` no oposto, mais sombra opcional num canto. */
+function papelComSombra(width: number, height: number, de: number, ate: number, sombra = 0): Raster {
+  const r = papel(width, height, 0)
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const d = Math.hypot(x, height - 1 - y) // distancia ao canto inferior esquerdo
+      const v = de + ((ate - de) * (x / width + y / height)) / 2 - sombra * Math.exp(-((d / 90) ** 2))
+      r.data.set([v, v, v, 255], (y * width + x) * 4)
+    }
+  }
+  return r
+}
+
+/** Pixels com alfa > 0 FORA da caixa [x0,x1) x [y0,y1): o que sobrou de fundo. */
+function tintaFora(r: Raster, x0: number, y0: number, x1: number, y1: number): number {
+  let n = 0
+  for (let y = 0; y < r.height; y++) {
+    for (let x = 0; x < r.width; x++) {
+      if (alfaEm(r, x, y) > 0 && (x < x0 || x >= x1 || y < y0 || y >= y1)) n++
+    }
+  }
+  return n
+}
+
 describe('cleanSignature', () => {
   it('traco preto em papel branco: fundo vira alfa 0 e traco alfa 255', () => {
     const r = papel(200, 100, 255)
@@ -73,23 +97,23 @@ describe('cleanSignature', () => {
 
   it('3000 px de largura saem com 1600, na mesma proporcao', () => {
     const r = papel(3000, 1000, 255)
-    retangulo(r, 0, 0, 3000, 500, 0)
+    retangulo(r, 0, 0, 3000, 30, 0) // faixa fina: traco, nao metade da foto de tinta
 
     const saida = cleanSignature(r, { margin: 0 })
 
     expect(saida.width).toBe(SIGNATURE_MAX_WIDTH)
-    expect(saida.height).toBe(Math.round((500 * 1600) / 3000))
+    expect(saida.height).toBe(Math.round((30 * 1600) / 3000))
     expect(saida.data.length).toBe(saida.width * saida.height * 4)
   })
 
   it('800 px de largura nao sao ampliados', () => {
     const r = papel(800, 200, 255)
-    retangulo(r, 0, 0, 800, 100, 0)
+    retangulo(r, 0, 0, 800, 20, 0)
 
     const saida = cleanSignature(r, { margin: 0 })
 
     expect(saida.width).toBe(800)
-    expect(saida.height).toBe(100)
+    expect(saida.height).toBe(20)
   })
 
   it('pixels pretos isolados longe da assinatura nao esticam o recorte', () => {
@@ -134,6 +158,89 @@ describe('cleanSignature', () => {
 
     expect(saida.width).toBe(234 - 50)
     expect(saida.height).toBe(120 - 40)
+  })
+
+  it('gradiente forte de sombra (250 a 150): fundo inteiro some e o recorte fica rente', () => {
+    // Regressao do smoke da Task 14: com UM papel so, o canto escuro virava tinta.
+    const r = papelComSombra(600, 400, 250, 150)
+    retangulo(r, 200, 150, 200, 12, 20)
+
+    const saida = cleanSignature(r, { margin: 4 })
+
+    expect(saida.width).toBe(200 + 8)
+    expect(saida.height).toBe(12 + 8)
+    expect(tintaFora(saida, 4, 4, 204, 16)).toBe(0)
+    expect(alfaEm(saida, 100, 10)).toBe(255)
+  })
+
+  it('sombra de dedo escura no canto nao vira tinta nem estica o recorte', () => {
+    const r = papelComSombra(600, 400, 250, 150, 130)
+    retangulo(r, 200, 150, 200, 12, 20)
+
+    const saida = cleanSignature(r, { margin: 4 })
+
+    expect(saida.width).toBe(200 + 8)
+    expect(saida.height).toBe(12 + 8)
+    expect(tintaFora(saida, 4, 4, 204, 16)).toBe(0)
+  })
+
+  it('bloco de papel todo coberto de tinta continua tinta', () => {
+    // O percentil alto de um bloco 100% de tinta cai na propria tinta; a mediana
+    // da vizinhanca devolve o papel e o miolo nao vira buraco.
+    const r = papelComSombra(400, 300, 250, 200)
+    retangulo(r, 90, 90, 60, 60, 10)
+
+    const saida = cleanSignature(r, { margin: 0 })
+
+    expect(saida.width).toBe(60)
+    expect(saida.height).toBe(60)
+    expect(alfaEm(saida, 30, 30)).toBe(255)
+    expect(alfaEm(saida, 0, 0)).toBe(255)
+  })
+
+  it('manchas pequenas dentro do recorte somem do resultado, com alfa 0', () => {
+    // Antes elas so saiam da CAIXA; entre dois tracos, dentro do recorte,
+    // apareciam como pontinhos.
+    const r = papel(300, 200, 255)
+    retangulo(r, 50, 100, 200, 12, 0) // traco de cima
+    retangulo(r, 50, 160, 200, 12, 0) // traco de baixo
+    retangulo(r, 100, 130, 2, 2, 0) // poeira entre os dois
+    retangulo(r, 200, 140, 1, 1, 0)
+    retangulo(r, 150, 125, 3, 1, 0)
+
+    const saida = cleanSignature(r, { margin: 0 })
+
+    expect(saida.width).toBe(200)
+    expect(saida.height).toBe(72)
+    expect(alfaEm(saida, 100 - 50, 130 - 100)).toBe(0)
+    // Entre os tracos (linhas 12..59 do recorte) nao sobra nenhum pixel visivel.
+    let sobra = 0
+    for (let y = 12; y < 60; y++) for (let x = 0; x < 200; x++) if (alfaEm(saida, x, y) > 0) sobra++
+    expect(sobra).toBe(0)
+  })
+
+  it('numa foto grande a mancha de ate ~100 px de area tambem some, o traco nao', () => {
+    const r = papel(1600, 600, 255)
+    retangulo(r, 50, 50, 1500, 10, 0) // corpo em L: caixa de 1500 x 500
+    retangulo(r, 50, 50, 10, 500, 0)
+    retangulo(r, 800, 300, 10, 10, 0) // mancha de 100 px dentro da caixa
+
+    const saida = cleanSignature(r, { margin: 0 })
+
+    expect(saida.width).toBe(1500)
+    expect(saida.height).toBe(500)
+    expect(alfaEm(saida, 750, 250)).toBe(0) // a mancha
+    expect(alfaEm(saida, 5, 250)).toBe(255) // o traco vertical
+  })
+
+  it('o pingo 4x4 de um i continua la, com alfa pleno', () => {
+    const r = papel(300, 200, 255)
+    retangulo(r, 50, 100, 100, 20, 0)
+    retangulo(r, 230, 40, 4, 4, 0)
+
+    const saida = cleanSignature(r, { margin: 0 })
+
+    expect(alfaEm(saida, 232 - 50, 42 - 40)).toBe(255)
   })
 
   it('so poeira, sem traco, lanca EmptySignatureError', () => {
