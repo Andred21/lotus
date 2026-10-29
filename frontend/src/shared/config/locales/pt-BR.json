@@ -432,6 +432,18 @@
     "remove": "Remover foto",
     "createUploadFailed": "O cadastro foi criado, mas a foto não subiu."
   },
+  "signature": {
+    "hint": "PNG, JPG ou WebP. Recortamos a assinatura e tiramos o fundo; você vê o resultado antes de salvar.",
+    "processing": "Limpando a imagem…",
+    "previewAlt": "Assinatura já limpa, sobre fundo xadrez que indica a transparência",
+    "confirm": "Usar esta assinatura",
+    "cancel": "Cancelar",
+    "errorUnsupported": "Este formato não pode ser lido. Use uma imagem PNG, JPG ou WebP.",
+    "errorEmpty": "Não encontramos nenhum traço na imagem. Tente uma foto mais nítida, com a assinatura em tinta escura.",
+    "errorTooNarrow": "A assinatura tem {{width}} px de largura e o mínimo é {{min}} px. Aproxime a câmera ou use uma imagem de maior resolução.",
+    "errorTooHeavy": "A assinatura já limpa pesa mais de 1 MB. Use uma imagem mais simples ou com menos ruído.",
+    "errorGeneric": "Não foi possível processar a imagem. Tente outro arquivo."
+  },
   "client": {
     "new": "Novo cliente",
     "create": "Cadastrar cliente",

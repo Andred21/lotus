@@ -432,6 +432,18 @@
     "remove": "Remove photo",
     "createUploadFailed": "The record was created, but the photo was not uploaded."
   },
+  "signature": {
+    "hint": "PNG, JPG or WebP. We crop the signature and remove the background; you see the result before saving.",
+    "processing": "Cleaning the image…",
+    "previewAlt": "Cleaned signature on a checkerboard that shows the transparency",
+    "confirm": "Use this signature",
+    "cancel": "Cancel",
+    "errorUnsupported": "This format cannot be read. Use a PNG, JPG or WebP image.",
+    "errorEmpty": "We found no strokes in the image. Try a sharper photo with the signature in dark ink.",
+    "errorTooNarrow": "The signature is {{width}} px wide and the minimum is {{min}} px. Move the camera closer or use a higher-resolution image.",
+    "errorTooHeavy": "The cleaned signature is over 1 MB. Use a simpler image or one with less noise.",
+    "errorGeneric": "The image could not be processed. Try another file."
+  },
   "client": {
     "new": "New client",
     "create": "Register client",

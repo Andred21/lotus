@@ -432,6 +432,18 @@
     "remove": "Eliminar foto",
     "createUploadFailed": "El registro fue creado, pero la foto no se subió."
   },
+  "signature": {
+    "hint": "PNG, JPG o WebP. Recortamos la firma y quitamos el fondo; verás el resultado antes de guardar.",
+    "processing": "Limpiando la imagen…",
+    "previewAlt": "Firma ya limpia, sobre fondo de cuadros que indica la transparencia",
+    "confirm": "Usar esta firma",
+    "cancel": "Cancelar",
+    "errorUnsupported": "Este formato no se puede leer. Usa una imagen PNG, JPG o WebP.",
+    "errorEmpty": "No encontramos ningún trazo en la imagen. Prueba con una foto más nítida y con la firma en tinta oscura.",
+    "errorTooNarrow": "La firma mide {{width}} px de ancho y el mínimo es {{min}} px. Acerca la cámara o usa una imagen de mayor resolución.",
+    "errorTooHeavy": "La firma ya limpia pesa más de 1 MB. Usa una imagen más simple o con menos ruido.",
+    "errorGeneric": "No se pudo procesar la imagen. Inténtalo con otro archivo."
+  },
   "client": {
     "new": "Nuevo cliente",
     "create": "Registrar cliente",
