@@ -26,10 +26,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
-| P-106 | A lixeira de um documento do orçamento remove sem confirmação (`useBudgetDetail.ts:99`), enquanto o `TurmaDocuments` confirma | — | bloco que tocar `useBudgetDetail.ts` ou o `BudgetDocumentsCard`; revisar 2026-11-07 |
-| P-107 | O 422 de upload diz "El campo file…": o backend não traduz o atributo `file` | — | bloco que tocar a validação de upload ou os atributos do `lang/`; revisar 2026-11-07 |
-| P-108 | Em 1024, o RUT do cliente passa por baixo do "Agregar cotización" no cabeçalho do detalhe do orçamento | — | bloco que tocar esse cabeçalho; revisar 2026-11-07 |
-| P-109 | O paginador das tabelas expõe "Previous Page"/"Next Page" em inglês a leitor de tela | — | bloco que tocar o `AppDataTable` ou o `pt` do paginador; revisar 2026-11-07 |
 |---|---|---|---|
 | P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | — | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-85 | No sqlite da suíte o `whereBetween` de `start_date` do `AnalyticsQuery` (série e dois rankings) deixa de fora o último dia do período — a produção (MySQL) acerta, a suíte não enxerga a borda; `DataSql::literal` já resolve isso em outro lugar | — | bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de período do dashboard; revisar 2026-10-31 |
@@ -44,6 +40,10 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
+| P-106 | A lixeira de um documento do orçamento remove sem confirmação (`useBudgetDetail.ts:99`), enquanto o `TurmaDocuments` confirma | — | bloco que tocar `useBudgetDetail.ts` ou o `BudgetDocumentsCard`; revisar 2026-11-07 |
+| P-107 | O 422 de upload diz "El campo file…": o backend não traduz o atributo `file` | — | bloco que tocar a validação de upload ou os atributos do `lang/`; revisar 2026-11-07 |
+| P-108 | Em 1024, o RUT do cliente passa por baixo do "Agregar cotización" no cabeçalho do detalhe do orçamento | — | bloco que tocar esse cabeçalho; revisar 2026-11-07 |
+| P-109 | O paginador das tabelas expõe "Previous Page"/"Next Page" em inglês a leitor de tela | — | bloco que tocar o `AppDataTable` ou o `pt` do paginador; revisar 2026-11-07 |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
