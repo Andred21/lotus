@@ -114,8 +114,8 @@ que o builder pode corrigir com motivo:
 ### 4.4 Proporção dos formulários
 
 - **Diálogo de Alumno (J7):** foto à esquerda; à direita, grade de 2 colunas — Nome │ RUT, E-mail │
-  Teléfono; Empresa (`StudentClientField`) na linha inteira abaixo da linha da foto. Abaixo de `md`
-  (o breakpoint), uma coluna. Corrige o docblock de `StudentIdentifyFields.tsx:5-9` para dizer o que
+  Teléfono; Empresa (`StudentClientField`) na linha inteira abaixo da linha da foto. Abaixo de `sm`
+  (o breakpoint; revisão Q-3), uma coluna. Corrige o docblock de `StudentIdentifyFields.tsx:5-9` para dizer o que
   o código faz.
 - **`FormPhotoRow`:** a foto deixa de ocupar `lg:w-3/5`; vira coluna compacta de largura fixa ao
   lado dos campos a partir de `sm`/`md`. Como é compartilhado com `ClientDialog`, `StaffUserDialog`
