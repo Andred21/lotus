@@ -694,6 +694,36 @@ class CertificatePdfTest extends TestCase
         });
     }
 
+    /**
+     * As duas assinaturas viajam inteiras: sem `break-inside: avoid` o Chromium
+     * separava a caixa (ou a imagem) do traço, do nome e do cargo na quebra de
+     * página — medido no Gotenberg real com descrições de 29 a 34 repetições de
+     * uma frase de 45 caracteres: o cargo caía na página 2 com o nome na 1, e
+     * depois a imagem na 1 com o nome na 2. Uma assinatura sem o nome embaixo
+     * não assina ninguém.
+     */
+    public function test_assinaturas_nao_se_partem_na_quebra_de_pagina(): void
+    {
+        $this->actingAsAdmin();
+        $this->fakeGotenberg();
+
+        $this->get($this->pdfUrl())->assertOk();
+
+        $html = $this->pdf->lastHtml();
+        foreach (['firmas', 'firma'] as $classe) {
+            $this->assertMatchesRegularExpression(
+                '/\.'.$classe.'\s*\{[^}]*break-inside:\s*avoid;[^}]*\}/s',
+                $html,
+                ".{$classe} perdeu o break-inside: avoid.",
+            );
+            $this->assertMatchesRegularExpression(
+                '/\.'.$classe.'\s*\{[^}]*page-break-inside:\s*avoid;[^}]*\}/s',
+                $html,
+                ".{$classe} perdeu o page-break-inside: avoid.",
+            );
+        }
+    }
+
     /** D6 e Review Focus 5: sem assinatura a caixa fica vazia e traço, nome e cargo ficam. */
     public function test_sem_assinatura_a_caixa_fica_vazia_e_traco_e_nome_ficam(): void
     {

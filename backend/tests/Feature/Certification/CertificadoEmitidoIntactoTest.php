@@ -28,6 +28,9 @@ class CertificadoEmitidoIntactoTest extends TestCase
     /**
      * sha256 do HTML que o layout v5 do bloco 40 gera para este certificado.
      *
+     * A rodada de fidelidade v5 do bloco 40 trocou o sha de novo (de `db918135…8fd1`):
+     * tamanhos de fonte e `break-inside` das assinaturas, sem mexer em conteúdo.
+     *
      * Valor anterior: `1323f813…94ac`, o HTML de `main@0740843a` (antes do
      * bloco 39). Trocá-lo é decidir que todo certificado já emitido reimprime
      * diferente — e é a decisão do João, de 2026-10-29 (D5 e D8 da spec do bloco
@@ -38,7 +41,7 @@ class CertificadoEmitidoIntactoTest extends TestCase
      * imutáveis (D12), e `test_ler_o_certificado_emitido_nao_reescreve_a_linha`
      * é a prova. Só o PDF, que é regerado do snapshot a cada leitura, muda.
      */
-    private const HTML_LAYOUT_V5_BLOCO_40 = 'db9181358f5c2cd214bd103d45216037bcacb1a6245eb70f84098033e9e68fd1';
+    private const HTML_LAYOUT_V5_BLOCO_40 = '34099ecb83e176cd8f57bf6d849f71a679923f02555dbf5bb56fb34e313850af';
 
     private const UUID = '3f6c2a1e-8b4d-4c7a-9e2f-5d1b0a9c8e7f';
 

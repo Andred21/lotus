@@ -215,14 +215,14 @@
         }
         .curso-nombre { color: #29a3e0; font-size: 18px; font-weight: 600; line-height: 1.25; }
         .curso-detalle { font-size: 10.8px; margin-top: 1.5mm; }
-        .parrafo { font-size: 12px; line-height: 1.6; margin: 10mm 0 0; }
+        .parrafo { font-size: 11.8px; line-height: 1.6; margin: 10mm 0 0; }
         .cliente {
             border-top: 1px solid #c9c9c9;
             margin-top: 4.7mm;
             padding-top: 4.2mm;
         }
-        .cliente-nombre { font-size: 12px; font-weight: 600; }
-        .cliente-rut { font-size: 10.5px; margin-top: 0.2mm; }
+        .cliente-nombre { font-size: 13.2px; font-weight: 600; }
+        .cliente-rut { font-size: 11.4px; margin-top: 0.2mm; }
         .registro { font-size: 10.5px; margin: 3.2mm 0 0; }
         .registro strong { font-weight: 600; }
 
@@ -231,11 +231,15 @@
              fica vazia e o resto não muda. O PNG já vem limpo do upload e entra
              como está; o `multiply` some qualquer resíduo claro no fundo. --}}
         .firmas {
+            break-inside: avoid;
             display: flex;
             gap: 22mm;
             margin: 13.7mm 10mm 0;
+            page-break-inside: avoid;
         }
-        .firma { flex: 1 1 0; min-width: 0; text-align: center; }
+        {{-- Nada da assinatura se parte na quebra de página: a caixa, o traço, o
+             nome e o cargo vão juntos, e o bloco inteiro desce se não couber. --}}
+        .firma { break-inside: avoid; flex: 1 1 0; min-width: 0; page-break-inside: avoid; text-align: center; }
         .firma-caja {
             align-items: flex-end;
             display: flex;
@@ -247,9 +251,9 @@
             max-width: 100%;
             mix-blend-mode: multiply;
         }
-        .firma-linea { border-top: 1px solid #3f3f3f; margin-bottom: 2.2mm; }
-        .firma-nombre { font-size: 10px; font-weight: 600; }
-        .firma-cargo { font-size: 9px; margin-top: 0.4mm; }
+        .firma-linea { border-top: 1px solid #3f3f3f; margin-bottom: 1.8mm; }
+        .firma-nombre { font-size: 11.7px; font-weight: 600; }
+        .firma-cargo { font-size: 10.5px; margin-top: 0.1mm; }
 
         {{-- O aviso entra uma vez só, na última folha, e o `margin-top: auto` o
              leva ao pé dela quando o conteúdo é mais curto que a página. --}}
@@ -267,15 +271,15 @@
              nunca fica sozinho no fim da página. --}}
         .temario { border: 1px solid #c9c9c9; }
         .temario-cabecera { border-bottom: 1px solid #c9c9c9; display: flex; font-weight: 600; }
-        .temario-cabecera > div { font-size: 10px; line-height: 1.5; padding: 2.7mm 3.4mm; }
-        .temario-cabecera > div:first-child { align-items: center; border-right: 1px solid #c9c9c9; display: flex; flex: 0 0 34%; font-style: italic; }
+        .temario-cabecera > div { font-size: 10.7px; line-height: 1.5; padding: 2.7mm 3.4mm; }
+        .temario-cabecera > div:first-child { align-items: center; border-right: 1px solid #c9c9c9; display: flex; flex: 0 0 34%; font-weight: 700; }
         .temario-cabecera > div:last-child { flex: 1 1 0; min-width: 0; }
         .temario-cuerpo { padding: 0 4mm 7mm; }
-        .modulo { break-inside: avoid; margin-top: 2.3mm; }
-        .modulo + .modulo { margin-top: 3.5mm; }
-        .modulo-titulo { break-after: avoid; font-size: 10px; font-weight: 600; }
-        .modulo ul { list-style: disc; margin: 1mm 0 0; padding-left: 6mm; }
-        .modulo li { font-size: 10px; line-height: 1.55; }
+        .modulo { break-inside: avoid; margin-top: 1.3mm; }
+        .modulo + .modulo { margin-top: 2.7mm; }
+        .modulo-titulo { break-after: avoid; font-size: 10.7px; font-weight: 600; }
+        .modulo ul { list-style: disc; margin: 1.25mm 0 0; padding-left: 6mm; }
+        .modulo li { font-size: 10.8px; line-height: 1.47; }
         .modulo li::marker { color: #3f3f3f; font-size: 8px; }
     </style>
 </head>
