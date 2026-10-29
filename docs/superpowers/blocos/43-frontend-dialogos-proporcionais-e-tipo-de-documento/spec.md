@@ -53,6 +53,9 @@ depende de lembrar de trocar um combo antes.
 | J8 | Validação do tipo | **Enum do domínio Comercial** (`BudgetDocumentType`), no molde do `TurmaDocumentType`; `generated.ts` regenerado; o tipo TS escrito à mão sai |
 | J9 | Onde a OC se anexa | **No orçamento**, junto de factura e comprobante, pelo mesmo diálogo. O PDF da OC não se liga a uma cotação específica, embora o número `purchase_order` seja campo de cada cotação (`Quote.php:40`); a ligação, se precisar, é decisão futura. Várias OCs por orçamento são aceitas, como as facturas |
 | J10 | `danger` e a `P-74` | **Fora.** O botão `danger` preenchido mede 3,76:1 no claro (`P-74`, aberta); o bloco o usa como está e declara o resíduo (§5) |
+| J11 | Cor da confirmação simples (revisão do plano) | **Verde** (`success`) na faixa e no ícone. O botão de confirmar segue na marca (achado B3, a mesma grafia do `CrudDialog`); o verde diz o tipo da pergunta |
+| J12 | Designar redator inelegível (revisão do plano) | **`warning`**: o título já diz "Designar con aviso de idoneidad" |
+| J13 | Branch `docs/impeccable-product` (24 commits não mesclados, sobre os mesmos primitivos) | **Descartada depois deste bloco.** Nada dela entra aqui; o bloco segue esta spec |
 
 ## 4. Design
 
@@ -77,10 +80,11 @@ depende de lembrar de trocar um combo antes.
 - O `ConfirmDialog` evolui; não nasce um segundo primitivo. `severity` passa a ser
   `'confirm' | 'warning' | 'danger'`, com `'confirm'` como default (o comportamento sem severidade
   de hoje).
-- **Visual (J3):** largura fixa ≈ 28rem (limitada a `95vw`), sem maximizar; faixa de cor no topo
-  e ícone circular grande à esquerda do título, na cor da severidade: `confirm` = marca, `pi-check`
-  ou `pi-question`; `warning` = âmbar, `pi-exclamation-triangle`; `danger` = vermelho, `pi-trash` ou
-  `pi-exclamation-circle`. O botão de confirmar veste a mesma severidade. Sem header navy.
+- **Visual (J3, J11):** largura fixa ≈ 28rem (limitada a `95vw`), sem maximizar; faixa de cor no
+  topo e ícone circular grande à esquerda do título, na cor da severidade: `confirm` = verde
+  (`success`), `pi-check-circle`; `warning` = âmbar, `pi-exclamation-triangle`; `danger` =
+  vermelho, `pi-trash` ou `pi-exclamation-circle`. No `warning` e no `danger` o botão de confirmar
+  veste a mesma severidade; no `confirm` ele segue na marca (J11). Sem header navy.
 - **Âmbar:** o `brand-theme.css` registra que o token `ámbar-aviso` nunca foi construído (D-P16). O
   aviso usa a paleta `warning` do tema Lara já gerado; não nasce token de marca novo. O contraste do
   ícone e do botão `warning` passa pela régua do `tone-ink.test.ts`.
@@ -97,8 +101,8 @@ que o builder pode corrigir com motivo:
 | `sm` | `EnrollStudentForm`, `RegisterResultDialog`, `ImportDialog`, `RedatorDesignation` (picker), `ReissueDialog`, `BatchIssueDialog` |
 | `md` | `BudgetDialog`, `ClientDialog`, `CourseDialog`, `RoleDialog`, `StaffUserDialog`, `StudentDialog`, `RedatorDialog`, `IssuedDialog` |
 | `lg` | `QuoteWizard`, `AppFilePreviewDialog` (e quem o usa: `FileList`, `DocumentTypeCard`, `RedatorDocumentsSection`, `ProfileDocumentsSection`), `CertificateViewDialog` |
-| confirmação `confirm` | `ConfirmIssueDialog`, `RedatorDesignation` (confirmação), `BudgetOverlays` (`approve`) |
-| confirmação `warning` | `MoveConfirmDialog` |
+| confirmação `confirm` | `ConfirmIssueDialog`, `BudgetOverlays` (`approve`) |
+| confirmação `warning` | `MoveConfirmDialog`, `RedatorDesignation` (designar inelegível, J12) |
 | confirmação `danger` | `RemoveEnrollmentDialog`, `TurmaDocuments`, `ConcludePanel`, `BudgetOverlays` (demais ações), `RevokeDialog`, `ArchiveConfirmDialog` (`CatalogPage`, `OperationPage`, `CommercialPage`, `AdministracionPage`, `RedatoresTab`) |
 
 - `ConfirmIssueDialog`, `MoveConfirmDialog` e `RevokeDialog`, hoje sobre `AppDialog` cru, passam a

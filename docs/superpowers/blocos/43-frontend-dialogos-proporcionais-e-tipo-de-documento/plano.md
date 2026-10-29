@@ -46,6 +46,8 @@ João.
 - i18n: as 3 locales com chaves idênticas (`es-CL` é a referência); chave que ficar sem uso sai
   das três.
 - `danger` preenchido segue como está (3,76:1 no claro, `P-74`) — fora do bloco (spec J10).
+- A branch `docs/impeccable-product` não é base nem referência: será descartada depois deste
+  bloco (spec J13). Nada dela se copia aqui — nem o `size`, nem os tons, nem os testes.
 - Comandos: backend no container da lane (`docker compose exec -T app …`); frontend com
   `pnpm -C frontend <script>`; Pint só nos arquivos tocados
   (`cd backend && ./vendor/bin/pint <arquivos>`).
@@ -328,6 +330,7 @@ sem resultado.
 - Modify: `frontend/src/features/operation/components/Enrollment/MoveConfirmDialog.tsx`
 - Modify: `frontend/src/features/certification/components/Historial/RevokeDialog.tsx`
 - Modify: `frontend/src/features/certification/components/Emission/ConfirmIssueDialog.tsx`
+- Modify: `frontend/src/features/operation/components/Turma/RedatorDesignation.tsx` (o aviso de inelegível vira `warning`)
 - Modify: `frontend/src/shared/config/locales/{es-CL,pt-BR,en}.json` (sai `operation.enrollment.move.cancel`)
 
 **Interfaces:**
@@ -342,7 +345,7 @@ sem resultado.
   em `ConfirmDialog/style.ts`; `ConfirmDialog` com as props de hoje mais `severity?:
   ConfirmDialogSeverity` (default `'confirm'`), `confirmIcon?: string` (default `'pi pi-check'`) e
   `confirmDisabled?: boolean`. Os consumidores atuais (`severity="danger"` ou sem severidade) não
-  mudam.
+  mudam, salvo o aviso de inelegível do `RedatorDesignation`, que passa a `warning` (spec J12).
 
 - [ ] **Step 1: Testes que falham.**
 
@@ -430,8 +433,15 @@ describe('ConfirmDialog — confirmação compacta', () => {
     expect(raiz?.className).not.toContain('lotus-dialog')
   })
 
+  it('com a requisição em voo, Cancelar trava e o X some', () => {
+    render(<ConfirmDialog {...base} confirmLabel="Eliminar" severity="danger" pending />)
+
+    expect((document.querySelector('.p-dialog-footer .p-button-text') as HTMLButtonElement).disabled).toBe(true)
+    expect(document.querySelector('.p-dialog-header-close')).toBeNull()
+  })
+
   it('o mapa de estilo lê os tons medidos do AppTag', () => {
-    expect(confirmSeverityStyle.confirm).toMatchObject({ stripe: 'var(--blue-500)', ...severityTone.info })
+    expect(confirmSeverityStyle.confirm).toMatchObject({ stripe: 'var(--green-500)', ...severityTone.success })
     expect(confirmSeverityStyle.warning).toMatchObject({ stripe: 'var(--yellow-500)', ...severityTone.warning })
     expect(confirmSeverityStyle.danger).toMatchObject({ stripe: 'var(--red-500)', ...severityTone.danger })
   })
@@ -644,14 +654,14 @@ export type ConfirmDialogSeverity = 'confirm' | 'warning' | 'danger'
 /** A pintura de cada severidade da confirmação compacta (bloco 43, spec J3):
  * faixa no topo e ícone circular no header, na cor do sinal. Fundo e tinta do
  * ícone são os do `AppTag` (`severityTone`), medidos pela régua UI-04; a faixa é
- * o hue cheio, que é traço e não texto. `confirm` usa o azul do `info`, não o
- * celeste da marca: o botão de confirmar já veste a marca, e o ícone diz o TIPO
- * da pergunta. */
+ * o hue cheio, que é traço e não texto. `confirm` é verde (`success`, spec J11):
+ * o botão de confirmar já veste a marca, e o ícone diz o TIPO da pergunta — um
+ * azul ao lado do celeste leria como outro tom da mesma cor. */
 export const confirmSeverityStyle: Record<
   ConfirmDialogSeverity,
   { stripe: string; icon: string; background: string; color: string }
 > = {
-  confirm: { stripe: 'var(--blue-500)', icon: 'pi pi-check-circle', ...severityTone.info },
+  confirm: { stripe: 'var(--green-500)', icon: 'pi pi-check-circle', ...severityTone.success },
   warning: { stripe: 'var(--yellow-500)', icon: 'pi pi-exclamation-triangle', ...severityTone.warning },
   danger: { stripe: 'var(--red-500)', icon: 'pi pi-exclamation-circle', ...severityTone.danger },
 }
@@ -672,7 +682,8 @@ export type { ConfirmDialogSeverity } from './style'
 /** Confirmação compacta (bloco 43): 28rem, sem maximizar, e a severidade dita
  * antes do texto — faixa no topo e ícone no header. `confirm` pergunta (aprovar
  * uma cotação libera a turma na Operação), `warning` avisa de um efeito
- * colateral (mover o aluno de cliente) e `danger` destrói ou não tem volta.
+ * colateral ou de uma regra contornada (mover o aluno de cliente, designar um
+ * redator inelegível) e `danger` destrói ou não tem volta.
  * Não usa a moldura navy do `AppDialog`: as duas famílias se distinguem à
  * primeira vista (spec J3/J4). Apresentacional puro: não conhece feature nem
  * mutação. */
@@ -755,7 +766,8 @@ export function ConfirmDialog({
 }
 ```
 
-- [ ] **Step 4: Migrar os três consumidores** (as props públicas deles não mudam).
+- [ ] **Step 4: Migrar os três consumidores e reclassificar o aviso do `RedatorDesignation`** (as
+  props públicas deles não mudam).
 
 `frontend/src/features/operation/components/Enrollment/MoveConfirmDialog.tsx` (arquivo inteiro):
 
@@ -913,6 +925,19 @@ o `vigencia` e o `submit` ficam; do `const footer = (` até o fim do arquivo vir
 }
 ```
 
+`frontend/src/features/operation/components/Turma/RedatorDesignation.tsx` — o aviso de inelegível
+é `warning` (spec J12: o título já diz "Designar con aviso de idoneidad"):
+
+```tsx
+// antes
+        confirmLabel={t('operation.redator.confirmIneligibleAction')}
+        pending={picker.pending}
+// depois
+        confirmLabel={t('operation.redator.confirmIneligibleAction')}
+        severity="warning"
+        pending={picker.pending}
+```
+
 Locales — `operation.enrollment.move.cancel` fica sem uso (o `ConfirmDialog` usa
 `common.cancel`, de mesmo texto) e sai das três:
 
@@ -1060,6 +1085,12 @@ describe('AppDialog — tamanho', () => {
     expect(document.querySelector('.p-dialog')?.className).toContain('[&.p-dialog-maximized]:max-w-none')
   })
 
+  it('o footer navy tem respiro em cima e embaixo', () => {
+    render(<AppDialog size="md" visible header="Diálogo" footer={<span>rodapé</span>} onHide={() => {}} />)
+
+    expect(document.querySelector('.p-dialog-footer')?.className).toContain('py-3')
+  })
+
   it('o chamador não religa o maximizar fora do lg', () => {
     // @ts-expect-error -- `maximizable` saiu do tipo: quem decide é o tamanho.
     render(<AppDialog size="sm" maximizable visible header="Diálogo" onHide={() => {}} />)
@@ -1094,13 +1125,22 @@ describe('moldura navy do diálogo padrão (bloco 43)', () => {
     expect(corpo).toMatch(/background:\s*var\(--brand-navy\)/)
     expect(corpo).toMatch(/color:\s*var\(--shell-ink\)/)
     expect(corpo).toMatch(/--focus-stroke:\s*var\(--brand\)/)
+    expect(corpo).toMatch(/--text-color-secondary:\s*var\(--shell-ink-muted\)/)
   })
 
-  it('a tinta do shell passa AA sobre o navy', () => {
-    // `--shell-ink` é o `slate-300` copiado literal (comentário do `:root`): #cbd5e1.
+  it('as tintas do shell passam AA sobre o navy', () => {
+    // As duas são `slate` copiado literal (comentário do `:root`): `--shell-ink`
+    // é o 300 (#cbd5e1) e `--shell-ink-muted` o 400 (#94a3b8).
+    const navy = hex(camadaDeMarca, '--brand-navy')
+    expect(navy).toBe('#0f2b3d')
     expect(camadaDeMarca).toMatch(/--shell-ink:\s*oklch\(86\.9% 0\.022 252\.894\);/)
-    expect(hex(camadaDeMarca, '--brand-navy')).toBe('#0f2b3d')
-    expect(contraste('#cbd5e1', hex(camadaDeMarca, '--brand-navy'))).toBeGreaterThanOrEqual(4.5)
+    expect(camadaDeMarca).toMatch(/--shell-ink-muted:\s*oklch\(70\.4% 0\.04 256\.788\);/)
+    expect(contraste('#cbd5e1', navy)).toBeGreaterThanOrEqual(4.5)
+    expect(contraste('#94a3b8', navy)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('o botão primário de marca se destaca do navy (3:1, contorno)', () => {
+    expect(contraste(hex(camadaDeMarca, '--brand'), hex(camadaDeMarca, '--brand-navy'))).toBeGreaterThanOrEqual(3)
   })
 
   it.each([
@@ -1116,7 +1156,7 @@ describe('moldura navy do diálogo padrão (bloco 43)', () => {
 `size="md"` logo depois do nome (ex.: `<CrudDialog size="md" visible mode="create" …>`).
 
 - [ ] **Step 2:** `pnpm -C frontend exec vitest run src/shared/ui/AppDialog tests/tone-ink.test.ts`
-  → FAIL (teto, `lotus-dialog`, maximizar no `sm`/`md` e as regras do CSS).
+  → FAIL (teto, `lotus-dialog`, maximizar no `sm`/`md`, o `py-3` do footer e as regras do CSS).
 
 - [ ] **Step 3: Implementar.**
 
@@ -1138,13 +1178,16 @@ const TETO: Record<AppDialogSize, string> = {
   lg: 'max-w-[64rem] [&.p-dialog-maximized]:max-w-none',
 }
 
-/** Passthrough do Dialog (ADR-16): largura e a classe da moldura. A pintura
- * navy do header e do footer mora em `brand-theme.css` (`.lotus-dialog`),
- * porque alcança peças internas do Prime — ícones do header, botões `text` do
- * footer — que o `pt` do Dialog não nomeia. */
+/** Passthrough do Dialog (ADR-16): largura, a classe da moldura e o respiro do
+ * footer. A pintura navy do header e do footer mora em `brand-theme.css`
+ * (`.lotus-dialog`), porque alcança peças internas do Prime — ícones do header,
+ * botões `text` do footer — que o `pt` do Dialog não nomeia. O `py-3` fica: o
+ * Lara dá ao footer padding 0 em cima (ele nasce colado ao conteúdo), e numa
+ * faixa de cor própria os botões encostariam na borda. */
 export const appDialogPt = (size: AppDialogSize): DialogPassThroughOptions => ({
   root: { className: `lotus-dialog w-[95vw] ${TETO[size]}` },
   content: { className: 'bg-[var(--surface-card)] pt-2' },
+  footer: { className: 'py-3' },
 })
 ```
 
@@ -1198,7 +1241,9 @@ export type { AppDialogProps, AppDialogSize } from './AppDialog'
  * `AppDialog` vestem a superfície FIXA do shell — a mesma do sidebar e do
  * navbar, que não acompanha o tema —, então a tinta é a do shell, não a do
  * tema, e o traço de foco é redeclarado celeste como no `Sidebar.tsx`: um
- * traço navy sobre navy seria foco invisível.
+ * traço navy sobre navy seria foco invisível. A tinta secundária do tema
+ * também é redeclarada com a do shell: o "Paso 1 de 2" do `QuoteWizard` lê
+ * `--text-color-secondary`, que no claro (#475569) mediria 1,9:1 sobre o navy.
  *
  * Escopada em `.lotus-dialog`, que o `appDialogPt` crava no root: a
  * `ConfirmDialog` não a recebe e fica com a superfície do tema — as duas
@@ -1212,6 +1257,7 @@ export type { AppDialogProps, AppDialogSize } from './AppDialog'
   background: var(--brand-navy);
   color: var(--shell-ink);
   --focus-stroke: var(--brand);
+  --text-color-secondary: var(--shell-ink-muted);
 }
 
 .lotus-dialog .p-dialog-header {
@@ -1834,16 +1880,16 @@ vi.mock('react-i18next', async (importOriginal) => {
 
 vi.mock('../api/useCommercialFiles', () => ({ useUploadBudgetFile: vi.fn() }))
 
-const mutacao = (mutate: unknown) =>
-  ({ mutate, reset: vi.fn(), isPending: false, error: null }) as unknown as ReturnType<typeof useUploadBudgetFile>
+const mutacao = (mutate: unknown, reset: unknown) =>
+  ({ mutate, reset, isPending: false, error: null }) as unknown as ReturnType<typeof useUploadBudgetFile>
 
 const escolha = (file: File) =>
   ({ files: [file], options: { clear: vi.fn() } }) as unknown as FileUploadHandlerEvent
 
 const pdf = new File(['%PDF'], 'oc-451.pdf', { type: 'application/pdf' })
 
-const montar = (mutate: unknown = vi.fn()) => {
-  vi.mocked(useUploadBudgetFile).mockReturnValue(mutacao(mutate))
+const montar = (mutate: unknown = vi.fn(), reset: unknown = vi.fn()) => {
+  vi.mocked(useUploadBudgetFile).mockReturnValue(mutacao(mutate, reset))
   return renderHook(() => useBudgetDocumentUpload(7)).result
 }
 
@@ -1906,8 +1952,9 @@ describe('useBudgetDocumentUpload', () => {
     expect(result.current).toMatchObject({ visible: true, type: null, file: null, sizeError: null })
   })
 
-  it('fechar descarta a escolha e o erro de tamanho', () => {
-    const result = montar()
+  it('fechar descarta a escolha, o erro de tamanho e o erro do envio', () => {
+    const reset = vi.fn()
+    const result = montar(vi.fn(), reset)
 
     act(() => result.current.open())
     act(() => result.current.setType('invoice'))
@@ -1917,6 +1964,7 @@ describe('useBudgetDocumentUpload', () => {
     act(() => result.current.open())
 
     expect(result.current).toMatchObject({ visible: true, type: null, file: null, sizeError: null })
+    expect(reset).toHaveBeenCalled()
   })
 })
 ```
@@ -2561,8 +2609,8 @@ Locales — no bloco `budget`, `fileTypeInvoice` e `fileTypeReceipt` saem e entr
      navy; RUT de outro cliente abre o aviso âmbar;
   3. orçamento: subir um documento de cada tipo e ver a tag na lista; um arquivo de tipo recusado
      mostra o erro dentro do diálogo, que não fecha;
-  4. uma confirmação de cada severidade: aprovar cotização (`confirm`), mover aluno (`warning`),
-     arquivar ou eliminar (`danger`) — sem maximizar, 28rem;
+  4. uma confirmação de cada severidade: aprovar cotização (`confirm`, verde), mover aluno ou
+     designar redator inelegível (`warning`), arquivar ou eliminar (`danger`) — sem maximizar, 28rem;
   5. preview de arquivo (`lg`): maximiza e ocupa a tela; `sm`/`md` sem botão de maximizar;
   6. Cliente, Usuario e Redator (`FormPhotoRow`): sem regressão de layout; header do `QuoteWizard`
      e `headerExtra` do `CrudDialog` legíveis sobre o navy.
@@ -2609,12 +2657,12 @@ Veredito: <scroll = frame, fecha | reprovou, StudentDialog em lg no modo ver, no
 
 | Grupo | Tasks | Files: disjuntos | Aresta Consumes/Produces |
 |---|---|---|---|
-| G1 | 1, 2 | sim — Task 1 toca backend, `generated.ts`, `useCommercialFiles`, `useBudgetDetail` e `BudgetDocumentsCard`; Task 2 toca `shared/ui/{AppDialog,AppTag,ConfirmDialog}`, `tests/tone-ink.test.ts`, os três diálogos migrados e as locales | nenhuma entre elas |
+| G1 | 1, 2 | sim — Task 1 toca backend, `generated.ts`, `useCommercialFiles`, `useBudgetDetail` e `BudgetDocumentsCard`; Task 2 toca `shared/ui/{AppDialog,AppTag,ConfirmDialog}`, `tests/tone-ink.test.ts`, os três diálogos migrados, o `RedatorDesignation` e as locales | nenhuma entre elas |
 | G2 | 4, 5 | sim — Task 4 toca `FormPhotoRow`, campos de identidade e três diálogos de `Enrollment/`; Task 5 toca `features/commercial/**` e as locales | nenhuma entre elas (as duas consomem a Task 3; a 5 consome também a 1) |
 
-Ordem: G1 → Task 3 → G2 → Task 6. A Task 3 fica fora de grupo porque toca `AppDialog.tsx` e
-`tests/tone-ink.test.ts` (também da Task 2) e os três diálogos de `Enrollment/` (também da
-Task 4). A Task 6 precisa de todas.
+Ordem: G1 → Task 3 → G2 → Task 6. A Task 3 fica fora de grupo porque toca `AppDialog.tsx`,
+`tests/tone-ink.test.ts` e `RedatorDesignation.tsx` (também da Task 2) e os três diálogos de
+`Enrollment/` (também da Task 4). A Task 6 precisa de todas.
 
 Task fora de grupo executa e revisa uma a uma.
 
