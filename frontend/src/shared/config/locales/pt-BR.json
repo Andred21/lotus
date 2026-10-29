@@ -537,8 +537,13 @@
     "uploadDocument": "Enviar documento",
     "noDocuments": "Sem documentos",
     "fileTypeLabel": "Tipo de documento",
-    "fileTypeInvoice": "Fatura",
-    "fileTypeReceipt": "Comprovante",
+    "uploadTitle": "Enviar documento",
+    "chooseFile": "Escolher arquivo",
+    "documentType": {
+      "purchase_order": "Ordem de compra",
+      "invoice": "Fatura",
+      "receipt": "Comprovante"
+    },
     "confirmDeleteTitle": "Excluir orçamento?",
     "confirmDeleteBody": "As cotações dele são arquivadas junto. Você poderá restaurá-lo em Arquivados."
   },

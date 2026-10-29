@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { FileUploadHandlerEvent } from '@shared/ui'
 import { usePermissions, useMutationErrors, loadFailure } from '@shared/hooks'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
-import type { BudgetDocumentType, QuoteData } from '@shared/types/generated'
+import type { QuoteData } from '@shared/types/generated'
 import { useApproveQuote, useRejectQuote, useRemoveQuote } from '../api/useQuotes'
-import { useUploadBudgetFile, useRemoveBudgetFile } from '../api/useCommercialFiles'
+import { useRemoveBudgetFile } from '../api/useCommercialFiles'
 
 type ConfirmAction = 'approve' | 'reject' | 'remove'
 
@@ -24,10 +23,6 @@ export function useBudgetDetail(budgetId: number) {
   const [wizard, setWizard] = useState<{ quote: QuoteData | null } | null>(null)
   const [confirm, setConfirm] = useState<{ action: ConfirmAction; quote: QuoteData } | null>(null)
   const [confirmDeleteBudget, setConfirmDeleteBudget] = useState(false)
-  const [fileType, setFileType] = useState<BudgetDocumentType>('invoice')
-  // Rejeição por tamanho é local (não passa pela API): o AppFileUpload barra o
-  // arquivo antes de qualquer request, então não vira erro de mutação.
-  const [fileSizeError, setFileSizeError] = useState<string | null>(null)
 
   const { can } = usePermissions()
   const canApprove = can('commercial.quote.approve')
@@ -36,22 +31,13 @@ export function useBudgetDetail(budgetId: number) {
   const reject = useRejectQuote()
   const removeQuote = useRemoveQuote()
   const removeBudget = budgetsApi.useRemove()
-  const uploadFile = useUploadBudgetFile()
   const removeFile = useRemoveBudgetFile()
 
   // `message` (não `generalError`): estes 422 vêm por campo (errors.status =
   // "cotação aprovada não pode ser excluída") e não há input onde pendurá-los.
   const { message: confirmError } = useMutationErrors([approve.error, reject.error, removeQuote.error])
   const { message: removeBudgetError } = useMutationErrors([removeBudget.error])
-  const { message: fileError } = useMutationErrors([uploadFile.error, removeFile.error])
-
-  // e.options.clear() devolve o AppFileUpload ao estado vazio depois do envio.
-  const handleUpload = (e: FileUploadHandlerEvent) => {
-    const file = e.files[0]
-    if (!file) return
-    setFileSizeError(null)
-    uploadFile.mutate({ budgetId, type: fileType, file }, { onSuccess: () => e.options.clear() })
-  }
+  const { message: fileError } = useMutationErrors([removeFile.error])
 
   // Reseta o erro da tentativa anterior: sem isso, reabrir o dialog para outra
   // cotação mostraria um erro fantasma de uma tentativa que nunca ocorreu para ela
@@ -110,14 +96,9 @@ export function useBudgetDetail(budgetId: number) {
     deleteBudget,
     removeBudgetPending: removeBudget.isPending,
     removeBudgetError,
-    fileType,
-    setFileType,
-    handleUpload,
-    uploadPending: uploadFile.isPending,
     removeFile: (fileId: number) => removeFile.mutate({ budgetId, fileId }),
+    /** Erro de REMOÇÃO de anexo; o do upload mora no `useBudgetDocumentUpload`. */
     fileError,
-    fileSizeError,
-    onFileSizeReject: setFileSizeError,
     goBack: () => navigate('/comercial'),
   }
 }

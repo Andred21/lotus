@@ -537,8 +537,13 @@
     "uploadDocument": "Subir documento",
     "noDocuments": "Sin documentos",
     "fileTypeLabel": "Tipo de documento",
-    "fileTypeInvoice": "Factura",
-    "fileTypeReceipt": "Comprobante",
+    "uploadTitle": "Subir documento",
+    "chooseFile": "Elegir archivo",
+    "documentType": {
+      "purchase_order": "Orden de compra",
+      "invoice": "Factura",
+      "receipt": "Comprobante"
+    },
     "confirmDeleteTitle": "¿Eliminar presupuesto?",
     "confirmDeleteBody": "Sus cotizaciones se archivarán junto con él. Podrás restaurarlo desde Archivados."
   },

@@ -122,15 +122,10 @@ export function BudgetDetailPage() {
         />
 
         <BudgetDocumentsCard
+          budgetId={budgetId}
           files={budget.files ?? []}
-          fileType={d.fileType}
-          onFileTypeChange={d.setFileType}
-          uploadPending={d.uploadPending}
-          onUpload={d.handleUpload}
-          onSizeReject={d.onFileSizeReject}
           onRemove={(fileId) => d.removeFile(fileId)}
           fileError={d.fileError}
-          fileSizeError={d.fileSizeError}
         />
 
         <BudgetOverlays d={d} budgetId={budgetId} budget={budget} />
