@@ -136,11 +136,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-104 | O diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado | João | o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`; revisar em 2026-11-07 |
 | P-105 | A tinta `danger` do tema escuro (`--tone-danger-ink` = `--red-400`) mede 4,36:1 sobre o fundo de 15% do `severityTone` — o do `AppTag` danger e do ícone da `ConfirmDialog` —, abaixo de 4,5:1; o caso do `tone-ink.test.ts` do item 43 o pula | João | bloco que tocar `--tone-danger-ink`, `severityTone` ou a P-74; revisar 2026-11-07 |
 
-## Encerradas (3)
+## Encerradas (2)
 
 **A P-28 e a P-78 fecharam no item 40 (2026-10-29)**: a P-28 pela decisão D8 do João (layout v5, fundo de continuação sem as barras), a P-78 pelos tetos de caracteres na entrada medidos no Gotenberg real (D10/D15, `matriz.md`). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
 
-**A P-94 fechou no item 43 (2026-10-29)**, pela medição do `smoke.md` do bloco: `scroll` = `frame` na linha `DIALOGO` em 1024x768 e em 1440x900. Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+**A P-94 saiu no fechamento do item 40 (2026-10-30)**, o primeiro depois do item 43, que a encerrou em 2026-10-29 pela medição do `smoke.md` do bloco: `scroll` = `frame` na linha `DIALOGO` em 1024x768 e em 1440x900. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-100 e a P-05 saíram no fechamento do item 38 (2026-10-21)**, o primeiro depois do item 39, que passou sem removê-las; o item 13 as encerrou em 2026-10-06. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

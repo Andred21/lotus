@@ -160,6 +160,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | **34** `infra-producao-observabilidade` | 7 | 2026-10-05 |
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **42** `infra-producao-higiene-e-manutencao` | 6, 7, 8 | 2026-10-27 |
+| **40** `certificado-refinamento-e-validade` | 1, 2, 3, 4 | 2026-10-30 |
 
 ---
 
