@@ -2,10 +2,34 @@
 
 ## Em aberto
 
-- **Q-1 · Crítico** — correção aprovada pelo João em 2026-10-30, ainda por aplicar: `AppButton`
-  nasce `type="button"`, todo botão que envia declara `type="submit"` (varrer os usos atuais), e
-  um teste com o `AppSignatureUpload` real prova que Confirmar, Cancelar e Ver não chamam o `put`.
-  Aplicar reabre a revisão (rodada 2).
+## Rodada 2 — `07579e04..2d7ef8ed` — 2026-10-30 · Lente 1: opus · Lente 2: sonnet
+
+A lente Codex outra vez **não rodou**, com a mesma recusa da rodada 1 (`The 'gpt-5.5' model is
+not supported when using Codex with a ChatGPT account.`).
+
+Os dois achados da rodada 1 estão fechados em `2d7ef8ed`, e a lente 1 conferiu o fechamento:
+
+- **Q-1:** `AppButton` nasce `type="button"`, e o `type` não pode ser sobrescrito pelo spread.
+  - Os 6 `<form>` do frontend já declaravam `type="submit"` no botão que envia.
+  - Nenhum botão é ligado ao form de fora: não há `form=` nem `requestSubmit`.
+  - Nenhum wrapper de `shared/ui` repassa `type` de fora.
+  - `ConfirmDialog` e `AppFilePreviewDialog` vão para `document.body` por portal.
+  - Os testes falham com o `AppButton` antigo:
+    - `AppButton.test.tsx`;
+    - `AppSignatureUpload.test.tsx`, que prova Confirmar e Cancelar dentro de um form;
+    - `CertificateSettingsPanel.firma.test.tsx`, que usa o painel real e prova Ver, Descargar e
+      Quitar.
+  - A regra entrou em `.claude/rules/frontend-fsliced.md`.
+- **Q-2:** `Redator.php:103` usa `RedatorDocumentType::FIRMA->value`.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | O teto de nome de assinante (60, `TetosImpressos::NOME_ASSINANTE`) vale para qualquer usuário do `PUT /api/profile`, inclusive o admin, cujo nome não sai em certificado. O `maxLength` do front também não tem condição. O cadastro de staff (`UserData`) não tem teto. Com isso, um admin com nome acima de 60 caracteres não salva o próprio perfil, mas o superadmin grava o mesmo nome pela tela de Usuários. A spec §4.5 fala em "nome do redator", e nenhum ruling isenta ou inclui o admin. O impacto real é pequeno: são uns 10 usuários, e a medição de produção dos tetos já é portão de merge. | CONFIRMED | `backend/app/Domains/Identity/Data/ProfileUpdateData.php:48` · `backend/app/Domains/Identity/routes.php:47` · `frontend/src/features/identity/components/Profile/ProfilePersonalSection.tsx:53` · `backend/app/Domains/Identity/Data/UserData.php:34` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+**Padrão reincidente:** nenhum.
 
 ## Rodada 1 — `07579e04..b6ec5050` — 2026-10-30 · Lente 1: opus · Lente 2: sonnet
 

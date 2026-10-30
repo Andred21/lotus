@@ -2,9 +2,9 @@
 schema_version: 3
 id: 40
 slug: 40-certificado-refinamento-e-validade
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings Q-1 Q-2 aprovados pelo joao, aplicar e abrir rodada 2
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/blocos/40-certificado-refinamento-e-validade/spec.md
 active_plan: docs/superpowers/blocos/40-certificado-refinamento-e-validade/plano.md
@@ -17,9 +17,9 @@ branch: feat/40-certificado-refinamento-e-validade
 worktree: ../lotus-40-certificado-refinamento-e-validade
 offset: 1
 lane_base: 0c09fa4f
-commit: b6ec5050
+commit: 2d7ef8ed
 blocker: null
-updated_at: 2026-10-30T15:12:36-03:00
+updated_at: 2026-10-30T15:31:33-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
