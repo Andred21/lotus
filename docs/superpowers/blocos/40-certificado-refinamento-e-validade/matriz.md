@@ -26,20 +26,20 @@ Constantes em `backend/app/Shared/Support/TetosImpressos.php`.
 
 | campo | maior de produção | teto | linhas no teto | linhas com teto+1 | máximo medido (antes de arredondar) |
 |---|---|---|---|---|---|
-| `NOME_ALUNO` | pendente | 70 | 2 | 2 (o teto+1 ainda cabe: o máximo é 79) | 79 |
-| `NOME_CURSO` | pendente | 110 | 2 | 3 | 110 |
-| `NOME_TECNICO` | pendente | 160 | 2 | 2 (máximo 169) | 169 |
-| `RAZAO_SOCIAL` | pendente | 150 | 2 | 2 (máximo 152) | 152 |
-| `NOME_ASSINANTE` (gerente e instrutor) | pendente | 60 | 2 | 2 (máximo 65) | 65 |
-| `CARGO_ASSINANTE` | pendente | 70 | 2 | 2 (máximo 75) | 75 |
-| `DESCRICAO_CURSO` | pendente | 620 | 7 (com a frase da nota) | assinaturas vão à página 2 com 628 | 627 |
+| `NOME_ALUNO` | 36 (snapshot 33) | 70 | 2 | 2 (o teto+1 ainda cabe: o máximo é 79) | 79 |
+| `NOME_CURSO` | 43 (snapshot 57) | 110 | 2 | 3 | 110 |
+| `NOME_TECNICO` | 57 (snapshot 4) | 160 | 2 | 2 (máximo 169) | 169 |
+| `RAZAO_SOCIAL` | 39 (snapshot 18) | 150 | 2 | 2 (máximo 152) | 152 |
+| `NOME_ASSINANTE` (gerente e instrutor) | 22 (redator; admin 16; snapshot 22) | 60 | 2 | 2 (máximo 65) | 65 |
+| `CARGO_ASSINANTE` | — (campo novo) | 70 | 2 | 2 (máximo 75) | 75 |
+| `DESCRICAO_CURSO` | 355 (snapshot 355) | 620 | 7 (com a frase da nota) | assinaturas vão à página 2 com 628 | 627 |
 
 "Linhas com teto+1" só vira 3 onde o teto coincide com o máximo medido (`NOME_CURSO`); nos demais o
 arredondamento à dezena deixa uma folga de 1 a 9 caracteres.
 
 ## Produção
 
-pendente — leitura de produção recusada pelo auto mode; o João roda scratchpad/medir-prod.php e o controlador preenche
+**Medido em 2026-10-30 pelo João**, no tinker de produção (só leitura, `MAX(CHAR_LENGTH(...))` em `users` por `type`, `clients.legal_name`, `courses` e nas chaves do `snapshot` dos 111 certificados emitidos). **Todas as folgas passam:** aluno 36 (teto 70, limite 46), assinante 22 (teto 60, limite 40), razão social 39 (teto 150, limite 100), curso 43 e 57 no snapshot (teto 110, limite 73), técnico 57 (teto 160, limite 106), descrição 355 (teto 620). `CARGO_ASSINANTE` não tem dado em produção: o campo nasce neste bloco. Nenhum certificado emitido passa de teto, então a reimpressão no layout v5 não tem caso conhecido de 3 páginas.
 
 **Portão de merge.** Antes do merge, o João roda `medir-prod.php`; o controlador confere as folgas
 (nomes >= 1,5x o maior de produção; descrição >= maior de produção); se algum dado passar do teto, o
