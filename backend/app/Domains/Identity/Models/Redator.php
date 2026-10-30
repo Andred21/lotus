@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Models;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\QueryBuilders\RedatorQueryBuilder;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Concerns\ArchivesChildren;
@@ -99,7 +100,7 @@ class Redator extends Model implements Auditable
         return $this->morphOne(File::class, 'fileable')
             ->withTrashed()
             ->ofMany(['id' => 'max'], fn ($q) => $q
-                ->where('type', 'FIRMA')
+                ->where('type', RedatorDocumentType::FIRMA->value)
                 ->where(fn ($w) => $w->whereNull('deleted_at')->orWhere('archived_with_parent', true)));
     }
 

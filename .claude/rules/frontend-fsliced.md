@@ -72,6 +72,11 @@ a Zustand o que não cruza fronteira — é over-engineering.
   `shared/ui/index.ts` é a única porta. Customização de componente Prime vive aqui, nunca com Tailwind
   na feature. Em wrappers com handler embutido (upload), **pine o override após o spread**
   (`customUpload` não pode ser desligado pelo caller).
+  **`AppButton` nasce `type="button"`; só o botão que envia declara `type="submit"`.** O `Button`
+  do Prime não declara `type`, e `<button>` sem ele vale `submit` dentro de um `<form>`: um
+  componente de `shared/ui` com botão interno pode cair dentro do form do chamador. Foi assim que
+  Ver, Confirmar e Cancelar da firma da gerente gravavam nome e cargo sem o Guardar (Q-1 do review
+  do bloco 40). Mecanismo: `AppButton.test.tsx` e `CertificateSettingsPanel.firma.test.tsx`.
 - **`forwardRef` no wrapper é condicional, não cerimônia.** Leva quem embrulha componente de função
   com ref de DOM útil — foco, seleção, medida: `AppInputText`, `AppPassword`, `AppTextarea`,
   `AppMenu`. **Não leva** quem embrulha *class component* do Prime (`RadioButton`, `Dropdown` — o

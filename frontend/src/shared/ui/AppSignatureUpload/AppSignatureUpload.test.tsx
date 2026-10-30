@@ -68,6 +68,22 @@ describe('AppSignatureUpload', () => {
     expect(screen.queryByRole('img', { name: 'signature.previewAlt' })).toBeNull()
   })
 
+  // Q-1 do review do bloco 40: o seletor mora dentro do <form> do chamador, e
+  // Confirmar ou Cancelar enviavam esse form junto (botao sem `type`).
+  it.each(['signature.cancel', 'signature.confirm'])('dentro de um form, %s nao envia o form do chamador', async (botao) => {
+    vi.mocked(fileToRaster).mockResolvedValue(raster(700))
+    const enviar = vi.fn((e: { preventDefault: () => void }) => e.preventDefault())
+    const { container } = render(
+      <form onSubmit={enviar}><AppSignatureUpload label="Subir firma" onConfirm={vi.fn()} /></form>,
+    )
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(input, { target: { files: [new File(['jpg'], 'foto.jpg', { type: 'image/jpeg' })] } })
+
+    fireEvent.click(await screen.findByRole('button', { name: botao }))
+
+    expect(enviar).not.toHaveBeenCalled()
+  })
+
   it('formato que o navegador nao le mostra a mensagem nomeada', async () => {
     vi.mocked(fileToRaster).mockRejectedValue(new UnsupportedImageError())
     escolher()

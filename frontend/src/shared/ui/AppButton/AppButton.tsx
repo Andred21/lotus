@@ -9,10 +9,13 @@ export interface AppButtonProps extends ButtonProps {
 
 // Wrapper do Button do PrimeReact. O app inteiro importa daqui, nunca de
 // 'primereact/button' direto. `variant` aplica um estilo do style.ts.
-export function AppButton({ variant, className, ...props }: AppButtonProps) {
+// Nasce `type="button"`: o Prime não declara `type`, e `<button>` sem ele vale
+// `submit` dentro de um `<form>` do chamador (Q-1 do review do bloco 40).
+// Quem envia declara `type="submit"`.
+export function AppButton({ variant, className, type = 'button', ...props }: AppButtonProps) {
   const merged = [variant ? appButtonStyles[variant] : '', className]
     .filter(Boolean)
     .join(' ')
 
-  return <PrimeButton className={merged || undefined} {...props} />
+  return <PrimeButton className={merged || undefined} type={type} {...props} />
 }
