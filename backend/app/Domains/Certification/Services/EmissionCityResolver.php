@@ -5,14 +5,21 @@ namespace App\Domains\Certification\Services;
 use App\Domains\Operation\Models\Turma;
 
 /**
- * Cidade de emissão do documento — fonte única da regra (bloco 39 D2). A turma
- * presencial manda pelo `local_aplicacao`; a online cai para a cidade do
- * emissor (`app.certificate_issuer.city`) — **nunca** para o endereço do
- * cliente (D12) e, desde o bloco 39, nunca para o template do curso.
+ * Cidade de emissão — fonte única da regra.
  *
- * A emissão recusa por aqui (porta 4) e o painel de emissão reporta
- * `sin_ciudad` por aqui, senão a tela promete um certificado que o POST recusa
- * com 422.
+ * Duas perguntas, duas respostas (bloco 40, D9/D12):
+ * - `issuerCity()` é a cidade que o certificado IMPRIME ("En Santiago, a…") e a
+ *   única que a porta 4 e o `SinCiudad` do painel consultam. É lida na hora de
+ *   renderizar, nunca do snapshot.
+ * - `emissionCityFor()` é o que o SNAPSHOT grava em `ciudad_emision`: o
+ *   `local_aplicacao` da turma presencial, ou a do emissor. O snapshot é
+ *   imutável e não mudou, mas o PDF já não lê esse campo.
+ *
+ * **Nunca** o endereço do cliente (D12 do bloco 39) nem o template do curso.
+ *
+ * A emissão recusa por `issuerCity()` (porta 4) e o painel de emissão reporta
+ * `sin_ciudad` pelo mesmo método, senão a tela promete um certificado que o POST
+ * recusa com 422.
  */
 class EmissionCityResolver
 {

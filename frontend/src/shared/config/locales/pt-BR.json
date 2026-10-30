@@ -40,6 +40,7 @@
     "yes": "Sim",
     "no": "Não",
     "close": "Fechar",
+    "charCount": "{{count}} / {{max}}",
     "edit": "Editar",
     "rut": "RUT",
     "lastLogin": "Último acesso",
@@ -102,12 +103,17 @@
     },
     "administracion": {
       "title": "Administração",
-      "description": "Usuários internos, papéis e permissões"
+      "description": "Usuários internos, papéis, permissões e configuração"
     }
   },
   "admin": {
     "tabUsers": "Usuários",
     "tabRoles": "Perfis e permissões",
+    "tabConfiguracion": "Configuração",
+    "configuracion": {
+      "navLabel": "Submódulos de configuração",
+      "certificados": "Certificados"
+    },
     "new": "Novo usuário",
     "create": "Criar",
     "empty": "Sem usuários",
@@ -188,7 +194,8 @@
     "operation_turma_submit_docs": "Subir documentação da turma (Fluxo 1/4 — ação do redator)",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado (Fluxo 5)",
-    "certification_certificate_revoke": "Revogar certificado (Fluxo 6 — sensível, peso legal)"
+    "certification_certificate_revoke": "Revogar certificado (Fluxo 6 — sensível, peso legal)",
+    "certification_settings_manage": "Configurar certificados: gerente, cargo e assinatura (só superadmin)"
   },
   "role": {
     "new": "Novo perfil",
@@ -372,6 +379,25 @@
   "placeholder": {
     "module": "Módulo em construção."
   },
+  "certificateSettings": {
+    "help": "Esta configuração vale para todos os certificados, inclusive os já emitidos.",
+    "managerName": "Nome",
+    "managerTitle": "Cargo",
+    "signature": "Assinatura",
+    "noSignature": "Nenhuma assinatura enviada",
+    "signatureHelp": "A assinatura vale assim que você a confirma. «Salvar» salva apenas o nome e o cargo.",
+    "signatureSaved": "Assinatura salva.",
+    "signatureRemoved": "Assinatura removida.",
+    "sendSignature": "Enviar assinatura",
+    "replaceSignature": "Substituir assinatura",
+    "removeSignature": "Remover assinatura",
+    "removeTitle": "Remover a assinatura",
+    "removeMessage": "Os certificados sairão sem a assinatura da gerência, inclusive os já emitidos, até que você envie outra.",
+    "removeConfirm": "Remover assinatura",
+    "save": "Salvar",
+    "saved": "Configuração salva.",
+    "loadError": "Não foi possível carregar a configuração"
+  },
   "profile": {
     "title": "Meu perfil",
     "subtitleRedator": "Seus dados pessoais, sua segurança e sua documentação profissional.",
@@ -404,6 +430,8 @@
       "title": "Documentação profissional",
       "hint": "Você pode enviar e substituir seus documentos. Eles não são excluídos: o novo substitui o anterior.",
       "send": "Enviar documento",
+      "sendSignature": "Enviar assinatura",
+      "replaceSignature": "Substituir assinatura",
       "replace": "Substituir",
       "sendNamed": "Enviar {{tipo}}",
       "replaceNamed": "Substituir {{tipo}}",
@@ -430,6 +458,18 @@
     "replace": "Substituir",
     "remove": "Remover foto",
     "createUploadFailed": "O cadastro foi criado, mas a foto não subiu."
+  },
+  "signature": {
+    "hint": "PNG, JPG ou WebP. Recortamos a assinatura e tiramos o fundo; você vê o resultado antes de salvar.",
+    "processing": "Limpando a imagem…",
+    "previewAlt": "Assinatura já limpa, sobre fundo xadrez que indica a transparência",
+    "confirm": "Usar esta assinatura",
+    "cancel": "Cancelar",
+    "errorUnsupported": "Este formato não pode ser lido. Use uma imagem PNG, JPG ou WebP.",
+    "errorEmpty": "Não encontramos nenhum traço na imagem. Tente uma foto mais nítida, com a assinatura em tinta escura.",
+    "errorTooNarrow": "A assinatura tem {{width}} px de largura e o mínimo é {{min}} px. Aproxime a câmera ou use uma imagem de maior resolução.",
+    "errorTooHeavy": "A assinatura já limpa pesa mais de 1 MB. Use uma imagem mais simples ou com menos ruído.",
+    "errorGeneric": "Não foi possível processar a imagem. Tente outro arquivo."
   },
   "client": {
     "new": "Novo cliente",
@@ -599,6 +639,8 @@
     "name": "Nome completo",
     "sectionUser": "Dados de usuário",
     "sectionDocuments": "Documentos",
+    "signatureChoose": "Enviar assinatura",
+    "signatureReplace": "Substituir assinatura",
     "sectionCourses": "Cursos habilitados",
     "enabledCourses": "Cursos habilitados",
     "suitability": "Idoneidade",
@@ -645,7 +687,8 @@
     "CV": "Currículo (CV)",
     "REUF": "Certificado REUF",
     "TITULO": "Título universitário",
-    "POSTGRADO": "Pós-graduação"
+    "POSTGRADO": "Pós-graduação",
+    "FIRMA": "Assinatura"
   },
   "documentStatus": {
     "sin_venc": "Sem vencimento",
@@ -884,6 +927,10 @@
     "blocked": {
       "sin_ciudad": "Sem cidade de emissão configurada",
       "sin_redactor": "A turma não tem redator designado"
+    },
+    "warnings": {
+      "managerSignatureMissing": "A assinatura da gerente não está cadastrada. Os certificados sairão com o espaço em branco sobre a linha, para assinar à mão, até que o superadministrador a cadastre em Administração › Configuração › Certificados.",
+      "redatorWithoutFirma": "{{name}} não tem assinatura cadastrada. O certificado sairá com o espaço em branco sobre a linha e o nome embaixo, para assinar à mão."
     },
     "confirmTitle": "Confirmar emissão",
     "confirmBody": "O certificado será gerado e registrado para este aluno.",

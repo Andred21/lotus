@@ -136,6 +136,17 @@ total: number,
 last_page: number,
 total_unfiltered: number,
 };
+export type CertificateSettingsData = {
+manager_name: string,
+manager_title: string,
+signature: CertificateSignatureFileData | null,
+};
+export type CertificateSignatureFileData = {
+original_name: string,
+size: number,
+created_at: string | null,
+download_url: string,
+};
 export type CertificateSnapshotData = {
 schema_version: number,
 aluno: SnapshotPartyData,
@@ -234,6 +245,7 @@ student_photo_url: string | null,
 export type EmissionPanelRedatorData = {
 redator_id: number,
 name: string,
+has_firma: boolean,
 };
 export type EmissionPanelTurmaData = {
 turma_id: number,
@@ -243,6 +255,7 @@ end_date: string,
 emission_blocked: EmissionBlockReason | null,
 enrollments: EmissionPanelEnrollmentData[],
 redatores: EmissionPanelRedatorData[],
+manager_signature_missing: boolean,
 };
 export type EnrollPreviewData = {
 exists: boolean,
@@ -473,7 +486,7 @@ valid_until: string | null,
 created_at: string | null,
 download_url: string,
 };
-export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO';
+export type RedatorDocumentType = 'CV' | 'REUF' | 'TITULO' | 'POSTGRADO' | 'FIRMA';
 export type RedatorHistoricoData = {
 turmas_concluidas: number,
 certificados_emitidos: number,

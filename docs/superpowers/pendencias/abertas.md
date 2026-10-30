@@ -661,58 +661,6 @@ promover — provada pelo run `36225909713`, `skipped` com zero passos
 Task 12, Step 6). **Fecha junto com esta ficha:** quando a org virar Team, o job `promover` ganha
 `environment:` com required reviewer, e os dois secrets de deploy passam a ser do Environment.
 
-## P-28 — o fundo do certificado não reproduz as cunhas nem separa a página 2
-
-**Gatilho:** fecha quando o fundo passar a distinguir página 1 das seguintes **e** as cunhas
-existirem (por raster recomposto ou CSS), ou quando a Lotus aprovar o documento como está. Revisar em
-**2026-10-31** (renovada pelo João no fechamento do item 34; vencia em 2026-09-30).
-
-O certificado renderizado não reproduz duas coisas do `docs/templates/certificado.pdf`: (a) as cunhas
-diagonais azul/preta das quinas da página 1, e (b) a página 2, que na nossa saída herda as faixas
-azul/preta das bordas e no aprovado é cinza limpo.
-
-Achado do gate visual de `documentos-oficiais-template-e-docx` (2026-08-10), **não** coberto pelas
-exclusões aceitas da §7 da spec (assinatura da gerente, carimbos SENCE/NCH, ornamentos das quinas do
-manual). Causa medida: as cunhas são **vetor** dentro do PDF aprovado e o raster versionado
-(`fundo-certificado.jpg`, Task 1) só carrega o que é imagem — extraí-lo não as traz; e o
-`background-repeat: repeat-y` da `.page` existe de propósito, para a página 2 não sair branca, mas
-repete a faixa junto.
-
-**Decisão do João no gate (2026-08-10): aceitar agora, tratar depois** — o documento está legível,
-correto e com o conteúdo de peso legal íntegro; o que falta é ornamento. Corrigir reabre as Tasks 1 e
-3 (recompor o fundo, ou reproduzir as cunhas em CSS, e separar o fundo da primeira página do das
-seguintes).
-
-## P-78 — a assinatura do relator cai para uma página própria quando a folha 1 cresce
-
-**Bloco:** infra-producao-provisionamento-aws (achado da Task 16, não do escopo) · **Gatilho:** fecha
-quando um certificado com dado real da Lotus fechar o rodapé na página 1 **e** isso for remedido, ou
-quando o João decidir o corte (clamp por comprimento de nome/descrição) e ele for implementado.
-Revisar em **2026-10-31**.
-
-Medido em produção em **2026-09-20**, no certificado `LOT-2026-1000` emitido pela UI para provar o
-DoD 4: o PDF saiu com **3 páginas** — (1) o certificado, com ~25% do rodapé vazio, (2) só a
-assinatura do relator e o aviso legal, (3) o temário do curso. A assinatura é o que se espera ver ao
-pé do documento assinado, e ela apareceu sozinha numa folha.
-
-**Não é regressão da nuvem nem defeito novo.** É o trade-off que o próprio template documenta em
-[`backend/resources/views/certification/certificate.blade.php`](../../../backend/resources/views/certification/certificate.blade.php),
-no comentário do `min-height` da `.page`: com `height` fixo o Chromium pinta o excedente **por cima**
-da página seguinte (medido em 2026-08-08 — QR sobre o logo, assinatura sobre o cabeçalho, disclaimer
-atravessando a tabela: documento corrompido e sem aviso). Com `min-height` a folha cresce e a
-paginação leva o excedente para uma página limpa — "feio, porém íntegro". O mesmo comentário diz que
-**o que cortar é decisão de negócio, e está com o João.**
-
-O penhasco que o comentário mede é o `courses.name` passar de ~67 caracteres. **Não foi esse o caso
-aqui:** o nome do curso sintético tinha 38. O suspeito é a `description` de 137 caracteres que a
-sessão escreveu no curso de prova, que vira a narrativa da folha. **Isso não chegou a ser medido** —
-a re-renderização com descrição curta exigia escrita no banco de produção, e a sessão parou antes.
-Quem pegar esta ficha começa por aí: encurtar a descrição, re-renderizar e contar as páginas diz se o
-gatilho real é o nome, a descrição ou a soma dos dois.
-
-Ligada à [P-28](#p-28--o-fundo-do-certificado-não-reproduz-as-cunhas-nem-separa-a-página-2), que trata
-do **fundo** dessa página 2, não da quebra que a cria.
-
 ## P-80 — a previsão de custo estoura o teto de D8, e o resize da EC2 piora a conta
 
 **Bloco:** infra-producao-provisionamento-aws (item 10 v2 — chega ao fechamento sem decisão) ·

@@ -47,7 +47,8 @@ function turmaWith(enrollments: EmissionPanelEnrollmentData[]): EmissionPanelTur
     end_date: '2026-01-01',
     emission_blocked: null,
     enrollments,
-    redatores: [{ redator_id: 9, name: 'Redator Uno' }],
+    redatores: [{ redator_id: 9, name: 'Redator Uno', has_firma: true }],
+    manager_signature_missing: false,
   }
 }
 

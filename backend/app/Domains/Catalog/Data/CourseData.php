@@ -3,7 +3,9 @@
 namespace App\Domains\Catalog\Data;
 
 use App\Domains\Catalog\Models\Course;
+use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
@@ -27,9 +29,11 @@ class CourseData extends Data
 {
     public function __construct(
         public int|Optional $id,
-        #[Required]
+        #[Required, Max(TetosImpressos::NOME_CURSO)]
         public string $name,
+        #[Max(TetosImpressos::NOME_TECNICO)]
         public string|Optional|null $technical_name = new Optional,
+        #[Max(TetosImpressos::DESCRICAO_CURSO)]
         public string|Optional|null $description = new Optional,
         #[Required]
         public int $workload_hours = 0,

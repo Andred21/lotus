@@ -2,6 +2,7 @@
 
 use App\Domains\Certification\Http\Controllers\CertificateController;
 use App\Domains\Certification\Http\Controllers\CertificatePreviewController;
+use App\Domains\Certification\Http\Controllers\CertificateSettingsController;
 use App\Domains\Certification\Http\Controllers\PublicCertificateController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,4 +29,11 @@ Route::middleware('auth.active')->group(function () {
         ->middleware('throttle:certificate-pdf');
     Route::get('certificates/{certificate}', [CertificateController::class, 'show']);
     Route::post('certificates/{certificate}/revoke', [CertificateController::class, 'revoke']);
+
+    // Configuración › Certificados (spec D3): singleton, só o superadmin.
+    Route::get('certificate-settings', [CertificateSettingsController::class, 'show']);
+    Route::put('certificate-settings', [CertificateSettingsController::class, 'update']);
+    Route::post('certificate-settings/signature', [CertificateSettingsController::class, 'storeSignature'])
+        ->middleware('throttle:upload');
+    Route::delete('certificate-settings/signature', [CertificateSettingsController::class, 'destroySignature']);
 });

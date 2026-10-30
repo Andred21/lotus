@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, AppDropdown, AppTag, FormField, FormErrorBanner } from '@shared/ui'
 import type { EmissionPanelTurmaData } from '@shared/types/generated'
 import { useBatchIssue } from '../../hooks/useBatchIssue'
+import { RedatorFirmaWarning } from './EmissionWarnings'
 
 type Props = {
   turma: EmissionPanelTurmaData
@@ -63,6 +64,7 @@ export function BatchIssueDialog({ turma, onHide }: Props) {
               onChange={(e) => batch.setRedatorId(e.value)}
             />
           </FormField>
+          <RedatorFirmaWarning turma={turma} redatorId={batch.redatorId} />
         </div>
       ) : (
         <div className="space-y-4">

@@ -40,6 +40,7 @@
     "yes": "Sí",
     "no": "No",
     "close": "Cerrar",
+    "charCount": "{{count}} / {{max}}",
     "edit": "Editar",
     "rut": "RUT",
     "lastLogin": "Último acceso",
@@ -102,12 +103,17 @@
     },
     "administracion": {
       "title": "Administración",
-      "description": "Usuarios internos, roles y permisos"
+      "description": "Usuarios internos, roles, permisos y configuración"
     }
   },
   "admin": {
     "tabUsers": "Usuarios",
     "tabRoles": "Roles y permisos",
+    "tabConfiguracion": "Configuración",
+    "configuracion": {
+      "navLabel": "Submódulos de configuración",
+      "certificados": "Certificados"
+    },
     "new": "Nuevo usuario",
     "create": "Crear",
     "empty": "Sin usuarios",
@@ -188,7 +194,8 @@
     "operation_turma_submit_docs": "Subir documentación del grupo (Flujo 1/4 — acción del redactor)",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado (Flujo 5)",
-    "certification_certificate_revoke": "Revocar certificado (Flujo 6 — sensible, peso legal)"
+    "certification_certificate_revoke": "Revocar certificado (Flujo 6 — sensible, peso legal)",
+    "certification_settings_manage": "Configurar certificados: gerente, cargo y firma (solo superadmin)"
   },
   "role": {
     "new": "Nuevo rol",
@@ -372,6 +379,25 @@
   "placeholder": {
     "module": "Módulo en construcción."
   },
+  "certificateSettings": {
+    "help": "Esta configuración se aplica a todos los certificados, incluidos los ya emitidos.",
+    "managerName": "Nombre",
+    "managerTitle": "Cargo",
+    "signature": "Firma",
+    "noSignature": "Sin firma cargada",
+    "signatureHelp": "La firma se aplica al confirmarla. «Guardar» guarda solo el nombre y el cargo.",
+    "signatureSaved": "Firma guardada.",
+    "signatureRemoved": "Firma quitada.",
+    "sendSignature": "Cargar firma",
+    "replaceSignature": "Reemplazar firma",
+    "removeSignature": "Quitar firma",
+    "removeTitle": "Quitar la firma",
+    "removeMessage": "Los certificados saldrán sin la firma de la gerencia, incluidos los ya emitidos, hasta que cargues otra.",
+    "removeConfirm": "Quitar firma",
+    "save": "Guardar",
+    "saved": "Configuración guardada.",
+    "loadError": "No se pudo cargar la configuración"
+  },
   "profile": {
     "title": "Mi perfil",
     "subtitleRedator": "Tus datos personales, tu seguridad y tu documentación profesional.",
@@ -404,6 +430,8 @@
       "title": "Documentación profesional",
       "hint": "Puedes subir y reemplazar tus documentos. No se eliminan: el nuevo reemplaza al anterior.",
       "send": "Subir documento",
+      "sendSignature": "Subir firma",
+      "replaceSignature": "Reemplazar firma",
       "replace": "Reemplazar",
       "sendNamed": "Subir {{tipo}}",
       "replaceNamed": "Reemplazar {{tipo}}",
@@ -430,6 +458,18 @@
     "replace": "Reemplazar",
     "remove": "Eliminar foto",
     "createUploadFailed": "El registro fue creado, pero la foto no se subió."
+  },
+  "signature": {
+    "hint": "PNG, JPG o WebP. Recortamos la firma y quitamos el fondo; verás el resultado antes de guardar.",
+    "processing": "Limpiando la imagen…",
+    "previewAlt": "Firma ya limpia, sobre fondo de cuadros que indica la transparencia",
+    "confirm": "Usar esta firma",
+    "cancel": "Cancelar",
+    "errorUnsupported": "Este formato no se puede leer. Usa una imagen PNG, JPG o WebP.",
+    "errorEmpty": "No encontramos ningún trazo en la imagen. Prueba con una foto más nítida y con la firma en tinta oscura.",
+    "errorTooNarrow": "La firma mide {{width}} px de ancho y el mínimo es {{min}} px. Acerca la cámara o usa una imagen de mayor resolución.",
+    "errorTooHeavy": "La firma ya limpia pesa más de 1 MB. Usa una imagen más simple o con menos ruido.",
+    "errorGeneric": "No se pudo procesar la imagen. Inténtalo con otro archivo."
   },
   "client": {
     "new": "Nuevo cliente",
@@ -599,6 +639,8 @@
     "name": "Nombre completo",
     "sectionUser": "Datos de usuario",
     "sectionDocuments": "Documentos",
+    "signatureChoose": "Subir firma",
+    "signatureReplace": "Reemplazar firma",
     "sectionCourses": "Cursos habilitados",
     "enabledCourses": "Cursos habilitados",
     "suitability": "Idoneidad",
@@ -645,7 +687,8 @@
     "CV": "Currículum (CV)",
     "REUF": "Certificado REUF",
     "TITULO": "Título universitario",
-    "POSTGRADO": "Post-Grado"
+    "POSTGRADO": "Post-Grado",
+    "FIRMA": "Firma"
   },
   "documentStatus": {
     "sin_venc": "Sin vencimiento",
@@ -884,6 +927,10 @@
     "blocked": {
       "sin_ciudad": "Sin ciudad de emisión configurada",
       "sin_redactor": "La turma no tiene redactor designado"
+    },
+    "warnings": {
+      "managerSignatureMissing": "La firma de la gerente no está cargada. Los certificados saldrán con el espacio en blanco sobre la línea, para firmar a mano, hasta que el superadministrador la cargue en Administración › Configuración › Certificados.",
+      "redatorWithoutFirma": "{{name}} no tiene firma cargada. El certificado saldrá con el espacio en blanco sobre la línea y el nombre debajo, para firmar a mano."
     },
     "confirmTitle": "Confirmar emisión",
     "confirmBody": "Se generará y registrará el certificado para este alumno.",

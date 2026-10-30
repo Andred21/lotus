@@ -10,6 +10,7 @@ import {
   useFormField,
   useToast,
 } from '@shared/ui'
+import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { ProfileData } from '@shared/types/generated'
 import { useProfileForm } from '../../hooks/useProfileForm'
 
@@ -46,7 +47,12 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
             um texto na tela que nunca chegou ao servidor, e o refetch só o
             desmentia depois. */}
         <campo.Field name="name" label={t('profile.personal.name')}>
-          <AppInputText className="w-full" autoComplete="name" disabled={pending} />
+          <AppInputText
+            className="w-full"
+            autoComplete="name"
+            maxLength={TETOS_IMPRESSOS.nomeAssinante}
+            disabled={pending}
+          />
         </campo.Field>
 
         <campo.Field name="phone" label={t('profile.personal.phone')}>

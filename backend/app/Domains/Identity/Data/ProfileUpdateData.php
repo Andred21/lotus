@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Data;
 
 use App\Shared\Data\ComputedFields;
+use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -42,7 +43,9 @@ class ProfileUpdateData extends Data
     {
         return [
             ...ComputedFields::rejected('photo_url'),
-            'name' => ['required', 'string', 'max:255'],
+            // Teto do que o certificado imprime (D15): o nome da redatora vira
+            // assinatura. `rules()` sobrepõe o atributo, então o teto mora aqui.
+            'name' => ['required', 'string', 'max:'.TetosImpressos::NOME_ASSINANTE],
             'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
             'email' => ['missing'],
             'rut' => ['missing'],

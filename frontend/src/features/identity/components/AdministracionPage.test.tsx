@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ReactNode } from 'react'
+import { fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import { api } from '@shared/api/axios'
 import { AdministracionPage } from './AdministracionPage'
@@ -15,7 +17,8 @@ beforeEach(() => {
   vi.spyOn(api, 'get').mockImplementation((() => Promise.resolve({ data: [] })) as never)
 })
 
-const montar = () => renderWithProviders(<AdministracionPage />, { route: '/' })
+const montar = (configuracion?: ReactNode) =>
+  renderWithProviders(<AdministracionPage configuracion={configuracion} />, { route: '/' })
 
 describe('AdministracionPage — régua de abas', () => {
   it('a régua de abas rola quando transborda', () => {
@@ -24,5 +27,18 @@ describe('AdministracionPage — régua de abas', () => {
     // que não transbordam ficam sem a prop; esta transborda.
     const { container } = montar()
     expect(container.querySelector('.p-tabview-scrollable')).not.toBeNull()
+  })
+})
+
+describe('AdministracionPage — aba Configuración (slot)', () => {
+  it('sem o slot não há aba Configuración', () => {
+    montar()
+    expect(screen.queryByText('admin.tabConfiguracion')).toBeNull()
+  })
+
+  it('com o slot, a aba Configuración existe e traz o conteúdo composto pela rota', () => {
+    montar(<p>conteudo-de-fora</p>)
+    fireEvent.click(screen.getByText('admin.tabConfiguracion'))
+    expect(screen.getByText('conteudo-de-fora')).toBeTruthy()
   })
 })

@@ -40,6 +40,7 @@
     "yes": "Yes",
     "no": "No",
     "close": "Close",
+    "charCount": "{{count}} / {{max}}",
     "edit": "Edit",
     "rut": "RUT",
     "lastLogin": "Last login",
@@ -102,12 +103,17 @@
     },
     "administracion": {
       "title": "Administration",
-      "description": "Internal users, roles and permissions"
+      "description": "Internal users, roles, permissions and settings"
     }
   },
   "admin": {
     "tabUsers": "Users",
     "tabRoles": "Roles & permissions",
+    "tabConfiguracion": "Settings",
+    "configuracion": {
+      "navLabel": "Settings sections",
+      "certificados": "Certificates"
+    },
     "new": "New user",
     "create": "Create",
     "empty": "No users",
@@ -188,7 +194,8 @@
     "operation_turma_submit_docs": "Upload class documentation (Flow 1/4 — editor action)",
     "certification_certificate_view": "View certificates",
     "certification_certificate_issue": "Issue certificate (Flow 5)",
-    "certification_certificate_revoke": "Revoke certificate (Flow 6 — sensitive, legal weight)"
+    "certification_certificate_revoke": "Revoke certificate (Flow 6 — sensitive, legal weight)",
+    "certification_settings_manage": "Configure certificates: manager, title and signature (superadmin only)"
   },
   "role": {
     "new": "New role",
@@ -372,6 +379,25 @@
   "placeholder": {
     "module": "Module under construction."
   },
+  "certificateSettings": {
+    "help": "This setting applies to all certificates, including those already issued.",
+    "managerName": "Name",
+    "managerTitle": "Title",
+    "signature": "Signature",
+    "noSignature": "No signature uploaded",
+    "signatureHelp": "The signature takes effect as soon as you confirm it. “Save” only saves the name and the title.",
+    "signatureSaved": "Signature saved.",
+    "signatureRemoved": "Signature removed.",
+    "sendSignature": "Upload signature",
+    "replaceSignature": "Replace signature",
+    "removeSignature": "Remove signature",
+    "removeTitle": "Remove the signature",
+    "removeMessage": "Certificates will come out without the manager signature, including those already issued, until you upload another.",
+    "removeConfirm": "Remove signature",
+    "save": "Save",
+    "saved": "Settings saved.",
+    "loadError": "Could not load the settings"
+  },
   "profile": {
     "title": "My profile",
     "subtitleRedator": "Your personal data, your security and your professional documents.",
@@ -404,6 +430,8 @@
       "title": "Professional documents",
       "hint": "You can upload and replace your documents. They are not deleted: the new one replaces the previous.",
       "send": "Upload document",
+      "sendSignature": "Upload signature",
+      "replaceSignature": "Replace signature",
       "replace": "Replace",
       "sendNamed": "Upload {{tipo}}",
       "replaceNamed": "Replace {{tipo}}",
@@ -430,6 +458,18 @@
     "replace": "Replace",
     "remove": "Remove photo",
     "createUploadFailed": "The record was created, but the photo was not uploaded."
+  },
+  "signature": {
+    "hint": "PNG, JPG or WebP. We crop the signature and remove the background; you see the result before saving.",
+    "processing": "Cleaning the image…",
+    "previewAlt": "Cleaned signature on a checkerboard that shows the transparency",
+    "confirm": "Use this signature",
+    "cancel": "Cancel",
+    "errorUnsupported": "This format cannot be read. Use a PNG, JPG or WebP image.",
+    "errorEmpty": "We found no strokes in the image. Try a sharper photo with the signature in dark ink.",
+    "errorTooNarrow": "The signature is {{width}} px wide and the minimum is {{min}} px. Move the camera closer or use a higher-resolution image.",
+    "errorTooHeavy": "The cleaned signature is over 1 MB. Use a simpler image or one with less noise.",
+    "errorGeneric": "The image could not be processed. Try another file."
   },
   "client": {
     "new": "New client",
@@ -599,6 +639,8 @@
     "name": "Full name",
     "sectionUser": "User information",
     "sectionDocuments": "Documents",
+    "signatureChoose": "Upload signature",
+    "signatureReplace": "Replace signature",
     "sectionCourses": "Enabled courses",
     "enabledCourses": "Enabled courses",
     "suitability": "Suitability",
@@ -645,7 +687,8 @@
     "CV": "Résumé (CV)",
     "REUF": "REUF certificate",
     "TITULO": "University degree",
-    "POSTGRADO": "Postgraduate degree"
+    "POSTGRADO": "Postgraduate degree",
+    "FIRMA": "Signature"
   },
   "documentStatus": {
     "sin_venc": "No expiry",
@@ -884,6 +927,10 @@
     "blocked": {
       "sin_ciudad": "No issuing city configured",
       "sin_redactor": "The class has no designated redator"
+    },
+    "warnings": {
+      "managerSignatureMissing": "The manager signature is not uploaded. Certificates will come out with a blank space above the line, to be signed by hand, until the superadmin uploads it in Administration › Settings › Certificates.",
+      "redatorWithoutFirma": "{{name}} has no signature uploaded. The certificate will come out with a blank space above the line and the name below it, to be signed by hand."
     },
     "confirmTitle": "Confirm issuance",
     "confirmBody": "The certificate will be generated and registered for this student.",

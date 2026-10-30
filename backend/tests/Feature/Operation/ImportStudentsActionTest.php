@@ -10,6 +10,7 @@ use App\Domains\Operation\Actions\ImportStudentsAction;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Support\TetosImpressos;
 use App\Shared\Validation\ValidationMessages;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -131,5 +132,30 @@ class ImportStudentsActionTest extends TestCase
 
         // A prova é o banco: recusa que já matriculou 500 pessoas não é recusa.
         $this->assertSame(0, $turma->enrollments()->count());
+    }
+
+    /**
+     * O nome do aluno NOVO é impresso no certificado (D15): acima do teto a linha
+     * é recusada como erro dela, sem criar o aluno e sem abortar o resto.
+     */
+    public function test_linha_com_nome_acima_do_teto_vira_erro_da_linha(): void
+    {
+        $result = app(ImportStudentsAction::class)->execute($this->turma, $this->xlsx([
+            ['11.111.111-1', str_repeat('a', TetosImpressos::NOME_ALUNO + 1), 'largo@acme.cl', ''],
+            ['44.444.444-4', str_repeat('a', TetosImpressos::NOME_ALUNO), 'justo@acme.cl', ''],
+        ]));
+
+        $this->assertSame(1, $result->created);
+        $this->assertCount(1, $result->errors);
+        $this->assertSame(2, $result->errors[0]->row);
+        $this->assertSame(
+            __('validation.max.string', [
+                'attribute' => __('validation.attributes.name'),
+                'max' => TetosImpressos::NOME_ALUNO,
+            ]),
+            $result->errors[0]->message,
+        );
+        $this->assertDatabaseMissing('users', ['email' => 'largo@acme.cl']);
+        $this->assertDatabaseHas('users', ['email' => 'justo@acme.cl']);
     }
 }

@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (44)
+## Abertas (42)
 
 ### Agrupadas em bloco de execução
 
@@ -112,14 +112,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-83 | Sete decisões de política dos guardas (allowlist da `main` para `.github/`/`.githooks/`/`.codex/`/`.superpowers/`, `merge --ff-only`, o `docker/probe.env` real, os três caminhos do `stop-verify`, o motivo que ensina a alargar a allowlist, `git commit` sem `-m`) ficaram só no ledger, que é **gitignorado** | João | João decidir cada linha — a favor ou contra — e a decisão virar commit; revisar 2026-10-31 |
 | P-74 | O botão de severidade reprova AA no estado base do tema claro em quatro das cinco famílias (success 2,28:1, info 2,77:1, danger 3,76:1, help 3,96:1) — o `warning`, que a P-30 fechou, era a quarta pior | João | uma régua por estado, no molde do `describe` da P-30 em `frontend/tests/tone-ink.test.ts`, cobrir as cinco severidades nos três estados e todas passarem 4,5:1; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | João | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
-| P-28 | O fundo do certificado não reproduz as cunhas das quinas nem separa a página 2 | João / Lotus | fundo distinguir página 1 **e** cunhas existirem, ou Lotus aprovar como está; revisar 2026-10-31 (renovada no fechamento do item 34) |
 | P-08 | RF-CUR-04 promete Manual por curso; implementado é Blade única | Lotus | contratante pedir manual personalizado por curso |
 | P-09 | Figma mostra 4 tipos de documento de turma; implementados são 3 | Lotus | Lotus confirmar que quer os 4 |
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
 | P-89 | O QR em `https://app.lotusotec.cl/validar/…` não foi decodificado de um PDF de produção — a produção não tinha turma elegível, e o João não quis cadeia de teste no banco | João | o primeiro certificado real ter o QR decodificado para `https://app.lotusotec.cl/validar/<uuid>`; revisar 2026-10-31 |
-| P-78 | A assinatura do relator e o aviso legal caem para uma página própria quando a folha 1 do certificado cresce — medido no `LOT-2026-1000` de produção, PDF com 3 páginas | João | decidir o corte (clamp por comprimento) e implementá-lo, ou um certificado com dado real da Lotus fechar o rodapé na página 1; revisar 2026-10-31 |
 | P-80 | A previsão de custo do mês é **35,74 USD** contra o teto de **30** da decisão D8, e o critério de resize da EC2 (`t4g.medium`, +9 USD/mês) está satisfeito — as duas decisões são a mesma conversa | João | decidir teto **e** resize juntos, com a decisão escrita na spec/ADR que a carrega; revisar 2026-10-31 |
 | P-81 | A access key `AKIA3B7BDINPPYESZA6T` do usuário `lotus-infra`, que provisionou toda a Fase B, continua ativa — a produção não a usa (instance profile), mas é credencial de longa duração sem uso corrente | João | `aws iam list-access-keys --user-name lotus-infra` não devolver mais a chave; revisar 2026-10-31 |
 | P-98 | Em produção o único admin ativo recebe o alerta D7 e o reset pelo Gmail pessoal do João (nenhuma caixa `@lotusotec.cl` com leitor), e o redator externo não está verificado no SES — reset e convite para ele falham calados | João | a Lotus entregar uma caixa `@lotusotec.cl` com leitor para o admin e o redator ser verificado (ou a conta sair do sandbox); antes do go-live (item 13); revisar 2026-10-31 |
@@ -138,9 +136,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-104 | O diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado | João | o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`; revisar em 2026-11-07 |
 | P-105 | A tinta `danger` do tema escuro (`--tone-danger-ink` = `--red-400`) mede 4,36:1 sobre o fundo de 15% do `severityTone` — o do `AppTag` danger e do ícone da `ConfirmDialog` —, abaixo de 4,5:1; o caso do `tone-ink.test.ts` do item 43 o pula | João | bloco que tocar `--tone-danger-ink`, `severityTone` ou a P-74; revisar 2026-11-07 |
 
-## Encerradas (1)
+## Encerradas (2)
 
-**A P-94 fechou no item 43 (2026-10-29)**, pela medição do `smoke.md` do bloco: `scroll` = `frame` na linha `DIALOGO` em 1024x768 e em 1440x900. Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+**A P-28 e a P-78 fecharam no item 40 (2026-10-29)**: a P-28 pela decisão D8 do João (layout v5, fundo de continuação sem as barras), a P-78 pelos tetos de caracteres na entrada medidos no Gotenberg real (D10/D15, `matriz.md`). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+
+**A P-94 saiu no fechamento do item 40 (2026-10-30)**, o primeiro depois do item 43, que a encerrou em 2026-10-29 pela medição do `smoke.md` do bloco: `scroll` = `frame` na linha `DIALOGO` em 1024x768 e em 1440x900. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-100 e a P-05 saíram no fechamento do item 38 (2026-10-21)**, o primeiro depois do item 39, que passou sem removê-las; o item 13 as encerrou em 2026-10-06. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

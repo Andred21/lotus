@@ -8,6 +8,7 @@ import { EmissionStudentsTable } from './EmissionStudentsTable'
 import { ConfirmIssueDialog } from './ConfirmIssueDialog'
 import { IssuedDialog } from './IssuedDialog'
 import { BatchIssueDialog } from './BatchIssueDialog'
+import { EmissionWarnings } from './EmissionWarnings'
 
 export function EmissionPanel() {
   const { t } = useTranslation()
@@ -31,16 +32,15 @@ export function EmissionPanel() {
 
   return (
     <div className="space-y-4 p-4">
+      <EmissionWarnings managerSignatureMissing={s.managerSignatureMissing} />
       <AppCard>
         <div className="space-y-3 p-4">
           {/* O rótulo é a correção do UI-02 da run de Certificados
-            * (2026-08-25). O nome acessível existia, mas vinha do PLACEHOLDER —
-            * o PrimeReact o usa como texto do botão que abre a lista —, e no
-            * visual não havia rótulo nenhum: escolhida a turma, o campo passa a
-            * mostrar só o VALOR e nada diz que aquilo é a turma. `useId` +
-            * `inputId`, a mesma forma dos três filtros de estado irmãos. A
-            * chave `certificate.turmaConcluida` já existia nas 3 locales e não
-            * era usada em lugar nenhum. */}
+            * (2026-08-25). O nome acessível vinha do PLACEHOLDER — o PrimeReact
+            * o usa como texto do botão que abre a lista — e no visual não havia
+            * rótulo: escolhida a turma, o campo mostra só o VALOR e nada diz que
+            * aquilo é a turma. `useId` + `inputId`, a forma dos três filtros de
+            * estado irmãos; a chave `certificate.turmaConcluida` já existia. */}
           <label htmlFor={desdeInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.concludedSince')}
           </label>

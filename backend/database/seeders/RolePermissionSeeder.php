@@ -55,6 +55,7 @@ class RolePermissionSeeder extends Seeder
             'commercial.quote.approve',   // Fluxo 2: exclusivo do superadmin
             'identity.access.manage',     // controle do RBAC: exclusivo do superadmin
             'certification.certificate.revoke', // revogação de peso legal: exclusivo do superadmin
+            'certification.settings.manage', // assinatura impressa em todo certificado: exclusivo do superadmin (spec D3)
             'operation.turma.submit_docs', // ação do redator, não do admin
         ]));
     }

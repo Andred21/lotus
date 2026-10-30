@@ -15,10 +15,10 @@ class RedatorDocumentTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_enum_tem_os_quatro_tipos(): void
+    public function test_enum_tem_os_cinco_tipos(): void
     {
         $this->assertSame(
-            ['CV', 'REUF', 'TITULO', 'POSTGRADO'],
+            ['CV', 'REUF', 'TITULO', 'POSTGRADO', 'FIRMA'],
             array_map(fn (RedatorDocumentType $t) => $t->value, RedatorDocumentType::cases()),
         );
     }

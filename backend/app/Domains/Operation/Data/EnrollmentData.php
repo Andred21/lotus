@@ -7,6 +7,7 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
+use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
@@ -44,7 +45,8 @@ class EnrollmentData extends Data
         return [
             ...ComputedFields::rejected('photo_url'),
             'rut' => ['required', 'string', new ValidRut],
-            'name' => ['required', 'string', 'max:255'],
+            // Teto do que o certificado imprime (D15); `rules()` sobrepõe o atributo.
+            'name' => ['required', 'string', 'max:'.TetosImpressos::NOME_ALUNO],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
         ];

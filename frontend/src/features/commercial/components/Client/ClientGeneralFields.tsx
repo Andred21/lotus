@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppInputText, AppDropdown, type FieldComponent } from '@shared/ui'
+import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { ClientFormFields } from '../../hooks/useClientForm'
 
 const TYPE_VALUES = ['client', 'provider', 'other'] as const
@@ -26,7 +27,7 @@ export function ClientGeneralFields({
           backend) é derivado de `legal_name` no submit, e o 422 pode voltar com
           a chave do derivado. O mapeamento vive no `useClientForm`. */}
       <Field name="legal_name" label={t('client.legalName')}>
-        <AppInputText className="w-full" />
+        <AppInputText className="w-full" maxLength={TETOS_IMPRESSOS.razaoSocial} />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">

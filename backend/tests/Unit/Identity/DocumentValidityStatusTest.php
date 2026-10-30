@@ -67,7 +67,7 @@ class DocumentValidityStatusTest extends TestCase
         $this->assertTrue(RedatorDocumentType::TITULO->isSelfService());
         $this->assertTrue(RedatorDocumentType::POSTGRADO->isSelfService());
 
-        $this->assertSame(['CV', 'TITULO', 'POSTGRADO'], RedatorDocumentType::selfServiceValues());
+        $this->assertSame(['CV', 'TITULO', 'POSTGRADO', 'FIRMA'], RedatorDocumentType::selfServiceValues());
     }
 
     /**

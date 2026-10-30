@@ -55,6 +55,10 @@ export function useEmissionPanelState() {
     [turmas],
   )
 
+  // A assinatura da gerente é da configuração: o servidor manda o mesmo valor em
+  // toda turma, então `some` basta e o aviso aparece antes de escolher a turma.
+  const managerSignatureMissing = turmas.some((t) => t.manager_signature_missing)
+
   const selected = useMemo(() => turmas.find((t) => t.turma_id === turmaId), [turmas, turmaId])
 
   const counts = useMemo<EmissionCounts>(() => {
@@ -74,6 +78,7 @@ export function useEmissionPanelState() {
     turmaId,
     setTurmaId,
     selected,
+    managerSignatureMissing,
     counts,
     issuing,
     setIssuing,

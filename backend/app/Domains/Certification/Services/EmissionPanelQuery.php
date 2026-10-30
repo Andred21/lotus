@@ -5,6 +5,7 @@ namespace App\Domains\Certification\Services;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Enums\EmissionBlockReason;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Models\CertificateSettings;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Support\DataSql;
@@ -59,6 +60,9 @@ class EmissionPanelQuery
                 // um SELECT por turma — guarda em `ContratanteEagerLoadTest`.
                 'quote.budget.client.user',
                 'redatores.user',
+                // D19: a firma vigente de CADA relator, num eager-load só. O filtro
+                // de tipo e de vigência mora na subquery do `ofMany` em `Redator::firma()`.
+                'redatores.firma',
                 // `withStudentData()` e não `with('student.user')`: a lista do
                 // que a projeção de matrícula carrega é do `EnrollmentQueryBuilder`.
                 // Não é `withListingData()`: este marca `result_locked` com mais
@@ -76,27 +80,34 @@ class EmissionPanelQuery
             ->get();
 
         $vigentes = $this->certificadosVigentes($turmas);
+        // A assinatura da gerente é da configuração, não da turma: uma leitura
+        // por requisição (D6, aviso e não bloqueio).
+        $gerenteSemAssinatura = CertificateSettings::atual()->signature === null;
+        $semCidade = $this->cities->issuerCity() === null;
 
         return $turmas
             ->map(fn (Turma $turma): EmissionPanelTurmaData => EmissionPanelTurmaData::fromModel(
                 $turma,
-                $this->emissionBlockedFor($turma),
+                $this->emissionBlockedFor($turma, $semCidade),
                 $vigentes,
+                $gerenteSemAssinatura,
             ))
             ->all();
     }
 
     /**
      * Por que a emissão recusaria esta turma inteira, ou `null`. A ordem é a das
-     * portas 4→5: sem cidade não há documento a emitir, e sem redator ele não
-     * tem assinatura.
+     * portas 4→5: sem a cidade do emissor não há frase a imprimir, e sem redator
+     * ele não tem assinatura. Os avisos de assinatura faltante (D6) NÃO são
+     * motivo de bloqueio: viajam como flags em `EmissionPanelTurmaData`.
      *
      * As portas por MATRÍCULA (aprovação, certificado vigente) não entram aqui —
      * elas são visíveis linha a linha, em `approval_status` e `certificate`.
      */
-    private function emissionBlockedFor(Turma $turma): ?EmissionBlockReason
+    private function emissionBlockedFor(Turma $turma, bool $semCidade): ?EmissionBlockReason
     {
-        if ($this->cities->emissionCityFor($turma) === null) {
+        // Só a cidade do emissor (D9) — a mesma que a porta 4 consulta.
+        if ($semCidade) {
             return EmissionBlockReason::SinCiudad;
         }
 

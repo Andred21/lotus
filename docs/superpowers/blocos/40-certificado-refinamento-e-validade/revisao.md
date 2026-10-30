@@ -1,0 +1,61 @@
+# 40 — Revisão
+
+## Em aberto
+
+## Rodada 2 — `07579e04..2d7ef8ed` — 2026-10-30 · Lente 1: opus · Lente 2: sonnet
+
+A lente Codex outra vez **não rodou**, com a mesma recusa da rodada 1 (`The 'gpt-5.5' model is
+not supported when using Codex with a ChatGPT account.`).
+
+Os dois achados da rodada 1 estão fechados em `2d7ef8ed`, e a lente 1 conferiu o fechamento:
+
+- **Q-1:** `AppButton` nasce `type="button"`, e o `type` não pode ser sobrescrito pelo spread.
+  - Os 6 `<form>` do frontend já declaravam `type="submit"` no botão que envia.
+  - Nenhum botão é ligado ao form de fora: não há `form=` nem `requestSubmit`.
+  - Nenhum wrapper de `shared/ui` repassa `type` de fora.
+  - `ConfirmDialog` e `AppFilePreviewDialog` vão para `document.body` por portal.
+  - Os testes falham com o `AppButton` antigo:
+    - `AppButton.test.tsx`;
+    - `AppSignatureUpload.test.tsx`, que prova Confirmar e Cancelar dentro de um form;
+    - `CertificateSettingsPanel.firma.test.tsx`, que usa o painel real e prova Ver, Descargar e
+      Quitar.
+  - A regra entrou em `.claude/rules/frontend-fsliced.md`.
+- **Q-2:** `Redator.php:103` usa `RedatorDocumentType::FIRMA->value`.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | O teto de nome de assinante (60, `TetosImpressos::NOME_ASSINANTE`) vale para qualquer usuário do `PUT /api/profile`, inclusive o admin, cujo nome não sai em certificado. O `maxLength` do front também não tem condição. O cadastro de staff (`UserData`) não tem teto. Com isso, um admin com nome acima de 60 caracteres não salva o próprio perfil, mas o superadmin grava o mesmo nome pela tela de Usuários. A spec §4.5 fala em "nome do redator", e nenhum ruling isenta ou inclui o admin. O impacto real é pequeno: são uns 10 usuários, e a medição de produção dos tetos já é portão de merge. | CONFIRMED | `backend/app/Domains/Identity/Data/ProfileUpdateData.php:48` · `backend/app/Domains/Identity/routes.php:47` · `frontend/src/features/identity/components/Profile/ProfilePersonalSection.tsx:53` · `backend/app/Domains/Identity/Data/UserData.php:34` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+**Padrão reincidente:** nenhum.
+
+## Rodada 1 — `07579e04..b6ec5050` — 2026-10-30 · Lente 1: opus · Lente 2: sonnet
+
+A lente Codex do Passo 4 (bloco de alto risco: certificado) **não rodou**. O `codex-companion`
+recusou o modelo duas vezes: `The 'gpt-5.5' model is not supported when using Codex with a
+ChatGPT account.` (o modelo do `~/.codex/config.toml`) e a mesma recusa para `--model gpt-5.4`.
+A rodada se apoia só na lente 1.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Crítico | Os botões do campo da firma da gerente (Confirmar e Cancelar da prévia, Ver, Descargar e Quitar) não declaram `type` e ficam dentro do `<form>` do painel. O `Button` do PrimeReact renderiza `<button>` sem `type`, que vale como submit. Cada clique roda `submit()`: `PUT /api/certificate-settings` com nome e cargo da tela, gravado e auditado. Isso contradiz o texto da tela (`es-CL.json:388`), e o valor sai em todo certificado, inclusive os já emitidos, porque é lido na hora de imprimir (D5). O teste substitui o `AppSignatureUpload` por `<button type="button">`, então não pega. | CONFIRMED | `frontend/src/features/certification/components/Settings/CertificateSettingsPanel.tsx:47-50,76` · `frontend/src/shared/ui/AppSignatureUpload/AppSignatureUpload.tsx:94-101` · `frontend/src/shared/ui/AppFileActions/AppFileActions.tsx:46-64` · `frontend/src/shared/ui/AppDownloadButton/AppDownloadButton.tsx:37-45` · `frontend/src/shared/ui/AppButton/AppButton.tsx:17` | correção aprovada (`AppButton` com `type="button"` por padrão), por aplicar |
+| Q-2 | Menor | `Redator::firma()` filtra o `ofMany` com a string literal `'FIRMA'`, e não com `RedatorDocumentType::FIRMA->value`. Hoje os valores coincidem. Se o enum for renomeado, a relação devolve `null` sem erro, e o certificado sai sem a assinatura do instrutor. | CONFIRMED | `backend/app/Domains/Identity/Models/Redator.php:102` · `backend/app/Domains/Identity/Enums/RedatorDocumentType.php:18` | corrigir junto com o Q-1 (decisão do João) |
+
+Placar: Crítico: 1 confirmado, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+**Padrão reincidente:** nenhum confirmado. É a primeira vez que o Q-1 aparece. Ele é estrutural,
+porque o `AppButton` herda o submit implícito do HTML. Com a correção aprovada, o texto proposto
+para `.claude/rules/frontend-fsliced.md` é: "`AppButton` nasce `type="button"`; só o botão que
+envia declara `type="submit"`. Componente de `shared/ui` com botão interno pode cair dentro de
+um `<form>` do chamador."
+
+**Registrado pela lente 1, fora dos achados** (já está nos rulings e nas evidências):
+
+- a medição de produção dos tetos é portão de merge;
+- o aviso da gerente depende de haver turma no painel;
+- um rollback da migration pode trazer de volta a assinatura antiga;
+- a cidade do snapshot é a reserva quando a configuração está vazia;
+- a regra que tira a FIRMA da idoneidade só tem prova indireta no backend.

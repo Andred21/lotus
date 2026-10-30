@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { AppButton } from './AppButton'
 import { appButtonStyles } from './style'
 
 /**
@@ -36,5 +38,32 @@ describe('vocabulário de botão', () => {
    * "Aprobar" dentro da linha de cotação, onde o botão do tema não cabe. */
   it('`compact` aperta padding e fonte, e só ele', () => {
     expect(appButtonStyles.compact).toContain('px-3 py-2.5 text-sm')
+  })
+})
+
+/**
+ * Q-1 do review do bloco 40. `<button>` sem `type` vale `submit` dentro de um
+ * `<form>`, e o `Button` do PrimeReact não declara `type`: os botões internos de
+ * um componente de `shared/ui` (Ver, Confirmar, Cancelar da firma) enviavam o
+ * form do chamador e gravavam nome e cargo da gerente sem o Guardar. O botão
+ * nasce `button`; quem envia declara `submit`.
+ */
+describe('AppButton — tipo do botão', () => {
+  it('sem `type` nasce `button` e não envia o form que o contém', () => {
+    const enviar = vi.fn((e: { preventDefault: () => void }) => e.preventDefault())
+    render(<form onSubmit={enviar}><AppButton label="Ver" /></form>)
+
+    const botao = screen.getByRole('button', { name: 'Ver' })
+    expect(botao.getAttribute('type')).toBe('button')
+    fireEvent.click(botao)
+    expect(enviar).not.toHaveBeenCalled()
+  })
+
+  it('`type="submit"` explícito vence o padrão e envia', () => {
+    const enviar = vi.fn((e: { preventDefault: () => void }) => e.preventDefault())
+    render(<form onSubmit={enviar}><AppButton type="submit" label="Guardar" /></form>)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    expect(enviar).toHaveBeenCalledTimes(1)
   })
 })

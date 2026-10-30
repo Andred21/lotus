@@ -66,8 +66,9 @@ return [
     'certificate_issuer' => [
         'name' => env('CERTIFICATE_ISSUER_NAME', 'OTEC LOTUS SpA'),
         'rut' => env('CERTIFICATE_ISSUER_RUT', '77.510.327-2'),
-        // Cidade impressa no certificado de turma online; a presencial usa
-        // `local_aplicacao` (bloco 39 D2). Vazia ou só com espaços = ausente.
+        // Cidade do emissor impressa na abertura de todo certificado, online ou
+        // presencial (bloco 40 D9). `local_aplicacao` da turma só alimenta
+        // `ciudad_emision` do snapshot. Vazia ou só com espaços = ausente.
         'city' => env('CERTIFICATE_ISSUER_CITY', 'Santiago'),
     ],
 

@@ -117,6 +117,7 @@ frontend/src/
 │   ├── providers/              # QueryClientProvider, tema, i18n, Zustand root
 │   ├── layouts/                # AppLayout (sidebar admin / interface redator)
 │   ├── pages/                  # página que NÃO é de domínio: DashboardPage, ModulePlaceholder
+│   │   └── Administracion/     # `AdministracionRoute` + `ConfiguracionTab`: compõe a aba de `certification` na página de `identity` por prop de slot (bloco 40)
 │   ├── SessionBootstrap.tsx    # hidrata a sessão antes de liberar as rotas
 │   └── App.tsx
 │
@@ -124,6 +125,8 @@ frontend/src/
 │   ├── ui/                     # WRAPPERS PrimeReact — features NUNCA importam primereact direto
 │   │   ├── AppButton/ AppDataTable/ AppDialog/ AppDropdown/ AppInputText/ …  # pasta-por-componente + index.ts
 │   │   ├── ModulePage/ CrudDialog/ PageHeader/   # moldes reusáveis de página de módulo e diálogo de cadastro
+│   │   ├── AppSignatureUpload/  # escolhe a imagem da assinatura, limpa no navegador e mostra a prévia (bloco 40, D16)
+│   │   ├── AppSubNav/           # navegação vertical de submódulos, `aria-current` no item atual (bloco 40)
 │   │   ├── AppearanceControls/ LanguageMenu/ Clock/ AppLogo/  # chrome: tema (ADR-16), idioma (ADR-15)
 │   │   ├── <Wrapper>/style.ts  # passthrough/variante nomeada SÓ quando há customização (senão nem existe)
 │   │   └── index.ts            # barrel raiz: um `export * from './X'` por pasta; features importam SÓ daqui
@@ -135,6 +138,7 @@ frontend/src/
 │   ├── stores/                 # Zustand TRANSVERSAL, não domínio: uiStore (tema/idioma), sessionStore (usuário)
 │   ├── hooks/                  # useClock, useCrudPage, useEntityForm, usePermissions (can() é infra de UI)
 │   ├── lib/                    # helpers puros: chileRegions, datetime, dialogMode, name, roles
+│   │   └── signature/          # `cleanSignature` (função pura sobre `Raster`: recorte, fundo transparente, redução a 1600 px) + `canvasBridge` (única ponte com canvas) — bloco 40
 │   ├── types/                  # tipos TS GERADOS do backend (ADR-04) — NÃO editar à mão
 │   └── config/                 # brand, navigation, primeTheme (ADR-16), i18n + locales (ADR-15)
 │
@@ -161,7 +165,8 @@ frontend/src/
 │   ├── catalog/                # cursos + habilitação de redatores (código real)
 │   ├── operation/              # turmas, matrícula, documentos, conclusão — código real
 │   │   ├── api/ components/{Document,Enrollment,Turma}/ hooks/ lib/ stores/
-│   ├── certification/          # scaffold vazio (.gitkeep) — entra na Sprint 4
+│   ├── certification/          # emissão, historial, validação pública e Configuración › Certificados
+│   │   └── components/Settings/ # `CertificateSettingsPanel` + `ManagerSignatureField`: nome, cargo e assinatura da gerente (só superadmin, bloco 40)
 │   │   (feedback/ NÃO entra — decisão de 2026-08-22)
 │   (sessão foi extraída para shared/stores por ser infra transversal, não domínio de identity)
 └── main.tsx                    # entrypoint — imports de CSS global (tema PrimeReact) aqui

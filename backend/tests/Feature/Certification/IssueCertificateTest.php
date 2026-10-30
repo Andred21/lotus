@@ -265,7 +265,11 @@ class IssueCertificateTest extends TestCase
         $this->assertDatabaseCount('certificates', 0);
     }
 
-    public function test_turma_presencial_emite_com_local_aplicacao_mesmo_sem_cidade_do_emissor(): void
+    /**
+     * D9 (bloco 40): a presencial com `local_aplicacao` também recusa quando a
+     * cidade do emissor está vazia — a frase impressa usa só a do emissor.
+     */
+    public function test_turma_presencial_com_local_e_cidade_do_emissor_vazia_e_recusada(): void
     {
         $this->actingAsAdmin();
         config(['app.certificate_issuer.city' => '']);
@@ -275,8 +279,10 @@ class IssueCertificateTest extends TestCase
         ]);
 
         $this->postJson($this->issueUrl(), $this->validPayload())
-            ->assertCreated()
-            ->assertJsonPath('snapshot.ciudad_emision', 'Rancagua');
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.turma.0', __('certification.eligibility.emission_city_missing'));
+
+        $this->assertDatabaseCount('certificates', 0);
     }
 
     /**

@@ -3,6 +3,7 @@ import { AppDialog, AppButton, AppInputText, FormField, FormErrorSummary } from 
 import { useEnrollStudentFlow } from '../../hooks/useEnrollStudentFlow'
 import { MoveConfirmDialog } from './MoveConfirmDialog'
 import { dangerText } from '@shared/styles/tokens'
+import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 
 type Props = {
   turmaId: number
@@ -68,7 +69,12 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
         {f.step === 'details' && (
           <>
             <FormField label={t('operation.enrollment.form.nameLabel')} error={err('name')}>
-              <AppInputText className="w-full" value={f.details.name} onChange={(e) => f.setField('name', e.target.value)} />
+              <AppInputText
+                className="w-full"
+                value={f.details.name}
+                maxLength={TETOS_IMPRESSOS.nomeAluno}
+                onChange={(e) => f.setField('name', e.target.value)}
+              />
             </FormField>
             <FormField label={t('operation.enrollment.form.emailLabel')} error={err('email')}>
               <AppInputText className="w-full" value={f.details.email} onChange={(e) => f.setField('email', e.target.value)} />

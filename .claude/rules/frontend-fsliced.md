@@ -25,7 +25,16 @@ sincronizados.
 **Regra de dependência:** só aponta para baixo. Feature usa shared; shared NUNCA usa feature;
 feature NÃO importa outra feature — **nem para tipo** (union compartilhado vai para `shared/lib`).
 Composição cruzada acontece na camada `app`/rota ou via API (ex.: `coursesApi` read-only em
-`shared/api` para o redator consumir sem importar `catalog`). **Validação QR pública** é a rota
+`shared/api` para o redator consumir sem importar `catalog`).
+**Aba de uma feature dentro da página de outra** (bloco 40): a página hospedeira expõe um **slot**
+(prop `ReactNode` opcional, aqui `configuracion` do `AdministracionPage` de `identity`) e a camada
+`app/` entrega o conteúdo da feature dona, com o `can()` da permissão decidindo se o slot vai
+preenchido. Ref.: `app/pages/Administracion/AdministracionRoute.tsx` monta
+`<AdministracionPage configuracion={…<ConfiguracionTab />} />` com a aba de `features/certification`
+(`components/Settings/`). Nenhuma das duas features importa a outra; submódulo novo de Configuración
+entra no `ConfiguracionTab`, com a navegação lateral `AppSubNav` (`shared/ui`).
+
+**Validação QR pública** é a rota
 `/validar/:uuid` desta SPA, fora do ramo protegido e do `SessionBootstrap` (spec D14/D19 da
 certificação); a API pública `/api/publico/certificados/{uuid}` responde sem cookie.
 
@@ -63,6 +72,11 @@ a Zustand o que não cruza fronteira — é over-engineering.
   `shared/ui/index.ts` é a única porta. Customização de componente Prime vive aqui, nunca com Tailwind
   na feature. Em wrappers com handler embutido (upload), **pine o override após o spread**
   (`customUpload` não pode ser desligado pelo caller).
+  **`AppButton` nasce `type="button"`; só o botão que envia declara `type="submit"`.** O `Button`
+  do Prime não declara `type`, e `<button>` sem ele vale `submit` dentro de um `<form>`: um
+  componente de `shared/ui` com botão interno pode cair dentro do form do chamador. Foi assim que
+  Ver, Confirmar e Cancelar da firma da gerente gravavam nome e cargo sem o Guardar (Q-1 do review
+  do bloco 40). Mecanismo: `AppButton.test.tsx` e `CertificateSettingsPanel.firma.test.tsx`.
 - **`forwardRef` no wrapper é condicional, não cerimônia.** Leva quem embrulha componente de função
   com ref de DOM útil — foco, seleção, medida: `AppInputText`, `AppPassword`, `AppTextarea`,
   `AppMenu`. **Não leva** quem embrulha *class component* do Prime (`RadioButton`, `Dropdown` — o

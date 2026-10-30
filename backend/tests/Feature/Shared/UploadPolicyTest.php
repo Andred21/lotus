@@ -60,6 +60,15 @@ class UploadPolicyTest extends TestCase
         $this->assertFalse($this->passa(ContentClass::Imagem, $this->pdfReal(), 'foto.png', 'image/png'));
     }
 
+    public function test_assinatura_so_aceita_png_com_largura_minima(): void
+    {
+        $this->assertTrue($this->passa(ContentClass::Assinatura, $this->pngDeLargura(600, 200), 'firma.png', 'image/png'));
+        $this->assertFalse($this->passa(ContentClass::Assinatura, $this->pngDeLargura(599, 200), 'firma.png', 'image/png'));
+        $this->assertFalse($this->passa(ContentClass::Assinatura, $this->jpegReal(), 'firma.png', 'image/png'));
+        $this->assertFalse($this->passa(ContentClass::Assinatura, $this->pdfReal(), 'firma.png', 'image/png'));
+        $this->assertSame(600, ContentClass::LARGURA_MINIMA_ASSINATURA_PX);
+    }
+
     public function test_o_teto_do_conjunto_cabe_no_transporte(): void
     {
         // A garantia do teto por arquivo ("quem recusa é sempre esta regra, com
@@ -107,6 +116,7 @@ class UploadPolicyTest extends TestCase
         $this->assertSame(10240, ContentClass::Documento->tetoEmKb());
         $this->assertSame(10240, ContentClass::DocumentoDeTurma->tetoEmKb());
         $this->assertSame(10240, ContentClass::Planilha->tetoEmKb());
+        $this->assertSame(1024, ContentClass::Assinatura->tetoEmKb());
     }
 
     public function test_a_foto_de_perfil_consome_a_peca_em_vez_de_reescrever(): void

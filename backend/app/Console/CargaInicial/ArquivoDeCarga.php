@@ -5,6 +5,7 @@ namespace App\Console\CargaInicial;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Shared\Support\Rut;
+use App\Shared\Support\TetosImpressos;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use JsonException;
@@ -109,12 +110,15 @@ final class ArquivoDeCarga
         $dataOuNula = ['present', 'nullable', 'date_format:'.self::DATA];
         $lista = ['present', 'array'];
         $inteiro = ['required', 'integer', 'min:0'];
+        // Tetos dos campos que o certificado imprime (D15): a carga os recusa
+        // como a tela, antes de gravar, e a mensagem nomeia o caminho do campo.
+        $ate = fn (array $regras, int $teto) => [...$regras, 'max:'.$teto];
 
         $regras = [
             'cliente' => ['required', 'array'],
             'cliente.rut' => $texto,
             'cliente.name' => $texto,
-            'cliente.legal_name' => $texto,
+            'cliente.legal_name' => $ate($texto, TetosImpressos::RAZAO_SOCIAL),
             'cliente.business_activity' => $textoOuNulo,
             'cliente.email' => ['required', 'email'],
             'cliente.desde' => $data,
@@ -135,9 +139,9 @@ final class ArquivoDeCarga
             'cursos' => $lista,
             'cursos.*' => ['array'],
             'cursos.*.chave' => $texto,
-            'cursos.*.name' => $texto,
-            'cursos.*.technical_name' => $textoOuNulo,
-            'cursos.*.description' => $textoOuNulo,
+            'cursos.*.name' => $ate($texto, TetosImpressos::NOME_CURSO),
+            'cursos.*.technical_name' => $ate($textoOuNulo, TetosImpressos::NOME_TECNICO),
+            'cursos.*.description' => $ate($textoOuNulo, TetosImpressos::DESCRICAO_CURSO),
             'cursos.*.workload_hours' => $inteiro,
             'cursos.*.modulos' => $lista,
             'cursos.*.modulos.*' => ['array'],
@@ -150,7 +154,7 @@ final class ArquivoDeCarga
             'redatores' => $lista,
             'redatores.*' => ['array'],
             'redatores.*.chave' => $texto,
-            'redatores.*.name' => $texto,
+            'redatores.*.name' => $ate($texto, TetosImpressos::NOME_ASSINANTE),
             'redatores.*.rut' => $texto,
             'redatores.*.email' => ['required', 'email'],
             'redatores.*.phone' => $textoOuNulo,
@@ -166,7 +170,7 @@ final class ArquivoDeCarga
             'alunos' => $lista,
             'alunos.*' => ['array'],
             'alunos.*.rut' => $texto,
-            'alunos.*.name' => $texto,
+            'alunos.*.name' => $ate($texto, TetosImpressos::NOME_ALUNO),
             'alunos.*.email' => ['required', 'email'],
             'alunos.*.desde' => $data,
 
@@ -207,12 +211,12 @@ final class ArquivoDeCarga
                 "{$turma}.matriculas.*.certificado.codigo" => $texto,
                 "{$turma}.matriculas.*.certificado.emitido_em" => $data,
                 "{$turma}.matriculas.*.certificado.valido_ate" => $data,
-                "{$turma}.matriculas.*.certificado.aluno_impresso" => $texto,
-                "{$turma}.matriculas.*.certificado.curso_impresso" => $texto,
+                "{$turma}.matriculas.*.certificado.aluno_impresso" => $ate($texto, TetosImpressos::NOME_ALUNO),
+                "{$turma}.matriculas.*.certificado.curso_impresso" => $ate($texto, TetosImpressos::NOME_CURSO),
                 "{$turma}.matriculas.*.certificado.horas_impressas" => $inteiro,
-                "{$turma}.matriculas.*.certificado.cliente_impresso" => $texto,
+                "{$turma}.matriculas.*.certificado.cliente_impresso" => $ate($texto, TetosImpressos::RAZAO_SOCIAL),
                 "{$turma}.matriculas.*.certificado.cliente_rut_impresso" => $texto,
-                "{$turma}.matriculas.*.certificado.redator_impresso" => $texto,
+                "{$turma}.matriculas.*.certificado.redator_impresso" => $ate($texto, TetosImpressos::NOME_ASSINANTE),
                 "{$turma}.matriculas.*.certificado.cidade" => $texto,
             ];
         }

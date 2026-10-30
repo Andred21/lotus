@@ -8,6 +8,7 @@ use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Shared\Support\Rut;
+use App\Shared\Support\TetosImpressos;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -55,6 +56,18 @@ class StudentResolver
                 if ($email === null || $email === '') {
                     throw ValidationException::withMessages([
                         'email' => __('identity.errors.student_email_required'),
+                    ]);
+                }
+
+                // O nome do aluno novo é o que o certificado imprime (D15): acima do
+                // teto a linha é recusada, como a tela recusa no cadastro. Só aqui,
+                // porque o resolver usa o nome apenas ao criar.
+                if (mb_strlen($name) > TetosImpressos::NOME_ALUNO) {
+                    throw ValidationException::withMessages([
+                        'name' => __('validation.max.string', [
+                            'attribute' => __('validation.attributes.name'),
+                            'max' => TetosImpressos::NOME_ALUNO,
+                        ]),
                     ]);
                 }
 

@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Models;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\QueryBuilders\RedatorQueryBuilder;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Concerns\ArchivesChildren;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Validation\ValidationException;
@@ -79,6 +81,27 @@ class Redator extends Model implements Auditable
     public function documents(): MorphMany
     {
         return $this->morphMany(File::class, 'fileable');
+    }
+
+    /**
+     * A assinatura vigente (spec D19 do bloco 40): a FIRMA ativa OU a que a
+     * cascata do arquivamento levou junto (`archived_with_parent`), a de maior
+     * `id`. `withTrashed()` porque o redator arquivado ainda precisa dela para
+     * a emissão de certificados antigos; a condição deixa de fora a que o admin
+     * apagou de propósito antes (essa não volta) e a substituída (soft-deletada
+     * sem a marca).
+     */
+    public function firma(): MorphOne
+    {
+        // O filtro tem de entrar na SUBQUERY do MAX (closure do `ofMany`), não
+        // só na query externa: sem isso o MAX(id) sai de TODOS os `files` do
+        // redator e qualquer arquivo posterior (de outro tipo, ou apagado) faz
+        // a firma vigente sumir. O `withTrashed()` vem antes para valer nas duas.
+        return $this->morphOne(File::class, 'fileable')
+            ->withTrashed()
+            ->ofMany(['id' => 'max'], fn ($q) => $q
+                ->where('type', RedatorDocumentType::FIRMA->value)
+                ->where(fn ($w) => $w->whereNull('deleted_at')->orWhere('archived_with_parent', true)));
     }
 
     /** Cursos que este redator está habilitado a ministrar (idoneidade). */

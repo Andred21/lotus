@@ -22,4 +22,7 @@ return [
     'validation_url' => [
         'not_configured' => 'The certificate validation address is not configured with https. No certificate is issued or downloaded until the system administrator configures it.',
     ],
+    'signature' => [
+        'missing_binary' => 'The signature image of file :id is missing from the disk (:path).',
+    ],
 ];

@@ -133,7 +133,8 @@ class RedatorController extends Controller implements HasMiddleware
             // Até 2026-08-25 este sítio não tinha regra NENHUMA: aceitava
             // qualquer conteúdo em qualquer tamanho, contido só pelo transporte
             // (nginx 12m). É a mesma política dos outros documentos de redator —
-            // a diferença era só ninguém a ter escrito aqui.
+            // a diferença era só ninguém a ter escrito aqui. A classe sai do
+            // TIPO: a FIRMA pede a da assinatura, os demais a de documento.
             //
             // O dado precisa ser array ANINHADO (`documents => [tipo => arquivo]`),
             // não uma chave plana com ponto literal: `Validator::parseData()`
@@ -142,7 +143,7 @@ class RedatorController extends Controller implements HasMiddleware
             // o valor nunca resolve e o campo sai sempre "obrigatório".
             Validator::make(
                 ['documents' => [$type => $file]],
-                ["documents.{$type}" => ContentClass::Documento->regras()],
+                ["documents.{$type}" => RedatorDocumentType::from((string) $type)->conteudo()->regras()],
             )->validate();
         }
 

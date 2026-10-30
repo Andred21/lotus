@@ -27,6 +27,28 @@ trait BuildsRealUploads
         );
     }
 
+    /** PNG real de largura e altura dadas (GD do container; só o teste precisa dele). */
+    protected function pngDeLargura(int $largura, int $altura): string
+    {
+        $imagem = imagecreatetruecolor($largura, $altura);
+        ob_start();
+        imagepng($imagem);
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * JPEG real (1x1), para provar que a assinatura recusa o que não é PNG. É
+     * literal porque o GD do container não tem suporte a JPEG; o `finfo` o lê
+     * como `image/jpeg`, que é o que a regra de conteúdo julga.
+     */
+    protected function jpegReal(): string
+    {
+        return base64_decode(
+            '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=',
+        );
+    }
+
     protected function csvReal(): string
     {
         return "RUT,Nombre,Email,Telefono\n11.111.111-1,Ana,ana@lotus.cl,+56900000000\n";

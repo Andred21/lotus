@@ -16,7 +16,7 @@ import { useUploadProfileDocument } from '../api/useProfile'
  * nenhum dos quais entra no gate da RN-09 — o que a regra barra é o REUF, e
  * quem o barra é o tipo, não a validade.
  *
- * Os quatro slots compartilham UMA instância de mutation, e por isso o estado
+ * Os slots compartilham UMA instância de mutation, e por isso o estado
  * em voo é local, não lido dela. O observer do TanStack acompanha só a chamada
  * mais recente (`mutationObserver.mutate` faz `removeObserver` na anterior):
  * `isPending`/`variables`/`error` passam a descrever o segundo upload no
@@ -35,23 +35,37 @@ export function useProfileDocuments(onSent?: () => void) {
 
   const { message } = useMutationErrors([erro])
 
+  /** Envia um arquivo já em mãos. Resolve `true` se o servidor aceitou e `false`
+   * se recusou (a falha vai para `error`): quem chama decide o que fazer com cada
+   * um, e nenhum dos dois desfecho vira rejeição solta. */
+  function enviarArquivo(type: RedatorDocumentType, file: File): Promise<boolean> {
+    setErro(null)
+    setEmVoo((atual) => [...atual, type])
+    return upload
+      .mutateAsync({ type, file })
+      .then(() => {
+        onSent?.()
+        return true
+      })
+      .catch((motivo: ProblemDetails) => {
+        setErro(motivo)
+        return false
+      })
+      .finally(() => setEmVoo((atual) => atual.filter((emAndamento) => emAndamento !== type)))
+  }
+
   function enviar(type: RedatorDocumentType, e: FileUploadHandlerEvent) {
     setSizeError(null)
     const file = e.files[0]
-    if (file) {
-      setErro(null)
-      setEmVoo((atual) => [...atual, type])
-      void upload
-        .mutateAsync({ type, file })
-        .then(() => onSent?.())
-        .catch((motivo: ProblemDetails) => setErro(motivo))
-        .finally(() => setEmVoo((atual) => atual.filter((emAndamento) => emAndamento !== type)))
-    }
+    if (file) void enviarArquivo(type, file)
     e.options.clear()
   }
 
   return {
     upload: enviar,
+    /** Para quem já tem o `File` limpo (a assinatura), sem passar pelo evento do
+     * `AppFileUpload`. */
+    uploadFile: enviarArquivo,
     /** Os slots EM VOO, não "algum slot em voo": desabilitar os quatro por causa
      * de um trava a tela inteira num upload de 10 MB. Lista, e não um tipo só,
      * porque os envios podem se sobrepor. */

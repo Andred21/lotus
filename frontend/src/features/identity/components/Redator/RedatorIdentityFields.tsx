@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppDropdown, AppInputText, type FieldComponent } from '@shared/ui'
+import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { RedatorFormFields } from '../../hooks/useRedatorForm'
 
 /** Os quatro campos de identificação do redator, em duas colunas a partir de
@@ -25,7 +26,7 @@ export function RedatorIdentityFields({
     <>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field name="name" label={t('redator.name')}>
-          <AppInputText className="w-full" />
+          <AppInputText className="w-full" maxLength={TETOS_IMPRESSOS.nomeAssinante} />
         </Field>
 
         <Field name="rut" label={t('common.rut')}>

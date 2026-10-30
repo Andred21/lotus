@@ -6,6 +6,8 @@ return [
     'file' => [
         'set_too_large' => 'O conjunto de arquivos passa do máximo de :max MB. Envie-os em requisições separadas.',
         'scanner_unavailable' => 'O serviço de antivírus está indisponível. O arquivo não foi salvo; tente de novo em alguns minutos.',
+        'image_too_narrow' => 'A assinatura precisa ter pelo menos :min px de largura; a enviada tem :width px.',
+        'image_unreadable' => 'Não foi possível ler a imagem da assinatura. Envie um PNG válido.',
     ],
     'spreadsheet' => [
         'unsupported_format' => 'Formato não suportado — envie xlsx ou csv.',

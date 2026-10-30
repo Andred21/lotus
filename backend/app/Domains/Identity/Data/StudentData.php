@@ -6,8 +6,10 @@ use App\Domains\Identity\Models\Student;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
+use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
@@ -29,7 +31,7 @@ class StudentData extends Data
 {
     public function __construct(
         public int|Optional $id,
-        #[Required]
+        #[Required, Max(TetosImpressos::NOME_ALUNO)]
         public string $name,
         #[Required]
         public string $rut,

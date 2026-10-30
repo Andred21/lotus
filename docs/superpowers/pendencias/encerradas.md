@@ -7,27 +7,21 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-94 — o diálogo do Alumno rola 3px em 1024x768 quando a tabela tem linha
+## P-28 — o fundo do certificado não reproduz as cunhas nem separa a página 2
 
-**Bloco:** — · **Gatilho:** fecha quando o `medir.cjs` do audit do item 23 (Apêndice A), com um
-alumno que tenha turma, medir `scroll` = `frame` na linha `DIALOGO` em 1024x768. O mesmo vale para
-qualquer bloco que tocar `StudentDetailSections.tsx`, a largura do diálogo do Alumno ou o piso
-default do `AppDataTable/style.ts`. Revisar em **2026-10-31**.
+**Bloco:** — · **Gatilho (original):** fecha quando o fundo passar a distinguir página 1 das seguintes **e** as cunhas existirem, ou quando a Lotus aprovar o documento como está. Revisar em 2026-10-31.
 
-Medido em 2026-09-28, no fechamento do item 23 (`frontend-tabelas-reserva-e-rolagem`), em
-`7f829137`, offset +2, es-CL. A tabela de turmas do diálogo do Alumno (consumidora 15 da spec do
-item 23) mede `frame 669 · scroll 672 · table 672` em 1024x768. A régua da spec §3 pede
-`scrollWidth == clientWidth`, e reprova por 3px.
+O certificado renderizado não reproduzia duas coisas do `docs/templates/certificado.pdf`: (a) as cunhas diagonais azul/preta das quinas da página 1, e (b) a página 2, que herdava as faixas azul/preta das bordas (`repeat-y` da `.page`) e no aprovado é cinza limpo. Achado do gate visual de `documentos-oficiais-template-e-docx` (2026-08-10); o João aceitou "agora, tratar depois". Causa medida: as cunhas são vetor dentro do PDF aprovado, e o raster versionado só carrega o que é imagem.
 
-A causa é o piso default de 42rem (672px) da §4.1, que o diálogo herda como toda consumidora sem
-`pt` próprio. A moldura do diálogo em 1024 tem 669px, 3px a menos. O audit do item 23 mediu o
-diálogo só vazio, com `rows 0` e `min-width` 0px, e concluiu que ele "não tem piso". A seção 9 do
-audit corrige isso. Antes do bloco, o piso era 48rem, e o mesmo diálogo com dado teria rolado 99px.
+**ENCERRADA em 2026-10-29, no `certificado-refinamento-e-validade` (item 40), pela decisão D8 do João:** o layout v5, aprovado por ele em cima de PDFs do Gotenberg da lane, vale como o certificado e se aplica a todo certificado, inclusive os já emitidos. As cunhas das quinas **não** voltaram: a v5 tem as barras preto/azul no topo e no rodapé da página 1, e o João aprovou esse desenho (`referencia-layout-p1.png`). A parte (b) saiu por mecanismo: o fundo de continuação é um asset próprio sem as barras (`backend/resources/images/fundo-certificado-continuacao.jpg`), embutido uma vez e aplicado a toda página depois da primeira. Prova: `CertificatePdfTest` (fundos e logo embutidos uma única vez; barras só na página 1), `CertificadoMatrizGotenbergTest` no Gotenberg 8.36.0 (todo caso com rodapé e logo em toda página) e a inspeção visual da Task 5 (`blocos/40-certificado-refinamento-e-validade/evidencias.md`).
 
-Ficou aberta por decisão do João no gate de fechamento do item 23. O bloco fechou com o resíduo
-registrado, sem reabrir a execução.
+## P-78 — a assinatura do relator cai para uma página própria quando a folha 1 cresce
 
-**ENCERRADA em 2026-10-29, no `frontend-dialogos-proporcionais-e-tipo-de-documento` (item 43).** O gatilho venceu pela medição: o `medir.cjs` do Apêndice A do audit do item 23, com o primeiro alumno da lista (uma turma, `rows 1`), mede `frame 720 · scroll 720 · table 720` em 1024x768 e em 1440x900 (`blocos/43-frontend-dialogos-proporcionais-e-tipo-de-documento/smoke.md`, seção P-94). A moldura `md` de 48rem dá ao corpo 720px, acima do piso de 42rem (672px); o `StudentDialog.tsx` não precisou mudar. Na revisão o João passou o diálogo do Alumno para `lg` (`9bd0ec86`), que só alarga o corpo e não foi remedido.
+**Bloco:** infra-producao-provisionamento-aws (achado da Task 16, não do escopo) · **Gatilho (original):** fecha quando um certificado com dado real da Lotus fechar o rodapé na página 1 e isso for remedido, ou quando o João decidir o corte (clamp por comprimento de nome/descrição) e ele for implementado. Revisar em 2026-10-31.
+
+Medido em produção em 2026-09-20, no `LOT-2026-1000`: PDF com 3 páginas, a assinatura do relator e o aviso legal sozinhos na segunda. Era o trade-off do `min-height` da `.page` do Blade antigo: com `height` fixo o excedente se pintava por cima da página seguinte; com `min-height` a folha crescia. O que cortar era decisão de negócio, do João.
+
+**ENCERRADA em 2026-10-29, no `certificado-refinamento-e-validade` (item 40), pela segunda metade do gatilho (D10, D11, D15):** o João decidiu o corte, e ele está implementado como **teto de caracteres na entrada**, medido no Gotenberg real (`TetosImpressos`, nome do aluno 70, curso 110, técnico 160, razão social 150, assinante 60, cargo 70, descrição 620), com `max:` nos DTOs, no import de alunos e na carga histórica, e o clamp com reticências da descrição saiu do Blade. O Blade v5 deixa as assinaturas no fluxo logo abaixo do corpo, e `CertificadoMatrizGotenbergTest` prova 2 páginas com as assinaturas na página 1 para texto realista no teto (`blocos/40-certificado-refinamento-e-validade/matriz.md`); texto adversário pode levar as assinaturas à página 2, mas nunca perde texto. **O que segue aberto, e não é esta ficha:** a coluna "maior de produção" da matriz ainda está pendente (a leitura de produção foi recusada pelo auto mode), e o PDF reimpresso em produção é o item 3 da Verificação externa do bloco (`aceitacao.md`), do João.
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -48,6 +42,11 @@ registrado, sem reabrir a execução.
 > **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
 ## Rastro anterior, já removido
+
+**A P-94 saiu no fechamento do `certificado-refinamento-e-validade` (item 40, 2026-10-30)**, o primeiro
+depois do item 43, que a encerrou em 2026-10-29 pela medição do `smoke.md` do bloco (`scroll` = `frame` na
+linha `DIALOGO` em 1024x768 e em 1440x900). O rastro durável está nos commits e na linha de entrega em
+[`../historico/progress.md`](../historico/progress.md).
 
 **A P-100 e a P-05 saíram no fechamento do `seeder-carga-inicial-producao` (item 38, 2026-10-21)**, o primeiro depois do item 39, que passou sem removê-las. Ambas foram encerradas em 2026-10-06 pelo item 13: a P-100 pela correção da idade do backup (Q-1 da revisão, aprovada pelo João), a P-05 pela decisão D4 da spec — não consolidar as 30 migrations, com o "banco = código" provado pelo `deploy/bin/conferir-golive.sh`. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

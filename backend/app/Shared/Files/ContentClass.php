@@ -2,6 +2,7 @@
 
 namespace App\Shared\Files;
 
+use App\Shared\Files\Rules\LarguraMinimaDeImagem;
 use App\Shared\Files\Rules\ScannedForMalware;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
@@ -37,6 +38,10 @@ enum ContentClass: string
     case Documento = 'documento';
     case DocumentoDeTurma = 'documento_de_turma';
     case Planilha = 'planilha';
+    case Assinatura = 'assinatura';
+
+    /** Largura mínima da assinatura do redator, em pixels (spec D1 do bloco 40): impressa no certificado, abaixo disso sai pixelada. */
+    public const LARGURA_MINIMA_ASSINATURA_PX = 600;
 
     /**
      * Extensões aceitas. Documento aceita imagem (spec D7): documento
@@ -52,6 +57,7 @@ enum ContentClass: string
             self::Documento => ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
             self::DocumentoDeTurma => ['pdf'],
             self::Planilha => ['xlsx', 'csv', 'txt'],
+            self::Assinatura => ['png'],
         };
     }
 
@@ -73,6 +79,7 @@ enum ContentClass: string
                 'text/csv',
                 'text/plain',
             ],
+            self::Assinatura => ['image/png'],
         };
     }
 
@@ -99,6 +106,7 @@ enum ContentClass: string
         return match ($this) {
             self::Imagem => 5120,
             self::Documento, self::DocumentoDeTurma, self::Planilha => 10240,
+            self::Assinatura => 1024,
         };
     }
 
@@ -137,6 +145,10 @@ enum ContentClass: string
             'mimes:'.implode(',', $this->extensoes()),
             'mimetypes:'.implode(',', $this->mimes()),
             'max:'.$this->tetoEmKb(),
+            // A largura vem antes do antivírus pelo mesmo motivo do `bail`:
+            // só vale mandar bytes ao daemon depois de o arquivo já ter passado
+            // por tudo o que se decide sem ele.
+            ...($this === self::Assinatura ? [new LarguraMinimaDeImagem(self::LARGURA_MINIMA_ASSINATURA_PX)] : []),
             // Por último de propósito: só vale mandar bytes ao daemon depois de
             // o tipo e o tamanho já terem passado.
             new ScannedForMalware,
