@@ -206,6 +206,34 @@ em 2026-10-31).
   `CONTRIBUINDO.md`.
 - Formato exato das notas de release do backfill.
 
+## 9. Emendas pré-plano (2026-10-31, decisões do João)
+
+- **E1 · Versão do backend em `backend/config/app.php`, não no `composer.json`.** O Composer põe
+  `version` no content-hash do `composer.lock`: com o release-please gravando `$.version`, toda PR
+  de release deixaria o lock desatualizado. A fonte do backend passa a ser a linha
+  `'version' => '1.9.1', // x-release-please-version` em `backend/config/app.php`, atualizada pelo
+  updater genérico do release-please (`extra-files` do tipo `generic`). Sem I/O, vale no container
+  de dev (que monta só `./backend`) e na imagem, e o `config:cache` cobre. O `composer.json` fica
+  **sem** `version`. Substitui o `composer.json` em §4.1, DoD 1 e DoD 3: a catraca compara
+  `version.txt`, `frontend/package.json` e essa linha.
+- **E2 · D2 mantido como está.** Caminho de produto é só `backend/`, `frontend/`, `docker/`,
+  `deploy/` e `.github/`. `docker-compose.prod.yml` e `docker-compose.prod-tls.yml` ficam no
+  `exclude-paths` mesmo indo para produção, por decisão explícita. A catraca da raiz (§4.2.1)
+  classifica cada entrada de `git ls-files` de primeiro nível.
+- **Fatos do repositório para o plano** (levantados em 2026-10-31):
+  - o `deploy.yml` faz checkout do SHA alvo em `alvo/` e da `main` em `main/`, e chama script de
+    `main/.github/scripts/` (padrão do `conferir-alinhamento.sh`). O passo de release segue o
+    mesmo padrão: `.github/scripts/publicar-release.sh`, lendo `version.txt` e `CHANGELOG.md` de
+    `alvo/`;
+  - catraca de script por execução com binário falso: `frontend/tests/<nome>.test.ts` +
+    `frontend/tests/fixtures/<nome>/` (molde: `podar-imagens.test.ts`), no projeto vitest `repo`;
+  - o `deploy.yml` não tem `run-name`, e a API de runs não devolve os inputs: a conferência do
+    backfill (§4.4) lê o `SHA` do log da execução (`gh run view <id> --log`, cabeçalho `env` do
+    passo), nas execuções `success` do `deploy.yml` do Gatika-CL;
+  - `APP_VERSION` é consumido em `Sidebar.tsx` e `LoginPage.tsx`; não há `vite-env.d.ts` em
+    `frontend/src/` (a constante injetada pelo Vite precisa de declaração de tipo);
+  - rota autenticada: grupo `auth.active` em `backend/app/Domains/Identity/routes.php`.
+
 ## Verificação externa
 
 1. Secret do token do release-please criado no `Andred21/lotus`, e a primeira PR de release
