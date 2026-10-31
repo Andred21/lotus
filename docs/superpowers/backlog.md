@@ -179,25 +179,24 @@ MIT sem decisão nenhuma, o que concede uso comercial irrestrito a terceiros. O 
 Gatika/Lotus não diz quem é titular do código, e nada no repositório prova autoria.
 
 **Escopo:**
-- **SemVer + release-please:** config e manifest, versão inicial decidida no brainstorming, PR de
-  release a partir dos Conventional Commits, tag `vX.Y.Z`, Release com notas e `CHANGELOG.md`;
-- **versão dentro do sistema:** fonte única da versão propagada ao `package.json`, ao
-  `composer.json`/config do backend (exposta por endpoint ou header) e à interface (sidebar ou
-  rodapé do shell); imagem de deploy rotulada com a tag;
-- **espelho:** tags e releases no Gatika-CL (via script de espelho ou release só num lado —
-  decidir);
-- **licença e titularidade:** sem MIT; `LICENSE` proprietária ("all rights reserved") nos dois
-  repos, com o aviso de copyright refletindo o arranjo entre João e cliente; cabeçalho/`NOTICE`;
-  rascunho de termo (cessão ou licença cruzada) para o João levar ao contrato;
-- **autenticidade:** commits e tags assinados (SSH), `SECURITY.md`, atestado de procedência da
-  imagem no CI.
+- **SemVer + release-please:** versão = o que foi para produção; bump pelos Conventional Commits
+  que tocam caminho de produto; PR de release, tag `vX.Y.Z`, Release e `CHANGELOG.md`;
+- **versão dentro do sistema:** `version.txt` como fonte única, propagado ao `package.json` e ao
+  `composer.json`; sidebar e backend (só autenticado) leem dali;
+- **espelho:** release no Andred21 no merge da PR de release, e no Gatika-CL pelo `deploy.yml`
+  depois da promoção;
+- **backfill:** 13 versões desde o go-live (`v1.0.0` em 2026-09-26 … `v1.9.1`);
+- **licença e titularidade:** sem MIT; `LICENSE` proprietária nos dois repos, titular o João;
+  rascunho de termo de licença de uso perpétua à Gatika/Lotus para o João levar ao contrato.
 
-**Fora:** parecer jurídico e assinatura do termo (ficam com o João); registro no INPI; mudança no
-fluxo de deploy além do rótulo da tag.
+**Fora:** parecer jurídico e assinatura do termo (ficam com o João); registro no INPI; assinatura
+de commits/tags, `SECURITY.md` e atestado de procedência; tornar o repo público privado; mudança
+no fluxo de deploy além do passo de release.
 
-**DoD:** `feat` mesclado gera PR de release com bump MINOR e `fix` gera PATCH (provado); release
-`vX.Y.Z` publicada com CHANGELOG; a mesma versão aparece na API e na sidebar; `LICENSE` correta nos
-dois repos e nenhum manifest declarando MIT; tag assinada aparece "Verified".
+**DoD:** `feat` em caminho de produto propõe MINOR, `fix` propõe PATCH e só-`docs` não propõe nada
+(provado); a mesma versão aparece na API autenticada e na sidebar, sem literal; release criada
+pelo `deploy.yml` depois da promoção; backfill simulado com as 13 linhas; `LICENSE` correta nos
+dois repos e nenhum manifest declarando MIT.
 
 ---
 

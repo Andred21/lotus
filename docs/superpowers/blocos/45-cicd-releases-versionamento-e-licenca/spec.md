@@ -31,12 +31,15 @@
 - **D2 · Critério SemVer.** `fix`/`perf` sobe o PATCH, `feat` sobe o MINOR, `BREAKING CHANGE` /
   `tipo!:` sobe o MAJOR. **Só conta mudança de produto real**: commits que tocam `backend/`,
   `frontend/`, `docker/`, `deploy/` ou `.github/`. Harness, docs e tooling de desenvolvimento não
-  geram versão.
+  geram versão. Os demais tipos (`refactor`, `infra`, `cicd`, `chore`, `docs`, `test`) nunca
+  sobem versão, mesmo em caminho de produto: entram no CHANGELOG da próxima versão, se a seção
+  existir, mas não a disparam.
 - **D3 · `1.0.0` = go-live.** A primeira promoção a produção, em 2026-09-26, quando o escopo
   funcional do Notion (Sprints 0–6) estava pronto, menos a task 8.3.1. As quatro promoções desse
   dia fundem-se numa só `1.0.0`, no último commit promovido no dia.
 - **D4 · Backfill.** Cada promoção bem-sucedida posterior vira uma versão, com o salto calculado
-  por D2 desde a promoção anterior (tabela no §4.4).
+  por D2 desde a promoção anterior (tabela no §4.4). Promoção sem nenhum commit que suba versão
+  por D2 não vira versão: os commits dela entram na versão seguinte.
 - **D5 · Titularidade.** O João é o autor e titular do copyright. A Gatika/Lotus recebe licença
   de uso **perpétua, irrevogável, não exclusiva** e sem custo adicional para a operação dela:
   usar, hospedar, modificar e manter, inclusive com outro fornecedor. Não pode revender,
@@ -68,10 +71,16 @@
 1. **Andred21 (`origin`).** Workflow novo `release-please.yml`, guardado por
    `if: github.repository == 'Andred21/lotus'` (o `.github/` atravessa o espelho, mesmo padrão
    do `deploy.yml`). Em cada push na `main`, ele mantém a PR de release com o CHANGELOG e o bump
-   calculados por D2 (`exclude-paths` para tudo fora dos caminhos de produto). A PR de release
-   precisa rodar os cinco gates do CI, e PR aberta com o `GITHUB_TOKEN` não dispara workflow.
-   Por isso o workflow usa um token próprio (PAT fine-grained ou GitHub App) guardado em secret:
-   ação externa 1.
+   calculados por D2 (`exclude-paths` para tudo fora dos caminhos de produto). O release-please só
+   aceita lista negativa, então uma catraca confere que toda entrada da raiz do repositório ou é
+   caminho de produto (D2) ou está no `exclude-paths`: diretório novo na raiz reprova até alguém
+   decidir de que lado ele fica. A config leva `bootstrap-sha` = `5fba081d` (a `v1.9.1`), para a
+   primeira execução não depender do backfill já escrito nem varrer o histórico inteiro. A
+   primeira versão pelo fluxo novo é a deste bloco, prevista `1.10.0` (há `feat` em
+   `frontend/`). A PR de release precisa rodar os cinco gates do CI (`pull_request`), e PR aberta
+   com o `GITHUB_TOKEN` não dispara workflow. Por isso o workflow usa um token próprio (PAT
+   fine-grained ou GitHub App) guardado em secret: ação externa 1, feita **antes** do merge deste
+   bloco, porque o push do merge já dispara o workflow.
 2. **Mesclar a PR de release** é a decisão "isto vai para produção". Ela grava a versão nos
    arquivos e cria a tag `vX.Y.Z` e a Release no Andred21. Diferença declarada: no Andred21 a
    Release aparece no merge, antes da promoção, porque o repo público não sabe da produção.
@@ -80,14 +89,18 @@
 4. **Promoção.** O `deploy.yml` (Gatika-CL) continua com o mesmo botão e o mesmo SHA. Depois do
    deploy OK, um passo novo lê a versão do `version.txt` do SHA promovido e cria a tag anotada
    `vX.Y.Z` nesse SHA e a Release no Gatika-CL, com as notas da seção correspondente do
-   `CHANGELOG.md`. A permissão do job passa a `contents: write`.
+   `CHANGELOG.md`. A permissão do job passa a `contents: write`. A lógica do passo vive num
+   script versionado que **atravessa** o espelho (fora do `.espelho-exclusoes`), chamado pelo
+   `deploy.yml`, para ser testável com `gh` falso no `PATH`.
    - Tag já existente no mesmo SHA (repromoção): sucesso sem ação.
    - Tag já existente em **outro** SHA: o passo avisa e não sobrescreve, e o deploy segue OK.
      O passo de release nunca reprova um deploy já concluído (lei 7 no espírito: registro, não
      gate).
    - Rollback para versão anterior não cria release.
 5. Promoção de um SHA sem bump (sem PR de release mesclada desde a última) não cria release
-   nova. O caminho normal é sempre mesclar a PR de release antes de espelhar.
+   nova: o `version.txt` dele aponta para uma tag que já existe em outro SHA, e cai no caso
+   "aviso, não sobrescreve" acima. O caminho normal é sempre mesclar a PR de release antes de
+   espelhar.
 
 ### 4.3 Licença
 
@@ -128,14 +141,18 @@ em 2026-10-31).
 | 1.9.1 | 2026-10-31 | `5fba081d7bff45e4ad4b930d49957f6c91f47978` | `935145f5394ed9aa3ba389222591ede703353bca` |
 
 - O mapeamento promoção→SHA usou o `headSha` das execuções, que é a `main` do Gatika-CL no
-  clique. Antes de criar tags, o script confere contra o ledger de deploy do host (leitura) ou
-  contra o input `sha` de cada execução. Divergência para tudo e é reportada.
-- Um script versionado (`scripts/`, fora do espelho) gera, para cada linha, a tag anotada
+  clique. Antes de criar tags, o script confere cada linha contra o input `sha` da execução do
+  `deploy.yml` correspondente (`gh run view`, leitura; o ledger do host não entra, porque exige
+  acesso ao servidor). Divergência para tudo e é reportada.
+- Um script versionado em `scripts/`, **listado no `.espelho-exclusoes`** (é ferramenta de
+  desenvolvimento, roda uma vez na máquina do João), gera, para cada linha, a tag anotada
   `vX.Y.Z` com a data da promoção e a Release com as notas dos commits de produto (D2) desde a
   versão anterior, agrupadas em Funcionalidades / Correções. Ele roda com `--simular` (mostra
   tudo, não escreve) e, sem a flag, escreve nos dois repos. Quem roda a escrita é o João (ação
   externa 2), porque escrita remota não sai de sessão de agente.
-- `CHANGELOG.md` inicial com as 13 versões. O manifest do release-please começa em `1.9.1`, e
+- O mesmo script gera o `CHANGELOG.md` inicial com as 13 versões, commitado neste bloco: as notas
+  das Releases do backfill e as seções do `CHANGELOG.md` saem da mesma geração, e o passo do
+  `deploy.yml` lê as notas dali. O manifest do release-please começa em `1.9.1`, e
   `version.txt` também.
 
 ## 5. Fora
@@ -173,7 +190,8 @@ em 2026-10-31).
 3. Backend: `config('app.version')` igual ao `version.txt`, e a exposição autenticada responde
    401 sem sessão e a versão com sessão (teste de feature).
 4. release-please: config validada em dry-run local ou PR de teste, com `fix` em caminho de
-   produto propondo PATCH, `feat` propondo MINOR e commit só em `docs/` não propondo nada.
+   produto propondo PATCH, `feat` propondo MINOR e commit só em `docs/` não propondo nada; e a
+   catraca da raiz (§4.2.1) vista reprovar com um diretório novo não classificado.
 5. `deploy.yml`: passo de release coberto pelos três casos de §4.2.4 (tag nova, repromoção,
    tag em outro SHA), com `gh` falso, no padrão das catracas de script existentes.
 6. Script de backfill em `--simular` imprime as 13 linhas da tabela §4.4 com as notas.
@@ -197,5 +215,7 @@ em 2026-10-31).
    `gh release list`.
    - prova: nenhuma
 3. Primeira release pelo fluxo novo promovida: a Release aparece no Gatika-CL criada pelo
-   `deploy.yml`, e a sidebar em produção mostra a mesma versão.
+   `deploy.yml`, e a sidebar em produção mostra a mesma versão. A prova HTTP só mede que a
+   produção responde depois da promoção; a versão é conferida à mão, porque só é exposta a
+   usuário autenticado (§6).
    - prova: `producao GET /up -> 200`
