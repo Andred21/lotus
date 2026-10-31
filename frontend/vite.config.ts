@@ -2,6 +2,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { readFileSync } from "node:fs";
 import tailwindcss from "@tailwindcss/vite";
 
 // A RAIZ do repositório, não `frontend/`: o offset de portas da árvore de
@@ -9,6 +10,12 @@ import tailwindcss from "@tailwindcss/vite";
 // `LOTUS_` restringe a leitura a ele — `import.meta.env` da aplicação segue
 // vindo só de `frontend/.env`, e as chaves `VITE_*` continuam sendo dele.
 const RAIZ_DO_REPO = path.resolve(__dirname, "..");
+
+// Versão do sistema: lida do package.json (fonte única, bloco 45) e injetada
+// como `__APP_VERSION__` em serve, build e test.
+const versaoDoApp: string = JSON.parse(
+  readFileSync(path.resolve(__dirname, "package.json"), "utf8"),
+).version;
 
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -37,14 +44,19 @@ export default defineConfig(({ command, mode }) => {
     // seguinte: o container recebe `SANCTUM_STATEFUL_DOMAINS` com ESTA porta,
     // e escorregar em silêncio mata a sessão sem mensagem que explique.
     server: { port: portaVite, strictPort: true },
-    // Só no `serve`, e só como default. No `build` este define NÃO é emitido:
-    // a imagem de produção passa `ENV VITE_API_URL=""` (docker/Dockerfile.prod)
-    // para servir SPA e API da mesma origem, e um define incondicional
-    // gravaria a URL de desenvolvimento dentro do bundle. Um `VITE_API_URL`
-    // explícito em `frontend/.env` continua vencendo o derivado.
-    ...(command === "serve" && !apiJaDefinida
-      ? { define: { "import.meta.env.VITE_API_URL": JSON.stringify(`http://localhost:${portaApi}`) } }
-      : {}),
+    // `__APP_VERSION__` é emitido SEMPRE (serve, build e test). O
+    // `VITE_API_URL` derivado, não: só no `serve`, e só como default. No
+    // `build` ele NÃO é emitido: a imagem de produção passa
+    // `ENV VITE_API_URL=""` (docker/Dockerfile.prod) para servir SPA e API da
+    // mesma origem, e um define incondicional gravaria a URL de
+    // desenvolvimento dentro do bundle. Um `VITE_API_URL` explícito em
+    // `frontend/.env` continua vencendo o derivado.
+    define: {
+      __APP_VERSION__: JSON.stringify(versaoDoApp),
+      ...(command === "serve" && !apiJaDefinida
+        ? { "import.meta.env.VITE_API_URL": JSON.stringify(`http://localhost:${portaApi}`) }
+        : {}),
+    },
     // Sem `globals`: cada teste importa describe/it/expect de 'vitest'. Assim os
     // arquivos de teste continuam type-checados pelo `tsc -b` do pnpm build, em
     // vez de virarem zona sem tipo.
