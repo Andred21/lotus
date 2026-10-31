@@ -90,6 +90,24 @@ class StudentResolver
     }
 
     /**
+     * O nome é obrigatório em toda linha da importação, nova ou de aluno já
+     * cadastrado (D17): é o que o certificado imprime. Fonte única da regra, que
+     * a prévia e a confirmação chamam antes de separar aluno novo de existente.
+     *
+     * @throws ValidationException
+     */
+    public function assertNameProvided(string $name): void
+    {
+        if (trim($name) === '') {
+            throw ValidationException::withMessages([
+                'name' => __('validation.required', [
+                    'attribute' => __('validation.attributes.name'),
+                ]),
+            ]);
+        }
+    }
+
+    /**
      * Valida, sem escrever, o que o ramo do aluno novo recusa (D10): fonte única
      * entre a criação e a triagem da importação.
      *
@@ -103,6 +121,8 @@ class StudentResolver
      */
     public function assertCanCreate(string $rut, string $name, ?string $email): void
     {
+        $this->assertNameProvided($name);
+
         if ($email === null || $email === '') {
             throw ValidationException::withMessages([
                 'email' => __('identity.errors.student_email_required'),

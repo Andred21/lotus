@@ -66,10 +66,13 @@ class ImportPreviewService
         }
 
         try {
-            // 2. RUT válido e tipo aluno (lança por linha).
+            // 2. Nome obrigatório em toda linha, nova ou cadastrada (D17).
+            $this->resolver->assertNameProvided($line['name']);
+
+            // 3. RUT válido e tipo aluno (lança por linha).
             $lookup = $this->resolver->previewByRut($line['rut']);
 
-            // 3. Aluno novo: as regras do ramo de criação, sem escrita.
+            // 4. Aluno novo: as regras do ramo de criação, sem escrita.
             if (! $lookup->exists) {
                 $this->resolver->assertCanCreate($line['rut'], $line['name'], $line['email']);
 
@@ -87,12 +90,12 @@ class ImportPreviewService
 
         $student = $lookup->student;
 
-        // 4. Matrícula ativa nesta turma (a soft-deletada se restaura na confirmação).
+        // 5. Matrícula ativa nesta turma (a soft-deletada se restaura na confirmação).
         if ($turma->enrollments()->where('student_id', $student->id)->exists()) {
             return $this->row($line, ImportRowStatus::AlreadyEnrolled);
         }
 
-        // 5. Sem vínculo atual não há o que mover: o primeiro vínculo é `registered`.
+        // 6. Sem vínculo atual não há o que mover: o primeiro vínculo é `registered`.
         $current = $student->currentClient;
         $status = $current === null || $current->id === $contratanteId
             ? ImportRowStatus::Registered

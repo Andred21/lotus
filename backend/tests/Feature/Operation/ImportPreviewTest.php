@@ -180,6 +180,23 @@ class ImportPreviewTest extends TestCase
             ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_email'));
     }
 
+    public function test_nome_vazio_vira_erro_em_linha_nova_e_cadastrada(): void
+    {
+        $this->actingAsAdmin();
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null);
+
+        $nomeObrigatorio = __('validation.required', ['attribute' => __('validation.attributes.name')]);
+
+        $this->previa([
+            ['11.111.111-1', '', 'juan@acme.cl', ''],      // nova
+            ['33.333.333-3', '', '', ''],                  // cadastrada
+        ])->assertOk()
+            ->assertJsonPath('rows.0.status', 'error')
+            ->assertJsonPath('rows.0.message', $nomeObrigatorio)
+            ->assertJsonPath('rows.1.status', 'error')
+            ->assertJsonPath('rows.1.message', $nomeObrigatorio);
+    }
+
     public function test_aluno_arquivado_sai_com_archived_true(): void
     {
         $this->actingAsAdmin();

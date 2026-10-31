@@ -156,6 +156,34 @@ class StudentResolverTest extends TestCase
         }
     }
 
+    public function test_assert_name_provided_recusa_nome_vazio_ou_em_branco(): void
+    {
+        foreach (['', '   '] as $nome) {
+            try {
+                $this->resolver()->assertNameProvided($nome);
+                $this->fail('esperava ValidationException');
+            } catch (ValidationException $e) {
+                $this->assertSame(['name'], array_keys($e->errors()));
+                $this->assertSame(
+                    [__('validation.required', ['attribute' => __('validation.attributes.name')])],
+                    $e->errors()['name'],
+                );
+            }
+        }
+
+        $this->resolver()->assertNameProvided('Juan Soto');
+    }
+
+    public function test_assert_can_create_recusa_nome_vazio(): void
+    {
+        try {
+            $this->resolver()->assertCanCreate('11.111.111-1', '', 'juan@acme.cl');
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame(['name'], array_keys($e->errors()));
+        }
+    }
+
     public function test_assert_can_create_recusa_nome_acima_do_teto(): void
     {
         $nome = str_repeat('a', TetosImpressos::NOME_ALUNO + 1);
