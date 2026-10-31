@@ -56,8 +56,11 @@ WORKDIR /spa
 # --activate` resolve a versão pelo campo `packageManager`, então o arquivo
 # precisa existir para ele ler. Antes de 2026-08-24 esta linha fixava
 # pnpm@11.22.0 à mão porque o campo não existia; ele existe agora, e a versão
-# tem um dono só.
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
+# tem um dono só. O pnpm-workspace.yaml vem junto porque guarda os `overrides`:
+# sem ele, o lockfile registra um override que a config não tem e o
+# `--frozen-lockfile` recusa com ERR_PNPM_LOCKFILE_CONFIG_MISMATCH (run
+# 41215439103, 2026-10-31).
+COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
 RUN corepack enable && corepack prepare --activate
 RUN pnpm install --frozen-lockfile
 COPY frontend/ ./
