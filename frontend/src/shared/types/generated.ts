@@ -297,6 +297,25 @@ created_at: string | null,
 export type ForgotPasswordData = {
 email: string,
 };
+export type ImportPreviewData = {
+rows: ImportPreviewRowData[],
+can_update_registration: boolean,
+};
+export type ImportPreviewRowData = {
+row: number,
+rut: string,
+name: string,
+email: string | null,
+phone: string | null,
+status: ImportRowStatus,
+message: string | null,
+current_client: string | null,
+archived: boolean,
+divergent: string[],
+registered_name: string | null,
+registered_email: string | null,
+registered_phone: string | null,
+};
 export type ImportResultData = {
 created: number,
 relinked: number,
@@ -310,6 +329,7 @@ export type ImportRowErrorData = {
 row: number,
 message: string,
 };
+export type ImportRowStatus = 'new' | 'registered' | 'moves' | 'already_enrolled' | 'error';
 export type IssueCertificateData = {
 redator_id: number,
 };

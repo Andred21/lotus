@@ -14,6 +14,7 @@ use App\Domains\Operation\Data\EnrollmentResultData;
 use App\Domains\Operation\Data\EnrollPreviewData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\ImportPreviewService;
 use App\Domains\Operation\Services\SpreadsheetTemplate;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
@@ -33,7 +34,7 @@ class EnrollmentController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:operation.turma.view', only: ['index', 'archived']),
-            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview', 'template']),
+            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'previewImport', 'destroy', 'preview', 'template']),
             // Separada de `manage` de propósito: o redator lança nota e presença
             // sem ganhar matricular/importar/remover (RN-02, spec D6). O escopo
             // por turma vem do binding, não daqui.
@@ -106,6 +107,17 @@ class EnrollmentController extends Controller implements HasMiddleware
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ])
             ->deleteFileAfterSend();
+    }
+
+    /** Prévia da planilha: classifica as linhas sem escrever nada (spec D9/D10). */
+    public function previewImport(Request $request, Turma $turma, ImportPreviewService $service): JsonResponse
+    {
+        $validated = $request->validate([
+            'file' => ContentClass::Planilha->regras(),
+        ]);
+
+        // 200, não 201: POST que lê e não cria nada (o Data devolvido cru sairia 201).
+        return RespostaDeRecurso::ok($service->preview($turma, $validated['file'], $request->user()));
     }
 
     public function import(Request $request, Turma $turma, ImportStudentsAction $action): JsonResponse

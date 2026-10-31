@@ -214,6 +214,7 @@ class RateLimitTest extends TestCase
             ['POST', 'api/budgets/{budget}/files', 'throttle:upload'],
             ['POST', 'api/turmas/{turma}/documents', 'throttle:upload'],
             ['POST', 'api/turmas/{turma}/alunos/importar', 'throttle:import'],
+            ['POST', 'api/turmas/{turma}/alunos/importar/previa', 'throttle:import'],
             ['POST', 'api/certificates/batch', 'throttle:certificate-batch'],
             ['GET', 'api/certificates/{certificate}/pdf', 'throttle:certificate-pdf'],
         ];

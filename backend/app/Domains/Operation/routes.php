@@ -46,6 +46,7 @@ Route::middleware('auth.active')->group(function () {
     Route::get('turmas/{turma}/alunos/archived', [EnrollmentController::class, 'archived']);
     Route::post('turmas/{turma}/alunos', [EnrollmentController::class, 'store']);
     Route::post('turmas/{turma}/alunos/importar', [EnrollmentController::class, 'import'])->middleware('throttle:import');
+    Route::post('turmas/{turma}/alunos/importar/previa', [EnrollmentController::class, 'previewImport'])->middleware('throttle:import');
     Route::put('turmas/{turma}/alunos/{enrollment}/resultado', [EnrollmentController::class, 'result'])
         ->scopeBindings();
     Route::delete('turmas/{turma}/alunos/{enrollment}', [EnrollmentController::class, 'destroy'])

@@ -15,6 +15,10 @@ return [
     ],
     'enrollment' => [
         'result_locked' => 'Esta matrícula já tem certificado emitido: o resultado não pode mais ser alterado.',
+        'import' => [
+            'duplicate_rut' => 'Este RUT aparece mais de uma vez na planilha: só a primeira linha vale.',
+            'duplicate_email' => 'Este e-mail aparece mais de uma vez na planilha: só a primeira linha vale.',
+        ],
     ],
     'requirement' => [
         'redator' => 'redator designado',

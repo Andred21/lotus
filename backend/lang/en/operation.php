@@ -15,6 +15,10 @@ return [
     ],
     'enrollment' => [
         'result_locked' => 'This enrollment already has an issued certificate: its result can no longer be changed.',
+        'import' => [
+            'duplicate_rut' => 'This RUT appears more than once in the spreadsheet: only the first row counts.',
+            'duplicate_email' => 'This email appears more than once in the spreadsheet: only the first row counts.',
+        ],
     ],
     'requirement' => [
         'redator' => 'assigned instructor',
