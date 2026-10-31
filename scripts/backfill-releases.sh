@@ -198,7 +198,13 @@ if [ "$SIMULAR" = 0 ]; then
   EMAIL=$(git config user.email || true)
   [ -n "$NOME" ] && [ -n "$EMAIL" ] || erro "git config user.name/user.email ausentes: o tagger da tag anotada precisa dos dois"
 
-  git remote get-url upstream >/dev/null 2>&1 || erro "remoto 'upstream' (o espelho $ESPELHO) ausente: nao ha como conferir o Source-Commit"
+  URL_UPSTREAM=$(git remote get-url upstream 2>/dev/null) \
+    || erro "remoto 'upstream' (o espelho $ESPELHO) ausente: nao ha como conferir o Source-Commit"
+  # O Source-Commit so prova algo se o `upstream` for mesmo o espelho. Substring literal (aspas no padrao do case).
+  case "$URL_UPSTREAM" in
+    *"$ESPELHO"*) ;;
+    *) erro "o remoto 'upstream' ($URL_UPSTREAM) nao aponta para $ESPELHO; o Source-Commit seria conferido no repositorio errado" ;;
+  esac
   git fetch --quiet upstream || erro "git fetch upstream falhou"
 
   for ((i = 0; i < N; i++)); do

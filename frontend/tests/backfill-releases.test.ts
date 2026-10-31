@@ -72,8 +72,9 @@ beforeAll(() => {
   todos.G = commitar(trabalho, 'backend/g.txt', 'feat!: troca')
 
   // O espelho: um commit por promoção, com o trailer que o espelhar-corporativo.sh grava.
-  const espelho = join(base, 'espelho')
-  mkdirSync(espelho)
+  // o caminho carrega o nome do espelho: o script confere que a URL do `upstream` o contém
+  const espelho = join(base, ESPELHO)
+  mkdirSync(espelho, { recursive: true })
   git(espelho, 'init', '-q', '-b', 'main')
   espelhos = {}
   for (const nome of ['A', 'D', 'F', 'G']) {
@@ -207,6 +208,9 @@ describe('scripts/backfill-releases — forma e tabela real', () => {
     const linhasEx = readFileSync(join(RAIZ, '.espelho-exclusoes'), 'utf8').split('\n')
     expect(linhasEx).toContain('scripts/backfill-releases.sh')
     expect(linhasEx).toContain('scripts/backfill-releases.tsv')
+    // o teste e a fixture exercitam um script que não atravessa: no espelho reprovariam por acerto
+    expect(linhasEx).toContain('frontend/tests/backfill-releases.test.ts')
+    expect(linhasEx).toContain('frontend/tests/fixtures/backfill-releases/')
   })
 })
 
@@ -260,6 +264,25 @@ describe('scripts/backfill-releases --simular', () => {
     expect(e.stderr).toContain('patch')
     // cita os commits que causaram a divergência
     expect(e.stderr).toContain(curto(todos.E))
+  })
+
+  it('Review 5 também na escrita: bump divergente sem --simular para com exit 1 e nenhuma escrita', () => {
+    const [a, , f] = linhas
+    const e = rodar([], { tabela: [a, { ...f, versao: '1.0.1' }] })
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain('v1.0.1')
+    expect(escritas(e)).toEqual([])
+    expect(e.chamadas).toEqual([])
+  })
+
+  it('Review 4 também na escrita: clone raso sem --simular para com exit 1 e nenhuma escrita', () => {
+    const raso = join(base, `raso-escrita-${contador}`)
+    execFileSync('git', ['clone', '-q', '--depth', '1', `file://${trabalho}`, raso])
+    const e = rodar([], { cwd: raso })
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain('clone raso')
+    expect(escritas(e)).toEqual([])
+    expect(e.chamadas).toEqual([])
   })
 
   it('Review 4: clone raso é recusado, sem calcular bump', () => {
@@ -326,6 +349,26 @@ describe('scripts/backfill-releases --changelog', () => {
 })
 
 describe('scripts/backfill-releases — escrita (sem --simular)', () => {
+  it('upstream que não aponta para o espelho: exit 1, nenhuma escrita', () => {
+    const outro = join(base, `outro-remoto-${contador}`)
+    execFileSync('git', ['clone', '-q', `file://${trabalho}`, outro])
+    git(outro, 'config', 'user.name', 'Teste Backfill')
+    git(outro, 'config', 'user.email', 'teste@example.com')
+    git(outro, 'remote', 'add', 'upstream', join(base, 'Outra-Org', 'lotus'))
+    const e = rodar([], { cwd: outro })
+    expect(e.status).toBe(1)
+    expect(e.stderr).toContain('upstream')
+    expect(e.stderr).toContain(ESPELHO)
+    expect(escritas(e)).toEqual([])
+    expect(e.chamadas).toEqual([])
+  })
+
+  it('o espelho vem de LOTUS_BACKFILL_ESPELHO: upstream que o contém passa, e as releases vão para ele', () => {
+    const e = rodar([], { env: { LOTUS_BACKFILL_ESPELHO: ESPELHO } })
+    expect(e.status, e.stderr).toBe(0)
+    expect(escritas(e).some((c) => repoDe(c) === ESPELHO)).toBe(true)
+  })
+
   it('Source-Commit do espelho diferente da origem da tabela: exit 1, nenhuma escrita', () => {
     const tabela = linhas.map((l) => (l.versao === '1.1.0' ? { ...l, espelho: espelhos.X } : l))
     const e = rodar([], { tabela })

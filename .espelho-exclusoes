@@ -26,6 +26,12 @@ scripts/espelhar-corporativo.sh
 scripts/backfill-releases.sh
 scripts/backfill-releases.tsv
 
+# Este teste (e a fixture do `gh` falso dele) exercita scripts/backfill-releases.sh
+# e a tabela, que nao atravessam. No espelho ele reprovaria por acerto: o alvo
+# dele e uma ferramenta de desenvolvimento que roda uma vez, na maquina do titular.
+frontend/tests/backfill-releases.test.ts
+frontend/tests/fixtures/backfill-releases/
+
 # Este teste afirma que CLAUDE.md, .claude/rules/ e docs/ existem e que todo
 # path citado neles existe. No espelho nenhum dos tres existe, entao ele
 # reprovaria por acerto, nao por defeito: o alvo dele e a documentacao
