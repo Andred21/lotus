@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# `gh` de mentira do frontend/tests/publicar-release.test.ts. Registra cada
+# chamada em $FAKE_LOG (uma linha `---` e um argumento por linha) e responde o
+# minimo que o .github/scripts/publicar-release.sh le. O estado do caso vem do
+# ambiente:
+# - FAKE_TAG_EXISTE=1: a tag ja existe. FAKE_TAG_TIPO (tag|commit) e
+#   FAKE_TAG_OBJETO e' o sha que o ref guarda; FAKE_TAG_COMMIT e' o commit para
+#   o qual o OBJETO de tag aponta (so quando o tipo e' `tag`);
+# - FAKE_FALHA = lookup | tags | refs | release derruba a chamada daquele tipo
+#   (lookup falha com algo que NAO e' 404);
+# - o corpo de `release create --notes-file -` vai para $FAKE_NOTAS.
+# O script passa `--jq`; o falso ja devolve o resultado filtrado, entao o
+# formato do --jq faz parte do contrato com o script.
+{
+  printf '%s\n' '---'
+  printf '%s\n' "$@"
+} >> "$FAKE_LOG"
+
+falha() { [ "${FAKE_FALHA:-}" = "$1" ]; }
+
+case "${1:-}" in
+  api)
+    caminho="${2:-}"
+    case "$caminho" in
+      repos/*/git/ref/tags/*)
+        falha lookup && { echo 'gh: Bad Gateway (HTTP 502)' >&2; exit 1; }
+        [ "${FAKE_TAG_EXISTE:-}" = 1 ] || { echo 'gh: Not Found (HTTP 404)' >&2; exit 1; }
+        echo "${FAKE_TAG_TIPO:-tag} ${FAKE_TAG_OBJETO:-}"
+        ;;
+      repos/*/git/tags/*)
+        echo "${FAKE_TAG_COMMIT:-}"
+        ;;
+      repos/*/git/tags)
+        falha tags && { echo 'gh: Validation Failed (HTTP 422)' >&2; exit 1; }
+        echo "${FAKE_NOVO_OBJETO:-ffffffffffffffffffffffffffffffffffffffff}"
+        ;;
+      repos/*/git/refs)
+        falha refs && { echo 'gh: Reference already exists (HTTP 422)' >&2; exit 1; }
+        echo '{}'
+        ;;
+      *) echo "gh falso: api nao previsto: $*" >&2; exit 1 ;;
+    esac
+    ;;
+  release)
+    [ "${2:-}" = create ] || { echo "gh falso: release nao previsto: $*" >&2; exit 1; }
+    cat > "$FAKE_NOTAS"
+    falha release && { echo 'gh: HTTP 500' >&2; exit 1; }
+    echo "https://github.com/falso/releases/tag/${3:-}"
+    ;;
+  *) echo "gh falso: nao previsto: $*" >&2; exit 1 ;;
+esac

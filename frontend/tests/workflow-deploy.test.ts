@@ -27,6 +27,7 @@ const corpoDoPasso = (nome: string) => {
 /** O comando que o host executa na conferência — o heredoc LEITURA. */
 const leitura = semComentarios.match(/<<'LEITURA'\n([\s\S]*?)\n\s*LEITURA\n/)?.[1] ?? ''
 const CONFERENCIA = 'O host esta alinhado ao SHA alvo'
+const RELEASE = 'Release da versao promovida'
 
 describe('.github/workflows/deploy.yml', () => {
   it('só promove a partir do repositório corporativo', () => {
@@ -256,7 +257,33 @@ describe('.github/workflows/deploy.yml', () => {
     expect([...inputs.matchAll(/^ {6}(\w+):$/gm)].map((m) => m[1])).toEqual(['sha', 'confirmar'])
     expect(corpoDoPasso(CONFERENCIA)).not.toMatch(/^\s+if:/m)
     expect(corpoDoPasso('deploy.sh no host, por SSM')).not.toMatch(/^\s+if:/m)
-    expect(semComentarios).not.toContain('continue-on-error')
+    // O único `continue-on-error` do job é o do passo de release, que roda
+    // DEPOIS da promoção; nenhum gate pode ser engolido.
+    expect(semComentarios.match(/continue-on-error/g)).toHaveLength(1)
+    expect(corpoDoPasso(RELEASE)).toContain('continue-on-error: true')
     expect(semComentarios).not.toMatch(/always\(\)|failure\(\)/)
+  })
+
+  it('publica a tag e a release da versão promovida só depois do deploy (bloco 45)', () => {
+    const deploy = passo('deploy.sh no host, por SSM')
+    const release = passo(RELEASE)
+    expect(release).toBeGreaterThan(deploy)
+    // É o último passo: nada depois dele depende da release, e ele não pode
+    // ficar entre os gates e o deploy.
+    expect(semComentarios.indexOf('\n      - ', release + 1)).toBe(-1)
+  })
+
+  it('o passo de release roda o script da main sobre o checkout do alvo, com o token do job', () => {
+    const corpo = corpoDoPasso(RELEASE)
+    expect(corpo).toMatch(/^\s*run: main\/\.github\/scripts\/publicar-release\.sh alvo\s*$/m)
+    expect(corpo).toContain('GH_TOKEN: ${{ github.token }}')
+    expect(corpo).not.toContain('alvo/.github/scripts/')
+    expect(corpo).not.toMatch(/^\s+if:/m)
+  })
+
+  it('a falha do passo de release não reprova a promoção, e o job escreve em contents', () => {
+    expect(corpoDoPasso(RELEASE)).toMatch(/^\s+continue-on-error: true\s*$/m)
+    expect(semComentarios).toMatch(/^permissions:[\s\S]*?\n\s+contents:\s*write\b/m)
+    expect(semComentarios).not.toMatch(/contents:\s*read/)
   })
 })
