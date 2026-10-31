@@ -12,12 +12,17 @@ type Props = {
 
 export function ImportDialog({ turmaId, visible, onHide }: Props) {
   const { t } = useTranslation()
-  const f = useImportStudentsFlow(turmaId, onHide)
+  const f = useImportStudentsFlow(turmaId)
+  const close = () => {
+    if (f.pending) return
+    f.close()
+    onHide()
+  }
 
   // O Cerrar só existe depois do resultado, como antes; antes dele, a saída é o X.
   const footer = f.result ? (
     <div className="flex justify-end">
-      <AppButton label={t('operation.enrollment.import.close')} text onClick={f.close} />
+      <AppButton label={t('operation.enrollment.import.close')} text onClick={close} />
     </div>
   ) : undefined
 
@@ -26,7 +31,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
       size="sm"
       visible={visible}
       header={t('operation.enrollment.import.title')}
-      onHide={f.close}
+      onHide={close}
       closable={!f.pending}
       closeOnEscape={!f.pending}
       dismissableMask={false}
@@ -40,7 +45,7 @@ export function ImportDialog({ turmaId, visible, onHide }: Props) {
               accept=".xlsx,.csv"
               chooseLabel={t('operation.enrollment.import.choose')}
               onSizeReject={f.setSizeError}
-              uploadHandler={f.upload}
+              uploadHandler={(e) => f.upload(e.files)}
               disabled={f.pending}
             />
             {f.pending && (
