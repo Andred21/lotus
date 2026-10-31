@@ -51,28 +51,10 @@ class StudentResolver
         return DB::transaction(function () use ($user, $name, $rut, $email, $phone, $client) {
             // Aluno novo: provisiona o User (inativo, sem role) e cria o Student.
             if ($user === null) {
-                // Aluno novo exige e-mail (D9): users.email é NOT NULL — sem isso não há
-                // como provisionar o User. Vira ValidationException por linha, nunca 500.
-                if ($email === null || $email === '') {
-                    throw ValidationException::withMessages([
-                        'email' => __('identity.errors.student_email_required'),
-                    ]);
-                }
+                // Aluno novo: e-mail, teto do nome e colisão de identidade saem de
+                // assertCanCreate — a mesma validação serve à triagem, sem escrita (D10).
+                $this->assertCanCreate($rut, $name, $email);
 
-                // O nome do aluno novo é o que o certificado imprime (D15): acima do
-                // teto a linha é recusada, como a tela recusa no cadastro. Só aqui,
-                // porque o resolver usa o nome apenas ao criar.
-                if (mb_strlen($name) > TetosImpressos::NOME_ALUNO) {
-                    throw ValidationException::withMessages([
-                        'name' => __('validation.max.string', [
-                            'attribute' => __('validation.attributes.name'),
-                            'max' => TetosImpressos::NOME_ALUNO,
-                        ]),
-                    ]);
-                }
-
-                // Colisão de e-mail vira ValidationException por linha (chave email),
-                // inclusive contra soft-deletados — nunca 500 que aborta a planilha.
                 $created = $this->provisioner->provision('aluno', $name, $rut, $email, $phone);
                 $student = Student::create(['user_id' => $created->id]);
                 $this->linkService->link($student, $client);
@@ -105,6 +87,38 @@ class StudentResolver
                 $outcome === StudentResolutionOutcome::Moved ? $previousClient : null,
             );
         });
+    }
+
+    /**
+     * Valida, sem escrever, o que o ramo do aluno novo recusa (D10): fonte única
+     * entre a criação e a triagem da importação.
+     *
+     * Aluno novo exige e-mail (D9): users.email é NOT NULL — sem isso não há como
+     * provisionar o User. O nome é o que o certificado imprime (D15): acima do
+     * teto a linha é recusada, como a tela recusa no cadastro. Colisão de RUT ou
+     * e-mail, inclusive contra soft-deletados, vira ValidationException por linha
+     * — nunca 500 que aborta a planilha.
+     *
+     * @throws ValidationException
+     */
+    public function assertCanCreate(string $rut, string $name, ?string $email): void
+    {
+        if ($email === null || $email === '') {
+            throw ValidationException::withMessages([
+                'email' => __('identity.errors.student_email_required'),
+            ]);
+        }
+
+        if (mb_strlen($name) > TetosImpressos::NOME_ALUNO) {
+            throw ValidationException::withMessages([
+                'name' => __('validation.max.string', [
+                    'attribute' => __('validation.attributes.name'),
+                    'max' => TetosImpressos::NOME_ALUNO,
+                ]),
+            ]);
+        }
+
+        $this->provisioner->ensureIdentityAvailable($rut, $email);
     }
 
     /**

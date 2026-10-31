@@ -6,7 +6,9 @@ use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\StudentResolver;
+use App\Shared\Support\TetosImpressos;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
@@ -139,5 +141,60 @@ class StudentResolverTest extends TestCase
         $again = $this->resolver()->resolveByRut('11.111.111-1', 'Juan Soto', null, null, $client);
 
         $this->assertSame($first->student->id, $again->student->id);
+    }
+
+    public function test_assert_can_create_recusa_email_ausente(): void
+    {
+        foreach ([null, ''] as $email) {
+            try {
+                $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', $email);
+                $this->fail('esperava ValidationException');
+            } catch (ValidationException $e) {
+                $this->assertSame(['email'], array_keys($e->errors()));
+                $this->assertSame([__('identity.errors.student_email_required')], $e->errors()['email']);
+            }
+        }
+    }
+
+    public function test_assert_can_create_recusa_nome_acima_do_teto(): void
+    {
+        $nome = str_repeat('a', TetosImpressos::NOME_ALUNO + 1);
+
+        try {
+            $this->resolver()->assertCanCreate('11.111.111-1', $nome, 'juan@acme.cl');
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame(['name'], array_keys($e->errors()));
+        }
+
+        // No teto exato passa.
+        $this->resolver()->assertCanCreate('11.111.111-1', str_repeat('a', TetosImpressos::NOME_ALUNO), 'juan@acme.cl');
+    }
+
+    public function test_assert_can_create_recusa_email_de_outro_usuario_inclusive_arquivado(): void
+    {
+        $vivo = User::factory()->redator()->create(['rut' => '12.345.678-5', 'email' => 'vivo@x.cl']);
+        $arquivado = User::factory()->redator()->create(['rut' => '7.654.321-6', 'email' => 'arq@x.cl']);
+        $arquivado->delete();
+
+        foreach (['vivo@x.cl', 'arq@x.cl'] as $email) {
+            try {
+                $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', $email);
+                $this->fail('esperava ValidationException');
+            } catch (ValidationException $e) {
+                $this->assertSame(['email'], array_keys($e->errors()));
+            }
+        }
+        $this->assertNotNull($vivo->id);
+    }
+
+    public function test_assert_can_create_nao_escreve(): void
+    {
+        $contar = fn () => [DB::table('users')->count(), DB::table('students')->count(), DB::table('audits')->count()];
+        $antes = $contar();
+
+        $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', 'juan@acme.cl');
+
+        $this->assertSame($antes, $contar());
     }
 }
