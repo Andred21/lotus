@@ -21,6 +21,11 @@
 #    `upstream`), o SHA do espelho consta no log de uma execucao `success` do
 #    deploy.yml do espelho, e nenhuma tag existente aponta para outro SHA.
 #
+# `--latest` na ultima linha so vale em um repositorio sem nenhuma release cuja tag esteja fora da
+# tabela (lido com `gh release list`, so leitura, antes de qualquer escrita); havendo, todas as
+# linhas daquele repositorio usam `--latest=false`. Em `--simular` nao ha chamada ao gh: a decisao
+# so e' tomada na escrita.
+#
 # Uma tag que ja existe no mesmo SHA e' pulada (anotada ou leve); a release que ja
 # existe tambem. Rodar de novo apos uma falha no meio e' seguro.
 #
@@ -172,9 +177,18 @@ if [ "${#DIVERGENCIAS[@]}" -gt 0 ]; then
 fi
 
 # ---------------------------------------------------------------- conferencias remotas (sem --simular)
+# A logica de estado da tag e' espelhada em .github/scripts/publicar-release.sh e nao e'
+# compartilhada de proposito: aquele atravessa para o espelho, este fica so aqui.
+# stdout do gh vai para a variavel; stderr, para um arquivo temporario, para que um aviso do gh
+# numa consulta bem-sucedida nao suje o parse. O 404 chega pelo stderr.
 estado_tag() {  # <repo> <tag> <sha> -> novo | ok | outro:<commit>
-  local repo=$1 tag=$2 sha=$3 existente tipo objeto commit
-  if existente=$(gh api "repos/$repo/git/ref/tags/$tag" --jq '.object.type + " " + .object.sha' 2>&1); then
+  local repo=$1 tag=$2 sha=$3 existente tipo objeto commit errf rc detalhe
+  errf=$(mktemp) || { echo "erro: mktemp falhou" >&2; return 1; }
+  existente=$(gh api "repos/$repo/git/ref/tags/$tag" --jq '.object.type + " " + .object.sha' 2>"$errf")
+  rc=$?
+  detalhe=$(cat "$errf" 2>/dev/null)
+  rm -f "$errf"
+  if [ "$rc" -eq 0 ]; then
     tipo=${existente%% *}
     objeto=${existente#* }
     if [ "$tipo" = tag ]; then
@@ -186,13 +200,29 @@ estado_tag() {  # <repo> <tag> <sha> -> novo | ok | outro:<commit>
     if [ "$commit" = "$sha" ]; then echo ok; else echo "outro:$commit"; fi
     return 0
   fi
-  case "$existente" in
+  case "$detalhe" in
     *"HTTP 404"*) echo novo ;;
-    *) echo "erro: consulta da tag $tag em $repo falhou ($existente)" >&2; return 1 ;;
+    *) echo "erro: consulta da tag $tag em $repo falhou ($detalhe)" >&2; return 1 ;;
   esac
 }
 
-ESTADO_O=(); ESTADO_E=()
+# 0 se o repositorio tem alguma release cuja tag NAO esta na tabela (so leitura). `--latest` so vale
+# para a ultima linha se nao houver nenhuma: uma release mais nova que a tabela (ex.: v1.10.0, criada
+# pelo passo do deploy ou pelo release-please) e' quem deve continuar como "Latest".
+tem_release_fora_da_tabela() {  # <repo>
+  local repo=$1 lista t v achou
+  lista=$(gh release list --repo "$repo" --limit 1000 --json tagName --jq '.[].tagName') \
+    || { echo "erro: nao consegui listar as releases de $repo" >&2; return 2; }
+  while IFS= read -r t; do
+    [ -n "$t" ] || continue
+    achou=0
+    for v in "${VERS[@]}"; do [ "$t" = "v$v" ] && achou=1; done
+    [ "$achou" = 1 ] || return 0
+  done <<< "$lista"
+  return 1
+}
+
+ESTADO_O=(); ESTADO_E=(); LATEST_O=--latest; LATEST_E=--latest
 if [ "$SIMULAR" = 0 ]; then
   NOME=$(git config user.name || true)
   EMAIL=$(git config user.email || true)
@@ -205,7 +235,7 @@ if [ "$SIMULAR" = 0 ]; then
     *"$ESPELHO"*) ;;
     *) erro "o remoto 'upstream' ($URL_UPSTREAM) nao aponta para $ESPELHO; o Source-Commit seria conferido no repositorio errado" ;;
   esac
-  git fetch --quiet upstream || erro "git fetch upstream falhou"
+  git fetch --quiet --no-tags upstream || erro "git fetch upstream falhou"
 
   for ((i = 0; i < N; i++)); do
     git cat-file -e "${ESPE[i]}^{commit}" 2>/dev/null \
@@ -236,6 +266,13 @@ if [ "$SIMULAR" = 0 ]; then
     case "${ESTADO_E[i]}" in outro:*) echo "erro: $tag ja existe em $ESPELHO em ${ESTADO_E[i]#outro:}, a tabela diz ${ESPE[i]}" >&2; conflito=1 ;; esac
   done
   [ "$conflito" = 0 ] || erro "tag existente em outro SHA; a tag nao e movida e nada foi escrito"
+
+  tem_release_fora_da_tabela "$ORIGEM"; rc=$?
+  [ "$rc" -ne 2 ] || erro "leitura das releases de $ORIGEM falhou; nada foi escrito"
+  [ "$rc" -ne 0 ] || { LATEST_O=--latest=false; echo "  $ORIGEM tem release fora da tabela: nenhuma linha leva --latest" >&2; }
+  tem_release_fora_da_tabela "$ESPELHO"; rc=$?
+  [ "$rc" -ne 2 ] || erro "leitura das releases de $ESPELHO falhou; nada foi escrito"
+  [ "$rc" -ne 0 ] || { LATEST_E=--latest=false; echo "  $ESPELHO tem release fora da tabela: nenhuma linha leva --latest" >&2; }
 fi
 
 # ---------------------------------------------------------------- saida e CHANGELOG
@@ -258,7 +295,10 @@ if [ -n "$CHANGELOG" ]; then
   echo "CHANGELOG gravado em $CHANGELOG" >&2
 fi
 
-[ "$SIMULAR" = 0 ] || exit 0
+if [ "$SIMULAR" = 1 ]; then
+  echo "  --latest: so e' decidido na escrita (depende das releases que cada repositorio ja tem fora da tabela)" >&2
+  exit 0
+fi
 
 # ---------------------------------------------------------------- escrita
 publicar() {  # <repo> <tag> <sha> <data> <estado-da-tag> <flag --latest> <notas>
@@ -285,9 +325,10 @@ publicar() {  # <repo> <tag> <sha> <data> <estado-da-tag> <flag --latest> <notas
 }
 
 for ((i = 0; i < N; i++)); do
-  latest=--latest=false
-  [ "$i" -eq $((N - 1)) ] && latest=--latest
-  publicar "$ORIGEM" "v${VERS[i]}" "${ORIG[i]}" "${DATAS[i]}" "${ESTADO_O[i]}" "$latest" "${NOTAS[i]}"
-  publicar "$ESPELHO" "v${VERS[i]}" "${ESPE[i]}" "${DATAS[i]}" "${ESTADO_E[i]}" "$latest" "${NOTAS[i]}"
+  latest_o=--latest=false
+  latest_e=--latest=false
+  if [ "$i" -eq $((N - 1)) ]; then latest_o=$LATEST_O; latest_e=$LATEST_E; fi
+  publicar "$ORIGEM" "v${VERS[i]}" "${ORIG[i]}" "${DATAS[i]}" "${ESTADO_O[i]}" "$latest_o" "${NOTAS[i]}"
+  publicar "$ESPELHO" "v${VERS[i]}" "${ESPE[i]}" "${DATAS[i]}" "${ESTADO_E[i]}" "$latest_e" "${NOTAS[i]}"
 done
 echo "backfill concluido: $N versoes em $ORIGEM e $ESPELHO" >&2

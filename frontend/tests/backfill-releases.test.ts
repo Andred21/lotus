@@ -163,6 +163,11 @@ const campo = (chamada: string[], chave: string) =>
   chamada.find((a) => a.startsWith(`${chave}=`))?.slice(chave.length + 1)
 const repoDe = (chamada: string[]) =>
   chamada[0] === 'api' ? chamada[1].replace(/^repos\//, '').replace(/\/git\/.*$/, '') : chamada[chamada.indexOf('--repo') + 1]
+/** [tag, flag de --latest] de cada `release create` do repositório, na ordem em que foram criadas. */
+const flagsLatest = (e: Execucao, repo: string) =>
+  e.chamadas
+    .filter((c) => c[0] === 'release' && c[1] === 'create' && repoDe(c) === repo)
+    .map((c) => [c[2], c.find((a) => a.startsWith('--latest'))])
 const cabecalhos = (e: Execucao) => e.stdout.split('\n').filter((l) => /^v\d/.test(l))
 /** Trecho do stdout entre o cabeçalho de uma versão e o da seguinte. */
 const secao = (e: Execucao, versao: string) => {
@@ -222,6 +227,12 @@ describe('scripts/backfill-releases --simular', () => {
       linhas.map((l) => `v${l.versao}  ${l.data}  ${curto(l.origem)}  ${curto(l.espelho)}`),
     )
     expect(e.chamadas).toEqual([])
+  })
+
+  it('avisa no stderr que o --latest só é decidido na escrita, sem tocar o stdout', () => {
+    const e = rodar(['--simular'])
+    expect(e.stderr).toMatch(/--latest.*(so|apenas).*escrita/i)
+    expect(cabecalhos(e)).toHaveLength(linhas.length)
   })
 
   it('a 1.0.0 traz só a nota do go-live', () => {
@@ -429,6 +440,66 @@ describe('scripts/backfill-releases — escrita (sem --simular)', () => {
         expect(release).toContain(l.versao === '2.0.0' ? '--latest' : '--latest=false')
       }
     }
+  })
+
+  it('sem release fora da tabela, só a última linha leva --latest, em cada repositório', () => {
+    const e = rodar([])
+    expect(e.status, e.stderr).toBe(0)
+    for (const repo of [ORIGEM, ESPELHO]) {
+      expect(flagsLatest(e, repo)).toEqual(
+        linhas.map((l) => [`v${l.versao}`, l.versao === '2.0.0' ? '--latest' : '--latest=false']),
+      )
+    }
+  })
+
+  it('release fora da tabela (v1.10.0) no repositório: nenhuma linha dele leva --latest', () => {
+    const e = rodar([], { estado: [`release ${ORIGEM} v1.10.0`] })
+    expect(e.status, e.stderr).toBe(0)
+    expect(flagsLatest(e, ORIGEM)).toEqual(linhas.map((l) => [`v${l.versao}`, '--latest=false']))
+    // a regra é por repositório: o espelho não tem release fora da tabela
+    expect(flagsLatest(e, ESPELHO).at(-1)).toEqual(['v2.0.0', '--latest'])
+    expect(e.chamadas.some((c) => c[0] === 'release' && c[1] === 'list')).toBe(true)
+  })
+
+  it('release fora da tabela nos dois repositórios: --latest=false em todas as linhas', () => {
+    const e = rodar([], { estado: [`release ${ORIGEM} v1.10.0`, `release ${ESPELHO} v1.10.0`] })
+    expect(e.status, e.stderr).toBe(0)
+    for (const repo of [ORIGEM, ESPELHO]) {
+      expect(flagsLatest(e, repo).map(([, f]) => f)).toEqual(linhas.map(() => '--latest=false'))
+    }
+    expect(e.chamadas.filter((c) => c[0] === 'release' && c[1] === 'create' && c.includes('--latest'))).toEqual([])
+  })
+
+  it('release da própria tabela já publicada não conta como fora da tabela', () => {
+    const e = rodar([], { estado: [`release ${ORIGEM} v1.0.0`] })
+    expect(e.status, e.stderr).toBe(0)
+    expect(flagsLatest(e, ORIGEM).at(-1)).toEqual(['v2.0.0', '--latest'])
+  })
+
+  it('a leitura das releases é só de leitura e vem antes de qualquer escrita', () => {
+    const e = rodar([])
+    const primeira = e.chamadas.findIndex((c) => escritas({ ...e, chamadas: [c] }).length > 0)
+    const lista = e.chamadas.findIndex((c) => c[0] === 'release' && c[1] === 'list')
+    expect(lista).toBeGreaterThanOrEqual(0)
+    expect(lista).toBeLessThan(primeira)
+  })
+
+  it('falha ao listar as releases: exit 1 e nenhuma escrita', () => {
+    const e = rodar([], { env: { FAKE_FALHA: 'release-list' } })
+    expect(e.status).toBe(1)
+    expect(escritas(e)).toEqual([])
+  })
+
+  it('stderr do gh numa consulta de tag bem-sucedida não vira conflito nem erro', () => {
+    const estado = linhas.flatMap((l) => [
+      `tag ${ORIGEM} v${l.versao} commit ${l.origem}`,
+      `tag ${ESPELHO} v${l.versao} commit ${l.espelho}`,
+      `release ${ORIGEM} v${l.versao}`,
+      `release ${ESPELHO} v${l.versao}`,
+    ])
+    const e = rodar([], { estado, env: { FAKE_RUIDO: '1' } })
+    expect(e.status, e.stderr).toBe(0)
+    expect(escritas(e)).toEqual([])
   })
 
   it('as notas das Releases são as mesmas do --simular, nos dois repositórios', () => {

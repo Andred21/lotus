@@ -10,6 +10,9 @@
 #     obj <objeto> <commit>              objeto de tag anotada -> commit
 #     release <repo> <tag>               release ja publicada
 # - o corpo de `release create --notes-file -` vai para $FAKE_NOTAS/<repo>__<tag>.
+# - `release list --repo <repo>` devolve as tags dos fatos `release <repo> <tag>`, uma por linha;
+# - FAKE_FALHA=release-list derruba o `release list`; FAKE_RUIDO=1 faz a consulta do ref da
+#   tag escrever um aviso no stderr mesmo com sucesso.
 # O script passa `--jq`; o falso ja devolve o resultado filtrado, entao o
 # formato do --jq faz parte do contrato com o script.
 {
@@ -50,6 +53,7 @@ case "${1:-}" in
         tag=${caminho##*/git/ref/tags/}
         linha=$(estado | awk -v r="$repo" -v t="$tag" '$1=="tag" && $2==r && $3==t { print $4 " " $5 }')
         [ -n "$linha" ] || { echo 'gh: Not Found (HTTP 404)' >&2; exit 1; }
+        [ "${FAKE_RUIDO:-}" = 1 ] && echo 'gh: aviso: nova versao do gh disponivel' >&2
         echo "$linha"
         ;;
       repos/*/git/tags/*)
@@ -67,6 +71,13 @@ case "${1:-}" in
     ;;
   release)
     case "${2:-}" in
+      list)
+        [ "${FAKE_FALHA:-}" = release-list ] && { echo 'gh: Bad Gateway (HTTP 502)' >&2; exit 1; }
+        repo=
+        prev=
+        for a in "$@"; do [ "$prev" = --repo ] && repo=$a; prev=$a; done
+        estado | awk -v r="$repo" '$1=="release" && $2==r { print $3 }'
+        ;;
       view)
         repo=
         prev=
