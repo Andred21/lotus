@@ -228,7 +228,9 @@ em 2026-10-31).
   produto é garantido pelo `exclude-paths`; arquivo solto da raiz é garantido por convenção —
   commit que toque só arquivo solto da raiz usa `docs`, `chore` ou `cicd`, regra escrita no
   `CONTRIBUINDO.md`. O `exclude-paths` lista só diretórios, e a catraca da raiz (§4.2.1)
-  classifica cada arquivo solto numa lista explícita de inertes por convenção.
+  classifica cada arquivo solto numa lista explícita de inertes por convenção. A E3 substitui a
+  menção da E2 a `docker-compose.prod*.yml` "no `exclude-paths`": esses arquivos estão sob a
+  convenção (arquivo solto da raiz), não no `exclude-paths`.
 - **Fatos do repositório para o plano** (levantados em 2026-10-31):
   - o `deploy.yml` faz checkout do SHA alvo em `alvo/` e da `main` em `main/`, e chama script de
     `main/.github/scripts/` (padrão do `conferir-alinhamento.sh`). O passo de release segue o

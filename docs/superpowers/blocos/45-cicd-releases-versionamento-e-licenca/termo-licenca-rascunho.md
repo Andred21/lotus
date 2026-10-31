@@ -72,6 +72,9 @@ O software é fornecido no estado em que se encontra, sem garantia, nos termos d
 Lei aplicável e foro, forma de assinatura, eventual contraprestação e redação final são
 decisões a validar com assessoria jurídica. Este rascunho não as resolve.
 
+A cláusula "prestadores não são terceiros" (§4) é acréscimo deste rascunho, além da D5: não
+consta da decisão do João e fica para revisão jurídica.
+
 ---
 
 ## Español
@@ -139,3 +142,6 @@ El software se entrega tal cual, sin garantía, en los términos del `LICENSE`.
 
 Ley aplicable y fuero, forma de firma, eventual contraprestación y redacción final son
 decisiones a validar con asesoría jurídica. Este borrador no las resuelve.
+
+La cláusula "los prestadores no son terceros" (§4) es un añadido de este borrador, más allá de la
+D5: no consta en la decisión de João y queda para revisión jurídica.
