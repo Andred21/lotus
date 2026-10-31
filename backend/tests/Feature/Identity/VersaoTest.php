@@ -13,7 +13,9 @@ class VersaoTest extends TestCase
 
     public function test_sem_sessao_responde_401(): void
     {
-        $this->getJson('/api/versao')->assertUnauthorized();
+        $this->getJson('/api/versao')
+            ->assertUnauthorized()
+            ->assertHeader('Content-Type', 'application/problem+json');
     }
 
     public function test_com_sessao_devolve_a_versao_da_config(): void
