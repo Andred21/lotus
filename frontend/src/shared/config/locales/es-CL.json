@@ -837,7 +837,53 @@
         "errors": "Filas con error",
         "errorRow": "Fila {{row}}: {{message}}",
         "enrolledVsContracted": "{{enrolled}} de {{contracted}} contratados",
-        "close": "Cerrar"
+        "close": "Cerrar",
+        "template": "Descargar plantilla",
+        "empty": "No hay filas para importar.",
+        "keep": "Mantener registro",
+        "update": "Actualizar",
+        "editRow": "Editar fila",
+        "removeRow": "Quitar fila",
+        "footerHint": "Las filas con error no se envían",
+        "reviewRefused": "Corregir filas rechazadas",
+        "counts": {
+          "new_one": "{{count}} nuevo",
+          "new_other": "{{count}} nuevos",
+          "registered_one": "{{count}} ya registrado",
+          "registered_other": "{{count}} ya registrados",
+          "moves_one": "{{count}} cambia de empresa",
+          "moves_other": "{{count}} cambian de empresa",
+          "already_enrolled_one": "{{count}} ya matriculado",
+          "already_enrolled_other": "{{count}} ya matriculados",
+          "error_one": "{{count}} con error",
+          "error_other": "{{count}} con error"
+        },
+        "col": {
+          "row": "Fila",
+          "rut": "RUT",
+          "name": "Nombre",
+          "email": "Email",
+          "phone": "Teléfono",
+          "situation": "Situación"
+        },
+        "situation": {
+          "new": "Nuevo",
+          "registered": "Ya registrado",
+          "divergent": "Datos distintos",
+          "moves": "Cambia de empresa",
+          "already_enrolled": "Ya matriculado",
+          "error": "Con error"
+        },
+        "note": {
+          "moves": "{{from}} → {{to}}",
+          "movesFrom": "Hoy en {{from}}",
+          "registry": "Registro: {{values}}",
+          "archived": "Archivado · se reactivará",
+          "skipped": "Se omite",
+          "edited": "Editada · se valida al confirmar"
+        },
+        "confirm_one": "Confirmar {{count}} fila",
+        "confirm_other": "Confirmar {{count}} filas"
       }
     },
     "documents": {

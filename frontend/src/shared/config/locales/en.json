@@ -837,7 +837,53 @@
         "errors": "Rows with errors",
         "errorRow": "Row {{row}}: {{message}}",
         "enrolledVsContracted": "{{enrolled}} of {{contracted}} contracted",
-        "close": "Close"
+        "close": "Close",
+        "template": "Download template",
+        "empty": "There are no rows to import.",
+        "keep": "Keep record",
+        "update": "Update",
+        "editRow": "Edit row",
+        "removeRow": "Remove row",
+        "footerHint": "Rows with errors are not sent",
+        "reviewRefused": "Fix refused rows",
+        "counts": {
+          "new_one": "{{count}} new",
+          "new_other": "{{count}} new",
+          "registered_one": "{{count}} already registered",
+          "registered_other": "{{count}} already registered",
+          "moves_one": "{{count}} changes company",
+          "moves_other": "{{count}} change company",
+          "already_enrolled_one": "{{count}} already enrolled",
+          "already_enrolled_other": "{{count}} already enrolled",
+          "error_one": "{{count}} with error",
+          "error_other": "{{count}} with errors"
+        },
+        "col": {
+          "row": "Row",
+          "rut": "RUT",
+          "name": "Name",
+          "email": "Email",
+          "phone": "Phone",
+          "situation": "Status"
+        },
+        "situation": {
+          "new": "New",
+          "registered": "Already registered",
+          "divergent": "Different data",
+          "moves": "Changes company",
+          "already_enrolled": "Already enrolled",
+          "error": "Error"
+        },
+        "note": {
+          "moves": "{{from}} → {{to}}",
+          "movesFrom": "Currently at {{from}}",
+          "registry": "Record: {{values}}",
+          "archived": "Archived · will be reactivated",
+          "skipped": "Skipped",
+          "edited": "Edited · validated on confirm"
+        },
+        "confirm_one": "Confirm {{count}} row",
+        "confirm_other": "Confirm {{count}} rows"
       }
     },
     "documents": {
