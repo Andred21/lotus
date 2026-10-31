@@ -93,6 +93,7 @@ class ListQueryBudgetTest extends TestCase
      */
     private const COM_PAI_ISENTAS = [
         'api/turmas/{turma}/alunos/preview' => 'pré-visualização de UMA matrícula por RUT (query `rut`), não lista',
+        'api/turmas/{turma}/alunos/importar/plantilla' => 'download de arquivo, não lista',
         'api/turmas/{turma}/manual' => 'gera um PDF de uma turma — resposta binária, não lista',
         'api/turmas/{turma}/manual/docx' => 'gera um DOCX de uma turma — resposta binária, não lista',
         'api/certificates/{certificate}/pdf' => 'gera o PDF de um certificado — resposta binária',

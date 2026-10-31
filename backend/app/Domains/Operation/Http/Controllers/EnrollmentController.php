@@ -14,6 +14,7 @@ use App\Domains\Operation\Data\EnrollmentResultData;
 use App\Domains\Operation\Data\EnrollPreviewData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\SpreadsheetTemplate;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
 use App\Shared\Files\ContentClass;
@@ -24,6 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EnrollmentController extends Controller implements HasMiddleware
 {
@@ -31,7 +33,7 @@ class EnrollmentController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:operation.turma.view', only: ['index', 'archived']),
-            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview']),
+            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview', 'template']),
             // Separada de `manage` de propósito: o redator lança nota e presença
             // sem ganhar matricular/importar/remover (RN-02, spec D6). O escopo
             // por turma vem do binding, não daqui.
@@ -87,6 +89,23 @@ class EnrollmentController extends Controller implements HasMiddleware
         return EnrollmentData::fromModel($outcome->enrollment->loadListingData())
             ->toResponse(request())
             ->setStatusCode(201);
+    }
+
+    /**
+     * Modelo `.xlsx` da importação. Não carrega dado da turma (o `{turma}` só
+     * posiciona a rota sob a permissão de matricular) e sai de arquivo
+     * temporário apagado após o envio.
+     */
+    public function template(Turma $turma, SpreadsheetTemplate $template): BinaryFileResponse
+    {
+        $path = tempnam(sys_get_temp_dir(), 'plantilla');
+        $template->write($path);
+
+        return response()
+            ->download($path, 'plantilla-alumnos.xlsx', [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])
+            ->deleteFileAfterSend();
     }
 
     public function import(Request $request, Turma $turma, ImportStudentsAction $action): JsonResponse

@@ -39,6 +39,7 @@ Route::middleware('auth.active')->group(function () {
 
     Route::get('turmas/{turma}/alunos', [EnrollmentController::class, 'index']);
     Route::get('turmas/{turma}/alunos/preview', [EnrollmentController::class, 'preview']);
+    Route::get('turmas/{turma}/alunos/importar/plantilla', [EnrollmentController::class, 'template']);
     // ANTES de qualquer rota GET com segundo parâmetro, senão
     // `alunos/archived` casaria como `alunos/{enrollment}` (hoje não existe
     // essa rota, mas a ordem evita criar a colisão amanhã).
