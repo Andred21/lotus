@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "5fba081d7bff45e4ad4b930d49957f6c91f47978",
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "include-v-in-tag": true,
+      "include-component-in-tag": false,
+      "changelog-sections": [
+        { "type": "feat", "section": "Funcionalidades" },
+        { "type": "fix", "section": "Correções" },
+        { "type": "perf", "section": "Desempenho" },
+        { "type": "docs", "section": "Documentação", "hidden": true },
+        { "type": "chore", "section": "Manutenção", "hidden": true },
+        { "type": "refactor", "section": "Refatoração", "hidden": true },
+        { "type": "test", "section": "Testes", "hidden": true },
+        { "type": "style", "section": "Estilo", "hidden": true },
+        { "type": "build", "section": "Build", "hidden": true },
+        { "type": "ci", "section": "CI", "hidden": true },
+        { "type": "cicd", "section": "CI/CD", "hidden": true },
+        { "type": "revert", "section": "Reversões", "hidden": true }
+      ],
+      "extra-files": [
+        { "type": "json", "path": "frontend/package.json", "jsonpath": "$.version" },
+        { "type": "generic", "path": "backend/config/app.php" }
+      ],
+      "exclude-paths": [
+        ".agents",
+        ".claude",
+        ".codex",
+        ".dockerignore",
+        ".editorconfig",
+        ".env.example",
+        ".espelho-exclusoes",
+        ".githooks",
+        ".gitignore",
+        ".impeccable",
+        ".release-please-manifest.json",
+        "AGENTS.md",
+        "CHANGELOG.md",
+        "CLAUDE.md",
+        "CONTRIBUINDO.md",
+        "DESIGN.md",
+        "INSTRUÇÕES-DO-PROJETO.md",
+        "LICENSE",
+        "PRODUCT.md",
+        "README.md",
+        "docker-compose.prod-probe.yml",
+        "docker-compose.prod-tls.yml",
+        "docker-compose.prod.yml",
+        "docker-compose.yml",
+        "docs",
+        "release-please-config.json",
+        "scripts",
+        "version.txt"
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+name: Release Please
+
+# Abre (e mantém atualizado) o PR de release a partir dos commits convencionais que entram na
+# main. Merge desse PR cria a tag vX.Y.Z e o release. Quem decide o bump é o release-please,
+# pelos commits que tocam caminho de produto (ver release-please-config.json).
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: release-please
+    # O espelho corporativo recebe este arquivo (`.github/` não é excluído do espelho) e não
+    # tem o secret: sem esta guarda o job falharia lá a cada push.
+    if: github.repository == 'Andred21/lotus'
+    runs-on: ubuntu-latest
+    steps:
+      # PAT próprio, e não o token padrão do Actions: PR e tag criados com o token padrão não
+      # disparam outros workflows (o CI do PR de release nunca rodaria).
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
