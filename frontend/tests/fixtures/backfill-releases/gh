@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+#
+# `gh` de mentira do frontend/tests/backfill-releases.test.ts. Registra cada
+# chamada em $FAKE_LOG (uma linha `---` e um argumento por linha) e responde o
+# minimo que o scripts/backfill-releases.sh le. O estado do caso vem do ambiente:
+# - FAKE_RUNS: diretorio com um `<id>.log` por execucao `success` do deploy.yml
+#   (o log leva o cabecalho `env` do passo, com `SHA: <sha>`);
+# - FAKE_ESTADO: arquivo com o que ja existe no remoto, uma linha por fato:
+#     tag <repo> <tag> <tipo> <objeto>   ref da tag (tipo `tag` ou `commit`)
+#     obj <objeto> <commit>              objeto de tag anotada -> commit
+#     release <repo> <tag>               release ja publicada
+# - o corpo de `release create --notes-file -` vai para $FAKE_NOTAS/<repo>__<tag>.
+# O script passa `--jq`; o falso ja devolve o resultado filtrado, entao o
+# formato do --jq faz parte do contrato com o script.
+{
+  printf '%s\n' '---'
+  printf '%s\n' "$@"
+} >> "$FAKE_LOG"
+
+estado() { cat "${FAKE_ESTADO:-/dev/null}" 2>/dev/null; }
+
+# valor de `chave=...` entre os argumentos (nas chamadas `api -f chave=valor`)
+campo() {
+  local chave=$1 a
+  shift
+  for a in "$@"; do
+    case "$a" in "$chave="*) printf '%s' "${a#"$chave="}"; return ;; esac
+  done
+}
+
+case "${1:-}" in
+  run)
+    case "${2:-}" in
+      list)
+        for f in "$FAKE_RUNS"/*.log; do
+          [ -e "$f" ] && basename "$f" .log
+        done
+        ;;
+      view)
+        cat "$FAKE_RUNS/${3:-}.log"
+        ;;
+      *) echo "gh falso: run nao previsto: $*" >&2; exit 1 ;;
+    esac
+    ;;
+  api)
+    caminho="${2:-}"
+    case "$caminho" in
+      repos/*/git/ref/tags/*)
+        repo=${caminho#repos/}; repo=${repo%%/git/*}
+        tag=${caminho##*/git/ref/tags/}
+        linha=$(estado | awk -v r="$repo" -v t="$tag" '$1=="tag" && $2==r && $3==t { print $4 " " $5 }')
+        [ -n "$linha" ] || { echo 'gh: Not Found (HTTP 404)' >&2; exit 1; }
+        echo "$linha"
+        ;;
+      repos/*/git/tags/*)
+        estado | awk -v o="${caminho##*/}" '$1=="obj" && $2==o { print $3 }'
+        ;;
+      repos/*/git/tags)
+        repo=${caminho#repos/}; repo=${repo%%/git/*}
+        printf '%s %s' "$repo" "$(campo tag "$@")" | sha1sum | cut -d' ' -f1
+        ;;
+      repos/*/git/refs)
+        echo '{}'
+        ;;
+      *) echo "gh falso: api nao previsto: $*" >&2; exit 1 ;;
+    esac
+    ;;
+  release)
+    case "${2:-}" in
+      view)
+        repo=
+        prev=
+        for a in "$@"; do [ "$prev" = --repo ] && repo=$a; prev=$a; done
+        estado | awk -v r="$repo" -v t="${3:-}" '$1=="release" && $2==r && $3==t { ok = 1 } END { exit ok ? 0 : 1 }' \
+          || { echo 'release not found' >&2; exit 1; }
+        ;;
+      create)
+        repo=
+        prev=
+        for a in "$@"; do [ "$prev" = --repo ] && repo=$a; prev=$a; done
+        mkdir -p "$FAKE_NOTAS"
+        cat > "$FAKE_NOTAS/$(printf '%s' "$repo" | tr / _)__${3:-}"
+        echo "https://github.com/falso/releases/tag/${3:-}"
+        ;;
+      *) echo "gh falso: release nao previsto: $*" >&2; exit 1 ;;
+    esac
+    ;;
+  *) echo "gh falso: nao previsto: $*" >&2; exit 1 ;;
+esac

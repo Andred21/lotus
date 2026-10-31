@@ -23,6 +23,8 @@ PRODUCT.md
 DESIGN.md
 docs/
 scripts/espelhar-corporativo.sh
+scripts/backfill-releases.sh
+scripts/backfill-releases.tsv
 
 # Este teste afirma que CLAUDE.md, .claude/rules/ e docs/ existem e que todo
 # path citado neles existe. No espelho nenhum dos tres existe, entao ele
