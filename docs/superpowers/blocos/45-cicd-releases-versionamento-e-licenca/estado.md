@@ -2,9 +2,9 @@
 schema_version: 3
 id: 45
 slug: 45-cicd-releases-versionamento-e-licenca
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/blocos/45-cicd-releases-versionamento-e-licenca/spec.md
 active_plan: docs/superpowers/blocos/45-cicd-releases-versionamento-e-licenca/plano.md
@@ -17,10 +17,10 @@ branch: cicd/45-cicd-releases-versionamento-e-licenca
 worktree: ../lotus-45-cicd-releases-versionamento-e-licenca
 offset: 2
 lane_base: 5fba081d
-commit: bf80278
+commit: bc3d7d1
 blocker: null
-updated_at: 2026-10-31T18:08:05+00:00
-updated_by: root@vm / opus
+updated_at: 2026-10-31T18:14:34+00:00
+updated_by: root@vm / sonnet
 ---
 
 # Bloco 45 — estado
