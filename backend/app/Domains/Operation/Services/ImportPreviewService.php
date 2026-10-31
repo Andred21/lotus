@@ -9,7 +9,6 @@ use App\Domains\Operation\Data\ImportPreviewData;
 use App\Domains\Operation\Data\ImportPreviewRowData;
 use App\Domains\Operation\Enums\ImportRowStatus;
 use App\Domains\Operation\Models\Turma;
-use App\Shared\Support\Rut;
 use App\Shared\Validation\ValidationMessages;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
@@ -36,12 +35,11 @@ class ImportPreviewService
         $linhas = iterator_to_array($this->reader->rows($file, ImportStudentsAction::MAX_LINHAS), false);
 
         $contratanteId = $turma->contratanteClient()->id;
-        $ruts = [];
-        $emails = [];
+        $ledger = new ImportBatchLedger;
         $rows = [];
 
         foreach ($linhas as $line) {
-            $rows[] = $this->classify($turma, $contratanteId, $line, $ruts, $emails);
+            $rows[] = $this->classify($turma, $contratanteId, $line, $ledger);
         }
 
         return new ImportPreviewData($rows, $actor->can('identity.user.update'));
@@ -49,20 +47,13 @@ class ImportPreviewService
 
     /**
      * @param  array{row:int,rut:string,name:string,email:?string,phone:?string}  $line
-     * @param  array<string,true>  $ruts  RUTs já vistos no lote (por referência)
-     * @param  array<string,true>  $emails  e-mails de aluno novo já vistos (por referência)
      */
-    private function classify(Turma $turma, int $contratanteId, array $line, array &$ruts, array &$emails): ImportPreviewRowData
+    private function classify(Turma $turma, int $contratanteId, array $line, ImportBatchLedger $ledger): ImportPreviewRowData
     {
         // 1. RUT repetido no lote (D11). Só RUT válido tem forma canônica; o
         // inválido cai no erro do resolver logo abaixo.
-        $parsed = Rut::parse($line['rut']);
-        if ($parsed->isValid()) {
-            $chave = $parsed->format();
-            if (isset($ruts[$chave])) {
-                return $this->row($line, ImportRowStatus::Error, __('operation.enrollment.import.duplicate_rut'));
-            }
-            $ruts[$chave] = true;
+        if (($duplicado = $ledger->claimRut($line['rut'])) !== null) {
+            return $this->row($line, ImportRowStatus::Error, $duplicado);
         }
 
         try {
@@ -76,11 +67,9 @@ class ImportPreviewService
             if (! $lookup->exists) {
                 $this->resolver->assertCanCreate($line['rut'], $line['name'], $line['email']);
 
-                $email = mb_strtolower($line['email']);
-                if (isset($emails[$email])) {
-                    return $this->row($line, ImportRowStatus::Error, __('operation.enrollment.import.duplicate_email'));
+                if (($duplicado = $ledger->claimEmail($line['email'])) !== null) {
+                    return $this->row($line, ImportRowStatus::Error, $duplicado);
                 }
-                $emails[$email] = true;
 
                 return $this->row($line, ImportRowStatus::New);
             }

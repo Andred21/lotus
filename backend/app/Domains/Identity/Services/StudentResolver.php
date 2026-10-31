@@ -3,6 +3,8 @@
 namespace App\Domains\Identity\Services;
 
 use App\Domains\Commercial\Models\Client;
+use App\Domains\Identity\Actions\UpdateStudentAction;
+use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Enums\LinkOutcome;
 use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Identity\Models\Student;
@@ -23,6 +25,7 @@ class StudentResolver
     public function __construct(
         private readonly UserProvisioner $provisioner,
         private readonly StudentClientLinkService $linkService,
+        private readonly UpdateStudentAction $updateStudent,
     ) {}
 
     public function resolveByRut(
@@ -139,6 +142,28 @@ class StudentResolver
         }
 
         $this->provisioner->ensureIdentityAvailable($rut, $email);
+    }
+
+    /**
+     * Atualiza o cadastro de um aluno EXISTENTE com os dados de uma linha da
+     * importação (D13). Campo em branco mantém o valor do cadastro (D17), e a
+     * validação é a do contrato do aluno (`StudentData`), a mesma da tela de
+     * cadastro. Quem escreve, e audita, é o `UpdateStudentAction`; o vínculo com
+     * a empresa não é tocado. Domínios vizinhos só enxergam `Services`, por isso
+     * a porta mora aqui.
+     *
+     * @throws ValidationException
+     */
+    public function updateRegistration(Student $student, string $name, ?string $email, ?string $phone): void
+    {
+        $user = $student->user;
+
+        $this->updateStudent->execute($student, StudentData::validateAndCreate([
+            'name' => $name,
+            'rut' => $user->rut,
+            'email' => $email ?? $user->email,
+            'phone' => $phone ?? $user->phone,
+        ]));
     }
 
     /**

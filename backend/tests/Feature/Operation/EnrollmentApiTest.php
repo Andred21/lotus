@@ -12,8 +12,6 @@ use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -71,29 +69,22 @@ class EnrollmentApiTest extends TestCase
     public function test_import_endpoint_retorna_resumo(): void
     {
         $this->actingAsAdmin();
-        $path = tempnam(sys_get_temp_dir(), 'imp').'.xlsx';
-        $writer = new XlsxWriter;
-        $writer->openToFile($path);
-        $writer->addRow(Row::fromValues(['RUT', 'Nombre', 'Email', 'Teléfono']));
-        $writer->addRow(Row::fromValues(['11.111.111-1', 'Juan Soto', 'juan@acme.cl', '']));
-        $writer->addRow(Row::fromValues(['RUT-INVALIDO', 'Mal', '', '']));
-        $writer->close();
 
-        $this->postJson(
-            "/api/turmas/{$this->turma->id}/alunos/importar",
-            ['file' => new UploadedFile($path, 'alunos.xlsx', null, null, true)],
-        )
+        $this->postJson("/api/turmas/{$this->turma->id}/alunos/importar", ['rows' => [
+            ['row' => 2, 'rut' => '11.111.111-1', 'name' => 'Juan Soto', 'email' => 'juan@acme.cl', 'phone' => null, 'update_registration' => false],
+            ['row' => 3, 'rut' => 'RUT-INVALIDO', 'name' => 'Mal', 'email' => null, 'phone' => null, 'update_registration' => false],
+        ]])
             ->assertOk()
             ->assertJsonPath('created', 1)
             ->assertJsonPath('errors.0.row', 3)
             ->assertJsonPath('contracted_count', 5);
     }
 
-    public function test_import_arquivo_invalido_422(): void
+    public function test_previa_arquivo_invalido_422(): void
     {
         $this->actingAsAdmin();
 
-        $this->postJson("/api/turmas/{$this->turma->id}/alunos/importar", [
+        $this->postJson("/api/turmas/{$this->turma->id}/alunos/importar/previa", [
             'file' => UploadedFile::fake()->create('malware.pdf', 10, 'application/pdf'),
         ])->assertStatus(422);
     }

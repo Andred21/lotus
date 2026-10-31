@@ -18,6 +18,7 @@ return [
         'import' => [
             'duplicate_rut' => 'Este RUT aparece más de una vez en la planilla: solo vale la primera fila.',
             'duplicate_email' => 'Este correo aparece más de una vez en la planilla: solo vale la primera fila.',
+            'update_forbidden' => 'No tienes permiso para actualizar el registro de alumnos: la fila no se guardó.',
         ],
     ],
     'requirement' => [

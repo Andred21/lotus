@@ -12,6 +12,7 @@ use App\Domains\Operation\Data\ArchivedEnrollmentData;
 use App\Domains\Operation\Data\EnrollmentData;
 use App\Domains\Operation\Data\EnrollmentResultData;
 use App\Domains\Operation\Data\EnrollPreviewData;
+use App\Domains\Operation\Data\ImportConfirmData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\ImportPreviewService;
@@ -120,13 +121,10 @@ class EnrollmentController extends Controller implements HasMiddleware
         return RespostaDeRecurso::ok($service->preview($turma, $validated['file'], $request->user()));
     }
 
-    public function import(Request $request, Turma $turma, ImportStudentsAction $action): JsonResponse
+    /** Confirmação JSON linha a linha: o servidor revalida cada uma (spec D13). */
+    public function import(ImportConfirmData $data, Request $request, Turma $turma, ImportStudentsAction $action): JsonResponse
     {
-        $validated = $request->validate([
-            'file' => ContentClass::Planilha->regras(),
-        ]);
-
-        return RespostaDeRecurso::ok($action->execute($turma, $validated['file']));
+        return RespostaDeRecurso::ok($action->execute($turma, $data, $request->user()));
     }
 
     public function result(

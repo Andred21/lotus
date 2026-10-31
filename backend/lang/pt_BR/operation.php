@@ -18,6 +18,7 @@ return [
         'import' => [
             'duplicate_rut' => 'Este RUT aparece mais de uma vez na planilha: só a primeira linha vale.',
             'duplicate_email' => 'Este e-mail aparece mais de uma vez na planilha: só a primeira linha vale.',
+            'update_forbidden' => 'Você não tem permissão para atualizar o cadastro de alunos: a linha não foi gravada.',
         ],
     ],
     'requirement' => [

@@ -297,6 +297,17 @@ created_at: string | null,
 export type ForgotPasswordData = {
 email: string,
 };
+export type ImportConfirmData = {
+rows: ImportConfirmRowData[] | undefined,
+};
+export type ImportConfirmRowData = {
+row: number,
+rut: string,
+name: string,
+email: string | null,
+phone: string | null,
+update_registration: boolean,
+};
 export type ImportPreviewData = {
 rows: ImportPreviewRowData[],
 can_update_registration: boolean,
