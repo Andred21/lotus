@@ -220,6 +220,15 @@ em 2026-10-31).
   `deploy/` e `.github/`. `docker-compose.prod.yml` e `docker-compose.prod-tls.yml` ficam no
   `exclude-paths` mesmo indo para produção, por decisão explícita. A catraca da raiz (§4.2.1)
   classifica cada entrada de `git ls-files` de primeiro nível.
+- **E3 · `exclude-paths` só exclui diretório (decisão do João, 2026-10-31, na execução).** O
+  release-please casa cada entrada como prefixo de diretório (`file.indexOf(path + '/') === 0`),
+  então arquivo solto da raiz não é excluído: um `feat`/`fix`/`perf`/`!` que toque só
+  `CLAUDE.md`, `README.md`, `docker-compose*.yml`, `LICENSE` e afins geraria versão. O §6
+  ("versão nova por mudança só de harness ou docs") passa a valer assim: diretório fora de
+  produto é garantido pelo `exclude-paths`; arquivo solto da raiz é garantido por convenção —
+  commit que toque só arquivo solto da raiz usa `docs`, `chore` ou `cicd`, regra escrita no
+  `CONTRIBUINDO.md`. O `exclude-paths` lista só diretórios, e a catraca da raiz (§4.2.1)
+  classifica cada arquivo solto numa lista explícita de inertes por convenção.
 - **Fatos do repositório para o plano** (levantados em 2026-10-31):
   - o `deploy.yml` faz checkout do SHA alvo em `alvo/` e da `main` em `main/`, e chama script de
     `main/.github/scripts/` (padrão do `conferir-alinhamento.sh`). O passo de release segue o

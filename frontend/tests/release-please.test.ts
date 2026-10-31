@@ -7,12 +7,33 @@ const raiz = resolve(__dirname, '..', '..')
 const ler = (caminho: string) => readFileSync(resolve(raiz, caminho), 'utf8')
 
 // Bloco 45: o release-please só dispara bump por commit que toca caminho de PRODUTO. O que sobra
-// na raiz entra em `exclude-paths`. A catraca abaixo obriga a classificar toda entrada nova da
-// raiz, para que um diretório novo não vire bump (ou deixe de virar) sem ninguém decidir.
+// na raiz precisa de classificação explícita, para que uma entrada nova não vire bump (ou deixe de
+// virar) sem ninguém decidir. O `exclude-paths` do release-please casa só prefixo de DIRETÓRIO
+// (`file.indexOf(path + '/') === 0`): arquivo solto listado ali não tem efeito. Por isso
+//   - diretório fora de produto  -> `exclude-paths` (garantido pela ferramenta);
+//   - arquivo solto da raiz      -> INERTES_POR_CONVENCAO (garantido só pela regra de tipo de commit).
 const PRODUTO = ['backend', 'frontend', 'docker', 'deploy', '.github']
 
-// Entradas que nascem em tasks paralelas do bloco e podem ainda não estar no índice do git.
-const EXTRAS_DO_BLOCO = [
+// Spec E3: arquivo solto da raiz não é excluído pelo release-please. Commit que toque só estes usa
+// `docs`, `chore` ou `cicd` (regra escrita no CONTRIBUINDO.md); um `feat`/`fix` neles geraria versão.
+const INERTES_POR_CONVENCAO = [
+  'INSTRUÇÕES-DO-PROJETO.md',
+  '.dockerignore',
+  '.editorconfig',
+  '.env.example',
+  '.espelho-exclusoes',
+  '.gitignore',
+  'AGENTS.md',
+  'CLAUDE.md',
+  'CONTRIBUINDO.md',
+  'DESIGN.md',
+  'PRODUCT.md',
+  'README.md',
+  'docker-compose.prod-probe.yml',
+  'docker-compose.prod-tls.yml',
+  'docker-compose.prod.yml',
+  'docker-compose.yml',
+  // nascem em tasks paralelas do bloco e podem ainda não estar no índice do git
   'LICENSE',
   'CHANGELOG.md',
   'version.txt',
@@ -20,20 +41,37 @@ const EXTRAS_DO_BLOCO = [
   'release-please-config.json',
 ]
 
+type Entrada = { nome: string; diretorio: boolean }
+
 const semBarraFinal = (caminho: string) => caminho.replace(/\/+$/, '')
 
-// Retorna as entradas de primeiro nível que não estão em PRODUTO nem em exclude-paths.
-function naoClassificadas(entradas: string[], excluidos: string[]): string[] {
-  const conhecidas = new Set([...PRODUTO, ...excluidos.map(semBarraFinal)])
-  return entradas.filter((entrada) => !conhecidas.has(entrada))
+// Retorna as entradas de primeiro nível sem classificação válida: diretório precisa estar em
+// PRODUTO ou em exclude-paths; arquivo, em PRODUTO ou em INERTES_POR_CONVENCAO.
+function naoClassificadas(entradas: Entrada[], excluidos: string[]): string[] {
+  const dirsExcluidos = new Set(excluidos.map(semBarraFinal))
+  const inertes = new Set(INERTES_POR_CONVENCAO)
+  return entradas
+    .filter(({ nome, diretorio }) => {
+      if (PRODUTO.includes(nome)) return false
+      return diretorio ? !dirsExcluidos.has(nome) : !inertes.has(nome)
+    })
+    .map(({ nome }) => nome)
 }
 
-function entradasDePrimeiroNivel(): string[] {
+function entradasDePrimeiroNivel(): Entrada[] {
   // `-z` evita o escape octal que o git aplica a "INSTRUÇÕES-DO-PROJETO.md" (acentos).
   const arquivos = execFileSync('git', ['ls-files', '-z'], { cwd: raiz, encoding: 'utf8' })
     .split('\0')
     .filter(Boolean)
-  return [...new Set([...arquivos.map((a) => a.split('/')[0]), ...EXTRAS_DO_BLOCO])]
+  // Diretório = algum arquivo tem `entrada/` como prefixo; sem barra, é arquivo solto.
+  const mapa = new Map<string, boolean>()
+  for (const arquivo of arquivos) {
+    const [primeiro, ...resto] = arquivo.split('/')
+    mapa.set(primeiro, (mapa.get(primeiro) ?? false) || resto.length > 0)
+  }
+  // Entradas que nascem em tasks paralelas do bloco e podem ainda não estar no índice (arquivos).
+  for (const extra of INERTES_POR_CONVENCAO) if (!mapa.has(extra)) mapa.set(extra, false)
+  return [...mapa].map(([nome, diretorio]) => ({ nome, diretorio }))
 }
 
 const config = JSON.parse(ler('release-please-config.json'))
@@ -78,7 +116,7 @@ describe('release-please: configuração (bloco 45)', () => {
 describe('release-please: catraca da raiz (bloco 45)', () => {
   const excluidos: string[] = pacote['exclude-paths']
 
-  it('toda entrada de primeiro nível do repositório é de produto ou está em exclude-paths', () => {
+  it('toda entrada de primeiro nível é produto, diretório em exclude-paths ou arquivo inerte por convenção', () => {
     expect(naoClassificadas(entradasDePrimeiroNivel(), excluidos)).toEqual([])
   })
 
@@ -89,9 +127,31 @@ describe('release-please: catraca da raiz (bloco 45)', () => {
     }
   })
 
-  it('reprova uma entrada nova que ninguém classificou', () => {
-    const comIntruso = [...entradasDePrimeiroNivel(), 'naoClassificado']
+  it('exclude-paths só tem diretório: arquivo listado ali não teria efeito no release-please', () => {
+    const diretorios = new Set(
+      entradasDePrimeiroNivel()
+        .filter((e) => e.diretorio)
+        .map((e) => e.nome),
+    )
+    const arquivosListados = excluidos.map(semBarraFinal).filter((e) => !diretorios.has(e))
+    expect(arquivosListados).toEqual([])
+  })
+
+  it('arquivo inerte por convenção não é diretório do repositório', () => {
+    const diretorios = entradasDePrimeiroNivel()
+      .filter((e) => e.diretorio)
+      .map((e) => e.nome)
+    expect(INERTES_POR_CONVENCAO.filter((e) => diretorios.includes(e))).toEqual([])
+  })
+
+  it('reprova um diretório novo que ninguém classificou', () => {
+    const comIntruso = [...entradasDePrimeiroNivel(), { nome: 'naoClassificado', diretorio: true }]
     expect(naoClassificadas(comIntruso, excluidos)).toEqual(['naoClassificado'])
+  })
+
+  it('reprova um arquivo solto novo que ninguém classificou', () => {
+    const comIntruso = [...entradasDePrimeiroNivel(), { nome: 'novo-arquivo.md', diretorio: false }]
+    expect(naoClassificadas(comIntruso, excluidos)).toEqual(['novo-arquivo.md'])
   })
 })
 

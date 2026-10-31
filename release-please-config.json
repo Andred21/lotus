@@ -28,31 +28,10 @@
         ".agents",
         ".claude",
         ".codex",
-        ".dockerignore",
-        ".editorconfig",
-        ".env.example",
-        ".espelho-exclusoes",
         ".githooks",
-        ".gitignore",
         ".impeccable",
-        ".release-please-manifest.json",
-        "AGENTS.md",
-        "CHANGELOG.md",
-        "CLAUDE.md",
-        "CONTRIBUINDO.md",
-        "DESIGN.md",
-        "INSTRUÇÕES-DO-PROJETO.md",
-        "LICENSE",
-        "PRODUCT.md",
-        "README.md",
-        "docker-compose.prod-probe.yml",
-        "docker-compose.prod-tls.yml",
-        "docker-compose.prod.yml",
-        "docker-compose.yml",
         "docs",
-        "release-please-config.json",
-        "scripts",
-        "version.txt"
+        "scripts"
       ]
     }
   }
