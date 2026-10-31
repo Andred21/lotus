@@ -6,7 +6,7 @@ import {
   identifierClass, narrowFloorTablePt, stickyActionsColumn, technicalDataClass,
   useCollapsibleActionsColumn, type RowAction,
 } from '@shared/ui'
-import type { TriageRow } from '../../hooks/useImportStudentsFlow'
+import { displayStatus, isRefusedPending, type TriageRow } from '../../hooks/useImportStudentsFlow'
 import { ImportRowEditor, type RowFields } from './ImportRowEditor'
 
 type Props = {
@@ -26,8 +26,10 @@ const isRegistered = (r: TriageRow) => r.status === 'registered' || r.status ===
 const FIELD_VALUE = { name: 'registered_name', email: 'registered_email', phone: 'registered_phone' } as const
 
 // A situação carrega tag e até três linhas de apoio: pesa mais que o texto livre.
+// O RUT em mono (12 caracteres, sem quebra) pede mais que o `COL.rut` das tabelas
+// sem edição inline: com o peso padrão ele encosta no nome.
 const largura = tableWidths({
-  row: COL.count, rut: COL.rut, name: COL.text, email: COL.text, situation: { weight: 30 },
+  row: COL.count, rut: { weight: 16 }, name: { weight: 20 }, email: { weight: 22 }, situation: { weight: 30 },
 })
 
 function Note({ children }: { children: string }) {
@@ -41,20 +43,22 @@ function Situation({ r, clientName, canUpdate, onSetUpdate }: {
   const { t } = useTranslation()
   const k = (key: string, opts?: Record<string, unknown>) => t(`operation.enrollment.import.${key}`, opts)
   const divergent = isRegistered(r) && (r.divergent.length > 0 || r.edited)
+  // Recusada sem edição: a tag e a contagem dizem `error`, o resto (RUT, par, empresa) segue.
+  const status = displayStatus(r)
   const registry = r.divergent.map((f) => r[FIELD_VALUE[f as keyof typeof FIELD_VALUE]]).filter(Boolean).join(' · ')
   return (
     <div className="space-y-1">
-      <AppTag severity={divergent && r.status === 'registered' ? 'warning' : TAG[r.status]} value={k(divergent && r.status === 'registered' ? 'situation.divergent' : `situation.${r.status}`)} />
+      <AppTag severity={divergent && status === 'registered' ? 'warning' : TAG[status]} value={k(divergent && status === 'registered' ? 'situation.divergent' : `situation.${status}`)} />
       {r.status === 'moves' && r.current_client && (
         <Note>{clientName ? k('note.moves', { from: r.current_client, to: clientName }) : k('note.movesFrom', { from: r.current_client })}</Note>
       )}
       {r.archived && <Note>{k('note.archived')}</Note>}
       {isRegistered(r) && registry && <Note>{k('note.registry', { values: registry })}</Note>}
       {r.status === 'already_enrolled' && <Note>{k('note.skipped')}</Note>}
-      {r.status === 'error' && r.message && <Note>{r.message}</Note>}
+      {(r.status === 'error' || isRefusedPending(r)) && !r.edited && r.message && <Note>{r.message}</Note>}
       {r.edited && <Note>{k('note.edited')}</Note>}
       {canUpdate && divergent && (
-        <div role="radiogroup" className="space-y-1 pt-1 text-sm">
+        <div role="radiogroup" aria-label={k('registrationGroup', { row: r.row })} className="space-y-1 pt-1 text-sm">
           {[false, true].map((update) => (
             <div key={String(update)} className="flex items-center gap-2">
               <AppRadioButton
@@ -95,7 +99,7 @@ export function ImportTriageTable({ rows, canUpdateRegistration, clientName, onE
       value={rows}
       dataKey="row"
       rows={100}
-      pt={narrowFloorTablePt('48rem')}
+      pt={narrowFloorTablePt('56rem')}
       expandedRows={editing === null ? undefined : { [editing]: true }}
       rowExpansionTemplate={(r: TriageRow) => (
         <ImportRowEditor row={r} onCancel={() => setEditing(null)} onSave={(patch) => { onEdit(r.row, patch); setEditing(null) }} />
@@ -104,7 +108,7 @@ export function ImportTriageTable({ rows, canUpdateRegistration, clientName, onE
       <AppColumn header={col('row')} body={(r: TriageRow) => <span className={technicalDataClass}>{r.row}</span>} style={largura.row} />
       <AppColumn header={col('rut')} body={(r: TriageRow) => <span className={identifierClass}>{r.rut}</span>} style={largura.rut} />
       <AppColumn header={col('name')} field="name" style={largura.name} />
-      <AppColumn header={col('email')} body={(r: TriageRow) => r.email ?? '—'} style={largura.email} />
+      <AppColumn header={col('email')} body={(r: TriageRow) => <span className="break-all" title={r.email ?? undefined}>{r.email ?? '—'}</span>} style={largura.email} />
       <AppColumn
         header={col('situation')}
         body={(r: TriageRow) => <Situation r={r} clientName={clientName} canUpdate={canUpdateRegistration} onSetUpdate={onSetUpdate} />}

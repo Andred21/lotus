@@ -22,6 +22,11 @@ use Illuminate\Validation\ValidationException;
  */
 class StudentResolver
 {
+    /** Tamanho das colunas `users.email` e `users.phone`. */
+    private const EMAIL_MAX = 255;
+
+    private const PHONE_MAX = 30;
+
     public function __construct(
         private readonly UserProvisioner $provisioner,
         private readonly StudentClientLinkService $linkService,
@@ -56,7 +61,7 @@ class StudentResolver
             if ($user === null) {
                 // Aluno novo: e-mail, teto do nome e colisão de identidade saem de
                 // assertCanCreate — a mesma validação serve à triagem, sem escrita (D10).
-                $this->assertCanCreate($rut, $name, $email);
+                $this->assertCanCreate($rut, $name, $email, $phone);
 
                 $created = $this->provisioner->provision('aluno', $name, $rut, $email, $phone);
                 $student = Student::create(['user_id' => $created->id]);
@@ -116,13 +121,15 @@ class StudentResolver
      *
      * Aluno novo exige e-mail (D9): users.email é NOT NULL — sem isso não há como
      * provisionar o User. O nome é o que o certificado imprime (D15): acima do
-     * teto a linha é recusada, como a tela recusa no cadastro. Colisão de RUT ou
+     * teto a linha é recusada, como a tela recusa no cadastro. Telefone e e-mail
+     * acima do tamanho da coluna (`users.phone` 30, `users.email` 255) também:
+     * em MySQL estourariam como 500 e derrubariam o lote. Colisão de RUT ou
      * e-mail, inclusive contra soft-deletados, vira ValidationException por linha
      * — nunca 500 que aborta a planilha.
      *
      * @throws ValidationException
      */
-    public function assertCanCreate(string $rut, string $name, ?string $email): void
+    public function assertCanCreate(string $rut, string $name, ?string $email, ?string $phone): void
     {
         $this->assertNameProvided($name);
 
@@ -139,6 +146,17 @@ class StudentResolver
                     'max' => TetosImpressos::NOME_ALUNO,
                 ]),
             ]);
+        }
+
+        foreach (['email' => [$email, self::EMAIL_MAX], 'phone' => [$phone, self::PHONE_MAX]] as $campo => [$valor, $max]) {
+            if ($valor !== null && mb_strlen($valor) > $max) {
+                throw ValidationException::withMessages([
+                    $campo => __('validation.max.string', [
+                        'attribute' => __("validation.attributes.{$campo}"),
+                        'max' => $max,
+                    ]),
+                ]);
+            }
         }
 
         $this->provisioner->ensureIdentityAvailable($rut, $email);

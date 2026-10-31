@@ -5,6 +5,10 @@ import type { TriageRow } from '../../hooks/useImportStudentsFlow'
 
 export type RowFields = Pick<TriageRow, 'rut' | 'name' | 'email' | 'phone'>
 
+// Tetos das colunas `users.email` e `users.phone`: acima deles o cadastro recusa a linha.
+const EMAIL_MAX = 255
+const PHONE_MAX = 30
+
 type Props = {
   row: TriageRow
   onSave: (patch: RowFields) => void
@@ -46,10 +50,10 @@ export function ImportRowEditor({ row, onSave, onCancel }: Props) {
           <AppInputText value={draft.name} onChange={set('name')} className="w-full" />
         </FormField>
         <FormField label={t('operation.enrollment.import.col.email')}>
-          <AppInputText value={draft.email} onChange={set('email')} className="w-full" />
+          <AppInputText value={draft.email} onChange={set('email')} maxLength={EMAIL_MAX} className="w-full" />
         </FormField>
         <FormField label={t('operation.enrollment.import.col.phone')}>
-          <AppInputText value={draft.phone} onChange={set('phone')} className="w-full" />
+          <AppInputText value={draft.phone} onChange={set('phone')} maxLength={PHONE_MAX} className="w-full" />
         </FormField>
       </div>
       <div className="flex justify-end gap-2">

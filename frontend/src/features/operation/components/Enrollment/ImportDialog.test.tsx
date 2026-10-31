@@ -14,12 +14,15 @@ vi.mock('react-i18next', async (importOriginal) => {
 })
 
 const flow = vi.hoisted(() => ({ current: {} as Record<string, unknown> }))
-vi.mock('../../hooks/useImportStudentsFlow', () => ({ useImportStudentsFlow: () => flow.current }))
+vi.mock('../../hooks/useImportStudentsFlow', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../hooks/useImportStudentsFlow')>()),
+  useImportStudentsFlow: () => flow.current,
+}))
 
 const ROW: TriageRow = {
   row: 2, rut: '11.111.111-1', name: 'Ana Pérez', email: 'ana@x.cl', phone: null, status: 'new',
   message: null, current_client: null, archived: false, divergent: [], registered_name: null,
-  registered_email: null, registered_phone: null, edited: false, removed: false, update_registration: false,
+  registered_email: null, registered_phone: null, edited: false, removed: false, update_registration: false, refused: false,
 }
 const RESULT: ImportResultData = {
   created: 1, relinked: 0, already_enrolled: 0, moved: [], errors: [], enrolled_total: 1, contracted_count: 10,
@@ -100,5 +103,14 @@ describe('ImportDialog', () => {
     montar()
     expect(screen.queryByText('operation.enrollment.import.reviewRefused')).toBeNull()
     expect(screen.getByText('operation.enrollment.import.close')).toBeTruthy()
+  })
+
+  it('planilha só com cabeçalho: sem dica nem Confirmar, só o Cancelar', () => {
+    setFlow({ step: 'triage', rows: [], sendableCount: 0 })
+    montar()
+    expect(screen.getByText('operation.enrollment.import.empty')).toBeTruthy()
+    expect(screen.queryByText('operation.enrollment.import.footerHint')).toBeNull()
+    expect(screen.queryByText(/operation\.enrollment\.import\.confirm/)).toBeNull()
+    expect(screen.getByText('common.cancel')).toBeTruthy()
   })
 })

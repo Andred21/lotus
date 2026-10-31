@@ -197,6 +197,26 @@ class ImportPreviewTest extends TestCase
             ->assertJsonPath('rows.1.message', $nomeObrigatorio);
     }
 
+    public function test_telefone_ou_email_acima_do_teto_da_coluna_vira_erro_na_linha_nova(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->previa([
+            ['11.111.111-1', 'Juan Soto', 'juan@acme.cl', str_repeat('9', 31)],
+            ['22.222.222-2', 'Pedro Lagos', str_repeat('a', 250).'@acme.cl', ''],
+            ['33.333.333-3', 'Ana Mora', 'ana@acme.cl', str_repeat('9', 30)],
+        ])->assertOk()
+            ->assertJsonPath('rows.0.status', 'error')
+            ->assertJsonPath('rows.0.message', __('validation.max.string', [
+                'attribute' => __('validation.attributes.phone'), 'max' => 30,
+            ]))
+            ->assertJsonPath('rows.1.status', 'error')
+            ->assertJsonPath('rows.1.message', __('validation.max.string', [
+                'attribute' => __('validation.attributes.email'), 'max' => 255,
+            ]))
+            ->assertJsonPath('rows.2.status', 'new');
+    }
+
     public function test_aluno_arquivado_sai_com_archived_true(): void
     {
         $this->actingAsAdmin();

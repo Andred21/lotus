@@ -35,8 +35,9 @@ class StudentData extends Data
         public string $name,
         #[Required]
         public string $rut,
-        #[Required, Email]
+        #[Required, Email, Max(255)]
         public string $email,
+        #[Max(30)]
         public string|Optional|null $phone,
         /** Cliente ao qual o aluno é vinculado no cadastro. Só entrada. */
         public int|Optional|null $client_id,

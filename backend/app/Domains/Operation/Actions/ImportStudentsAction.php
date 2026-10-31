@@ -134,7 +134,7 @@ class ImportStudentsAction
         if (! $lookup->exists) {
             // `update_registration` em aluno inexistente é ignorada (D13): o
             // aluno nasce com os dados da linha.
-            $this->resolver->assertCanCreate($line->rut, $line->name, $email);
+            $this->resolver->assertCanCreate($line->rut, $line->name, $email, $phone);
             $this->claimEmail($ledger, $email);
 
             return $this->enroll->execute($turma, $line->rut, $line->name, $email, $phone);

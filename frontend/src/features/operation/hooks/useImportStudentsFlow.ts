@@ -7,6 +7,8 @@ export type TriageRow = ImportPreviewRowData & {
   edited: boolean
   removed: boolean
   update_registration: boolean
+  /** O servidor recusou a linha na confirmação: só volta a ser enviável depois de editada. */
+  refused: boolean
 }
 
 type Step = 'upload' | 'triage' | 'result'
@@ -23,9 +25,13 @@ const EMPTY_COUNTS: Record<ImportRowStatus, number> = {
 
 const fieldsOf = ({ rut, name, email, phone }: Fields): Fields => ({ rut, name, email, phone })
 const isRegistered = (r: TriageRow) => r.status === 'registered' || r.status === 'moves'
-// D12: já matriculado nunca vai; `error` só vai depois de editado.
+// Recusada e ainda não editada: a tela a trata como `error`, mas sem perder o status de origem.
+export const isRefusedPending = (r: TriageRow) => r.refused && !r.edited
+/** Situação que a triagem mostra e conta: a recusada não editada vale `error`. */
+export const displayStatus = (r: TriageRow): ImportRowStatus => (isRefusedPending(r) ? 'error' : r.status)
+// D12: já matriculado nunca vai; `error` e recusada só vão depois de editados.
 const isSendable = (r: TriageRow) =>
-  !r.removed && r.status !== 'already_enrolled' && (r.status !== 'error' || r.edited)
+  !r.removed && r.status !== 'already_enrolled' && (displayStatus(r) !== 'error' || r.edited)
 
 /**
  * Máquina do diálogo de importação (D8): `upload` → `triage` → `result`. Toda a
@@ -53,7 +59,10 @@ export function useImportStudentsFlow(turmaId: number) {
 
   const pending = previewMutation.isPending || confirmMutation.isPending
   const rows = all.filter((r) => !r.removed)
-  const counts = rows.reduce((acc, r) => ({ ...acc, [r.status]: acc[r.status] + 1 }), EMPTY_COUNTS)
+  const counts = rows.reduce((acc, r) => {
+    const status = displayStatus(r)
+    return { ...acc, [status]: acc[status] + 1 }
+  }, EMPTY_COUNTS)
   const sendable = all.filter(isSendable)
 
   const load = (list: TriageRow[]) => {
@@ -72,7 +81,7 @@ export function useImportStudentsFlow(turmaId: number) {
       { turmaId, file },
       {
         onSuccess: (preview) => {
-          load(preview.rows.map((r) => ({ ...r, edited: false, removed: false, update_registration: false })))
+          load(preview.rows.map((r) => ({ ...r, edited: false, removed: false, update_registration: false, refused: false })))
           setCanUpdate(preview.can_update_registration)
           setStep('triage')
         },
@@ -108,19 +117,18 @@ export function useImportStudentsFlow(turmaId: number) {
       {
         onSuccess: (res) => {
           const byRow = new Map(res.errors.map((e) => [e.row, e.message]))
-          // Recusadas voltam como `error` sem edição: só seguem depois de corrigidas.
-          // A flag de Actualizar cai de propósito — o RUT pode mudar e, com ela
-          // ligada, a correção atualizaria o cadastro de outro aluno.
+          // A recusada de linha cadastrada (`registered`/`moves`) mantém a situação
+          // de origem — RUT travado, Mantener/Actualizar e a troca de empresa — e a
+          // flag como foi enviada: o RUT é travado, então a correção não muda de
+          // aluno. Só segue depois de editada. Linha `new`/`error` vira `error`.
           load(
             sent
               .filter((r) => byRow.has(r.row))
-              .map((r) => ({
-                ...r,
-                status: 'error' as const,
-                message: byRow.get(r.row) ?? null,
-                edited: false,
-                update_registration: false,
-              })),
+              .map((r) =>
+                isRegistered(r)
+                  ? { ...r, message: byRow.get(r.row) ?? null, refused: true, edited: false }
+                  : { ...r, status: 'error' as const, message: byRow.get(r.row) ?? null, edited: false, update_registration: false },
+              ),
           )
           setResult(res)
           setStep('result')

@@ -147,7 +147,7 @@ class StudentResolverTest extends TestCase
     {
         foreach ([null, ''] as $email) {
             try {
-                $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', $email);
+                $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', $email, null);
                 $this->fail('esperava ValidationException');
             } catch (ValidationException $e) {
                 $this->assertSame(['email'], array_keys($e->errors()));
@@ -177,7 +177,7 @@ class StudentResolverTest extends TestCase
     public function test_assert_can_create_recusa_nome_vazio(): void
     {
         try {
-            $this->resolver()->assertCanCreate('11.111.111-1', '', 'juan@acme.cl');
+            $this->resolver()->assertCanCreate('11.111.111-1', '', 'juan@acme.cl', null);
             $this->fail('esperava ValidationException');
         } catch (ValidationException $e) {
             $this->assertSame(['name'], array_keys($e->errors()));
@@ -189,14 +189,14 @@ class StudentResolverTest extends TestCase
         $nome = str_repeat('a', TetosImpressos::NOME_ALUNO + 1);
 
         try {
-            $this->resolver()->assertCanCreate('11.111.111-1', $nome, 'juan@acme.cl');
+            $this->resolver()->assertCanCreate('11.111.111-1', $nome, 'juan@acme.cl', null);
             $this->fail('esperava ValidationException');
         } catch (ValidationException $e) {
             $this->assertSame(['name'], array_keys($e->errors()));
         }
 
         // No teto exato passa.
-        $this->resolver()->assertCanCreate('11.111.111-1', str_repeat('a', TetosImpressos::NOME_ALUNO), 'juan@acme.cl');
+        $this->resolver()->assertCanCreate('11.111.111-1', str_repeat('a', TetosImpressos::NOME_ALUNO), 'juan@acme.cl', null);
     }
 
     public function test_assert_can_create_recusa_email_de_outro_usuario_inclusive_arquivado(): void
@@ -207,7 +207,7 @@ class StudentResolverTest extends TestCase
 
         foreach (['vivo@x.cl', 'arq@x.cl'] as $email) {
             try {
-                $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', $email);
+                $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', $email, null);
                 $this->fail('esperava ValidationException');
             } catch (ValidationException $e) {
                 $this->assertSame(['email'], array_keys($e->errors()));
@@ -216,12 +216,41 @@ class StudentResolverTest extends TestCase
         $this->assertNotNull($vivo->id);
     }
 
+    public function test_assert_can_create_recusa_telefone_e_email_acima_do_teto_da_coluna(): void
+    {
+        $emailLongo = str_repeat('a', 256 - strlen('@acme.cl')).'@acme.cl'; // 256
+
+        foreach ([
+            'phone' => ['juan@acme.cl', str_repeat('9', 31), 30],
+            'email' => [$emailLongo, null, 255],
+        ] as $campo => [$email, $phone, $max]) {
+            try {
+                $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', $email, $phone);
+                $this->fail('esperava ValidationException');
+            } catch (ValidationException $e) {
+                $this->assertSame([$campo], array_keys($e->errors()));
+                $this->assertSame([__('validation.max.string', [
+                    'attribute' => __("validation.attributes.{$campo}"),
+                    'max' => $max,
+                ])], $e->errors()[$campo]);
+            }
+        }
+
+        // No teto exato passa.
+        $this->resolver()->assertCanCreate(
+            '11.111.111-1',
+            'Juan Soto',
+            str_repeat('a', 255 - strlen('@acme.cl')).'@acme.cl',
+            str_repeat('9', 30),
+        );
+    }
+
     public function test_assert_can_create_nao_escreve(): void
     {
         $contar = fn () => [DB::table('users')->count(), DB::table('students')->count(), DB::table('audits')->count()];
         $antes = $contar();
 
-        $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', 'juan@acme.cl');
+        $this->resolver()->assertCanCreate('11.111.111-1', 'Juan Soto', 'juan@acme.cl', null);
 
         $this->assertSame($antes, $contar());
     }

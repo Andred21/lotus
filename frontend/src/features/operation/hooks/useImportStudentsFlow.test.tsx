@@ -169,8 +169,9 @@ describe('useImportStudentsFlow', () => {
     expect(invalidate).toHaveBeenCalledWith({ queryKey: enrollmentKeys.list(7) })
   })
 
-  it('recusadas voltam como rows com a mensagem do servidor', async () => {
+  it('recusada de linha cadastrada mantém status, flag e RUT travado; só segue depois de editada', async () => {
     const { result: r } = await loaded()
+    act(() => r.current.edit(3, { rut: '22.222.222-2', name: 'Beto Reyes', email: 'b@x.cl', phone: null }))
     post.mockResolvedValueOnce({
       data: result({ errors: [{ row: 3, message: 'Sin permiso para actualizar' }] }),
     })
@@ -181,21 +182,57 @@ describe('useImportStudentsFlow', () => {
     expect(r.current.rows).toHaveLength(1)
     expect(r.current.rows[0]).toMatchObject({
       row: 3,
-      status: 'error',
+      status: 'registered',
       message: 'Sin permiso para actualizar',
+      refused: true,
       edited: false,
-      update_registration: false,
+      update_registration: true,
     })
+    // a recusada conta como error até ser corrigida
+    expect(r.current.counts).toEqual({ new: 0, registered: 0, moves: 0, already_enrolled: 0, error: 1 })
 
     // volta à triagem e reenvia só essa, depois de corrigida
     act(() => r.current.reviewRefused())
     expect(r.current.step).toBe('triage')
     expect(r.current.sendableCount).toBe(0)
-    act(() => r.current.edit(3, { rut: '22.222.222-2', name: 'Beto', email: 'b@x.cl', phone: null }))
+    act(() => r.current.edit(3, { rut: '99.999.999-9', name: 'Beto', email: 'b@x.cl', phone: null }))
+    expect(r.current.rows[0]).toMatchObject({ rut: '22.222.222-2', edited: true, update_registration: true })
+    expect(r.current.sendableCount).toBe(1)
+    expect(r.current.counts.registered).toBe(1)
     post.mockResolvedValueOnce({ data: result() })
     act(() => r.current.confirm())
     await waitFor(() => expect(post).toHaveBeenCalledTimes(3))
-    expect((post.mock.calls[2][1] as { rows: unknown[] }).rows).toHaveLength(1)
+    expect((post.mock.calls[2][1] as { rows: unknown[] }).rows).toEqual([
+      { row: 3, rut: '22.222.222-2', name: 'Beto', email: 'b@x.cl', phone: null, update_registration: true },
+    ])
+  })
+
+  it('recusada de linha cadastrada com Mantener segue com a flag desligada', async () => {
+    const { result: r } = await loaded([previewRow({ row: 3, status: 'moves', current_client: 'Enel' })])
+    post.mockResolvedValueOnce({ data: result({ errors: [{ row: 3, message: 'Sin permiso' }] }) })
+
+    act(() => r.current.confirm())
+    await waitFor(() => expect(r.current.step).toBe('result'))
+
+    expect(r.current.rows[0]).toMatchObject({
+      status: 'moves', current_client: 'Enel', refused: true, update_registration: false,
+    })
+  })
+
+  it('recusada de linha nova vira error e só segue depois de editada', async () => {
+    const { result: r } = await loaded()
+    post.mockResolvedValueOnce({ data: result({ errors: [{ row: 2, message: 'RUT duplicado' }] }) })
+
+    act(() => r.current.confirm())
+    await waitFor(() => expect(r.current.step).toBe('result'))
+
+    expect(r.current.rows[0]).toMatchObject({
+      row: 2, status: 'error', message: 'RUT duplicado', edited: false, update_registration: false,
+    })
+    act(() => r.current.reviewRefused())
+    expect(r.current.sendableCount).toBe(0)
+    act(() => r.current.edit(2, { rut: '55.555.555-5', name: 'Ana', email: null, phone: null }))
+    expect(r.current.sendableCount).toBe(1)
   })
 
   it('close no meio da triagem descarta sem chamar a API e volta a upload', async () => {

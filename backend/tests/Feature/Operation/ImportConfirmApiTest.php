@@ -107,6 +107,45 @@ class ImportConfirmApiTest extends TestCase
             ->assertJsonPath('errors.1.row', 4);
     }
 
+    public function test_telefone_ou_email_longo_recusa_so_a_linha_e_nao_grava(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->confirmar(['rows' => [
+            $this->linha(['row' => 2, 'phone' => str_repeat('9', 31)]),
+            $this->linha(['row' => 3, 'rut' => '22.222.222-2', 'email' => str_repeat('a', 250).'@acme.cl']),
+            $this->linha(['row' => 4, 'rut' => '33.333.333-3', 'name' => 'Pedro', 'email' => 'p@acme.cl']),
+        ]])
+            ->assertOk()
+            ->assertJsonPath('created', 1)
+            ->assertJsonPath('errors.0.row', 2)
+            ->assertJsonPath('errors.1.row', 3);
+
+        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
+        $this->assertDatabaseMissing('users', ['rut' => '22.222.222-2']);
+    }
+
+    public function test_actualizar_com_telefone_longo_vira_erro_da_linha_e_nao_grava(): void
+    {
+        $this->actingAsAdmin();
+        app(StudentResolver::class)
+            ->resolveByRut('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null, $this->client);
+
+        $this->confirmar(['rows' => [
+            $this->linha([
+                'row' => 2, 'rut' => '33.333.333-3', 'name' => 'Pedro Alterado', 'email' => null,
+                'phone' => str_repeat('9', 31), 'update_registration' => true,
+            ]),
+            $this->linha(['row' => 3]),
+        ]])
+            ->assertOk()
+            ->assertJsonPath('created', 1)
+            ->assertJsonPath('errors.0.row', 2);
+
+        $this->assertSame('Pedro Lagos', User::where('rut', '33.333.333-3')->value('name'));
+        $this->assertSame(0, $this->turma->enrollments()->where('student_id', User::where('rut', '33.333.333-3')->first()->student->id)->count());
+    }
+
     public function test_rows_vazio_ou_ausente_ou_acima_de_100_recusa_422_sem_escrever(): void
     {
         $this->actingAsAdmin();
