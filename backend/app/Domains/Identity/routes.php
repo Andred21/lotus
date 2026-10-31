@@ -16,6 +16,7 @@ use App\Domains\Identity\Http\Controllers\StudentController;
 use App\Domains\Identity\Http\Controllers\StudentPhotoController;
 use App\Domains\Identity\Http\Controllers\UserController;
 use App\Domains\Identity\Http\Controllers\UserPhotoController;
+use App\Domains\Identity\Http\Controllers\VersaoController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas do domínio Identity. Já entram sob prefixo `api/` e middleware `api`
@@ -40,6 +41,8 @@ Route::middleware('throttle:password')->group(function () {
 Route::middleware('auth.active')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    // Versão da plataforma: só para quem tem sessão (spec do bloco 45).
+    Route::get('versao', VersaoController::class);
 
     // Perfil próprio (spec D4): recurso próprio, fora do grupo
     // `permission:identity.user.update`. `/me` continua servindo só a sessão.

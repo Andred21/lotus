@@ -91,6 +91,9 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimits::register();
 
+        // Toda linha de log carrega a versão em execução (rastreio de auditoria).
+        Log::shareContext(['versao' => config('app.version')]);
+
         Relation::enforceMorphMap([
             'user' => User::class,
             'client' => Client::class,
