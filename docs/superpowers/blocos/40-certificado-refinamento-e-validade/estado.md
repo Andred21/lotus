@@ -2,9 +2,9 @@
 schema_version: 3
 id: 40
 slug: 40-certificado-refinamento-e-validade
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item aceitacao externa
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/40-certificado-refinamento-e-validade/spec.md
 active_plan: docs/superpowers/blocos/40-certificado-refinamento-e-validade/plano.md
@@ -17,9 +17,9 @@ branch: docs/40-certificado-refinamento-e-validade
 worktree: ../lotus-40-certificado-refinamento-e-validade
 offset: 1
 lane_base: c97c49be
-commit: c97c49be
+commit: 8954b38a
 blocker: null
-updated_at: 2026-10-31T12:13:24-03:00
+updated_at: 2026-10-31T12:15:03-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
