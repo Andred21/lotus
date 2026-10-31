@@ -856,7 +856,7 @@
           "already_enrolled_one": "{{count}} ya matriculado",
           "already_enrolled_other": "{{count}} ya matriculados",
           "error_one": "{{count}} con error",
-          "error_other": "{{count}} con error"
+          "error_other": "{{count}} con errores"
         },
         "col": {
           "row": "Fila",
