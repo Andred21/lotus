@@ -65,7 +65,16 @@ fi
 
 # A tag ja existe? 404 e' "nao", e so ele. Qualquer outra falha da consulta nao
 # prova que a tag e' nova, e criar por cima de uma que existe seria o erro caro.
-if EXISTENTE=$(gh api "repos/$REPO/git/ref/tags/$TAG" --jq '.object.type + " " + .object.sha' 2>&1); then
+# A logica de estado da tag e' espelhada em scripts/backfill-releases.sh (estado_tag) e nao e'
+# compartilhada de proposito: este script atravessa para o espelho, aquele nao.
+# stdout do gh vai para a variavel; stderr, para um arquivo temporario lido logo depois, para que
+# um aviso do gh numa consulta bem-sucedida nao suje o parse. O 404 chega pelo stderr.
+ERRO_GH=$(mktemp) || pular "mktemp falhou; release nao publicada"
+EXISTENTE=$(gh api "repos/$REPO/git/ref/tags/$TAG" --jq '.object.type + " " + .object.sha' 2>"$ERRO_GH")
+CONSULTA=$?
+DETALHE=$(cat "$ERRO_GH" 2>/dev/null)
+rm -f "$ERRO_GH"
+if [ "$CONSULTA" -eq 0 ]; then
   TIPO=${EXISTENTE%% *}
   OBJETO=${EXISTENTE#* }
   if [ "$TIPO" = tag ]; then
@@ -81,9 +90,9 @@ if EXISTENTE=$(gh api "repos/$REPO/git/ref/tags/$TAG" --jq '.object.type + " " +
   fi
   pular "$TAG ja existe em $COMMIT e este deploy promoveu $SHA; a tag nao e movida"
 fi
-case "$EXISTENTE" in
+case "$DETALHE" in
   *"HTTP 404"*) ;;
-  *) pular "consulta da tag $TAG falhou ($EXISTENTE); release nao publicada" ;;
+  *) pular "consulta da tag $TAG falhou ($DETALHE); release nao publicada" ;;
 esac
 
 OBJETO_NOVO=$(gh api "repos/$REPO/git/tags" \

@@ -243,6 +243,7 @@ jobs:
         # e' o da main que roda, como o conferir-alinhamento.sh. `contents:
         # write` e' do job inteiro, e e' por isso que este e' o ultimo passo.
         continue-on-error: true
+        timeout-minutes: 2
         env:
           GH_TOKEN: ${{ github.token }}
         run: main/.github/scripts/publicar-release.sh alvo

@@ -286,4 +286,8 @@ describe('.github/workflows/deploy.yml', () => {
     expect(semComentarios).toMatch(/^permissions:[\s\S]*?\n\s+contents:\s*write\b/m)
     expect(semComentarios).not.toMatch(/contents:\s*read/)
   })
+
+  it('o passo de release tem o próprio timeout, curto: um gh pendurado não segura o job', () => {
+    expect(corpoDoPasso(RELEASE)).toMatch(/^\s+timeout-minutes: 2\s*$/m)
+  })
 })

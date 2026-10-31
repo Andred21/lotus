@@ -188,6 +188,12 @@ describe('release-please: workflow (bloco 45)', () => {
     expect(workflow).not.toContain('GITHUB_TOKEN')
   })
 
+  it('o GITHUB_TOKEN só lê o conteúdo: quem escreve é o PAT da action', () => {
+    const permissoes = workflow.match(/^permissions:\n((?: {2,}.*\n)+)/m)?.[1] ?? ''
+    expect(permissoes).toMatch(/^ {2}contents: read$/m)
+    expect(permissoes).not.toMatch(/write/)
+  })
+
   it('dispara só em push na main', () => {
     const on = workflow.match(/^on:\n((?: {2,}.*\n|\n)+)/m)?.[1] ?? ''
     expect(on).toMatch(/^ {2}push:/m)

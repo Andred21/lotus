@@ -7,8 +7,10 @@
 # - FAKE_TAG_EXISTE=1: a tag ja existe. FAKE_TAG_TIPO (tag|commit) e
 #   FAKE_TAG_OBJETO e' o sha que o ref guarda; FAKE_TAG_COMMIT e' o commit para
 #   o qual o OBJETO de tag aponta (so quando o tipo e' `tag`);
-# - FAKE_FALHA = lookup | tags | refs | release derruba a chamada daquele tipo
-#   (lookup falha com algo que NAO e' 404);
+# - FAKE_FALHA = lookup | tagobj | tags | refs | release derruba a chamada daquele
+#   tipo (lookup falha com algo que NAO e' 404; tagobj e' a leitura do objeto da
+#   tag anotada, git/tags/<obj>);
+# - FAKE_RUIDO=1: a consulta do ref escreve um aviso no stderr mesmo com sucesso;
 # - o corpo de `release create --notes-file -` vai para $FAKE_NOTAS.
 # O script passa `--jq`; o falso ja devolve o resultado filtrado, entao o
 # formato do --jq faz parte do contrato com o script.
@@ -26,9 +28,11 @@ case "${1:-}" in
       repos/*/git/ref/tags/*)
         falha lookup && { echo 'gh: Bad Gateway (HTTP 502)' >&2; exit 1; }
         [ "${FAKE_TAG_EXISTE:-}" = 1 ] || { echo 'gh: Not Found (HTTP 404)' >&2; exit 1; }
+        [ "${FAKE_RUIDO:-}" = 1 ] && echo 'gh: aviso: nova versao do gh disponivel' >&2
         echo "${FAKE_TAG_TIPO:-tag} ${FAKE_TAG_OBJETO:-}"
         ;;
       repos/*/git/tags/*)
+        falha tagobj && { echo 'gh: Bad Gateway (HTTP 502)' >&2; exit 1; }
         echo "${FAKE_TAG_COMMIT:-}"
         ;;
       repos/*/git/tags)

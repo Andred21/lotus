@@ -153,6 +153,9 @@ describe('.github/scripts/publicar-release.sh — tag nova', () => {
     expect(release.slice(0, 3)).toEqual(['release', 'create', 'v1.10.0'])
     expect(release).toContain('--verify-tag')
     expect(release[release.indexOf('--repo') + 1]).toBe(REPO)
+    expect(release[release.indexOf('--title') + 1]).toBe('v1.10.0')
+    // as notas entram pelo stdin: `--notes-file -`, nunca um arquivo no disco do runner
+    expect(release[release.indexOf('--notes-file') + 1]).toBe('-')
     expect(e.notas).toBe(`${NOTAS_1_10_0}\n`)
   })
 
@@ -220,6 +223,27 @@ describe('.github/scripts/publicar-release.sh — tag que já existe', () => {
     expect(ultimaLinha(e)).toBe('release: pulada')
     expect(escritas(e)).toEqual([])
     expect(avisos(e)[0]).toContain(OUTRO)
+  })
+
+  it('falha ao ler o objeto da tag anotada: aviso, "release: pulada" e nenhuma escrita', () => {
+    const e = rodar({
+      env: { FAKE_TAG_EXISTE: '1', FAKE_TAG_TIPO: 'tag', FAKE_TAG_OBJETO: OBJETO_TAG, FAKE_FALHA: 'tagobj' },
+    })
+    expect(e.status, e.stderr).toBe(0)
+    expect(ultimaLinha(e)).toBe('release: pulada')
+    expect(escritas(e)).toEqual([])
+    expect(avisos(e)).toHaveLength(1)
+    expect(avisos(e)[0]).toContain(OBJETO_TAG)
+    expect(e.chamadas.some((c) => c[1] === `repos/${REPO}/git/tags/${OBJETO_TAG}`)).toBe(true)
+  })
+
+  it('stderr do gh numa consulta que deu certo não entra no veredito (repromoção segue "ja publicada")', () => {
+    const e = rodar({
+      env: { FAKE_TAG_EXISTE: '1', FAKE_TAG_TIPO: 'tag', FAKE_TAG_OBJETO: OBJETO_TAG, FAKE_TAG_COMMIT: SHA, FAKE_RUIDO: '1' },
+    })
+    expect(e.status, e.stderr).toBe(0)
+    expect(ultimaLinha(e)).toBe('release: ja publicada v1.10.0')
+    expect(escritas(e)).toEqual([])
   })
 
   it('consulta da tag falhando por outra causa que não 404: não presume tag nova', () => {
