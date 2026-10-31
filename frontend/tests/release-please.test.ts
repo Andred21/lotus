@@ -58,6 +58,16 @@ function naoClassificadas(entradas: Entrada[], excluidos: string[]): string[] {
     .map(({ nome }) => nome)
 }
 
+// Retorna as entradas do `exclude-paths` que não teriam efeito: arquivo solto rastreado ou arquivo
+// inerte por convenção. Entrada AUSENTE da árvore não reprova: no espelho (Gatika-CL) `.agents`,
+// `.claude`, `docs` etc. não existem, porque estão no `.espelho-exclusoes`, e o `exclude-paths`
+// continua listando-os. A catraca precisa passar nas duas árvores.
+function excluidosSemEfeito(entradas: Entrada[], excluidos: string[]): string[] {
+  const arquivos = new Set(entradas.filter((e) => !e.diretorio).map((e) => e.nome))
+  const inertes = new Set(INERTES_POR_CONVENCAO)
+  return excluidos.map(semBarraFinal).filter((e) => arquivos.has(e) || inertes.has(e))
+}
+
 function entradasDePrimeiroNivel(): Entrada[] {
   // `-z` evita o escape octal que o git aplica a "INSTRUÇÕES-DO-PROJETO.md" (acentos).
   const arquivos = execFileSync('git', ['ls-files', '-z'], { cwd: raiz, encoding: 'utf8' })
@@ -128,13 +138,23 @@ describe('release-please: catraca da raiz (bloco 45)', () => {
   })
 
   it('exclude-paths só tem diretório: arquivo listado ali não teria efeito no release-please', () => {
-    const diretorios = new Set(
-      entradasDePrimeiroNivel()
-        .filter((e) => e.diretorio)
-        .map((e) => e.nome),
-    )
-    const arquivosListados = excluidos.map(semBarraFinal).filter((e) => !diretorios.has(e))
-    expect(arquivosListados).toEqual([])
+    expect(excluidosSemEfeito(entradasDePrimeiroNivel(), excluidos)).toEqual([])
+  })
+
+  it('exclude-paths não reprova entrada ausente da árvore (espelho sem .claude, docs etc.)', () => {
+    const semAusente = entradasDePrimeiroNivel().filter((e) => e.nome !== 'docs')
+    expect(semAusente.some((e) => e.nome === 'docs')).toBe(false)
+    expect(excluidosSemEfeito(semAusente, [...excluidos, 'docs'])).toEqual([])
+  })
+
+  it('reprova arquivo solto rastreado listado no exclude-paths', () => {
+    const comArquivo = [...entradasDePrimeiroNivel(), { nome: 'solto.md', diretorio: false }]
+    expect(excluidosSemEfeito(comArquivo, [...excluidos, 'solto.md'])).toEqual(['solto.md'])
+  })
+
+  it('reprova arquivo inerte por convenção listado no exclude-paths, mesmo fora do índice', () => {
+    const semLicense = entradasDePrimeiroNivel().filter((e) => e.nome !== 'LICENSE')
+    expect(excluidosSemEfeito(semLicense, [...excluidos, 'LICENSE'])).toEqual(['LICENSE'])
   })
 
   it('arquivo inerte por convenção não é diretório do repositório', () => {
