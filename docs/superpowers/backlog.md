@@ -167,6 +167,40 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 
 ---
 
+## 45. `cicd-releases-versionamento-e-licenca`
+
+**Prioridade:** P2 · **Frente:** CI/CD · **Contexto:** não · **Depende:** —
+**Fonte:** pedido do João em 2026-10-31; `backend/composer.json:7` (`"license": "MIT"`),
+`frontend/package.json:4` (`"version": "0.0.0"`), `CONTRIBUINDO.md` (espelho Andred21 → Gatika-CL).
+Ficha entra pela PR da própria lane, como no item 42 (a pedido do João).
+
+**Por que existe:** o projeto não tem versão, tag, release nem CHANGELOG. O repo público declara
+MIT sem decisão nenhuma, o que concede uso comercial irrestrito a terceiros. O contrato com a
+Gatika/Lotus não diz quem é titular do código, e nada no repositório prova autoria.
+
+**Escopo:**
+- **SemVer + release-please:** config e manifest, versão inicial decidida no brainstorming, PR de
+  release a partir dos Conventional Commits, tag `vX.Y.Z`, Release com notas e `CHANGELOG.md`;
+- **versão dentro do sistema:** fonte única da versão propagada ao `package.json`, ao
+  `composer.json`/config do backend (exposta por endpoint ou header) e à interface (sidebar ou
+  rodapé do shell); imagem de deploy rotulada com a tag;
+- **espelho:** tags e releases no Gatika-CL (via script de espelho ou release só num lado —
+  decidir);
+- **licença e titularidade:** sem MIT; `LICENSE` proprietária ("all rights reserved") nos dois
+  repos, com o aviso de copyright refletindo o arranjo entre João e cliente; cabeçalho/`NOTICE`;
+  rascunho de termo (cessão ou licença cruzada) para o João levar ao contrato;
+- **autenticidade:** commits e tags assinados (SSH), `SECURITY.md`, atestado de procedência da
+  imagem no CI.
+
+**Fora:** parecer jurídico e assinatura do termo (ficam com o João); registro no INPI; mudança no
+fluxo de deploy além do rótulo da tag.
+
+**DoD:** `feat` mesclado gera PR de release com bump MINOR e `fix` gera PATCH (provado); release
+`vX.Y.Z` publicada com CHANGELOG; a mesma versão aparece na API e na sidebar; `LICENSE` correta nos
+dois repos e nenhum manifest declarando MIT; tag assinada aparece "Verified".
+
+---
+
 ## 42. `infra-producao-higiene-e-manutencao`
 
 **Prioridade:** P1, urgente · **Frente:** Infra · **Contexto:** não · **Depende:** —
