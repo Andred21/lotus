@@ -96,3 +96,13 @@ CGE e sem matrícula): `17.111.110-2`, Rodrigo Pizarro, `rodrigo.pizarro@cge.dem
 | J-2 | Important | Na tabela, o RUT invade a coluna Nombre (por exemplo, "17.111.110-2" encosta em "Rodrigo"). Um e-mail longo passa por cima da tag de Situación. | `<sp>/j2-triagem.png`, `<sp>/j4-pre-confirm.png` |
 | J-3 | Minor | Com a planilha vazia, o rodapé mantém "Las filas con error no se envían" e o botão "Confirmar 0 filas", só que desabilitado. O Review Focus 1 previa a mensagem **no lugar** de "Confirmar 0 filas". | `<sp>/j9-vazia.png` |
 | J-4 | Pré-existente | A recusa por e-mail duplicado sai em pt-BR ("Este e-mail já está cadastrado.") numa interface es-CL. A frase é literal em `UserProvisioner::DUPLICADO`, um caso já registrado em `pendencias/abertas.md` (gatilho: "bloco que tocar `Identity/Services/UserProvisioner`"). Este bloco não tocou esse arquivo. | `<sp>/j5-resultado.png` |
+
+## Re-verificação depois da correção final (`4e0c72fa`)
+
+No mesmo navegador e na mesma turma, com o Vite recarregado:
+
+- **J-1:** o link "Descargar plantilla" mede `rgb(202,213,226)` sobre `rgb(15,43,61)`, 9,86:1 (`<sp>/f1-header.png`). Forcei uma recusa sem escrita (fila 6 com RUT `11.111.111-1` e o e-mail de outra aluna). No resumo, "Corregir filas rechazadas" mede o mesmo 9,86:1, com borda `rgba(255,255,255,0.5)`, e "Cerrar" também (`<sp>/f3-resultado.png`). O resumo deu `Creados: 0`.
+- **J-2:** reimportei a planilha da jornada. O RUT mais largo (`17.111.110-2`) termina a 29px da coluna Nombre, e o e-mail mais longo (`vicente.bustamante@transelec.demo.cl`) quebra dentro da própria coluna e termina a 23px de Situación (`<sp>/f2-triagem.png`).
+- **J-3:** com a planilha só com cabeçalho, o diálogo mostra "No hay filas para importar." e o rodapé fica só com "Cancelar" (`<sp>/f4-vazia.png`).
+- O editor limita o telefone a 30 caracteres (`maxLength` 30, medido no input).
+- **Console:** nenhum erro.

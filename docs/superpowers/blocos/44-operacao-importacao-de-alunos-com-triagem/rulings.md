@@ -1,0 +1,18 @@
+# Bloco 44 — rulings da execução
+
+Decisões do controller durante o `/executar-bloco 44` (subagent-driven-development), uma por linha, com o custo se estiver errada.
+
+- Pipeline de profundidade 1, com os implementadores nunca em paralelo (Passo 5.1 do command). Custo se errado: nenhum.
+- Task 1: a rota `GET turmas/{turma}/alunos/importar/plantilla` entra em `ListQueryBudgetTest::COM_PAI_ISENTAS`, não em `ISENTAS` como o plano dizia, porque a rota tem `{turma}`. Custo se errado: mover uma linha de lista.
+- Task 3: nome vazio vira erro em toda linha (D17 vence o silêncio do brief). A regra mora em `StudentResolver::assertNameProvided` e é chamada antes de separar aluno novo de existente. Custo se errado: a linha de aluno cadastrado com nome vazio é recusada em vez de manter o nome do cadastro.
+- Task 4: na confirmação, o conjunto de e-mails vistos inclui a linha nova e a linha com Actualizar que traz e-mail (D18). Custo se errado: uma segunda linha legítima com o mesmo e-mail de um Actualizar seria recusada.
+- Task 4: a escrita do Actualizar entra por `StudentResolver::updateRegistration`, arquivo fora de Files, porque o `DomainDependencyTest` proíbe Operation de importar `Identity\Actions`/`Data`. Custo se errado: mover a porta para outro Service de Identity.
+- Task 4: `ImportConfirmRowData` declara `rut`/`name` como `present|nullable|string`, não `required`: com `required` e o `ConvertEmptyStringsToNull`, o lote inteiro cairia com 422, contra D13/D17. Custo se errado: o payload sem o campo vira erro de linha em vez de 422.
+- Task 4: `ImportBatchLedger` novo, compartilhado pela prévia e pela confirmação, como fonte única da regra de duplicidade. Custo se errado: um arquivo a mais.
+- Task 6: o hook ganha três extras no retorno (`message`, `setSizeError`, `reviewRefused`), porque o contrato não tinha como mostrar erro da API nem sair do resumo. Custo se errado: superfície maior do hook.
+- Task 6 (substituída pela ruling final sobre recusadas): as recusadas voltavam com `update_registration=false`, para não atualizar o cadastro de outro aluno depois de uma correção de RUT. Custo, que a revisão final confirmou: a recusada de Actualizar reenviada só matriculava.
+- Task 7: `EnrollmentSection.tsx` e `plural.test.ts` foram autorizados fora de Files, porque D7 exige a turma no cabeçalho e "<empresa atual> → <empresa da turma>". O rótulo da turma é o `course_name`, o mesmo do cabeçalho da página da turma. Custo se errado: trocar o rótulo, uma linha.
+- Task 7: "Registro: …" mostra o valor do cadastro de todo campo divergente, não só do nome. Custo se errado: a linha secundária fica mais longa.
+- Final: a recusada de linha `registered`/`moves` mantém o status de origem (RUT travado, par Mantener/Actualizar, "Registro:" e "Enel → CGE"), fica marcada como recusada e só pode ser reenviada depois de editada. A flag de Actualizar volta como foi enviada. Substitui a ruling da Task 6: com o RUT travado, o risco do RUT trocado não existe. Custo se errado: a recusada de cadastro reenviada atualiza o cadastro de novo, o que é o pedido do admin; a recusa por permissão sem Actualizar só sai removendo a linha.
+- Final: `max:30` no telefone e `max:255` no e-mail, em `StudentResolver::assertCanCreate` e em `StudentData`; vale também para o CRUD de aluno. Custo se errado: telefone ou e-mail longo é recusado com 422 também na tela de cadastro, que antes dava 500.
+- Final: J-3 e os pontos menores baratos entram na rodada final: motivo do `UploadPolicyRatchetTest`, "Leyendo planilla…" na prévia, `aria-label` do radiogroup, mensagem antiga escondida em linha editada e a nota do alcance novo na P-76. Custo se errado: diff maior na rodada final.
