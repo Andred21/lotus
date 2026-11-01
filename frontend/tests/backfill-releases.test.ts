@@ -204,9 +204,12 @@ describe('scripts/backfill-releases — forma e tabela real', () => {
     expect(rows[12].slice(1)).toEqual(['2026-10-31', '5fba081d7bff45e4ad4b930d49957f6c91f47978', '935145f5394ed9aa3ba389222591ede703353bca'])
   })
 
-  it('a última versão da tabela é a que está em version.txt', () => {
-    const ultima = readFileSync(TABELA_REAL, 'utf8').trim().split('\n').at(-1)!.split('\t')[0]
-    expect(ultima).toBe(readFileSync(join(RAIZ, 'version.txt'), 'utf8').trim())
+  // A tabela é fixa e o version.txt anda a cada PR de release; o ponto de
+  // emenda que não muda é o bootstrap-sha, de onde o release-please parte.
+  it('a origem da última linha da tabela é o bootstrap-sha do release-please', () => {
+    const origem = readFileSync(TABELA_REAL, 'utf8').trim().split('\n').at(-1)!.split('\t')[2]
+    const config = JSON.parse(readFileSync(join(RAIZ, 'release-please-config.json'), 'utf8'))
+    expect(origem).toBe(config['bootstrap-sha'])
   })
 
   it('é ferramenta de desenvolvimento: o script e a tabela não atravessam para o espelho', () => {

@@ -33,7 +33,6 @@ const INERTES_POR_CONVENCAO = [
   'docker-compose.prod-tls.yml',
   'docker-compose.prod.yml',
   'docker-compose.yml',
-  // nascem em tasks paralelas do bloco e podem ainda não estar no índice do git
   'LICENSE',
   'CHANGELOG.md',
   'version.txt',
@@ -79,8 +78,6 @@ function entradasDePrimeiroNivel(): Entrada[] {
     const [primeiro, ...resto] = arquivo.split('/')
     mapa.set(primeiro, (mapa.get(primeiro) ?? false) || resto.length > 0)
   }
-  // Entradas que nascem em tasks paralelas do bloco e podem ainda não estar no índice (arquivos).
-  for (const extra of INERTES_POR_CONVENCAO) if (!mapa.has(extra)) mapa.set(extra, false)
   return [...mapa].map(([nome, diretorio]) => ({ nome, diretorio }))
 }
 
@@ -162,6 +159,12 @@ describe('release-please: catraca da raiz (bloco 45)', () => {
       .filter((e) => e.diretorio)
       .map((e) => e.nome)
     expect(INERTES_POR_CONVENCAO.filter((e) => diretorios.includes(e))).toEqual([])
+  })
+
+  it('arquivo inerte por convenção existe no índice, salvo o que o espelho exclui', () => {
+    const presentes = new Set(entradasDePrimeiroNivel().map((e) => e.nome))
+    const doEspelho = new Set(ler('.espelho-exclusoes').split('\n').map((l) => l.trim()))
+    expect(INERTES_POR_CONVENCAO.filter((e) => !presentes.has(e) && !doEspelho.has(e))).toEqual([])
   })
 
   it('reprova um diretório novo que ninguém classificou', () => {
