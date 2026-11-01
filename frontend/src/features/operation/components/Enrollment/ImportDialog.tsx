@@ -30,14 +30,7 @@ export function ImportDialog({ turmaId, visible, onHide, turmaLabel, clientName 
 
   const hasRows = f.rows.length > 0
 
-  const header = (
-    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-      <span>{turmaLabel ? `${k('title')} · ${turmaLabel}` : k('title')}</span>
-      {f.step !== 'result' && (
-        <AppButton label={k('template')} link disabled={f.pending} onClick={f.downloadTemplate} />
-      )}
-    </div>
-  )
+  const header = turmaLabel ? `${k('title')} · ${turmaLabel}` : k('title')
 
   // Antes da triagem a saída é o X; o Cerrar só existe depois do resultado.
   const footer =
@@ -80,13 +73,24 @@ export function ImportDialog({ turmaId, visible, onHide, turmaLabel, clientName 
         {f.step === 'upload' && (
           <>
             <p className="text-sm" style={secondary}>{k('help')}</p>
-            <AppFileUpload
-              accept=".xlsx,.csv"
-              chooseLabel={k('choose')}
-              onSizeReject={f.setSizeError}
-              uploadHandler={(e) => f.upload(e.files)}
-              disabled={f.pending}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <AppFileUpload
+                accept=".xlsx,.csv"
+                chooseLabel={k('choose')}
+                onSizeReject={f.setSizeError}
+                uploadHandler={(e) => f.upload(e.files)}
+                disabled={f.pending}
+              />
+              {/* Mesmo papel dos botões de arquivo do manual: contornado, com o ícone do tipo. */}
+              <AppButton
+                label={k('template')}
+                icon="pi pi-file-excel"
+                outlined
+                loading={f.templatePending}
+                disabled={f.pending}
+                onClick={f.downloadTemplate}
+              />
+            </div>
             {f.pending && <p className="text-sm" style={secondary}>{k('uploading')}</p>}
           </>
         )}

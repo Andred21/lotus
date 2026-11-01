@@ -36,7 +36,7 @@ const fns = {
 function setFlow(over: Record<string, unknown>) {
   flow.current = {
     step: 'upload', rows: [], counts: { new: 0, registered: 0, moves: 0, already_enrolled: 0, error: 0 },
-    sendableCount: 0, canUpdateRegistration: true, result: null, pending: false, sizeError: null, message: null,
+    sendableCount: 0, canUpdateRegistration: true, result: null, pending: false, templatePending: false, sizeError: null, message: null,
     ...fns, ...over,
   }
 }
@@ -54,7 +54,11 @@ describe('ImportDialog', () => {
     montar()
     expect(screen.getByText('operation.enrollment.import.help')).toBeTruthy()
     expect(screen.getByText(/operation\.enrollment\.import\.title/).textContent).toContain('2026-118')
-    fireEvent.click(screen.getByText('operation.enrollment.import.template'))
+    // O modelo sai no corpo, ao lado de Elegir archivo, com o ícone do tipo de arquivo.
+    const template = screen.getByRole('button', { name: 'operation.enrollment.import.template' })
+    expect(template.closest('.p-dialog-header')).toBeNull()
+    expect(template.querySelector('.pi-file-excel')).toBeTruthy()
+    fireEvent.click(template)
     expect(fns.downloadTemplate).toHaveBeenCalled()
   })
 

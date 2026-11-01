@@ -160,6 +160,7 @@ export function useImportStudentsFlow(turmaId: number) {
     canUpdateRegistration,
     result,
     pending,
+    templatePending: templateMutation.isPending,
     sizeError,
     setSizeError,
     message,
