@@ -10,6 +10,14 @@
   --brand: #25a5e4; /* celeste-lotus — fonte CSS única; não há mais fonte JS (spec D7 do BD-16) */
   --brand-navy: #0f2b3d; /* azul-poste — sidebar, texto do botão primário (D6) */
 
+  /* Linha do título de seção de formulário (`FormSection`, tone "brand"):
+   * o celeste com TRANSPARÊNCIA, não um degrau da rampa `--primary-*`. Um
+   * degrau fixo sairia certo num tema e errado no outro; a transparência deixa
+   * a linha abaixo do título no claro (celeste pálido) e no escuro (celeste
+   * apagado). Token, e não `color-mix` no `style`, porque a catraca
+   * `COR_LITERAL_EM_STYLE` só aceita valor que comece por `var(`. */
+  --section-rule: color-mix(in srgb, var(--primary-color) 35%, transparent);
+
   /* Tinta sobre as superfícies navy FIXAS do shell (sidebar, header). NÃO pode
    * sair de `--text-color`: essas superfícies não acompanham o swap de tema
    * (spec §6/UI-04), e a tinta do tema claro seria texto escuro sobre navy —

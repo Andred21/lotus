@@ -58,6 +58,40 @@ describe('FormField em modo leitura', () => {
   })
 })
 
+describe('FormField: hierarquia label × valor', () => {
+  it('a label sai em 14px peso 500 na tinta de corpo', () => {
+    const { container } = render(<FormField label="RUT"><input /></FormField>)
+
+    const label = container.querySelector('label') as HTMLLabelElement
+    expect(label.className).toContain('text-sm')
+    expect(label.className).toContain('font-medium')
+    const style = label.getAttribute('style') ?? ''
+    expect(style).toContain('var(--text-color)')
+    expect(style).not.toContain('--text-color-secondary')
+  })
+
+  it('o valor de leitura sai em 14px regular na tinta de corpo', () => {
+    render(<FormField label="RUT" readOnly value="76.123.456-7" />)
+
+    const valor = screen.getByText('76.123.456-7')
+    expect(valor.className).toContain('text-sm')
+    expect(valor.className).not.toContain('font-medium')
+    expect(valor.getAttribute('style')).toContain('var(--text-color)')
+  })
+
+  it('em leitura a label segue sem htmlFor e com erro o nome acessível do controle não muda', () => {
+    const { container, rerender } = render(<FormField label="RUT" readOnly value="x" />)
+    expect(container.querySelector('label')?.hasAttribute('for')).toBe(false)
+
+    rerender(
+      <FormField label="RUT" error="RUT inválido">
+        <ControleDeTeste />
+      </FormField>,
+    )
+    expect(screen.getByLabelText('RUT')).toBe(screen.getByTestId('controle'))
+  })
+})
+
 describe('NestedField em modo leitura', () => {
   it('mostra o valor como texto e NÃO monta o controle', () => {
     render(

@@ -4,21 +4,30 @@ import { FormSection } from './FormSection'
 import { sectionLabelClass } from '../typography'
 
 /**
- * A P-36 já foi reaberta três vezes, sempre pela mesma via: o título de seção
- * volta a receber a tinta de marca porque "sem cor fica sem graça". A decisão
- * (spec D1) é que a marca preenchida passa a valer só para a ação primária do
- * cartão, e que a hierarquia do título vem de PESO e TRACKING. Isto é o
- * mecanismo dessa decisão — sem ele, ela é só um parágrafo de docblock.
+ * A D1/P-36 do audit de 2026-08-26 tirou a tinta de marca do título de seção
+ * (2,77:1 sobre o humo; celeste em sete papéis na mesma dobra de `/perfil`) e
+ * este arquivo travava a decisão. O João reverteu em 2026-11-01: o título volta
+ * ao `--primary-color` nos dois temas, com a linha contínua até a borda. No
+ * escuro passa o AA; no claro fica em 2,77:1 no card e 2,53:1 no humo, e ele
+ * aceitou esse contraste como decisão dele. Os casos abaixo são o mecanismo da
+ * regra nova — sem eles, a próxima auditoria reabre a ficha pelo contraste.
  */
 describe('FormSection', () => {
-  it('pinta o título com a tinta de CORPO, não com a de marca', () => {
+  it('pinta o título de --primary-color (reversão da D1/P-36, João, 2026-11-01)', () => {
     render(<FormSection title="Identidad" />)
 
     const titulo = screen.getByRole('heading', { name: 'Identidad' })
-    expect(titulo.getAttribute('style')).toContain('var(--text-color)')
+    expect(titulo.getAttribute('style')).toContain('var(--primary-color)')
   })
 
-  it('carrega a hierarquia no peso e no tracking, não na cor', () => {
+  it('traz a linha contínua até a borda', () => {
+    const { container } = render(<FormSection title="Identidad" />)
+
+    expect(container.querySelector('span[aria-hidden="true"]')?.getAttribute('style'))
+      .toContain('var(--section-rule)')
+  })
+
+  it('carrega a hierarquia no peso e no tracking', () => {
     render(<FormSection title="Identidad" />)
 
     const titulo = screen.getByRole('heading', { name: 'Identidad', level: 3 })
