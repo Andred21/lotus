@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { APP_VERSION } from "@shared/config/brand";
 import { AuthPanel } from "./AuthPanel";
 import { AppearanceControls, AppLogo, technicalDataClass } from "@/shared/ui";
 
@@ -40,16 +39,6 @@ export function LoginPage() {
         >
           {t("brand.sector")}
         </p>
-
-        {/* No fluxo no mobile, fixado no rodapé só a partir de md: com o painel
-            crescendo por conteúdo, um badge absoluto colidia com a legenda de
-            setor em vez de ficar abaixo dela. */}
-        <span
-          className={`mt-2 ${technicalDataClass} text-[13px] md:absolute md:bottom-4 md:mt-0`}
-          style={{ color: 'var(--primary-300)' }}
-        >
-          {APP_VERSION}
-        </span>
 
       </aside>
 

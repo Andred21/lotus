@@ -190,3 +190,131 @@ outras duas vêm do overlay, então a árvore que usa esse offset derruba a stac
 dev antes (`docker compose stop` basta — preserva containers e volumes — e
 `docker compose start` depois). Colisão faz o Compose falhar alto com `port is
 already allocated`, e o `trap` limpa o que chegou a subir.
+
+## Releases
+
+**O que é versão.** Versão é o que foi **promovido a produção**, não o que foi
+mesclado em `main` (D1 do bloco 45). A fonte única é `version.txt` na raiz,
+mantida pelo release-please (`release-please-config.json` e
+`.release-please-manifest.json`); ele propaga o número para
+`frontend/package.json` e para a linha `version` de `backend/config/app.php`.
+Nunca se edita nenhum dos três à mão: uma catraca de CI reprova se divergirem.
+O `CHANGELOG.md` também é gerado.
+
+**Regra de bump (D2).** Só conta mudança de produto: commit que toca `backend/`,
+`frontend/`, `docker/`, `deploy/` ou `.github/`.
+
+| Commit | Sobe |
+|---|---|
+| `fix`, `perf` | PATCH |
+| `feat` | MINOR |
+| `BREAKING CHANGE` ou `tipo!:` | MAJOR |
+| `refactor`, `cicd`, `chore`, `docs`, `test` e demais | nada, **e não aparecem no CHANGELOG** (seções `hidden: true` no `release-please-config.json`) |
+
+Harness, docs e tooling (`.claude/`, `.agents/`, `.codex/`, `.githooks/`,
+`.impeccable/`, `docs/`, `scripts/`) ficam no `exclude-paths` e nunca geram
+versão. `docker-compose.prod.yml` e `docker-compose.prod-tls.yml` **não** estão
+no `exclude-paths`: são arquivos soltos da raiz e valem pela regra A abaixo
+(E3 substitui a menção da E2).
+
+**Arquivo solto da raiz (regra A, E3).** O `exclude-paths` do release-please só
+exclui **diretório**. Um commit que toque **só** arquivo solto da raiz
+(`CLAUDE.md`, `README.md`, `LICENSE`, `docker-compose*.yml` e afins) usa o tipo
+`docs`, `chore` ou `cicd`, **nunca** `feat`, `fix`, `perf` ou `!`: esses
+gerariam versão. Um commit que mistura diretório excluído e arquivo solto conta
+para o release-please (o arquivo solto não é excluído), então o mesmo tipo vale.
+É convenção, não há trava no servidor.
+
+**O caminho de uma versão.**
+
+```
+push em main ──▶ release-please mantém a PR de release (CHANGELOG + bump)
+                          │  mesclar a PR = "isto vai para produção"
+                          ▼
+       tag vX.Y.Z + Release em Andred21/lotus (antes da promoção)
+                          │
+        scripts/espelhar-corporativo.sh  ──▶  Gatika-CL/lotus
+                          │
+        deploy.yml (mesmo botão, mesmo SHA) ──▶ deploy OK
+                          ▼
+   passo "Release da versao promovida": tag anotada vX.Y.Z + Release
+   no Gatika-CL, no SHA promovido, com as notas do CHANGELOG.md
+```
+
+Antes de espelhar, mescle a PR de release; é o caminho normal. O workflow é
+`.github/workflows/release-please.yml`, guardado por
+`github.repository == 'Andred21/lotus'` (o espelho recebe o arquivo, mas não o
+secret).
+
+**O token.** O workflow usa o secret `RELEASE_PLEASE_TOKEN`, um PAT
+fine-grained com `contents: write` e `pull-requests: write` **só** no
+`Andred21/lotus`. Não é o `GITHUB_TOKEN`: PR aberta com ele não dispara outros
+workflows, e o CI da PR de release nunca rodaria. Na criação do token, confira
+se o release-please exige também `Issues: write` (para o label
+`autorelease: pending`); não está confirmado que exija.
+
+```bash
+gh secret set RELEASE_PLEASE_TOKEN -R Andred21/lotus
+```
+
+**O passo do `deploy.yml`.** Roda por último, com `continue-on-error: true`, e
+chama `.github/scripts/publicar-release.sh`. A produção já subiu quando ele
+roda, então ele **nunca reprova** o deploy: toda falha vira `::warning::`. A
+versão vem do `version.txt` do SHA promovido; as notas, da seção dessa versão no
+`CHANGELOG.md`. A última linha do stdout diz o que houve:
+
+- `release: criada vX.Y.Z`: tag anotada e Release criadas.
+- `release: ja publicada vX.Y.Z`: **repromoção**. A tag já existe no mesmo SHA e
+  o passo não escreve nada.
+- `release: pulada`, com o motivo no aviso: entre eles, **tag em outro SHA**.
+  Promover um SHA sem PR de release mesclada desde a última cai aqui (o
+  `version.txt` aponta para tag de outro commit). A tag nunca é movida nem
+  sobrescrita; o deploy segue verde.
+
+**Rollback nunca cria release.** O veredito é "já publicada" (SHA promovido
+depois do bloco 45, cujo `version.txt` aponta para uma tag que já existe nele) ou
+"pulada" (SHA sem `version.txt`, como os do backfill, ou tag em outro SHA).
+
+**Tags.** No `Andred21/lotus`, as tags do release-please são leves; as do
+backfill e as do Gatika-CL (passo do deploy) são anotadas.
+
+Um caso pede ação manual. Se a tag existe no mesmo SHA mas a **Release** não
+(um `release create` anterior falhou), o passo responde "já publicada" e não
+escreve nada, porque não confere a Release. Crie-a à mão:
+
+```bash
+awk -v v=X.Y.Z '/^## /{ if (d) exit; d = (index($0, "## [" v "]") == 1 || index($0, "## " v " ") == 1); next } d' CHANGELOG.md \
+  | gh release create vX.Y.Z --verify-tag --title vX.Y.Z -R Gatika-CL/lotus --notes-file -
+```
+
+O `awk` extrai do `CHANGELOG.md` a seção da versão e a entrega ao `gh` pelo
+pipe; sem ele, o `--notes-file -` ficaria esperando digitação no terminal.
+
+**Ordem das ações externas.** Duas, feitas pelo João, nesta ordem:
+
+1. **Antes do merge do bloco 45:** criar o secret `RELEASE_PLEASE_TOKEN` no
+   `Andred21/lotus`. O push do merge já dispara o `release-please.yml`; sem o
+   secret, ele falha.
+2. **Logo depois do merge do bloco 45, antes de mesclar a primeira PR de release
+   e antes de qualquer promoção:** rodar o backfill, que cria as 13 versões
+   `1.0.0` a `1.9.1` (tags anotadas e Releases) nos dois repositórios. Uma
+   promoção antes do backfill faz o passo do deploy criar a `v1.9.1` no SHA
+   promovido, e o backfill passa a recusar essa linha ("tag em outro SHA"); o
+   reparo é apagar essa tag à mão. Pré-requisitos: clone **não raso** (o script
+   recusa clone raso), um remoto `upstream` apontando para `Gatika-CL/lotus` (ele
+   confere o `Source-Commit` ali), `git config user.name` e `user.email` (o
+   tagger da tag anotada) e o `gh` autenticado com escrita nos dois repos. Antes
+   de escrever qualquer coisa, confere a tabela contra o bump de D2 e contra o
+   log das execuções `success` do `deploy.yml`; qualquer divergência para tudo. É
+   seguro rodar de novo após uma falha no meio. O `--latest` da última linha só
+   vale em repositório sem release cuja tag esteja fora da tabela; havendo,
+   todas as linhas dele usam `--latest=false`.
+
+```bash
+scripts/backfill-releases.sh --simular   # mostra tudo, não escreve
+scripts/backfill-releases.sh             # escreve (só o João)
+```
+
+A tabela autoritativa é `scripts/backfill-releases.tsv`; o script nunca a
+ajusta. Ele e a tabela estão no `.espelho-exclusoes`: não atravessam para o
+corporativo.

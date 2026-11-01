@@ -160,10 +160,44 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | **34** `infra-producao-observabilidade` | 7 | 2026-10-05 |
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **42** `infra-producao-higiene-e-manutencao` | 6, 7, 8 | 2026-10-27 |
+| **45** `cicd-releases-versionamento-e-licenca` | 1, 2 | 2026-11-01 |
 
 ---
 
 # Fila priorizada
+
+---
+
+## 45. `cicd-releases-versionamento-e-licenca`
+
+**Prioridade:** P2 · **Frente:** CI/CD · **Contexto:** não · **Depende:** —
+**Fonte:** pedido do João em 2026-10-31; `backend/composer.json:7` (`"license": "MIT"`),
+`frontend/package.json:4` (`"version": "0.0.0"`), `CONTRIBUINDO.md` (espelho Andred21 → Gatika-CL).
+Ficha entra pela PR da própria lane, como no item 42 (a pedido do João).
+
+**Por que existe:** o projeto não tem versão, tag, release nem CHANGELOG. O repo público declara
+MIT sem decisão nenhuma, o que concede uso comercial irrestrito a terceiros. O contrato com a
+Gatika/Lotus não diz quem é titular do código, e nada no repositório prova autoria.
+
+**Escopo:**
+- **SemVer + release-please:** versão = o que foi para produção; bump pelos Conventional Commits
+  que tocam caminho de produto; PR de release, tag `vX.Y.Z`, Release e `CHANGELOG.md`;
+- **versão dentro do sistema:** `version.txt` como fonte única, propagado ao `package.json` e ao
+  `composer.json`; sidebar e backend (só autenticado) leem dali;
+- **espelho:** release no Andred21 no merge da PR de release, e no Gatika-CL pelo `deploy.yml`
+  depois da promoção;
+- **backfill:** 13 versões desde o go-live (`v1.0.0` em 2026-09-26 … `v1.9.1`);
+- **licença e titularidade:** sem MIT; `LICENSE` proprietária nos dois repos, titular o João;
+  rascunho de termo de licença de uso perpétua à Gatika/Lotus para o João levar ao contrato.
+
+**Fora:** parecer jurídico e assinatura do termo (ficam com o João); registro no INPI; assinatura
+de commits/tags, `SECURITY.md` e atestado de procedência; tornar o repo público privado; mudança
+no fluxo de deploy além do passo de release.
+
+**DoD:** `feat` em caminho de produto propõe MINOR, `fix` propõe PATCH e só-`docs` não propõe nada
+(provado); a mesma versão aparece na API autenticada e na sidebar, sem literal; release criada
+pelo `deploy.yml` depois da promoção; backfill simulado com as 13 linhas; `LICENSE` correta nos
+dois repos e nenhum manifest declarando MIT.
 
 ---
 

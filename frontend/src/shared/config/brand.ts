@@ -4,4 +4,6 @@
 // resolve binding, então `style={{ color: BRAND_COLOR }}` passava verde. Os
 // dois consumidores foram pagos (FormSection, CoursesTable) e a constante saiu
 // junto — sem segunda grafia, não há o que perseguir (spec D7).
-export const APP_VERSION = 'v0.1.0'
+// A versão vem do `version` do package.json, injetada no build pelo `define`
+// do vite.config.ts (`__APP_VERSION__`). Sem literal aqui: a fonte é uma só.
+export const APP_VERSION = `v${__APP_VERSION__}`
