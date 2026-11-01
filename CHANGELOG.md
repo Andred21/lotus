@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/Andred21/lotus/compare/v1.10.0...v1.11.0) (2026-11-01)
+
+
+### Funcionalidades
+
+* **44:** importação de alunos com triagem ([d97af5e](https://github.com/Andred21/lotus/commit/d97af5e8749d781bcdf9ddca54e4bdf74b0d676d))
+
 ## [1.10.0](https://github.com/Andred21/lotus/compare/v1.9.1...v1.10.0) (2026-11-01)
 
 
