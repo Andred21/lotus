@@ -18,6 +18,12 @@
    * `COR_LITERAL_EM_STYLE` só aceita valor que comece por `var(`. */
   --section-rule: color-mix(in srgb, var(--primary-color) 35%, transparent);
 
+  /* Fundo do xadrez da assinatura. Assinatura é traço escuro: no tema escuro o
+   * xadrez usa degraus CLAROS da rampa (senão o traço some no noche); o claro
+   * sobrescreve abaixo com as superfícies de sempre. */
+  --signature-bg-a: var(--primary-300);
+  --signature-bg-b: var(--primary-200);
+
   /* Tinta sobre as superfícies navy FIXAS do shell (sidebar, header). NÃO pode
    * sair de `--text-color`: essas superfícies não acompanham o swap de tema
    * (spec §6/UI-04), e a tinta do tema claro seria texto escuro sobre navy —
@@ -148,6 +154,10 @@
  * traço vale por especificidade, não por ordem. */
 html:not(.dark) {
   --surface-ground: #f1f5f9;
+
+  /* Xadrez da assinatura no claro: o par de superfícies de hoje. */
+  --signature-bg-a: var(--surface-border);
+  --signature-bg-b: var(--surface-card);
 
   /* O degrau que a rampa do tema pula (decisão do João, 2026-08-17, D-28).
    *
