@@ -42,6 +42,18 @@ class ClientCrudTest extends TestCase
         $this->assertDatabaseHas('client_contacts', ['name' => 'Parris Barrios']);
     }
 
+    public function test_telefone_ou_email_acima_da_coluna_recusa_422_sem_gravar(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson('/api/clients', $this->payload([
+            'email' => str_repeat('a', 250).'@switch.cl',
+            'phone' => str_repeat('9', 31),
+        ]))->assertStatus(422)->assertJsonValidationErrors(['email', 'phone']);
+
+        $this->assertDatabaseMissing('users', ['rut' => '12.345.678-5']);
+    }
+
     public function test_rut_duplicado_rejeitado(): void
     {
         $this->actingAsAdmin();

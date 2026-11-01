@@ -16,6 +16,16 @@ use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 class SpreadsheetRowReader
 {
     /**
+     * Fonte única do cabeçalho: o `SpreadsheetTemplate` grava estas colunas na
+     * linha 1 do modelo. O leitor NÃO as valida (D21): ele pula a linha 1 e lê
+     * por posição, então a constante só garante que o modelo baixado volte por
+     * aqui sem ajuste.
+     *
+     * @var list<string>
+     */
+    public const array HEADER = ['RUT', 'Nombre', 'Email', 'Teléfono'];
+
+    /**
      * `$maxLinhas` limita a ITERAÇÃO, não o aproveitamento. Quem passa o teto é
      * o chamador, porque o número é decisão dele.
      *

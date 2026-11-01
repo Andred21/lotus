@@ -6,6 +6,7 @@ use App\Domains\Identity\Models\Redator;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
+use App\Shared\Support\TetosDeColuna;
 use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
@@ -29,8 +30,9 @@ class RedatorData extends Data
         public string $name,
         #[Required]
         public string $rut,
-        #[Required, Email]
+        #[Required, Email, Max(TetosDeColuna::EMAIL)]
         public string $email,
+        #[Max(TetosDeColuna::TELEFONE)]
         public string|Optional|null $phone,
         /**
          * Acesso do redator. `Optional` de propósito: um PUT que não fala de

@@ -8,6 +8,7 @@ use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -36,6 +37,28 @@ class StudentDataTest extends TestCase
         $this->assertSame($client->id, $data->current_client_id);
         $this->assertSame('Transelec', $data->current_client_name);
         $this->assertSame(0, $data->enrollments_count);
+    }
+
+    public function test_contrato_recusa_telefone_e_email_acima_do_tamanho_da_coluna(): void
+    {
+        $base = ['name' => 'Juan Soto', 'rut' => '11.111.111-1', 'email' => 'juan@acme.cl', 'phone' => null];
+
+        foreach ([
+            'phone' => str_repeat('9', 31),
+            'email' => str_repeat('a', 250).'@acme.cl',
+        ] as $campo => $valor) {
+            try {
+                StudentData::validateAndCreate([...$base, $campo => $valor]);
+                $this->fail("esperava ValidationException em {$campo}");
+            } catch (ValidationException $e) {
+                $this->assertSame([$campo], array_keys($e->errors()));
+            }
+        }
+
+        $this->assertSame(
+            str_repeat('9', 30),
+            StudentData::validateAndCreate([...$base, 'phone' => str_repeat('9', 30)])->phone,
+        );
     }
 
     public function test_data_aceita_aluno_sem_cliente_atual(): void

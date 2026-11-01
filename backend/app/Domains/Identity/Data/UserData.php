@@ -6,9 +6,11 @@ use App\Domains\Identity\Models\User;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
+use App\Shared\Support\TetosDeColuna;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
+use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
@@ -32,9 +34,10 @@ class UserData extends Data
         public string|Optional $uuid,
         #[Required]
         public string $name,
-        #[Required, Email]
+        #[Required, Email, Max(TetosDeColuna::EMAIL)]
         public string $email,
         public string|Optional|null $rut,
+        #[Max(TetosDeColuna::TELEFONE)]
         public string|Optional|null $phone,
         public string $role,
         /**

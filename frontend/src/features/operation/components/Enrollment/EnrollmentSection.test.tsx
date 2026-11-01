@@ -19,7 +19,7 @@ vi.mock('react-i18next', async (importOriginal) => {
 
 // Os dois diálogos abrem query própria e não têm parte nesta prova.
 vi.mock('./EnrollStudentForm', () => ({ EnrollStudentForm: () => null }))
-vi.mock('./ImportDialog', () => ({ ImportDialog: () => null }))
+vi.mock('./ImportDialog', () => ({ ImportDialog: (p: { turmaLabel?: string; clientName?: string }) => <i data-testid="import" data-label={p.turmaLabel} data-client={p.clientName} /> }))
 
 type Section = ReturnType<typeof useEnrollmentSection>
 type Archived = ReturnType<typeof useEnrollmentsArchived>
@@ -79,6 +79,12 @@ afterEach(() => {
 })
 
 describe('EnrollmentSection e o switch local da D5', () => {
+  it('entrega ao diálogo de importação a turma e a empresa (D7)', () => {
+    montar({ ...TURMA, course_name: 'Trabajo en altura', client_name: 'CGE' })
+    const d = screen.getByTestId('import')
+    expect([d.dataset.label, d.dataset.client]).toEqual(['Trabajo en altura', 'CGE'])
+  })
+
   it('o switch aparece mesmo sem matrícula ativa', () => {
     montar()
 

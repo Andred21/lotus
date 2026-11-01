@@ -97,7 +97,13 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
         visible={addOpen}
         onHide={() => setAddOpen(false)}
       />
-      <ImportDialog turmaId={turma.id!} visible={importOpen} onHide={() => setImportOpen(false)} />
+      <ImportDialog
+        turmaId={turma.id!}
+        visible={importOpen}
+        onHide={() => setImportOpen(false)}
+        turmaLabel={turma.course_name}
+        clientName={turma.client_name}
+      />
     </>
   )
 }

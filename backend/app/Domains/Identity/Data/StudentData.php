@@ -6,6 +6,7 @@ use App\Domains\Identity\Models\Student;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
+use App\Shared\Support\TetosDeColuna;
 use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\Validation\Email;
@@ -35,8 +36,9 @@ class StudentData extends Data
         public string $name,
         #[Required]
         public string $rut,
-        #[Required, Email]
+        #[Required, Email, Max(TetosDeColuna::EMAIL)]
         public string $email,
+        #[Max(TetosDeColuna::TELEFONE)]
         public string|Optional|null $phone,
         /** Cliente ao qual o aluno é vinculado no cadastro. Só entrada. */
         public int|Optional|null $client_id,

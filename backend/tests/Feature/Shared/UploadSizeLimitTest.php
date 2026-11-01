@@ -145,13 +145,13 @@ class UploadSizeLimitTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('file');
     }
 
-    public function test_import_de_matricula_acima_de_10mb_e_422(): void
+    public function test_previa_de_matricula_acima_de_10mb_e_422(): void
     {
         $this->actingAsAdmin();
 
         $turma = $this->turma();
 
-        $this->postJson("/api/turmas/{$turma->id}/alunos/importar", [
+        $this->postJson("/api/turmas/{$turma->id}/alunos/importar/previa", [
             'file' => UploadedFile::fake()->create('grande.xlsx', self::OVERSIZED_KB),
         ])->assertStatus(422)->assertJsonValidationErrors('file');
     }

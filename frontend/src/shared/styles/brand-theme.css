@@ -382,12 +382,26 @@ html.dark
   color: var(--shell-ink);
 }
 
-.lotus-dialog .p-dialog-footer .p-button.p-button-text {
+.lotus-dialog .p-dialog-header .p-button.p-button-text,
+.lotus-dialog .p-dialog-header .p-button.p-button-link,
+.lotus-dialog .p-dialog-header .p-button.p-button-outlined,
+.lotus-dialog .p-dialog-footer .p-button.p-button-text,
+.lotus-dialog .p-dialog-footer .p-button.p-button-link,
+.lotus-dialog .p-dialog-footer .p-button.p-button-outlined {
   color: var(--shell-ink);
 }
 
+/* O `outlined` do Lara pinta a borda com a cor da marca (navy sobre navy:
+ * 2,18:1) — ela acompanha a tinta do shell, só um pouco mais discreta. */
+.lotus-dialog .p-dialog-header .p-button.p-button-outlined,
+.lotus-dialog .p-dialog-footer .p-button.p-button-outlined {
+  border-color: rgb(255 255 255 / 0.5);
+}
+
 .lotus-dialog .p-dialog-header .p-dialog-header-icon:enabled:hover,
-.lotus-dialog .p-dialog-footer .p-button.p-button-text:not(:disabled):hover,
-.lotus-dialog .p-dialog-footer .p-button.p-button-text:not(:disabled):active {
+.lotus-dialog .p-dialog-header .p-button:is(.p-button-text, .p-button-link, .p-button-outlined):not(:disabled):hover,
+.lotus-dialog .p-dialog-header .p-button:is(.p-button-text, .p-button-link, .p-button-outlined):not(:disabled):active,
+.lotus-dialog .p-dialog-footer .p-button:is(.p-button-text, .p-button-link, .p-button-outlined):not(:disabled):hover,
+.lotus-dialog .p-dialog-footer .p-button:is(.p-button-text, .p-button-link, .p-button-outlined):not(:disabled):active {
   background: rgb(255 255 255 / 0.1);
 }
