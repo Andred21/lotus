@@ -11,4 +11,4 @@ sobrescreve o que estiver escrito nela. O item manual é do João: feita a açã
 |---|---|---|---|---|
 | 1 | Secret do token do release-please criado no `Andred21/lotus`, e a primeira PR de release aberta pelo workflow com os cinco gates rodando. | manual |  |  |
 | 2 | Backfill escrito: 13 tags e Releases `v1.0.0`…`v1.9.1` nos dois repositórios, conferidas com `gh release list`. | manual |  |  |
-| 3 | Primeira release pelo fluxo novo promovida: a Release aparece no Gatika-CL criada pelo `deploy.yml`, e a sidebar em produção mostra a mesma versão. A prova HTTP só mede que a produção responde depois da promoção; a versão é conferida à mão, porque só é exposta a usuário autenticado (§6). | `producao GET /up -> 200` |  |  |
+| 3 | Primeira release pelo fluxo novo promovida: a Release aparece no Gatika-CL criada pelo `deploy.yml`, e a sidebar em produção mostra a mesma versão. A prova HTTP só mede que a produção responde depois da promoção; a versão é conferida à mão, porque só é exposta a usuário autenticado (§6). | `producao GET /up -> 200` | `200`, esperado `200`: OK | 2026-11-01 |
