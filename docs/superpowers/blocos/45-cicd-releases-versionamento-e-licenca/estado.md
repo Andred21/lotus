@@ -2,9 +2,9 @@
 schema_version: 3
 id: 45
 slug: 45-cicd-releases-versionamento-e-licenca
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item aceitacao externa
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/45-cicd-releases-versionamento-e-licenca/spec.md
 active_plan: docs/superpowers/blocos/45-cicd-releases-versionamento-e-licenca/plano.md
@@ -17,9 +17,9 @@ branch: docs/45-cicd-releases-versionamento-e-licenca
 worktree: ../lotus-45-cicd-releases-versionamento-e-licenca
 offset: 2
 lane_base: 568a7dd1
-commit: 568a7dd1
+commit: 8f40a9a5
 blocker: null
-updated_at: 2026-11-01T17:32:09-03:00
+updated_at: 2026-11-01T17:34:10-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
