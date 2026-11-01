@@ -197,6 +197,11 @@ tem no máximo cinco mudanças; o que passar disso vira o lote seguinte, com fic
    - **Presupuestos:** abre do mais novo para o mais antigo; Código (pelo número do Scap), Estado
      (Pendiente → Aprobada → Rechazada) e Cotizaciones ganham ordenação no cabeçalho. Só nesta
      tabela.
+3. **Tamanho de diálogo** — decisão do João, 2026-11-01: o `lg` volta à largura de antes do
+   bloco 43 (70vw a partir de 1024px, teto de 84rem; hoje 64rem), `sm` e `md` não mudam; o
+   diálogo de Curso passa de `md` para `lg` e ganha o maximizar.
+
+Lote fechado em três mudanças (decisão do João, 2026-11-01): o que vier depois é o lote 2.
 
 Tickets de cada mudança: `blocos/46-frontend-ajustes-de-interface-lote-1/tickets/`.
 
