@@ -2,9 +2,9 @@
 schema_version: 3
 id: 46
 slug: 46-frontend-ajustes-de-interface-lote-1
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/blocos/46-frontend-ajustes-de-interface-lote-1/spec.md
 active_plan: docs/superpowers/blocos/46-frontend-ajustes-de-interface-lote-1/plano.md
@@ -17,10 +17,10 @@ branch: feat/46-frontend-ajustes-de-interface-lote-1
 worktree: ../lotus-46-frontend-ajustes-de-interface-lote-1
 offset: 3
 lane_base: 5fba081d
-commit: 0ebca302
+commit: 1d1894c9
 blocker: null
-updated_at: 2026-11-01T20:17:06-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+updated_at: 2026-11-01T20:17:51-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 46 — estado
