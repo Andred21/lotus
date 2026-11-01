@@ -190,6 +190,15 @@ tem no máximo cinco mudanças; o que passar disso vira o lote seguinte, com fic
      `SectionLabel` e os docblocks mudam junto, e a reversão fica registrada no bloco;
    - **label × valor:** a label do `FormField` passa a 14px peso 500 na tinta de corpo (hoje
      cinza secundário, com o mesmo corpo do valor); o valor fica em 14px regular.
+2. **Tabelas** — decisão do João, 2026-11-01:
+   - **ações de linha, em toda tabela:** ver primeiro, ações próprias no meio, arquivar por último
+     (hoje o `ArchiveRowActions` põe ver no fim); ícones centralizados na coluna (hoje
+     `justify-end`); dica traduzida em todo botão (hoje só onde a tabela liga `tooltip`);
+   - **Presupuestos:** abre do mais novo para o mais antigo; Código (pelo número do Scap), Estado
+     (Pendiente → Aprobada → Rechazada) e Cotizaciones ganham ordenação no cabeçalho. Só nesta
+     tabela.
+
+Tickets de cada mudança: `blocos/46-frontend-ajustes-de-interface-lote-1/tickets/`.
 
 **Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria.
 
