@@ -2,11 +2,40 @@
 
 ## Em aberto
 
-- **Q-1 da rodada 2** (Importante, CONFIRMED): o docblock de `TetosDeColuna` afirma que toda porta
-  de escrita recusa pelo teto, mas `RedatorData` e `UserData` gravam `users.email` e `users.phone`
-  sem `max`. Falta a decisão do João entre reescrever o docblock com o que é verdade e abrir
-  ficha para Redator/User, ou aplicar `Max(TetosDeColuna::…)` nos dois DTOs agora, fora do escopo
-  original do bloco.
+## Rodada 3 — `8c1659d6..51da9d99` — 2026-11-01 · Lente 1: opus · Lente 2: sonnet
+
+Esta rodada revisa o bloco inteiro, com foco no `51da9d99`, que aplica as correções aprovadas da
+rodada 2: o Q-1 (`TetosDeColuna` em `RedatorData`, `UserData` e `ClientData`, com o docblock
+corrigido) e o Q-2 (o `ImportRowEditor` usa o `isRegistered` do hook). A lente 1 confirmou as
+duas sem regressão:
+- os três testes novos provam o `max`, e não o formato do e-mail;
+- o seeder de demo cabe nos tetos;
+- a carga inicial não passa pelos DTOs;
+- o erro de `phone` aparece nas três telas.
+
+A suíte do backend passou inteira (1621 testes, 5 skipped). No front, `tsc`, lint e vitest
+passaram (1443 testes). A lente Codex segue fora, pelo mesmo `model_not_found` das rodadas
+anteriores.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | O contato do cliente (`ClientContactData`) grava `email` e `phone` sem teto de coluna. `client_contacts.phone` é `string(30)`, então um telefone de 31 caracteres no `POST /api/clients` passa a validação e estoura como 500 em MySQL strict. Anterior ao bloco. | CONFIRMED | `backend/app/Domains/Commercial/Data/ClientContactData.php:21-22`; `backend/database/migrations/2026_07_06_141820_clients.php:43`; `frontend/src/features/commercial/components/Client/ContactCard.tsx:101-110` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+Correções da rodada 2, aplicadas em `51da9d99`: Q-1 e Q-2.
+
+Observações da lente 1 que não viraram achado:
+
+- A emenda do texto da spec segue pendente para o fechamento: a D6 (`spec.md:71`) com o
+  limitador da prévia e a D7 e `jornada.md:21` com o link do modelo "no cabeçalho".
+- A validação da carga inicial também não tem teto para e-mail e telefone de redator e cliente
+  (`ArquivoDeCarga.php:122-160`). O defeito é anterior ao bloco e a fonte é um arquivo escrito à
+  mão pelo João, então fica só como nota.
+- Uma linha cadastrada com Actualizar e e-mail X, antes de uma linha nova com o mesmo X, aparece
+  como `new` na prévia e é recusada só na confirmação. O custo está aceito na ruling da Task 4
+  (D18).
 
 ## Rodada 2 — `8c1659d6..ee05062a` — 2026-11-01 · Lente 1: opus · Lente 2: sonnet
 
