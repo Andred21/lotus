@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.10.0](https://github.com/Andred21/lotus/compare/v1.9.1...v1.10.0) (2026-11-01)
+
+
+### Funcionalidades
+
+* **45:** versão do sistema a partir de fonte única ([acfe318](https://github.com/Andred21/lotus/commit/acfe318908e7316d9c397ea8cab52b70f7ca87c0))
+* **45:** versão exposta a usuário autenticado e no log ([fcf1fde](https://github.com/Andred21/lotus/commit/fcf1fde6bcff4c5f02c21d0a442a8fbae116445f))
+
+
+### Correções
+
+* **45:** login não mostra a versão a quem não autenticou (Q-2) ([9e4cac3](https://github.com/Andred21/lotus/commit/9e4cac3bfb03b4f232355a7f1beacf9a812a9072))
+
 ## [1.9.1](https://github.com/Andred21/lotus/compare/v1.9.0...v1.9.1) (2026-10-31)
 
 ### Correções
