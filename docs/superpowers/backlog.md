@@ -179,7 +179,17 @@ antes de entrar no escopo.
 **Por que existe:** um lote de ajustes de interface que o João levantou usando o sistema. O lote
 tem no máximo cinco mudanças; o que passar disso vira o lote seguinte, com ficha própria.
 
-**Escopo:** a preencher, uma mudança por vez (máximo de cinco).
+**Escopo:** uma mudança por vez, máximo de cinco; o que falta a preencher.
+1. **Hierarquia do corpo do diálogo**, em todo `AppDialog`, e por `FormSection`/`FormField` no
+   produto inteiro (Perfil e formulários inclusive) — decisão do João, 2026-11-01:
+   - **respiro simétrico:** o conteúdo tem `pt-2` (`AppDialog/style.ts`) contra os 2rem de baixo
+     do Lara; header e footer passam a enquadrar o corpo com o mesmo espaçamento;
+   - **seção:** título no azul da marca por `--brand-ink` (celeste no escuro, `#186b94` no claro,
+     AA nos dois) e linha contínua até a borda (`SectionLabel` `rule`, hoje desligada no
+     `FormSection`). **Reverte a D1/P-36**, por decisão do João: os testes do `FormSection` e do
+     `SectionLabel` e os docblocks mudam junto, e a reversão fica registrada no bloco;
+   - **label × valor:** a label do `FormField` passa a 14px peso 500 na tinta de corpo (hoje
+     cinza secundário, com o mesmo corpo do valor); o valor fica em 14px regular.
 
 **Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria.
 
