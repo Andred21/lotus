@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppButton, AppInputText, FormField } from '@shared/ui'
-import type { TriageRow } from '../../hooks/useImportStudentsFlow'
+import { isRegistered, type TriageRow } from '../../hooks/useImportStudentsFlow'
 
 export type RowFields = Pick<TriageRow, 'rut' | 'name' | 'email' | 'phone'>
 
-// Tetos das colunas `users.email` e `users.phone`: acima deles o cadastro recusa a linha.
+// Tetos das colunas `users.email` e `users.phone` (`TetosDeColuna` no backend):
+// acima deles o cadastro recusa a linha.
 const EMAIL_MAX = 255
 const PHONE_MAX = 30
 
@@ -28,7 +29,7 @@ export function ImportRowEditor({ row, onSave, onCancel }: Props) {
     email: row.email ?? '',
     phone: row.phone ?? '',
   })
-  const rutLocked = row.status === 'registered' || row.status === 'moves'
+  const rutLocked = isRegistered(row)
   const set = (key: keyof typeof draft) => (e: { target: { value: string } }) =>
     setDraft((cur) => ({ ...cur, [key]: e.target.value }))
 

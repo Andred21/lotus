@@ -95,6 +95,20 @@ class RedatorCrudTest extends TestCase
         $response->assertCreated()->assertJsonPath('course_ids', []);
     }
 
+    public function test_telefone_ou_email_acima_da_coluna_recusa_422_sem_gravar(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson('/api/redatores', [
+            'name' => 'Fabián Cifuentes',
+            'rut' => '12.345.678-5',
+            'email' => str_repeat('a', 250).'@lotus.cl',
+            'phone' => str_repeat('9', 31),
+        ])->assertStatus(422)->assertJsonValidationErrors(['email', 'phone']);
+
+        $this->assertDatabaseMissing('users', ['rut' => '12.345.678-5']);
+    }
+
     public function test_rut_duplicado_rejeitado(): void
     {
         $this->actingAsAdmin();
