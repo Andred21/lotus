@@ -4,7 +4,7 @@ id: 44
 slug: 44-operacao-importacao-de-alunos-com-triagem
 workflow_state: reviewing
 next_owner: joao
-next_action: approve_review_findings Q-1
+next_action: approve_review_findings Q-1 (rodada 2)
 resume_state: null
 active_spec: docs/superpowers/blocos/44-operacao-importacao-de-alunos-com-triagem/spec.md
 active_plan: docs/superpowers/blocos/44-operacao-importacao-de-alunos-com-triagem/plano.md
@@ -17,9 +17,9 @@ branch: feat/44-operacao-importacao-de-alunos-com-triagem
 worktree: ../lotus-44-operacao-importacao-de-alunos-com-triagem
 offset: 1
 lane_base: 8c1659d6
-commit: e9838885
+commit: ee05062a
 blocker: null
-updated_at: 2026-11-01T15:25:27-03:00
+updated_at: 2026-11-01T15:58:29-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 

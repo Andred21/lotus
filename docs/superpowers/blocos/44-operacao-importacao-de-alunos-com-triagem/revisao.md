@@ -2,9 +2,40 @@
 
 ## Em aberto
 
-- **Q-1** (Importante, CONFIRMED) — aluno novo da importação grava e-mail sem validar formato.
-  Falta a decisão do João: corrigir agora (checagem de formato em `assertCanCreate`, com caso na
-  prévia e na confirmação) ou adiar como ficha proposta.
+- **Q-1 da rodada 2** (Importante, CONFIRMED): o docblock de `TetosDeColuna` afirma que toda porta
+  de escrita recusa pelo teto, mas `RedatorData` e `UserData` gravam `users.email` e `users.phone`
+  sem `max`. Falta a decisão do João entre reescrever o docblock com o que é verdade e abrir
+  ficha para Redator/User, ou aplicar `Max(TetosDeColuna::…)` nos dois DTOs agora, fora do escopo
+  original do bloco.
+
+## Rodada 2 — `8c1659d6..ee05062a` — 2026-11-01 · Lente 1: opus · Lente 2: sonnet
+
+Esta rodada revisa o bloco inteiro, com foco no `ee05062a`, que aplica as correções aprovadas da
+rodada 1: Q-1, Q-2, Q-3, Q-5 e Q-6. A lente 1 confirmou que as cinco fecham o que prometem, sem
+regressão. A suíte do backend passou inteira (1618 testes, 5 skipped). No front, `tsc`, lint e
+vitest passaram (1443 testes), e o `generated.ts` bate com o manifest. A lente Codex segue fora,
+pelo mesmo `model_not_found` da rodada 1.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Importante | O docblock de `TetosDeColuna` diz que toda porta de escrita recusa pelo teto, mas `RedatorData` e `UserData` gravam `users.email` e `users.phone` sem `max`. Um telefone de 31 caracteres no cadastro de redator ou de usuário segue dando 500 em MySQL strict; o defeito já existia antes do bloco. | CONFIRMED | `backend/app/Shared/Support/TetosDeColuna.php:6-9`; `backend/app/Domains/Identity/Data/RedatorData.php:32-34,59-70`; `backend/app/Domains/Identity/Data/UserData.php:35-38,65-72`; `backend/database/migrations/0001_01_01_000000_create_users_table.php:20` | aguarda decisão do João |
+| Q-2 | Menor | A correção do Q-5 deixou uma terceira cópia de `isRegistered` em `ImportRowEditor`, no `rutLocked`. | CONFIRMED | `frontend/src/features/operation/components/Enrollment/ImportRowEditor.tsx:31` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 1 confirmado, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+Correções da rodada 1, aplicadas em `ee05062a`: Q-1, Q-2, Q-3, Q-5 e Q-6. O Q-4 (PLAUSIBLE) não
+foi corrigido, por decisão do João.
+
+Observações da lente 1 que não viraram achado:
+
+- O texto da spec não foi emendado. A D6 (`spec.md:71`) ainda põe a prévia sob `throttle:import`,
+  e a D10 não cita a checagem de formato do e-mail. As duas mudanças estão nas rulings.
+- A mudança do link do modelo para o corpo do passo de upload segue sem ruling (D7 e
+  `jornada.md:21`).
+- A ruling do Q-2 diz que o `max:50` virar 30 em `EnrollmentData` não muda comportamento. Isso só
+  vale para aluno novo: na matrícula avulsa de aluno já existente, o `EnrollStudentAction` ignora
+  o telefone, e um telefone de 31 a 50 caracteres, que antes passava com 201, agora dá 422.
 
 ## Rodada 1 — `8c1659d6..e9838885` — 2026-11-01 · Lente 1: opus · Lente 2: sonnet
 
