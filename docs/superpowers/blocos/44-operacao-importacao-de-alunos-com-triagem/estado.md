@@ -2,9 +2,9 @@
 schema_version: 3
 id: 44
 slug: 44-operacao-importacao-de-alunos-com-triagem
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/44-operacao-importacao-de-alunos-com-triagem/spec.md
 active_plan: docs/superpowers/blocos/44-operacao-importacao-de-alunos-com-triagem/plano.md
@@ -17,9 +17,9 @@ branch: feat/44-operacao-importacao-de-alunos-com-triagem
 worktree: ../lotus-44-operacao-importacao-de-alunos-com-triagem
 offset: 1
 lane_base: 8c1659d6
-commit: 51da9d99
+commit: 3b2079c1
 blocker: null
-updated_at: 2026-11-01T16:45:03-03:00
+updated_at: 2026-11-01T17:07:50-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 

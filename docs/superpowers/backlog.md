@@ -249,44 +249,6 @@ depois na pasta do bloco. Escrita em produção segue duas mãos: o João roda, 
 
 ---
 
-## 44. `operacao-importacao-de-alunos-com-triagem`
-
-**Prioridade:** P1 · **Frente:** Full-stack · **Contexto:** sim · **Depende:** —
-**Fonte:** pedido do João (2026-10-31); `ImportStudentsAction`, `SpreadsheetRowReader`,
-`StudentResolver::previewByRut`, `EnrollPreviewData`, `StudentClientLinkService` (RN-10);
-`ImportDialog`/`useImportStudentsFlow`.
-
-**Por que existe:** a importação matricula e troca a empresa do aluno no ato do upload, sem
-triagem — o aluno de outra empresa muda em silêncio e só aparece no resumo, já gravado. A
-matrícula avulsa avisa a troca (`will_move`); a importação não. E não há modelo da planilha para
-o admin mandar à empresa que pediu a turma.
-
-**Escopo:**
-- **prévia sem gravar:** a planilha é lida e validada (formato, RUT, e-mail de aluno novo, teto
-  de nome, limite de linhas) sem nenhuma escrita; cada linha volta classificada — novo, já
-  cadastrado (empresa atual), já matriculado nesta turma, erro;
-- **triagem no diálogo (o mesmo de hoje):** excluir linha, corrigir linha, ver o cadastro
-  existente e a empresa atual, confirmar a troca de empresa (histórico do vínculo anterior
-  preservado pelo `StudentClientLinkService`); tudo no cliente até o botão de confirmar;
-- **confirmação:** só ela persiste; o servidor revalida tudo (a triagem do cliente não é
-  confiável) e matricula pelo `EnrollStudentAction`, a fonte única de hoje;
-- **modelo para baixar:** planilha vazia com o cabeçalho D1, baixável no diálogo.
-
-**Decisões para o brainstorming:** prévia lida no servidor (OpenSpout, sem dependência nova) ×
-lida no navegador (biblioteca nova); editar a linha de aluno JÁ cadastrado altera o cadastro
-dele ou só vale para aluno novo (hoje o resolver ignora); confirmação é tudo ou nada ou por
-linha, como hoje; modelo gerado pelo backend (mesma fonte do cabeçalho do leitor) × arquivo
-estático; `.xlsx` só ou também `.csv`.
-
-**Fora:** colunas novas na planilha; importar para várias turmas; mudar o teto de 100 linhas.
-
-**DoD:** upload sem nenhuma escrita no banco (provado por teste de contagem); a triagem exclui,
-corrige e mostra a troca de empresa antes de gravar; a confirmação grava o que foi triado, com o
-log de vínculo fechado e o novo aberto; linha adulterada no cliente é recusada pelo servidor; o
-modelo baixado volta pelo próprio importador sem erro; jornada vista no navegador.
-
----
-
 ## 9. `administracao-roles-permissoes-redesign`
 
 **Prioridade:** P1 · **Frente:** Frontend · **Contexto:** sim
