@@ -2,13 +2,13 @@
 schema_version: 3
 id: 44
 slug: 44-operacao-importacao-de-alunos-com-triagem
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: reviewing
+next_owner: joao
+next_action: approve_review_findings Q-1
 resume_state: null
 active_spec: docs/superpowers/blocos/44-operacao-importacao-de-alunos-com-triagem/spec.md
 active_plan: docs/superpowers/blocos/44-operacao-importacao-de-alunos-com-triagem/plano.md
-active_review: null
+active_review: docs/superpowers/blocos/44-operacao-importacao-de-alunos-com-triagem/revisao.md
 active_acceptance: null
 context_packet: docs/superpowers/blocos/44-operacao-importacao-de-alunos-com-triagem/context.md
 efeito_externo: nao
@@ -17,9 +17,9 @@ branch: feat/44-operacao-importacao-de-alunos-com-triagem
 worktree: ../lotus-44-operacao-importacao-de-alunos-com-triagem
 offset: 1
 lane_base: 8c1659d6
-commit: 4e0c72fa
+commit: e9838885
 blocker: null
-updated_at: 2026-10-31T18:09:45-03:00
+updated_at: 2026-11-01T15:25:27-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
