@@ -2,13 +2,32 @@
 
 ## Em aberto
 
-- **Q-1** (Crítico, CONFIRMED) — a catraca `a última versão da tabela é a que está em version.txt`
-  reprova toda PR de release a partir da primeira. Falta: aprovação do João para a correção
-  (ancorar no que não muda: o SHA de origem da última linha da tabela igual ao `bootstrap-sha` do
-  `release-please-config.json`).
-- **Q-2** (Importante, CONFIRMED) — a versão exata de produção fica visível a anônimo no login e no
-  bundle. Falta: decisão do João — tirar `APP_VERSION` do `LoginPage` (só a sidebar autenticada
-  mostra), ou registrar que expor a versão ao anônimo no front é aceito.
+## Rodada 2 — `5fba081d..9e4cac3b` — 2026-11-01 · Lente 1: opus · Lente 2: sonnet
+
+A lente Codex foi tentada de novo e não rodou, pelo mesmo motivo da rodada 1 (`gpt-5.5`
+recusado pela conta ChatGPT, `model_not_found`).
+
+Os achados da rodada 1 aprovados pelo João foram corrigidos e conferidos pelo `revisor-bloco`:
+
+- Q-1 (Crítico) corrigido em `65cc5d20`. Num clone com a PR de release `1.10.0` simulada
+  (`version.txt`, manifest, `package.json`, `config/app.php` e seção nova no `CHANGELOG.md`), os
+  testes do projeto `repo` deram 59/59 verdes.
+- Q-5 (Menor) corrigido em `65cc5d20`. Numa árvore montada com o filtro do
+  `espelhar-corporativo.sh`, os 5 testes que atravessam para o espelho deram 77/77 verdes.
+- Q-2 (Importante) corrigido em `9e4cac3b`: o login deixou de exibir a versão; o que sobrou é o
+  Q-6 abaixo.
+- Q-3 e Q-4 (PLAUSIBLE) seguem como observação, sem fato novo.
+
+Suíte do frontend 203 arquivos / 1490 testes verdes; `tsc -b` e eslint limpos nos tocados. O
+backend não foi reexecutado nesta rodada (container parado; o diff da rodada não toca o backend).
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-6 | Menor | A versão de produção continua no bundle que o `/login` baixa: `AppLayout` → `Sidebar` → `APP_VERSION` entra por import estático, sem code-splitting, e o `define` grava a versão literal no chunk. A correção do Q-2 fechou a exposição visível, não a leitura do JS | CONFIRMED | `frontend/src/app/router/AppRouter.tsx:6` · `frontend/src/app/layouts/Sidebar/Sidebar.tsx:5`, `:71` · `frontend/vite.config.ts:55` | registrado, não bloqueia — fechar de vez pede a sidebar ler `GET /api/versao` e emenda à spec §4.1 |
+| Q-7 | Menor | A catraca de existência de `INERTES_POR_CONVENCAO` dispensa também na origem as 6 entradas que o `.espelho-exclusoes` lista; uma delas sair do índice na origem passa verde | CONFIRMED | `frontend/tests/release-please.test.ts:164-168` · `.espelho-exclusoes:18-23` | registrado, não bloqueia — dispensar só quando a árvore for o espelho |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 2 confirmados, 0 plausíveis, 0 refutados
 
 ## Rodada 1 — `5fba081d..3823d35c` — 2026-11-01 · Lente 1: opus · Lente 2: sonnet
 
