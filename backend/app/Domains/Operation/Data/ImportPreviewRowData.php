@@ -2,6 +2,7 @@
 
 namespace App\Domains\Operation\Data;
 
+use App\Domains\Operation\Enums\ImportField;
 use App\Domains\Operation\Enums\ImportRowStatus;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -24,7 +25,7 @@ class ImportPreviewRowData extends Data
         public ?string $message,
         public ?string $current_client,
         public bool $archived,
-        /** @var array<string> subconjunto de 'name' | 'email' | 'phone' */
+        /** @var array<ImportField> */
         public array $divergent,
         public ?string $registered_name,
         public ?string $registered_email,

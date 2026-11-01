@@ -50,7 +50,7 @@ class RateLimitTest extends TestCase
     {
         foreach ([
             'api', 'login', 'public-certificate', 'password',
-            'upload', 'import', 'certificate-batch', 'certificate-pdf',
+            'upload', 'import', 'import-preview', 'certificate-batch', 'certificate-pdf',
         ] as $nome) {
             $this->assertNotNull(
                 RateLimiter::limiter($nome),
@@ -138,6 +138,7 @@ class RateLimitTest extends TestCase
         foreach ([
             'upload' => RateLimits::UPLOAD,
             'import' => RateLimits::IMPORT,
+            'import-preview' => RateLimits::IMPORT_PREVIA,
             'certificate-batch' => RateLimits::LOTE_CERTIFICADO,
             'certificate-pdf' => RateLimits::PDF_CERTIFICADO,
         ] as $nome => $esperado) {
@@ -214,7 +215,7 @@ class RateLimitTest extends TestCase
             ['POST', 'api/budgets/{budget}/files', 'throttle:upload'],
             ['POST', 'api/turmas/{turma}/documents', 'throttle:upload'],
             ['POST', 'api/turmas/{turma}/alunos/importar', 'throttle:import'],
-            ['POST', 'api/turmas/{turma}/alunos/importar/previa', 'throttle:import'],
+            ['POST', 'api/turmas/{turma}/alunos/importar/previa', 'throttle:import-preview'],
             ['POST', 'api/certificates/batch', 'throttle:certificate-batch'],
             ['GET', 'api/certificates/{certificate}/pdf', 'throttle:certificate-pdf'],
         ];

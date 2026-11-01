@@ -217,6 +217,21 @@ class ImportPreviewTest extends TestCase
             ->assertJsonPath('rows.2.status', 'new');
     }
 
+    public function test_email_com_formato_invalido_vira_erro_na_linha_nova(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->previa([
+            ['11.111.111-1', 'Juan Soto', 'juan@', ''],
+            ['22.222.222-2', 'Ana Mora', 'ana@acme.cl', ''],
+        ])->assertOk()
+            ->assertJsonPath('rows.0.status', 'error')
+            ->assertJsonPath('rows.0.message', __('validation.email', [
+                'attribute' => __('validation.attributes.email'),
+            ]))
+            ->assertJsonPath('rows.1.status', 'new');
+    }
+
     public function test_aluno_arquivado_sai_com_archived_true(): void
     {
         $this->actingAsAdmin();

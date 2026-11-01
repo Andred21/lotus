@@ -7,6 +7,7 @@ use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Actions\ImportStudentsAction;
 use App\Domains\Operation\Data\ImportPreviewData;
 use App\Domains\Operation\Data\ImportPreviewRowData;
+use App\Domains\Operation\Enums\ImportField;
 use App\Domains\Operation\Enums\ImportRowStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Validation\ValidationMessages;
@@ -106,20 +107,20 @@ class ImportPreviewService
      * cadastro. E-mail compara sem diferenciar caixa.
      *
      * @param  array{name:string,email:?string,phone:?string}  $line
-     * @return array<string>
+     * @return array<ImportField>
      */
     private function divergent(array $line, User $user): array
     {
         $divergent = [];
 
         if ($line['name'] !== '' && $line['name'] !== $user->name) {
-            $divergent[] = 'name';
+            $divergent[] = ImportField::Name;
         }
         if ($line['email'] !== null && mb_strtolower($line['email']) !== mb_strtolower((string) $user->email)) {
-            $divergent[] = 'email';
+            $divergent[] = ImportField::Email;
         }
         if ($line['phone'] !== null && $line['phone'] !== (string) $user->phone) {
-            $divergent[] = 'phone';
+            $divergent[] = ImportField::Phone;
         }
 
         return $divergent;
@@ -127,7 +128,7 @@ class ImportPreviewService
 
     /**
      * @param  array{row:int,rut:string,name:string,email:?string,phone:?string}  $line
-     * @param  array<string>  $divergent
+     * @param  array<ImportField>  $divergent
      */
     private function row(
         array $line,

@@ -43,7 +43,16 @@ final class RateLimits
     /** Cada upload custa um scan de antivírus antes da escrita. */
     public const UPLOAD = 20;
 
+    /** Confirmação da importação: grava até 100 linhas e paga um bcrypt por aluno novo. */
     public const IMPORT = 5;
+
+    /**
+     * Prévia da triagem: lê e classifica a planilha sem gravar nem pagar bcrypt.
+     * Balde próprio, separado do `import`: dividindo os 5, cada importação gastava
+     * no mínimo dois, e o ciclo escolher arquivo, ver as recusadas e reenviar
+     * levava o admin ao 429 em uso normal (review do bloco 44, Q-3).
+     */
+    public const IMPORT_PREVIA = 20;
 
     public const LOTE_CERTIFICADO = 5;
 
@@ -73,6 +82,9 @@ final class RateLimits
             ->by(self::porUsuario($request)));
 
         RateLimiter::for('import', fn (Request $request) => Limit::perMinute(self::IMPORT)
+            ->by(self::porUsuario($request)));
+
+        RateLimiter::for('import-preview', fn (Request $request) => Limit::perMinute(self::IMPORT_PREVIA)
             ->by(self::porUsuario($request)));
 
         RateLimiter::for('certificate-batch', fn (Request $request) => Limit::perMinute(self::LOTE_CERTIFICADO)

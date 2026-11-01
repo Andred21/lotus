@@ -23,8 +23,19 @@ const EMPTY_COUNTS: Record<ImportRowStatus, number> = {
   error: 0,
 }
 
+// Tom da D7, fonte única da contagem do topo e da tag de cada linha: nuevos
+// (sucesso), ya registrados (neutro), cambian de empresa (aviso), ya matriculados
+// (neutro), con error (perigo).
+export const STATUS_TONE: Record<ImportRowStatus, 'success' | 'secondary' | 'warning' | 'danger'> = {
+  new: 'success',
+  registered: 'secondary',
+  moves: 'warning',
+  already_enrolled: 'secondary',
+  error: 'danger',
+}
+
 const fieldsOf = ({ rut, name, email, phone }: Fields): Fields => ({ rut, name, email, phone })
-const isRegistered = (r: TriageRow) => r.status === 'registered' || r.status === 'moves'
+export const isRegistered = (r: TriageRow) => r.status === 'registered' || r.status === 'moves'
 // Recusada e ainda não editada: a tela a trata como `error`, mas sem perder o status de origem.
 export const isRefusedPending = (r: TriageRow) => r.refused && !r.edited
 /** Situação que a triagem mostra e conta: a recusada não editada vale `error`. */

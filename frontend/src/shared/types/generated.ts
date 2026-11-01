@@ -308,6 +308,7 @@ email: string | null,
 phone: string | null,
 update_registration: boolean,
 };
+export type ImportField = 'name' | 'email' | 'phone';
 export type ImportPreviewData = {
 rows: ImportPreviewRowData[],
 can_update_registration: boolean,
@@ -322,7 +323,7 @@ status: ImportRowStatus,
 message: string | null,
 current_client: string | null,
 archived: boolean,
-divergent: string[],
+divergent: ImportField[],
 registered_name: string | null,
 registered_email: string | null,
 registered_phone: string | null,

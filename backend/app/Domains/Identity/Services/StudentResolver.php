@@ -10,8 +10,10 @@ use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Shared\Support\Rut;
+use App\Shared\Support\TetosDeColuna;
 use App\Shared\Support\TetosImpressos;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -22,11 +24,6 @@ use Illuminate\Validation\ValidationException;
  */
 class StudentResolver
 {
-    /** Tamanho das colunas `users.email` e `users.phone`. */
-    private const EMAIL_MAX = 255;
-
-    private const PHONE_MAX = 30;
-
     public function __construct(
         private readonly UserProvisioner $provisioner,
         private readonly StudentClientLinkService $linkService,
@@ -121,9 +118,11 @@ class StudentResolver
      *
      * Aluno novo exige e-mail (D9): users.email é NOT NULL — sem isso não há como
      * provisionar o User. O nome é o que o certificado imprime (D15): acima do
-     * teto a linha é recusada, como a tela recusa no cadastro. Telefone e e-mail
-     * acima do tamanho da coluna (`users.phone` 30, `users.email` 255) também:
-     * em MySQL estourariam como 500 e derrubariam o lote. Colisão de RUT ou
+     * teto a linha é recusada, como a tela recusa no cadastro. O e-mail passa pela
+     * mesma regra `email` do `StudentData`: gravado malformado, o aluno não
+     * salvaria mais pelo cadastro nem aceitaria Actualizar. Telefone e e-mail
+     * acima do tamanho da coluna (`TetosDeColuna`) também são recusados: em MySQL
+     * estourariam como 500 e derrubariam o lote. Colisão de RUT ou
      * e-mail, inclusive contra soft-deletados, vira ValidationException por linha
      * — nunca 500 que aborta a planilha.
      *
@@ -148,7 +147,9 @@ class StudentResolver
             ]);
         }
 
-        foreach (['email' => [$email, self::EMAIL_MAX], 'phone' => [$phone, self::PHONE_MAX]] as $campo => [$valor, $max]) {
+        Validator::make(['email' => $email], ['email' => ['email']])->validate();
+
+        foreach (['email' => [$email, TetosDeColuna::EMAIL], 'phone' => [$phone, TetosDeColuna::TELEFONE]] as $campo => [$valor, $max]) {
             if ($valor !== null && mb_strlen($valor) > $max) {
                 throw ValidationException::withMessages([
                     $campo => __('validation.max.string', [

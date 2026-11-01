@@ -125,6 +125,24 @@ class ImportConfirmApiTest extends TestCase
         $this->assertDatabaseMissing('users', ['rut' => '22.222.222-2']);
     }
 
+    public function test_email_com_formato_invalido_recusa_so_a_linha_e_nao_grava(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->confirmar(['rows' => [
+            $this->linha(['row' => 2, 'email' => 'juan arroba acme']),
+            $this->linha(['row' => 3, 'rut' => '22.222.222-2', 'name' => 'Pedro', 'email' => 'p@acme.cl']),
+        ]])
+            ->assertOk()
+            ->assertJsonPath('created', 1)
+            ->assertJsonPath('errors.0.row', 2)
+            ->assertJsonPath('errors.0.message', __('validation.email', [
+                'attribute' => __('validation.attributes.email'),
+            ]));
+
+        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
+    }
+
     public function test_actualizar_com_telefone_longo_vira_erro_da_linha_e_nao_grava(): void
     {
         $this->actingAsAdmin();
