@@ -68,7 +68,9 @@ O bloco falha, mesmo funcionando, se acontecer qualquer um destes:
 
 - **D6 — Três rotas**, todas no grupo `auth.active` e sob `permission:operation.enrollment.manage`
   (só admin e superadmin a têm; o redator não), com o binding de `{turma}` já escopado:
-  - `POST turmas/{turma}/alunos/importar/previa`, multipart com `file`, sob `throttle:import`.
+  - `POST turmas/{turma}/alunos/importar/previa`, multipart com `file`, sob `throttle:import-preview`
+    (`RateLimits::IMPORT_PREVIA`, 20 por minuto por usuário; emenda da revisão, ruling do Q-3 da
+    rodada 1 — o texto original punha a prévia sob `throttle:import`).
     Recebe as mesmas regras de upload de hoje (`ContentClass::Planilha`). Devolve a prévia
     (DTO de saída novo, `#[TypeScript]`).
   - `POST turmas/{turma}/alunos/importar` passa a receber **JSON**:
@@ -76,8 +78,10 @@ O bloco falha, mesmo funcionando, se acontecer qualquer um destes:
     `MAX_LINHAS` linhas, sob `throttle:import`. Devolve o resumo atual (`ImportResultData`) e as
     linhas recusadas, com `row` e mensagem. **O envio multipart para gravar deixa de existir.**
   - `GET turmas/{turma}/alunos/importar/plantilla` devolve o `.xlsx` do modelo.
-- **D7 — Tela** (mockup v2): o diálogo passa de `sm` para `lg`. No cabeçalho ficam o título com a
-  turma e o link "Descargar plantilla". No topo, as contagens por situação em tags de tom: nuevos
+- **D7 — Tela** (mockup v2): o diálogo passa de `sm` para `lg`. No cabeçalho fica o título com a
+  turma. O botão "Descargar plantilla" fica no corpo do passo de upload, ao lado de "Elegir
+  archivo", contornado e com o ícone do tipo (emenda do fechamento: o `e9838885` o tirou do
+  cabeçalho, onde o texto original o punha; ver `rulings.md`). No topo, as contagens por situação em tags de tom: nuevos
   (sucesso), ya registrados (neutro), cambian de empresa (aviso), ya matriculados (neutro), con
   error (perigo). A tabela tem as colunas Fila, RUT (mono), Nombre, Email, Situación e ações. A
   situação é uma tag com uma linha secundária: "Enel → CGE", "Registro: <nome do cadastro>" ou
@@ -93,7 +97,8 @@ O bloco falha, mesmo funcionando, se acontecer qualquer um destes:
   `error` (com mensagem). `registered` e `moves` levam ainda `divergent` (quais campos diferem) e
   os valores do cadastro.
 - **D10 — Validações da prévia = as da gravação, sem escrita.** RUT válido, tipo aluno, e-mail
-  obrigatório e teto de nome **para aluno novo**, colisão de e-mail, teto de linhas. Se um
+  obrigatório, com formato válido (regra `email`, a mesma do `StudentData`; emenda da revisão,
+  ruling do Q-1 da rodada 1) e teto de nome **para aluno novo**, colisão de e-mail, teto de linhas. Se um
   registrado for marcado para atualizar, valem as regras do `UpdateStudentAction`
   (`ensureIdentityAvailable`). **Fonte única:** a regra mora no `StudentResolver` e no
   `UserProvisioner`, e a prévia a chama em modo sem escrita. Copiar regra para a prévia é

@@ -18,7 +18,9 @@ CGE e sem matrícula): `17.111.110-2`, Rodrigo Pizarro, `rodrigo.pizarro@cge.dem
 
 1. **Abrir o diálogo** (`<sp>/j1-upload.png`).
    - O título é "Importar planilla · Trabajos en líneas energizadas 220kV".
-   - O link "Descargar plantilla" fica no cabeçalho.
+   - O link "Descargar plantilla" fica no cabeçalho. (Nota do fechamento: depois desta jornada, o
+     `e9838885` levou o botão para o corpo do passo de upload, ao lado de "Elegir archivo"; ver a
+     D7 emendada da spec.)
    - A instrução cita as colunas RUT, Nombre, Email, Teléfono.
 2. **Baixar o modelo.**
    - O arquivo baixado é `plantilla-alumnos.xlsx`, com 4445 bytes.
