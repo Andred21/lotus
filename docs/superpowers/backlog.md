@@ -183,9 +183,10 @@ tem no máximo cinco mudanças; o que passar disso vira o lote seguinte, com fic
 1. **Hierarquia do corpo do diálogo**, em todo `AppDialog`, e por `FormSection`/`FormField` no
    produto inteiro (Perfil e formulários inclusive) — decisão do João, 2026-11-01:
    - **respiro simétrico:** o conteúdo tem `pt-2` (`AppDialog/style.ts`) contra os 2rem de baixo
-     do Lara; header e footer passam a enquadrar o corpo com o mesmo espaçamento;
-   - **seção:** título no azul da marca por `--brand-ink` (celeste no escuro, `#186b94` no claro,
-     AA nos dois) e linha contínua até a borda (`SectionLabel` `rule`, hoje desligada no
+     do Lara; header e footer passam a enquadrar o corpo com o mesmo espaçamento; vale também
+     para a aba Configuración › Certificados da administração, colada à barra de abas e ao rodapé;
+   - **seção:** título no celeste `--primary-color` do código Scap, nos dois temas (abaixo do AA
+     no claro, aceito pelo João), e linha contínua até a borda, no mesmo tom e mais clara (`SectionLabel` `rule`, hoje desligada no
      `FormSection`). **Reverte a D1/P-36**, por decisão do João: os testes do `FormSection` e do
      `SectionLabel` e os docblocks mudam junto, e a reversão fica registrada no bloco;
    - **label × valor:** a label do `FormField` passa a 14px peso 500 na tinta de corpo (hoje
@@ -201,7 +202,11 @@ tem no máximo cinco mudanças; o que passar disso vira o lote seguinte, com fic
    bloco 43 (70vw a partir de 1024px, teto de 84rem; hoje 64rem), `sm` e `md` não mudam; o
    diálogo de Curso passa de `md` para `lg` e ganha o maximizar.
 
-Lote fechado em três mudanças (decisão do João, 2026-11-01): o que vier depois é o lote 2.
+4. **Fundo da assinatura** — decisão do João, 2026-11-01: sempre claro, para a assinatura escura
+   aparecer; no tema claro fica como hoje, no escuro o xadrez vira azul claro (não branco).
+
+Lote reaberto na revisão da spec e fechado em quatro mudanças (decisão do João, 2026-11-01): o que
+vier depois é o lote 2.
 
 Tickets de cada mudança: `blocos/46-frontend-ajustes-de-interface-lote-1/tickets/`.
 
