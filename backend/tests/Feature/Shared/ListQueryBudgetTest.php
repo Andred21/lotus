@@ -69,6 +69,7 @@ class ListQueryBudgetTest extends TestCase
         'api/me' => 'devolve a sessão corrente (usuário, papel, permissões), um registro por request',
         'api/profile' => 'o perfil de quem está logado: um usuário, os documentos dele são bounded pelo enum',
         'api/permissions' => 'catálogo estático de permissões (PermissionCatalog), não cresce com o uso',
+        'api/versao' => 'versão da plataforma em execução (config), um valor escalar — não há N que cresça com o uso',
         'api/certificate-settings' => 'singleton de Configuración › Certificados: uma linha, uma assinatura',
     ];
 

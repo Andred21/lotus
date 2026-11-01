@@ -715,3 +715,6 @@ roles: string[],
 photo_url: string | null,
 last_login: string | null,
 };
+export type VersaoData = {
+versao: string,
+};
