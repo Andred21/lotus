@@ -167,6 +167,28 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 
 ---
 
+## 47. `frontend-ajustes-de-interface-lote-2`
+
+**Prioridade:** P1 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
+**Fonte:** pedido do João em 2026-11-01, ditado mudança a mudança; cada uma é confirmada no código
+antes de entrar no escopo.
+
+**Por que existe:** o lote seguinte de ajustes de interface, depois do fechamento do lote 1 (bloco
+46) em quatro mudanças. Mesmo teto: no máximo cinco mudanças; o que passar disso vira o lote 3.
+
+**Escopo:** uma mudança por vez, máximo de cinco; o que falta a preencher.
+
+Tickets de cada mudança: `blocos/47-frontend-ajustes-de-interface-lote-2/tickets/`.
+
+**Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria; o que o
+lote 1 (bloco 46) já cobre.
+
+**Colisão com o 46:** o 46 ainda está vivo, e o lote 2 tende a tocar os mesmos componentes
+(`AppDialog`, `FormSection`, tabelas). O `lane.sh conferir` do plano acusa a interseção; se cruzar,
+o plano espera o 46 mesclar e parte da `main` atualizada.
+
+---
+
 ## 42. `infra-producao-higiene-e-manutencao`
 
 **Prioridade:** P1, urgente · **Frente:** Infra · **Contexto:** não · **Depende:** —
