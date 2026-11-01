@@ -109,6 +109,9 @@
   O `43` nasceu em 2026-10-28, aberto pelo João a partir do diálogo de matrícula da Operación, que
   empilhava os campos: a moldura dos diálogos e o tipo dos documentos do orçamento. Entrou pela PR
   da própria lane, com o mesmo desvio da invariante 10 e a mesma cópia provisória do `42`.
+  O `46` nasceu em 2026-11-01, aberto pelo João para um lote de até cinco ajustes de interface
+  ditados um a um. Entrou pela PR da própria lane, com o mesmo desvio da invariante 10 e a mesma
+  cópia provisória do `42`.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -164,6 +167,24 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 ---
 
 # Fila priorizada
+
+---
+
+## 46. `frontend-ajustes-de-interface-lote-1`
+
+**Prioridade:** P1 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
+**Fonte:** pedido do João em 2026-11-01, ditado mudança a mudança; cada uma é confirmada no código
+antes de entrar no escopo.
+
+**Por que existe:** um lote de ajustes de interface que o João levantou usando o sistema. O lote
+tem no máximo cinco mudanças; o que passar disso vira o lote seguinte, com ficha própria.
+
+**Escopo:** a preencher, uma mudança por vez (máximo de cinco).
+
+**Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria.
+
+**DoD:** cada mudança do escopo provada na tela, no stack da lane; `pnpm build`, `pnpm lint` e
+`pnpm test` verdes.
 
 ---
 
