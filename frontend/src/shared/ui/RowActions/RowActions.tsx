@@ -5,13 +5,12 @@ import { AppButton } from '../AppButton'
 import { AppMenu, type AppMenuRef } from '../AppMenu'
 
 export type RowAction = {
-  /** Já traduzido: nome acessível do botão e rótulo do item de menu. */
+  /** Já traduzido: nome acessível do botão, dica no hover do botão solto e
+   * rótulo do item de menu. */
   label: string
   icon: string
   onClick: () => void
   disabled?: boolean
-  /** Dica no hover do botão solto. O item de menu já mostra o rótulo. */
-  tooltip?: boolean
   /** Ação destrutiva (remover matrícula): tinge o botão solto de perigo. No
    * menu o rótulo já diz o que a ação faz. */
   severity?: 'danger'
@@ -38,6 +37,11 @@ export type RowAction = {
  *
  * Com uma ação só não há menu: seria um clique a mais para chegar ao mesmo
  * lugar, e um botão já cabe na coluna colapsada.
+ *
+ * Todo botão solto mostra o próprio rótulo como dica, habilitado ou não, sem
+ * pedir. A dica já foi opt-in (`tooltip: true`), e cinco tabelas ficavam com
+ * ícones mudos — o item 46 tirou a opção: um botão só-ícone sem nome visível não
+ * tem motivo para calar. Os botões ficam centralizados na coluna.
  */
 /** A dica abre à ESQUERDA do ícone. A coluna presa mora na borda direita da
  * tabela, e à direita (o default do Prime) a dica passava da moldura e criava
@@ -56,7 +60,7 @@ const DICA: TooltipProps = { position: 'left' }
  */
 function RowActionButton({ acao }: { acao: RowAction }) {
   const involucro = useRef<HTMLSpanElement>(null)
-  const dicaNoInvolucro = acao.tooltip && acao.disabled
+  const dicaNoInvolucro = acao.disabled
 
   const botao = (
     <AppButton
@@ -66,7 +70,7 @@ function RowActionButton({ acao }: { acao: RowAction }) {
       severity={acao.severity}
       aria-label={acao.label}
       aria-describedby={acao.describedBy}
-      tooltip={acao.tooltip && !acao.disabled ? acao.label : undefined}
+      tooltip={!acao.disabled ? acao.label : undefined}
       tooltipOptions={DICA}
       disabled={acao.disabled}
       onClick={acao.onClick}
@@ -95,7 +99,7 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
 
   if (!collapsed || actions.length === 1) {
     return (
-      <div className="flex justify-end gap-1">
+      <div className="flex justify-center gap-1">
         {actions.map((acao) => (
           <RowActionButton key={acao.label} acao={acao} />
         ))}
@@ -104,7 +108,7 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
   }
 
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-center">
       <AppButton
         icon="pi pi-ellipsis-v"
         text

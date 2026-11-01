@@ -33,13 +33,12 @@ export function EnrollmentRowActions({
 
   const actions: RowAction[] = []
   if (canResult) {
-    actions.push({ label: t('certificate.result.action'), icon: 'pi pi-pencil', tooltip: true, onClick: onResult })
+    actions.push({ label: t('certificate.result.action'), icon: 'pi pi-pencil', onClick: onResult })
   }
   if (canRemove) {
     actions.push({
       label: t('operation.enrollment.remove'),
       icon: 'pi pi-times',
-      tooltip: true,
       severity: 'danger',
       disabled: removing,
       onClick: onRemove,
