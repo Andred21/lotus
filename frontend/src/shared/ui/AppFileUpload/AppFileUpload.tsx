@@ -46,8 +46,8 @@ export type AppFileUploadOwnProps = FileUploadProps & {
  * O modo básico do Prime entrega `<span class="p-button p-fileupload-choose"
  * tabindex="0">` com `role` nulo: um alvo focável que não se anuncia como nada
  * (D-23 do review de 2026-08-17) — e é o controle que substitui documento de
- * peso legal de forma irreversível. O papel é do wrapper porque vale para os
- * oito sítios; o NOME não pode ser, porque só o chamador sabe qual documento
+ * peso legal de forma irreversível. O papel é do wrapper porque vale para todo
+ * chamador; o NOME não pode ser, porque só o chamador sabe qual documento
  * está em jogo. O `pt` funde por `mergePt`, chave a chave: quem passa
  * `pt.basicButton.className` não perde o papel, e o papel não apaga a classe.
  * O papel não vem sozinho: tecla e estado desabilitado entram com ele, medidos
@@ -79,11 +79,10 @@ export function AppFileUpload({
   }
 
   // Nome acessível: o do chamador vence sempre. Sem ele, quem nomeia é o rótulo
-  // VISÍVEL — e quando esse rótulo é vazio, que é como três sítios pedem o
-  // disparador só-ícone (`QuoteRow`, e as duas linhas do `SlotBody`), o Prime
-  // cai no próprio default INGLÊS e o botão anuncia "Choose" numa interface em
-  // espanhol. Medido no gate do BD-16: quatro ocorrências só no diálogo do
-  // redator. O piso traduzido mora aqui pela mesma régua do olho do
+  // VISÍVEL — e quando esse rótulo é vazio, que é como o disparador só-ícone é
+  // pedido, o Prime cai no próprio default INGLÊS e o botão anuncia "Choose"
+  // numa interface em espanhol. Medido no gate do BD-16: quatro ocorrências só
+  // no diálogo do redator. O piso traduzido mora aqui pela mesma régua do olho do
   // `AppPassword` (UI-08) — o wrapper é a única porta, e nome acessível não é
   // opcional. `common.upload` é o rótulo que os outros sítios já mostram.
   const nome = accessibleName ?? (props.chooseLabel ? undefined : t('common.upload'))
@@ -103,7 +102,7 @@ export function AppFileUpload({
   // **Estado:** `basicButtonProps` mantém `tabIndex: 0` com `disabled` e só
   // acrescenta a classe `p-disabled` (`:1010-1024`). Sem `aria-disabled` o
   // disparador recebe foco, anuncia botão HABILITADO e é inerte — o `<input>`
-  // que ele aciona nasce `disabled` (`:1003`). Cinco sítios passam
+  // que ele aciona nasce `disabled` (`:1003`). Quem envia passa
   // `disabled={uploading}`, e é durante o upload que o usuário mais tenta de
   // novo. Continua focável de propósito: alvo que some do Tab enquanto desabilita
   // é alvo que o leitor de tela não acha para descobrir POR QUE não responde.

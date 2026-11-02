@@ -19,10 +19,11 @@ use Throwable;
 class UploadFileAction
 {
     /**
-     * Sobe e registra numa chamada. Continua servindo os chamadores que NÃO
-     * estão dentro de transação (`QuoteFileController`, `BudgetFileController`).
-     * Quem abre transação usa `put`/`register`/`discard` separados — ver
-     * `StoreRedatorDocumentAction` e `StoreTurmaDocumentAction` (P-49).
+     * Sobe e registra numa chamada, para quem NÃO está dentro de transação. Hoje
+     * nenhum fluxo de produção a usa: quem abre transação compõe `put`/
+     * `register`/`discard` — ver `StoreRedatorDocumentAction`,
+     * `StoreTurmaDocumentAction` (P-49) e `ReplaceFileOfTypeAction`, por onde
+     * sobem os anexos de cotação e orçamento.
      */
     public function execute(Model $owner, UploadedFile $file, string $type, ?CarbonInterface $validUntil = null, ?string $disk = null): File
     {

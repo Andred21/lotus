@@ -15,7 +15,8 @@ export type ManagerSignatureControl = {
   current: CertificateSignatureFileData | null
   uploading: boolean
   uploadError: string | null
-  /** `true` = o servidor aceitou; só nesse caso o seletor é remontado. */
+  /** `true` = o servidor aceitou; só nesse caso quem chama zera o seletor
+   * (`cleaner.reset()`). */
   upload: (file: File) => Promise<boolean>
   removing: boolean
   removeError: string | null

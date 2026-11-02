@@ -38,8 +38,8 @@ export function DocumentTypeCard({
   // tipo (D-23).
   const tipo = turmaDocumentTypeLabel(type, t)
 
-  // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação
-  // (diferente do useBudgetDetail, que limpa só no onSuccess): com
+  // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação (é a
+  // convenção de todo slot de upload, nunca só no onSuccess): com
   // filesState não-vazio o input some do DOM e o clique seguinte
   // reenvia o MESMO arquivo em vez de reabrir o seletor — no sucesso
   // (arquivo errado subiu) e na falha (422 rejeitado) igual. `file`
