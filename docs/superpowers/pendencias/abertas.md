@@ -1257,18 +1257,6 @@ decorativo (`aria-hidden`). O João decidiu em 2026-10-29, na Task 2 do item 43,
 O caminho candidato é clarear a tinta do escuro para `--red-300` (#ff8780), o que muda o `AppTag`
 em todas as telas.
 
-## P-106 — a lixeira de um documento do orçamento remove sem confirmação
-
-**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar `useBudgetDetail.ts` ou o
-`BudgetDocumentsCard`. Revisar em **2026-11-07**.
-
-O smoke do item 43 viu que a lixeira de um documento no detalhe do orçamento chama
-`removeFile.mutate` direto (`frontend/src/features/commercial/hooks/useBudgetDetail.ts:99`), sem
-`ConfirmDialog`. Um clique errado tira do orçamento uma OC, factura ou comprobante, que têm peso
-legal. O soft delete preserva o metadado e o arquivo fica no bucket, mas o documento some da tela.
-O `TurmaDocuments` já confirma a remoção com `severity="danger"`, e o orçamento deveria fazer o
-mesmo.
-
 ## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
 
 **Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
@@ -1278,6 +1266,11 @@ O item 43 enviou um arquivo de tipo recusado ao upload do orçamento, e o erro d
 saiu "El campo **file** debe ser…": o backend não traduz o nome do atributo `file`. Vale para todos
 os uploads que validam `file`, não só para o orçamento. Parente da P-76 (frases ao usuário fora da
 catraca de idioma).
+
+**Gatilho disparado e não pago no item 47 (2026-11-02):** o bloco tocou o
+`Shared/Files/Actions/UploadFileAction.php` e a validação do upload de cotización e presupuesto, mas
+não traduziu o atributo `file` (`backend/lang/es_CL/validation.php`, `attributes`, segue sem ele).
+O gatilho não se desarma.
 
 ## P-108 — em 1024, o RUT do cliente passa por baixo do "Agregar cotización"
 
@@ -1311,17 +1304,3 @@ tamanhos de faixa e o celeste num título, e reabriria a divergência que o audi
 O código não viola a rule: ela ficou atrás dele. Fecha com uma linha na tabela (o título de seção
 de formulário, 13px, na marca, a mesma voz da faixa um degrau acima) e o valor da constante nova
 congelado no `typography.test.ts`, como as outras.
-
-## P-111 — o `estrutura-monolito.md` não registra o `AppSignatureSlot`
-
-**Bloco:** — · **Quem decide:** — · **Gatilho:** fechamento do item 47 (`/finalizar-bloco 47`), que
-já tocou o `estrutura-monolito.md` (a linha do `AppFileSlot`), ou o bloco seguinte que tocar o doc.
-Revisar em **2026-11-15**.
-
-A rodada 2 da revisão do item 47 (Q-2, `CONFIRMED`) mediu que a linha da pasta
-`shared/ui/AppSignatureUpload/` (`docs/estrutura-monolito.md:128`) cita só `useSignatureCleaner`,
-`SignaturePreview` e `SignatureHint`. A correção do Q-3 da rodada 1 (`d8c7dded`) criou nessa pasta o
-`AppSignatureSlot` (`frontend/src/shared/ui/AppSignatureUpload/index.ts:1`): o `AppFileSlot` com a
-limpeza de D16, que a firma do redator, Mi perfil e a firma da gerente consomem. O ruling 24 aceitou
-que o nome da pasta engana e prometeu compensar no texto do doc; sem a peça no texto, quem procura
-"slot de assinatura" monta uma quarta fiação. Fecha acrescentando o `AppSignatureSlot` à mesma linha.

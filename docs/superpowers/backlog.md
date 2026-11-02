@@ -168,45 +168,6 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 
 ---
 
-## 47. `frontend-ajustes-de-interface-lote-2`
-
-**Prioridade:** P1 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
-**Fonte:** pedido do João em 2026-11-01, ditado mudança a mudança; cada uma é confirmada no código
-antes de entrar no escopo.
-
-**Por que existe:** o lote seguinte de ajustes de interface, depois do fechamento do lote 1 (bloco
-46) em quatro mudanças. Mesmo teto: no máximo cinco mudanças; o que passar disso vira o lote 3.
-
-**Escopo:** uma mudança por vez, máximo de cinco; o que falta a preencher.
-1. **Arquivo num padrão só** — decisão do João, 2026-11-01: o slot dos Documentos do redator (CV)
-   vira a peça compartilhada de arquivo, e **reverte a D8** da spec de upload de 2026-07-31:
-   - **ações:** ver, baixar, substituir e excluir só ícone, com dica nos três idiomas; excluir
-     confirma sempre;
-   - **onde:** Assinatura do redator (admin e Perfil), assinatura do gerente em Configuración ›
-     Certificados, documentos do Perfil, fotos (cliente, redator, aluno, usuário e Perfil, com o
-     avatar mantido), cotizaciones, presupuestos e documentos de turma;
-   - **presupuesto:** saem o botão e o diálogo "Enviar documento"; ficam três slots fixos (Ordem de
-     compra, Fatura, Comprovante), com tag do tipo maior e com ícone;
-   - **um arquivo por tipo** em presupuesto e cotización: enviar de novo substitui, e o backend
-     apaga o anterior com auditoria. Vários por tipo só na turma. Regra nova no backend, aceita
-     neste bloco pelo João; duplicado antigo mostra o mais recente, sem migração.
-
-Lote fechado na mudança 1 (decisão do João, 2026-11-02): o que vier depois é o lote 3.
-
-Tickets de cada mudança: `blocos/47-frontend-ajustes-de-interface-lote-2/tickets/`.
-
-**Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria — salvo a
-regra de um arquivo por tipo da mudança 1, aceita pelo João; o que o lote 1 (bloco 46) já cobre.
-
-**Parte do 46:** a branch do 46 foi mesclada nesta lane (decisão do João, 2026-11-01), e o 46
-fechou na `main` pela PR #156. O lote 2 parte do código do lote 1; os dois saem na mesma versão,
-1.12.0 (decisão do João, 2026-11-02).
-
-**DoD:** cada mudança do escopo provada na tela, no stack da lane; `php artisan test`, `pnpm build`,
-`pnpm lint` e `pnpm test` verdes.
-
----
-
 ## 9. `administracao-roles-permissoes-redesign`
 
 **Prioridade:** P1 · **Frente:** Frontend · **Contexto:** sim
