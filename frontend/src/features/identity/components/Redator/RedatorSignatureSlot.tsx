@@ -69,6 +69,7 @@ export function RedatorSignatureSlot({
       uploading={uploading || cleaner.processing}
       onSizeReject={cleaner.reject}
       onRemove={mode === 'edit' && doc && onRemoveDoc ? () => onRemoveDoc(doc.id) : undefined}
+      removeLabel={t('common.deleteNamed', { tipo: t('documentType.FIRMA') })}
     >
       {(canPick || showing) && (
         <div className="flex flex-col gap-3">

@@ -53,7 +53,9 @@ describe('RedatorSignatureSlot', () => {
     montar({ doc: existente })
 
     expect(screen.getByText('documentType.FIRMA')).toBeTruthy()
-    expect(nomesDosIcones()).toEqual(['common.preview', 'common.download', 'redator.signatureReplace', 'common.delete'])
+    // O excluir leva o tipo no nome, como os documentos do mesmo diálogo (ruling 22;
+    // Q-2 da revisão do bloco 47).
+    expect(nomesDosIcones()).toEqual(['common.preview', 'common.download', 'redator.signatureReplace', 'common.deleteNamed'])
   })
 
   it('onde dá para enviar a dica de formatos fica visível, com ou sem firma, e continua com a prévia aberta', async () => {
@@ -106,11 +108,10 @@ describe('RedatorSignatureSlot', () => {
   it('excluir a firma pede confirmação e só então chama onRemoveDoc', async () => {
     const { props } = montar({ doc: existente })
 
-    fireEvent.click(screen.getByRole('button', { name: 'common.delete' }))
+    fireEvent.click(screen.getByRole('button', { name: 'common.deleteNamed' }))
     expect(props.onRemoveDoc).not.toHaveBeenCalled()
-    // Com o diálogo aberto o "sim" é o segundo botão com o rótulo de excluir.
-    await waitFor(() => expect(screen.getAllByRole('button', { name: 'common.delete' }).length).toBeGreaterThan(1))
-    fireEvent.click(screen.getAllByRole('button', { name: 'common.delete' }).at(-1)!)
+    // O "sim" do diálogo é o único botão com o rótulo de excluir sem o tipo.
+    fireEvent.click(await screen.findByRole('button', { name: 'common.delete' }))
 
     await waitFor(() => expect(props.onRemoveDoc).toHaveBeenCalledWith(7))
   })

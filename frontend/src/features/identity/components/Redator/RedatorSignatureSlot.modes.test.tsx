@@ -98,10 +98,10 @@ describe('RedatorSignatureSlot — visualização e criação', () => {
     const { props } = montar({ mode: 'create', staged: limpo })
 
     expect(screen.getByText('firma.png')).toBeTruthy()
-    expect(nomesDosIcones()).toEqual(['common.delete'])
+    expect(nomesDosIcones()).toEqual(['common.deleteNamed'])
     expect(document.querySelector('input[type="file"]')).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'common.delete' }))
+    fireEvent.click(screen.getByRole('button', { name: 'common.deleteNamed' }))
     expect(props.onUnstage).toHaveBeenCalled()
   })
 })
