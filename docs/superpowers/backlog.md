@@ -177,11 +177,23 @@ antes de entrar no escopo.
 46) em quatro mudanças. Mesmo teto: no máximo cinco mudanças; o que passar disso vira o lote 3.
 
 **Escopo:** uma mudança por vez, máximo de cinco; o que falta a preencher.
+1. **Arquivo num padrão só** — decisão do João, 2026-11-01: o slot dos Documentos do redator (CV)
+   vira a peça compartilhada de arquivo, e **reverte a D8** da spec de upload de 2026-07-31:
+   - **ações:** ver, baixar, substituir e excluir só ícone, com dica nos três idiomas; excluir
+     confirma sempre;
+   - **onde:** Assinatura do redator (admin e Perfil), assinatura do gerente em Configuración ›
+     Certificados, documentos do Perfil, fotos (cliente, redator, aluno, usuário e Perfil, com o
+     avatar mantido), cotizaciones, presupuestos e documentos de turma;
+   - **presupuesto:** saem o botão e o diálogo "Enviar documento"; ficam três slots fixos (Ordem de
+     compra, Fatura, Comprovante), com tag do tipo maior e com ícone;
+   - **um arquivo por tipo** em presupuesto e cotización: enviar de novo substitui, e o backend
+     apaga o anterior com auditoria. Vários por tipo só na turma. Regra nova no backend, aceita
+     neste bloco pelo João; duplicado antigo mostra o mais recente, sem migração.
 
 Tickets de cada mudança: `blocos/47-frontend-ajustes-de-interface-lote-2/tickets/`.
 
-**Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria; o que o
-lote 1 (bloco 46) já cobre.
+**Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria — salvo a
+regra de um arquivo por tipo da mudança 1, aceita pelo João; o que o lote 1 (bloco 46) já cobre.
 
 **Colisão com o 46:** o 46 ainda está vivo, e o lote 2 tende a tocar os mesmos componentes
 (`AppDialog`, `FormSection`, tabelas). O `lane.sh conferir` do plano acusa a interseção; se cruzar,
