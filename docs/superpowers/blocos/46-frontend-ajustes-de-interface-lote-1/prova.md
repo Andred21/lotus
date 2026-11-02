@@ -24,7 +24,10 @@ Medido em 2026-11-01 com Playwright (Chromium 1248), por `getComputedStyle` e
 
 ## Ticket 02 — hierarquia seção × label × valor (Cliente, leitura e edição)
 
-- Título de seção: `rgb(37, 165, 228)` (`--primary-color`), 12px / 600, nos dois temas.
+- Título de seção: `rgb(37, 165, 228)` (`--primary-color`), 13px / 600 (`formSectionTitleClass`,
+  desde `756b00fe`), nos dois temas, em leitura e em edição. Respiro (remedido em 2026-11-01 no
+  `/finalizar-bloco`, Q-1 da revisão): primeira seção `padding` 0 / 4px (topo / base); as seguintes,
+  com `spaced`, 16px / 4px.
   Contraste sobre `--surface-card`: **claro 2,77:1** (abaixo do AA, aceito pelo João na spec D1);
   **escuro 5,28:1**.
 - Linha da seção: `color(srgb 0.145 0.647 0.894 / 0.35)` (`--section-rule`), 1px, nos dois temas.
@@ -85,4 +88,4 @@ Medido em 2026-11-01 com Playwright (Chromium 1248), por `getComputedStyle` e
 ## Gate
 
 `pnpm build` ok (só o aviso de chunk pré-existente); `pnpm lint` limpo; `pnpm test` 199 arquivos,
-1439 testes (depois da onda de correção final), todos passando. O cliente arquivado para a medida foi restaurado (`deleted_at` nulo).
+1440 testes (no `756b00fe`, rodada fresca do `/finalizar-bloco`), todos passando. O cliente arquivado para a medida foi restaurado (`deleted_at` nulo).
