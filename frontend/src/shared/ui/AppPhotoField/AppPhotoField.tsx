@@ -1,10 +1,30 @@
 import { useTranslation } from "react-i18next";
 import { AppAvatar } from "../AppAvatar";
 import { AppButton } from "../AppButton";
+import { AppFileActions } from "../AppFileActions";
+import { AppFilePreviewDialog } from "../AppFilePreviewDialog";
+import type { PreviewableFile } from "../AppFilePreviewDialog";
 import { AppFileUpload } from "../AppFileUpload";
 import type { FileUploadHandlerEvent } from "../AppFileUpload";
+import { useFilePreview } from "@shared/hooks";
 import { MAX_PHOTO_BYTES } from "@shared/lib/upload";
 import { dangerText } from "../../styles/tokens"
+
+/** Enviar e substituir são o mesmo ícone, só-ícone: o rótulo é a dica e o nome
+ * acessível (`AppFileUpload`), como no `AppFileSlot`. */
+const UPLOAD_CHOOSE_OPTIONS = {
+  icon: "pi pi-upload",
+  className: "p-button-text p-button-rounded",
+};
+
+/** A URL é a única coisa que o `useEntityPhoto` expõe da foto: o arquivo
+ * previsualizável é montado em volta dela. O `mime` só serve para o preview
+ * escolher imagem. */
+const arquivo = (url: string, name: string): PreviewableFile => ({
+  original_name: name,
+  mime: "image/jpeg",
+  download_url: url,
+});
 
 export interface AppPhotoFieldProps {
   /** Nome da pessoa/empresa — vira as duas iniciais quando não há foto. */
@@ -24,20 +44,18 @@ export interface AppPhotoFieldProps {
 }
 
 /**
- * Campo de foto do corpo dos diálogos de cadastro. Apresentacional puro: não
- * conhece rota, mutation nem modo do diálogo — quem orquestra é
- * `useEntityPhoto` (spec D8).
+ * Campo de foto do corpo dos diálogos de cadastro. Com foto, as ações vêm
+ * embaixo do avatar, só-ícone e com dica: ver (abre o preview no próprio campo),
+ * baixar, substituir e excluir (que confirma). Sem foto, só o enviar.
+ * Apresentacional puro: não conhece rota, mutation nem modo do diálogo — quem
+ * orquestra é `useEntityPhoto` (spec D8).
  *
- * O rótulo do botão muda com o estado ("Seleccionar" vs "Reemplazar") porque
- * substituir apaga a foto anterior de forma irreversível (spec D4) — o texto é
- * o único aviso disso na tela.
+ * Substituir apaga a foto anterior de forma irreversível (spec D4): por isso o
+ * ícone de substituir tem dica e nome próprios (`photo.replace`), distintos do
+ * enviar de quando não há foto (`photo.select`), e excluir pede confirmação.
  *
- * O par de controles é CENTRADO, e a quebra preserva isso: os rótulos de es-CL
- * e pt-BR são mais longos que os de en e não cabem numa linha da coluna de
- * 22rem do perfil. Alinhados ao fim, a quebra deixava o primário sozinho à
- * esquerda e o secundário desalinhado na linha de baixo — o mesmo bloco mudava
- * de arranjo com o idioma, e o que quebra é justamente o idioma de referência
- * do projeto (UI-07 do review de 2026-08-16).
+ * As ações ficam numa linha centrada que quebra sem perder o centro, e como são
+ * só-ícone o idioma não muda o arranjo (UI-07 do review de 2026-08-16).
  */
 export function AppPhotoField({
   name,
@@ -52,11 +70,26 @@ export function AppPhotoField({
 }: AppPhotoFieldProps) {
   const { t } = useTranslation();
 
+  const preview = useFilePreview<PreviewableFile>();
+
   const handleUpload = (e: FileUploadHandlerEvent) => {
     const file = e.files[0];
     e.options.clear();
     if (file) onSelect(file);
   };
+
+  const picker = (label: string) => (
+    <AppFileUpload
+      accept="image/jpeg,image/png,image/webp"
+      maxBytes={MAX_PHOTO_BYTES}
+      disabled={pending}
+      chooseLabel=""
+      accessibleName={label}
+      chooseOptions={UPLOAD_CHOOSE_OPTIONS}
+      uploadHandler={handleUpload}
+      onSizeReject={onSizeReject}
+    />
+  );
 
   return (
     <div className="flex flex-col items-center">
@@ -80,33 +113,20 @@ export function AppPhotoField({
       />
 
       <div className="flex flex-col gap-2 items-center">
-        {!readOnly && (
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
-            <AppFileUpload
-              accept="image/jpeg,image/png,image/webp"
-              maxBytes={MAX_PHOTO_BYTES}
-              disabled={pending}
-              chooseLabel={url ? t("photo.replace") : t("photo.select")}
-              chooseOptions={{ icon: "pi pi-camera" }}
-              uploadHandler={handleUpload}
-              onSizeReject={onSizeReject}
-            />
-            {url && (
-              // `severity="danger"`, não `dangerText` inline: é BOTÃO, e botão
-              // recebe severidade — a tinta vem da folha do Prime, sem hex novo
-              // (ADR-16). Antes, `Eliminar foto` era texto celeste logo abaixo do
-              // `Reemplazar` celeste PREENCHIDO: das duas, a destrutiva tinha o
-              // MENOR peso visual, e lia como "menos importante" em vez de "mais
-              // perigosa" (D-30). É o caso pior do acúmulo de papéis que a P-36
-              // registra — a mesma tinta em ação primária e em ação que apaga.
-              <AppButton
-                label={t("photo.remove")}
-                icon="pi pi-trash"
-                text
-                severity="danger"
-                disabled={pending}
-                onClick={onRemove}
-              />
+        {(url || !readOnly) && (
+          <div className="flex flex-wrap items-center justify-center gap-1 pt-4">
+            {url ? (
+              <AppFileActions
+                file={arquivo(url, t("photo.fileName"))}
+                onPreview={preview.open}
+                onRemove={readOnly ? undefined : onRemove}
+                removing={pending}
+                removeLabel={t("photo.remove")}
+              >
+                {!readOnly && picker(t("photo.replace"))}
+              </AppFileActions>
+            ) : (
+              picker(t("photo.select"))
             )}
           </div>
         )}
@@ -123,6 +143,12 @@ export function AppPhotoField({
           </p>
         )}
       </div>
+
+      <AppFilePreviewDialog
+        file={preview.file}
+        visible={preview.visible}
+        onHide={preview.close}
+      />
     </div>
   );
 }
