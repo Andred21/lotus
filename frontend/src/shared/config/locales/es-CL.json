@@ -58,6 +58,8 @@
     "moreActions": "Más acciones",
     "upload": "Subir documento",
     "replace": "Reemplazar",
+    "uploadNamed": "Subir {{tipo}}",
+    "replaceNamed": "Reemplazar {{tipo}}",
     "deleteFileTitle": "Eliminar archivo",
     "deleteFileMessage": "¿Eliminar «{{name}}»? Esta acción no se puede deshacer.",
     "fileTooLarge": "El archivo pesa {{size}} y el máximo es {{limit}}.",

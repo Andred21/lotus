@@ -41,6 +41,12 @@ export function BudgetDocumentsCard({
     upload.mutate({ budgetId, type, file }, { onSuccess: () => e.options.clear() })
   }
 
+  // O erro de envio anterior é do arquivo anterior: não fica à frente do tamanho.
+  const rejectSize = (message: string) => {
+    upload.reset()
+    setSizeError(message)
+  }
+
   const others = files.filter((f) => budgetDocumentTag(f.type) === null)
 
   return (
@@ -69,10 +75,10 @@ export function BudgetDocumentsCard({
               file={current}
               onPreview={preview.open}
               onUpload={(e) => send(type, e)}
-              uploadLabel={`${t('common.upload')}: ${label}`}
-              replaceLabel={`${t('common.replace')}: ${label}`}
+              uploadLabel={t('common.uploadNamed', { tipo: label })}
+              replaceLabel={t('common.replaceNamed', { tipo: label })}
               uploading={upload.isPending && upload.variables?.type === type}
-              onSizeReject={setSizeError}
+              onSizeReject={rejectSize}
               onRemove={current ? () => onRemove(current.id) : undefined}
             />
           )

@@ -58,6 +58,8 @@
     "moreActions": "More actions",
     "upload": "Upload document",
     "replace": "Replace",
+    "uploadNamed": "Upload {{tipo}}",
+    "replaceNamed": "Replace {{tipo}}",
     "deleteFileTitle": "Delete file",
     "deleteFileMessage": "Delete “{{name}}”? This action cannot be undone.",
     "fileTooLarge": "The file is {{size}} and the maximum is {{limit}}.",

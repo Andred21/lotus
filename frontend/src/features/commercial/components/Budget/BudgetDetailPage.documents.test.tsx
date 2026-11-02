@@ -15,13 +15,18 @@ vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
   return {
     ...(await importOriginal<typeof import('react-i18next')>()),
-    useTranslation: mockUseTranslation(),
+    // Ecoa o `tipo` da interpolação: o nome acessível dos slots leva o tipo.
+    useTranslation: mockUseTranslation({
+      t: (key, opts) => (opts?.tipo === undefined ? key : `${key}:${String(opts.tipo)}`),
+    }),
   }
 })
 
 vi.mock('../../api/useCommercialFiles', () => ({ useUploadBudgetFile: vi.fn() }))
 
 const mutate = vi.fn()
+const reset = vi.fn()
+const estado = vi.hoisted<{ error: { detail: string } | null }>(() => ({ error: null }))
 
 const arquivo = (id: number, type: string, createdAt = '2026-10-28T10:00:00Z'): FileData => ({
   id,
@@ -43,9 +48,12 @@ const tags = () => Array.from(document.querySelectorAll('.p-tag'))
 
 beforeEach(() => {
   mutate.mockReset()
-  vi.mocked(useUploadBudgetFile).mockReturnValue({
-    mutate, error: null, isPending: false, variables: undefined,
-  } as unknown as ReturnType<typeof useUploadBudgetFile>)
+  estado.error = null
+  // `reset` limpa o erro como a mutation real; o próximo render já o lê vazio.
+  reset.mockReset().mockImplementation(() => { estado.error = null })
+  vi.mocked(useUploadBudgetFile).mockImplementation(() => ({
+    mutate, reset, error: estado.error, isPending: false, variables: undefined,
+  }) as unknown as ReturnType<typeof useUploadBudgetFile>)
 })
 
 describe('BudgetDocumentsCard — um slot fixo por tipo', () => {
@@ -108,5 +116,28 @@ describe('BudgetDocumentsCard — um slot fixo por tipo', () => {
     montar([], 'No se pudo eliminar')
 
     expect(screen.getByText('No se pudo eliminar')).toBeTruthy()
+  })
+
+  it('o slot Fatura tem enviar e substituir nomeados com o tipo', () => {
+    const { unmount } = montar()
+    expect(screen.getByLabelText('common.uploadNamed:budget.documentType.invoice')).toBeTruthy()
+    unmount()
+
+    montar([arquivo(2, 'invoice')])
+    expect(screen.getByLabelText('common.replaceNamed:budget.documentType.invoice')).toBeTruthy()
+  })
+
+  it('arquivo grande demais mostra o erro de tamanho, não um erro de envio antigo', () => {
+    estado.error = { detail: 'Tipo de archivo no permitido' }
+    const { container } = montar()
+    expect(screen.getByText('Tipo de archivo no permitido')).toBeTruthy()
+    const grande = new File(['x'], 'enorme.pdf', { type: 'application/pdf' })
+    Object.defineProperty(grande, 'size', { value: 50 * 1024 * 1024 })
+
+    fireEvent.change(container.querySelectorAll('input[type="file"]')[1], { target: { files: [grande] } })
+
+    expect(screen.getByText('common.fileTooLarge')).toBeTruthy()
+    expect(screen.queryByText('Tipo de archivo no permitido')).toBeNull()
+    expect(mutate).not.toHaveBeenCalled()
   })
 })

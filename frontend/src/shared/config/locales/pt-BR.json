@@ -58,6 +58,8 @@
     "moreActions": "Mais ações",
     "upload": "Enviar documento",
     "replace": "Substituir",
+    "uploadNamed": "Enviar {{tipo}}",
+    "replaceNamed": "Substituir {{tipo}}",
     "deleteFileTitle": "Excluir arquivo",
     "deleteFileMessage": "Excluir «{{name}}»? Esta ação não pode ser desfeita.",
     "fileTooLarge": "O arquivo tem {{size}} e o máximo é {{limit}}.",
