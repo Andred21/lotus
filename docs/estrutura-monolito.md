@@ -48,7 +48,10 @@ backend/app/
 │   ├── Commercial/             # cliente/endereço/contato, orçamento, cotação, aprovação, anexos
 │   ├── Catalog/                # cursos, templates de certificado, habilitação redator-curso
 │   ├── Operation/              # turma, matrícula, designação redator, conclusão  [código real]
-│   └── Certification/          # emissão on-demand, validação QR pública          [scaffold vazio]
+│   └── Certification/          # emissão on-demand, validação QR pública          [código real]
+│       │                       #   estado de emissão da matrícula (bloco 48): `Enums/EnrollmentEmissionState`
+│       │                       #   (vigente · revogado_reemissivel · nunca_emitido) e `Services/EmissionStateResolver`
+│       │                       #   — dono do critério "vigente" (predicado SQL, escopo sobre Enrollment, classificação PHP)
 │   (Feedback NÃO entra: decisão de 2026-08-22 — é documentação de turma, ver der-fisico.md)
 │   (cada domínio: mesma estrutura interna, conforme necessidade)
 │

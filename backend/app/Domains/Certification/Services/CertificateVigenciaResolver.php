@@ -2,7 +2,6 @@
 
 namespace App\Domains\Certification\Services;
 
-use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Operation\Services\ResultLock;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +20,10 @@ use Illuminate\Support\Collection;
  * a significar "emitido **e** dentro do `valido_ate`", as portas mudam e o
  * painel continua exibindo um certificado vencido como atual — a lista
  * prometendo o que o POST recusa. Mudar `vigentes()` muda todos de uma vez.
+ *
+ * O dono do critério é o `EmissionStateResolver` (bloco 48): `vigentes()` só
+ * aplica o predicado dele à query de `Certificate`, e a pendência do Dashboard
+ * lê o mesmo predicado — a antiga "fonte única" ganhou uma cópia lá fora.
  */
 class CertificateVigenciaResolver implements ResultLock
 {
@@ -85,8 +88,12 @@ class CertificateVigenciaResolver implements ResultLock
     /** @return Builder<Certificate> */
     private function vigentes(): Builder
     {
-        // Fonte única do critério. Revogado não é vigente; "emitido" é o único
-        // estado que bloqueia reemissão e o único que o painel exibe.
-        return Certificate::query()->where('status', CertificateStatus::Emitido);
+        // O critério mora no `EmissionStateResolver`: revogado não é vigente;
+        // "emitido" é o único estado que bloqueia reemissão e o único que o
+        // painel exibe. Esta classe só o aplica à query de `Certificate`.
+        $query = Certificate::query();
+        EmissionStateResolver::whereVigente($query);
+
+        return $query;
     }
 }
