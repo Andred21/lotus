@@ -5,6 +5,7 @@ import { AppButton } from '../AppButton'
 import { AppDownloadButton } from '../AppDownloadButton'
 import { ConfirmDialog } from '../ConfirmDialog'
 import type { PreviewableFile } from '../AppFilePreviewDialog'
+import { DICA_ESQUERDA } from '../dicaEsquerda'
 
 export type AppFileActionsProps<T extends PreviewableFile> = {
   file: T
@@ -31,10 +32,6 @@ export type AppFileActionsProps<T extends PreviewableFile> = {
   /** Ações da própria tela, entre baixar e excluir (ex.: substituir). */
   children?: ReactNode
 }
-
-/** A dica abre à ESQUERDA (bloco 47), como no `RowActions` do 46: a linha de
- * arquivo mora na borda direita do cartão, e à direita a dica passa da moldura. */
-const DICA = { position: 'left' } as const
 
 function isThenable(value: unknown): value is PromiseLike<unknown> {
   return typeof (value as PromiseLike<unknown> | undefined)?.then === 'function'
@@ -116,7 +113,7 @@ export function AppFileActions<T extends PreviewableFile>({
         rounded
         aria-label={t('common.preview')}
         tooltip={t('common.preview')}
-        tooltipOptions={DICA}
+        tooltipOptions={DICA_ESQUERDA}
         onClick={() => onPreview(file)}
       />
       <AppDownloadButton href={file.download_url} />
@@ -130,7 +127,7 @@ export function AppFileActions<T extends PreviewableFile>({
             severity="danger"
             aria-label={removeName}
             tooltip={removeName}
-            tooltipOptions={DICA}
+            tooltipOptions={DICA_ESQUERDA}
             disabled={removing}
             onClick={ask}
           />

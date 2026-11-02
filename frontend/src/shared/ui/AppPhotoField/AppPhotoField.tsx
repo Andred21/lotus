@@ -10,13 +10,6 @@ import { useFilePreview } from "@shared/hooks";
 import { MAX_PHOTO_BYTES } from "@shared/lib/upload";
 import { dangerText } from "../../styles/tokens"
 
-/** Enviar e substituir são o mesmo ícone, só-ícone: o rótulo é a dica e o nome
- * acessível (`AppFileUpload`), como no `AppFileSlot`. */
-const UPLOAD_CHOOSE_OPTIONS = {
-  icon: "pi pi-upload",
-  className: "p-button-text p-button-rounded",
-};
-
 /** A URL é a única coisa que o `useEntityPhoto` expõe da foto: o arquivo
  * previsualizável é montado em volta dela. O `mime` só serve para o preview
  * escolher imagem. */
@@ -83,9 +76,7 @@ export function AppPhotoField({
       accept="image/jpeg,image/png,image/webp"
       maxBytes={MAX_PHOTO_BYTES}
       disabled={pending}
-      chooseLabel=""
       accessibleName={label}
-      chooseOptions={UPLOAD_CHOOSE_OPTIONS}
       uploadHandler={handleUpload}
       onSizeReject={onSizeReject}
     />

@@ -5,7 +5,15 @@ import { Tooltip } from 'primereact/tooltip'
 import type { FileUploadProps, FileUploadHandlerEvent } from 'primereact/fileupload'
 import { useTranslation } from 'react-i18next'
 import { MAX_UPLOAD_BYTES, formatFileSize } from '@shared/lib/upload'
+import { DICA_ESQUERDA } from '../dicaEsquerda'
 import { mergePt } from '../mergePt'
+
+/** Disparador só-ícone: enviar e substituir são o mesmo ícone. O default mora
+ * aqui para que AppFileSlot, AppPhotoField e o cartão da turma não repitam. */
+const UPLOAD_ICON_OPTIONS = {
+  icon: 'pi pi-upload',
+  className: 'p-button-text p-button-rounded',
+}
 
 export type { FileUploadHandlerEvent } from 'primereact/fileupload'
 export type { FileUploadProps as AppFileUploadProps } from 'primereact/fileupload'
@@ -124,9 +132,18 @@ export function AppFileUpload({
   // Só entra quando falta rótulo: passar `chooseOptions={undefined}` de volta
   // ATROPELA o default do Prime — a prop explícita vence, e o `createBasic`
   // estoura em `chooseOptions.iconOnly`.
+  // O que o chamador passou em `chooseOptions` vence o default campo a campo; um
+  // `null` (o default do próprio Prime) não conta como passado.
   const soIcone = props.chooseLabel
     ? null
-    : { chooseOptions: { ...props.chooseOptions, iconOnly: true } }
+    : {
+        chooseOptions: {
+          ...props.chooseOptions,
+          icon: props.chooseOptions?.icon ?? UPLOAD_ICON_OPTIONS.icon,
+          className: props.chooseOptions?.className ?? UPLOAD_ICON_OPTIONS.className,
+          iconOnly: true,
+        },
+      }
 
   const upload = (
     <FileUpload
@@ -154,7 +171,7 @@ export function AppFileUpload({
       </span>
       {/* O `useRef` do React 19 tipa `RefObject<T | null>` e o d.ts do Prime ainda
         * pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
-      <Tooltip target={involucro as RefObject<HTMLElement>} content={nome} position="left" />
+      <Tooltip target={involucro as RefObject<HTMLElement>} content={nome} {...DICA_ESQUERDA} />
     </>
   )
 }

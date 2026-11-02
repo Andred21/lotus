@@ -5,13 +5,7 @@ import { AppFileActions, type AppFileActionsProps } from '../AppFileActions'
 import type { PreviewableFile } from '../AppFilePreviewDialog'
 import { AppFileRow } from '../AppFileRow'
 import { AppFileUpload, type FileUploadHandlerEvent } from '../AppFileUpload'
-
-/** Enviar e substituir são o mesmo ícone, só-ícone: o rótulo é a dica e o nome
- * acessível (`AppFileUpload`). */
-const UPLOAD_CHOOSE_OPTIONS = {
-  icon: 'pi pi-upload',
-  className: 'p-button-text p-button-rounded',
-}
+import { DICA_ESQUERDA } from '../dicaEsquerda'
 
 type RemovalProps<T extends PreviewableFile> = Pick<
   AppFileActionsProps<T>,
@@ -75,8 +69,6 @@ export function AppFileSlot<T extends PreviewableFile>({
   const picker = (label: string) =>
     onUpload && (
       <AppFileUpload
-        chooseOptions={UPLOAD_CHOOSE_OPTIONS}
-        chooseLabel=""
         accessibleName={label}
         accept={accept}
         maxBytes={maxBytes}
@@ -101,7 +93,7 @@ export function AppFileSlot<T extends PreviewableFile>({
             severity="danger"
             aria-label={removal.removeLabel ?? t('common.delete')}
             tooltip={removal.removeLabel ?? t('common.delete')}
-            tooltipOptions={{ position: 'left' }}
+            tooltipOptions={DICA_ESQUERDA}
             onClick={onUnstage}
           />
         }

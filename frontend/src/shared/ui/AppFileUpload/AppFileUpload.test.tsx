@@ -112,6 +112,37 @@ describe('AppFileUpload', () => {
   })
 })
 
+describe('AppFileUpload — convenção do só-ícone', () => {
+  it('sem rótulo, o disparador nasce com o ícone de enviar e a classe de texto arredondado', () => {
+    // O default mora aqui, uma vez: AppFileSlot, AppPhotoField e o cartão da
+    // turma pediam o mesmo `chooseOptions` cada um por conta própria.
+    render(<AppFileUpload accessibleName="Subir currículum" />)
+
+    const botao = screen.getByRole('button', { name: 'Subir currículum' })
+    expect(botao.className).toContain('p-button-text')
+    expect(botao.className).toContain('p-button-rounded')
+    expect(botao.querySelector('.pi-upload')).not.toBeNull()
+  })
+
+  it('o chooseOptions do chamador vence o default, campo a campo', () => {
+    render(<AppFileUpload accessibleName="Subir" chooseOptions={{ icon: 'pi pi-file', className: 'marcador' }} />)
+
+    const botao = screen.getByRole('button', { name: 'Subir' })
+    expect(botao.className).toContain('marcador')
+    expect(botao.className).not.toContain('p-button-rounded')
+    expect(botao.querySelector('.pi-file')).not.toBeNull()
+    expect(botao.querySelector('.pi-upload')).toBeNull()
+  })
+
+  it('com rótulo visível o default não entra', () => {
+    render(<AppFileUpload chooseLabel="Reemplazar" />)
+
+    const botao = screen.getByRole('button')
+    expect(botao.className).not.toContain('p-button-rounded')
+    expect(botao.querySelector('.pi-upload')).toBeNull()
+  })
+})
+
 describe('AppFileUpload — dica do disparador só-ícone', () => {
   it('sem rótulo visível, o hover mostra o nome acessível à esquerda', async () => {
     const { container } = render(<AppFileUpload chooseLabel="" accessibleName="Reemplazar currículum" />)
