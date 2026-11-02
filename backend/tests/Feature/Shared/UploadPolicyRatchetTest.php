@@ -57,6 +57,7 @@ class UploadPolicyRatchetTest extends TestCase
         'app/Shared/Files/Actions/UploadFileAction.php' => 'É a escrita no disco, não a porta de entrada: recebe o arquivo já validado por quem o recebeu do cliente.',
         'app/Domains/Operation/Services/SpreadsheetRowReader.php' => 'Só itera a planilha que o `EnrollmentController::previewImport` já validou pela classe Planilha, e despacha o leitor pelo MIME de CONTEÚDO — os mesmos três que aquela classe aceita.',
         'app/Domains/Operation/Services/ImportPreviewService.php' => 'Recebe o `UploadedFile` já validado pelo `EnrollmentController::previewImport`, que pede a classe Planilha.',
+        'app/Domains/Commercial/Actions/ReplaceFileOfTypeAction.php' => 'Recebe o arquivo já validado pelo `BudgetFileController` e pelo `QuoteFileController`, que pedem a classe Documento.',
         'app/Domains/Operation/Actions/StoreTurmaDocumentAction.php' => 'Recebe o arquivo já validado pelo `TurmaDocumentController`, que pede a classe DocumentoDeTurma.',
         'app/Domains/Identity/Actions/CreateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorController::documentsFromRequest`, um a um.',
         'app/Domains/Identity/Actions/UpdateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorController::documentsFromRequest`, um a um.',

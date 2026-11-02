@@ -4,6 +4,7 @@ namespace Tests\Feature\Comercial;
 
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
+use App\Shared\Files\Models\File;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -194,5 +195,109 @@ class CommercialFilesTest extends TestCase
             ->assertJsonPath('files.0.original_name', 'aceite.pdf');
         $this->assertNotEmpty($response->json('files.0.id'));
         $this->assertStringContainsString('http', $response->json('files.0.download_url'));
+    }
+
+    private function quote(Budget $budget): Quote
+    {
+        return Quote::forceCreate([
+            'budget_id' => $budget->id, 'course_id' => $this->makeCourse()->id, 'seq_in_budget' => 1,
+            'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
+        ]);
+    }
+
+    private function sobe(string $rota, string $tipo, string $nome): int
+    {
+        return $this->postJson($rota, [
+            'type' => $tipo,
+            'file' => UploadedFile::fake()->create($nome, 5, 'application/pdf'),
+        ])->assertCreated()->json('id');
+    }
+
+    private function assertAuditoriaDeDelecao(int $fileId): void
+    {
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'file', 'auditable_id' => $fileId, 'event' => 'deleted',
+        ]);
+    }
+
+    public function test_novo_upload_do_mesmo_tipo_substitui_no_orcamento(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+
+        $primeiro = $this->sobe("/api/budgets/{$budget->id}/files", 'invoice', 'a.pdf');
+        $segundo = $this->sobe("/api/budgets/{$budget->id}/files", 'invoice', 'b.pdf');
+
+        $this->assertTrue(File::withTrashed()->findOrFail($primeiro)->trashed());
+        $this->assertAuditoriaDeDelecao($primeiro);
+        $vivos = $budget->files()->where('type', 'invoice')->get();
+        $this->assertCount(1, $vivos);
+        $this->assertSame($segundo, $vivos->first()->id);
+    }
+
+    public function test_substituir_nao_toca_outro_tipo(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+
+        $this->sobe("/api/budgets/{$budget->id}/files", 'invoice', 'a.pdf');
+        $recibo = $this->sobe("/api/budgets/{$budget->id}/files", 'receipt', 'r.pdf');
+        $this->sobe("/api/budgets/{$budget->id}/files", 'invoice', 'b.pdf');
+
+        $this->assertFalse(File::withTrashed()->findOrFail($recibo)->trashed());
+    }
+
+    public function test_novo_upload_substitui_na_cotacao(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $quote = $this->quote($this->budget());
+
+        $primeiro = $this->sobe("/api/quotes/{$quote->id}/files", 'quote_document', 'a.pdf');
+        $segundo = $this->sobe("/api/quotes/{$quote->id}/files", 'quote_document', 'b.pdf');
+
+        $this->assertTrue(File::withTrashed()->findOrFail($primeiro)->trashed());
+        $this->assertAuditoriaDeDelecao($primeiro);
+        $vivos = $quote->files()->where('type', 'quote_document')->get();
+        $this->assertCount(1, $vivos);
+        $this->assertSame($segundo, $vivos->first()->id);
+    }
+
+    public function test_duplicados_antigos_saem_todos_no_proximo_upload(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+
+        $antigos = collect([1, 2])->map(fn (int $n) => $budget->files()->create([
+            'type' => 'invoice', 'path' => "budget/{$budget->id}/{$n}.pdf",
+            'original_name' => "{$n}.pdf", 'mime' => 'application/pdf', 'size' => 10,
+        ])->id);
+
+        $novo = $this->sobe("/api/budgets/{$budget->id}/files", 'invoice', 'c.pdf');
+
+        $this->assertSame([$novo], $budget->files()->where('type', 'invoice')->pluck('id')->all());
+        $antigos->each(function (int $id) {
+            $this->assertTrue(File::withTrashed()->findOrFail($id)->trashed());
+            $this->assertAuditoriaDeDelecao($id);
+        });
+    }
+
+    public function test_arquivar_e_restaurar_nao_ressuscita_o_substituido(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+
+        $primeiro = $this->sobe("/api/budgets/{$budget->id}/files", 'invoice', 'a.pdf');
+        $segundo = $this->sobe("/api/budgets/{$budget->id}/files", 'invoice', 'b.pdf');
+
+        $this->deleteJson("/api/budgets/{$budget->id}")->assertNoContent();
+        $this->postJson("/api/budgets/{$budget->id}/restore")->assertOk();
+
+        $this->assertTrue(File::withTrashed()->findOrFail($primeiro)->trashed());
+        $this->assertSame([$segundo], $budget->files()->where('type', 'invoice')->pluck('id')->all());
     }
 }
