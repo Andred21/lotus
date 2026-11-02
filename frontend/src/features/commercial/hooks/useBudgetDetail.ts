@@ -97,7 +97,7 @@ export function useBudgetDetail(budgetId: number) {
     removeBudgetPending: removeBudget.isPending,
     removeBudgetError,
     removeFile: (fileId: number) => removeFile.mutate({ budgetId, fileId }),
-    /** Erro de REMOÇÃO de anexo; o do upload mora no `useBudgetDocumentUpload`. */
+    /** Erro de REMOÇÃO de anexo; o de envio mora no `BudgetDocumentsCard`. */
     fileError,
     goBack: () => navigate('/comercial'),
   }

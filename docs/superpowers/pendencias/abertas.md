@@ -1257,18 +1257,6 @@ decorativo (`aria-hidden`). O João decidiu em 2026-10-29, na Task 2 do item 43,
 O caminho candidato é clarear a tinta do escuro para `--red-300` (#ff8780), o que muda o `AppTag`
 em todas as telas.
 
-## P-106 — a lixeira de um documento do orçamento remove sem confirmação
-
-**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar `useBudgetDetail.ts` ou o
-`BudgetDocumentsCard`. Revisar em **2026-11-07**.
-
-O smoke do item 43 viu que a lixeira de um documento no detalhe do orçamento chama
-`removeFile.mutate` direto (`frontend/src/features/commercial/hooks/useBudgetDetail.ts:99`), sem
-`ConfirmDialog`. Um clique errado tira do orçamento uma OC, factura ou comprobante, que têm peso
-legal. O soft delete preserva o metadado e o arquivo fica no bucket, mas o documento some da tela.
-O `TurmaDocuments` já confirma a remoção com `severity="danger"`, e o orçamento deveria fazer o
-mesmo.
-
 ## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
 
 **Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
@@ -1278,6 +1266,11 @@ O item 43 enviou um arquivo de tipo recusado ao upload do orçamento, e o erro d
 saiu "El campo **file** debe ser…": o backend não traduz o nome do atributo `file`. Vale para todos
 os uploads que validam `file`, não só para o orçamento. Parente da P-76 (frases ao usuário fora da
 catraca de idioma).
+
+**Gatilho disparado e não pago no item 47 (2026-11-02):** o bloco tocou o
+`Shared/Files/Actions/UploadFileAction.php` e a validação do upload de cotización e presupuesto, mas
+não traduziu o atributo `file` (`backend/lang/es_CL/validation.php`, `attributes`, segue sem ele).
+O gatilho não se desarma.
 
 ## P-108 — em 1024, o RUT do cliente passa por baixo do "Agregar cotización"
 

@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import { api } from '@shared/api/axios'
+import { fileToRaster, rasterToPngFile } from '@shared/lib/signature/canvasBridge'
+import { escolherImagem, nomesDosIcones, raster } from '@shared/testing/signature'
 import type { CertificateSettingsData } from '@shared/types/generated'
 import { CertificateSettingsPanel } from './CertificateSettingsPanel'
 
@@ -9,6 +11,8 @@ vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
   return { ...(await importOriginal<typeof import('react-i18next')>()), useTranslation: mockUseTranslation() }
 })
+
+vi.mock('@shared/lib/signature/canvasBridge', () => ({ fileToRaster: vi.fn(), rasterToPngFile: vi.fn() }))
 
 const comFirma: CertificateSettingsData = {
   manager_name: 'Marcia de Batalha',
@@ -38,5 +42,43 @@ describe('CertificateSettingsPanel — botões da firma não enviam o form', () 
 
     await screen.findByRole('button', { name: 'certificateSettings.removeConfirm' })
     expect(put).not.toHaveBeenCalled()
+  })
+})
+
+describe('CertificateSettingsPanel — a firma no padrão do slot', () => {
+  it('com firma: imagem sobre o xadrez e a linha com os quatro ícones com dica', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({ data: comFirma })
+    renderWithProviders(<CertificateSettingsPanel />, { route: '/' })
+
+    expect((await screen.findByRole('img', { name: 'gerente.png' })).getAttribute('src')).toBe('https://x/gerente.png')
+    // O Guardar do form vem depois da linha da firma: só os quatro primeiros são dela.
+    expect(nomesDosIcones().slice(0, 4)).toEqual([
+      'common.preview', 'common.download', 'certificateSettings.replaceSignature', 'certificateSettings.removeSignature',
+    ])
+    expect(screen.getByText('signature.hint')).toBeTruthy()
+  })
+
+  it('substituir a firma abre a prévia para confirmar o envio', async () => {
+    vi.mocked(fileToRaster).mockResolvedValue(raster())
+    vi.mocked(rasterToPngFile).mockResolvedValue(new File(['png'], 'firma.png', { type: 'image/png' }))
+    URL.createObjectURL = vi.fn(() => 'blob:previa')
+    URL.revokeObjectURL = vi.fn()
+    vi.spyOn(api, 'get').mockResolvedValue({ data: comFirma })
+    const { container } = renderWithProviders(<CertificateSettingsPanel />, { route: '/' })
+    await screen.findByRole('img', { name: 'gerente.png' })
+
+    await escolherImagem(container)
+
+    expect(screen.getByRole('button', { name: 'signature.confirm' })).toBeTruthy()
+  })
+
+  it('excluir abre um diálogo só, com o texto do gerente', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({ data: comFirma })
+    renderWithProviders(<CertificateSettingsPanel />, { route: '/' })
+
+    fireEvent.click(await screen.findByRole('button', { name: 'certificateSettings.removeSignature' }))
+
+    await screen.findByText('certificateSettings.removeTitle')
+    await waitFor(() => expect(screen.getAllByRole('dialog')).toHaveLength(1))
   })
 })

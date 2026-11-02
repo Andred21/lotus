@@ -57,6 +57,12 @@
     "view": "Ver",
     "moreActions": "Mais ações",
     "upload": "Enviar documento",
+    "replace": "Substituir",
+    "uploadNamed": "Enviar {{tipo}}",
+    "replaceNamed": "Substituir {{tipo}}",
+    "deleteNamed": "Excluir {{tipo}}",
+    "deleteFileTitle": "Excluir arquivo",
+    "deleteFileMessage": "Excluir «{{name}}»? Esta ação não pode ser desfeita.",
     "fileTooLarge": "O arquivo tem {{size}} e o máximo é {{limit}}.",
     "preview": "Ver",
     "previewUnavailable": "Este formato não tem pré-visualização. Baixe o arquivo para abri-lo.",
@@ -384,7 +390,6 @@
     "managerName": "Nome",
     "managerTitle": "Cargo",
     "signature": "Assinatura",
-    "noSignature": "Nenhuma assinatura enviada",
     "signatureHelp": "A assinatura vale assim que você a confirma. «Salvar» salva apenas o nome e o cargo.",
     "signatureSaved": "Assinatura salva.",
     "signatureRemoved": "Assinatura removida.",
@@ -429,12 +434,8 @@
     "documents": {
       "title": "Documentação profissional",
       "hint": "Você pode enviar e substituir seus documentos. Eles não são excluídos: o novo substitui o anterior.",
-      "send": "Enviar documento",
       "sendSignature": "Enviar assinatura",
       "replaceSignature": "Substituir assinatura",
-      "replace": "Substituir",
-      "sendNamed": "Enviar {{tipo}}",
-      "replaceNamed": "Substituir {{tipo}}",
       "managedByAdmin": "Este documento é gerido pelo administrador.",
       "sent": "Documento enviado.",
       "validUntil": "Vence em {{date}}"
@@ -454,6 +455,7 @@
   },
   "photo": {
     "label": "Foto",
+    "fileName": "Foto",
     "select": "Selecionar foto",
     "replace": "Substituir",
     "remove": "Remover foto",
@@ -547,6 +549,7 @@
     "countShort_other": "{{count}} módulos"
   },
   "budget": {
+    "otherDocuments": "Outros documentos",
     "tab": "Orçamentos",
     "new": "Novo orçamento",
     "create": "Criar orçamento",
@@ -574,11 +577,6 @@
     "addQuote": "Adicionar cotação",
     "noQuotes": "Este orçamento ainda não tem cotações",
     "documents": "Documentos",
-    "uploadDocument": "Enviar documento",
-    "noDocuments": "Sem documentos",
-    "fileTypeLabel": "Tipo de documento",
-    "uploadTitle": "Enviar documento",
-    "chooseFile": "Escolher arquivo",
     "documentType": {
       "purchase_order": "Ordem de compra",
       "invoice": "Fatura",
@@ -613,6 +611,7 @@
     "confirmDeleteTitle": "Excluir cotação?",
     "confirmDeleteBody": "Você poderá restaurá-la em Arquivados.",
     "documents": "Documentos",
+    "documentOf": "documento de {{curso}}",
     "studentsShort_one": "{{count}} aluno",
     "studentsShort_other": "{{count}} alunos"
   },
@@ -902,7 +901,6 @@
       "pending": "Pendente",
       "empty": "Sem arquivos.",
       "enabled": "Documentação completa · turma habilitada para a conclusão.",
-      "upload": "Subir PDF",
       "uploadHint": "Somente PDF, até 10 MB. É possível subir vários arquivos por tipo.",
       "remove": "Remover",
       "removeTitle": "Remover documento",

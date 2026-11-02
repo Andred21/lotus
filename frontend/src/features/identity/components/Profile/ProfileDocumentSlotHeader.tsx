@@ -47,7 +47,7 @@ export function ProfileDocumentSlotHeader({
   const { t } = useTranslation()
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2">
       <p className="text-sm font-medium">{tipo}</p>
       <div className="flex flex-wrap items-center gap-2">
         <AppTag value={t(`profile.docStatus.${status}`)} severity={SEVERIDADE[status]} />

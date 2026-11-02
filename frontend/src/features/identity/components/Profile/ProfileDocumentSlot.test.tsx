@@ -2,17 +2,23 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
+import { nomesDosIcones } from '@shared/testing/signature'
 import type { RedatorProfileDocumentData } from '@shared/types/generated'
 import { ProfileDocumentSlot } from './ProfileDocumentSlot'
 
 // O `t` devolve a chave, mas ECOA a interpolação: sem isso a data formatada —
-// que é o que o UI-01 mede — não chegaria ao DOM em teste nenhum.
+// que é o que o UI-01 mede — não chegaria ao DOM em teste nenhum, nem o tipo
+// que nomeia o enviar e o substituir (D-23).
 vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
   return {
     ...(await importOriginal<typeof import('react-i18next')>()),
     useTranslation: mockUseTranslation({
-      t: (key, opts) => (opts?.date === undefined ? key : `${key}:${String(opts.date)}`),
+      t: (key, opts) => {
+        if (opts?.date !== undefined) return `${key}:${String(opts.date)}`
+        if (opts?.tipo !== undefined) return `${key}:${String(opts.tipo)}`
+        return key
+      },
     }),
   }
 })
@@ -56,23 +62,25 @@ describe('ProfileDocumentSlot', () => {
     expect(screen.getByText('profile.docStatus.vence_em_breve')).toBeTruthy()
   })
 
-  it('slot ausente oferece ENVIO, e o que ja tem documento oferece SUBSTITUIR', () => {
-    const { unmount } = montar({
-      status: 'ausente',
-      original_name: null,
-      download_url: null,
-      size: null,
-    })
+  it('slot ausente oferece ENVIO so icone, nomeado com o tipo', () => {
+    montar({ status: 'ausente', original_name: null, download_url: null, size: null })
 
     expect(screen.getByText('profile.docStatus.ausente')).toBeTruthy()
-    expect(screen.getByText('profile.documents.send')).toBeTruthy()
-    expect(screen.queryByText('profile.documents.replace')).toBeNull()
+    expect(nomesDosIcones()).toEqual(['common.uploadNamed:documentType.CV'])
+    expect(screen.queryByText('common.upload')).toBeNull()
     expect(screen.queryByText('profile.documents.managedByAdmin')).toBeNull()
-    unmount()
+  })
 
-    // O rótulo é o único aviso de que substituir apaga o anterior.
+  it('com documento e self_service: ver, baixar e substituir so icone, sem lixeira', () => {
     montar()
-    expect(screen.getByText('profile.documents.replace')).toBeTruthy()
+
+    expect(nomesDosIcones()).toEqual([
+      'common.preview',
+      'common.download',
+      'common.replaceNamed:documentType.CV',
+    ])
+    expect(screen.queryByText('common.replace')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'common.delete' })).toBeNull()
   })
 
   it('formata a validade no idioma da interface, sem voltar um dia (UI-01)', () => {
@@ -87,12 +95,14 @@ describe('ProfileDocumentSlot', () => {
     )
   })
 
-  it('sem self_service NAO ha envio, e a gestao e nomeada', () => {
+  it('sem self_service so ver e baixar, e a gestao e nomeada', () => {
     montar({ type: 'REUF', self_service: false, status: 'vigente' })
 
     expect(screen.getByText('profile.documents.managedByAdmin')).toBeTruthy()
+    expect(nomesDosIcones()).toEqual(['common.preview', 'common.download'])
     expect(document.querySelector('input[type="file"]')).toBeNull()
   })
+
   it('a validade sobe para a linha do STATUS, que e derivado dela', () => {
     // D-21: `Vence el 10-08-2028` saia text-xs secundario como ULTIMA linha do
     // slot, abaixo da nota administrativa, enquanto o `Vigente` -- que o backend
@@ -120,30 +130,14 @@ describe('ProfileDocumentSlot', () => {
     expect(screen.queryByText(/profile\.documents\.noValidity/)).toBeNull()
   })
 
-  it('o upload vem ANTES do par Ver/Descargar, para o par ancorar sempre igual', () => {
-    // D-22: `Ver` ficava em x=1132 nos slots com tres acoes e x=1275 no que tem
-    // duas -- 143px entre linhas equivalentes separadas por 16px. Reservar
-    // largura falharia com o idioma (o rotulo do upload e texto traduzido); com
-    // o upload ANTES, o par de icones -- largura constante em qualquer locale --
-    // vira o fim do grupo e ancora na mesma borda nos quatro slots.
-    const { container } = montar()
-
-    const acoes = Array.from(
-      container.querySelectorAll('.p-fileupload-choose, button[aria-label]'),
-    )
-    const indiceUpload = acoes.findIndex((el) => el.className.includes('p-fileupload-choose'))
-    const indiceVer = acoes.findIndex((el) => el.getAttribute('aria-label') === 'common.preview')
-
-    expect(indiceUpload).toBeGreaterThanOrEqual(0)
-    expect(indiceVer).toBeGreaterThan(indiceUpload)
-  })
-
-  it('o nome acessivel do upload diz de QUAL documento se trata', () => {
-    // Tres slots repetem "Reemplazar" (D-23).
+  it('a raiz do cabecalho ocupa a linha do slot, para tipo e status ficarem nas pontas', () => {
+    // O `AppFileSlot` embrulha o titulo-no num flex; sem `flex-1` a raiz encolhe
+    // ao conteudo e o `justify-between` interno nao tem folga. jsdom nao mede
+    // layout: a classe e a trava.
     montar()
 
-    expect(
-      screen.getByRole('button', { name: /profile\.documents\.replaceNamed/ }),
-    ).toBeTruthy()
+    const raiz = screen.getByText('documentType.CV').parentElement as HTMLElement
+    expect(raiz.className).toContain('flex-1')
+    expect(raiz.className).toContain('min-w-0')
   })
 })

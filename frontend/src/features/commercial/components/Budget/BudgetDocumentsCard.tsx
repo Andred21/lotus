@@ -1,39 +1,114 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppCard, AppCardHeader, FormErrorBanner } from '@shared/ui'
-import type { FileData } from '@shared/types/generated'
-import { useBudgetDocumentUpload } from '../../hooks/useBudgetDocumentUpload'
-import { BudgetDocumentUploadDialog } from './BudgetDocumentUploadDialog'
+import {
+  AppCard, AppCardHeader, AppFilePreviewDialog, AppFileSlot, AppTag, FormErrorBanner,
+  SectionLabel, type FileUploadHandlerEvent,
+} from '@shared/ui'
+import { useFilePreview, useMutationErrors } from '@shared/hooks'
+import type { BudgetDocumentType, FileData } from '@shared/types/generated'
+import { useUploadBudgetFile } from '../../api/useCommercialFiles'
+import { BUDGET_DOCUMENT_TYPES, budgetDocumentTag } from '../../lib/budgetDocumentType'
+import { latestFile } from '../../lib/latestFile'
 import { FileList } from './FileList'
 
-/** Card de documentos do orçamento: o botão de subir, o erro de remoção e a
- * lista com a tag do tipo. Subir é um diálogo (bloco 43), cujo estado mora no
- * `useBudgetDocumentUpload`; este componente só consome. */
+/** Card de documentos do orçamento (bloco 47): um slot fixo por tipo, na ordem
+ * do ciclo, cada um com o arquivo mais recente do tipo. Enviar de novo
+ * substitui (o backend guarda um por tipo). Arquivo de tipo fora do enum, dado
+ * antigo, fica numa lista abaixo dos slots. */
 export function BudgetDocumentsCard({
   budgetId, files, onRemove, fileError,
 }: {
   budgetId: number
   files: FileData[]
   onRemove: (fileId: number) => void
-  /** Erro de REMOÇÃO de anexo; o do upload aparece dentro do diálogo. */
+  /** Erro de REMOÇÃO de anexo; o de envio e o de tamanho o cartão junta a ele. O
+   * local, mais novo, vem na frente: um erro de remoção antigo não cobre o
+   * tamanho recém-rejeitado. */
   fileError: string | null
 }) {
   const { t } = useTranslation()
-  const upload = useBudgetDocumentUpload(budgetId)
+  // Uma mutation para os três slots: enquanto um envio está em voo, os três
+  // travam. Um `mutate` novo solta o observer do anterior, e o erro do primeiro
+  // envio sumiria sem banner (Q-1 da revisão do bloco 47).
+  const upload = useUploadBudgetFile()
+  const preview = useFilePreview<FileData>()
+  // Rejeição por tamanho é local: o AppFileUpload barra o arquivo antes de
+  // qualquer request, então não vira erro de mutação.
+  const [sizeError, setSizeError] = useState<string | null>(null)
+  // `message` sai tipado `string`, mas é `null` sem erro (o `?? null` final some
+  // no tipo); alargar aqui é o tipo dizer a verdade.
+  const uploadError = useMutationErrors([upload.error]).message as string | null
+
+  const send = (type: BudgetDocumentType, e: FileUploadHandlerEvent) => {
+    setSizeError(null)
+    const file = e.files[0]
+    if (!file) return
+    // Limpa ANTES da mutação, como os demais slots: no modo básico o Prime só
+    // renderiza o `<input>` com o estado de arquivos vazio, e limpar só no
+    // sucesso deixava o slot sem seletor depois de um 422.
+    e.options.clear()
+    upload.mutate({ budgetId, type, file })
+  }
+
+  // O erro de envio anterior é do arquivo anterior: não fica à frente do tamanho.
+  const rejectSize = (message: string) => {
+    upload.reset()
+    setSizeError(message)
+  }
+
+  // Remover é uma ação nova: o erro local que ficou (tamanho, envio) é de outra
+  // ação e sairia na frente do resultado desta, então zera antes de chamá-la.
+  const remove = (fileId: number) => {
+    upload.reset()
+    setSizeError(null)
+    onRemove(fileId)
+  }
+
+  const others = files.filter((f) => budgetDocumentTag(f.type) === null)
 
   return (
     <AppCard>
-      <AppCardHeader
-        title={t('budget.documents')}
-        count={files.length}
-        actions={
-          <AppButton variant="compact" icon="pi pi-upload" label={t('budget.uploadDocument')} onClick={upload.open} />
-        }
-      />
+      <AppCardHeader title={t('budget.documents')} count={files.length} />
       <div className="mx-4 mt-4 empty:m-0">
-        <FormErrorBanner message={fileError} />
+        <FormErrorBanner message={sizeError ?? uploadError ?? fileError} />
       </div>
-      <FileList files={files} onRemove={onRemove} showType />
-      <BudgetDocumentUploadDialog u={upload} />
+      <div className="space-y-3 p-4">
+        {BUDGET_DOCUMENT_TYPES.map((type) => {
+          const tag = budgetDocumentTag(type)
+          const label = t(tag.labelKey)
+          const current = latestFile(files.filter((f) => f.type === type))
+          return (
+            <AppFileSlot
+              key={type}
+              title={
+                <AppTag
+                  value={label}
+                  severity={tag.severity}
+                  tone={tag.tone}
+                  icon={tag.icon}
+                  className="text-sm px-3 py-1"
+                />
+              }
+              file={current}
+              onPreview={preview.open}
+              onUpload={(e) => send(type, e)}
+              uploadLabel={t('common.uploadNamed', { tipo: label })}
+              replaceLabel={t('common.replaceNamed', { tipo: label })}
+              removeLabel={t('common.deleteNamed', { tipo: label })}
+              uploading={upload.isPending}
+              onSizeReject={rejectSize}
+              onRemove={current ? () => remove(current.id) : undefined}
+            />
+          )
+        })}
+      </div>
+      {others.length > 0 && (
+        <div className="pb-2">
+          <SectionLabel as="h3" rule={false} className="px-4">{t('budget.otherDocuments')}</SectionLabel>
+          <FileList files={others} onRemove={remove} />
+        </div>
+      )}
+      <AppFilePreviewDialog file={preview.file} visible={preview.visible} onHide={preview.close} />
     </AppCard>
   )
 }

@@ -57,6 +57,12 @@
     "view": "View",
     "moreActions": "More actions",
     "upload": "Upload document",
+    "replace": "Replace",
+    "uploadNamed": "Upload {{tipo}}",
+    "replaceNamed": "Replace {{tipo}}",
+    "deleteNamed": "Delete {{tipo}}",
+    "deleteFileTitle": "Delete file",
+    "deleteFileMessage": "Delete “{{name}}”? This action cannot be undone.",
     "fileTooLarge": "The file is {{size}} and the maximum is {{limit}}.",
     "preview": "View",
     "previewUnavailable": "This format cannot be previewed. Download it to open.",
@@ -384,7 +390,6 @@
     "managerName": "Name",
     "managerTitle": "Title",
     "signature": "Signature",
-    "noSignature": "No signature uploaded",
     "signatureHelp": "The signature takes effect as soon as you confirm it. “Save” only saves the name and the title.",
     "signatureSaved": "Signature saved.",
     "signatureRemoved": "Signature removed.",
@@ -429,12 +434,8 @@
     "documents": {
       "title": "Professional documents",
       "hint": "You can upload and replace your documents. They are not deleted: the new one replaces the previous.",
-      "send": "Upload document",
       "sendSignature": "Upload signature",
       "replaceSignature": "Replace signature",
-      "replace": "Replace",
-      "sendNamed": "Upload {{tipo}}",
-      "replaceNamed": "Replace {{tipo}}",
       "managedByAdmin": "This document is managed by the administrator.",
       "sent": "Document uploaded.",
       "validUntil": "Valid until {{date}}"
@@ -454,6 +455,7 @@
   },
   "photo": {
     "label": "Photo",
+    "fileName": "Photo",
     "select": "Select photo",
     "replace": "Replace",
     "remove": "Remove photo",
@@ -547,6 +549,7 @@
     "countShort_other": "{{count}} modules"
   },
   "budget": {
+    "otherDocuments": "Other documents",
     "tab": "Budgets",
     "new": "New budget",
     "create": "Create budget",
@@ -574,11 +577,6 @@
     "addQuote": "Add quote",
     "noQuotes": "This budget has no quotes yet",
     "documents": "Documents",
-    "uploadDocument": "Upload document",
-    "noDocuments": "No documents",
-    "fileTypeLabel": "Document type",
-    "uploadTitle": "Upload document",
-    "chooseFile": "Choose file",
     "documentType": {
       "purchase_order": "Purchase order",
       "invoice": "Invoice",
@@ -613,6 +611,7 @@
     "confirmDeleteTitle": "Delete quote?",
     "confirmDeleteBody": "You can restore it from Archived.",
     "documents": "Documents",
+    "documentOf": "{{curso}} document",
     "studentsShort_one": "{{count}} student",
     "studentsShort_other": "{{count}} students"
   },
@@ -902,7 +901,6 @@
       "pending": "Pending",
       "empty": "No files.",
       "enabled": "Documentation complete · class enabled for completion.",
-      "upload": "Upload PDF",
       "uploadHint": "PDF only, up to 10 MB. Multiple files per type are allowed.",
       "remove": "Remove",
       "removeTitle": "Remove document",

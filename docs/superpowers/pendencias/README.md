@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (43)
+## Abertas (42)
 
 ### Agrupadas em bloco de execução
 
@@ -39,13 +39,18 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | BD-15 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
-| P-106 | A lixeira de um documento do orçamento remove sem confirmação (`useBudgetDetail.ts:99`), enquanto o `TurmaDocuments` confirma | — | bloco que tocar `useBudgetDetail.ts` ou o `BudgetDocumentsCard`; revisar 2026-11-07 |
 | P-107 | O 422 de upload diz "El campo file…": o backend não traduz o atributo `file` | — | bloco que tocar a validação de upload ou os atributos do `lang/`; revisar 2026-11-07 |
 | P-108 | Em 1024, o RUT do cliente passa por baixo do "Agregar cotización" no cabeçalho do detalhe do orçamento | — | bloco que tocar esse cabeçalho; revisar 2026-11-07 |
 | P-109 | O paginador das tabelas expõe "Previous Page"/"Next Page" em inglês a leitor de tela | — | bloco que tocar o `AppDataTable` ou o `pt` do paginador; revisar 2026-11-07 |
 | P-110 | A rule `frontend-estilizacao.md` ainda descreve uma faixa de seção só (12px, tinta de corpo); o título de seção de formulário do item 46 (`formSectionTitleClass`, 13px, na marca) ficou só no `rulings.md` e em docblocks | — | bloco que tocar a rule, o `typography.ts` ou o `FormSection`/`SectionLabel`; revisar 2026-11-15 |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
+>
+> **O item 47 (`frontend-ajustes-de-interface-lote-2`) fechou em 2026-11-02 a P-106 e a P-111**, e
+> disparou sem pagar o gatilho da **P-107** (tocou o `UploadFileAction`, mas o atributo `file` segue
+> sem tradução); a ficha registra o disparo. Não abriu ficha nova: os dois achados fora do escopo da
+> prova (a rolagem de 14 px do diálogo do redator a 390 e o "Not uploaded" duplicado no Perfil)
+> ficaram no `rulings.md` e no `prova.md` do bloco.
 >
 > **O item 43 (`frontend-dialogos-proporcionais-e-tipo-de-documento`) fechou em 2026-10-29 a P-94**, pela medição do `smoke.md`, e abriu a **P-105** a **P-109** na execução: a tinta `danger` do tema escuro sobre o `AppTag`, a lixeira de documento sem confirmação, o 422 de upload em "campo file", o RUT do cliente sob o botão de cotação em 1024 e o paginador em inglês. Quatro Menores da revisão (Q-1, Q-2, Q-4 e a Q-3, já corrigida na spec) ficaram só no `revisao.md`.
 >
@@ -139,7 +144,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (2)
 
-**A P-28 e a P-78 fecharam no item 40 (2026-10-29)**: a P-28 pela decisão D8 do João (layout v5, fundo de continuação sem as barras), a P-78 pelos tetos de caracteres na entrada medidos no Gotenberg real (D10/D15, `matriz.md`). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+**A P-106 e a P-111 fecharam no item 47 (2026-11-02)**: a P-106 por mecanismo (a lixeira do presupuesto confirma pelo `AppFileSlot`, medido no `prova.md` do bloco), a P-111 pelo próprio gatilho (o `AppSignatureSlot` na linha do `estrutura-monolito.md`, `debc6891`). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+
+**A P-28 e a P-78 saíram no fechamento do item 47 (2026-11-02)**, o item 40 as encerrou em 2026-10-29 e os fechamentos de 2026-11-01 passaram sem removê-las. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-94 saiu no fechamento do item 40 (2026-10-30)**, o primeiro depois do item 43, que a encerrou em 2026-10-29 pela medição do `smoke.md` do bloco: `scroll` = `frame` na linha `DIALOGO` em 1024x768 e em 1440x900. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

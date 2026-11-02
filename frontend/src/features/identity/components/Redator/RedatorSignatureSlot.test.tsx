@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { fileToRaster, rasterToPngFile } from '@shared/lib/signature/canvasBridge'
+import { escolherImagem, nomesDosIcones, raster } from '@shared/testing/signature'
 import type { RedatorDocumentData } from '@shared/types/generated'
 import { RedatorSignatureSlot } from './RedatorSignatureSlot'
 
@@ -10,22 +11,13 @@ vi.mock('react-i18next', async (importOriginal) => {
   return { ...(await importOriginal<typeof import('react-i18next')>()), useTranslation: mockUseTranslation() }
 })
 
-const limpo = new File(['png'], 'firma.png', { type: 'image/png' })
-const montagens = vi.hoisted(() => ({ n: 0 }))
+// A limpeza em canvas não roda no jsdom; o resto do fluxo (slot, prévia, hook) é real.
+vi.mock('@shared/lib/signature/canvasBridge', () => ({
+  fileToRaster: vi.fn(),
+  rasterToPngFile: vi.fn(),
+}))
 
-// O componente compartilhado já tem a sua suíte: aqui só importa o contrato com
-// ele — o que o slot faz com o PNG confirmado, e que remonta depois do sucesso.
-vi.mock('@shared/ui', async (importOriginal) => {
-  const real = await importOriginal<typeof import('@shared/ui')>()
-  return {
-    ...real,
-    AppSignatureUpload: ({ onConfirm, label }: { onConfirm: (f: File) => void; label: string }) => {
-      // Conta as montagens: remontar (trocar a `key`) é o que zera a prévia.
-      useEffect(() => { montagens.n += 1 }, [])
-      return <button type="button" onClick={() => onConfirm(limpo)}>{label}</button>
-    },
-  }
-})
+const limpo = new File(['png'], 'firma.png', { type: 'image/png' })
 
 const existente: RedatorDocumentData = {
   id: 7, type: 'FIRMA', original_name: 'firma.png', mime: 'image/png', size: 2048,
@@ -45,54 +37,100 @@ function montar(over: Partial<Parameters<typeof RedatorSignatureSlot>[0]> = {}) 
     onPreview: vi.fn(),
     ...over,
   }
-  render(<RedatorSignatureSlot {...props} />)
-  return props
+  const { container } = render(<RedatorSignatureSlot {...props} />)
+  return { props, container }
 }
 
 describe('RedatorSignatureSlot', () => {
-  beforeEach(() => { montagens.n = 0 })
-
-  it('slot Firma do dialog sobe o PNG confirmado', async () => {
-    const p = montar()
-
-    fireEvent.click(screen.getByRole('button', { name: 'redator.signatureChoose' }))
-
-    expect(p.onUpload).toHaveBeenCalledWith(limpo)
-    await waitFor(() => expect(montagens.n).toBe(2))
+  beforeEach(() => {
+    URL.createObjectURL = vi.fn(() => 'blob:previa')
+    URL.revokeObjectURL = vi.fn()
+    vi.mocked(fileToRaster).mockResolvedValue(raster())
+    vi.mocked(rasterToPngFile).mockResolvedValue(limpo)
   })
 
-  it('em criação o PNG vai para o stage e não para o upload', () => {
-    const p = montar({ mode: 'create' })
+  it('em edição com firma mostra ver, baixar, substituir e excluir, nessa ordem', () => {
+    montar({ doc: existente })
 
-    fireEvent.click(screen.getByRole('button', { name: 'redator.signatureChoose' }))
+    expect(screen.getByText('documentType.FIRMA')).toBeTruthy()
+    // O excluir leva o tipo no nome, como os documentos do mesmo diálogo (ruling 22;
+    // Q-2 da revisão do bloco 47).
+    expect(nomesDosIcones()).toEqual(['common.preview', 'common.download', 'redator.signatureReplace', 'common.deleteNamed'])
+  })
 
-    expect(p.onStage).toHaveBeenCalledWith(limpo)
-    expect(p.onUpload).not.toHaveBeenCalled()
+  it('onde dá para enviar a dica de formatos fica visível, com ou sem firma, e continua com a prévia aberta', async () => {
+    const { container } = montar({ doc: existente })
+
+    expect(screen.getByText('signature.hint')).toBeTruthy()
+    await escolherImagem(container)
+    expect(screen.getByText('signature.hint')).toBeTruthy()
+  })
+
+  it('em edição sem firma mostra só o enviar, com o nome de enviar assinatura', () => {
+    montar()
+
+    expect(screen.getByText('common.notLoaded')).toBeTruthy()
+    expect(nomesDosIcones()).toEqual(['redator.signatureChoose'])
+  })
+
+  it('escolher a imagem mostra a prévia abaixo da linha, e Confirmar sobe o PNG limpo', async () => {
+    const { props, container } = montar({ doc: existente })
+
+    await escolherImagem(container)
+    const decidir = screen.getByRole('button', { name: 'signature.confirm' })
+    expect(screen.getByText('firma.png').compareDocumentPosition(decidir) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(decidir)
+
+    expect(props.onUpload).toHaveBeenCalledWith(limpo)
+    expect(props.onStage).not.toHaveBeenCalled()
+  })
+
+  it('a prévia some depois do envio aceito', async () => {
+    const { container } = montar({ doc: existente })
+    await escolherImagem(container)
+
+    fireEvent.click(screen.getByRole('button', { name: 'signature.confirm' }))
+
+    await waitFor(() => expect(screen.queryByRole('img', { name: 'signature.previewAlt' })).toBeNull())
+  })
+
+  it('a prévia fica quando o servidor recusa o envio', async () => {
+    const onUpload = vi.fn(() => Promise.resolve(false))
+    const { container } = montar({ doc: existente, onUpload })
+    await escolherImagem(container)
+
+    fireEvent.click(screen.getByRole('button', { name: 'signature.confirm' }))
+
+    await waitFor(() => expect(onUpload).toHaveBeenCalled())
+    expect(screen.getByRole('img', { name: 'signature.previewAlt' })).toBeTruthy()
+  })
+
+  it('excluir a firma pede confirmação e só então chama onRemoveDoc', async () => {
+    const { props } = montar({ doc: existente })
+
+    fireEvent.click(screen.getByRole('button', { name: 'common.deleteNamed' }))
+    expect(props.onRemoveDoc).not.toHaveBeenCalled()
+    // O "sim" do diálogo é o único botão com o rótulo de excluir sem o tipo.
+    fireEvent.click(await screen.findByRole('button', { name: 'common.delete' }))
+
+    await waitFor(() => expect(props.onRemoveDoc).toHaveBeenCalledWith(7))
   })
 
   it('não mostra tag de status nem validade', () => {
     montar({ doc: existente })
 
-    expect(screen.getByText('documentType.FIRMA')).toBeTruthy()
     expect(screen.queryByText(/documentStatus/)).toBeNull()
   })
 
-  it('remonta o seletor depois do sucesso do envio', async () => {
-    montar()
-    expect(montagens.n).toBe(1)
+  it('formato ilegível mostra o erro e não oferece Confirmar', async () => {
+    const { UnsupportedImageError } = await import('@shared/lib/signature')
+    vi.mocked(fileToRaster).mockRejectedValue(new UnsupportedImageError())
+    const { container } = montar({ doc: existente })
 
-    fireEvent.click(screen.getByRole('button', { name: 'redator.signatureChoose' }))
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(input, { target: { files: [new File(['x'], 'a.heic', { type: 'image/heic' })] } })
 
-    await waitFor(() => expect(montagens.n).toBe(2))
-  })
-
-  it('mantém o seletor montado quando o envio falha', async () => {
-    const onUpload = vi.fn(() => Promise.resolve(false))
-    montar({ onUpload })
-
-    fireEvent.click(screen.getByRole('button', { name: 'redator.signatureChoose' }))
-
-    await waitFor(() => expect(onUpload).toHaveBeenCalled())
-    expect(montagens.n).toBe(1)
+    expect((await screen.findByRole('alert')).textContent).toBe('signature.errorUnsupported')
+    expect(screen.queryByRole('button', { name: 'signature.confirm' })).toBeNull()
   })
 })

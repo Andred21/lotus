@@ -22,24 +22,23 @@ const arquivo = (id: number, type: string): FileData => ({
   created_at: '2026-10-28T10:00:00Z',
 })
 
-describe('FileList — tag do tipo (bloco 43)', () => {
-  it('com showType, cada linha mostra o tipo', () => {
-    renderWithProviders(<FileList files={[arquivo(1, 'invoice'), arquivo(2, 'purchase_order')]} showType />)
-
-    expect(screen.getByText('budget.documentType.invoice')).toBeTruthy()
-    expect(screen.getByText('budget.documentType.purchase_order')).toBeTruthy()
-  })
-
-  /** Review Focus 4: dado antigo ou de outro fluxo não quebra a lista. */
+describe('FileList — outros documentos do orçamento', () => {
+  /** Review Focus 4 (bloco 43): dado antigo ou de outro fluxo não quebra a lista. */
   it('tipo fora do enum vira tag neutra com o valor cru', () => {
-    renderWithProviders(<FileList files={[arquivo(3, 'foo')]} showType />)
+    renderWithProviders(<FileList files={[arquivo(3, 'foo')]} />)
 
-    expect(screen.getByText('foo')).toBeTruthy()
+    expect(screen.getByText('foo').className).toContain('p-tag')
+    expect(screen.getByText('foo-3.pdf')).toBeTruthy()
   })
 
-  it('sem showType (a lista da cotação), nenhuma tag', () => {
-    renderWithProviders(<FileList files={[arquivo(4, 'invoice')]} />)
+  it('cada arquivo tem ver e baixar; excluir só com onRemove', () => {
+    const { unmount } = renderWithProviders(<FileList files={[arquivo(3, 'foo')]} />)
+    expect(screen.getAllByRole('button', { name: 'common.preview' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'common.download' })).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: 'common.delete' })).toBeNull()
+    unmount()
 
-    expect(screen.queryByText('budget.documentType.invoice')).toBeNull()
+    renderWithProviders(<FileList files={[arquivo(3, 'foo')]} onRemove={() => {}} />)
+    expect(screen.getByRole('button', { name: 'common.delete' })).toBeTruthy()
   })
 })

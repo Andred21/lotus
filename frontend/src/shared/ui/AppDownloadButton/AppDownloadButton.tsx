@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppButton } from '../AppButton'
+import { DICA_ESQUERDA } from '../dicaEsquerda'
 
 export type AppDownloadButtonProps = {
   /** URL pré-assinada do arquivo (`FileData.download_url`). */
@@ -32,6 +33,7 @@ export type AppDownloadButtonProps = {
  */
 export function AppDownloadButton({ href, label, className }: AppDownloadButtonProps) {
   const { t } = useTranslation()
+  const nome = t('common.download')
 
   return (
     <AppButton
@@ -40,7 +42,9 @@ export function AppDownloadButton({ href, label, className }: AppDownloadButtonP
       text={!label}
       rounded={!label}
       className={className}
-      aria-label={label ? undefined : t('common.download')}
+      aria-label={label ? undefined : nome}
+      tooltip={label ? undefined : nome}
+      tooltipOptions={DICA_ESQUERDA}
       onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
     />
   )

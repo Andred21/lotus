@@ -49,6 +49,19 @@ describe('useEntityPhoto', () => {
     expect(result.current.url).toBe('blob:lotus')
   })
 
+  it('em create, a foto escolhida está em stage; em edit, não', () => {
+    // A foto em stage nunca saiu do navegador: o campo mostra só o tirar do
+    // stage, sem baixar nem confirmação de exclusão irreversível (Q-6 da
+    // revisão do bloco 47).
+    const criacao = montar(null)
+    expect(criacao.result.current.staged).toBe(false)
+    act(() => criacao.result.current.onSelect(arquivo()))
+    expect(criacao.result.current.staged).toBe(true)
+
+    const edicao = montar(7, 'edit')
+    expect(edicao.result.current.staged).toBe(false)
+  })
+
   it('`flush` sobe o arquivo bufferizado para o id recém-criado', async () => {
     const { result } = montar(null)
 

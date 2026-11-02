@@ -12,8 +12,11 @@ type Props = {
   files: TurmaDocumentData[]
   uploading: boolean
   onUpload: (file: File) => void
-  onRemove: (file: TurmaDocumentData) => void
+  /** Chamado só depois do "sim" da confirmação do `AppFileActions`; a Promise
+   * mantém o diálogo aberto até resolver. */
+  onRemove: (file: TurmaDocumentData) => void | Promise<unknown>
   removing: boolean
+  removeError: string | null
   canSubmit: boolean
 }
 
@@ -24,15 +27,19 @@ export function DocumentTypeCard({
   onUpload,
   onRemove,
   removing,
+  removeError,
   canSubmit,
 }: Props) {
   const { t } = useTranslation()
   const preview = useFilePreview<TurmaDocumentData>()
   const [sizeError, setSizeError] = useState<string | null>(null)
   const delivered = files.length > 0
+  // Três cartões repetem enviar e excluir na mesma tela: o nome acessível leva o
+  // tipo (D-23).
+  const tipo = turmaDocumentTypeLabel(type, t)
 
-  // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação
-  // (diferente do useBudgetDetail, que limpa só no onSuccess): com
+  // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação (é a
+  // convenção de todo slot de upload, nunca só no onSuccess): com
   // filesState não-vazio o input some do DOM e o clique seguinte
   // reenvia o MESMO arquivo em vez de reabrir o seletor — no sucesso
   // (arquivo errado subiu) e na falha (422 rejeitado) igual. `file`
@@ -49,7 +56,7 @@ export function DocumentTypeCard({
   return (
     <section className="rounded-surface border p-4" style={{ borderColor: 'var(--surface-border)' }}>
       <header className="flex items-center justify-between gap-4">
-        <h4 className="font-medium">{turmaDocumentTypeLabel(type, t)}</h4>
+        <h4 className="font-medium">{tipo}</h4>
         <AppTag
           value={t(delivered ? 'operation.documents.delivered' : 'operation.documents.pending')}
           severity={delivered ? 'success' : 'warning'}
@@ -57,7 +64,7 @@ export function DocumentTypeCard({
         {canSubmit && (
           <AppFileUpload
             accept="application/pdf"
-            chooseLabel={t('operation.documents.upload')}
+            accessibleName={t('common.uploadNamed', { tipo })}
             disabled={uploading}
             onSizeReject={setSizeError}
             uploadHandler={handleUpload}
@@ -79,7 +86,11 @@ export function DocumentTypeCard({
                   onPreview={preview.open}
                   onRemove={canSubmit ? () => onRemove(file) : undefined}
                   removing={removing}
-                  removeLabel={t('operation.documents.remove')}
+                  removeLabel={t('common.deleteNamed', { tipo })}
+                  removeError={removeError}
+                  confirmTitle={t('operation.documents.removeTitle')}
+                  confirmMessage={t('operation.documents.removeBody', { name: file.original_name })}
+                  confirmLabel={t('operation.documents.remove')}
                 />
               }
             />

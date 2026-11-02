@@ -1,8 +1,9 @@
 import { useRef, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Tooltip, type TooltipProps } from 'primereact/tooltip'
+import { Tooltip } from 'primereact/tooltip'
 import { AppButton } from '../AppButton'
 import { AppMenu, type AppMenuRef } from '../AppMenu'
+import { DICA_ESQUERDA } from '../dicaEsquerda'
 
 export type RowAction = {
   /** Já traduzido: nome acessível do botão, dica no hover do botão solto e
@@ -19,12 +20,6 @@ export type RowAction = {
    * que usa é de ação única e nunca abre menu. */
   describedBy?: string
 }
-
-/** A dica abre à ESQUERDA do ícone. A coluna presa mora na borda direita da
- * tabela, e à direita (o default do Prime) a dica passava da moldura e criava
- * rolagem horizontal na página — achado do João no "Revocar" do Historial
- * (review do item 23). */
-const DICA: TooltipProps = { position: 'left' }
 
 /**
  * Um botão solto da linha. Apagado, o `Button` do Prime não abre dica nenhuma
@@ -53,7 +48,7 @@ function RowActionButton({ acao }: { acao: RowAction }) {
           aria-label={acao.label}
           aria-describedby={acao.describedBy}
           tooltip={!acao.disabled ? acao.label : undefined}
-          tooltipOptions={DICA}
+          tooltipOptions={DICA_ESQUERDA}
           disabled={acao.disabled}
           onClick={acao.onClick}
         />
@@ -61,7 +56,7 @@ function RowActionButton({ acao }: { acao: RowAction }) {
       {/* O `useRef` do React 19 tipa `RefObject<T | null>`, e o d.ts do Prime
         * ainda pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
       {acao.disabled && (
-        <Tooltip target={involucro as RefObject<HTMLElement>} content={acao.label} {...DICA} />
+        <Tooltip target={involucro as RefObject<HTMLElement>} content={acao.label} {...DICA_ESQUERDA} />
       )}
     </>
   )
