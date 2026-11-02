@@ -27,6 +27,9 @@ export function BudgetDocumentsCard({
   fileError: string | null
 }) {
   const { t } = useTranslation()
+  // Uma mutation para os três slots: enquanto um envio está em voo, os três
+  // travam. Um `mutate` novo solta o observer do anterior, e o erro do primeiro
+  // envio sumiria sem banner (Q-1 da revisão do bloco 47).
   const upload = useUploadBudgetFile()
   const preview = useFilePreview<FileData>()
   // Rejeição por tamanho é local: o AppFileUpload barra o arquivo antes de
@@ -92,7 +95,7 @@ export function BudgetDocumentsCard({
               uploadLabel={t('common.uploadNamed', { tipo: label })}
               replaceLabel={t('common.replaceNamed', { tipo: label })}
               removeLabel={t('common.deleteNamed', { tipo: label })}
-              uploading={upload.isPending && upload.variables?.type === type}
+              uploading={upload.isPending}
               onSizeReject={rejectSize}
               onRemove={current ? () => remove(current.id) : undefined}
             />

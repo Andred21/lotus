@@ -67,6 +67,25 @@ describe('BudgetDocumentsCard — envio recusado', () => {
   })
 })
 
+describe('BudgetDocumentsCard — envio em voo', () => {
+  it('trava os três slots, não só o do envio: um segundo envio soltaria o erro do primeiro', () => {
+    // A mutation é uma só para os três slots; um `mutate` novo solta o observer
+    // do anterior, e o 422 do primeiro não chegaria a banner nenhum (Q-1 da
+    // revisão do bloco 47).
+    vi.mocked(postMultipart).mockReturnValueOnce(new Promise(() => {}))
+    const { container } = montar()
+    const pdf = new File(['%PDF'], 'fa-1.pdf', { type: 'application/pdf' })
+
+    fireEvent.change(seletores(container)[0], { target: { files: [pdf] } })
+
+    return waitFor(() => {
+      const inputs = Array.from(seletores(container)) as HTMLInputElement[]
+      expect(inputs).toHaveLength(3)
+      expect(inputs.every((i) => i.disabled)).toBe(true)
+    })
+  })
+})
+
 describe('BudgetDocumentsCard — qual erro aparece', () => {
   it('arquivo grande demais mostra o erro de tamanho, não um erro de envio antigo', async () => {
     vi.mocked(postMultipart).mockRejectedValueOnce({ detail: 'Tipo de archivo no permitido' })
