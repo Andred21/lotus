@@ -65,6 +65,30 @@ describe('useSignatureCleaner — a limpeza antes do envio', () => {
     expect(enviar).not.toHaveBeenCalled()
   })
 
+  it('cancelar a prévia a descarta sem entregar o arquivo', async () => {
+    vi.mocked(fileToRaster).mockResolvedValue(raster(700))
+    const onConfirm = vi.fn()
+    function Harness() {
+      const cleaner = useSignatureCleaner()
+      return (
+        <>
+          <button type="button" onClick={() => cleaner.pick({ files: [new File(['jpg'], 'foto.jpg')], options: { clear: vi.fn() } } as never)}>
+            escolher
+          </button>
+          <SignaturePreview cleaner={cleaner} onConfirm={onConfirm} />
+        </>
+      )
+    }
+    render(<Harness />)
+    fireEvent.click(screen.getByRole('button', { name: 'escolher' }))
+    await screen.findByRole('img', { name: 'signature.previewAlt' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'signature.cancel' }))
+
+    await waitFor(() => expect(screen.queryByRole('img', { name: 'signature.previewAlt' })).toBeNull())
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
   it('formato que o navegador não lê guarda a mensagem nomeada, sem prévia', async () => {
     vi.mocked(fileToRaster).mockRejectedValue(new UnsupportedImageError())
     const result = escolher()
