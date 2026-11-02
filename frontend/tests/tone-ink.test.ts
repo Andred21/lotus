@@ -112,7 +112,7 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
   describe.each([
     { tema: 'claro', bloco: blocoClaro, folha: temaClaro },
     { tema: 'escuro', bloco: blocoRaiz, folha: temaEscuro },
-  ])('tema $tema', ({ tema, bloco, folha }) => {
+  ])('tema $tema', ({ bloco, folha }) => {
     const card = hex(folha, '--surface-card')
 
     it.each(tintasDe(bloco, folha))(

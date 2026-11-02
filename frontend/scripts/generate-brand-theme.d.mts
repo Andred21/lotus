@@ -12,5 +12,14 @@ export const LIGHT_MAP: Record<string, string>
 export const DARK_MAP: Record<string, string>
 /** Borda de controle do claro (D-68): slate-500, 4,76:1 — troca o slate-300 que reprovava 3:1. */
 export const CINZA_BORDA: string
+/** Receita do botão filled de uma severidade no claro (P-74): chaves de `fundo` e `anel` são hex de STOCK. */
+export interface SeveridadeClara {
+  hue: string
+  fundo: Record<string, string>
+  tintaLara: string
+  tinta: string
+  anel: Record<string, string>
+}
+export const SEVERIDADES_CLARAS: Record<'success' | 'info' | 'danger' | 'help', SeveridadeClara>
 /** `tinta` só no claro — no escuro o celeste de primeiro plano mede 6,76:1. */
 export function transform(css: string, map: Record<string, string>, tinta?: string): string
