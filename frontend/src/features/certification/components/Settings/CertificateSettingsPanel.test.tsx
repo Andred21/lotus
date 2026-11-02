@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import { api } from '@shared/api/axios'
+import { fileToRaster, rasterToPngFile } from '@shared/lib/signature/canvasBridge'
+import { escolherImagem, raster } from '@shared/testing/signature'
 import type { CertificateSettingsData } from '@shared/types/generated'
 import { CertificateSettingsPanel } from './CertificateSettingsPanel'
 
@@ -12,19 +13,13 @@ vi.mock('react-i18next', async (importOriginal) => {
 })
 
 const limpo = new File(['png'], 'firma.png', { type: 'image/png' })
-const espia = vi.hoisted(() => ({ montagens: 0, toast: { success: vi.fn(), error: vi.fn() } }))
+const espia = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
-// O seletor real limpa pixels em canvas (sem jsdom): aqui só entrega o PNG ao confirmar.
+// A limpeza em canvas não roda no jsdom: o teste mocka a ponte e o resto do fluxo é real.
+vi.mock('@shared/lib/signature/canvasBridge', () => ({ fileToRaster: vi.fn(), rasterToPngFile: vi.fn() }))
 vi.mock('@shared/ui', async (importOriginal) => {
   const real = await importOriginal<typeof import('@shared/ui')>()
-  return {
-    ...real,
-    useToast: () => espia.toast,
-    AppSignatureUpload: ({ onConfirm, label }: { onConfirm: (f: File) => void; label: string }) => {
-      useEffect(() => { espia.montagens += 1 }, [])
-      return <button type="button" onClick={() => onConfirm(limpo)}>{label}</button>
-    },
-  }
+  return { ...real, useToast: () => espia.toast }
 })
 
 const semFirma: CertificateSettingsData = {
@@ -41,7 +36,10 @@ function montar(settings: CertificateSettingsData) {
 }
 beforeEach(() => {
   vi.restoreAllMocks()
-  espia.montagens = 0
+  vi.mocked(fileToRaster).mockResolvedValue(raster())
+  vi.mocked(rasterToPngFile).mockResolvedValue(limpo)
+  URL.createObjectURL = vi.fn(() => 'blob:previa')
+  URL.revokeObjectURL = vi.fn()
   espia.toast.success.mockClear()
 })
 
@@ -68,9 +66,11 @@ describe('CertificateSettingsPanel', () => {
 
   it('trocar a firma sobe o PNG confirmado pelo multipart', async () => {
     const post = vi.spyOn(api, 'post').mockResolvedValue({ data: comFirma })
-    montar(semFirma)
+    const { container } = montar(semFirma)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'certificateSettings.sendSignature' }))
+    await screen.findByText('common.notLoaded')
+    await escolherImagem(container)
+    fireEvent.click(screen.getByRole('button', { name: 'signature.confirm' }))
 
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1))
     await waitFor(() => expect(espia.toast.success).toHaveBeenCalledWith('certificateSettings.signatureSaved'))
@@ -112,24 +112,26 @@ describe('CertificateSettingsPanel', () => {
   it('sem firma não mostra imagem', async () => {
     montar(semFirma)
 
-    await screen.findByText('certificateSettings.noSignature')
+    await screen.findByText('common.notLoaded')
     expect(screen.queryByRole('img')).toBeNull()
   })
 
-  it('a falha do upload mantém o seletor montado e mostra o erro; o sucesso o remonta', async () => {
+  it('a falha do upload mantém a prévia e mostra o erro; o sucesso a descarta', async () => {
     const recusa = { status: 422, detail: 'x', errors: { file: ['La firma es muy angosta.'] } }
     const post = vi.spyOn(api, 'post').mockRejectedValueOnce(recusa).mockResolvedValueOnce({ data: comFirma })
-    montar(semFirma)
+    const { container } = montar(semFirma)
+    await screen.findByText('common.notLoaded')
+    await escolherImagem(container)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'certificateSettings.sendSignature' }))
+    fireEvent.click(screen.getByRole('button', { name: 'signature.confirm' }))
 
     expect((await screen.findByRole('alert')).textContent).toContain('La firma es muy angosta.')
-    expect(espia.montagens).toBe(1)
+    expect(screen.getByRole('img', { name: 'signature.previewAlt' })).toBeTruthy()
     expect(espia.toast.success).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: 'certificateSettings.sendSignature' }))
+    fireEvent.click(screen.getByRole('button', { name: 'signature.confirm' }))
 
-    await waitFor(() => expect(espia.montagens).toBe(2))
+    await waitFor(() => expect(screen.queryByRole('img', { name: 'signature.previewAlt' })).toBeNull())
     expect(post).toHaveBeenCalledTimes(2)
   })
 

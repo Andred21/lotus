@@ -1,35 +1,34 @@
-import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useFilePreview } from '@shared/hooks'
 import {
-  AppFileActions,
   AppFilePreviewDialog,
-  AppFileRow,
-  AppSignatureUpload,
+  AppFileSlot,
   FormErrorBanner,
+  SIGNATURE_ACCEPT,
+  SIGNATURE_MAX_ORIGINAL_BYTES,
+  SignatureHint,
+  SignaturePreview,
   signatureCheckerboard,
+  useSignatureCleaner,
 } from '@shared/ui'
 import type { PreviewableFile } from '@shared/ui'
 import type { ManagerSignatureControl } from '../../hooks/useCertificateSettingsForm'
 
 /**
- * A Firma da gerente: arquivo atual (ver, baixar, remover com a confirmação do `AppFileActions`) e o
- * seletor que limpa e sobe o PNG (D16). O `AppSignatureUpload` não se reseta
- * depois do `onConfirm`; a `key` só muda quando o servidor ACEITA, então uma
- * falha deixa a prévia na tela a um clique de reenviar.
+ * A Firma da gerente no padrão do slot: arquivo atual (ver, baixar, substituir,
+ * excluir) e a limpeza de D16 no meio. O enviar escolhe a imagem, o
+ * `useSignatureCleaner` a limpa e o `SignaturePreview` pede a decisão; só sobe o
+ * PNG limpo. A prévia sai quando o servidor ACEITA: uma falha a deixa na tela, a
+ * um clique de reenviar. Excluir confirma uma vez só, pelo `AppFileActions`.
  */
 export function ManagerSignatureField({ control }: { control: ManagerSignatureControl }) {
   const { t } = useTranslation()
-  const labelId = useId()
   const preview = useFilePreview<PreviewableFile>()
-  const [uploadKey, setUploadKey] = useState(0)
+  const cleaner = useSignatureCleaner()
   const { current } = control
 
   return (
-    <div role="group" aria-labelledby={labelId} className="flex flex-col gap-3">
-      <p id={labelId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-        {t('certificateSettings.signature')}
-      </p>
+    <div className="flex flex-col gap-3">
       {/* O seletor diz "verás el resultado antes de guardar" e o Guardar está logo
           abaixo; sem esta linha a firma parece rascunho, e ela já vale para todos
           os certificados, inclusive os emitidos (D5). */}
@@ -39,43 +38,40 @@ export function ManagerSignatureField({ control }: { control: ManagerSignatureCo
 
       <FormErrorBanner message={control.uploadError} />
 
-      {current ? (
-        <>
-          <div className="rounded-surface border p-3" style={{ borderColor: 'var(--surface-border)', ...signatureCheckerboard }}>
-            <img src={current.download_url} alt={current.original_name} className="mx-auto max-h-24 max-w-full object-contain" />
-          </div>
-          <AppFileRow
-            name={current.original_name}
-            size={current.size}
-            createdAt={current.created_at}
-            actions={
-              <AppFileActions
-                file={current}
-                onPreview={preview.open}
-                onRemove={control.remove}
-                removing={control.removing}
-                removeError={control.removeError}
-                removeLabel={t('certificateSettings.removeSignature')}
-                confirmTitle={t('certificateSettings.removeTitle')}
-                confirmMessage={t('certificateSettings.removeMessage')}
-                confirmLabel={t('certificateSettings.removeConfirm')}
-              />
-            }
+      <AppFileSlot
+        title={t('certificateSettings.signature')}
+        file={current}
+        onPreview={preview.open}
+        onUpload={cleaner.pick}
+        uploadLabel={t('certificateSettings.sendSignature')}
+        replaceLabel={t('certificateSettings.replaceSignature')}
+        accept={SIGNATURE_ACCEPT}
+        maxBytes={SIGNATURE_MAX_ORIGINAL_BYTES}
+        uploading={control.uploading || cleaner.processing}
+        onSizeReject={cleaner.reject}
+        onRemove={control.remove}
+        removing={control.removing}
+        removeError={control.removeError}
+        removeLabel={t('certificateSettings.removeSignature')}
+        confirmTitle={t('certificateSettings.removeTitle')}
+        confirmMessage={t('certificateSettings.removeMessage')}
+        confirmLabel={t('certificateSettings.removeConfirm')}
+      >
+        <div className="flex flex-col gap-3">
+          {current && (
+            <div className="rounded-surface border p-3" style={{ borderColor: 'var(--surface-border)', ...signatureCheckerboard }}>
+              <img src={current.download_url} alt={current.original_name} className="mx-auto max-h-24 max-w-full object-contain" />
+            </div>
+          )}
+          <SignatureHint />
+          <SignaturePreview
+            cleaner={cleaner}
+            onConfirm={(png) => void control.upload(png).then((ok) => ok && cleaner.reset())}
+            busy={control.uploading}
+            disabled={control.uploading}
           />
-        </>
-      ) : (
-        <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-          {t('certificateSettings.noSignature')}
-        </p>
-      )}
-
-      <AppSignatureUpload
-        key={uploadKey}
-        label={t(current ? 'certificateSettings.replaceSignature' : 'certificateSettings.sendSignature')}
-        busy={control.uploading}
-        disabled={control.uploading}
-        onConfirm={(png) => void control.upload(png).then((ok) => ok && setUploadKey((k) => k + 1))}
-      />
+        </div>
+      </AppFileSlot>
 
       <AppFilePreviewDialog file={preview.file} visible={preview.visible} onHide={preview.close} />
     </div>

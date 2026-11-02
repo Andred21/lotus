@@ -3,7 +3,6 @@ import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-li
 import { UnsupportedImageError } from '@shared/lib/signature'
 import type { Raster } from '@shared/lib/signature'
 import { fileToRaster, rasterToPngFile } from '@shared/lib/signature/canvasBridge'
-import { AppSignatureUpload } from './AppSignatureUpload'
 import { signatureCheckerboard } from './checkerboard'
 import { SignaturePreview } from './SignaturePreview'
 import { useSignatureCleaner } from './useSignatureCleaner'
@@ -27,15 +26,15 @@ function raster(traco: number): Raster {
 
 const limpo = new File(['png'], 'firma.png', { type: 'image/png' })
 
-function escolher(onConfirm = vi.fn()) {
-  const { container } = render(<AppSignatureUpload label="Subir firma" onConfirm={onConfirm} />)
-  const input = container.querySelector('input[type="file"]') as HTMLInputElement
+/** Escolhe a foto pelo hook, como o slot faz, e devolve o resultado do hook. */
+function escolher() {
+  const hook = renderHook(() => useSignatureCleaner())
   const original = new File(['jpg'], 'foto.jpg', { type: 'image/jpeg' })
-  fireEvent.change(input, { target: { files: [original] } })
-  return onConfirm
+  act(() => hook.result.current.pick({ files: [original], options: { clear: vi.fn() } } as never))
+  return hook.result
 }
 
-describe('AppSignatureUpload', () => {
+describe('useSignatureCleaner — a limpeza antes do envio', () => {
   beforeEach(() => {
     URL.createObjectURL = vi.fn(() => 'blob:previa')
     URL.revokeObjectURL = vi.fn()
@@ -43,80 +42,58 @@ describe('AppSignatureUpload', () => {
   })
   afterEach(() => vi.clearAllMocks())
 
-  it('a previa aparece depois da escolha, com os botoes de decisao', async () => {
+  it('a prévia entrega o arquivo LIMPO, não o original', async () => {
     vi.mocked(fileToRaster).mockResolvedValue(raster(700))
-    escolher()
+    const result = escolher()
 
-    expect(await screen.findByRole('img', { name: 'signature.previewAlt' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'signature.confirm' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'signature.cancel' })).toBeTruthy()
+    await waitFor(() => expect(result.current.preview).not.toBeNull())
+
+    expect(result.current.preview?.file).toBe(limpo)
   })
 
-  it('confirmar entrega o arquivo LIMPO, nao o original', async () => {
-    vi.mocked(fileToRaster).mockResolvedValue(raster(700))
-    const onConfirm = escolher()
-
-    fireEvent.click(await screen.findByRole('button', { name: 'signature.confirm' }))
-
-    expect(onConfirm).toHaveBeenCalledTimes(1)
-    expect(onConfirm).toHaveBeenCalledWith(limpo)
-  })
-
-  it('cancelar descarta a previa sem chamar onConfirm', async () => {
-    vi.mocked(fileToRaster).mockResolvedValue(raster(700))
-    const onConfirm = escolher()
-
-    fireEvent.click(await screen.findByRole('button', { name: 'signature.cancel' }))
-
-    expect(onConfirm).not.toHaveBeenCalled()
-    expect(screen.queryByRole('img', { name: 'signature.previewAlt' })).toBeNull()
-  })
-
-  // Q-1 do review do bloco 40: o seletor mora dentro do <form> do chamador, e
-  // Confirmar ou Cancelar enviavam esse form junto (botao sem `type`).
-  it.each(['signature.cancel', 'signature.confirm'])('dentro de um form, %s nao envia o form do chamador', async (botao) => {
-    vi.mocked(fileToRaster).mockResolvedValue(raster(700))
+  // Q-1 do review do bloco 40: o preview mora dentro do <form> do chamador, e
+  // Confirmar ou Cancelar enviavam esse form junto (botão sem `type`).
+  it.each(['signature.cancel', 'signature.confirm'])('dentro de um form, %s não envia o form do chamador', (botao) => {
     const enviar = vi.fn((e: { preventDefault: () => void }) => e.preventDefault())
-    const { container } = render(
-      <form onSubmit={enviar}><AppSignatureUpload label="Subir firma" onConfirm={vi.fn()} /></form>,
-    )
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement
-    fireEvent.change(input, { target: { files: [new File(['jpg'], 'foto.jpg', { type: 'image/jpeg' })] } })
+    const cleaner: SignatureCleaner = {
+      pick: vi.fn(), preview: { file: limpo, url: 'blob:previa' }, error: null, processing: false, reset: vi.fn(), reject: vi.fn(),
+    }
+    render(<form onSubmit={enviar}><SignaturePreview cleaner={cleaner} onConfirm={vi.fn()} /></form>)
 
-    fireEvent.click(await screen.findByRole('button', { name: botao }))
+    fireEvent.click(screen.getByRole('button', { name: botao }))
 
     expect(enviar).not.toHaveBeenCalled()
   })
 
-  it('formato que o navegador nao le mostra a mensagem nomeada', async () => {
+  it('formato que o navegador não lê guarda a mensagem nomeada, sem prévia', async () => {
     vi.mocked(fileToRaster).mockRejectedValue(new UnsupportedImageError())
-    escolher()
+    const result = escolher()
 
-    expect((await screen.findByRole('alert')).textContent).toBe('signature.errorUnsupported')
-    expect(screen.queryByRole('button', { name: 'signature.confirm' })).toBeNull()
+    await waitFor(() => expect(result.current.error).toBe('signature.errorUnsupported'))
+    expect(result.current.preview).toBeNull()
   })
 
-  it('imagem sem traco mostra a mensagem nomeada', async () => {
+  it('imagem sem traço guarda a mensagem nomeada', async () => {
     vi.mocked(fileToRaster).mockResolvedValue({ width: 10, height: 10, data: new Uint8ClampedArray(400).fill(255) })
-    escolher()
+    const result = escolher()
 
-    expect((await screen.findByRole('alert')).textContent).toBe('signature.errorEmpty')
+    await waitFor(() => expect(result.current.error).toBe('signature.errorEmpty'))
   })
 
-  it('largura final abaixo do minimo do servidor e recusada, sem previa', async () => {
+  it('largura final abaixo do mínimo do servidor é recusada, sem prévia', async () => {
     vi.mocked(fileToRaster).mockResolvedValue(raster(300))
-    escolher()
+    const result = escolher()
 
-    expect((await screen.findByRole('alert')).textContent).toBe('signature.errorTooNarrow')
+    await waitFor(() => expect(result.current.error).toBe('signature.errorTooNarrow'))
     expect(rasterToPngFile).not.toHaveBeenCalled()
   })
 
-  it('PNG limpo acima de 1 MB e recusado antes de subir', async () => {
+  it('PNG limpo acima de 1 MB é recusado antes de subir', async () => {
     vi.mocked(fileToRaster).mockResolvedValue(raster(700))
     vi.mocked(rasterToPngFile).mockResolvedValue(new File([new Uint8Array(1024 * 1024 + 1)], 'x.png'))
-    escolher()
+    const result = escolher()
 
-    await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('signature.errorTooHeavy'))
+    await waitFor(() => expect(result.current.error).toBe('signature.errorTooHeavy'))
   })
 
   it('o xadrez lê os tokens da assinatura, não as superfícies do tema', () => {
