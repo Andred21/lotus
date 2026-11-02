@@ -61,6 +61,42 @@ function tintasDe(bloco: string, tema: string) {
 const blocoClaro = camadaDeMarca.match(/^html:not\(\.dark\)\s*\{([^}]*)\}/m)?.[1] ?? ''
 const blocoRaiz = camadaDeMarca.match(/^:root\s*\{([^}]*)\}/m)?.[1] ?? ''
 
+/** O corpo da regra cujo seletor começa por `prefixo`. */
+const regra = (css: string, prefixo: string) =>
+  css.match(new RegExp(`${prefixo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^{}]*\\{([^{}]*)\\}`))?.[1] ?? ''
+
+const corDe = (corpo: string) => corpo.match(/(?<![-\w])color:\s*(#[0-9a-f]{6})/i)?.[1] ?? ''
+const fundoDe = (corpo: string) => corpo.match(/background(?:-color)?:\s*(#[0-9a-f]{6})/i)?.[1] ?? ''
+
+/** A cor do anel de foco. São duas formas de `box-shadow`: o
+ * `:not(:disabled):focus` traz uma camada só, e o `:enabled:focus` traz um
+ * separador antes — ali o anel é a camada de 4px, nunca a primeira. */
+const anelDe = (corpo: string) =>
+  (corpo.match(/0 0 0 4px\s+(#[0-9a-f]{6}|rgba?\([^)]*\))/i) ??
+    corpo.match(/box-shadow:\s*0 0 0 [\d.]+(?:rem|px)\s+(#[0-9a-f]{6}|rgba?\([^)]*\))/i))?.[1] ?? ''
+
+/** O hue declarado, sem o alfa — é ele que responde "de que família é". */
+const nucleo = (cor: string) => {
+  const m = cor.match(/^rgba?\(\s*(\d+)\D+(\d+)\D+(\d+)/i)
+  return m
+    ? '#' + [1, 2, 3].map((i) => Number(m[i]).toString(16).padStart(2, '0')).join('')
+    : cor.toLowerCase()
+}
+
+/** A cor como o olho a vê: veladura composta sobre onde pousa. Comparar a cor
+ * DECLARADA ignoraria o alfa, e o anel do escuro é veladura. */
+const solido = (cor: string, sobre: string) => {
+  const m = cor.match(/^rgba\(\s*\d+\D+\d+\D+\d+\D+([\d.]+)/i)
+  const alfa = m ? Number(m[1]) : 1
+  return (
+    '#' +
+    rgb(nucleo(cor))
+      .map((v, i) => Math.round(v * alfa + rgb(sobre)[i] * (1 - alfa)))
+      .map((v) => v.toString(16).padStart(2, '0'))
+      .join('')
+  )
+}
+
 /**
  * UI-04 do review de 2026-08-17. O número do KPI em tom de aviso media 2,86:1
  * no tema claro — abaixo até do 3,0:1 de texto grande —, e o rótulo secundário
@@ -214,42 +250,6 @@ describe('tinta do botão `danger` text/outlined (UI-02)', () => {
  * exatamente a "uma severidade, duas famílias" que a P-30 fechou.
  */
 describe('botão `warning` filled e outlined (P-30)', () => {
-  /** O corpo da regra cujo seletor começa por `prefixo`. */
-  const regra = (css: string, prefixo: string) =>
-    css.match(new RegExp(`${prefixo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^{}]*\\{([^{}]*)\\}`))?.[1] ?? ''
-
-  const corDe = (corpo: string) => corpo.match(/(?<![-\w])color:\s*(#[0-9a-f]{6})/i)?.[1] ?? ''
-  const fundoDe = (corpo: string) => corpo.match(/background(?:-color)?:\s*(#[0-9a-f]{6})/i)?.[1] ?? ''
-
-  /** A cor do anel de foco. São duas formas de `box-shadow`: o
-   * `:not(:disabled):focus` traz uma camada só, e o `:enabled:focus` traz um
-   * separador antes — ali o anel é a camada de 4px, nunca a primeira. */
-  const anelDe = (corpo: string) =>
-    (corpo.match(/0 0 0 4px\s+(#[0-9a-f]{6}|rgba?\([^)]*\))/i) ??
-      corpo.match(/box-shadow:\s*0 0 0 [\d.]+(?:rem|px)\s+(#[0-9a-f]{6}|rgba?\([^)]*\))/i))?.[1] ?? ''
-
-  /** O hue declarado, sem o alfa — é ele que responde "de que família é". */
-  const nucleo = (cor: string) => {
-    const m = cor.match(/^rgba?\(\s*(\d+)\D+(\d+)\D+(\d+)/i)
-    return m
-      ? '#' + [1, 2, 3].map((i) => Number(m[i]).toString(16).padStart(2, '0')).join('')
-      : cor.toLowerCase()
-  }
-
-  /** A cor como o olho a vê: veladura composta sobre onde pousa. Comparar a cor
-   * DECLARADA ignoraria o alfa, e o anel do escuro é veladura. */
-  const solido = (cor: string, sobre: string) => {
-    const m = cor.match(/^rgba\(\s*\d+\D+\d+\D+\d+\D+([\d.]+)/i)
-    const alfa = m ? Number(m[1]) : 1
-    return (
-      '#' +
-      rgb(nucleo(cor))
-        .map((v, i) => Math.round(v * alfa + rgb(sobre)[i] * (1 - alfa)))
-        .map((v) => v.toString(16).padStart(2, '0'))
-        .join('')
-    )
-  }
-
   const rampaAmarela = (folha: string) =>
     [...folha.matchAll(/--yellow-\d00:\s*(#[0-9a-f]{6})/gi)].map((m) => m[1].toLowerCase())
 
@@ -329,6 +329,106 @@ describe('botão `warning` filled e outlined (P-30)', () => {
     expect(contraste('#ffffff', '#f97316')).toBeLessThan(3)
     expect(contraste('#5e4803', '#a47d06')).toBeLessThan(3)
   })
+})
+
+/**
+ * P-74 / O3 do bloco 49. No tema claro o Lara pintava `#ffffff` sobre o fundo de
+ * stock das severidades — `#22c55e` 2,28:1, `#0ea5e9` 2,77:1, `#ef4444` 3,76:1,
+ * `#a855f7` 3,96:1 —, e o "Eliminar" de toda confirmação herdava o vermelho. A
+ * decisão (opção A, spec §4.1) é o molde da P-30: fundo claro da rampa da Lotus e
+ * letra no degrau 900 da mesma família, com os estados SUBINDO a rampa.
+ *
+ * A régua cobre as CINCO severidades nos DOIS temas e nenhum par é pulado: razão
+ * do filled em base/hover/active e anel de foco contra cada superfície onde o
+ * botão pousa. No claro mede também a AMARRAÇÃO — o degrau exato, lido da própria
+ * folha —, porque a razão sozinha passa com qualquer degrau que meça bem.
+ */
+describe('botão filled das cinco severidades (P-74)', () => {
+  const SEVERIDADES = [
+    { sev: 'success', hue: 'green' },
+    { sev: 'info', hue: 'blue' },
+    { sev: 'warning', hue: 'yellow' },
+    { sev: 'danger', hue: 'red' },
+    { sev: 'help', hue: 'purple' },
+  ]
+  const DO_P74 = SEVERIDADES.filter(({ sev }) => sev !== 'warning')
+
+  const temas = [
+    {
+      tema: 'claro',
+      folha: temaClaro,
+      superficies: ['#ffffff', hex(blocoClaro, '--surface-ground')],
+    },
+    {
+      tema: 'escuro',
+      folha: temaEscuro,
+      superficies: [hex(temaEscuro, '--surface-ground'), hex(temaEscuro, '--surface-card')],
+    },
+  ]
+
+  describe.each(temas)('tema $tema', ({ folha, superficies }) => {
+    it.each(
+      SEVERIDADES.flatMap(({ sev }) => [
+        { sev, estado: 'base', prefixo: `.p-button.p-button-${sev},` },
+        { sev, estado: 'hover', prefixo: `.p-button.p-button-${sev}:not(:disabled):hover,` },
+        { sev, estado: 'active', prefixo: `.p-button.p-button-${sev}:not(:disabled):active,` },
+      ]),
+    )('$sev: o filled no estado $estado passa AA (4,5:1)', ({ prefixo }) => {
+      const corpo = regra(folha, prefixo)
+
+      expect(fundoDe(corpo)).toMatch(/^#[0-9a-f]{6}$/)
+      expect(contraste(corDe(corpo), fundoDe(corpo))).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it.each(
+      SEVERIDADES.flatMap(({ sev }) => [
+        { sev, qual: '`:not(:disabled):focus`', prefixo: `.p-button.p-button-${sev}:not(:disabled):focus,` },
+        { sev, qual: '`:enabled:focus`', prefixo: `.p-button.p-button-${sev}:enabled:focus` },
+      ]),
+    )('$sev: o anel de foco em $qual separa 3:1 de cada superfície', ({ prefixo }) => {
+      const anel = anelDe(regra(folha, prefixo))
+
+      expect(anel).not.toBe('')
+      for (const superficie of superficies) {
+        expect(contraste(solido(anel, superficie), superficie)).toBeGreaterThanOrEqual(3)
+      }
+    })
+  })
+
+  /** A amarração do claro (spec §4.1): fundo base/hover/active nos degraus
+   * 300/200/100 da família, tinta e anel no 900. O `warning` fica de fora porque
+   * a P-30 tem o `describe` dela. */
+  describe.each(DO_P74)('tema claro: $sev amarrado à rampa $hue', ({ sev, hue }) => {
+    const degrau = (n: number) => hex(temaClaro, `--${hue}-${n}`)
+
+    it.each([
+      { estado: 'base', prefixo: `.p-button.p-button-${sev},`, n: 300 },
+      { estado: 'hover', prefixo: `.p-button.p-button-${sev}:not(:disabled):hover,`, n: 200 },
+      { estado: 'active', prefixo: `.p-button.p-button-${sev}:not(:disabled):active,`, n: 100 },
+    ])('o fundo do estado $estado é o degrau $n e a tinta é o 900', ({ prefixo, n }) => {
+      const corpo = regra(temaClaro, prefixo)
+
+      expect(degrau(n)).toMatch(/^#[0-9a-f]{6}$/)
+      expect(fundoDe(corpo)).toBe(degrau(n))
+      expect(corDe(corpo)).toBe(degrau(900))
+    })
+
+    it.each([
+      { qual: '`:not(:disabled):focus`', prefixo: `.p-button.p-button-${sev}:not(:disabled):focus,` },
+      { qual: '`:enabled:focus`', prefixo: `.p-button.p-button-${sev}:enabled:focus` },
+    ])('o anel em $qual é o degrau 900', ({ prefixo }) => {
+      expect(nucleo(anelDe(regra(temaClaro, prefixo)))).toBe(degrau(900))
+    })
+  })
+
+  /** O controle negativo: a tinta branca de stock sobre o fundo de stock das
+   * quatro reprova — é o defeito que a ficha fecha, e reverter cai aqui. */
+  it.each(['#22c55e', '#0ea5e9', '#ef4444', '#a855f7'])(
+    'o branco de stock sobre %s reprova no claro',
+    (fundo) => {
+      expect(contraste('#ffffff', fundo)).toBeLessThan(4.5)
+    },
+  )
 })
 
 /**
