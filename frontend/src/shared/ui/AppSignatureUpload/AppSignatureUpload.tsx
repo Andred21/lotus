@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next'
 import { AppFileUpload } from '../AppFileUpload'
+import { SignatureHint } from './SignatureHint'
 import { SignaturePreview } from './SignaturePreview'
 import { SIGNATURE_ACCEPT, SIGNATURE_MAX_ORIGINAL_BYTES, useSignatureCleaner } from './useSignatureCleaner'
 
@@ -20,7 +20,6 @@ export interface AppSignatureUploadProps {
  * (Configuración › Certificados) até migrar.
  */
 export function AppSignatureUpload({ label, onConfirm, disabled = false, busy = false }: AppSignatureUploadProps) {
-  const { t } = useTranslation()
   const cleaner = useSignatureCleaner()
   const { preview, processing } = cleaner
 
@@ -39,9 +38,7 @@ export function AppSignatureUpload({ label, onConfirm, disabled = false, busy = 
               onSizeReject={cleaner.reject}
             />
           </div>
-          {!processing && (
-            <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('signature.hint')}</p>
-          )}
+          {!processing && <SignatureHint />}
         </>
       )}
       <SignaturePreview cleaner={cleaner} onConfirm={onConfirm} busy={busy} disabled={disabled} />

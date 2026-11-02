@@ -58,6 +58,16 @@ describe('ProfileSignatureSlot', () => {
     await waitFor(() => expect(screen.queryByRole('img', { name: 'signature.previewAlt' })).toBeNull())
   })
 
+  it('com self_service a dica de formatos fica visível, com ou sem assinatura enviada', () => {
+    const { unmount } = render(<ProfileSignatureSlot doc={doc()} uploading={false} onUpload={vi.fn()} onPreview={() => {}} />)
+    expect(screen.getByText('signature.hint')).toBeTruthy()
+    unmount()
+
+    montar(enviada)
+    expect(screen.getByText('signature.hint')).toBeTruthy()
+    expect(screen.queryByText('profile.documents.managedByAdmin')).toBeNull()
+  })
+
   it('com assinatura enviada mostra ver, baixar e substituir, e nunca excluir', () => {
     montar(enviada)
 
@@ -80,6 +90,7 @@ describe('ProfileSignatureSlot', () => {
     montar({ self_service: false, ...enviada })
 
     expect(screen.getByText('profile.documents.managedByAdmin')).toBeTruthy()
+    expect(screen.queryByText('signature.hint')).toBeNull()
     expect(nomesDosIcones()).toEqual(['common.preview', 'common.download'])
     expect(document.querySelector('input[type="file"]')).toBeNull()
   })

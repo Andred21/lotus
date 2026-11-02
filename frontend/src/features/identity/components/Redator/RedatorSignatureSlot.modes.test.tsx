@@ -24,8 +24,8 @@ const existente: RedatorDocumentData = {
   valid_until: null, created_at: '2026-10-01T10:00:00Z', download_url: 'https://x/firma.png',
 }
 
-function montar(over: Partial<Parameters<typeof RedatorSignatureSlot>[0]> = {}) {
-  const props = {
+function propsBase(over: Partial<Parameters<typeof RedatorSignatureSlot>[0]> = {}) {
+  return {
     mode: 'edit' as const,
     doc: undefined,
     staged: undefined,
@@ -37,6 +37,10 @@ function montar(over: Partial<Parameters<typeof RedatorSignatureSlot>[0]> = {}) 
     onPreview: vi.fn(),
     ...over,
   }
+}
+
+function montar(over: Partial<Parameters<typeof RedatorSignatureSlot>[0]> = {}) {
+  const props = propsBase(over)
   const { container } = render(<RedatorSignatureSlot {...props} />)
   return { props, container }
 }
@@ -54,6 +58,23 @@ describe('RedatorSignatureSlot — visualização e criação', () => {
 
     expect(nomesDosIcones()).toEqual(['common.preview', 'common.download'])
     expect(document.querySelector('input[type="file"]')).toBeNull()
+  })
+
+  it('em visualização não há dica de formatos nem corpo vazio: não há como enviar', () => {
+    const { container } = montar({ mode: 'view', doc: existente })
+
+    expect(screen.queryByText('signature.hint')).toBeNull()
+    // O cartão tem só o cabeçalho e a linha.
+    expect((container.firstChild as HTMLElement).children).toHaveLength(2)
+  })
+
+  it('em criação a dica aparece com o seletor e some quando o arquivo está em stage', () => {
+    const { unmount } = render(<RedatorSignatureSlot {...propsBase({ mode: 'create' })} />)
+    expect(screen.getByText('signature.hint')).toBeTruthy()
+    unmount()
+
+    render(<RedatorSignatureSlot {...propsBase({ mode: 'create', staged: limpo })} />)
+    expect(screen.queryByText('signature.hint')).toBeNull()
   })
 
   it('em visualização sem firma mostra "não carregado" e nenhum botão', () => {

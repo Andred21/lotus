@@ -3,6 +3,7 @@ import {
   AppFileSlot,
   SIGNATURE_ACCEPT,
   SIGNATURE_MAX_ORIGINAL_BYTES,
+  SignatureHint,
   SignaturePreview,
   useSignatureCleaner,
 } from '@shared/ui'
@@ -37,9 +38,10 @@ export function RedatorSignatureSlot({
   const cleaner = useSignatureCleaner()
 
   // Criação: escolher é pôr em stage, e com o arquivo em stage só se tira.
-  // Sem nada a mostrar não há corpo: o slot não abre um vão vazio abaixo da linha.
-  const showing = cleaner.processing || cleaner.preview !== null || cleaner.error !== null
   const canPick = mode === 'edit' || (mode === 'create' && !staged)
+  // Sem nada a mostrar não há corpo: o slot não abre um vão vazio abaixo da linha.
+  // A dica dos formatos vale onde há como enviar; a prévia, enquanto houver o que decidir.
+  const showing = cleaner.processing || cleaner.preview !== null || cleaner.error !== null
 
   const confirm = (file: File) => {
     if (mode === 'create') {
@@ -68,7 +70,12 @@ export function RedatorSignatureSlot({
       onSizeReject={cleaner.reject}
       onRemove={mode === 'edit' && doc && onRemoveDoc ? () => onRemoveDoc(doc.id) : undefined}
     >
-      {showing && <SignaturePreview cleaner={cleaner} onConfirm={confirm} busy={uploading} disabled={uploading} />}
+      {(canPick || showing) && (
+        <div className="flex flex-col gap-3">
+          {canPick && <SignatureHint />}
+          {showing && <SignaturePreview cleaner={cleaner} onConfirm={confirm} busy={uploading} disabled={uploading} />}
+        </div>
+      )}
     </AppFileSlot>
   )
 }

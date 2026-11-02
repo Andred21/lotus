@@ -56,11 +56,12 @@ describe('RedatorSignatureSlot', () => {
     expect(nomesDosIcones()).toEqual(['common.preview', 'common.download', 'redator.signatureReplace', 'common.delete'])
   })
 
-  it('sem prévia nem erro não abre corpo vazio abaixo da linha', () => {
+  it('onde dá para enviar a dica de formatos fica visível, com ou sem firma, e continua com a prévia aberta', async () => {
     const { container } = montar({ doc: existente })
 
-    // O cartão tem o cabeçalho e a linha; o corpo extra só existe com prévia ou erro.
-    expect((container.firstChild as HTMLElement).children).toHaveLength(2)
+    expect(screen.getByText('signature.hint')).toBeTruthy()
+    await escolherImagem(container)
+    expect(screen.getByText('signature.hint')).toBeTruthy()
   })
 
   it('em edição sem firma mostra só o enviar, com o nome de enviar assinatura', () => {

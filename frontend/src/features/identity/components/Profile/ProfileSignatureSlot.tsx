@@ -3,6 +3,7 @@ import {
   AppFileSlot,
   SIGNATURE_ACCEPT,
   SIGNATURE_MAX_ORIGINAL_BYTES,
+  SignatureHint,
   SignaturePreview,
   useSignatureCleaner,
 } from '@shared/ui'
@@ -27,7 +28,7 @@ export function ProfileSignatureSlot({ doc, uploading, onUpload, onPreview }: Pr
   const { t } = useTranslation()
   const cleaner = useSignatureCleaner()
 
-  // Sem nada a mostrar não há corpo: o slot não abre um vão vazio abaixo da linha.
+  // A prévia só entra enquanto houver o que mostrar; a dica dos formatos fica sempre, pois há como enviar.
   const showing = cleaner.processing || cleaner.preview !== null || cleaner.error !== null
 
   const file: (PreviewableFile & { created_at?: string | null }) | null =
@@ -54,12 +55,17 @@ export function ProfileSignatureSlot({ doc, uploading, onUpload, onPreview }: Pr
       onSizeReject={cleaner.reject}
     >
       {doc.self_service ? (
-        showing && <SignaturePreview
-          cleaner={cleaner}
-          busy={uploading}
-          disabled={uploading}
-          onConfirm={(png) => void onUpload(png).then((ok) => ok && cleaner.reset())}
-        />
+        <div className="flex flex-col gap-3">
+          <SignatureHint />
+          {showing && (
+            <SignaturePreview
+              cleaner={cleaner}
+              busy={uploading}
+              disabled={uploading}
+              onConfirm={(png) => void onUpload(png).then((ok) => ok && cleaner.reset())}
+            />
+          )}
+        </div>
       ) : (
         <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
           {t('profile.documents.managedByAdmin')}
