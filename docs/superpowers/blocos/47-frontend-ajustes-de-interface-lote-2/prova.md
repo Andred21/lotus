@@ -73,3 +73,13 @@ turma, Settings, Perfil admin, Perfil redator, diálogo do redator).
 - Firma do gerente trocada pela imagem de teste.
 - Foto do admin enviada e removida.
 - Senha do redator `juan.morales@lotus.cl` definida como a do seed do admin, para entrar no Perfil.
+
+## Depois da revisão final (d13ba47e..bad483a8)
+
+A rodada de correção da revisão final mudou nomes acessíveis medidos acima: enviar, substituir e
+excluir levam o tipo onde o verbo se repete (redator, turma, cotização, presupuesto), então a turma
+diz `Upload <tipo>` e `Delete <tipo>` em vez de `Upload PDF` e `Remove`. Isso e o seletor que volta
+depois de envio recusado estão provados por teste, não por nova medição no navegador.
+
+Suítes na ponta bad483a8: `pnpm build` ok, `pnpm lint` 0, `pnpm test` 220 arquivos / 1654 passed;
+`php artisan test` 1631 passed, 5 skipped.
