@@ -2,9 +2,9 @@
 schema_version: 3
 id: 47
 slug: 47-frontend-ajustes-de-interface-lote-2
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/blocos/47-frontend-ajustes-de-interface-lote-2/spec.md
 active_plan: docs/superpowers/blocos/47-frontend-ajustes-de-interface-lote-2/plano.md
@@ -17,10 +17,10 @@ branch: feat/47-frontend-ajustes-de-interface-lote-2
 worktree: ../lotus-47-frontend-ajustes-de-interface-lote-2
 offset: 1
 lane_base: b9e1e45f
-commit: c813d5ba
+commit: 258e2fc7
 blocker: null
-updated_at: 2026-11-02T13:10:17-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-11-02T16:26:29-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 47 — estado
