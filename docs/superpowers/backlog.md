@@ -193,6 +193,8 @@ antes de entrar no escopo.
      apaga o anterior com auditoria. Vários por tipo só na turma. Regra nova no backend, aceita
      neste bloco pelo João; duplicado antigo mostra o mais recente, sem migração.
 
+Lote fechado na mudança 1 (decisão do João, 2026-11-02): o que vier depois é o lote 3.
+
 Tickets de cada mudança: `blocos/47-frontend-ajustes-de-interface-lote-2/tickets/`.
 
 **Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria — salvo a
