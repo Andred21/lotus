@@ -57,3 +57,54 @@ describe('DocumentTypeCard — excluir um PDF da turma', () => {
     await waitFor(() => expect(screen.getByRole('dialog')).toBeTruthy())
   })
 })
+
+function montarComArquivos(files: TurmaDocumentData[], canSubmit: boolean) {
+  render(
+    <DocumentTypeCard
+      type="MANUAL"
+      files={files}
+      uploading={false}
+      onUpload={() => {}}
+      onRemove={() => {}}
+      removing={false}
+      removeError={null}
+      canSubmit={canSubmit}
+    />,
+  )
+}
+
+describe('DocumentTypeCard — ações só ícone', () => {
+  const segundo = { ...file, id: 4, original_name: 'guia.pdf' } as TurmaDocumentData
+
+  it('canSubmit mostra o ícone de enviar com nome acessível, sem botão de texto', () => {
+    montarComArquivos([file], true)
+
+    expect(screen.getByRole('button', { name: 'operation.documents.upload' })).toBeTruthy()
+    expect(screen.queryByText('operation.documents.upload')).toBeNull()
+    expect(screen.getByText('operation.documents.uploadHint')).toBeTruthy()
+  })
+
+  it('dois PDFs listados têm ver, baixar e excluir cada um', () => {
+    montarComArquivos([file, segundo], true)
+
+    expect(screen.getAllByRole('button', { name: 'operation.documents.remove' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'common.preview' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'common.download' })).toHaveLength(2)
+  })
+
+  it('excluir abre um diálogo só', () => {
+    montarComArquivos([file, segundo], true)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'operation.documents.remove' })[0])
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(1)
+  })
+
+  it('canSubmit falso: sem enviar, sem lixeira, sem aviso', () => {
+    montarComArquivos([file], false)
+
+    expect(screen.queryByRole('button', { name: 'operation.documents.upload' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'operation.documents.remove' })).toBeNull()
+    expect(screen.queryByText('operation.documents.uploadHint')).toBeNull()
+  })
+})

@@ -7,6 +7,8 @@ import { turmaDocumentTypeLabel } from '@shared/lib'
 import { dangerText } from '@shared/styles/tokens'
 import type { TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 
+const UPLOAD_CHOOSE_OPTIONS = { icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }
+
 type Props = {
   type: TurmaDocumentType
   files: TurmaDocumentData[]
@@ -61,7 +63,9 @@ export function DocumentTypeCard({
         {canSubmit && (
           <AppFileUpload
             accept="application/pdf"
-            chooseLabel={t('operation.documents.upload')}
+            chooseOptions={UPLOAD_CHOOSE_OPTIONS}
+            chooseLabel=""
+            accessibleName={t('operation.documents.upload')}
             disabled={uploading}
             onSizeReject={setSizeError}
             uploadHandler={handleUpload}
