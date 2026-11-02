@@ -13,11 +13,16 @@ classe `p-tooltip-left`.
 
 ## Limpeza de locale
 
-Chaves que estavam em uso no merge-base com a `main` e ficaram sem nenhum `t()` de produção depois
-do bloco, removidas dos três locales: `certificateSettings.noSignature`, `budget.uploadDocument`,
-`budget.fileTypeLabel`, `budget.uploadTitle`, `budget.chooseFile`. Outras chaves sem uso literal
-(`budget.documentType.*`, plurais `_one/_other`, `operation.documents.lock.*`) são lidas por
-template ou por plural e ficaram; as que já estavam mortas antes do bloco não são deste escopo.
+Chaves que estavam em uso (`t()` de produção) no merge-base `d220a04f` e ficaram sem nenhuma
+referência depois do bloco, removidas dos três locales: `certificateSettings.noSignature`,
+`budget.uploadDocument`, `budget.fileTypeLabel`, `budget.uploadTitle`, `budget.chooseFile`,
+`profile.documents.send`, `profile.documents.replace`, `profile.documents.sendNamed`,
+`profile.documents.replaceNamed` (o Perfil passou a usar `common.uploadNamed`/`common.replaceNamed`)
+e `operation.documents.upload` (o enviar da turma passou a `common.uploadNamed`).
+Conferido por script contra o merge-base (chave literal entre aspas ou crase, ou prefixo de template
+`prefixo.${`): nenhuma chave que o bloco matou ficou no locale. Chaves lidas por template ou por
+plural (`budget.documentType.*`, `_one/_other`, `operation.documents.lock.*`) ficaram; as que já
+estavam mortas antes do bloco não são deste escopo.
 
 ## Critérios dos tickets
 

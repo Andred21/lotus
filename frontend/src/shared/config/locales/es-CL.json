@@ -434,12 +434,8 @@
     "documents": {
       "title": "Documentación profesional",
       "hint": "Puedes subir y reemplazar tus documentos. No se eliminan: el nuevo reemplaza al anterior.",
-      "send": "Subir documento",
       "sendSignature": "Subir firma",
       "replaceSignature": "Reemplazar firma",
-      "replace": "Reemplazar",
-      "sendNamed": "Subir {{tipo}}",
-      "replaceNamed": "Reemplazar {{tipo}}",
       "managedByAdmin": "Este documento lo gestiona el administrador.",
       "sent": "Documento subido.",
       "validUntil": "Vence el {{date}}"
@@ -905,7 +901,6 @@
       "pending": "Pendiente",
       "empty": "Sin archivos.",
       "enabled": "Documentación completa · turma habilitada para la conclusión.",
-      "upload": "Subir PDF",
       "uploadHint": "Solo PDF, hasta 10 MB. Puedes subir varios archivos por tipo.",
       "remove": "Quitar",
       "removeTitle": "Quitar documento",

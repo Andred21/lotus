@@ -7,13 +7,18 @@ import type { RedatorProfileDocumentData } from '@shared/types/generated'
 import { ProfileDocumentSlot } from './ProfileDocumentSlot'
 
 // O `t` devolve a chave, mas ECOA a interpolação: sem isso a data formatada —
-// que é o que o UI-01 mede — não chegaria ao DOM em teste nenhum.
+// que é o que o UI-01 mede — não chegaria ao DOM em teste nenhum, nem o tipo
+// que nomeia o enviar e o substituir (D-23).
 vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
   return {
     ...(await importOriginal<typeof import('react-i18next')>()),
     useTranslation: mockUseTranslation({
-      t: (key, opts) => (opts?.date === undefined ? key : `${key}:${String(opts.date)}`),
+      t: (key, opts) => {
+        if (opts?.date !== undefined) return `${key}:${String(opts.date)}`
+        if (opts?.tipo !== undefined) return `${key}:${String(opts.tipo)}`
+        return key
+      },
     }),
   }
 })
@@ -61,8 +66,8 @@ describe('ProfileDocumentSlot', () => {
     montar({ status: 'ausente', original_name: null, download_url: null, size: null })
 
     expect(screen.getByText('profile.docStatus.ausente')).toBeTruthy()
-    expect(nomesDosIcones()).toEqual(['profile.documents.sendNamed'])
-    expect(screen.queryByText('profile.documents.send')).toBeNull()
+    expect(nomesDosIcones()).toEqual(['common.uploadNamed:documentType.CV'])
+    expect(screen.queryByText('common.upload')).toBeNull()
     expect(screen.queryByText('profile.documents.managedByAdmin')).toBeNull()
   })
 
@@ -72,9 +77,9 @@ describe('ProfileDocumentSlot', () => {
     expect(nomesDosIcones()).toEqual([
       'common.preview',
       'common.download',
-      'profile.documents.replaceNamed',
+      'common.replaceNamed:documentType.CV',
     ])
-    expect(screen.queryByText('profile.documents.replace')).toBeNull()
+    expect(screen.queryByText('common.replace')).toBeNull()
     expect(screen.queryByRole('button', { name: 'common.delete' })).toBeNull()
   })
 

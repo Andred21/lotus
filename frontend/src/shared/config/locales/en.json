@@ -434,12 +434,8 @@
     "documents": {
       "title": "Professional documents",
       "hint": "You can upload and replace your documents. They are not deleted: the new one replaces the previous.",
-      "send": "Upload document",
       "sendSignature": "Upload signature",
       "replaceSignature": "Replace signature",
-      "replace": "Replace",
-      "sendNamed": "Upload {{tipo}}",
-      "replaceNamed": "Replace {{tipo}}",
       "managedByAdmin": "This document is managed by the administrator.",
       "sent": "Document uploaded.",
       "validUntil": "Valid until {{date}}"
@@ -905,7 +901,6 @@
       "pending": "Pending",
       "empty": "No files.",
       "enabled": "Documentation complete · class enabled for completion.",
-      "upload": "Upload PDF",
       "uploadHint": "PDF only, up to 10 MB. Multiple files per type are allowed.",
       "remove": "Remove",
       "removeTitle": "Remove document",

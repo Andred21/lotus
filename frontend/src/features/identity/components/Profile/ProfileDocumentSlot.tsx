@@ -57,8 +57,8 @@ export function ProfileDocumentSlot({
       file={file}
       onPreview={onPreview}
       onUpload={doc.self_service ? (e) => onUpload(doc.type, e) : undefined}
-      uploadLabel={t('profile.documents.sendNamed', { tipo })}
-      replaceLabel={t('profile.documents.replaceNamed', { tipo })}
+      uploadLabel={t('common.uploadNamed', { tipo })}
+      replaceLabel={t('common.replaceNamed', { tipo })}
       uploading={uploading}
       onSizeReject={onSizeReject}
     >
