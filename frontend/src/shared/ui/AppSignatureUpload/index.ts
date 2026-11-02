@@ -1,6 +1,8 @@
+export { AppSignatureSlot } from './AppSignatureSlot'
 export { SignatureHint } from './SignatureHint'
 export { SignaturePreview } from './SignaturePreview'
 export { SIGNATURE_ACCEPT, SIGNATURE_MAX_ORIGINAL_BYTES, useSignatureCleaner } from './useSignatureCleaner'
 export { signatureCheckerboard } from './checkerboard'
+export type { AppSignatureSlotProps } from './AppSignatureSlot'
 export type { SignaturePreviewProps } from './SignaturePreview'
 export type { SignatureCleaner } from './useSignatureCleaner'

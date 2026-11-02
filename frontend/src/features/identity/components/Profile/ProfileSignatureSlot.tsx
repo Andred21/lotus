@@ -1,12 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import {
-  AppFileSlot,
-  SIGNATURE_ACCEPT,
-  SIGNATURE_MAX_ORIGINAL_BYTES,
-  SignatureHint,
-  SignaturePreview,
-  useSignatureCleaner,
-} from '@shared/ui'
+import { AppSignatureSlot } from '@shared/ui'
 import type { PreviewableFile } from '@shared/ui'
 import type { RedatorProfileDocumentData } from '@shared/types/generated'
 import { profileFile } from '../../lib/profileFile'
@@ -23,45 +16,26 @@ export type ProfileSignatureSlotProps = {
  * A assinatura do próprio redator em Mi perfil (spec D2 do bloco 40). Fora do
  * caminho de compliance: sem tag de status e sem validade — o `status` do DTO
  * descreve validade, que a assinatura não tem. Sem excluir: o redator troca a
- * assinatura, não a remove. Mesmo slot do admin, sobre o `AppFileSlot`.
+ * assinatura, não a remove. Mesmo slot do admin, o `AppSignatureSlot`.
  */
 export function ProfileSignatureSlot({ doc, uploading, onUpload, onPreview }: ProfileSignatureSlotProps) {
   const { t } = useTranslation()
-  const cleaner = useSignatureCleaner()
-
-  // A prévia só entra enquanto houver o que mostrar; a dica dos formatos fica sempre, pois há como enviar.
-  const showing = cleaner.processing || cleaner.preview !== null || cleaner.error !== null
 
   return (
-    <AppFileSlot
+    <AppSignatureSlot
       title={t(`documentType.${doc.type}`)}
       file={profileFile(doc)}
       onPreview={onPreview}
-      onUpload={doc.self_service ? cleaner.pick : undefined}
+      onConfirm={doc.self_service ? onUpload : undefined}
       uploadLabel={t('profile.documents.sendSignature')}
       replaceLabel={t('profile.documents.replaceSignature')}
-      accept={SIGNATURE_ACCEPT}
-      maxBytes={SIGNATURE_MAX_ORIGINAL_BYTES}
-      uploading={uploading || cleaner.processing}
-      onSizeReject={cleaner.reject}
+      uploading={uploading}
     >
-      {doc.self_service ? (
-        <div className="flex flex-col gap-3">
-          <SignatureHint />
-          {showing && (
-            <SignaturePreview
-              cleaner={cleaner}
-              busy={uploading}
-              disabled={uploading}
-              onConfirm={(png) => void onUpload(png).then((ok) => ok && cleaner.reset())}
-            />
-          )}
-        </div>
-      ) : (
+      {!doc.self_service && (
         <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>
           {t('profile.documents.managedByAdmin')}
         </p>
       )}
-    </AppFileSlot>
+    </AppSignatureSlot>
   )
 }
