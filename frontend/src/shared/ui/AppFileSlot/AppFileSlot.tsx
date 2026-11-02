@@ -12,7 +12,11 @@ type RemovalProps<T extends PreviewableFile> = Pick<
   'onRemove' | 'removing' | 'removeLabel' | 'confirmTitle' | 'confirmMessage' | 'confirmLabel' | 'removeError'
 >
 
-export type AppFileSlotProps<T extends PreviewableFile> = RemovalProps<T> & {
+/** O arquivo do slot: o que a pré-visualização exige e, opcional, a data de envio
+ * que a linha mostra. */
+type SlotFile = PreviewableFile & { created_at?: string | null }
+
+export type AppFileSlotProps<T extends SlotFile> = RemovalProps<T> & {
   /** Cabeçalho do cartão: texto (vira o rótulo) ou nó (texto + tag de estado, que
    * ficam nas pontas). Ausente = cartão sem cabeçalho. */
   title?: ReactNode
@@ -48,7 +52,7 @@ export type AppFileSlotProps<T extends PreviewableFile> = RemovalProps<T> & {
  * A tela passa só o que tem: sem `onUpload` não há enviar nem substituir; sem
  * `onRemove`, sem lixeira. Excluir confirma sempre (`AppFileActions`).
  */
-export function AppFileSlot<T extends PreviewableFile>({
+export function AppFileSlot<T extends SlotFile>({
   title,
   file,
   onPreview,
@@ -105,7 +109,7 @@ export function AppFileSlot<T extends PreviewableFile>({
         name={file.original_name}
         mime={file.mime}
         size={file.size}
-        createdAt={(file as { created_at?: string | null }).created_at}
+        createdAt={file.created_at}
         actions={
           <AppFileActions file={file} onPreview={onPreview} {...removal}>
             {picker(replaceLabel ?? t('common.replace'))}

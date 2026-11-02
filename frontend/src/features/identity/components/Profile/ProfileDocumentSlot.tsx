@@ -5,6 +5,7 @@ import type {
   RedatorDocumentType,
   RedatorProfileDocumentData,
 } from '@shared/types/generated'
+import { profileFile } from '../../lib/profileFile'
 import { ProfileDocumentSlotHeader } from './ProfileDocumentSlotHeader'
 
 export type ProfileDocumentSlotProps = {
@@ -37,24 +38,12 @@ export function ProfileDocumentSlot({
 }: ProfileDocumentSlotProps) {
   const { t } = useTranslation()
 
-  // `PreviewableFile` exige nome e URL não-nulos; o DTO os traz nullable porque
-  // o slot ausente é projetado igual. Montar o literal aqui é o que estreita.
-  const file: (PreviewableFile & { created_at?: string | null }) | null =
-    doc.original_name && doc.download_url
-      ? {
-          original_name: doc.original_name,
-          size: doc.size ?? undefined,
-          download_url: doc.download_url,
-          created_at: doc.created_at,
-        }
-      : null
-
   const tipo = t(`documentType.${doc.type}`)
 
   return (
     <AppFileSlot
       title={<ProfileDocumentSlotHeader tipo={tipo} status={doc.status} validUntil={doc.valid_until} />}
-      file={file}
+      file={profileFile(doc)}
       onPreview={onPreview}
       onUpload={doc.self_service ? (e) => onUpload(doc.type, e) : undefined}
       uploadLabel={t('common.uploadNamed', { tipo })}

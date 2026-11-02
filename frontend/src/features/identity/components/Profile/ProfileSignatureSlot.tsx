@@ -9,6 +9,7 @@ import {
 } from '@shared/ui'
 import type { PreviewableFile } from '@shared/ui'
 import type { RedatorProfileDocumentData } from '@shared/types/generated'
+import { profileFile } from '../../lib/profileFile'
 
 export type ProfileSignatureSlotProps = {
   doc: RedatorProfileDocumentData
@@ -31,20 +32,10 @@ export function ProfileSignatureSlot({ doc, uploading, onUpload, onPreview }: Pr
   // A prévia só entra enquanto houver o que mostrar; a dica dos formatos fica sempre, pois há como enviar.
   const showing = cleaner.processing || cleaner.preview !== null || cleaner.error !== null
 
-  const file: (PreviewableFile & { created_at?: string | null }) | null =
-    doc.original_name && doc.download_url
-      ? {
-          original_name: doc.original_name,
-          size: doc.size ?? undefined,
-          download_url: doc.download_url,
-          created_at: doc.created_at,
-        }
-      : null
-
   return (
     <AppFileSlot
       title={t(`documentType.${doc.type}`)}
-      file={file}
+      file={profileFile(doc)}
       onPreview={onPreview}
       onUpload={doc.self_service ? cleaner.pick : undefined}
       uploadLabel={t('profile.documents.sendSignature')}
