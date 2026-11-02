@@ -589,7 +589,7 @@ class DashboardEndpointTest extends TestCase
 
     // ---------------------------------------------------------------- (7)
 
-    public function test_certificado_revogado_nao_devolve_a_matricula_para_a_emitir(): void
+    public function test_certificado_revogado_devolve_a_matricula_para_a_emitir(): void
     {
         $this->actingAsAdmin();
         $client = $this->makeCliente('Cliente Revogado');
@@ -600,10 +600,11 @@ class DashboardEndpointTest extends TestCase
 
         $response = $this->getJson(self::ENDPOINT)->assertOk();
 
-        // D6: a matrícula foi certificada uma vez; revogar não a devolve à fila
-        // de emissão. Reemitir é decisão humana, não consequência automática.
-        $response->assertJsonPath('kpis.certificados_a_emitir', 0);
-        $this->assertNotContains(
+        // Achado 0.3 e decisão do João (2026-11-02): a matrícula aprovada cujo
+        // único certificado foi revogado volta a ser pendência, como já é no
+        // painel de emissão.
+        $response->assertJsonPath('kpis.certificados_a_emitir', 1);
+        $this->assertContains(
             'enrollment_awaiting_certificate',
             array_column($response->json('pendencias'), 'type'),
         );
@@ -612,9 +613,11 @@ class DashboardEndpointTest extends TestCase
         // alerta: alertar sobre a validade de um documento já anulado é ruído.
         $this->assertSame([], $response->json('alertas'));
 
-        // A turma tampouco fica presa em "emissão pendente" no funil.
+        // O funil particiona `CertificationMetricsQuery::pendencias()`, então a
+        // turma passa a "emissão pendente" junto com a pendência. (As demais
+        // etapas do funil ainda têm critério próprio; alinhamento: bloco 54.)
         $this->assertSame(
-            ['concluded_pending_issuance' => 0, 'fully_issued' => 1],
+            ['concluded_pending_issuance' => 1, 'fully_issued' => 0],
             collect($response->json('pipeline'))
                 ->mapWithKeys(fn (array $row): array => [$row['stage'] => $row['count']])
                 ->only(['concluded_pending_issuance', 'fully_issued'])
