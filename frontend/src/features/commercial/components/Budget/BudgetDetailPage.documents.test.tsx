@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import type { FileData } from '@shared/types/generated'
 import { useUploadBudgetFile } from '../../api/useCommercialFiles'
@@ -66,7 +66,8 @@ describe('BudgetDocumentsCard — um slot fixo por tipo', () => {
       'budget.documentType.receipt',
     ])
     expect(screen.getAllByText('common.notLoaded')).toHaveLength(3)
-    expect(screen.queryByRole('button', { name: 'budget.uploadDocument' })).toBeNull()
+    // O botão que abria o diálogo de upload saiu: nenhum botão leva o nome simples de enviar.
+    expect(screen.queryByRole('button', { name: 'common.upload' })).toBeNull()
   })
 
   it('cada tag leva o ícone do tipo', () => {
@@ -131,6 +132,34 @@ describe('BudgetDocumentsCard — um slot fixo por tipo', () => {
     montar([arquivo(2, 'invoice')])
 
     expect(screen.getByRole('button', { name: 'common.deleteNamed:budget.documentType.invoice' })).toBeTruthy()
+  })
+
+  it('arquivo grande demais mostra o erro de tamanho, não um erro de remoção antigo', () => {
+    const { container } = montar([], 'No se pudo eliminar')
+    const grande = new File(['x'], 'enorme.pdf', { type: 'application/pdf' })
+    Object.defineProperty(grande, 'size', { value: 50 * 1024 * 1024 })
+
+    fireEvent.change(container.querySelectorAll('input[type="file"]')[1], { target: { files: [grande] } })
+
+    expect(screen.getByText('common.fileTooLarge')).toBeTruthy()
+    expect(screen.queryByText('No se pudo eliminar')).toBeNull()
+  })
+
+  it('remover um arquivo limpa o erro de tamanho que ficou na tela', () => {
+    const onRemove = vi.fn()
+    const { container } = renderWithProviders(
+      <BudgetDocumentsCard budgetId={7} files={[arquivo(2, 'invoice')]} onRemove={onRemove} fileError={null} />,
+    )
+    const grande = new File(['x'], 'enorme.pdf', { type: 'application/pdf' })
+    Object.defineProperty(grande, 'size', { value: 50 * 1024 * 1024 })
+    fireEvent.change(container.querySelectorAll('input[type="file"]')[0], { target: { files: [grande] } })
+    expect(screen.getByText('common.fileTooLarge')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'common.deleteNamed:budget.documentType.invoice' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'common.delete' }))
+
+    expect(onRemove).toHaveBeenCalledWith(2)
+    expect(screen.queryByText('common.fileTooLarge')).toBeNull()
   })
 
   it('arquivo grande demais mostra o erro de tamanho, não um erro de envio antigo', () => {

@@ -577,7 +577,6 @@
     "addQuote": "Adicionar cotação",
     "noQuotes": "Este orçamento ainda não tem cotações",
     "documents": "Documentos",
-    "noDocuments": "Sem documentos",
     "documentType": {
       "purchase_order": "Ordem de compra",
       "invoice": "Fatura",

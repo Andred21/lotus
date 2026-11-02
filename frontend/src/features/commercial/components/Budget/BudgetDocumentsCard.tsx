@@ -21,7 +21,9 @@ export function BudgetDocumentsCard({
   budgetId: number
   files: FileData[]
   onRemove: (fileId: number) => void
-  /** Erro de REMOÇÃO de anexo; o de envio e o de tamanho o cartão junta a ele. */
+  /** Erro de REMOÇÃO de anexo; o de envio e o de tamanho o cartão junta a ele. O
+   * local, mais novo, vem na frente: um erro de remoção antigo não cobre o
+   * tamanho recém-rejeitado. */
   fileError: string | null
 }) {
   const { t } = useTranslation()
@@ -51,18 +53,26 @@ export function BudgetDocumentsCard({
     setSizeError(message)
   }
 
+  // Remover é uma ação nova: o erro local que ficou (tamanho, envio) é de outra
+  // ação e sairia na frente do resultado desta, então zera antes de chamá-la.
+  const remove = (fileId: number) => {
+    upload.reset()
+    setSizeError(null)
+    onRemove(fileId)
+  }
+
   const others = files.filter((f) => budgetDocumentTag(f.type) === null)
 
   return (
     <AppCard>
       <AppCardHeader title={t('budget.documents')} count={files.length} />
       <div className="mx-4 mt-4 empty:m-0">
-        <FormErrorBanner message={fileError ?? uploadError ?? sizeError} />
+        <FormErrorBanner message={sizeError ?? uploadError ?? fileError} />
       </div>
       <div className="space-y-3 p-4">
         {BUDGET_DOCUMENT_TYPES.map((type) => {
           const tag = budgetDocumentTag(type)
-          const label = t(`budget.documentType.${type}`)
+          const label = t(tag.labelKey)
           const current = latestFile(files.filter((f) => f.type === type))
           return (
             <AppFileSlot
@@ -70,9 +80,9 @@ export function BudgetDocumentsCard({
               title={
                 <AppTag
                   value={label}
-                  severity={tag?.severity}
-                  tone={tag?.tone}
-                  icon={tag?.icon}
+                  severity={tag.severity}
+                  tone={tag.tone}
+                  icon={tag.icon}
                   className="text-sm px-3 py-1"
                 />
               }
@@ -84,7 +94,7 @@ export function BudgetDocumentsCard({
               removeLabel={t('common.deleteNamed', { tipo: label })}
               uploading={upload.isPending && upload.variables?.type === type}
               onSizeReject={rejectSize}
-              onRemove={current ? () => onRemove(current.id) : undefined}
+              onRemove={current ? () => remove(current.id) : undefined}
             />
           )
         })}
@@ -92,7 +102,7 @@ export function BudgetDocumentsCard({
       {others.length > 0 && (
         <div className="pb-2">
           <SectionLabel as="h3" rule={false} className="px-4">{t('budget.otherDocuments')}</SectionLabel>
-          <FileList files={others} onRemove={onRemove} showType />
+          <FileList files={others} onRemove={remove} />
         </div>
       )}
       <AppFilePreviewDialog file={preview.file} visible={preview.visible} onHide={preview.close} />
