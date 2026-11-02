@@ -2,10 +2,10 @@
 schema_version: 3
 id: 34
 slug: 34-infra-producao-observabilidade
-workflow_state: blocked
+workflow_state: closed
 next_owner: joao
-next_action: "resolve_blocker aguardando aceitação: item 7"
-resume_state: ready_for_closure
+next_action: none
+resume_state: null
 active_spec: docs/superpowers/blocos/34-infra-producao-observabilidade/spec.md
 active_plan: docs/superpowers/blocos/34-infra-producao-observabilidade/plano.md
 active_review: docs/superpowers/blocos/34-infra-producao-observabilidade/revisao.md
@@ -13,14 +13,14 @@ active_acceptance: docs/superpowers/blocos/34-infra-producao-observabilidade/ace
 context_packet: docs/superpowers/blocos/34-infra-producao-observabilidade/context.md
 efeito_externo: sim
 executor: claude
-branch: docs/34-infra-producao-observabilidade
+branch: chore/34-infra-producao-observabilidade
 worktree: ../lotus-34-infra-producao-observabilidade
-offset: 1
-lane_base: c5a04213
-commit: 0f0d9800
-blocker: "aguardando aceitação depois do merge: item 7 da ## Verificação externa"
-updated_at: 2026-10-05T21:43:56-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+offset: 3
+lane_base: d220a04f
+commit: 6cc4d581
+blocker: null
+updated_at: 2026-11-02T14:14:43-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 34 — estado
@@ -49,3 +49,9 @@ A lane de aceitação rodou a Fase B do runbook §14 (spec §5, passos 4 a 8), e
 mediram OK. O `conferir` saiu `ACEITACAO PENDENTE: 1 de 7 item(ns): 7`: o custo no Cost Explorer só
 se lê a partir de 2026-10-08. Por decisão do João, a lane publica o andamento e volta o bloco a
 `blocked`. A próxima lane de aceitação parte com os itens 1 a 6 preenchidos e só lê o custo.
+
+Reaberto em 2026-11-02 pelo lane.sh aceitar, na branch chore/34-infra-producao-observabilidade; a branch do bloco era docs/34-infra-producao-observabilidade.
+
+## Aceito (2026-11-02)
+
+O item 7, último pendente, foi lido pelo João no Cost Explorer: CloudWatch em US$ 0,00 em setembro e US$ 0,00014 em outubro, dentro do free tier. O `aceitacao.sh conferir` saiu `ACEITACAO OK: 7 item(ns)`, e a lane de aceitação (offset +3) fechou o bloco.

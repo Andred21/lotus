@@ -710,8 +710,10 @@ binário, que o kernel descarta sob pressão (audit do bloco 34, Task 6). Isso e
 resize, junto com o resto. O histórico de `mem_used_percent` e `swap_used_percent` em `Lotus/Host`
 substitui o `free -m` à mão como evidência do critério do runbook §12 (§14.5).
 
-O custo medido no Cost Explorer, ~3 dias depois da instalação em produção, entra aqui pela lane de
-aceitação do item 34.
+**Custo medido do CloudWatch (2026-11-02, item 34).** Cost Explorer pelo console, serviço CloudWatch,
+granularidade mensal, maio a outubro de 2026: setembro US$ 0,00 e outubro US$ 0,00014 (instalação em
+2026-10-05). O free tier da organização cobriu, como a hipótese de ≈ US$ 0 da D13 previa; fora dele
+seriam ≈ US$ 3–4/mês.
 
 ## P-81 — a access key que provisionou a produção continua ativa
 
