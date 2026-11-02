@@ -25,3 +25,11 @@ loop da SDD a registrar.
   Redactor ficaram sem medida no navegador**, por falta de dado no banco local; aceitos pelos testes
   de `AppDialog`, `RowActions` e `AppSignatureUpload`. Custo se errado: um desses critérios do DoD
   pode falhar só no navegador e aparecer na aceitação.
+- **Pedido do João depois da execução (2026-11-01) — espaço entre seções, título maior e respiro
+  interno, de forma sutil.** Li assim, tudo no `FormSection`/`SectionLabel` (as 16 telas
+  acompanham): `spaced` de `pt-2` para `pt-4` (24 → 32px entre seções); título de seção de
+  formulário de 12 para 13px (`formSectionTitleClass`, só no `tone="brand"`; as faixas de Dashboard,
+  Sidebar e cartões ficam nos 12px da D-63); `pb-1` sob o título (20px até o conteúdo). "Padding
+  interno" virou o respiro título → conteúdo, não um recuo lateral do conteúdo: o `FormSection` é
+  só o cabeçalho, e recuar exigiria embrulhar o conteúdo nas 16 telas. Custo se errado: recuo
+  lateral ainda por fazer, ou um degrau a mais/menos em três classes.

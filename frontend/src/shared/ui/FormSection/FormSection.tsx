@@ -2,7 +2,8 @@ import { SectionLabel } from '../SectionLabel'
 
 export interface FormSectionProps {
   title: string
-  /** Espaço acima, para seções que não são a primeira do diálogo. */
+  /** Espaço acima (1rem, somado ao `space-y-4` do pai), para seções que não
+   * são a primeira do diálogo. */
   spaced?: boolean
   /** Nível do cabeçalho. `h3` (default) é a seção DENTRO de diálogo, sob o `h1`
    * da página; `h2` é a seção que divide a própria página — o Perfil, cujas
@@ -31,11 +32,19 @@ export interface FormSectionProps {
  *
  * A grafia deixou de ser própria (`text-sm font-bold tracking-wide`) e passou a
  * ser a compartilhada do `SectionLabel`: o mesmo papel saía em 5 grafias pelo
- * produto (achado A2 do audit de 2026-08-26).
+ * produto (achado A2 do audit de 2026-08-26). Desde 2026-11-01 ela sobe um
+ * degrau, para 13px (`formSectionTitleClass`), só aqui.
  */
 export function FormSection({ title, spaced, as = 'h3' }: FormSectionProps) {
   // `h3` porque a seção vive DENTRO de um diálogo, sob o `h1` da página — o
   // nível é do CHAMADOR (`as`). A linha sai ligada (sem `rule={false}`): desde
   // a reversão da D1 ela acompanha o título até a borda.
-  return <SectionLabel as={as} tone="brand" className={spaced ? 'pt-2' : undefined}>{title}</SectionLabel>
+  // O `pb-1` separa o título do conteúdo que ele encabeça um pouco mais que o
+  // `space-y-4` entre campos; o `pt-4` do `spaced` separa as seções entre si
+  // (pedido do João em 2026-11-01, bloco 46: as seções coladas não se liam).
+  return (
+    <SectionLabel as={as} tone="brand" className={spaced ? 'pt-4 pb-1' : 'pb-1'}>
+      {title}
+    </SectionLabel>
+  )
 }

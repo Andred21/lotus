@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { sectionLabelClass } from '../typography'
+import { formSectionTitleClass, sectionLabelClass } from '../typography'
 
 export interface SectionLabelProps {
   children: ReactNode
@@ -54,7 +54,7 @@ export function SectionLabel({
   return (
     <div className={`flex items-center gap-3${className ? ` ${className}` : ''}`}>
       <Heading
-        className={sectionLabelClass}
+        className={brand ? formSectionTitleClass : sectionLabelClass}
         style={{ color: brand ? 'var(--primary-color)' : 'var(--text-color)' }}
       >
         {children}
