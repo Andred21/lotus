@@ -38,13 +38,32 @@ describe('SectionLabel', () => {
     expect(container.querySelector('span[aria-hidden="true"]')).toBeNull()
   })
 
-  /** Tinta do CORPO, não a secundária nem a de marca. A P-36 já foi reaberta
-   * três vezes pela via do "sem cor fica sem graça": a hierarquia vem do peso e
-   * da caixa alta, e o mecanismo é este teste. */
+  /** Tinta do CORPO é o DEFAULT, não a secundária. A P-36 travava o
+   * `SectionLabel` inteiro; desde a reversão da D1 (João, 2026-11-01) ela trava
+   * só este default — a marca é opt-in (`tone="brand"`), e quem a pede é o
+   * `FormSection`. As faixas de Dashboard, Sidebar e cartões seguem aqui. */
   it('pinta com a tinta de corpo', () => {
     render(<SectionLabel>Acción</SectionLabel>)
 
     expect(screen.getByRole('heading', { name: 'Acción' }).getAttribute('style'))
       .toContain('var(--text-color)')
+  })
+
+  it('tone body mantém a linha em --surface-border', () => {
+    const { container } = render(<SectionLabel tone="body">Acción</SectionLabel>)
+
+    expect(container.querySelector('span[aria-hidden="true"]')?.getAttribute('style'))
+      .toContain('var(--surface-border)')
+  })
+
+  /** A variante da reversão da D1/P-36 (João, 2026-11-01): título no celeste e
+   * linha no token `--section-rule`, que é o celeste com transparência. */
+  it('tone="brand" pinta o título de --primary-color e a linha de --section-rule', () => {
+    const { container } = render(<SectionLabel tone="brand">Acción</SectionLabel>)
+
+    expect(screen.getByRole('heading', { name: 'Acción' }).getAttribute('style'))
+      .toContain('var(--primary-color)')
+    expect(container.querySelector('span[aria-hidden="true"]')?.getAttribute('style'))
+      .toContain('var(--section-rule)')
   })
 })

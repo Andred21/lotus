@@ -119,12 +119,11 @@ export function RedatoresTable({
             collapsed={colunaDeAcoes.collapsed}
             // Reenviar convite é ação de acesso, e acesso arquivado não existe:
             // o `User` do redator desce com a cascata, então a ação só vale na
-            // lista ativa — e é lá que `leading` entra.
-            leading={[
+            // lista ativa — e é lá que `extra` entra.
+            extra={[
               {
                 label: t('redator.resendInvitation'),
                 icon: 'pi pi-envelope',
-                tooltip: true,
                 disabled: invitation.isPending,
                 onClick: () => reenviar(r.id!),
               },

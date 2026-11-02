@@ -109,6 +109,9 @@
   O `43` nasceu em 2026-10-28, aberto pelo João a partir do diálogo de matrícula da Operación, que
   empilhava os campos: a moldura dos diálogos e o tipo dos documentos do orçamento. Entrou pela PR
   da própria lane, com o mesmo desvio da invariante 10 e a mesma cópia provisória do `42`.
+  O `46` nasceu em 2026-11-01, aberto pelo João para um lote de até cinco ajustes de interface
+  ditados um a um. Entrou pela PR da própria lane, com o mesmo desvio da invariante 10 e a mesma
+  cópia provisória do `42`.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o

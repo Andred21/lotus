@@ -69,8 +69,8 @@ export function FormField({ label, error, readOnly, value, bind, children }: For
           aceita `ReactNode` justamente para isso. */}
       <label
         htmlFor={readOnly ? undefined : id}
-        className="mb-1 block text-sm"
-        style={{ color: 'var(--text-color-secondary)' }}
+        className="mb-1 block text-sm font-medium"
+        style={{ color: 'var(--text-color)' }}
       >
         {label}
       </label>

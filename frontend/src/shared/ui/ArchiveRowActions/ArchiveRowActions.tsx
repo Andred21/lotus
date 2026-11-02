@@ -4,7 +4,7 @@ import { RowActions, type RowAction } from '../RowActions'
 
 /**
  * As ações da linha de uma tabela que alterna entre ativos e arquivados:
- * restaurar de um lado, arquivar e ver do outro.
+ * restaurar de um lado, ver e arquivar do outro.
  *
  * Nasceu do Q-3 do review de 2026-08-19. Seis roots tinham o MESMO componente
  * copiado — 397 linhas ao todo —, diferindo em duas strings de permissão, no tipo
@@ -36,7 +36,7 @@ export function ArchiveRowActions({
   onArchive,
   onView,
   collapsed = false,
-  leading = [],
+  extra = [],
 }: {
   archived: boolean
   /** Mutation em voo: sem isto o clique duplo dispara dois POSTs (Q-2). */
@@ -50,44 +50,45 @@ export function ArchiveRowActions({
    * a uma tela de 404. Restaurar primeiro, abrir depois. */
   onView?: () => void
   collapsed?: boolean
-  /** Ações da feature que vêm ANTES de arquivar e ver, na mesma linha ou no
+  /** Ações próprias da feature, entre ver e arquivar, na mesma linha ou no
    * mesmo menu — o "Reenviar invitación" de Redactores. Só na lista ativa: na
    * de arquivados a linha só restaura. */
-  leading?: RowAction[]
+  extra?: RowAction[]
 }) {
   const { t } = useTranslation()
 
   if (archived) {
     if (!canRestore) return null
-    // O rótulo não cabe na coluna colapsada: fica o ícone, e o rótulo vira o
-    // nome acessível.
+    // Ação única: `RowActions` centraliza na célula e dá a dica (também com o
+    // botão apagado pelo `busy`). Colapsada o rótulo não cabe e vira só o
+    // nome acessível; fora do colapso o restaurar segue rotulado.
     return collapsed ? (
-      <AppButton
-        icon="pi pi-undo"
-        text
-        rounded
-        aria-label={t('archive.restoreAction')}
-        disabled={busy}
-        onClick={onRestore}
+      <RowActions
+        collapsed
+        actions={[{ label: t('archive.restoreAction'), icon: 'pi pi-undo', onClick: onRestore, disabled: busy }]}
       />
     ) : (
-      <AppButton
-        label={t('archive.restoreAction')}
-        icon="pi pi-undo"
-        text
-        size="small"
-        disabled={busy}
-        onClick={onRestore}
-      />
+      <div className="flex justify-center">
+        <AppButton
+          label={t('archive.restoreAction')}
+          icon="pi pi-undo"
+          text
+          size="small"
+          disabled={busy}
+          onClick={onRestore}
+        />
+      </div>
     )
   }
 
-  const actions: RowAction[] = [...leading]
-  if (canArchive && onArchive) {
-    actions.push({ label: t('archive.archiveAction'), icon: 'pi pi-inbox', onClick: onArchive, disabled: busy })
-  }
+  // Ver → próprias da feature → arquivar: a destrutiva por último.
+  const actions: RowAction[] = []
   if (onView) {
     actions.push({ label: t('common.view'), icon: 'pi pi-eye', onClick: onView })
+  }
+  actions.push(...extra)
+  if (canArchive && onArchive) {
+    actions.push({ label: t('archive.archiveAction'), icon: 'pi pi-inbox', onClick: onArchive, disabled: busy })
   }
 
   return <RowActions actions={actions} collapsed={collapsed} />

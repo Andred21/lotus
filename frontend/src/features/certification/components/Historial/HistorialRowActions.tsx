@@ -31,16 +31,15 @@ export function HistorialRowActions({
   const status = certificate.display_status
 
   const actions: RowAction[] = [
-    { label: t('certificate.view'), icon: 'pi pi-eye', tooltip: true, onClick: () => onView(certificate) },
+    { label: t('certificate.view'), icon: 'pi pi-eye', onClick: () => onView(certificate) },
   ]
   if (canRevoke && (status === 'vigente' || status === 'por_vencer')) {
-    actions.push({ label: t('certificate.revoke'), icon: 'pi pi-ban', tooltip: true, onClick: () => onRevoke(certificate) })
+    actions.push({ label: t('certificate.revoke'), icon: 'pi pi-ban', onClick: () => onRevoke(certificate) })
   }
   if (canReissue && status === 'revocado') {
     actions.push({
       label: t('certificate.reissue'),
       icon: 'pi pi-replay',
-      tooltip: true,
       onClick: () => onReissue(certificate),
     })
   }
