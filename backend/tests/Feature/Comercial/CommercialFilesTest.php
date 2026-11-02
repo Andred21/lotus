@@ -300,4 +300,21 @@ class CommercialFilesTest extends TestCase
         $this->assertTrue(File::withTrashed()->findOrFail($primeiro)->trashed());
         $this->assertSame([$segundo], $budget->files()->where('type', 'invoice')->pluck('id')->all());
     }
+
+    /** Mesmo mecanismo do orçamento (`Quote::booted`): o substituído não volta. */
+    public function test_arquivar_e_restaurar_a_cotacao_nao_ressuscita_o_substituido(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $quote = $this->quote($this->budget());
+
+        $primeiro = $this->sobe("/api/quotes/{$quote->id}/files", 'quote_document', 'a.pdf');
+        $segundo = $this->sobe("/api/quotes/{$quote->id}/files", 'quote_document', 'b.pdf');
+
+        $this->deleteJson("/api/quotes/{$quote->id}")->assertNoContent();
+        $this->postJson("/api/quotes/{$quote->id}/restore")->assertOk();
+
+        $this->assertTrue(File::withTrashed()->findOrFail($primeiro)->trashed());
+        $this->assertSame([$segundo], $quote->files()->where('type', 'quote_document')->pluck('id')->all());
+    }
 }
