@@ -160,7 +160,6 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 
 | Bloco | Itens pendentes | Desde |
 |---|---|---|
-| **34** `infra-producao-observabilidade` | 7 | 2026-10-05 |
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **42** `infra-producao-higiene-e-manutencao` | 6, 7, 8 | 2026-10-27 |
 
@@ -239,37 +238,6 @@ criação/edição de role customizada; nunca criar permissions arbitrárias pel
 **Candidato a hospedeiro da `D-34`** — é o único que sobrou, e escolher é do João.
 
 **DoD:** referência aprovada e produto convergem sem enfraquecer ADR-07.
-
----
-
-## 34. `infra-producao-observabilidade`
-
-**Prioridade:** P1 antes do go-live · **Frente:** Infra · **Contexto:** sim · **Depende:** 32
-**Fonte:** spec do item 10 v2 (mesmas linhas 53-58 — "CloudWatch agent, alarmes de app; bloco
-próprio"); Notion admin `10.1.8` (healthcheck + alerta de queda, CloudWatch básico); Drive ADR-14
-("healthcheck + alerta de queda `[FASE 2]`"); `deploy/bin/verificar-backup.sh` e o tópico SNS
-`lotus-alertas` (item 12); `docker-compose.prod.yml` (healthchecks de container, sem alerta fora do host).
-
-**Por que existe:** hoje o único alerta que sai do host é o de backup atrasado (SNS). Queda do `app`,
-disco cheio, 5xx sustentado, certificado a vencer — ninguém é avisado. A spec do item 10 v2 prometeu
-este bloco e ele nunca entrou na fila; o item 13 lista "alertas/health", mas é gate de medição, não o
-construtor.
-
-**Escopo:**
-- CloudWatch agent na EC2 (via `user-data.sh`, versionado): disco, memória, logs do nginx/app com
-  retenção decidida;
-- alarmes mínimos → SNS `lotus-alertas` já existente: instância/`/up` fora, disco acima do limiar, 5xx
-  sustentado, certificado a menos de N dias (ou a saída do `certbot renew --dry-run`);
-- destinatário do SNS real (e-mail do item 33 ou o mesmo canal do Budget);
-- custo dos alarmes dentro da conversa da `P-80`.
-
-**Fora:** APM, tracing, dashboards; auditoria de aplicação (já é `owen-it/laravel-auditing`).
-
-**Depende de:** item 32 (alarme de certificado só faz sentido com TLS); item 33 recomendado, não
-obrigatório (SNS entrega e-mail sem SES).
-
-**DoD:** cada alarme visto disparar por sonda (parar o `app`, encher o disco em laboratório, etc.) e
-chegar ao destinatário; `user-data.sh` recria a instância com o agente; medição em `audits/`.
 
 ---
 
@@ -382,6 +350,7 @@ ficam só como ponteiro, e a ficha delas é lá.
 > | 2026-09-26 | `D-59` | paga — o alternador Activos/Archivados de "Cotizaciones" subiu para o slot `actions` do `AppCardHeader` (`BudgetQuotesCard`) e a régua própria de 56px sumiu, medido nos três viewports (`180bfa1a`, teste em `a3439596`). A ficha seguiu aberta aqui até o Q-2 do review | fatia 3 do item 16 |
 > | 2026-09-26 | — (herança da Task 12 da fatia 1, nunca escrita) | **morta antes de nascer** — a recusa em espanhol fixo de `Turma.php:200` já virou `__('operation.turma.concluded_locked')` nos três locales; reconfirmado em `Turma.php:201` nesta leitura. Paga em 2026-08-30, junto com `D-07`/`D-18`/`D-36`/`D-38`/`D-58`, antes de a ficha ganhar nome | item 7 (reconfirmado pela Task 10 da fatia 3 do item 16) |
 > | 2026-09-28 | `D-65` | paga — em 1024 a coluna presa não cobre mais nada nas 18 visões com presa, sobre o piso default de 42rem; abaixo de `sm` o `narrowFloorTablePt` medido por visão tira a 1ª coluna de baixo da presa, e o `RowActions` colapsa as ações num `⋮` único, sob a catraca `ACAO_SEM_COLAPSO`. Cursos e Usuarios arquivados ficam como exceção provada, e o diálogo do Alumno, que rola 3px em 1024, virou a `P-94` (`audits/2026-09-27-item23-medicoes.md`) | item 23 |
+> | 2026-11-02 | `D-74` | paga — `mask_bindings_in_exception_messages` nas conexões de `config/database.php`, provado por `backend/tests/Feature/Shared/BindingsForaDaMensagemTest.php` (`d5878d61`) | item 34 |
 >
 > **O que aqueles fechamentos deixaram aberto, e que não é débito:** cinco recusas literais fora de
 > `lang/` viraram a **P-71** e o 419 virou a **P-72** — as duas fechadas depois pelo item 26; a
@@ -437,17 +406,6 @@ ficam só como ponteiro, e a ficha delas é lá.
   conteúdo) e deixá-la quebrar ou truncar. **Quem decide o hospedeiro é o João.** **DoD:**
   `scrollWidth == clientWidth` no invólucro dos dois painéis em 1024x768 e 390x844, medido no
   navegador. Origem: Q-3 do review do item 23 (`frontend-tabelas-reserva-e-rolagem`).
-
-- **D-74 · A `QueryException` leva a SQL com os bindings ao log default, e com o banco fora qualquer
-  `report()` grava e-mail, RUT ou nome** → **sem bloco hospedeiro.** A mensagem da exceção traz a
-  SQL com os valores já interpolados (`Str::replaceArray`), em qualquer rota. É anterior ao SES e
-  vale para o app inteiro: o item 33 fechou o mesmo vazamento para o destinatário de e-mail (D15,
-  `report` de `TransportExceptionInterface` no `bootstrap/app.php`) e deixou esta fatia de fora
-  (spec do item 33, §1.3 e §8). O Laravel 13.34 lê `mask_bindings_in_exception_messages` na
-  conexão; ligar custa os valores no diagnóstico de erro de SQL, e **a decisão é do João**.
-  Gatilho: o próximo bloco que tocar a observabilidade ou `config/database.php`. O débito do
-  `report($e)` proposto em 2026-10-01 não nasceu: a D15 o pagou neste bloco. Origem: brainstorming
-  de 2026-10-04 do item 33 (`infra-producao-email-ses`).
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**

@@ -2,9 +2,9 @@
 schema_version: 3
 id: 34
 slug: 34-infra-producao-observabilidade
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item aceitacao externa
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/34-infra-producao-observabilidade/spec.md
 active_plan: docs/superpowers/blocos/34-infra-producao-observabilidade/plano.md
@@ -17,9 +17,9 @@ branch: chore/34-infra-producao-observabilidade
 worktree: ../lotus-34-infra-producao-observabilidade
 offset: 3
 lane_base: d220a04f
-commit: d220a04f
+commit: 6cc4d581
 blocker: null
-updated_at: 2026-11-02T14:13:17-03:00
+updated_at: 2026-11-02T14:14:43-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
@@ -51,3 +51,7 @@ se lê a partir de 2026-10-08. Por decisão do João, a lane publica o andamento
 `blocked`. A próxima lane de aceitação parte com os itens 1 a 6 preenchidos e só lê o custo.
 
 Reaberto em 2026-11-02 pelo lane.sh aceitar, na branch chore/34-infra-producao-observabilidade; a branch do bloco era docs/34-infra-producao-observabilidade.
+
+## Aceito (2026-11-02)
+
+O item 7, último pendente, foi lido pelo João no Cost Explorer: CloudWatch em US$ 0,00 em setembro e US$ 0,00014 em outubro, dentro do free tier. O `aceitacao.sh conferir` saiu `ACEITACAO OK: 7 item(ns)`, e a lane de aceitação (offset +3) fechou o bloco.
