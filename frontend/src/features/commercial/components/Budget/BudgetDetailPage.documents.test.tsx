@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, screen, within } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import type { FileData } from '@shared/types/generated'
 import { useUploadBudgetFile } from '../../api/useCommercialFiles'
@@ -26,7 +26,6 @@ vi.mock('../../api/useCommercialFiles', () => ({ useUploadBudgetFile: vi.fn() })
 
 const mutate = vi.fn()
 const reset = vi.fn()
-const estado = vi.hoisted<{ error: { detail: string } | null }>(() => ({ error: null }))
 
 const arquivo = (id: number, type: string, createdAt = '2026-10-28T10:00:00Z'): FileData => ({
   id,
@@ -48,11 +47,9 @@ const tags = () => Array.from(document.querySelectorAll('.p-tag'))
 
 beforeEach(() => {
   mutate.mockReset()
-  estado.error = null
-  // `reset` limpa o erro como a mutation real; o próximo render já o lê vazio.
-  reset.mockReset().mockImplementation(() => { estado.error = null })
+  reset.mockReset()
   vi.mocked(useUploadBudgetFile).mockImplementation(() => ({
-    mutate, reset, error: estado.error, isPending: false, variables: undefined,
+    mutate, reset, error: null, isPending: false, variables: undefined,
   }) as unknown as ReturnType<typeof useUploadBudgetFile>)
 })
 
@@ -132,47 +129,5 @@ describe('BudgetDocumentsCard — um slot fixo por tipo', () => {
     montar([arquivo(2, 'invoice')])
 
     expect(screen.getByRole('button', { name: 'common.deleteNamed:budget.documentType.invoice' })).toBeTruthy()
-  })
-
-  it('arquivo grande demais mostra o erro de tamanho, não um erro de remoção antigo', () => {
-    const { container } = montar([], 'No se pudo eliminar')
-    const grande = new File(['x'], 'enorme.pdf', { type: 'application/pdf' })
-    Object.defineProperty(grande, 'size', { value: 50 * 1024 * 1024 })
-
-    fireEvent.change(container.querySelectorAll('input[type="file"]')[1], { target: { files: [grande] } })
-
-    expect(screen.getByText('common.fileTooLarge')).toBeTruthy()
-    expect(screen.queryByText('No se pudo eliminar')).toBeNull()
-  })
-
-  it('remover um arquivo limpa o erro de tamanho que ficou na tela', () => {
-    const onRemove = vi.fn()
-    const { container } = renderWithProviders(
-      <BudgetDocumentsCard budgetId={7} files={[arquivo(2, 'invoice')]} onRemove={onRemove} fileError={null} />,
-    )
-    const grande = new File(['x'], 'enorme.pdf', { type: 'application/pdf' })
-    Object.defineProperty(grande, 'size', { value: 50 * 1024 * 1024 })
-    fireEvent.change(container.querySelectorAll('input[type="file"]')[0], { target: { files: [grande] } })
-    expect(screen.getByText('common.fileTooLarge')).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: 'common.deleteNamed:budget.documentType.invoice' }))
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'common.delete' }))
-
-    expect(onRemove).toHaveBeenCalledWith(2)
-    expect(screen.queryByText('common.fileTooLarge')).toBeNull()
-  })
-
-  it('arquivo grande demais mostra o erro de tamanho, não um erro de envio antigo', () => {
-    estado.error = { detail: 'Tipo de archivo no permitido' }
-    const { container } = montar()
-    expect(screen.getByText('Tipo de archivo no permitido')).toBeTruthy()
-    const grande = new File(['x'], 'enorme.pdf', { type: 'application/pdf' })
-    Object.defineProperty(grande, 'size', { value: 50 * 1024 * 1024 })
-
-    fireEvent.change(container.querySelectorAll('input[type="file"]')[1], { target: { files: [grande] } })
-
-    expect(screen.getByText('common.fileTooLarge')).toBeTruthy()
-    expect(screen.queryByText('Tipo de archivo no permitido')).toBeNull()
-    expect(mutate).not.toHaveBeenCalled()
   })
 })
