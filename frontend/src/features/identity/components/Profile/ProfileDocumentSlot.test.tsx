@@ -124,4 +124,15 @@ describe('ProfileDocumentSlot', () => {
 
     expect(screen.queryByText(/profile\.documents\.noValidity/)).toBeNull()
   })
+
+  it('a raiz do cabecalho ocupa a linha do slot, para tipo e status ficarem nas pontas', () => {
+    // O `AppFileSlot` embrulha o titulo-no num flex; sem `flex-1` a raiz encolhe
+    // ao conteudo e o `justify-between` interno nao tem folga. jsdom nao mede
+    // layout: a classe e a trava.
+    montar()
+
+    const raiz = screen.getByText('documentType.CV').parentElement as HTMLElement
+    expect(raiz.className).toContain('flex-1')
+    expect(raiz.className).toContain('min-w-0')
+  })
 })
