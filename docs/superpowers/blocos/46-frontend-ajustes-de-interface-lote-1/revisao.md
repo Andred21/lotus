@@ -2,6 +2,21 @@
 
 ## Em aberto
 
+## Rodada 2 — `b9e1e45f..69e8e5a7` — 2026-11-01 · Lente 1: opus
+
+Rodada depois da correção do `tooltip: true`: o merge da `origin/main` (`067fb607`) trouxe a
+`ImportTriageTable` do bloco 44 com o opt-in que este bloco tirou do `RowAction`, e o `69e8e5a7`
+o removeu. Baixo risco (frontend visual, `executor: claude`, nenhuma lei §5), sem lente Codex. A
+lente 1 rodou os gates no HEAD: `pnpm build` verde, `pnpm lint` limpo, `pnpm test` 1569/1569.
+Conferiu a ordem editar → remover da triagem (sem "ver"; destrutiva por último), a ausência de
+`tooltip: true|false` em `frontend/src`, os consumidores vindos da main (`ImportDialog` em
+`AppDialog size="lg"`, `ImportRowEditor` com `FormField`; nenhum `FormSection`/`SectionLabel`) e o
+merge do `brand-theme.css` sem sobreposição. Observações sem achado: a triagem não foi medida no
+navegador (registrado em `rulings.md`); a linha de gate da `prova.md` cita os 1440 testes do
+`756b00fe` e ganha os números do HEAD novo na verificação fresca do `/finalizar-bloco`.
+
+Lente 2: não despachada — nenhum achado nesta rodada.
+
 ## Rodada 1 — `5fba081d..756b00fe` — 2026-11-01 · Lente 1: opus · Lente 2: sonnet
 
 Classificação: baixo risco (frontend visual e ordenação client-side; nenhuma lei §5 tocada,
