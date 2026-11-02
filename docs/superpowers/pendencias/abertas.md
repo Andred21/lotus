@@ -1289,3 +1289,19 @@ paginador. Revisar em **2026-11-07**.
 O `lotus-ui-review` do item 43 viu o paginador expor "Previous Page", "Next Page" e "Page N" a
 leitor de tela num produto es-CL. É o `aria-label` padrão do PrimeReact, que o `locale` do Lotus não
 sobrescreve. Anterior ao bloco.
+
+## P-110 — a rule de estilização não conhece o título de seção de formulário em 13px e na marca
+
+**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar `.claude/rules/frontend-estilizacao.md`,
+`shared/ui/typography.ts` ou o `FormSection`/`SectionLabel`. Revisar em **2026-11-15**.
+
+A revisão do item 46 (Q-2, `CONFIRMED`) mediu que a tabela de tipografia da rule
+(`.claude/rules/frontend-estilizacao.md:37`) e o parágrafo do D-63 (`:74-78`) ainda descrevem uma
+faixa de seção só, a `sectionLabelClass` em 12px na tinta de corpo. O item 46 criou a
+`formSectionTitleClass` (`frontend/src/shared/ui/typography.ts:35`, 13px em `--primary-color`),
+que o `FormSection` usa via `SectionLabel tone="brand"`: a decisão do João de 2026-11-01 (reversão
+da D1/P-36) está só no `rulings.md` do bloco e em docblocks. Um audit guiado pela rule veria dois
+tamanhos de faixa e o celeste num título, e reabriria a divergência que o audit de 2026-08-26 fechou.
+O código não viola a rule: ela ficou atrás dele. Fecha com uma linha na tabela (o título de seção
+de formulário, 13px, na marca, a mesma voz da faixa um degrau acima) e o valor da constante nova
+congelado no `typography.test.ts`, como as outras.

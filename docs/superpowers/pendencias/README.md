@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (42)
+## Abertas (43)
 
 ### Agrupadas em bloco de execução
 
@@ -43,6 +43,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-107 | O 422 de upload diz "El campo file…": o backend não traduz o atributo `file` | — | bloco que tocar a validação de upload ou os atributos do `lang/`; revisar 2026-11-07 |
 | P-108 | Em 1024, o RUT do cliente passa por baixo do "Agregar cotización" no cabeçalho do detalhe do orçamento | — | bloco que tocar esse cabeçalho; revisar 2026-11-07 |
 | P-109 | O paginador das tabelas expõe "Previous Page"/"Next Page" em inglês a leitor de tela | — | bloco que tocar o `AppDataTable` ou o `pt` do paginador; revisar 2026-11-07 |
+| P-110 | A rule `frontend-estilizacao.md` ainda descreve uma faixa de seção só (12px, tinta de corpo); o título de seção de formulário do item 46 (`formSectionTitleClass`, 13px, na marca) ficou só no `rulings.md` e em docblocks | — | bloco que tocar a rule, o `typography.ts` ou o `FormSection`/`SectionLabel`; revisar 2026-11-15 |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
