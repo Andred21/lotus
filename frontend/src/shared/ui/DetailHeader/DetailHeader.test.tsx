@@ -128,6 +128,22 @@ describe('alinhamento do bloco da direita', () => {
     expect(embrulho?.className).toContain('sm:contents')
     expect(embrulho?.parentElement?.className).toContain('sm:items-baseline')
   })
+
+  /**
+   * P-108: em 1024 o `BudgetDetailPage` espremia o bloco do título a 165px, e o
+   * RUT do subtítulo (`whitespace-nowrap`) vazava para baixo do "Agregar
+   * cotización". O bloco não encolhe abaixo do conteúdo mínimo, e a linha quebra
+   * em vez de sobrepor. jsdom não faz layout: a prova de pixel está em `prova.md`.
+   */
+  it('o titulo nao encolhe abaixo do conteudo minimo, e a linha quebra', () => {
+    const { container } = render(
+      <DetailHeader title="Presupuesto 12" subtitle="RUT 76.123.456-0" actions={<button>Editar</button>} />,
+    )
+    const bloco = container.querySelector('h1')?.parentElement
+
+    expect(bloco?.className).toContain('sm:min-w-min')
+    expect(bloco?.parentElement?.className).toContain('sm:flex-wrap')
+  })
 })
 
 /**

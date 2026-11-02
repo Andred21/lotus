@@ -65,7 +65,7 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
         * quando tem o que mostrar. */}
       {titleHidden && <h1 className="sr-only">{title}</h1>}
       {(!titleHidden || subtitle || tags || actions) && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-baseline sm:gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-2">
           {/* `items-baseline`, e não `items-start`: o `h1` logo abaixo carrega
             * `mb-4` — e, desde a E2, nenhuma margem superior. Alinhar pelo TOPO
             * do bloco punha as tags acima do centro do título que elas
@@ -93,8 +93,16 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
             * O embrulho existe só abaixo do `sm`, onde a linha é coluna e os
             * dois slots ainda dividem uma faixa: `sm:contents` o dissolve, e os
             * filhos viram itens diretos da linha exatamente onde o alinhamento
-            * passa a importar. */}
-          <div className="min-w-0 sm:flex-1">
+            * passa a importar.
+            *
+            * P-108: o `sm:flex-1` zera a base, e com o `min-w-0` o bloco do
+            * título encolhia até 165px em 1024 no `BudgetDetailPage` (tag e três
+            * ações `shrink-0`), com o RUT `whitespace-nowrap` do subtítulo vazando
+            * para baixo do "Agregar cotización". `sm:min-w-min` para o encolhimento
+            * no conteúdo mínimo, e o `sm:flex-wrap` da linha leva tag e ações para
+            * a linha de baixo quando nem isso cabe. Abaixo do `sm` a linha é
+            * coluna e o `min-w-0` segue valendo. */}
+          <div className="min-w-0 sm:min-w-min sm:flex-1">
             {/* Mesma grafia e mesma margem do `PageHeader`: título de página é
               * um papel só, e sair em duas vozes fazia a tela mudar de voz ao
               * navegar para o detalhe (achado A1). A margem de cima some com a
