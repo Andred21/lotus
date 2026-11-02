@@ -144,7 +144,22 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 2 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming, e é o único candidato que sobrou para a `D-34`. A colisão com o 16 saiu com ele — ver a nota abaixo |
+| 1 | **48** `certificacao-estado-de-emissao` | Backend | Certificado tem peso legal: a corrida da P-103 e a pendência que some do Dashboard (achado 0.3) |
+| 1 | **49** `frontend-acessibilidade-e-respiro` | Frontend | Não disputa árvore com o backend e corre em paralelo com o 48 |
+| 2 | **50** `backend-ciclo-de-vida-da-cotacao` | Backend | Recusar cotação com turma em andamento hoje passa (achado 0.2) |
+| 3 | **51** `backend-contrato-de-entrada-dos-data` | Backend | Depende do 50 (`Budget`) |
+| 4 | **52** `backend-arquivo-recepcao-e-upload` | Backend | Recomendação principal do review; a P-107 tem revisão em 2026-11-07 |
+| 5 | **53** `backend-importacao-e-identidade-do-aluno` | Backend | Depende do 52 (Identity) |
+| 6 | **54** `dashboard-agenda-e-pendencias` | Dashboard | Depende do 48 |
+| 7 | **55** `backend-borda-http-auth-e-permissao` | Backend | Sem urgência funcional; a P-91 é a única que se vê de fora |
+| — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
+| — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
+| 8 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
+| 9 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
+
+**Emendada em 2026-11-02, por decisão do João:** os itens 48 a 58 entram na frente do 9. Os
+números iguais na primeira coluna (o 48 e o 49) correm em paralelo, e o `—` corre em frente
+própria, sem disputar árvore.
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
 Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
@@ -186,7 +201,8 @@ redesenhar, a tela nova pede run própria aqui; se mantiver, aquele relatório v
 **Escopo:** lista de roles + detalhe + matriz de permissões; permissões essenciais protegidas;
 criação/edição de role customizada; nunca criar permissions arbitrárias pela UI.
 
-**Candidato a hospedeiro da `D-34`** — é o único que sobrou, e escolher é do João.
+**A `D-34` e a `D-71` saíram daqui em 2026-11-02**, por decisão do João, para o item 54 e o item
+49. Se este bloco redesenhar o diálogo de Roles depois do 49, os rótulos `perm.*` já chegam limpos.
 
 **DoD:** referência aprovada e produto convergem sem enfraquecer ADR-07.
 
@@ -222,6 +238,262 @@ está formalmente resolvida.
 
 ---
 
+> **Os itens 48 a 58 nasceram em 2026-11-02**, abertos pelo João para juntar em blocos as pendências
+> e os débitos que nenhum bloco hospedava com os achados da revisão de arquitetura do backend
+> daquele dia (`audits/2026-11-02-arquitetura-backend.html`, contra `main@d220a04f`). "Card N" e
+> "achado 0.N" abaixo são as seções daquele relatório. Decisões do João na mesma conversa, que as
+> fichas carregam: recusar cotação com turma em andamento é proibido (50); a matrícula revogada e
+> reemissível é pendência no Dashboard (48); a `D-34` e a `D-71` saem do item 9 para o 54 e o 49; a
+> P-51 vai inteira para o 51, e a marca de coleção só de entrada vai para o 53. **Não decidido:**
+> registrar "não adotar FormRequest nem Policy" em ADR — o João vai estudar o caso (55).
+
+## 48. `certificacao-estado-de-emissao`
+
+**Prioridade:** P1 · **Frente:** Backend (Certification) · **Contexto:** não · **Depende:** —
+**Fonte:** card 4 e achado 0.3 do review de 2026-11-02; `P-103`, `P-104`.
+
+Certificado tem peso legal, por isso vai primeiro.
+
+**Escopo:**
+- **Card 4.** Um módulo de Certification nomeia os estados de emissão da matrícula (vigente,
+  revogado-reemissível, nunca emitido). Ele é consumido em SQL e em PHP, com teste de paridade no
+  molde da ADR-22. Hoje há duas "fontes únicas" (`CertificateVigenciaResolver::vigentes()` e
+  `Certificate::scopeEmitidos`) e cópias cruas de `where status = Emitido`
+  (`CertificationMetricsQuery.php:59,87-96`, `AnalyticsQuery.php:183`, `PipelineQuery.php:103`).
+- **Achado 0.3, decidido pelo João: a matrícula revogada e reemissível É pendência no Dashboard.**
+  `CertificationMetricsQuery.php:94` exclui qualquer certificado, revogado incluído, e o painel de
+  emissão reabre o revogado. O teste `…_nao_reabre_revogado`, que fixa o comportamento divergente,
+  inverte.
+- **P-103.** A porta 2 e o snapshot passam para dentro da transação da emissão, e a matrícula é relida
+  com `lockForUpdate`. A prova da corrida exige MySQL, porque no sqlite o lock é no-op.
+- **P-104.** O texto de `operation.conclusion.confirmBody` e de `operation.detail.lock.concluida`,
+  nos três locales, diz o que de fato é irreversível. O João decide o texto no brainstorming.
+
+**Fora:** consumir o estado novo nas outras queries do Dashboard (série, pipeline). Isso fica com o
+54, que depende deste. Este bloco corrige só a contagem de pendências do 0.3.
+
+**DoD:** os consumidores de Certification perguntam ao módulo novo, e a paridade SQL × domínio está
+verde. A matrícula revogada e reemissível aparece no painel e nas pendências do Dashboard. A
+P-103 está fechada com prova em MySQL, e a P-104 com o texto aprovado.
+
+---
+
+## 49. `frontend-acessibilidade-e-respiro`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
+**Fonte:** `P-74`, `P-101`, `P-105`, `P-108`, `P-109`, `D-71`.
+
+**Escopo:**
+- **Contraste:** a **P-74** (botão de severidade no claro, quatro famílias abaixo de 4,5:1) e a
+  **P-105** (tinta `danger` do escuro sobre o fundo de 15%). As duas se medem no mesmo
+  `frontend/tests/tone-ink.test.ts`. A P-74 estava travada em decisão do João: a régua por estado e o
+  ajuste de tom se decidem no brainstorming deste bloco.
+- **Leitor de tela e i18n:** a **P-109** (o paginador diz "Previous Page"/"Next Page") e a **D-71**
+  (os 9 rótulos `perm.*` com jargão interno, nos três locales). A D-71 saiu do item 9 por decisão do
+  João em 2026-11-02.
+- **Respiro de layout:** a **P-108** (o RUT do cliente fica sob o "Agregar cotización" em 1024) e a
+  **P-101** (o RUT quebra no hífen a 390 px, em `EnrollmentTable` e `ArchivedEnrollmentsList`).
+
+**DoD:** o `tone-ink.test.ts` cobre as cinco severidades nos estados medidos e nos dois temas, sem
+par pulado. Nenhum rótulo `perm.*` casa `/Flujo|Fluxo|Flow|RN-\d|soft delete/` nos três locales. O
+paginador está em es-CL. O RUT não passa por baixo do botão em 1024 nem quebra a 390, medido no
+navegador.
+
+---
+
+## 50. `backend-ciclo-de-vida-da-cotacao`
+
+**Prioridade:** P1 · **Frente:** Backend (Commercial) · **Contexto:** não · **Depende:** —
+**Fonte:** card 5 e achados 0.2 e 0.5 do review de 2026-11-02; `P-49`.
+
+**Escopo:**
+- **Card 5.** As transições da cotação (aprovar, recusar, reabrir, arquivar) ganham um módulo dono,
+  que toma o lock da Quote, confere o estado de origem permitido e sabe se há turma. Hoje
+  `ApproveQuoteAction` e `RejectQuoteAction` fazem um `update` cru, sem guarda, sem transação e sem
+  lock, enquanto `CreateTurmaAction`/`RestoreTurmaAction` travam a mesma Quote.
+- **Achado 0.2, decidido pelo João:** é **proibido recusar uma cotação com turma já em andamento**.
+  As demais informações da cotação **continuam editáveis**, menos o status e o curso. O brainstorming
+  confirma a fronteira exata: "em andamento" pelo `display_status` da turma, ou qualquer turma viva.
+- **P-49, o eixo que resta (cotação × orçamento).** `RestoreQuoteAction` e `DeleteBudgetAction`
+  passam a travar os dois lados. Com isso a P-49 fecha inteira.
+- **Achado 0.5.** Os docblocks de `ArchiveRedatorAction:18-23` e `Turma.php:76-79` passam a dizer
+  que os escritores de filho tomam o lock do pai, como de fato tomam desde 2026-08-23
+  (`ParentLockOnChildWriteTest`).
+
+**DoD:** uma tabela de teste origem × verbo × turma prova cada transição. Recusar com turma em
+andamento dá 422, editar campo livre passa, e editar status ou curso recusa. A P-49 está fechada.
+
+---
+
+## 51. `backend-contrato-de-entrada-dos-data`
+
+**Prioridade:** P2 · **Frente:** Backend (transversal) · **Contexto:** não · **Depende:** 50
+**Fonte:** achados 0.1 e 0.4 e a seção "FormRequest" do review de 2026-11-02; `P-51`.
+
+Depende do 50 porque os dois mexem no `Budget` (`BudgetController`, as Actions do orçamento).
+
+**Escopo:**
+- **P-51 inteira, os cinco campos que restam:** `ClientData::$type`, `CourseData::$workload_hours`,
+  `BudgetController::update` (`payment_terms`) e `CourseTemplateController::update`
+  (`layout_config`, `validity_months`). Mais uma catraca que reprova default literal em propriedade
+  de DTO de entrada, porque a varredura pelo ternário era cega a este defeito.
+- **Achado 0.1**, que é o campo 4 da P-51: a escrita sai do `BudgetController` para uma
+  `UpdateBudgetAction`.
+- **Achado 0.4.** `TurmaData::$redatores` ganha `#[DataCollectionOf]` e `#[ReadOnlyCollection]` e
+  volta ao alcance do `PersistenceLawsTest`.
+- **Renomear os Data de query string**, `*PageRequest` e `EmissionPanelRequest`, para `*Query`.
+  O `PageRequest` ganha `#[TypeScript]`, e o `PageQuery` escrito à mão em `shared/api/page.ts:20`
+  morre.
+
+Regenera o `generated.ts` (lei §5.3).
+
+**DoD:** omitir cada um dos cinco campos num PUT preserva o valor, provado contra a API. A catraca nova
+foi vista reprovar por sonda. Nenhum `Request` sobra no nome de Data de query, e o front compila sem
+tipo de paginação escrito à mão.
+
+---
+
+## 52. `backend-arquivo-recepcao-e-upload`
+
+**Prioridade:** P1 · **Frente:** Backend (Shared/Files + 4 domínios) · **Contexto:** não · **Depende:** —
+**Fonte:** cards 1 e 2 (a recomendação principal) e card 9 do review de 2026-11-02; `P-107`, `P-76`.
+
+**Escopo:**
+- **Card 1.** Uma classe Data de entrada para cada forma de upload (foto, documento tipado, anexo
+  tipado). A escolha "tipo → regra do arquivo e validade" passa para o enum do domínio. Os 17
+  `$request->validate()` dos 13 controllers somem, e também a cópia `RedatorDocument`/
+  `ProfileDocument` e o parser multipart de 45 linhas do `RedatorController`.
+- **Card 2.** `UploadFileAction` vira um módulo de uma entrada só, dono da ordem storage ↔ transação e
+  da compensação. Os seis callers perdem o try/catch.
+- **P-107.** O atributo `file` é traduzido. Com o card 1, isso acontece num lugar só.
+- **P-76.** A catraca de idioma ganha a porta do `$fail` de `ValidationRule` e a da resposta de
+  sucesso, e as seis frases vão para o `lang/` nos três locales.
+- **Card 9** (projeção de `File`) **só entra se** o brainstorming medir que o front já trata os dois
+  formatos de `created_at`. Senão fica fora.
+
+**DoD:** nenhum `validate()` de arquivo em controller. Um teste com disco fake prova que, quando o
+register falha, o arquivo é descartado. O 422 de upload diz o nome do campo em es-CL. A P-76 e a
+P-107 estão fechadas, e a catraca foi vista reprovar.
+
+---
+
+## 53. `backend-importacao-e-identidade-do-aluno`
+
+**Prioridade:** P2 · **Frente:** Backend (Operation, Identity) · **Contexto:** não · **Depende:** 52
+**Fonte:** cards 3 e 7 e a seção "FormRequest" (ação barata 2) do review de 2026-11-02.
+
+Depende do 52 porque os dois mexem em Identity (`RedatorController`, `UpdateRedatorAction`).
+
+**Escopo:**
+- **Card 3.** A classificação da linha (criar, atualizar, matricular, recusar com motivo) fica num
+  módulo só: a prévia reporta a decisão e a confirmação a executa. Um teste de paridade prova que o que
+  a prévia mostrou é o que a confirmação fez. Hoje as duas já divergem na reserva de e-mail da linha
+  "Actualizar".
+- **Card 7.** Um Data de identidade do aluno, usado na matrícula, na prévia e na importação. O
+  `UserProvisioner` ganha uma contraparte de update à altura do `provision()`, e os quatro `Update*`
+  deixam de lembrar os três passos.
+- **A marca de "coleção só de entrada"** no `PersistenceLawsTest`, espelho da
+  `#[ReadOnlyCollection]`. O `ImportConfirmData::$rows` deixa de ser `Optional`, e os dois
+  `Validator::make` de domínio (`ImportStudentsAction:65`, `StudentResolver:150`) somem.
+
+**DoD:** o teste de paridade entre prévia e confirmação está verde, e não há `Validator::make` em
+`app/Domains/*/Actions` nem em `Services`. A marca nova foi vista reprovar por sonda.
+
+---
+
+## 54. `dashboard-agenda-e-pendencias`
+
+**Prioridade:** P2 · **Frente:** Dashboard (backend e frontend) · **Contexto:** não · **Depende:** 48
+**Fonte:** card 8 do review de 2026-11-02; `D-72`, `D-73`, `D-34`, `P-85`, `P-102`.
+
+Depende do 48: as três queries do Dashboard passam a consumir o estado de emissão que ele cria.
+
+**Escopo:**
+- **Card 8 e D-72.** Um classificador (turma, hoje, horizonte) devolve os baldes da agenda. O KPI
+  "Próximas clases" conta o resultado dele, e o Dashboard reusa o `whereDisplayStatus` em vez de
+  filtrar "habilitada" em PHP.
+- **P-102.** O `CompliancePanel` diz o que falta (redator, `local_aplicacao`), e
+  `OperationMetricsQuery::pendencias()` passa a sinalizar o presencial sem local.
+- **P-85.** Os três filtros de `start_date` do `AnalyticsQuery` passam por `DataSql::literal`, com
+  teste da borda do último dia.
+- **D-73.** Os dois painéis de tabela do Dashboard deixam de transbordar por conteúdo de célula.
+- **D-34**, que saiu do item 9 por decisão do João em 2026-11-02: a visibilidade RBAC vira campo
+  explícito do payload, e o front para de farejar nulo. Regenera o `generated.ts`.
+- As outras queries de certificado do Dashboard (série, pipeline) consomem o estado de emissão do 48.
+
+**DoD:** a turma que começa em 10 dias aparece no KPI e numa janela da agenda, ou em nenhum dos dois.
+`scrollWidth == clientWidth` nos dois painéis em 1024x768 e 390x844. A borda do último dia está
+provada no sqlite. Nenhum componente reconstrói permissão a partir de nulo.
+
+---
+
+## 55. `backend-borda-http-auth-e-permissao`
+
+**Prioridade:** P3 · **Frente:** Backend (Identity, rotas) · **Contexto:** não · **Depende:** —
+**Fonte:** card 10 e a seção "Policy" do review de 2026-11-02; `D-17`, `P-91`, `P-54` (condicional).
+
+**Escopo:**
+- **Card 10.** O escopo "só admin" de `UserController`/`UserPhotoController` (6 × `abort_unless`,
+  2 × `where('type','admin')`) vira binding, no molde da `{turma}`.
+- **`permission:` declarada num lugar só** (controller ou `routes.php`, escolha no brainstorming),
+  com catraca no molde do `AuthenticatedRouteMiddlewareTest`, que reprova rota autenticada sem
+  `permission:`.
+- **D-17.** Catraca de permissão órfã sobre o `PermissionCatalog`.
+- **P-91.** `/api/*` autenticada sem `Accept: application/json` responde 401, não 500.
+- **P-54**, só se o bloco escrever migration de permissão: entram as duas assertivas que faltam.
+
+**Fora, até o João decidir:** registrar "não adotar FormRequest nem Policy" em ADR e apagar
+`Policies/` e `Http/Requests/` do `estrutura-monolito.md`. O João vai estudar o caso antes.
+
+**DoD:** rota nova de `{user}` nasce com o escopo. As duas catracas foram vistas reprovar por sonda. O
+401 está provado por teste e no curl contra o dev.
+
+---
+
+## 56. `infra-deploy-gate-up`
+
+**Prioridade:** P2 · **Frente:** Infra · **Contexto:** não · **Depende:** —
+**Fonte:** `P-90`, `P-86`.
+
+**Escopo:** o gate `/up` do `deploy.sh` espera o php-fpm novo escutar, com retentativa limitada, em
+vez de um `curl` só depois do nginx ficar `healthy` (**P-90**). A **P-86** (o dump pré-deploy nunca
+rodou num deploy real) se paga no primeiro release corporativo com migration. Se este bloco não tiver
+uma, ela fica com o primeiro bloco do 48 ao 55 que tiver.
+
+**DoD:** um deploy que recria só o `app` passa no gate sem 502, e a evidência está no log do botão.
+
+---
+
+## 57. `harness-pontas-e-politicas`
+
+**Prioridade:** P3 · **Frente:** Harness · **Contexto:** não · **Depende:** —
+**Fonte:** `P-95`, `P-83`, `P-32`.
+
+**Escopo:** as doze pontas do item 35 (**P-95**), cada uma corrigida ou com veredito escrito. As sete
+decisões de política dos guardas (**P-83**), cada uma decidida pelo João e virada commit. A guarda da
+lição 13 passa a conferir classe, e não path (**P-32**).
+
+**DoD:** a P-95, a P-83 e a P-32 estão fechadas, e a suíte do harness está verde.
+
+---
+
+## 58. `docs-sincronizacao-de-mapa`
+
+**Prioridade:** P3 · **Frente:** Docs · **Contexto:** não · **Depende:** 50 51 52 53 54 55
+**Fonte:** `P-96`, `P-97`, `P-53`, `P-52`, `P-110`, `P-57`.
+
+Vai por último porque a P-97 é de coordenada de linha, e os blocos 50 a 55 mexem nessas linhas.
+
+**Escopo:** os três docs de mapa (**P-96**), as doze coordenadas e mapas (**P-97**), as 12
+divergências do BD-15 (**P-53**), a ficha de `invitation_tokens` no `der-fisico.md` (**P-52**), a
+faixa de seção de formulário na `frontend-estilizacao.md` (**P-110**) e o §6 do `CLAUDE.md` em
+worktree nova (**P-57**). Fecha com uma `auditar-docs` fresca.
+
+**DoD:** as seis fichas estão fechadas, e a `auditar-docs` do fechamento não acusa nada fora de
+`pendencias/`.
+
+---
+
 # Decisões não promovíveis isoladamente
 
 Executar sem a decisão é escolher no lugar de quem decide. A tabela é o índice; as fichas com
@@ -233,7 +505,6 @@ ficam só como ponteiro, e a ficha delas é lá.
 | `D-70` | Lotus | `/validar` diz "contacta a Lotus" sem canal — publicar endereço ou telefone é decisão da Lotus |
 | `DS-05` | João | Avatar do Perfil só vira task após medição justificar |
 | `DS-07` | João | Mural de credenciais é redesign próprio, com brainstorming |
-| `P-74` | João | Botão de severidade reprova AA no claro em 4 das 5 famílias |
 | `P-57` | João | `artisan test` fatala por memória em worktree com imagem `app` velha |
 | `P-28` | Lotus / João | Fundo final do certificado: aprovar ou corrigir |
 | `P-08` | Lotus | Manual varia por curso ou não |
@@ -309,7 +580,7 @@ ficam só como ponteiro, e a ficha delas é lá.
 > em `pendencias/`.
 
 - **D-71 · Rótulos `perm.*` do diálogo de Roles expõem jargão interno (Flujo N, RN-02, soft delete),
-  nos 3 locales** → **sem bloco hospedeiro.** UI-04 da run de Administración de 2026-09-26
+  nos 3 locales** → **item 49 (`frontend-acessibilidade-e-respiro`), desde 2026-11-02.** UI-04 da run de Administración de 2026-09-26
   (`audits/2026-09-04-lotus-ui-review-administracion.md`), classe `B`. Em `/administracion` >
   "Roles y permisos" > "Ver" em qualquer role, 9 dos 41 rótulos de `perm.*`
   (`frontend/src/shared/config/locales/es-CL.json:150-190`, conferido vivo nesta leitura) carregam
@@ -331,7 +602,7 @@ ficam só como ponteiro, e a ficha delas é lá.
   fatia 3 do item 16 (`frontend-revisao-ui-por-modulo`).
 
 - **D-72 · O KPI "Próximas clases" e a agenda do dashboard do redator contam conjuntos diferentes** →
-  **sem bloco hospedeiro.** `RedatorScopeQuery::resumo()` conta `proximas_turmas` com
+  **item 54 (`dashboard-agenda-e-pendencias`), desde 2026-11-02.** `RedatorScopeQuery::resumo()` conta `proximas_turmas` com
   `$turma->start_date->isAfter($today)`, **sem teto**; `RedatorScopeQuery::agenda()` recorta
   `starting_soon` por `DashboardWindows::turmaHorizon()`, que é `TURMA_WINDOW_DAYS = 7`
   (`backend/app/Domains/Dashboard/Services/DashboardWindows.php:17`) — os dois conferidos vivos
@@ -346,7 +617,7 @@ ficam só como ponteiro, e a ficha delas é lá.
   nunca escreveu.
 
 - **D-73 · Os dois painéis de tabela do Dashboard transbordam por conteúdo, não por piso** →
-  **sem bloco hospedeiro.** `app/pages/Dashboard/admin/CompliancePanel.tsx` e
+  **item 54 (`dashboard-agenda-e-pendencias`), desde 2026-11-02.** `app/pages/Dashboard/admin/CompliancePanel.tsx` e
   `RedatorLoadPanel.tsx` têm `scrollWidth` maior que a tabela: em 1024x768, 749 e 747px sobre
   moldura e tabela de 718, ou seja, 31 e 29px a mais. Antes do item 23 eram 25 e 21px sobre 768. Em
   390x844, 708 e 707 sobre 672. A tabela cabe na moldura (`table` ≤ `frame`, régua do item 23), então
@@ -359,7 +630,8 @@ ficam só como ponteiro, e a ficha delas é lá.
   navegador. Origem: Q-3 do review do item 23 (`frontend-tabelas-reserva-e-rolagem`).
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
-  **entregue PELA METADE em 2026-08-22, e a metade que falta tem dono nenhum.**
+  **entregue PELA METADE em 2026-08-22; a metade que falta está no item 55
+  (`backend-borda-http-auth-e-permissao`) desde 2026-11-02.**
   **Feito** (`BD-15-docs-guardrails-e-sincronizacao`,
   `plans/archive/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md`): a Regra C do
   `DomainDependencyTest` reprova aresta declarada sem consumidor, lendo a **mesma** varredura da
@@ -371,7 +643,8 @@ ficam só como ponteiro, e a ficha delas é lá.
   vê. Quem absorver isto precisa de uma catraca sobre o catálogo de permissões, não sobre `use`.
 
 - **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta** →
-  **sem bloco hospedeiro desde 2026-08-23.** Estava no item 3 como **condicional** ("só se o
+  **item 54 (`dashboard-agenda-e-pendencias`) desde 2026-11-02**, por decisão do João; ficou sem
+  bloco hospedeiro de 2026-08-23 até então. Estava no item 3 como **condicional** ("só se o
   contrato for tocado"), e a §2 da spec do `hardening-acesso-ownership-e-integridade` o declarou
   **fora**: o bloco tocou `generated.ts` pelo `is_active` de `UserData`, **não** pelo payload do
   Dashboard, e entrar ali abriria `AnalyticsQuery`, o assembler e dois componentes do SPA — frente

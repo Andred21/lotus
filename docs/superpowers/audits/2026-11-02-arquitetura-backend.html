@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Revisão de arquitetura — Lotus backend</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { htmlLabels: true } });
+</script>
+<style>
+  .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+  .deep { background: linear-gradient(135deg, #0f172a, #1e293b); color: #e2e8f0; }
+  .seam { border-style: dashed; }
+  pre.mermaid { background: transparent; }
+</style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans">
+<main class="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-14">
+
+<header class="space-y-4">
+  <p class="lbl text-slate-500">Lotus · backend/app · 2026-11-02 · main @ d220a04f</p>
+  <h1 class="font-serif text-4xl">Revisão de arquitetura do backend</h1>
+  <p class="text-slate-600 max-w-3xl">Escopo: controllers, Actions, Services e Data. Régua: <code>.claude/rules/backend-ddd.md</code>, ADR-02/04/07/22. Pontos quentes pelo <code>git log</code> desde 2026-08-15: Operation (matrícula, importação), Identity (redator, aluno), Certification.</p>
+  <div class="flex flex-wrap gap-4 text-xs text-slate-600">
+    <span class="flex items-center gap-2"><span class="inline-block w-5 h-4 border border-slate-500 bg-white"></span>módulo</span>
+    <span class="flex items-center gap-2"><span class="inline-block w-5 h-4 border-2 border-dashed border-slate-500"></span>seam</span>
+    <span class="flex items-center gap-2"><span class="inline-block w-6 h-0.5 bg-red-600"></span>vazamento / duplicação</span>
+    <span class="flex items-center gap-2"><span class="inline-block w-5 h-4 deep"></span>módulo profundo</span>
+  </div>
+  <nav class="text-sm flex flex-wrap gap-x-4 gap-y-1 pt-2">
+    <a class="underline" href="#corrigir">0 · Correção antes de arquitetura</a>
+    <a class="underline" href="#c1">1 · Recepção de arquivo</a>
+    <a class="underline" href="#c2">2 · Upload compensado</a>
+    <a class="underline" href="#c3">3 · Decisão de linha da importação</a>
+    <a class="underline" href="#c4">4 · Estado de emissão da matrícula</a>
+    <a class="underline" href="#c5">5 · Ciclo de vida da cotação</a>
+    <a class="underline" href="#c6">6 · Projeção do agregado</a>
+    <a class="underline" href="#c7">7 · Identidade do aluno e do User</a>
+    <a class="underline" href="#c8">8 · Agenda da turma</a>
+    <a class="underline" href="#c9">9 · Projeção de File</a>
+    <a class="underline" href="#c10">10 · Binding de staff</a>
+    <a class="underline" href="#requests">Request &amp; Policy: trade-offs</a>
+    <a class="underline" href="#top">Recomendação</a>
+  </nav>
+</header>
+
+<!-- ================= 0: correção ================= -->
+<section id="corrigir" class="rounded-xl border-2 border-red-300 bg-red-50 p-6 space-y-3">
+  <h2 class="font-serif text-2xl">0 · Achados de correção (não são refatoração)</h2>
+  <p class="text-sm text-slate-700">Achados conferidos no código. Não esperam decisão de arquitetura: entram como pendência ou correção pequena.</p>
+  <ul class="text-sm space-y-2 list-disc pl-5">
+    <li><b>PUT de orçamento sem <code>payment_terms</code> apaga o valor.</b> <code>BudgetData.php:44</code> declara <code>= null</code> em vez de <code>Optional</code>, e <code>BudgetController.php:77-79</code> grava sem Action e converte <code>Optional</code> em <code>null</code>. É a lei da <code>generated-types.md</code> ao contrário. Hoje o risco é latente, porque o front sempre manda o campo. A escrita também está no controller, contra a regra "Action = regra de escrita".</li>
+    <li><b>Recusar uma cotação aprovada com turma viva não é bloqueado.</b> <code>ApproveQuoteAction</code> e <code>RejectQuoteAction</code> são um <code>update</code> cru: sem guarda de transição, sem transação, sem <code>lockRow</code>. <code>CreateTurmaAction</code> trava a mesma Quote. Precisa da sua confirmação se é intencional (ver card 5).</li>
+    <li><b>O Dashboard e o painel de emissão discordam sobre a matrícula revogada.</b> <code>CertificationMetricsQuery.php:94</code> exclui qualquer certificado, revogado incluído, enquanto <code>CertificateVigenciaResolver::vigentes()</code> só considera vigente o <code>Emitido</code>. A matrícula revogada e reemissível aparece no painel e some das pendências (ver card 4).</li>
+    <li><b><code>TurmaData::$redatores = []</code> não tem <code>#[DataCollectionOf]</code>.</b> Escapa da catraca <code>PersistenceLawsTest</code>, que só varre propriedades com o atributo. Coleção de saída deveria levar <code>#[ReadOnlyCollection]</code>.</li>
+    <li><b>Docblocks desatualizados:</b> <code>ArchiveRedatorAction:18-23</code> e <code>Turma.php:76-79</code> dizem que os escritores de filho não tomam o lock do pai. Hoje tomam, com guarda em <code>ParentLockOnChildWriteTest</code>.</li>
+  </ul>
+</section>
+
+<section id="candidates" class="space-y-14">
+
+<!-- ================= 1 ================= -->
+<article id="c1" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">1 · Recepção de arquivo: um Data de entrada por forma de upload</h2>
+    <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-0.5 text-xs font-semibold">Strong</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs">in-process</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Identity/Http/Controllers/{Redator,RedatorDocument,ProfileDocument,UserPhoto,RedatorPhoto,StudentPhoto,ProfilePhoto}Controller.php
+Commercial/Http/Controllers/{BudgetFile,QuoteFile,ClientPhoto}Controller.php
+Operation/Http/Controllers/{TurmaDocument,Enrollment}Controller.php · Certification/Http/Controllers/CertificateSettingsController.php
+Identity/Services/UserPhotoService.php::rules() · Shared/Files/ContentClass.php</pre>
+
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-red-700 mb-2">Antes: a regra mora em 13 controllers</p>
+      <pre class="mermaid">
+flowchart LR
+  subgraph C["13 controllers · 17 validate()"]
+    RD["RedatorDocument<br/>type → file → valid_until"]
+    PD["ProfileDocument<br/>cópia + allowlist"]
+    RC["Redator::documentsFromRequest<br/>45 linhas à mão"]
+    PH["5 × Photo<br/>UserPhotoService::rules()"]
+    AN["Budget/Quote/TurmaFile<br/>enum ou literal 'in:'"]
+  end
+  CC[["ContentClass"]]
+  A["Actions<br/>confiam no UploadedFile"]
+  RD --> CC
+  PD --> CC
+  RC --> CC
+  PH --> CC
+  AN --> CC
+  RD -.-> A
+  PD -.-> A
+  RC -.-> A
+  AN -.-> A
+  classDef leak stroke:#dc2626,stroke-width:2px;
+  classDef deep fill:#0f172a,color:#e2e8f0;
+  class RD,PD,RC leak
+  class CC deep
+      </pre>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-emerald-700 mb-2">Depois: a forma do upload é o contrato</p>
+      <pre class="mermaid">
+flowchart LR
+  CT["controllers<br/>store(XUploadData $d)"]
+  subgraph D["Data de upload (poucas formas)"]
+    F1["foto"]
+    F2["documento tipado<br/>(tipo escolhe a regra)"]
+    F3["anexo tipado"]
+  end
+  E[["enum do domínio<br/>tipo → ContentClass, validade"]]
+  CC[["ContentClass"]]
+  CT --> D --> E --> CC
+  classDef deep fill:#0f172a,color:#e2e8f0;
+  class D,E,CC deep
+      </pre>
+    </div>
+  </div>
+  <p><b>Problema.</b> A rule manda o Data concentrar a validação, mas toda forma de upload valida à mão no controller. O documento de redator tem três entradas: duas cópias linha a linha e um parser multipart de 45 linhas. As Actions aceitam qualquer <code>UploadedFile</code>.</p>
+  <p><b>Solução.</b> Uma classe Data de entrada para cada forma de upload (foto, documento tipado, anexo tipado). A escolha "tipo → regra do arquivo / validade" passa para o enum do domínio, que no redator já existe (<code>RedatorDocumentType::conteudo()</code>).</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 text-sm list-disc pl-5">
+    <li>locality: a política de upload fica em 3 módulos</li>
+    <li>leverage: a P-107 se corrige num lugar só</li>
+    <li>apaga a cópia Redator/ProfileDocument</li>
+    <li>o controller volta a ser fino (backend-ddd)</li>
+    <li>teste: interface = POST com arquivo, sem tocar o controller</li>
+    <li>o <code>'in:quote_document'</code> literal vira enum</li>
+  </ul>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-sm">Alinha com o ADR-04 ("consolida validação + resource + DTO numa classe"). <b>Não</b> pede FormRequest. A <b>P-107</b> tem revisão marcada para <b>2026-11-07</b> e é gatilho natural.</div>
+</article>
+
+<!-- ================= 2 ================= -->
+<article id="c2" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">2 · Upload compensado: um módulo dono de subir, gravar e compensar</h2>
+    <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-0.5 text-xs font-semibold">Strong</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs">local-substitutable (S3/MinIO)</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Shared/Files/Actions/UploadFileAction.php (metadataOf, put, putTo, register, discard)
+Identity/Actions/{Create,Update}RedatorAction.php · StoreRedatorDocumentAction.php (registerUploaded)
+Operation/Actions/StoreTurmaDocumentAction.php · Certification/Actions/StoreManagerSignatureAction.php
+Console/Commands/CarregarCargaInicial.php:150</pre>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-red-700 mb-3">Antes: massa. A interface tem quase o tamanho da implementação</p>
+      <div class="flex items-end gap-6 h-56">
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-24 h-40 border-2 border-red-500 bg-red-50 flex items-center justify-center text-center text-[10px] p-1">5 métodos públicos + invariante "nunca dentro de transação"</div>
+          <span class="lbl">interface</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-24 h-48 border border-slate-400 bg-slate-50 flex items-center justify-center text-center text-[10px] p-1">put/register/discard</div>
+          <span class="lbl">implementação</span>
+        </div>
+        <div class="text-[11px] text-red-700 leading-tight">o envelope<br/>sobe → tx → register<br/>→ catch → discard<br/>se repete em <b>6 callers</b></div>
+      </div>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-emerald-700 mb-3">Depois: interface curta, implementação absorve o envelope</p>
+      <div class="flex items-end gap-6 h-56">
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-24 h-10 border-2 border-emerald-600 bg-emerald-50 flex items-center justify-center text-[10px]">1 entrada</div>
+          <span class="lbl">interface</span>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-24 h-48 deep flex flex-col items-center justify-center text-[10px] gap-1 p-1"><span class="opacity-60">put</span><span class="opacity-60">tx + register</span><span class="opacity-60">compensação</span><span class="opacity-60">lock do dono</span></div>
+          <span class="lbl">implementação</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p><b>Problema.</b> <code>UploadFileAction</code> tem nome de Action e corpo de serviço de cinco métodos, e a ordem correta é obrigação de cada caller. O teste da deleção mostra que é raso: apagá-lo quase não muda os callers, porque a compensação já mora neles. A janela da pendência sobre <code>StoreRedatorDocumentAction</code> (put antes da transação) nasce desse desenho.</p>
+  <p><b>Solução.</b> Uma única entrada que recebe os arquivos e a escrita transacional do dono e cuida da ordem e da compensação.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 text-sm list-disc pl-5">
+    <li>locality: a ordem storage↔transação num lugar</li>
+    <li>leverage: 6 callers perdem o try/catch</li>
+    <li>teste com disco fake: falha de register descarta</li>
+    <li>fecha "Action chama método de outra Action"</li>
+  </ul>
+  <p class="text-xs text-slate-500">Combina com o card 1: o 1 é a porta HTTP, o 2 é a porta de storage. Juntos, cobrem o bloco "arquivo" inteiro.</p>
+</article>
+
+<!-- ================= 3 ================= -->
+<article id="c3" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">3 · Importação: uma decisão por linha que a prévia reporta e a confirmação executa</h2>
+    <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-0.5 text-xs font-semibold">Strong</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs">in-process</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Operation/Services/ImportPreviewService.php:52-103 · Operation/Actions/ImportStudentsAction.php:65,121-168
+Identity/Services/StudentResolver.php:30,33-218 (injeta UpdateStudentAction; Validator::make :150)</pre>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-red-700 mb-2">Antes: a mesma sequência escrita duas vezes</p>
+      <pre class="mermaid">
+flowchart TB
+  subgraph P["ImportPreviewService"]
+    p1[claimRut] --> p2[assertNameProvided] --> p3[previewByRut] --> p4[assertCanCreate] --> p5["claimEmail<br/>só se novo"]
+  end
+  subgraph S["ImportStudentsAction"]
+    s1[claimRut] --> s2[assertNameProvided] --> s3[previewByRut] --> s4[assertCanCreate] --> s5["claimEmail<br/>novo E atualizar"]
+  end
+  s4 -.2x.-> R["StudentResolver<br/>assertCanCreate de novo"]
+  classDef leak stroke:#dc2626,stroke-width:2px;
+  class p5,s5 leak
+      </pre>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-emerald-700 mb-2">Depois: um classificador, dois consumidores</p>
+      <pre class="mermaid">
+flowchart TB
+  L[["decisão da linha<br/>criar · atualizar · matricular · recusar(motivo)"]]
+  P["prévia<br/>reporta"] --> L
+  S["confirmação<br/>executa"] --> L
+  L --> R["StudentResolver<br/>só resolveByRut"]
+  T(["teste de paridade<br/>prévia == confirmação"]) -.-> L
+  classDef deep fill:#0f172a,color:#e2e8f0;
+  class L deep
+      </pre>
+    </div>
+  </div>
+  <p><b>Problema.</b> A prévia e a confirmação já divergem na reserva de e-mail da linha "Actualizar", e não há teste que prove "o que a prévia mostrou é o que a confirmação fez". Há três inversões de camada: um Service depende de uma Action, um Service lê constante de uma Action e há <code>Validator::make</code> dentro de Action e de Service.</p>
+  <p><b>Solução.</b> Concentrar a classificação da linha num módulo só. A prévia devolve a decisão e a confirmação a executa.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 text-sm list-disc pl-5">
+    <li>locality: a divergência de e-mail não volta</li>
+    <li>teste de paridade, como na emissão</li>
+    <li>uma leitura de RUT por linha, não duas</li>
+    <li>área mais quente do repo (5–7 commits)</li>
+  </ul>
+</article>
+
+<!-- ================= 4 ================= -->
+<article id="c4" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">4 · Estado de emissão da matrícula: uma resposta, não três</h2>
+    <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-0.5 text-xs font-semibold">Strong</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs">in-process · peso legal</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Certification/Services/CertificateVigenciaResolver.php:86-91 · Certification/Models/Certificate.php:55-67 (scopeEmitidos)
+Dashboard/Services/CertificationMetricsQuery.php:59,87-96 · AnalyticsQuery.php:183 · PipelineQuery.php:103
+Certification/Services/EmissionPanelQuery.php:126-130 · CertificateEligibility.php (porta 3)</pre>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-red-700 mb-2">Antes: duas "fontes únicas" e cópias cruas</p>
+      <pre class="mermaid">
+flowchart LR
+  V["VigenciaResolver<br/>vigente = Emitido"]
+  SC["scopeEmitidos"]
+  RAW["where status = Emitido<br/>cru · 2 queries"]
+  DB["Dashboard 'a emitir'<br/>exclui QUALQUER cert"]
+  E["Eligibility porta 3<br/>reabre revogado"] --> V
+  PN["Painel de emissão"] --> V
+  M["Métricas"] --> RAW
+  PL["Pipeline 'FullyIssued'"] --> DB
+  classDef leak stroke:#dc2626,stroke-width:2px;
+  class SC,RAW,DB leak
+      </pre>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-emerald-700 mb-2">Depois: Certification responde, os outros perguntam</p>
+      <pre class="mermaid">
+flowchart LR
+  ST[["estado de emissão<br/>vigente · revogado-reemissível · nunca emitido"]]
+  E["Eligibility"] --> ST
+  PN["Painel"] --> ST
+  D["Dashboard (3 queries)"] --> ST
+  classDef deep fill:#0f172a,color:#e2e8f0;
+  class ST deep
+      </pre>
+    </div>
+  </div>
+  <p><b>Problema.</b> Os docblocks dizem que a regra mora "num lugar só", mas o Dashboard tem a dele. A matrícula revogada e reemissível aparece no painel e some das pendências do Dashboard. As portas 4 e 5 da elegibilidade também não chegam ao Dashboard. Existe um teste que fixa o comportamento divergente (<code>…_nao_reabre_revogado</code>).</p>
+  <p><b>Solução.</b> Um módulo de Certification que nomeia os estados de emissão e é consumido em SQL e em PHP, com teste de paridade (molde da ADR-22). Se a diferença do Dashboard for intencional, ela ganha nome próprio.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 text-sm list-disc pl-5">
+    <li>locality: "revogado" decidido uma vez</li>
+    <li>leverage: 3 queries do Dashboard herdam</li>
+    <li>paridade SQL × domínio, como ADR-22</li>
+    <li>preserva o seam <code>ResultLock</code> existente</li>
+  </ul>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-sm">Precisa da sua decisão: a matrícula revogada e reemissível é pendência no Dashboard ou não?</div>
+</article>
+
+<!-- ================= 5 ================= -->
+<article id="c5" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">5 · Ciclo de vida da cotação: as transições ganham um dono</h2>
+    <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-0.5 text-xs font-semibold">Strong</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs">in-process</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Commercial/Actions/{Approve,Reject,Update,Delete}QuoteAction.php
+Operation/Actions/{Create,Restore}TurmaAction.php (Quote::lockRow) · tests/.../QuoteApprovalTest.php:77</pre>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-red-700 mb-2">Antes: meio mutex</p>
+      <div class="space-y-2 text-xs">
+        <div class="border-l-4 border-red-400 bg-red-50 px-3 py-2">Approve · update cru, sem guarda</div>
+        <div class="border-l-4 border-red-400 bg-red-50 px-3 py-2">Reject · update cru: recusa aprovada com turma viva</div>
+        <div class="border-l-4 border-amber-400 bg-amber-50 px-3 py-2">Update · checa status do binding (pode estar velho), sem tx</div>
+        <div class="border-l-4 border-amber-400 bg-amber-50 px-3 py-2">Delete · checa turma</div>
+        <div class="border-l-4 border-slate-700 bg-slate-100 px-3 py-2">CreateTurma / RestoreTurma · <b>lockRow</b> na Quote</div>
+      </div>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-emerald-700 mb-2">Depois: uma faixa grossa</p>
+      <div class="deep rounded px-4 py-6 text-sm space-y-1">
+        <div class="lbl opacity-70">transições da cotação</div>
+        <div>lock · estado de origem permitido · tem turma viva?</div>
+        <div class="text-xs opacity-60">approve · reject · reabrir · arquivar</div>
+      </div>
+      <div class="mt-3 text-xs text-slate-500">Os escritores de Turma continuam tomando o mesmo lock, e agora os dois lados tomam.</div>
+    </div>
+  </div>
+  <p><b>Problema.</b> A cotação tem máquina de estado, mas as guardas estão espalhadas por cinco Actions, e duas delas não têm guarda nem transação. Isso contradiz a rule ("Action dentro de <code>DB::transaction</code>").</p>
+  <p><b>Solução.</b> Concentrar as transições num módulo que toma o lock e conhece o vínculo com a turma.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 text-sm list-disc pl-5">
+    <li>locality: transições legais num lugar</li>
+    <li>teste: tabela origem × verbo × turma</li>
+  </ul>
+</article>
+
+<!-- ================= 6 ================= -->
+<article id="c6" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">6 · Projeção do agregado: o <code>fromModel</code> é dono da carga e da dependência</h2>
+    <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-0.5 text-xs font-semibold">Worth exploring</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs">in-process</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Operation/Data/TurmaData.php:82 + TurmaController (9 métodos injetam TurmaHabilitacaoService; present() :172)
+Commercial/Data/BudgetData.php:75 + BudgetController (6 × BudgetSummaryService) · Certification/Data/CertificateData.php:60 (?$hoje)
+Identity/Http/Controllers/StudentController.php:83-94 (5 eager-loads antes do DTO)</pre>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-red-700 mb-2">Antes: a projeção única pela metade</p>
+      <pre class="mermaid">
+flowchart LR
+  subgraph CT["cada método do controller"]
+    a["inject Service"]
+    b["loadListingData()"]
+  end
+  a --> F["TurmaData::fromModel(t, svc)"]
+  b --> F
+  classDef leak stroke:#dc2626,stroke-width:2px;
+  class a,b leak
+      </pre>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-emerald-700 mb-2">Depois: o chamador passa só o model</p>
+      <pre class="mermaid">
+flowchart LR
+  CT["controller"] --> P[["projeção da Turma<br/>carga + habilitação + DTO"]]
+  classDef deep fill:#0f172a,color:#e2e8f0;
+  class P deep
+      </pre>
+    </div>
+  </div>
+  <p><b>Problema.</b> A rule diz que <code>fromModel</code> é "o único lugar que projeta o model", mas metade da projeção (eager-load e serviço derivado) fica em cada chamador. O <code>present()</code> privado é o seam real, e mora no controller errado.</p>
+  <p><b>Solução.</b> Mover essa metade para dentro da projeção do agregado, para que o chamador passe só o model ou a query.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 text-sm list-disc pl-5">
+    <li>leverage: rota nova não esquece a carga</li>
+    <li>interface encolhe de 2 args para 1</li>
+  </ul>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-sm">Toca a convenção "fromModel = estático" da backend-ddd. A carga precisa continuar compatível com o <code>Paginates::page($present)</code> e com o <code>ListQueryBudgetTest</code>.</div>
+</article>
+
+<!-- ================= 7 ================= -->
+<article id="c7" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">7 · Identidade: o aluno como um Data só, e o update do <code>UserProvisioner</code></h2>
+    <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-0.5 text-xs font-semibold">Worth exploring</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs">in-process</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Operation/Data/EnrollmentData.php:48-52 · Identity/Data/StudentData.php:35,68 · StudentResolver.php:131-160
+EnrollmentController.php:79,89 (5 escalares soltos) · Identity/Services/UserProvisioner.php
+Update{Student,Redator,Client,StaffUser}Action.php · CreateStaffUserAction.php:30-45</pre>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-red-700 mb-2">Antes</p>
+      <div class="grid grid-cols-2 gap-2 text-[11px]">
+        <div class="border border-red-400 p-2">rut/nome/email/tel em EnrollmentData</div>
+        <div class="border border-red-400 p-2">os mesmos em StudentData</div>
+        <div class="border border-red-400 p-2">Validator::make no Resolver</div>
+        <div class="border border-red-400 p-2">validate rut no controller</div>
+        <div class="col-span-2 border border-amber-400 p-2">4 Update*: ensureIdentityAvailable → usar o RUT formatado → writing(fn) · o caller lembra os 3 passos</div>
+      </div>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4">
+      <p class="lbl text-emerald-700 mb-2">Depois</p>
+      <div class="space-y-2 text-[11px]">
+        <div class="deep rounded p-3">identidade do aluno (Data): matrícula, prévia e importação</div>
+        <div class="deep rounded p-3">UserProvisioner: provision() <i>e</i> uma contraparte de update que checa, formata, grava e traduz a colisão</div>
+      </div>
+    </div>
+  </div>
+  <p><b>Problema.</b> A mesma entrada está escrita em quatro lugares, e <code>EnrollmentData</code> serve dois conceitos ao mesmo tempo ("matricular por RUT" e "matrícula com resultado"). O create do <code>UserProvisioner</code> é profundo, o update é raso.</p>
+  <p><b>Solução.</b> Um Data de identidade do aluno, passado inteiro à Action, e um update no provisionador à altura do create.</p>
+</article>
+
+<!-- ================= 8 ================= -->
+<article id="c8" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">8 · Agenda da turma: um classificador, o KPI conta o resultado</h2>
+    <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-0.5 text-xs font-semibold">Worth exploring</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-0.5 text-xs">in-process</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Dashboard/Services/OperationMetricsQuery.php:36-46,56-81 · RedatorScopeQuery.php:78-99
+Operation/QueryBuilders/TurmaQueryBuilder.php:138 (whereDisplayStatus, já com paridade)</pre>
+  <p><b>Problema.</b> As fronteiras "encerrando" e "atrasada" estão escritas três vezes: o KPI em SQL e duas agendas em PHP. "Habilitada" é filtrada em PHP sobre todas as turmas, embora o builder já tenha a versão SQL testada.</p>
+  <p><b>Solução.</b> Um classificador (turma, hoje, horizonte) que devolve os baldes, e o Dashboard reusa o <code>whereDisplayStatus</code>.</p>
+  <ul class="text-sm list-disc pl-5"><li>locality: mudar o horizonte de "encerrando" mexe num lugar</li></ul>
+</article>
+
+<!-- ================= 9 ================= -->
+<article id="c9" class="rounded-xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">9 · Projeção de File: um formato, extensões por tipo</h2>
+    <span class="rounded-full bg-slate-200 text-slate-700 px-3 py-0.5 text-xs font-semibold">Speculative</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Shared/Files/Data/FileData.php · Operation/Data/TurmaDocumentData.php · Identity/Data/{RedatorDocument,RedatorProfileDocument}Data.php · CertificateSignatureFileData</pre>
+  <p><b>Problema.</b> Cinco DTOs projetam o mesmo <code>File</code>, e o <code>created_at</code> já sai em dois formatos (<code>toIso8601String</code> × <code>toISOString</code>). A validade é calculada no backend para o perfil e "derivada no front" para o admin.</p>
+  <p><b>Solução.</b> Uma projeção de arquivo dona do formato de data e do status de validade. Os DTOs de tipo só acrescentam campos.</p>
+  <p class="text-xs text-slate-500">Speculative porque a divergência hoje é de formato, não de dado. Vira Strong se o front já estiver tratando os dois formatos de data.</p>
+</article>
+
+<!-- ================= 10 ================= -->
+<article id="c10" class="rounded-xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">10 · Binding de staff: o escopo "só admin" vira binding, como a Turma</h2>
+    <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-0.5 text-xs font-semibold">Worth exploring</span>
+  </div>
+  <pre class="font-mono text-xs sm:text-sm text-slate-600 whitespace-pre-wrap">Identity/Http/Controllers/UserController.php:44,56,63,70,85,107 · UserPhotoController.php:27,37</pre>
+  <div class="grid md:grid-cols-2 gap-4 text-xs">
+    <div class="rounded-lg border border-red-300 bg-red-50 p-3">Antes: 6 × <code>abort_unless($user->type === 'admin', 404)</code> e 2 × <code>where('type','admin')</code>. A rota nova precisa lembrar.</div>
+    <div class="rounded-lg deep p-3">Depois: o escopo aplicado ao <code>{user}</code> no binding. A rota nova já nasce coberta, como as 20 de <code>{turma}</code>.</div>
+  </div>
+  <p class="text-sm">Usa o molde que a rule já prescreve para escopo de dado. Não precisa de Policy.</p>
+</article>
+
+</section>
+
+<!-- ================= Requests & Policies ================= -->
+<section id="requests" class="rounded-xl border-2 border-indigo-200 bg-white p-6 space-y-6">
+  <h2 class="font-serif text-3xl">FormRequest e Policy: vale a pena?</h2>
+  <p class="text-slate-700">O que você percebeu está certo. Hoje <b>não há nenhum FormRequest nem nenhuma Policy</b>. O que parece "Request" são classes Data de query string (<code>PageRequest</code>, <code>TurmaPageRequest</code>, <code>CertificatePageRequest</code>, <code>EmissionPanelRequest</code>). A validação vive em três lugares:</p>
+  <div class="grid sm:grid-cols-3 gap-3 text-sm">
+    <div class="rounded-lg border border-emerald-300 bg-emerald-50 p-3"><b>XData::rules()</b> · ~26 classes<br/><span class="text-xs">o padrão da rule e do ADR-04</span></div>
+    <div class="rounded-lg border border-red-300 bg-red-50 p-3"><b>$request->validate()</b> · 17 chamadas em 13 controllers<br/><span class="text-xs">uploads quase todos, mais rut, planilha e login</span></div>
+    <div class="rounded-lg border border-amber-300 bg-amber-50 p-3"><b>Validator::make</b> em domínio · 2<br/><span class="text-xs">ImportStudentsAction:65, StudentResolver:150</span></div>
+  </div>
+
+  <h3 class="font-serif text-xl pt-2">FormRequest</h3>
+  <div class="overflow-x-auto">
+  <table class="w-full text-sm border-collapse">
+    <thead><tr class="text-left border-b border-slate-300"><th class="py-2 pr-3">Critério</th><th class="py-2 pr-3">FormRequest</th><th class="py-2">Data de entrada (atual)</th></tr></thead>
+    <tbody class="align-top">
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">Fonte do contrato</td><td class="py-2 pr-3 text-red-700">Segunda classe por endpoint, ao lado do Data que vai pro TS. Duas fontes que podem divergir.</td><td class="py-2 text-emerald-700">Uma classe: valida, tipa e gera <code>generated.ts</code>.</td></tr>
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">Tipo do valor validado</td><td class="py-2 pr-3 text-red-700"><code>$request->validated()</code> é um array sem tipo.</td><td class="py-2 text-emerald-700">Propriedades tipadas, enum já coagido.</td></tr>
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">Regra que depende de outro campo (tipo escolhe a regra do arquivo)</td><td class="py-2 pr-3 text-emerald-700"><code>rules()</code> de instância lê <code>$this->input('type')</code>.</td><td class="py-2 text-emerald-700"><code>rules(ValidationContext $ctx)</code> lê o payload. Resolve o caso do documento de redator.</td></tr>
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">Nome do atributo no 422 (P-107)</td><td class="py-2 pr-3"><code>attributes()</code></td><td class="py-2"><code>attributes()</code> também existe no Data, ou <code>lang/*/validation.php</code> globalmente.</td></tr>
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3"><code>authorize()</code> junto da validação</td><td class="py-2 pr-3 text-emerald-700">Sim. É o único ganho real.</td><td class="py-2">Não. Fica no middleware ou no binding.</td></tr>
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">Multipart e arquivo</td><td class="py-2 pr-3">Nativo.</td><td class="py-2 text-amber-700">Funciona (<code>UploadedFile</code> como propriedade), mas o <code>RedatorData::$documents</code> mostra a costura: o mesmo nome entra e sai, e precisa do <code>prepareForPipeline</code>.</td></tr>
+      <tr><td class="py-2 pr-3">Obrigatoriedade por verbo</td><td class="py-2 pr-3">Uma classe por verbo resolve.</td><td class="py-2">A rule já resolveu: mora na Action.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="rounded-lg bg-indigo-50 border border-indigo-200 p-4 text-sm space-y-2">
+    <p><b>Recomendação: não adote FormRequest.</b> O problema não é faltar FormRequest. É que os uploads não têm Data (card 1). Um FormRequest só mudaria o mesmo <code>validate()</code> de arquivo e criaria uma terceira forma de validar no repo, contra o ADR-04. O único ganho, o <code>authorize()</code> junto, não se aplica, porque vocês não autorizam por instância (ver Policy).</p>
+    <p><b>Duas ações baratas:</b> (1) renomear os Data <code>*PageRequest</code> e <code>EmissionPanelRequest</code> para algo como <code>*Query</code>, porque o nome induz exatamente a confusão que você teve. O <code>PageRequest</code> sem <code>#[TypeScript]</code> também obriga o front a escrever <code>PageQuery</code> à mão em <code>shared/api/page.ts:20</code>. (2) <code>ImportConfirmData::$rows</code> nasceu <code>Optional</code> só para passar na catraca, que trata como read-write uma coleção só de entrada, e por isso o <code>required|min:1|max:100</code> foi para um <code>Validator::make</code> na Action. A catraca precisa de uma marca "coleção só de entrada", espelho da <code>#[ReadOnlyCollection]</code>.</p>
+  </div>
+
+  <h3 class="font-serif text-xl pt-2">Policy</h3>
+  <div class="overflow-x-auto">
+  <table class="w-full text-sm border-collapse">
+    <thead><tr class="text-left border-b border-slate-300"><th class="py-2 pr-3">Tipo de autorização</th><th class="py-2 pr-3">Onde está hoje</th><th class="py-2">Policy ajudaria?</th></tr></thead>
+    <tbody class="align-top">
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">"pode X?" (RBAC por papel)</td><td class="py-2 pr-3"><code>permission:</code> em <code>HasMiddleware</code> <b>ou</b> grupo de rota (20 controllers)</td><td class="py-2">Não. O problema é a <b>locality</b>: dois lugares. Escolha um.</td></tr>
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">"vê esta linha?" (escopo de dado)</td><td class="py-2 pr-3"><code>visibleTo</code> + <code>resolveRouteBinding</code> (Turma), <code>scopeBindings</code> (arquivos)</td><td class="py-2 text-emerald-700">Não, e a rule explica por quê: Policy não filtra LISTA. O molde atual é mais profundo.</td></tr>
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">"só admin" em User</td><td class="py-2 pr-3">6 × <code>abort_unless</code></td><td class="py-2">Não. É escopo de dado: binding (card 10).</td></tr>
+      <tr class="border-b border-slate-100"><td class="py-2 pr-3">"pode X <i>neste estado</i>?"</td><td class="py-2 pr-3"><code>RecordEnrollmentResultAction:43</code> (<code>manage</code> fora de andamento), <code>ImportPreviewService:46</code>, <code>ImportStudentsAction:71</code></td><td class="py-2 text-amber-700">É onde a Policy brilha (<code>can('recordResult', $enrollment)</code>). Mas são 3 sítios, e dois são regra de domínio que precisa de lock, não de gate HTTP.</td></tr>
+      <tr><td class="py-2 pr-3">"é redator?" no perfil</td><td class="py-2 pr-3"><code>ProfileDocumentController:26-30</code> lança 403 de domínio</td><td class="py-2">Não. É pré-condição do recurso, e a exceção nomeada já basta.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="rounded-lg bg-indigo-50 border border-indigo-200 p-4 text-sm space-y-2">
+    <p><b>Recomendação: não adote Policy.</b> A decisão já está na rule, com o motivo certo (duas fontes de verdade para escopo de lista). O que sobra fora do molde é pouco e cabe nele (card 10). Os 3 casos de "permissão por estado" não somam massa para justificar uma camada nova. Reabra se aparecer o quarto ou quinto.</p>
+    <p><b>O que fazer de fato:</b> unificar onde o <code>permission:</code> é declarado. Hoje, para saber a permissão de um endpoint, você abre o controller <i>e</i> o <code>routes.php</code>. Qualquer um dos dois serve, desde que seja um só, com uma catraca no molde do <code>AuthenticatedRouteMiddlewareTest</code> que reprove a rota autenticada sem <code>permission:</code> declarada.</p>
+    <p class="text-xs text-slate-500">Depois de decidir, apague as pastas fantasma <code>Policies/</code> e <code>Http/Requests/</code> do <code>estrutura-monolito.md</code>. Elas convidam a próxima sessão a criar exatamente o que vocês recusaram.</p>
+  </div>
+</section>
+
+<!-- ================= preservar ================= -->
+<section class="rounded-xl border border-slate-200 bg-white p-6 space-y-3">
+  <h2 class="font-serif text-2xl">O que está profundo e deve ser preservado</h2>
+  <div class="grid sm:grid-cols-3 gap-3 text-sm">
+    <div class="deep rounded-lg p-4"><b>CertificateEligibility::assert()</b><br/><span class="text-xs opacity-80">cinco portas atrás de um método só, devolve o <code>IssuanceContext</code>. O teste assere qual porta recusou.</span></div>
+    <div class="deep rounded-lg p-4"><b>ResultLock</b><br/><span class="text-xs opacity-80">seam real: a interface está em Operation e o adapter em Certification. Operation não conhece Certification.</span></div>
+    <div class="deep rounded-lg p-4"><b>Turma::assertAcademicallyWritable + lockForWrite</b><br/><span class="text-xs opacity-80">onze caminhos, uma mensagem, fail-closed. Somado ao <code>DomainDependencyTest</code>, dá acoplamento entre domínios verificado.</span></div>
+    <div class="deep rounded-lg p-4"><b>ContentClass</b><br/><span class="text-xs opacity-80">o módulo certo para a política de arquivo. Falta só a porta de entrada (card 1).</span></div>
+    <div class="deep rounded-lg p-4"><b>Paginates + PageData</b><br/><span class="text-xs opacity-80">uma interface, N listas, com catraca de query.</span></div>
+    <div class="deep rounded-lg p-4"><b>UserProvisioner::provision()</b><br/><span class="text-xs opacity-80">o create é o molde que o update deveria copiar (card 7).</span></div>
+  </div>
+</section>
+
+<!-- ================= top ================= -->
+<section id="top" class="rounded-2xl deep p-8 space-y-3">
+  <p class="lbl opacity-70">Recomendação principal</p>
+  <h2 class="font-serif text-3xl"><a href="#c1" class="underline decoration-emerald-400">Recepção de arquivo (1), seguida do upload compensado (2)</a></h2>
+  <p class="opacity-90 max-w-3xl">É a maior massa de divergência da rule: 13 controllers, 3 domínios e a única cópia linha a linha do repo. Tem gatilho datado (P-107, revisão em 2026-11-07) e mexe no controller mais quente de Identity, o <code>RedatorController</code>. Fecha a pergunta do FormRequest pelo caminho que o ADR-04 já escolheu. Os achados de correção da seção 0 vão antes, como fichas pequenas e independentes. A importação (3) fica em segundo lugar por já ter uma divergência viva.</p>
+</section>
+
+</main>
+</body>
+</html>
