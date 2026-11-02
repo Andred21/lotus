@@ -1,6 +1,16 @@
 import { COL, tableWidths } from '@shared/ui'
 
 /**
+ * P-101: o RUT em `identifierClass` não quebra mais, e por isso precisa da caixa
+ * inteira — 101px de mono mais 32px de padding. O `COL.rut` (peso 9) entregava
+ * 95px na ativa e 106px nas arquivadas a 390 de viewport, e o RUT vazava para a
+ * coluna vizinha. Peso 14 é o menor redondo que passa nas duas tabelas, com ou
+ * sem ação; a conta está em `enrollmentColumns.test.ts`. Local, e não no `COL`,
+ * porque a fatia depende da aridade desta tabela.
+ */
+const RUT_MATRICULA = { weight: 14 } as const
+
+/**
  * Classificação das colunas da `EnrollmentTable`.
  *
  * `actions` é parâmetro e não constante porque a coluna de ação desta tabela sai
@@ -12,7 +22,7 @@ import { COL, tableWidths } from '@shared/ui'
  */
 export const enrollmentWidths = (actions: boolean) =>
   tableWidths(
-    { name: COL.identity, rut: COL.rut, grade: COL.count, attendance: COL.tag, status: COL.tag },
+    { name: COL.identity, rut: RUT_MATRICULA, grade: COL.count, attendance: COL.tag, status: COL.tag },
     { actions },
   )
 
@@ -28,4 +38,4 @@ export const enrollmentWidths = (actions: boolean) =>
  * justamente para render 10%/14% IGUAIS nas sete superfícies arquivadas.
  */
 export const archivedEnrollmentWidths = (actions: boolean) =>
-  tableWidths({ name: COL.identity, rut: COL.rut }, { actions, archived: true })
+  tableWidths({ name: COL.identity, rut: RUT_MATRICULA }, { actions, archived: true })
