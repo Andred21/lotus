@@ -2,6 +2,16 @@
 
 ## Em aberto
 
+Correção aprovada pelo João em 2026-11-02 ("Resolva os minors"), ainda por aplicar. Os achados são
+Menor e não bloqueiam; a correção reabre a revisão (rodada 2).
+
+- Q-1 (Menor, CONFIRMED) — erro do envio concorrente no presupuesto.
+- Q-2 (Menor, CONFIRMED) — nome do excluir da firma do redator.
+- Q-3 (Menor, CONFIRMED) — slot de assinatura repetido em três consumidores.
+- Q-4 (Menor, PLAUSIBLE) — nome do excluir do documento da cotização.
+- Q-5 (Menor, CONFIRMED) — `UploadFileAction::execute` órfão.
+- Q-6 (Menor, CONFIRMED) — ações da foto em stage na criação.
+
 ## Rodada 1 — `d220a04f..901e4135` — 2026-11-02 · Lente 1: opus · Lente 2: sonnet
 
 Classificação: alto risco (backend de arquivos comerciais — `ReplaceFileOfTypeAction`,
