@@ -125,7 +125,7 @@ frontend/src/
 │   ├── ui/                     # WRAPPERS PrimeReact — features NUNCA importam primereact direto
 │   │   ├── AppButton/ AppDataTable/ AppDialog/ AppDropdown/ AppInputText/ …  # pasta-por-componente + index.ts
 │   │   ├── ModulePage/ CrudDialog/ PageHeader/   # moldes reusáveis de página de módulo e diálogo de cadastro
-│   │   ├── AppSignatureUpload/  # guarda `useSignatureCleaner`, `SignaturePreview` e `SignatureHint` (escolhe a imagem da assinatura, limpa no navegador e mostra a prévia — bloco 40, D16)
+│   │   ├── AppSignatureUpload/  # guarda `useSignatureCleaner`, `SignaturePreview` e `SignatureHint` (escolhe a imagem da assinatura, limpa no navegador e mostra a prévia — bloco 40, D16) e o `AppSignatureSlot`, o `AppFileSlot` com essa limpeza, que a firma do redator, Mi perfil e a firma da gerente consomem (bloco 47)
 │   │   ├── AppFileSlot/         # cartão de arquivo: título, linha do arquivo e ações só-ícone (ver, baixar, enviar/substituir, excluir); vale ao produto inteiro (bloco 47)
 │   │   ├── AppSubNav/           # navegação vertical de submódulos, `aria-current` no item atual (bloco 40)
 │   │   ├── AppearanceControls/ LanguageMenu/ Clock/ AppLogo/  # chrome: tema (ADR-16), idioma (ADR-15)
