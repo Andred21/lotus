@@ -14,7 +14,7 @@
 
 ## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
 
-**Bloco:** — · **Gatilho:** fecha quando uma régua por estado, no molde do `describe` da P-30
+**Bloco:** item 49 (desde 2026-11-02) · **Gatilho:** fecha quando uma régua por estado, no molde do `describe` da P-30
 (`frontend/tests/tone-ink.test.ts`), cobrir as cinco severidades e todas passarem 4,5:1 nos três
 estados. Revisar em **2026-10-31**.
 
@@ -48,7 +48,7 @@ severidade nos dois temas, decisão de design que ninguém tomou ainda — e nã
 
 ## P-57 — o `artisan test` do `CLAUDE.md` §6 fatala em worktree com imagem velha
 
-**Bloco:** — · **Gatilho:** fecha quando o `CLAUDE.md` §6 (ou o `/executar-bloco`) disser que
+**Bloco:** item 58 (desde 2026-11-02) · **Gatilho:** fecha quando o `CLAUDE.md` §6 (ou o `/executar-bloco`) disser que
 worktree novo constrói a imagem antes de rodar a suíte, ou quando o compose deixar de permitir
 imagem por projeto defasada. Revisar em **2026-10-31**.
 
@@ -82,7 +82,7 @@ no lugar que o fatal de 128M apareceu aqui.
 
 ## P-76 — seis frases ao usuário seguem literais em `app/`, por três caminhos que nenhuma catraca alcança
 
-**Bloco:** — · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
+**Bloco:** item 52 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
 `Shared/Files/Rules` ou `AuthController::logout()` por outro motivo; cada sítio passa a ler `lang/`
 nos três locales no mesmo commit, **ou** a catraca ganha o caminho que faltava. Revisar em
 **2026-10-31**.
@@ -122,7 +122,7 @@ mudanças que a spec dele declarou; abrir a quarta porta ali seria a quinta.
 
 ## P-85 — no sqlite da suíte, o último dia do período some do filtro de `start_date` do `AnalyticsQuery`
 
-**Bloco:** — · **Gatilho:** bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de
+**Bloco:** item 54 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de
 período do dashboard; os três filtros de `start_date` passam por `DataSql::literal` e um teste prova
 a turma que começa no **último dia** do período dentro da série e dos dois rankings. Revisar em
 **2026-10-31**.
@@ -151,7 +151,7 @@ dele descreve a mesma borda). Não entrou no item 29 porque o Q-1 era sobre os l
 
 ## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
-**Bloco:** — · **Gatilho:** os eixos **redator** e **turma** fecharam em 2026-08-23 (ver o bloco
+**Bloco:** item 50 (desde 2026-11-02) · **Gatilho:** os eixos **redator** e **turma** fecharam em 2026-08-23 (ver o bloco
 final desta ficha). O que resta é o eixo **cotação × orçamento**: fecha quando um bloco tocar
 `RestoreQuoteAction` ou `DeleteBudgetAction` e puder travar os DOIS lados, ou quando um filho ativo
 sob pai arquivado for observado em uso real. Revisar em **2026-10-31**.
@@ -260,7 +260,7 @@ repositório prova lock.
 
 ## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** bloco que tocar `backend/bootstrap/app.php`
+**Bloco:** item 55 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** bloco que tocar `backend/bootstrap/app.php`
 (`withMiddleware` ou `withExceptions`) ou o middleware de autenticação; revisar em **2026-10-31**.
 
 **Medido em produção pelo item 32, em 2026-09-27 e de novo no fechamento (2026-09-28T02:35Z):**
@@ -288,7 +288,7 @@ cabeçalho, visto reprovar antes da correção.
 
 ## P-95 — doze pontas do harness que o item 35 deixou registradas sem correção
 
-**Bloco:** 36 (`harness-aceitacao-externa`) · **Quem decide:** João · **Gatilho:** fecha quando
+**Bloco:** item 57 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha quando
 cada linha das duas tabelas abaixo for corrigida ou ganhar veredito escrito de que fica como está;
 dispara no próximo bloco que tocar `.claude/commands/`, `.claude/scripts/lane.sh`,
 `.claude/tests/commands.tests.sh` ou `docs/superpowers/state.md`. Revisar em **2026-10-31**.
@@ -328,7 +328,7 @@ reconferida no HEAD do fechamento:
 
 ## P-96 — três docs de mapa não acompanharam o que entrou depois deles
 
-**Bloco:** BD-15-docs-guardrails-e-sincronizacao · **Gatilho:** fecha quando o `AGENTS.md` e o
+**Bloco:** item 58 (desde 2026-11-02) · **Gatilho:** fecha quando o `AGENTS.md` e o
 `INSTRUÇÕES-DO-PROJETO.md` listarem as seis rules de `.claude/rules/` e o
 `docs/estrutura-monolito.md` citar `shared/ui/Timestamp/`; dispara no próximo bloco que tocar
 qualquer um dos três. Revisar em **2026-10-31**.
@@ -352,7 +352,7 @@ do fechamento. O fechamento só escreve registros, e o João decidiu registrar e
 
 ## P-32 — a guarda da lição 13 confere path, não classe
 
-**Bloco:** BD-15 · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a
+**Bloco:** item 57 (desde 2026-11-02) · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a
 reincidência é o dado que falta para desenhar a guarda sem falso-positivo —, ou quando um bloco de
 hardening de doc a trouxer para o escopo. Revisar em **2026-10-31**.
 
@@ -436,7 +436,7 @@ fechados.
 
 ## P-52 — `invitation_tokens` existe desde 2026-08-18 e não tem ficha no `der-fisico.md`
 
-**Bloco:** — · **Gatilho:** fecha quando um bloco tocar `invitation_tokens` (convite de redator,
+**Bloco:** item 58 (desde 2026-11-02) · **Gatilho:** fecha quando um bloco tocar `invitation_tokens` (convite de redator,
 expiração, reenvio) e puder descrever as colunas com o comportamento já provado, ou quando um
 bloco de doc trouxer o `der-fisico.md` para o escopo de novo. Revisar em **2026-10-31**.
 
@@ -460,7 +460,7 @@ migrations. Enquanto essa medição não existir, a próxima tabela nova repete 
 
 ## P-53 — a auditoria do fechamento do BD-15 mediu 12 divergências que nenhum bloco tinha no escopo
 
-**Bloco:** — · **Gatilho:** fecha no primeiro bloco que tocar `docs/estrutura-monolito.md` ou
+**Bloco:** item 58 (desde 2026-11-02) · **Gatilho:** fecha no primeiro bloco que tocar `docs/estrutura-monolito.md` ou
 `.claude/rules/backend-ddd.md` por outro motivo e puder reconciliá-los contra a árvore, ou quando
 uma delas custar uma decisão errada de verdade (o candidato mais provável é o `Dashboard` ausente:
 é o doc que responde "onde vai o arquivo novo"). Revisar em **2026-10-31**.
@@ -519,7 +519,7 @@ as arestas de domínio, não para a árvore de pastas), a lista volta a crescer.
 
 ## P-54 — os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()`
 
-**Bloco:** — · **Gatilho:** o próximo bloco que escrever migration de permissão e puder absorver as
+**Bloco:** item 55 (desde 2026-11-02) · **Gatilho:** o próximo bloco que escrever migration de permissão e puder absorver as
 duas assertivas. Revisar em **2026-10-31**.
 
 Medido no review de `feedbacks-resolver-escopo` (2026-08-22, achado Q-4): o
@@ -551,7 +551,7 @@ sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do
 a mesma faixa no mesmo dia e mesclou antes, pela PR #105. Ver a nota da colisão em
 [`encerradas.md`](./encerradas.md).)*
 
-**Gatilho:** fecha quando o João decidir cada uma das sete linhas abaixo — a favor ou contra, tanto
+**Bloco:** item 57 (desde 2026-11-02) · **Gatilho:** fecha quando o João decidir cada uma das sete linhas abaixo — a favor ou contra, tanto
 faz, desde que a decisão vire commit. Revisar em **2026-10-31**.
 
 Medido em 2026-09-20, no `/fechar-sprint` do `harness-hooks-de-guarda`. O review de branch triou
@@ -924,7 +924,7 @@ segue de pé: fecha quando o João apagar ou mesclar uma das duas.
 
 ## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal, e um dos seis campos é acesso
 
-**Bloco:** — · **Gatilho:** o campo **1** (`is_active`) fechou em 2026-08-23 (ver o bloco final
+**Bloco:** item 51 (desde 2026-11-02) · **Gatilho:** o campo **1** (`is_active`) fechou em 2026-08-23 (ver o bloco final
 desta ficha). Restam **cinco**: o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
 `BudgetController::update` ou `CourseTemplateController::update`. Revisar em **2026-10-31**.
 
@@ -1103,7 +1103,7 @@ captura e em que chave ela acumula, o que é decisão do João e alimenta direta
 ## P-86 — o dump pré-deploy nunca rodou num deploy de verdade
 
 **Bloco:** cicd-promocao-deploy-e-rollback (item 12); — (o `cicd-host-alinhado-ao-sha`, item 31,
-fechou em 2026-09-26 sem hospedá-la — ver emenda abaixo) · **Gatilho:** o primeiro release
+fechou em 2026-09-26 sem hospedá-la — ver emenda abaixo); item 56 (desde 2026-11-02) · **Gatilho:** o primeiro release
 corporativo que trouxer migration nova. Nele, conferir: a linha `inicio` do `releases.jsonl` com
 `migrations` não vazio e `dump` com a chave `s3://…`, esse objeto existindo no S3, e o
 `verificar-backup.sh` aprovando. Se houver rollback recusado depois dele, a recusa tem de imprimir
@@ -1124,7 +1124,7 @@ bloco fechou sem pagar o gatilho.
 
 ## P-90 — o gate `/up` do `deploy.sh` corre contra o php-fpm quando o deploy recria só o `app`
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
+**Bloco:** item 56 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
 `deploy/bin/deploy.sh`, ou o próximo botão que sair `erro: /up respondeu 502`; revisar em
 **2026-10-31**.
 
@@ -1152,7 +1152,7 @@ fora da spec do 42.
 
 ## P-97 — dez divergências de coordenada e de mapa que a `auditar-docs` do item 33 mediu
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar
+**Bloco:** item 58 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar
 `docs/operacao-segredos.md`, `docs/estrutura-monolito.md` ou `deploy/aws/README.md` por outro motivo
 e puder reconciliá-los; dispara também quando uma citação por linha custar uma leitura errada.
 Revisar em **2026-10-31**.
@@ -1187,7 +1187,7 @@ fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-
 
 ## P-101 — o RUT quebra no hífen na tabela de alunos a 390 px
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar
+**Bloco:** item 49 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar
 `EnrollmentTable.tsx` ou `ArchivedEnrollmentsList.tsx` por outro motivo; dispara de qualquer forma se
 a Lotus reclamar do RUT quebrado no celular. Revisar em **2026-11-07**.
 
@@ -1200,7 +1200,7 @@ tabelas, fora do plano do 41.
 
 ## P-102 — o `CompliancePanel` e o dashboard não mostram os requisitos novos da conclusão
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
+**Bloco:** item 54 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
 `CompliancePanel` ou `OperationMetricsQuery::pendencias()`; dispara se a Lotus perguntar por que uma
 turma presencial "não está habilitada". Revisar em **2026-11-07**.
 
@@ -1214,7 +1214,7 @@ telas ficaram para trás:
 
 ## P-103 — a emissão do certificado decide a porta 2 e o snapshot fora da transação, e a correção de resultado pode entrar na janela
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
+**Bloco:** item 48 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
 `IssueCertificateAction`; dispara antes de a correção pós-conclusão ter uso real em produção, e de
 qualquer forma se aparecer certificado com resultado diferente da matrícula. Revisar em **2026-11-07**.
 
@@ -1233,7 +1233,7 @@ exige MySQL. Mesma família da **P-49** (`lockForWrite()` nos escritores).
 
 ## P-104 — o diálogo de conclusão diz "irreversível", e o aviso da turma concluída diz que o admin ainda corrige o resultado
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha quando o João decidir o texto; dispara no
+**Bloco:** item 48 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha quando o João decidir o texto; dispara no
 próximo bloco que tocar `operation.conclusion.confirmBody` ou `operation.detail.lock.concluida`. Revisar em
 **2026-11-07**.
 
@@ -1245,7 +1245,7 @@ com certificado emitido) e o que não é.
 
 ## P-105 — a tinta `danger` do tema escuro reprova AA sobre o fundo de 15% do `AppTag`
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** bloco que tocar `--tone-danger-ink`
+**Bloco:** item 49 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** bloco que tocar `--tone-danger-ink`
 (`brand-theme.css`), o `severityTone` do `AppTag` ou a P-74. Revisar em **2026-11-07**.
 
 O item 43 passou a medir no `frontend/tests/tone-ink.test.ts` cada tinta de severidade sobre o
@@ -1259,7 +1259,7 @@ em todas as telas.
 
 ## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
 
-**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
+**Bloco:** item 52 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
 (`Shared/Files`) ou os atributos de validação do `lang/`. Revisar em **2026-11-07**.
 
 O item 43 enviou um arquivo de tipo recusado ao upload do orçamento, e o erro dentro do diálogo
@@ -1274,7 +1274,7 @@ O gatilho não se desarma.
 
 ## P-108 — em 1024, o RUT do cliente passa por baixo do "Agregar cotización"
 
-**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar o cabeçalho do detalhe do
+**Bloco:** item 49 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar o cabeçalho do detalhe do
 orçamento. Revisar em **2026-11-07**.
 
 O smoke do item 43 viu, em 1024×768, o RUT do cliente sobreposto pelo botão "Agregar cotización"
@@ -1282,7 +1282,7 @@ no cabeçalho do detalhe do orçamento. É anterior ao bloco, que não tocou o c
 
 ## P-109 — o paginador das tabelas tem nomes acessíveis em inglês
 
-**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar o `AppDataTable` ou o `pt` do
+**Bloco:** item 49 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar o `AppDataTable` ou o `pt` do
 paginador. Revisar em **2026-11-07**.
 
 O `lotus-ui-review` do item 43 viu o paginador expor "Previous Page", "Next Page" e "Page N" a
@@ -1291,7 +1291,7 @@ sobrescreve. Anterior ao bloco.
 
 ## P-110 — a rule de estilização não conhece o título de seção de formulário em 13px e na marca
 
-**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar `.claude/rules/frontend-estilizacao.md`,
+**Bloco:** item 58 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar `.claude/rules/frontend-estilizacao.md`,
 `shared/ui/typography.ts` ou o `FormSection`/`SectionLabel`. Revisar em **2026-11-15**.
 
 A revisão do item 46 (Q-2, `CONFIRMED`) mediu que a tabela de tipografia da rule
