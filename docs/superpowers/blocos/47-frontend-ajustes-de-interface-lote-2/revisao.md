@@ -2,15 +2,24 @@
 
 ## Em aberto
 
-Correção aprovada pelo João em 2026-11-02 ("Resolva os minors"), ainda por aplicar. Os achados são
-Menor e não bloqueiam; a correção reabre a revisão (rodada 2).
+## Rodada 2 — `d220a04f..542b0560` — 2026-11-02 · Lente 1: opus · Lente 2: sonnet
 
-- Q-1 (Menor, CONFIRMED) — erro do envio concorrente no presupuesto.
-- Q-2 (Menor, CONFIRMED) — nome do excluir da firma do redator.
-- Q-3 (Menor, CONFIRMED) — slot de assinatura repetido em três consumidores.
-- Q-4 (Menor, PLAUSIBLE) — nome do excluir do documento da cotização.
-- Q-5 (Menor, CONFIRMED) — `UploadFileAction::execute` órfão.
-- Q-6 (Menor, CONFIRMED) — ações da foto em stage na criação.
+Classificação: alto risco, como na rodada 1. A lente Codex de novo não rodou: o `codex-companion`
+recusou `gpt-5.5` com o mesmo `model_not_found` ("not supported when using Codex with a ChatGPT
+account"). A rodada ficou só com o `revisor-bloco`.
+
+As correções da rodada 1 — Q-1 `bd7f38dd`, Q-2 `ded32f6e`, Q-3 `d8c7dded`, Q-4 `bcb679db`, Q-5
+`2110e7a6`, Q-6 `542b0560` — foram conferidas pela lente 1, sem regressão (`tsc` limpo, `eslint`
+limpo, 306 testes de frontend e 19 de backend nos filtros tocados). A "Quitar firma" da gerente
+ficou como está: tela de um arquivo só, fora do ruling 22.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | A lista de cotizaciones tem o defeito do Q-1 da rodada 1: uma `useUploadQuoteFile()` serve todas as linhas e só a linha que envia fica travada; um envio em outra linha solta o observer do primeiro, e o 422 dele não chega ao banner | CONFIRMED | `frontend/src/features/commercial/hooks/useQuoteFiles.ts:13,17,38-39`; `@tanstack/query-core@5.101.1 mutationObserver.js:58` (`removeObserver`) | registrado; não bloqueia |
+| Q-2 | Menor | `docs/estrutura-monolito.md` não registra o `AppSignatureSlot`, peça nova da pasta `AppSignatureUpload/` que as três telas de assinatura consomem | CONFIRMED | `docs/estrutura-monolito.md:128`; `frontend/src/shared/ui/AppSignatureUpload/index.ts:1` | divergência de doc: P-111 |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0 plausíveis,
+0 refutados · Menor: 2 confirmados, 0 plausíveis, 0 refutados
 
 ## Rodada 1 — `d220a04f..901e4135` — 2026-11-02 · Lente 1: opus · Lente 2: sonnet
 

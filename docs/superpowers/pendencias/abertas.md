@@ -1309,3 +1309,17 @@ tamanhos de faixa e o celeste num título, e reabriria a divergência que o audi
 O código não viola a rule: ela ficou atrás dele. Fecha com uma linha na tabela (o título de seção
 de formulário, 13px, na marca, a mesma voz da faixa um degrau acima) e o valor da constante nova
 congelado no `typography.test.ts`, como as outras.
+
+## P-111 — o `estrutura-monolito.md` não registra o `AppSignatureSlot`
+
+**Bloco:** — · **Quem decide:** — · **Gatilho:** fechamento do item 47 (`/finalizar-bloco 47`), que
+já tocou o `estrutura-monolito.md` (a linha do `AppFileSlot`), ou o bloco seguinte que tocar o doc.
+Revisar em **2026-11-15**.
+
+A rodada 2 da revisão do item 47 (Q-2, `CONFIRMED`) mediu que a linha da pasta
+`shared/ui/AppSignatureUpload/` (`docs/estrutura-monolito.md:128`) cita só `useSignatureCleaner`,
+`SignaturePreview` e `SignatureHint`. A correção do Q-3 da rodada 1 (`d8c7dded`) criou nessa pasta o
+`AppSignatureSlot` (`frontend/src/shared/ui/AppSignatureUpload/index.ts:1`): o `AppFileSlot` com a
+limpeza de D16, que a firma do redator, Mi perfil e a firma da gerente consomem. O ruling 24 aceitou
+que o nome da pasta engana e prometeu compensar no texto do doc; sem a peça no texto, quem procura
+"slot de assinatura" monta uma quarta fiação. Fecha acrescentando o `AppSignatureSlot` à mesma linha.
