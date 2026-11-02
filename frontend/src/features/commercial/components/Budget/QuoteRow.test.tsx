@@ -3,14 +3,18 @@ import { render, screen } from '@testing-library/react'
 import type { QuoteData } from '@shared/types/generated'
 import { QuoteRow } from './QuoteRow'
 
-// Ecoa o `tipo` da interpolação: o nome acessível das ações do arquivo leva o
-// curso da linha, que é o que distingue uma cotação da outra (D-23).
+// Ecoa a interpolação: o nome acessível das ações do arquivo leva o DOCUMENTO e
+// o curso da linha, que distingue uma cotação da outra (D-23). Só o curso faria o
+// excluir do arquivo soar como o da cotação (Q-4 da revisão do bloco 47).
 vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
   return {
     ...(await importOriginal<typeof import('react-i18next')>()),
     useTranslation: mockUseTranslation({
-      t: (key, opts) => (opts?.tipo === undefined ? key : `${key}:${String(opts.tipo)}`),
+      t: (key, opts) => {
+        const arg = opts?.tipo ?? opts?.curso
+        return arg === undefined ? key : `${key}:${String(arg)}`
+      },
     }),
   }
 })
@@ -45,14 +49,14 @@ describe('QuoteRow — nome acessível do arquivo', () => {
   it('sem arquivo, o enviar leva o curso da linha', () => {
     montar([])
 
-    expect(screen.getByRole('button', { name: 'common.uploadNamed:Alta tensión' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'common.uploadNamed:quote.documentOf:Alta tensión' })).toBeTruthy()
   })
 
   it('com arquivo, substituir e excluir levam o curso; a lixeira da cotação segue com o nome simples', () => {
     montar([arquivo])
 
-    expect(screen.getByRole('button', { name: 'common.replaceNamed:Alta tensión' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'common.deleteNamed:Alta tensión' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'common.replaceNamed:quote.documentOf:Alta tensión' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'common.deleteNamed:quote.documentOf:Alta tensión' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'common.delete' })).toBeTruthy()
   })
 })

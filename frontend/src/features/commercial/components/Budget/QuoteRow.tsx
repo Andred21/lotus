@@ -29,6 +29,10 @@ export function QuoteRow({
   const { t } = useTranslation()
   const preview = useFilePreview<FileData>()
   const current = latestFile(quote.files ?? [])
+  // O nome das ações do arquivo diz que o alvo é o DOCUMENTO; o curso só
+  // distingue a linha. Só o curso fazia o excluir do arquivo soar como o da
+  // cotação (Q-4 da revisão do bloco 47).
+  const documento = t('quote.documentOf', { curso: courseName })
 
   return (
     <div
@@ -102,9 +106,9 @@ export function QuoteRow({
           file={current}
           onPreview={preview.open}
           onUpload={onUpload}
-          uploadLabel={t('common.uploadNamed', { tipo: courseName })}
-          replaceLabel={t('common.replaceNamed', { tipo: courseName })}
-          removeLabel={t('common.deleteNamed', { tipo: courseName })}
+          uploadLabel={t('common.uploadNamed', { tipo: documento })}
+          replaceLabel={t('common.replaceNamed', { tipo: documento })}
+          removeLabel={t('common.deleteNamed', { tipo: documento })}
           uploading={uploading}
           onSizeReject={onSizeReject}
           onRemove={current ? () => onRemoveFile(current.id) : undefined}

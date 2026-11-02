@@ -611,6 +611,7 @@
     "confirmDeleteTitle": "¿Eliminar cotización?",
     "confirmDeleteBody": "Podrás restaurarla desde Archivados.",
     "documents": "Documentos",
+    "documentOf": "documento de {{curso}}",
     "studentsShort_one": "{{count}} alumno",
     "studentsShort_other": "{{count}} alumnos"
   },
