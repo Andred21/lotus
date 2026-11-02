@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { usePermissions, useTableFilter } from '@shared/hooks'
 import {
   ArchiveRowActions, AppColumn, AppDataTable, AppEmptyState, IdentityCell, archivedColumns, narrowFloorTablePt,
-  stickyActionsColumn, useCollapsibleActionsColumn,
+  stickyActionsColumn, useCollapsibleActionsColumn, identifierClass,
 } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { EnrollmentData } from '@shared/types/generated'
@@ -79,7 +79,7 @@ export function ArchivedEnrollmentsList({
       />
       <AppColumn
         header={t('operation.enrollment.table.rut')}
-        field="rut"
+        body={(e: ArchivedEnrollmentRow) => <span className={identifierClass}>{e.rut}</span>}
         style={largura.rut}
       />
       {/* Sem guarda de modo: esta lista SÓ existe no modo arquivado, então as duas
