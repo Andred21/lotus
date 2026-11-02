@@ -89,7 +89,12 @@ class CertificationMetricsQueryTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_conta_aprovados_sem_qualquer_certificado_e_nao_reabre_revogado(): void
+    /**
+     * Achado 0.3 da ficha 48: a pendência olhava "qualquer certificado" e
+     * escondia a matrícula aprovada cujo único certificado foi revogado. Revogar
+     * reabre a emissão (decisão do João, 2026-11-02), então ela volta a contar.
+     */
+    public function test_conta_aprovados_sem_certificado_vigente_e_reabre_revogado(): void
     {
         $turma = $this->createConcludedTurma();
         $this->createEnrollment($turma, EnrollmentApprovalStatus::Aprobado);
@@ -99,7 +104,7 @@ class CertificationMetricsQueryTest extends TestCase
 
         $query = app(CertificationMetricsQuery::class);
 
-        $this->assertSame(1, $query->certificadosAEmitir());
+        $this->assertSame(2, $query->certificadosAEmitir());
         $this->assertSame([
             [
                 'module' => DashboardModule::Certification,
@@ -109,6 +114,28 @@ class CertificationMetricsQueryTest extends TestCase
                 'navigation' => ['turma_id' => $turma->id],
             ],
         ], $this->pendingProjection($query->pendencias()));
+    }
+
+    public function test_revogado_seguido_de_emitido_nao_e_pendencia(): void
+    {
+        $turma = $this->createConcludedTurma();
+        $enrollment = $this->createEnrollment($turma, EnrollmentApprovalStatus::Aprobado);
+        $this->createCertificate($enrollment, CertificateStatus::Revocado);
+        $this->createCertificate($enrollment, CertificateStatus::Emitido);
+
+        $query = app(CertificationMetricsQuery::class);
+
+        $this->assertSame(0, $query->certificadosAEmitir());
+        $this->assertSame([], $query->pendencias());
+    }
+
+    public function test_revogado_de_matricula_reprovada_nao_e_pendencia(): void
+    {
+        $turma = $this->createConcludedTurma();
+        $enrollment = $this->createEnrollment($turma, EnrollmentApprovalStatus::Reprobado);
+        $this->createCertificate($enrollment, CertificateStatus::Revocado);
+
+        $this->assertSame(0, app(CertificationMetricsQuery::class)->certificadosAEmitir());
     }
 
     public function test_pendencias_agregam_uma_linha_por_turma(): void
