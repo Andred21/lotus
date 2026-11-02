@@ -2,10 +2,10 @@
 schema_version: 3
 id: 42
 slug: 42-infra-producao-higiene-e-manutencao
-workflow_state: blocked
-next_owner: joao
-next_action: "resolve_blocker aguardando aceitação: itens 6, 7, 8"
-resume_state: ready_for_closure
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item aceitacao externa
+resume_state: null
 active_spec: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/spec.md
 active_plan: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/plano.md
 active_review: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/revisao.md
@@ -13,13 +13,13 @@ active_acceptance: docs/superpowers/blocos/42-infra-producao-higiene-e-manutenca
 context_packet: null
 efeito_externo: sim
 executor: claude
-branch: infra/42-infra-producao-higiene-e-manutencao
+branch: docs/42-infra-producao-higiene-e-manutencao
 worktree: ../lotus-42-infra-producao-higiene-e-manutencao
 offset: 2
-lane_base: 68790dac
-commit: 22e40493
-blocker: "aguardando aceitação depois do merge: itens 6, 7, 8 da ## Verificação externa"
-updated_at: 2026-10-27T16:54:56-03:00
+lane_base: d220a04f
+commit: d220a04f
+blocker: null
+updated_at: 2026-11-02T14:12:30-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
@@ -38,3 +38,5 @@ Aberto por lane.sh abrir. O contrato dos campos esta em docs/superpowers/state.m
   (`git diff --stat main...docs/13-go-live-confiabilidade-e-recuperacao`, HEAD `7bbef4be`) toca só
   `aceitacao.md`, `estado.md` e `proposta-dis02.md`, na pasta do próprio bloco. O `conferir` compara
   as listas de arquivos dos planos, não o que cada lane ainda vai mudar.
+
+Reaberto em 2026-11-02 pelo lane.sh aceitar, na branch docs/42-infra-producao-higiene-e-manutencao; a branch do bloco era infra/42-infra-producao-higiene-e-manutencao.
