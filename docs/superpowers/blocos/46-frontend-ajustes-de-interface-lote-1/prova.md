@@ -12,7 +12,15 @@ Medido em 2026-11-01 com Playwright (Chromium 1248), por `getComputedStyle` e
 - Largura do `lg` (Cliente e Curso): 1440 → 1008px; 1920 → 1344px; 2560 → 1344px (teto 84rem);
   390 → 371px (95vw).
 - Maximizar o Cliente em 1440: 1440px (teto solto); restaurar: volta a 1008px.
-- Curso abre em `lg`: 1008px em 1440 e 1344px em 1920.
+- Curso abre em `lg`: 1008px em 1440 e 1344px em 1920. Tem o botão de maximizar em leitura e em
+  edição; em edição, maximizado 1440px e restaurado 1008px, respiro 24 / 24 nos três, sem
+  rolagem horizontal na página nem no corpo.
+- Cliente novo (`lg`, criação): 1008px, 24 / 24.
+- `md` igual a antes: Usuario e Rol abrem em 768px (48rem), 24 / 24.
+- Não medidos no navegador: `sm` (nenhum diálogo `sm` alcançável com o dado local) e os diálogos de
+  certificação (Emisión e Historial sem linhas; a amostra do Curso abre em aba, não em diálogo).
+  Ficam pelos testes do `AppDialog` (degraus do `lg` ausentes em `sm`/`md`; corpo `pt-6 pb-6`).
+  O confirmar de arquivar é `ConfirmDialog` do Prime, fora do `AppDialog`, e ficou como era.
 
 ## Ticket 02 — hierarquia seção × label × valor (Cliente, leitura e edição)
 
@@ -22,7 +30,8 @@ Medido em 2026-11-01 com Playwright (Chromium 1248), por `getComputedStyle` e
 - Linha da seção: `color(srgb 0.145 0.647 0.894 / 0.35)` (`--section-rule`), 1px, nos dois temas.
 - Label: 14px / 500 na tinta de corpo — claro `rgb(51, 65, 85)` (10,35:1), escuro
   `rgba(255,255,255,0.87)` (14,63:1). Valor de leitura: 14px / 400, mesma tinta.
-- Perfil: label 14px / 500 na tinta de corpo. Login: label 14px / 500, `rgb(51, 65, 85)`.
+- Perfil: label 14px / 500 — escuro `rgba(255,255,255,0.87)`, claro `rgb(51, 65, 85)`.
+  Login: 14px / 500 — claro `rgb(51, 65, 85)`, escuro `rgba(255,255,255,0.87)`.
 
 ## Ticket 03 — ações de linha (1440 e 390)
 
@@ -43,8 +52,11 @@ Medido em 2026-11-01 com Playwright (Chromium 1248), por `getComputedStyle` e
 - Não medido no navegador: botão desabilitado (Emisión e Historial sem linhas no banco local) e
   matrículas arquivadas (sem dado). Os dois ficam cobertos pelos testes de `RowActions`
   (`p-tooltip-left` também no desabilitado).
-- Fora do ticket, registrado: as tabelas de Alumnos (Personas › Students) e de Roles montam
-  `AppButton` direto, sem `RowActions`; ficam como antes (sem centro nem dica).
+- Alumnos (Personas › Students) e Roles: passaram ao `RowActions` na onda de correção final
+  (ruling, "toda tabela do produto" no ticket 03). Remedido depois dela: View 33 / 32 nas duas,
+  dica `p-tooltip-left`; as demais tabelas mantiveram as mesmas folgas com o `span` estável.
+- O desabilitado usa o mesmo `DICA` à esquerda medido no habilitado; os rótulos existem nos três
+  locales (medida feita só em `en`).
 
 ## Ticket 04 — Presupuestos
 
@@ -58,16 +70,19 @@ Medido em 2026-11-01 com Playwright (Chromium 1248), por `getComputedStyle` e
 
 ## Ticket 06 — Configuración › Certificados
 
-- Grid da aba com `padding` 24px nos quatro lados, nos dois temas.
+- Grid da aba com `padding` 24px nos quatro lados, nos dois temas; a navegação lateral fica a
+  24px do topo e da esquerda, em 1440 e em 390, sem rolagem horizontal.
+- Usuarios segue de borda a borda: tabela encostada no painel (`padding` 0), em 1440 e 390.
 
 ## Ticket 07 — fundo da assinatura
 
 - Escuro: xadrez `#96d4f2` / `#c2e6f7` (`--primary-300` / `--primary-200`); a assinatura (traço
-  preto) fica legível. Mantido 300/200, sem descer para 100/200.
+  preto) fica legível, lida em Administración › Settings › Certificates. Mantido 300/200, sem descer para 100/200.
 - Claro: `#dfe7ef` / `#ffffff`, o xadrez de antes.
-- Perfil do admin não tem campo de assinatura; o Redactor usa o mesmo `AppSignatureUpload`.
+- Perfil do admin não tem campo de assinatura e o banco local não tem Redactor com assinatura: a
+  prévia do Redactor não foi medida; usa o mesmo `AppSignatureUpload`, coberto pelo teste do xadrez.
 
 ## Gate
 
 `pnpm build` ok (só o aviso de chunk pré-existente); `pnpm lint` limpo; `pnpm test` 199 arquivos,
-1432 testes, todos passando. O cliente arquivado para a medida foi restaurado (`deleted_at` nulo).
+1439 testes (depois da onda de correção final), todos passando. O cliente arquivado para a medida foi restaurado (`deleted_at` nulo).
