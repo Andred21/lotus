@@ -38,7 +38,11 @@ export function BudgetDocumentsCard({
     setSizeError(null)
     const file = e.files[0]
     if (!file) return
-    upload.mutate({ budgetId, type, file }, { onSuccess: () => e.options.clear() })
+    // Limpa ANTES da mutação, como os demais slots: no modo básico o Prime só
+    // renderiza o `<input>` com o estado de arquivos vazio, e limpar só no
+    // sucesso deixava o slot sem seletor depois de um 422.
+    e.options.clear()
+    upload.mutate({ budgetId, type, file })
   }
 
   // O erro de envio anterior é do arquivo anterior: não fica à frente do tamanho.

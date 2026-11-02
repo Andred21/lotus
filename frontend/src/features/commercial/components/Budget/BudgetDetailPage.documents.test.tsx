@@ -85,7 +85,7 @@ describe('BudgetDocumentsCard — um slot fixo por tipo', () => {
     const inputs = container.querySelectorAll('input[type="file"]')
     fireEvent.change(inputs[1], { target: { files: [pdf] } })
 
-    expect(mutate).toHaveBeenCalledWith({ budgetId: 7, type: 'invoice', file: pdf }, expect.anything())
+    expect(mutate).toHaveBeenCalledWith({ budgetId: 7, type: 'invoice', file: pdf })
   })
 
   it('com dois invoice antigos, o slot mostra só o mais recente', () => {

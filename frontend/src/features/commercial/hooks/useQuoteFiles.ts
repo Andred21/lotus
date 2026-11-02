@@ -23,7 +23,11 @@ export function useQuoteFiles() {
     setSizeError(null)
     const file = e.files[0]
     if (!file) return
-    uploadFile.mutate({ quoteId, file }, { onSuccess: () => e.options.clear() })
+    // Limpa ANTES da mutação: o Prime só renderiza o `<input>` com o estado de
+    // arquivos vazio, e limpar só no sucesso deixava a linha sem seletor depois
+    // de um 422.
+    e.options.clear()
+    uploadFile.mutate({ quoteId, file })
   }
 
   return {
