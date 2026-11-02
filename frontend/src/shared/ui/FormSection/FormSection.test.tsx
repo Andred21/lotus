@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { FormSection } from './FormSection'
-import { sectionLabelClass } from '../typography'
+import { formSectionTitleClass } from '../typography'
 
 /**
  * A D1/P-36 do audit de 2026-08-26 tirou a tinta de marca do título de seção
@@ -27,17 +27,25 @@ describe('FormSection', () => {
       .toContain('var(--section-rule)')
   })
 
-  it('carrega a hierarquia no peso e no tracking', () => {
+  it('o título sai em 13px, um degrau acima da faixa de 12px (João, 2026-11-01)', () => {
     render(<FormSection title="Identidad" />)
 
     const titulo = screen.getByRole('heading', { name: 'Identidad', level: 3 })
-    expect(titulo.className).toContain(sectionLabelClass)
+    expect(titulo.className).toContain(formSectionTitleClass)
+    expect(titulo.className).not.toContain('text-xs')
   })
 
-  it('`spaced` acrescenta o respiro de cima sem mexer no resto', () => {
+  it('separa o título do conteúdo com um respiro próprio', () => {
+    const { container } = render(<FormSection title="Identidad" />)
+
+    expect(container.firstElementChild?.classList.contains('pb-1')).toBe(true)
+  })
+
+  it('`spaced` afasta a seção da anterior em 1rem', () => {
     const { container } = render(<FormSection title="Seguridad" spaced />)
 
-    expect(container.firstElementChild?.className).toContain('pt-2')
+    expect(container.firstElementChild?.classList.contains('pt-4')).toBe(true)
+    expect(container.firstElementChild?.classList.contains('pt-2')).toBe(false)
   })
 
   /**
@@ -50,6 +58,6 @@ describe('FormSection', () => {
     render(<FormSection title="Datos personales" as="h2" />)
 
     const titulo = screen.getByRole('heading', { name: 'Datos personales', level: 2 })
-    expect(titulo.className).toContain(sectionLabelClass)
+    expect(titulo.className).toContain(formSectionTitleClass)
   })
 })

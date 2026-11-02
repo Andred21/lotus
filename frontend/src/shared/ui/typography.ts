@@ -27,6 +27,14 @@ export const pageTitleClass = 'font-display text-2xl font-semibold tracking-tigh
 export const sectionLabelClass = 'text-xs font-semibold tracking-wider uppercase'
 
 /**
+ * Título de seção de FORMULÁRIO: a mesma voz da faixa, um degrau acima (13px).
+ * Só o `FormSection` a usa (via `SectionLabel tone="brand"`); as faixas de
+ * Dashboard, Sidebar e cartões seguem nos 12px da D-63. Pedido do João em
+ * 2026-11-01 (bloco 46), junto com o respiro entre seções.
+ */
+export const formSectionTitleClass = 'text-[0.8125rem] font-semibold tracking-wider uppercase'
+
+/**
  * Rótulo de CAMPO — o `<dt>` de uma lista de definição. Peça diferente da faixa
  * de seção (spec D5): não encabeça grupo, não é heading, não carrega peso.
  */
