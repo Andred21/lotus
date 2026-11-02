@@ -33,3 +33,8 @@ loop da SDD a registrar.
   interno" virou o respiro título → conteúdo, não um recuo lateral do conteúdo: o `FormSection` é
   só o cabeçalho, e recuar exigiria embrulhar o conteúdo nas 16 telas. Custo se errado: recuo
   lateral ainda por fazer, ou um degrau a mais/menos em três classes.
+- **Fechamento (2026-11-01) — o merge da `origin/main` trouxe a `ImportTriageTable` do bloco 44
+  com `tooltip: true`**, opt-in que este bloco tirou do `RowAction` (a dica agora sai sempre): o
+  `pnpm build` quebrou no `067fb607`. Corrigido tirando o campo das duas ações (editar e remover);
+  a ordem própria → remover já segue o ticket 03. Não medido no navegador (pede planilha de
+  importação); fica pelos testes de `RowActions`. Custo se errado: dica que não aparece na triagem.
