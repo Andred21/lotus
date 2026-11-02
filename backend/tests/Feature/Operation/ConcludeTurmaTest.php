@@ -54,9 +54,11 @@ class ConcludeTurmaTest extends TestCase
     private function completarDocs(): void
     {
         $action = app(StoreTurmaDocumentAction::class);
+        // Turma em andamento: as Actions não consultam permissão, qualquer ator serve.
+        $actor = User::factory()->create();
         foreach (TurmaDocumentType::cases() as $type) {
             $action->execute($this->turma, $type,
-                UploadedFile::fake()->create('d.pdf', 10, 'application/pdf'));
+                UploadedFile::fake()->create('d.pdf', 10, 'application/pdf'), $actor);
         }
     }
 
@@ -211,13 +213,21 @@ class ConcludeTurmaTest extends TestCase
         $this->assertSame('em_andamento', $turma->fresh()->status->value);
     }
 
-    public function test_rn15_upload_e_delete_apos_conclusao_422(): void
+    public function test_rn15_upload_e_delete_apos_conclusao_422_para_redator(): void
     {
-        $this->actingAsSuperadmin();
+        // Redator não tem `manage_concluded_docs`: o 422 vale para ele. O caso do
+        // superadmin (201/204) está em `TurmaDocumentApiTest`.
         $this->completarDocs();
         $docId = $this->turma->files()->first()->id;
+        // Conclui pela Action e não pela rota: um 2º ator na mesma requisição de
+        // teste herda o usuário da 1ª (o guard guarda o resolvido).
+        app(ConcludeTurmaAction::class)->execute($this->turma);
 
-        $this->postJson("/api/turmas/{$this->turma->id}/conclude")->assertOk();
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->create(['type' => 'redator', 'is_active' => true]);
+        $user->assignRole('redator');
+        $this->turma->redatores()->attach($user->redator()->create([])->id);
+        $this->actingAs($user, 'web');
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
             'type' => 'PRUEBAS',

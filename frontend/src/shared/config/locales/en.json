@@ -198,6 +198,7 @@
     "operation_turma_assign_redator": "Assign a qualified editor to the class (Flow 3)",
     "operation_turma_complete": "Confirm class completion (Flow 4 — admin confirms)",
     "operation_turma_submit_docs": "Upload class documentation (Flow 1/4 — editor action)",
+    "operation_turma_manage_concluded_docs": "Upload and remove documents of a concluded class",
     "certification_certificate_view": "View certificates",
     "certification_certificate_issue": "Issue certificate (Flow 5)",
     "certification_certificate_revoke": "Revoke certificate (Flow 6 — sensitive, legal weight)",

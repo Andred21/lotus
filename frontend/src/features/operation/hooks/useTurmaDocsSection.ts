@@ -47,8 +47,11 @@ export function useTurmaDocsSection(turma: TurmaData) {
   // só esta aba, e o cartão que a explica passou a ser da `TurmaDetailPage`
   // (UI-01) — mantê-lo aqui diria o mesmo motivo duas vezes na mesma tela. Falta
   // de permissão continua, porque é específico desta aba e não aparece em lugar
-  // nenhum. `canSubmit` NÃO mudou: o que a aba deixa fazer é o mesmo, só o
-  // cartão trocou de dono.
+  // nenhum.
+  // Turma concluída tranca o registro (RN-15), e o documento é a exceção de um
+  // só papel: quem tem `manage_concluded_docs` (superadmin) ainda sobe e remove.
+  // `submit_docs` continua sendo o portão da rota — a permissão nova só abre o
+  // caso concluído, e a API recusa o resto com 422.
   const lockReason: 'permission' | null = hasPermission ? null : 'permission'
 
   return {
@@ -62,7 +65,7 @@ export function useTurmaDocsSection(turma: TurmaData) {
     totalTypes: TURMA_DOCUMENT_TYPES.length,
     habilitada: turma.habilitada === true,
     concluida,
-    canSubmit: !concluida && hasPermission,
+    canSubmit: hasPermission && (!concluida || can('operation.turma.manage_concluded_docs')),
     lockReason,
     upload: (type: TurmaDocumentType, file: File) =>
       uploadMutation.mutate(

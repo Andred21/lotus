@@ -198,6 +198,7 @@
     "operation_turma_assign_redator": "Designar redator idôneo à turma (Fluxo 3)",
     "operation_turma_complete": "Confirmar conclusão da turma (Fluxo 4 — admin confirma)",
     "operation_turma_submit_docs": "Subir documentação da turma (Fluxo 1/4 — ação do redator)",
+    "operation_turma_manage_concluded_docs": "Subir e remover documentos de turma concluída",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado (Fluxo 5)",
     "certification_certificate_revoke": "Revogar certificado (Fluxo 6 — sensível, peso legal)",

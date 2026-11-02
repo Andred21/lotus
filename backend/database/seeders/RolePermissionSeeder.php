@@ -57,6 +57,7 @@ class RolePermissionSeeder extends Seeder
             'certification.certificate.revoke', // revogação de peso legal: exclusivo do superadmin
             'certification.settings.manage', // assinatura impressa em todo certificado: exclusivo do superadmin (spec D3)
             'operation.turma.submit_docs', // ação do redator, não do admin
+            'operation.turma.manage_concluded_docs', // documento de turma concluída (peso legal): exclusivo do superadmin
         ]));
     }
 
