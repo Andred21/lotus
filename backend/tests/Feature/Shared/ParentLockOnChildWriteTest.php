@@ -54,8 +54,8 @@ class ParentLockOnChildWriteTest extends TestCase
         'Identity/Actions/RestoreRedatorAction.php' => 'É o lado que RESTAURA: toma `Redator::lockRow()` cru, sobre linha arquivada — `lockForWrite` a recusaria.',
         'Operation/Actions/DeleteTurmaAction.php' => 'É o lado que ARQUIVA: toma `Turma::lockRow()` cru, sobre linha em vias de ser arquivada.',
         'Operation/Actions/RestoreTurmaAction.php' => 'É o lado que RESTAURA: toma `Turma::lockRow()` cru, sobre linha arquivada — `lockForWrite` a recusaria.',
-        'Operation/Actions/ImportStudentsAction.php' => 'Não abre transação: a transação do import é POR LINHA e mora no `EnrollStudentAction`, que toma o lock. '.
-            '`lockForUpdate()` fora de transação é solto no autocommit da própria consulta — o lock aqui seria teatro.',
+        'Operation/Actions/ImportStudentsAction.php' => 'Abre a transação POR LINHA só para juntar o update do cadastro do aluno (escrita em `users`, que não é filho de `Turma`) '.
+            'à matrícula; a escrita de filho da turma é a do `EnrollStudentAction`, que toma o `Turma::lockForWrite` dentro dela, antes de gravar a matrícula.',
         'Operation/Actions/UpdateTurmaAction.php' => 'Escreve o PRÓPRIO pai (`$turma->update`), não filho. A corrida pai-vs-pai é outra e está fora do escopo da P-49.',
         'Operation/Actions/ConcludeTurmaAction.php' => 'Escreve o PRÓPRIO pai (`status`/`concluded_at`), não filho. Mesmo motivo do `UpdateTurmaAction`.',
         'Operation/Actions/RemoveRedatorAction.php' => 'O `detach` REDUZ vínculo. A janela da P-49 é pousar filho ATIVO sob pai arquivado; remover não pousa nada.',

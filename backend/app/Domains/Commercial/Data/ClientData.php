@@ -7,6 +7,7 @@ use App\Domains\Commercial\Rules\UmContatoPrincipal;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use App\Shared\Rules\ValidRut;
+use App\Shared\Support\TetosDeColuna;
 use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -37,8 +38,9 @@ class ClientData extends Data
         public string $name,
         #[Required]
         public string $rut,
-        #[Required, Email]
+        #[Required, Email, Max(TetosDeColuna::EMAIL)]
         public string $email,
+        #[Max(TetosDeColuna::TELEFONE)]
         public string|Optional|null $phone,
         #[Required, Max(TetosImpressos::RAZAO_SOCIAL)]
         public string $legal_name,

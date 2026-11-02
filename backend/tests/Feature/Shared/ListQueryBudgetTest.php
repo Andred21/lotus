@@ -69,6 +69,7 @@ class ListQueryBudgetTest extends TestCase
         'api/me' => 'devolve a sessão corrente (usuário, papel, permissões), um registro por request',
         'api/profile' => 'o perfil de quem está logado: um usuário, os documentos dele são bounded pelo enum',
         'api/permissions' => 'catálogo estático de permissões (PermissionCatalog), não cresce com o uso',
+        'api/versao' => 'versão da plataforma em execução (config), um valor escalar — não há N que cresça com o uso',
         'api/certificate-settings' => 'singleton de Configuración › Certificados: uma linha, uma assinatura',
     ];
 
@@ -93,6 +94,7 @@ class ListQueryBudgetTest extends TestCase
      */
     private const COM_PAI_ISENTAS = [
         'api/turmas/{turma}/alunos/preview' => 'pré-visualização de UMA matrícula por RUT (query `rut`), não lista',
+        'api/turmas/{turma}/alunos/importar/plantilla' => 'download de arquivo, não lista',
         'api/turmas/{turma}/manual' => 'gera um PDF de uma turma — resposta binária, não lista',
         'api/turmas/{turma}/manual/docx' => 'gera um DOCX de uma turma — resposta binária, não lista',
         'api/certificates/{certificate}/pdf' => 'gera o PDF de um certificado — resposta binária',

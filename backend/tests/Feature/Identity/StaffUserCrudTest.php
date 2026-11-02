@@ -39,6 +39,19 @@ class StaffUserCrudTest extends TestCase
             ->assertOk()->assertJsonPath('email', 'nuevo@lotus.cl');
     }
 
+    public function test_telefone_ou_email_acima_da_coluna_recusa_422_sem_gravar(): void
+    {
+        $this->actingAsSuperadmin();
+
+        $this->postJson('/api/users', [
+            'name' => 'Nuevo Admin', 'email' => str_repeat('a', 250).'@lotus.cl',
+            'phone' => str_repeat('9', 31),
+            'password' => 'secret123', 'role' => 'admin', 'is_active' => true,
+        ])->assertStatus(422)->assertJsonValidationErrors(['email', 'phone']);
+
+        $this->assertDatabaseMissing('users', ['name' => 'Nuevo Admin']);
+    }
+
     public function test_update_sem_senha_preserva_login(): void
     {
         $this->actingAsSuperadmin();

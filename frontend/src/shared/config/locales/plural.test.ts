@@ -28,6 +28,12 @@ const CHAVES = [
   'operation.pending.students',
   'operation.table.count',
   'operation.enrollment.footerCount',
+  'operation.enrollment.import.counts.new',
+  'operation.enrollment.import.counts.registered',
+  'operation.enrollment.import.counts.moves',
+  'operation.enrollment.import.counts.already_enrolled',
+  'operation.enrollment.import.counts.error',
+  'operation.enrollment.import.confirm',
   'certificate.validation.hours',
 ] as const
 

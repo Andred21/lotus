@@ -109,6 +109,10 @@ segundo é que **três sítios estão em pt-BR num produto es-CL**: o `ValidRut`
 respondem em português a um operador chileno, e o `logout` também. Isso é observável hoje, sem
 mudar locale nenhum.
 
+**Alcance novo (bloco 44):** a frase do `UserProvisioner::DUPLICADO` agora também aparece na tabela
+da triagem da importação (a prévia chama `ensureIdentityAvailable` via `assertCanCreate`) e na recusa
+da linha do Actualizar. O gatilho não muda.
+
 **Por que fica aberta:** fechar pede a quarta porta da catraca (`$fail` de `ValidationRule`) e uma
 quinta para resposta de sucesso — não é dicionário, é mecanismo, e o mecanismo é o que a
 `.claude/rules/backend-lang.md` manda estender junto. O bloco do envelope fechou a lista de quatro

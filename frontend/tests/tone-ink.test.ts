@@ -373,8 +373,27 @@ describe('moldura navy do diálogo padrão (bloco 43)', () => {
 
   it.each([
     '.lotus-dialog .p-dialog-header .p-dialog-title,\n.lotus-dialog .p-dialog-header .p-dialog-header-icon',
-    '.lotus-dialog .p-dialog-footer .p-button.p-button-text',
   ])('%s lê a tinta do shell', (seletor) => {
     expect(regra(seletor)).toMatch(/color:\s*var\(--shell-ink\)/)
+  })
+
+  // J-1 do bloco 44: o `link` do cabeçalho e o `outlined` do rodapé herdavam a
+  // cor da marca do Lara (navy sobre navy, 2,18:1). Os três estilos sem fundo
+  // leem a tinta do shell nos dois lados.
+  it('link, outlined e text, no header e no footer, leem a tinta do shell', () => {
+    const seletores = ['header', 'footer']
+      .flatMap((lado) => ['text', 'link', 'outlined'].map((v) => `.lotus-dialog .p-dialog-${lado} .p-button.p-button-${v}`))
+      .join(',\n')
+
+    expect(regra(seletores)).toMatch(/color:\s*var\(--shell-ink\)/)
+  })
+
+  it('o outlined do diálogo desenha a borda em tinta clara, não na marca', () => {
+    const corpo = regra(
+      '.lotus-dialog .p-dialog-header .p-button.p-button-outlined,\n.lotus-dialog .p-dialog-footer .p-button.p-button-outlined',
+    )
+    expect(corpo).toMatch(/border-color:\s*rgb\(255 255 255 \/ 0\.5\)/)
+    // 50% de branco sobre o navy passa os 3:1 de contorno de componente.
+    expect(contraste('#87959e', hex(camadaDeMarca, '--brand-navy'))).toBeGreaterThanOrEqual(3)
   })
 })

@@ -39,12 +39,14 @@ Route::middleware('auth.active')->group(function () {
 
     Route::get('turmas/{turma}/alunos', [EnrollmentController::class, 'index']);
     Route::get('turmas/{turma}/alunos/preview', [EnrollmentController::class, 'preview']);
+    Route::get('turmas/{turma}/alunos/importar/plantilla', [EnrollmentController::class, 'template']);
     // ANTES de qualquer rota GET com segundo parâmetro, senão
     // `alunos/archived` casaria como `alunos/{enrollment}` (hoje não existe
     // essa rota, mas a ordem evita criar a colisão amanhã).
     Route::get('turmas/{turma}/alunos/archived', [EnrollmentController::class, 'archived']);
     Route::post('turmas/{turma}/alunos', [EnrollmentController::class, 'store']);
     Route::post('turmas/{turma}/alunos/importar', [EnrollmentController::class, 'import'])->middleware('throttle:import');
+    Route::post('turmas/{turma}/alunos/importar/previa', [EnrollmentController::class, 'previewImport'])->middleware('throttle:import-preview');
     Route::put('turmas/{turma}/alunos/{enrollment}/resultado', [EnrollmentController::class, 'result'])
         ->scopeBindings();
     Route::delete('turmas/{turma}/alunos/{enrollment}', [EnrollmentController::class, 'destroy'])

@@ -12,8 +12,11 @@ use App\Domains\Operation\Data\ArchivedEnrollmentData;
 use App\Domains\Operation\Data\EnrollmentData;
 use App\Domains\Operation\Data\EnrollmentResultData;
 use App\Domains\Operation\Data\EnrollPreviewData;
+use App\Domains\Operation\Data\ImportConfirmData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\ImportPreviewService;
+use App\Domains\Operation\Services\SpreadsheetTemplate;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
 use App\Shared\Files\ContentClass;
@@ -24,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EnrollmentController extends Controller implements HasMiddleware
 {
@@ -31,7 +35,7 @@ class EnrollmentController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:operation.turma.view', only: ['index', 'archived']),
-            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'destroy', 'preview']),
+            new Middleware('permission:operation.enrollment.manage', only: ['store', 'import', 'previewImport', 'destroy', 'preview', 'template']),
             // Separada de `manage` de propósito: o redator lança nota e presença
             // sem ganhar matricular/importar/remover (RN-02, spec D6). O escopo
             // por turma vem do binding, não daqui.
@@ -89,13 +93,38 @@ class EnrollmentController extends Controller implements HasMiddleware
             ->setStatusCode(201);
     }
 
-    public function import(Request $request, Turma $turma, ImportStudentsAction $action): JsonResponse
+    /**
+     * Modelo `.xlsx` da importação. Não carrega dado da turma (o `{turma}` só
+     * posiciona a rota sob a permissão de matricular) e sai de arquivo
+     * temporário apagado após o envio.
+     */
+    public function template(Turma $turma, SpreadsheetTemplate $template): BinaryFileResponse
+    {
+        $path = tempnam(sys_get_temp_dir(), 'plantilla');
+        $template->write($path);
+
+        return response()
+            ->download($path, 'plantilla-alumnos.xlsx', [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])
+            ->deleteFileAfterSend();
+    }
+
+    /** Prévia da planilha: classifica as linhas sem escrever nada (spec D9/D10). */
+    public function previewImport(Request $request, Turma $turma, ImportPreviewService $service): JsonResponse
     {
         $validated = $request->validate([
             'file' => ContentClass::Planilha->regras(),
         ]);
 
-        return RespostaDeRecurso::ok($action->execute($turma, $validated['file']));
+        // 200, não 201: POST que lê e não cria nada (o Data devolvido cru sairia 201).
+        return RespostaDeRecurso::ok($service->preview($turma, $validated['file'], $request->user()));
+    }
+
+    /** Confirmação JSON linha a linha: o servidor revalida cada uma (spec D13). */
+    public function import(ImportConfirmData $data, Request $request, Turma $turma, ImportStudentsAction $action): JsonResponse
+    {
+        return RespostaDeRecurso::ok($action->execute($turma, $data, $request->user()));
     }
 
     public function result(

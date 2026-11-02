@@ -297,6 +297,37 @@ created_at: string | null,
 export type ForgotPasswordData = {
 email: string,
 };
+export type ImportConfirmData = {
+rows: ImportConfirmRowData[] | undefined,
+};
+export type ImportConfirmRowData = {
+row: number,
+rut: string,
+name: string,
+email: string | null,
+phone: string | null,
+update_registration: boolean,
+};
+export type ImportField = 'name' | 'email' | 'phone';
+export type ImportPreviewData = {
+rows: ImportPreviewRowData[],
+can_update_registration: boolean,
+};
+export type ImportPreviewRowData = {
+row: number,
+rut: string,
+name: string,
+email: string | null,
+phone: string | null,
+status: ImportRowStatus,
+message: string | null,
+current_client: string | null,
+archived: boolean,
+divergent: ImportField[],
+registered_name: string | null,
+registered_email: string | null,
+registered_phone: string | null,
+};
 export type ImportResultData = {
 created: number,
 relinked: number,
@@ -310,6 +341,7 @@ export type ImportRowErrorData = {
 row: number,
 message: string,
 };
+export type ImportRowStatus = 'new' | 'registered' | 'moves' | 'already_enrolled' | 'error';
 export type IssueCertificateData = {
 redator_id: number,
 };
@@ -714,4 +746,7 @@ type: undefined | string,
 roles: string[],
 photo_url: string | null,
 last_login: string | null,
+};
+export type VersaoData = {
+versao: string,
 };

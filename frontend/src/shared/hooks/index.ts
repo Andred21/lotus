@@ -14,6 +14,7 @@ export { useCrudForm } from './useCrudForm'
 export { useArchivedPage } from './useArchivedPage'
 export { useArchiveAction } from './useArchiveAction'
 export { useBlobTabOpener } from './useBlobTabOpener'
+export { useBlobDownload } from './useBlobDownload'
 // `useArchiveToasts` NÃO sai daqui: é o mecanismo interno das duas linhas acima,
 // consumido por caminho relativo. Barrel é fronteira pública (mesma nota da
 // guarda de classificação do `useCrudForm`).
