@@ -109,6 +109,9 @@
   O `43` nasceu em 2026-10-28, aberto pelo João a partir do diálogo de matrícula da Operación, que
   empilhava os campos: a moldura dos diálogos e o tipo dos documentos do orçamento. Entrou pela PR
   da própria lane, com o mesmo desvio da invariante 10 e a mesma cópia provisória do `42`.
+  O `46` nasceu em 2026-11-01, aberto pelo João para um lote de até cinco ajustes de interface
+  ditados um a um. Entrou pela PR da própria lane, com o mesmo desvio da invariante 10 e a mesma
+  cópia provisória do `42`.
   **O `frontend-campo-de-formulario-liga-no-form` foi registrado como "item 24" na `lane-c` sem
   nunca ter ficha aqui**; o rótulo foi corrigido no fechamento da lane-a, por decisão do João, e
   **nenhum número foi reusado nem renumerado**. O `15` fica queimado, porque chegou a nomear o
@@ -167,6 +170,53 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 
 ---
 
+## 46. `frontend-ajustes-de-interface-lote-1`
+
+**Prioridade:** P1 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
+**Fonte:** pedido do João em 2026-11-01, ditado mudança a mudança; cada uma é confirmada no código
+antes de entrar no escopo.
+
+**Por que existe:** um lote de ajustes de interface que o João levantou usando o sistema. O lote
+tem no máximo cinco mudanças; o que passar disso vira o lote seguinte, com ficha própria.
+
+**Escopo:** uma mudança por vez, máximo de cinco; o que falta a preencher.
+1. **Hierarquia do corpo do diálogo**, em todo `AppDialog`, e por `FormSection`/`FormField` no
+   produto inteiro (Perfil e formulários inclusive) — decisão do João, 2026-11-01:
+   - **respiro simétrico:** o conteúdo tem `pt-2` (`AppDialog/style.ts`) contra os 2rem de baixo
+     do Lara; header e footer passam a enquadrar o corpo com o mesmo espaçamento; vale também
+     para a aba Configuración › Certificados da administração, colada à barra de abas e ao rodapé;
+   - **seção:** título no celeste `--primary-color` do código Scap, nos dois temas (abaixo do AA
+     no claro, aceito pelo João), e linha contínua até a borda, no mesmo tom e mais clara (`SectionLabel` `rule`, hoje desligada no
+     `FormSection`). **Reverte a D1/P-36**, por decisão do João: os testes do `FormSection` e do
+     `SectionLabel` e os docblocks mudam junto, e a reversão fica registrada no bloco;
+   - **label × valor:** a label do `FormField` passa a 14px peso 500 na tinta de corpo (hoje
+     cinza secundário, com o mesmo corpo do valor); o valor fica em 14px regular.
+2. **Tabelas** — decisão do João, 2026-11-01:
+   - **ações de linha, em toda tabela:** ver primeiro, ações próprias no meio, arquivar por último
+     (hoje o `ArchiveRowActions` põe ver no fim); ícones centralizados na coluna (hoje
+     `justify-end`); dica traduzida em todo botão (hoje só onde a tabela liga `tooltip`);
+   - **Presupuestos:** abre do mais novo para o mais antigo; Código (pelo número do Scap), Estado
+     (Pendiente → Aprobada → Rechazada) e Cotizaciones ganham ordenação no cabeçalho. Só nesta
+     tabela.
+3. **Tamanho de diálogo** — decisão do João, 2026-11-01: o `lg` volta à largura de antes do
+   bloco 43 (70vw a partir de 1024px, teto de 84rem; hoje 64rem), `sm` e `md` não mudam; o
+   diálogo de Curso passa de `md` para `lg` e ganha o maximizar.
+
+4. **Fundo da assinatura** — decisão do João, 2026-11-01: sempre claro, para a assinatura escura
+   aparecer; no tema claro fica como hoje, no escuro o xadrez vira azul claro (não branco).
+
+Lote reaberto na revisão da spec e fechado em quatro mudanças (decisão do João, 2026-11-01): o que
+vier depois é o lote 2.
+
+Tickets de cada mudança: `blocos/46-frontend-ajustes-de-interface-lote-1/tickets/`.
+
+**Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria.
+
+**DoD:** cada mudança do escopo provada na tela, no stack da lane; `pnpm build`, `pnpm lint` e
+`pnpm test` verdes.
+
+---
+
 ## 47. `frontend-ajustes-de-interface-lote-2`
 
 **Prioridade:** P1 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
@@ -195,9 +245,12 @@ Tickets de cada mudança: `blocos/47-frontend-ajustes-de-interface-lote-2/ticket
 **Fora:** mudança que exija schema novo ou regra de negócio nova, que vira ficha própria — salvo a
 regra de um arquivo por tipo da mudança 1, aceita pelo João; o que o lote 1 (bloco 46) já cobre.
 
-**Colisão com o 46:** o 46 ainda está vivo, e o lote 2 tende a tocar os mesmos componentes
-(`AppDialog`, `FormSection`, tabelas). O `lane.sh conferir` do plano acusa a interseção; se cruzar,
-o plano espera o 46 mesclar e parte da `main` atualizada.
+**Leva o 46 junto:** a branch do 46, executada e em `ready_for_review`, foi mesclada nesta lane
+(decisão do João, 2026-11-01). O lote 2 parte do código do lote 1, e os dois saem numa PR só para
+a `main`.
+
+**DoD:** cada mudança do escopo provada na tela, no stack da lane; `php artisan test`, `pnpm build`,
+`pnpm lint` e `pnpm test` verdes.
 
 ---
 

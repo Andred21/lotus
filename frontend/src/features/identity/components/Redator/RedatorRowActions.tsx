@@ -13,7 +13,7 @@ export function RedatorRowActions({
   onArchive,
   onRestore,
   collapsed,
-  leading,
+  extra,
 }: {
   redator: RedatorData
   archived: boolean
@@ -22,7 +22,7 @@ export function RedatorRowActions({
   onArchive: (r: RedatorData) => void
   onRestore: (r: RedatorData) => void
   collapsed: boolean
-  leading?: RowAction[]
+  extra?: RowAction[]
 }) {
   const { can } = usePermissions()
 
@@ -36,7 +36,7 @@ export function RedatorRowActions({
       onArchive={() => onArchive(redator)}
       onView={() => onView(redator)}
       collapsed={collapsed}
-      leading={leading}
+      extra={extra}
     />
   )
 }

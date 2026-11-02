@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -10,6 +10,7 @@ import type { ArchiveMode } from '@shared/hooks'
 import { budgetWidths } from './budgetColumns'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
+import { budgetSortProps, newestFirst } from '../../lib/budgetOrder'
 import { formatUf, type ArchivableRow } from '@shared/lib'
 import { useCommercialClients } from '../../hooks/useCommercialClients'
 import { BudgetRowActions } from './BudgetRowActions'
@@ -60,11 +61,14 @@ export function BudgetsTable({
    * depois que as duas responderam. */
   const carregando = loading || clients.isLoading
 
+  // Ordem padrão (D7): Scap mais novo no topo, antes do filtro — a ordem sobrevive à busca.
+  const maisNovosPrimeiro = useMemo(() => newestFirst(budgets), [budgets])
+
   // Busca por código OU cliente: o AppDataTable filtra só por campos da própria
   // linha, e o nome do cliente não é um deles (vem de outra query). Por isso o
   // filtro é aplicado aqui, antes de entregar as linhas à tabela.
   const table = useTableFilter(
-    budgets,
+    maisNovosPrimeiro,
     (b) => [b.code, clients.clientName(b.client_id)],
     status === null ? undefined : (b) => b.status === status,
   )
@@ -99,6 +103,7 @@ export function BudgetsTable({
     >
       <AppColumn
         header={t('budget.code')}
+        field="id" sortable
         body={(b: BudgetData) => <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
         style={largura.code}
       />
@@ -115,10 +120,11 @@ export function BudgetsTable({
         }}
         style={largura.client}
       />
-      <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} style={largura.quoteCount} />
+      <AppColumn header={t('budget.quoteCount')} body={(b: BudgetData) => <span className="font-semibold">{b.quotes.length}</span>} style={largura.quoteCount} {...budgetSortProps('quoteCount')} />
       <AppColumn header={t('budget.totalValue')} body={(b: BudgetData) => `${formatUf(b.total_value_uf ?? '0')} UF`} style={largura.totalValue} />
       <AppColumn
         header={t('budget.status')}
+        {...budgetSortProps('status')}
         body={(b: BudgetData) =>
           b.status ? <AppTag value={t(`quoteStatus.${b.status}`)} severity={quoteStatusSeverity(b.status)} /> : null
         }

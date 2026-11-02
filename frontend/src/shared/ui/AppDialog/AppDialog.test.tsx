@@ -45,7 +45,7 @@ describe('AppDialog — tamanho', () => {
   it.each([
     ['sm', 'max-w-[32rem]'],
     ['md', 'max-w-[48rem]'],
-    ['lg', 'max-w-[64rem]'],
+    ['lg', 'max-w-[84rem]'],
   ] as const)('%s crava o teto %s e a moldura navy', (size, teto) => {
     render(<AppDialog size={size} visible header="Diálogo" onHide={() => {}} />)
 
@@ -72,6 +72,32 @@ describe('AppDialog — tamanho', () => {
     render(<AppDialog size="lg" visible header="Diálogo" onHide={() => {}} />)
 
     expect(document.querySelector('.p-dialog')?.className).toContain('[&.p-dialog-maximized]:max-w-none')
+  })
+
+  it('lg cresce em degraus: 95vw, 85vw a partir de sm, 70vw a partir de lg', () => {
+    render(<AppDialog size="lg" visible header="Diálogo" onHide={() => {}} />)
+
+    const classe = document.querySelector('.p-dialog')?.className
+    for (const c of ['w-[95vw]', 'sm:w-[85vw]', 'lg:w-[70vw]', 'max-w-[84rem]']) {
+      expect(classe).toContain(c)
+    }
+  })
+
+  it.each(['sm', 'md'] as const)('%s não ganha os degraus do lg', (size) => {
+    render(<AppDialog size={size} visible header="Diálogo" onHide={() => {}} />)
+
+    const classe = document.querySelector('.p-dialog')?.className
+    expect(classe).not.toContain('sm:w-[85vw]')
+    expect(classe).not.toContain('lg:w-[70vw]')
+  })
+
+  it('o corpo tem o mesmo respiro em cima e embaixo', () => {
+    render(<AppDialog size="md" visible header="Diálogo" onHide={() => {}} />)
+
+    const classe = document.querySelector('.p-dialog-content')?.className
+    expect(classe).toContain('pt-6')
+    expect(classe).toContain('pb-6')
+    expect(classe).not.toContain('pt-2')
   })
 
   it('o footer navy tem respiro em cima e embaixo', () => {

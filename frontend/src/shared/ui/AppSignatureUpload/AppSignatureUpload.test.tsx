@@ -4,6 +4,7 @@ import { UnsupportedImageError } from '@shared/lib/signature'
 import type { Raster } from '@shared/lib/signature'
 import { fileToRaster, rasterToPngFile } from '@shared/lib/signature/canvasBridge'
 import { AppSignatureUpload } from './AppSignatureUpload'
+import { signatureCheckerboard } from './checkerboard'
 
 vi.mock('@shared/lib/signature/canvasBridge', () => ({
   fileToRaster: vi.fn(),
@@ -113,5 +114,11 @@ describe('AppSignatureUpload', () => {
     escolher()
 
     await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('signature.errorTooHeavy'))
+  })
+
+  it('o xadrez lê os tokens da assinatura, não as superfícies do tema', () => {
+    expect(signatureCheckerboard.backgroundImage).toContain('var(--signature-bg-a)')
+    expect(signatureCheckerboard.backgroundImage).toContain('var(--signature-bg-b)')
+    expect(signatureCheckerboard.backgroundImage).not.toContain('--surface-card')
   })
 })

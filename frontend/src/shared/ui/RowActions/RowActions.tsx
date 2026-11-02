@@ -5,13 +5,12 @@ import { AppButton } from '../AppButton'
 import { AppMenu, type AppMenuRef } from '../AppMenu'
 
 export type RowAction = {
-  /** Já traduzido: nome acessível do botão e rótulo do item de menu. */
+  /** Já traduzido: nome acessível do botão, dica no hover do botão solto e
+   * rótulo do item de menu. */
   label: string
   icon: string
   onClick: () => void
   disabled?: boolean
-  /** Dica no hover do botão solto. O item de menu já mostra o rótulo. */
-  tooltip?: boolean
   /** Ação destrutiva (remover matrícula): tinge o botão solto de perigo. No
    * menu o rótulo já diz o que a ação faz. */
   severity?: 'danger'
@@ -19,6 +18,53 @@ export type RowAction = {
    * aponta para a tag do bloqueio (f3 UI-03). Vale no botão solto; a tabela
    * que usa é de ação única e nunca abre menu. */
   describedBy?: string
+}
+
+/** A dica abre à ESQUERDA do ícone. A coluna presa mora na borda direita da
+ * tabela, e à direita (o default do Prime) a dica passava da moldura e criava
+ * rolagem horizontal na página — achado do João no "Revocar" do Historial
+ * (review do item 23). */
+const DICA: TooltipProps = { position: 'left' }
+
+/**
+ * Um botão solto da linha. Apagado, o `Button` do Prime não abre dica nenhuma
+ * (`showTooltip = !disabled || showOnDisabled`), e o `showOnDisabled` dele
+ * embrulha o botão num `div` criado FORA do React, que a reconciliação não
+ * conhece. Aqui o invólucro é um `span` do próprio React: o `.p-disabled` do
+ * Prime põe `pointer-events: none` no botão, então o hover cai no `span`, e é
+ * nele que a dica se prende — o "Emitir" apagado da Emisión volta a dizer o
+ * que é (Q-1 do review do item 23).
+ *
+ * O `span` existe SEMPRE, e só o `Tooltip` entra quando a ação está apagada:
+ * com a árvore estável o React mantém o mesmo nó de botão quando o `disabled`
+ * alterna, e o foco do teclado não se perde (item 46).
+ */
+function RowActionButton({ acao }: { acao: RowAction }) {
+  const involucro = useRef<HTMLSpanElement>(null)
+
+  return (
+    <>
+      <span ref={involucro} className="inline-flex">
+        <AppButton
+          icon={acao.icon}
+          text
+          rounded
+          severity={acao.severity}
+          aria-label={acao.label}
+          aria-describedby={acao.describedBy}
+          tooltip={!acao.disabled ? acao.label : undefined}
+          tooltipOptions={DICA}
+          disabled={acao.disabled}
+          onClick={acao.onClick}
+        />
+      </span>
+      {/* O `useRef` do React 19 tipa `RefObject<T | null>`, e o d.ts do Prime
+        * ainda pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
+      {acao.disabled && (
+        <Tooltip target={involucro as RefObject<HTMLElement>} content={acao.label} {...DICA} />
+      )}
+    </>
+  )
 }
 
 /**
@@ -38,55 +84,12 @@ export type RowAction = {
  *
  * Com uma ação só não há menu: seria um clique a mais para chegar ao mesmo
  * lugar, e um botão já cabe na coluna colapsada.
+ *
+ * Todo botão solto mostra o próprio rótulo como dica, habilitado ou não, sem
+ * pedir. A dica já foi opt-in (`tooltip: true`), e cinco tabelas ficavam com
+ * ícones mudos — o item 46 tirou a opção: um botão só-ícone sem nome visível não
+ * tem motivo para calar. Os botões ficam centralizados na coluna.
  */
-/** A dica abre à ESQUERDA do ícone. A coluna presa mora na borda direita da
- * tabela, e à direita (o default do Prime) a dica passava da moldura e criava
- * rolagem horizontal na página — achado do João no "Revocar" do Historial
- * (review do item 23). */
-const DICA: TooltipProps = { position: 'left' }
-
-/**
- * Um botão solto da linha. Apagado, o `Button` do Prime não abre dica nenhuma
- * (`showTooltip = !disabled || showOnDisabled`), e o `showOnDisabled` dele
- * embrulha o botão num `div` criado FORA do React, que a reconciliação não
- * conhece. Aqui o involucro é um `span` do próprio React: o `.p-disabled` do
- * Prime põe `pointer-events: none` no botão, então o hover cai no `span`, e é
- * nele que a dica se prende — o "Emitir" apagado da Emisión volta a dizer o
- * que é (Q-1 do review do item 23).
- */
-function RowActionButton({ acao }: { acao: RowAction }) {
-  const involucro = useRef<HTMLSpanElement>(null)
-  const dicaNoInvolucro = acao.tooltip && acao.disabled
-
-  const botao = (
-    <AppButton
-      icon={acao.icon}
-      text
-      rounded
-      severity={acao.severity}
-      aria-label={acao.label}
-      aria-describedby={acao.describedBy}
-      tooltip={acao.tooltip && !acao.disabled ? acao.label : undefined}
-      tooltipOptions={DICA}
-      disabled={acao.disabled}
-      onClick={acao.onClick}
-    />
-  )
-
-  if (!dicaNoInvolucro) return botao
-
-  return (
-    <>
-      <span ref={involucro} className="inline-flex">
-        {botao}
-      </span>
-      {/* O `useRef` do React 19 tipa `RefObject<T | null>`, e o d.ts do Prime
-        * ainda pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
-      <Tooltip target={involucro as RefObject<HTMLElement>} content={acao.label} {...DICA} />
-    </>
-  )
-}
-
 export function RowActions({ actions, collapsed }: { actions: RowAction[]; collapsed: boolean }) {
   const { t } = useTranslation()
   const menu = useRef<AppMenuRef>(null)
@@ -95,7 +98,7 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
 
   if (!collapsed || actions.length === 1) {
     return (
-      <div className="flex justify-end gap-1">
+      <div className="flex justify-center gap-1">
         {actions.map((acao) => (
           <RowActionButton key={acao.label} acao={acao} />
         ))}
@@ -104,7 +107,7 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
   }
 
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-center">
       <AppButton
         icon="pi pi-ellipsis-v"
         text

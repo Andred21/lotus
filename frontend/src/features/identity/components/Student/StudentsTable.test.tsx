@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import { setViewportWidth } from '@shared/testing/viewport'
 import type { ServerTable } from '@shared/hooks'
@@ -49,5 +50,30 @@ describe('StudentsTable — coluna de ações no telefone (UI-01)', () => {
     const tabelaEl = document.querySelector('table') as HTMLTableElement
     expect(tabelaEl.className).toContain('sm:min-w-[42rem]')
     expect(tabelaEl.style.getPropertyValue('--table-narrow-floor')).toBe('40rem')
+  })
+})
+
+/** Item 46: o "ver" da linha passa pelo `RowActions` como as demais tabelas —
+ * centrado na coluna e com o rótulo como dica à esquerda. */
+describe('StudentsTable — ação "ver" da linha', () => {
+  it('fica centralizada na célula', () => {
+    renderWithProviders(<StudentsTable table={tabela} onView={() => {}} />)
+
+    const botao = screen.getByRole('button', { name: 'common.view' })
+    expect(botao.closest('div')!.className).toContain('justify-center')
+  })
+
+  it('mostra o rótulo como dica, à esquerda', async () => {
+    renderWithProviders(<StudentsTable table={tabela} onView={() => {}} />)
+
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'common.view' }))
+
+    const dica = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.p-tooltip')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(dica.textContent).toBe('common.view')
+    expect(dica.className).toContain('p-tooltip-left')
   })
 })

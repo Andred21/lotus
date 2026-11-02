@@ -81,8 +81,38 @@ describe('RowActions', () => {
     expect(botao.getAttribute('aria-describedby')).toBe('motivo')
   })
 
+  it('os botões soltos ficam centralizados na coluna', () => {
+    const { container } = render(<RowActions collapsed={false} actions={[acao('Ver'), acao('Archivar')]} />)
+
+    const conteiner = container.firstElementChild!
+    expect(conteiner.className).toContain('justify-center')
+    expect(conteiner.className).not.toContain('justify-end')
+  })
+
+  it('o gatilho colapsado também fica centralizado na coluna', () => {
+    const { container } = render(<RowActions collapsed actions={[acao('Ver'), acao('Archivar')]} />)
+
+    const conteiner = container.firstElementChild!
+    expect(conteiner.className).toContain('justify-center')
+    expect(conteiner.className).not.toContain('justify-end')
+  })
+
+  it('todo botão mostra o rótulo como dica, sem precisar pedir', async () => {
+    render(<RowActions collapsed={false} actions={[acao('Ver')]} />)
+
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'Ver' }))
+
+    const dica = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.p-tooltip')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(dica.textContent).toBe('Ver')
+    expect(dica.className).toContain('p-tooltip-left')
+  })
+
   it('a dica abre à ESQUERDA do ícone: à direita ela passa da borda da tabela e cria rolagem na página', async () => {
-    render(<RowActions collapsed={false} actions={[acao('Revocar', { tooltip: true })]} />)
+    render(<RowActions collapsed={false} actions={[acao('Revocar')]} />)
 
     fireEvent.mouseEnter(screen.getByRole('button', { name: 'Revocar' }))
 
@@ -95,8 +125,8 @@ describe('RowActions', () => {
     expect(dica.className).toContain('p-tooltip-left')
   })
 
-  it('o botão apagado também mostra a dica, pelo invólucro: o Prime não a abre em botão disabled', async () => {
-    render(<RowActions collapsed={false} actions={[acao('Emitir', { tooltip: true, disabled: true })]} />)
+  it('o botão desabilitado também mostra a dica, à esquerda, pelo invólucro: o Prime não a abre em botão disabled', async () => {
+    render(<RowActions collapsed={false} actions={[acao('Emitir', { disabled: true })]} />)
 
     const botao = screen.getByRole('button', { name: 'Emitir' })
     expect(botao.hasAttribute('disabled')).toBe(true)
@@ -112,8 +142,21 @@ describe('RowActions', () => {
   })
 })
 
+describe('RowActions — árvore estável', () => {
+  it('o mesmo nó de botão sobrevive quando o disabled alterna (o foco não se perde)', () => {
+    const { rerender } = render(<RowActions collapsed={false} actions={[acao('Emitir')]} />)
+    const antes = screen.getByRole('button', { name: 'Emitir' })
+
+    rerender(<RowActions collapsed={false} actions={[acao('Emitir', { disabled: true })]} />)
+    expect(screen.getByRole('button', { name: 'Emitir' })).toBe(antes)
+
+    rerender(<RowActions collapsed={false} actions={[acao('Emitir')]} />)
+    expect(screen.getByRole('button', { name: 'Emitir' })).toBe(antes)
+  })
+})
+
 describe('ArchiveRowActions colapsada', () => {
-  it('as ações de antes (leading) entram no mesmo menu que arquivar e ver', () => {
+  it('as ações próprias (extra) entram no mesmo menu, entre ver e arquivar', () => {
     render(
       <ArchiveRowActions
         collapsed
@@ -124,16 +167,16 @@ describe('ArchiveRowActions colapsada', () => {
         onRestore={() => {}}
         onArchive={() => {}}
         onView={() => {}}
-        leading={[acao('redator.resendInvitation', { icon: 'pi pi-envelope' })]}
+        extra={[acao('redator.resendInvitation', { icon: 'pi pi-envelope' })]}
       />,
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'common.moreActions' }))
     const itens = itensDoMenu().map((item) => item.getAttribute('aria-label'))
-    expect(itens).toEqual(['redator.resendInvitation', 'archive.archiveAction', 'common.view'])
+    expect(itens).toEqual(['common.view', 'redator.resendInvitation', 'archive.archiveAction'])
   })
 
-  it('fora do colapso, as ações de antes vêm antes de arquivar e ver, na mesma linha', () => {
+  it('fora do colapso, as ações próprias vêm entre ver e arquivar, na mesma linha', () => {
     render(
       <ArchiveRowActions
         archived={false}
@@ -143,12 +186,12 @@ describe('ArchiveRowActions colapsada', () => {
         onRestore={() => {}}
         onArchive={() => {}}
         onView={() => {}}
-        leading={[acao('redator.resendInvitation', { icon: 'pi pi-envelope' })]}
+        extra={[acao('redator.resendInvitation', { icon: 'pi pi-envelope' })]}
       />,
     )
 
     const nomes = screen.getAllByRole('button').map((botao) => botao.getAttribute('aria-label'))
-    expect(nomes).toEqual(['redator.resendInvitation', 'archive.archiveAction', 'common.view'])
+    expect(nomes).toEqual(['common.view', 'redator.resendInvitation', 'archive.archiveAction'])
   })
 
   it('na visão de arquivados, restaurar perde o rótulo visível e fica só ícone, com nome acessível', () => {
@@ -158,6 +201,41 @@ describe('ArchiveRowActions colapsada', () => {
 
     const restaurar = screen.getByRole('button', { name: 'archive.restoreAction' })
     expect(restaurar.textContent?.trim()).toBe('')
+  })
+
+  it('o restaurar só-ícone mostra a dica', async () => {
+    render(<ArchiveRowActions collapsed archived busy={false} canRestore onRestore={() => {}} />)
+
+    fireEvent.mouseEnter(screen.getByRole('button', { name: 'archive.restoreAction' }))
+
+    const dica = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.p-tooltip')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(dica.textContent).toBe('archive.restoreAction')
+    expect(dica.className).toContain('p-tooltip-left')
+  })
+
+  it('o restaurar desabilitado (busy) também mostra a dica, pelo invólucro', async () => {
+    render(<ArchiveRowActions collapsed archived busy canRestore onRestore={() => {}} />)
+
+    const botao = screen.getByRole('button', { name: 'archive.restoreAction' })
+    expect(botao.hasAttribute('disabled')).toBe(true)
+    fireEvent.mouseEnter(botao.parentElement!)
+
+    const dica = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.p-tooltip')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(dica.textContent).toBe('archive.restoreAction')
+  })
+
+  it('o restaurar fica centralizado na célula', () => {
+    const { container } = render(<ArchiveRowActions archived busy={false} canRestore onRestore={() => {}} />)
+
+    expect(container.firstElementChild!.className).toContain('justify-center')
   })
 
   it('fora do colapso, restaurar segue rotulado', () => {

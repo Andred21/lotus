@@ -32,7 +32,7 @@ export function CourseRowActions({
 
   // A amostra é do curso ativo (a linha arquivada só restaura) e segue o gate
   // do PDF emitido. Esconder o botão é conveniência: a API é quem autoriza.
-  const leading: RowAction[] = can('certification.certificate.view')
+  const extra: RowAction[] = can('certification.certificate.view')
     ? [{
         label: t('course.certificatePreview'),
         icon: 'pi pi-file-pdf',
@@ -42,7 +42,7 @@ export function CourseRowActions({
     : []
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-center gap-1">
       <ArchiveRowActions
         archived={archived}
         busy={busy}
@@ -52,7 +52,7 @@ export function CourseRowActions({
         onArchive={() => onArchive(course)}
         onView={() => onView(course)}
         collapsed={collapsed}
-        leading={leading}
+        extra={extra}
       />
       {/* Um aviso só, na forma do `StudentCertificateCell`: popup bloqueado tem
           texto próprio, o resto é a mensagem do erro. */}
