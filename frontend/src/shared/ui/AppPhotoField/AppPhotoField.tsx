@@ -9,6 +9,7 @@ import type { FileUploadHandlerEvent } from "../AppFileUpload";
 import { useFilePreview } from "@shared/hooks";
 import { MAX_PHOTO_BYTES } from "@shared/lib/upload";
 import { dangerText } from "../../styles/tokens"
+import { DICA_ESQUERDA } from "../dicaEsquerda";
 
 /** A URL é a única coisa que o `useEntityPhoto` expõe da foto: o arquivo
  * previsualizável é montado em volta dela. O `mime` só serve para o preview
@@ -23,6 +24,10 @@ export interface AppPhotoFieldProps {
   /** Nome da pessoa/empresa — vira as duas iniciais quando não há foto. */
   name: string;
   url?: string | null;
+  /** A foto foi escolhida e ainda não subiu (criação): a `url` é um `blob:` do
+   * navegador. Só o tirar do stage, sem confirmação — nada no servidor se
+   * perde (spec §4.1; Q-6 da revisão do bloco 47). */
+  staged?: boolean;
   readOnly?: boolean;
   pending?: boolean;
   /** Mensagem de erro do upload/remoção, já traduzida. */
@@ -39,7 +44,8 @@ export interface AppPhotoFieldProps {
 /**
  * Campo de foto do corpo dos diálogos de cadastro. Com foto, as ações vêm
  * embaixo do avatar, só-ícone e com dica: ver (abre o preview no próprio campo),
- * baixar, substituir e excluir (que confirma). Sem foto, só o enviar.
+ * baixar, substituir e excluir (que confirma). Sem foto, só o enviar. Foto em
+ * stage (criação, ainda não enviada), só o tirar do stage.
  * Apresentacional puro: não conhece rota, mutation nem modo do diálogo — quem
  * orquestra é `useEntityPhoto` (spec D8).
  *
@@ -53,6 +59,7 @@ export interface AppPhotoFieldProps {
 export function AppPhotoField({
   name,
   url,
+  staged = false,
   readOnly = false,
   pending = false,
   error,
@@ -106,7 +113,19 @@ export function AppPhotoField({
       <div className="flex flex-col gap-2 items-center">
         {(url || !readOnly) && (
           <div className="flex flex-wrap items-center justify-center gap-1 pt-4">
-            {url ? (
+            {url && staged && !readOnly ? (
+              <AppButton
+                icon="pi pi-times"
+                text
+                rounded
+                severity="danger"
+                aria-label={t("photo.remove")}
+                tooltip={t("photo.remove")}
+                tooltipOptions={DICA_ESQUERDA}
+                disabled={pending}
+                onClick={onRemove}
+              />
+            ) : url ? (
               <AppFileActions
                 file={arquivo(url, t("photo.fileName"))}
                 onPreview={preview.open}

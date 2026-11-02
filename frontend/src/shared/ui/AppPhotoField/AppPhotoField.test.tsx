@@ -94,6 +94,27 @@ describe('AppPhotoField — ver e excluir', () => {
   })
 })
 
+describe('AppPhotoField — foto em stage (criação)', () => {
+  // A foto escolhida no cadastro ainda não subiu: baixar o que acabou de sair do
+  // disco não serve, e "não pode ser desfeito" seria falso (Q-6 da revisão do
+  // bloco 47; spec §4.1).
+  it('mostra só o tirar do stage', () => {
+    render(<AppPhotoField {...base} url="blob:lotus" staged />)
+
+    expect(nomesDosBotoes()).toEqual(['photo.remove'])
+  })
+
+  it('tirar do stage não pede confirmação', () => {
+    const onRemove = vi.fn()
+    render(<AppPhotoField {...base} url="blob:lotus" staged onRemove={onRemove} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'photo.remove' }))
+
+    expect(onRemove).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+})
+
 describe('AppPhotoField — erro', () => {
   it('mostra a mensagem e o Reintentar quando há onRetry', () => {
     const onRetry = vi.fn()

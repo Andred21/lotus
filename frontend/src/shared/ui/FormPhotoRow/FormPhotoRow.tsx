@@ -31,6 +31,7 @@ export function FormPhotoRow({
         <AppPhotoField
           name={name}
           url={photo.url}
+          staged={photo.staged}
           readOnly={readOnly}
           pending={photo.pending}
           error={photo.error}

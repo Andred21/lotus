@@ -125,6 +125,9 @@ export function useEntityPhoto({ resource, id, mode, url, invalidateKey }: UseEn
 
   return {
     url: mode === 'create' ? preview : (url ?? null),
+    // Escolhida no create e ainda não enviada: nunca saiu do navegador, então o
+    // campo oferece só o tirar do stage (Q-6 da revisão do bloco 47).
+    staged: mode === 'create' && preview !== null,
     pending: upload.isPending || remove.isPending,
     error: sizeError ?? mutationError,
     onSelect,
