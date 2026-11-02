@@ -117,3 +117,33 @@ it('Rechazar e Aprobar dividem a geometria da linha', () => {
   // `p-button-sm` é a geometria de 40px do Prime: a que criava o degrau.
   expect(rechazar.classList.contains('p-button-sm')).toBe(false)
 })
+
+describe('QuotesList: um slot de documento por cotação', () => {
+  const arq = (id: number, nome: string, created_at: string) => ({
+    id, type: 'quote_document', original_name: nome, mime: 'application/pdf', size: 10,
+    download_url: `/f/${id}`, created_at,
+  })
+
+  it('com dois arquivos mostra só o mais recente, com ver, baixar, substituir e excluir', () => {
+    const q = {
+      ...COTACAO,
+      files: [arq(1, 'antiga.pdf', '2026-01-01T10:00:00Z'), arq(2, 'nova.pdf', '2026-01-01T10:00:00Z')],
+    } as unknown as QuoteData
+
+    render(<QuotesList quotes={[q]} {...PROPS_ARQUIVADOS} />)
+
+    expect(screen.getByText('nova.pdf')).toBeTruthy()
+    expect(screen.queryByText('antiga.pdf')).toBeNull()
+    expect(screen.getByLabelText('common.preview')).toBeTruthy()
+    expect(screen.getByLabelText('common.download')).toBeTruthy()
+    expect(screen.getByLabelText('common.replace')).toBeTruthy()
+    expect(screen.getByLabelText('common.delete')).toBeTruthy()
+  })
+
+  it('sem arquivo mostra o enviar com dica', () => {
+    render(<QuotesList quotes={[COTACAO]} {...PROPS_ARQUIVADOS} />)
+
+    expect(screen.getByText('common.notLoaded')).toBeTruthy()
+    expect(screen.getByLabelText('common.upload')).toBeTruthy()
+  })
+})

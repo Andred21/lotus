@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { AppTag, AppButton, AppFileUpload, type FileUploadHandlerEvent } from '@shared/ui'
-import type { QuoteData } from '@shared/types/generated'
+import { AppTag, AppButton, AppFileSlot, AppFilePreviewDialog, type FileUploadHandlerEvent } from '@shared/ui'
+import { useFilePreview } from '@shared/hooks'
+import type { FileData, QuoteData } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '@shared/lib'
 import { dangerText } from '@shared/styles/tokens'
-import { FileList } from './FileList'
+import { latestFile } from '../../lib/latestFile'
 
 /** Uma cotação da lista do orçamento. `striped` vem do índice: alternância como
  * separação de item (spec D4) — lista empilhada, não tabela. */
@@ -26,6 +27,8 @@ export function QuoteRow({
   onSizeReject: (message: string) => void
 }) {
   const { t } = useTranslation()
+  const preview = useFilePreview<FileData>()
+  const current = latestFile(quote.files ?? [])
 
   return (
     <div
@@ -94,19 +97,16 @@ export function QuoteRow({
       </div>
 
       <div className="w-full">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('quote.documents')}
-          </span>
-          <AppFileUpload
-            chooseOptions={{ icon: 'pi pi-upload', className: 'p-button-text p-button-rounded' }}
-            chooseLabel=""
-            disabled={uploading}
-            onSizeReject={onSizeReject}
-            uploadHandler={onUpload}
-          />
-        </div>
-        <FileList files={quote.files ?? []} onRemove={onRemoveFile} />
+        <AppFileSlot
+          title={t('quote.documents')}
+          file={current}
+          onPreview={preview.open}
+          onUpload={onUpload}
+          uploading={uploading}
+          onSizeReject={onSizeReject}
+          onRemove={current ? () => onRemoveFile(current.id) : undefined}
+        />
+        <AppFilePreviewDialog file={preview.file} visible={preview.visible} onHide={preview.close} />
       </div>
     </div>
   )
