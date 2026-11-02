@@ -1,5 +1,7 @@
-import type { KeyboardEvent } from 'react'
+import { useRef } from 'react'
+import type { KeyboardEvent, RefObject } from 'react'
 import { FileUpload } from 'primereact/fileupload'
+import { Tooltip } from 'primereact/tooltip'
 import type { FileUploadProps, FileUploadHandlerEvent } from 'primereact/fileupload'
 import { useTranslation } from 'react-i18next'
 import { MAX_UPLOAD_BYTES, formatFileSize } from '@shared/lib/upload'
@@ -51,6 +53,7 @@ export function AppFileUpload({
   ...props
 }: AppFileUploadOwnProps) {
   const { t } = useTranslation()
+  const involucro = useRef<HTMLSpanElement>(null)
 
   const guarded = (e: FileUploadHandlerEvent) => {
     const file = e.files[0]
@@ -125,7 +128,7 @@ export function AppFileUpload({
     ? null
     : { chooseOptions: { ...props.chooseOptions, iconOnly: true } }
 
-  return (
+  const upload = (
     <FileUpload
       mode="basic"
       auto
@@ -135,5 +138,23 @@ export function AppFileUpload({
       uploadHandler={guarded}
       customUpload
     />
+  )
+
+  // Só-ícone não diz o que faz: a dica é o nome acessível, o mesmo texto que o
+  // leitor de tela anuncia (bloco 47). O `FileUpload` não tem prop de dica, então
+  // ela se prende a um `span` invólucro — o mesmo arranjo do botão apagado do
+  // `RowActions`. Com rótulo visível o texto já está na tela e não há invólucro:
+  // as telas com rótulo mantêm a árvore e o layout que tinham.
+  if (!soIcone) return upload
+
+  return (
+    <>
+      <span ref={involucro} className="inline-flex">
+        {upload}
+      </span>
+      {/* O `useRef` do React 19 tipa `RefObject<T | null>` e o d.ts do Prime ainda
+        * pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
+      <Tooltip target={involucro as RefObject<HTMLElement>} content={nome} position="left" />
+    </>
   )
 }

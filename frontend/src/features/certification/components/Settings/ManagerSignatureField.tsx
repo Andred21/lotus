@@ -6,7 +6,6 @@ import {
   AppFilePreviewDialog,
   AppFileRow,
   AppSignatureUpload,
-  ConfirmDialog,
   FormErrorBanner,
   signatureCheckerboard,
 } from '@shared/ui'
@@ -14,7 +13,7 @@ import type { PreviewableFile } from '@shared/ui'
 import type { ManagerSignatureControl } from '../../hooks/useCertificateSettingsForm'
 
 /**
- * A Firma da gerente: arquivo atual (ver, baixar, remover com confirmação) e o
+ * A Firma da gerente: arquivo atual (ver, baixar, remover com a confirmação do `AppFileActions`) e o
  * seletor que limpa e sobe o PNG (D16). O `AppSignatureUpload` não se reseta
  * depois do `onConfirm`; a `key` só muda quando o servidor ACEITA, então uma
  * falha deixa a prévia na tela a um clique de reenviar.
@@ -53,9 +52,13 @@ export function ManagerSignatureField({ control }: { control: ManagerSignatureCo
               <AppFileActions
                 file={current}
                 onPreview={preview.open}
-                onRemove={control.askRemove}
+                onRemove={control.remove}
                 removing={control.removing}
+                removeError={control.removeError}
                 removeLabel={t('certificateSettings.removeSignature')}
+                confirmTitle={t('certificateSettings.removeTitle')}
+                confirmMessage={t('certificateSettings.removeMessage')}
+                confirmLabel={t('certificateSettings.removeConfirm')}
               />
             }
           />
@@ -74,18 +77,6 @@ export function ManagerSignatureField({ control }: { control: ManagerSignatureCo
         onConfirm={(png) => void control.upload(png).then((ok) => ok && setUploadKey((k) => k + 1))}
       />
 
-      <ConfirmDialog
-        visible={control.confirmingRemove}
-        severity="danger"
-        title={t('certificateSettings.removeTitle')}
-        message={t('certificateSettings.removeMessage')}
-        confirmLabel={t('certificateSettings.removeConfirm')}
-        confirmIcon="pi pi-trash"
-        pending={control.removing}
-        error={control.removeError}
-        onConfirm={control.confirmRemove}
-        onCancel={control.cancelRemove}
-      />
       <AppFilePreviewDialog file={preview.file} visible={preview.visible} onHide={preview.close} />
     </div>
   )

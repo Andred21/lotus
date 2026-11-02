@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppCard, ConfirmDialog, FormErrorBanner, AppDetailSkeleton, AppErrorState, SectionLabel } from '@shared/ui'
-import type { TurmaData, TurmaDocumentData } from '@shared/types/generated'
+import { AppCard, FormErrorBanner, AppDetailSkeleton, AppErrorState, SectionLabel } from '@shared/ui'
+import type { TurmaData } from '@shared/types/generated'
 import { useTurmaDocsSection } from '../../hooks/useTurmaDocsSection'
 import { TURMA_DOCUMENT_TYPES } from '../../lib/turmaDocuments'
 import { DocumentTypeCard } from './DocumentTypeCard'
@@ -11,7 +10,6 @@ import { loadErrorHint, screenDetail } from '@shared/lib'
 export function TurmaDocuments({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
   const s = useTurmaDocsSection(turma)
-  const [pendingRemoval, setPendingRemoval] = useState<TurmaDocumentData | null>(null)
 
   if (s.loading) return <AppDetailSkeleton />
   if (s.loadError)
@@ -71,29 +69,20 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
             uploading={s.uploading}
             onUpload={(file) => s.upload(type, file)}
             removing={s.removing}
-            onRemove={setPendingRemoval}
+            // A confirmação é do `AppFileActions`, dentro do cartão; a guarda
+            // fica aqui. A Promise mantém o diálogo aberto até o servidor
+            // responder, e a rejeição o deixa aberto mostrando `removeError`.
+            onRemove={(file) => {
+              if (s.removing || !s.canSubmit) return
+              return new Promise<void>((resolve, reject) =>
+                s.remove(file.id, { onSuccess: () => resolve(), onError: () => reject(new Error('remove')) }),
+              )
+            }}
+            removeError={s.removeError}
             canSubmit={s.canSubmit}
           />
         ))}
       </div>
-
-      <ConfirmDialog
-        visible={pendingRemoval !== null}
-        title={t('operation.documents.removeTitle')}
-        message={t('operation.documents.removeBody', { name: pendingRemoval?.original_name ?? '' })}
-        confirmLabel={t('operation.documents.remove')}
-        severity="danger"
-        pending={s.removing}
-        error={s.removeError}
-        onConfirm={() => {
-          if (!pendingRemoval || s.removing || !s.canSubmit) return
-          s.remove(pendingRemoval.id, { onSuccess: () => setPendingRemoval(null) })
-        }}
-        onCancel={() => {
-          s.resetRemove()
-          setPendingRemoval(null)
-        }}
-      />
     </div>
   )
 }

@@ -17,12 +17,11 @@ export type ManagerSignatureControl = {
   uploadError: string | null
   /** `true` = o servidor aceitou; só nesse caso o seletor é remontado. */
   upload: (file: File) => Promise<boolean>
-  confirmingRemove: boolean
   removing: boolean
   removeError: string | null
-  askRemove: () => void
-  cancelRemove: () => void
-  confirmRemove: () => void
+  /** Sem `catch` de propósito: a rejeição é o sinal de que o servidor recusou, e
+   * a confirmação do `AppFileActions` fica aberta mostrando `removeError`. */
+  remove: () => Promise<unknown>
 }
 
 /** Avisos de sucesso: a tela decide o texto, o hook só diz QUANDO. */
@@ -51,7 +50,6 @@ export function useCertificateSettingsForm({ onSaved, onSignatureSaved, onSignat
   const upload = useUploadManagerSignature()
   const remove = useRemoveManagerSignature()
   const [edits, setEdits] = useState<Partial<Campos>>({})
-  const [confirmingRemove, setConfirmingRemove] = useState(false)
 
   const form: Campos = { manager_name: '', manager_title: '', ...(state.data && toFields(state.data)), ...edits }
   const { fieldErrors, generalError } = useMutationErrors([update.error])
@@ -70,19 +68,11 @@ export function useCertificateSettingsForm({ onSaved, onSignatureSaved, onSignat
           return true
         })
         .catch(() => false),
-    confirmingRemove,
     removing: remove.isPending,
     removeError,
-    askRemove: () => {
-      remove.reset()
-      setConfirmingRemove(true)
-    },
-    cancelRemove: () => setConfirmingRemove(false),
-    confirmRemove: () => remove.mutate(undefined, {
-        onSuccess: () => {
-          setConfirmingRemove(false)
-          onSignatureRemoved?.()
-        },
+    remove: () =>
+      remove.mutateAsync().then(() => {
+        onSignatureRemoved?.()
       }),
   }
 

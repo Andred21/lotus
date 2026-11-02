@@ -57,6 +57,9 @@
     "view": "Ver",
     "moreActions": "Mais ações",
     "upload": "Enviar documento",
+    "replace": "Substituir",
+    "deleteFileTitle": "Excluir arquivo",
+    "deleteFileMessage": "Excluir «{{name}}»? Esta ação não pode ser desfeita.",
     "fileTooLarge": "O arquivo tem {{size}} e o máximo é {{limit}}.",
     "preview": "Ver",
     "previewUnavailable": "Este formato não tem pré-visualização. Baixe o arquivo para abri-lo.",
@@ -454,6 +457,7 @@
   },
   "photo": {
     "label": "Foto",
+    "fileName": "Foto",
     "select": "Selecionar foto",
     "replace": "Substituir",
     "remove": "Remover foto",
@@ -547,6 +551,7 @@
     "countShort_other": "{{count}} módulos"
   },
   "budget": {
+    "otherDocuments": "Outros documentos",
     "tab": "Orçamentos",
     "new": "Novo orçamento",
     "create": "Criar orçamento",

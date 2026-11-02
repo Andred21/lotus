@@ -1,13 +1,8 @@
-import { useTranslation } from 'react-i18next'
-import { AppButton, AppFileUpload, AppFileRow, AppFileActions } from '@shared/ui'
+import type { ReactNode } from 'react'
+import { AppFileSlot } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorDocumentData } from '@shared/types/generated'
 import type { DialogMode, DocType } from '@shared/lib'
-
-const UPLOAD_CHOOSE_OPTIONS = {
-  icon: 'pi pi-upload',
-  className: 'p-button-text p-button-rounded',
-}
 
 export type SlotBodyProps = {
   type: DocType
@@ -23,36 +18,17 @@ export type SlotBodyProps = {
   onRemoveDoc?: (docId: number) => void
   onPreview: (doc: RedatorDocumentData) => void
   onSizeReject: (message: string) => void
+  /** Cabeçalho do cartão (rótulo + tag de status), que só o slot do documento sabe montar. */
+  title?: ReactNode
 }
 
-/** Linha de "nada carregado ainda" + o botão de escolher arquivo. Idêntica em
- * `create` (stage local) e `edit` (upload imediato); só muda o handler. */
-function EmptySlot({
-  uploading,
-  onPick,
-  onSizeReject,
-}: {
-  uploading?: boolean
-  onPick: (e: FileUploadHandlerEvent) => void
-  onSizeReject: (message: string) => void
-}) {
-  const { t } = useTranslation()
-
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('common.notLoaded')}</p>
-      <AppFileUpload
-        chooseOptions={UPLOAD_CHOOSE_OPTIONS}
-        chooseLabel=""
-        disabled={uploading}
-        onSizeReject={onSizeReject}
-        uploadHandler={onPick}
-      />
-    </div>
-  )
-}
-
-/** Os três modos como guardas sequenciais, não como ternário aninhado (D5). */
+/** Os três modos do diálogo, sobre o `AppFileSlot` compartilhado (bloco 47).
+ * O que muda de um modo para outro é só o que se PASSA à peça (D5):
+ * - `create`: ainda não há redator, então enviar é pôr em stage (`onStage`) e o
+ *   arquivo em stage só se tira;
+ * - `view`: documento imutável, só ver e baixar;
+ * - `edit`: ver, baixar, substituir (upload imediato pelo endpoint aninhado) e
+ *   excluir — a exclusão confirma, na peça. */
 export function SlotBody({
   type,
   mode,
@@ -65,80 +41,31 @@ export function SlotBody({
   onRemoveDoc,
   onPreview,
   onSizeReject,
+  title,
 }: SlotBodyProps) {
-  const { t } = useTranslation()
+  const common = { title, onPreview, onSizeReject }
 
   if (mode === 'create') {
-    // Arquivo em stage é um `File` do browser, sem `download_url` — não há o que
-    // pré-visualizar nem baixar, então a linha traz só a remoção do stage (por
-    // isso não usa `AppFileActions`).
-    if (!staged) {
-      return <EmptySlot onPick={(e) => onStage(type, e)} onSizeReject={onSizeReject} />
-    }
     return (
-      <AppFileRow
-        name={staged.name}
-        mime={staged.type}
-        size={staged.size}
-        actions={
-          <AppButton
-            icon="pi pi-times"
-            text
-            rounded
-            severity="danger"
-            aria-label={t('common.delete')}
-            onClick={() => onUnstage(type)}
-          />
-        }
+      <AppFileSlot
+        {...common}
+        file={null}
+        staged={staged}
+        onUnstage={() => onUnstage(type)}
+        onUpload={(e) => onStage(type, e)}
       />
     )
   }
 
-  if (mode === 'view') {
-    // Documento é imutável aqui: só ver e baixar.
-    if (!doc) return <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('common.notLoaded')}</p>
-    return (
-      <AppFileRow
-        name={doc.original_name}
-        mime={doc.mime}
-        size={doc.size}
-        createdAt={doc.created_at}
-        actions={<AppFileActions file={doc} onPreview={onPreview} />}
-      />
-    )
-  }
+  if (mode === 'view') return <AppFileSlot {...common} file={doc} />
 
-  // edit: ver, baixar, substituir (upload imediato pelo endpoint aninhado) e excluir.
-  if (!doc) {
-    return (
-      <EmptySlot
-        uploading={uploading}
-        onPick={(e) => onUpload(type, e)}
-        onSizeReject={onSizeReject}
-      />
-    )
-  }
   return (
-    <AppFileRow
-      name={doc.original_name}
-      mime={doc.mime}
-      size={doc.size}
-      createdAt={doc.created_at}
-      actions={
-        <AppFileActions
-          file={doc}
-          onPreview={onPreview}
-          onRemove={onRemoveDoc ? () => onRemoveDoc(doc.id) : undefined}
-        >
-          <AppFileUpload
-            chooseOptions={UPLOAD_CHOOSE_OPTIONS}
-            chooseLabel=""
-            disabled={uploading}
-            onSizeReject={onSizeReject}
-            uploadHandler={(e) => onUpload(type, e)}
-          />
-        </AppFileActions>
-      }
+    <AppFileSlot
+      {...common}
+      file={doc}
+      uploading={uploading}
+      onUpload={(e) => onUpload(type, e)}
+      onRemove={doc && onRemoveDoc ? () => onRemoveDoc(doc.id) : undefined}
     />
   )
 }

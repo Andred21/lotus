@@ -79,14 +79,15 @@ export function useTurmaDocsSection(turma: TurmaData) {
         },
       ),
     uploading: uploadMutation.isPending,
-    // O dialog fecha só no sucesso (onSuccess do caller): com a mutation em voo,
-    // o ConfirmDialog trava ESC/X/Cancelar para o 403/422 ter onde pousar.
-    remove: (fileId: number, options?: { onSuccess: () => void }) =>
+    // O diálogo de confirmação é do `AppFileActions`, e ele fecha só no sucesso
+    // (`onSuccess` do caller, que resolve a Promise dele): com a mutation em voo
+    // ele trava ESC/X/Cancelar para o 403/422 ter onde pousar (`onError`).
+    remove: (fileId: number, options?: { onSuccess?: () => void; onError?: () => void }) =>
       removeMutation.mutate({ turmaId, fileId }, options),
     removing: removeMutation.isPending,
+    // O erro só aparece no diálogo depois de uma tentativa rejeitada NELE
+    // (`AppFileActions`), então reabrir para outro arquivo não mostra o erro
+    // fantasma de uma tentativa que nunca ocorreu para ele.
     removeError,
-    // Reseta a mutation ao cancelar: sem isso, reabrir o dialog para outro
-    // arquivo mostraria o erro fantasma de uma tentativa que nunca ocorreu para ele.
-    resetRemove: () => removeMutation.reset(),
   }
 }

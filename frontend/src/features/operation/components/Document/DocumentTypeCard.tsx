@@ -12,8 +12,11 @@ type Props = {
   files: TurmaDocumentData[]
   uploading: boolean
   onUpload: (file: File) => void
-  onRemove: (file: TurmaDocumentData) => void
+  /** Chamado só depois do "sim" da confirmação do `AppFileActions`; a Promise
+   * mantém o diálogo aberto até resolver. */
+  onRemove: (file: TurmaDocumentData) => void | Promise<unknown>
   removing: boolean
+  removeError: string | null
   canSubmit: boolean
 }
 
@@ -24,6 +27,7 @@ export function DocumentTypeCard({
   onUpload,
   onRemove,
   removing,
+  removeError,
   canSubmit,
 }: Props) {
   const { t } = useTranslation()
@@ -80,6 +84,10 @@ export function DocumentTypeCard({
                   onRemove={canSubmit ? () => onRemove(file) : undefined}
                   removing={removing}
                   removeLabel={t('operation.documents.remove')}
+                  removeError={removeError}
+                  confirmTitle={t('operation.documents.removeTitle')}
+                  confirmMessage={t('operation.documents.removeBody', { name: file.original_name })}
+                  confirmLabel={t('operation.documents.remove')}
                 />
               }
             />

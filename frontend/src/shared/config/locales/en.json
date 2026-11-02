@@ -57,6 +57,9 @@
     "view": "View",
     "moreActions": "More actions",
     "upload": "Upload document",
+    "replace": "Replace",
+    "deleteFileTitle": "Delete file",
+    "deleteFileMessage": "Delete “{{name}}”? This action cannot be undone.",
     "fileTooLarge": "The file is {{size}} and the maximum is {{limit}}.",
     "preview": "View",
     "previewUnavailable": "This format cannot be previewed. Download it to open.",
@@ -454,6 +457,7 @@
   },
   "photo": {
     "label": "Photo",
+    "fileName": "Photo",
     "select": "Select photo",
     "replace": "Replace",
     "remove": "Remove photo",
@@ -547,6 +551,7 @@
     "countShort_other": "{{count}} modules"
   },
   "budget": {
+    "otherDocuments": "Other documents",
     "tab": "Budgets",
     "new": "New budget",
     "create": "Create budget",

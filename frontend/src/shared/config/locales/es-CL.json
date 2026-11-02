@@ -57,6 +57,9 @@
     "view": "Ver",
     "moreActions": "Más acciones",
     "upload": "Subir documento",
+    "replace": "Reemplazar",
+    "deleteFileTitle": "Eliminar archivo",
+    "deleteFileMessage": "¿Eliminar «{{name}}»? Esta acción no se puede deshacer.",
     "fileTooLarge": "El archivo pesa {{size}} y el máximo es {{limit}}.",
     "preview": "Ver",
     "previewUnavailable": "Este formato no se puede previsualizar. Descárgalo para abrirlo.",
@@ -454,6 +457,7 @@
   },
   "photo": {
     "label": "Foto",
+    "fileName": "Foto",
     "select": "Seleccionar foto",
     "replace": "Reemplazar",
     "remove": "Eliminar foto",
@@ -547,6 +551,7 @@
     "countShort_other": "{{count}} módulos"
   },
   "budget": {
+    "otherDocuments": "Otros documentos",
     "tab": "Presupuestos",
     "new": "Nuevo presupuesto",
     "create": "Crear presupuesto",

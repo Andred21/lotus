@@ -1,12 +1,21 @@
 import { useTranslation } from 'react-i18next'
 import { AppButton } from '../AppButton'
 
+/** A dica abre à ESQUERDA, como no `RowActions`: a linha de arquivo mora na borda
+ * direita do cartão, e à direita ela passa da moldura. */
+const DICA = { position: 'left' } as const
+
 export type AppDownloadButtonProps = {
   /** URL pré-assinada do arquivo (`FileData.download_url`). */
   href: string
   /** Rótulo visível. Ausente = disparador só-ícone, nomeado pelo `aria-label`. */
   label?: string
   className?: string
+  /** Dica no hover, já traduzida. Default: o próprio rótulo acessível do
+   * disparador só-ícone (`common.download`); com rótulo visível não há dica,
+   * porque ela repetiria o texto que já está na tela. A dica abre à esquerda,
+   * como a do `RowActions` (bloco 46). */
+  tooltip?: string
 }
 
 /**
@@ -30,8 +39,9 @@ export type AppDownloadButtonProps = {
  * duplicar o miolo do tema em `shared/ui` para ganhar a semântica de link que o
  * parágrafo acima acabou de dispensar.
  */
-export function AppDownloadButton({ href, label, className }: AppDownloadButtonProps) {
+export function AppDownloadButton({ href, label, className, tooltip }: AppDownloadButtonProps) {
   const { t } = useTranslation()
+  const nome = t('common.download')
 
   return (
     <AppButton
@@ -40,7 +50,9 @@ export function AppDownloadButton({ href, label, className }: AppDownloadButtonP
       text={!label}
       rounded={!label}
       className={className}
-      aria-label={label ? undefined : t('common.download')}
+      aria-label={label ? undefined : nome}
+      tooltip={tooltip ?? (label ? undefined : nome)}
+      tooltipOptions={DICA}
       onClick={() => window.open(href, '_blank', 'noopener,noreferrer')}
     />
   )
