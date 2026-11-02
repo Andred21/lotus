@@ -108,6 +108,42 @@ describe('AppDataTable — modo lazy (spec §5)', () => {
   })
 })
 
+/**
+ * P-109: o PrimeReact rotula os controles do paginador com `api.ariaLabel(...)`,
+ * contra a locale GLOBAL dele, que o projeto nunca troca: "Previous Page",
+ * "Next Page", "Page 2" em tela espanhola. O nome vem das chaves `common.paginator*`.
+ */
+describe('AppDataTable — paginador anuncia no idioma da tela (P-109)', () => {
+  const VINTE_E_CINCO = Array.from({ length: 25 }, (_, i) => ({ id: i + 1 }))
+  const montar = () =>
+    render(
+      <AppDataTable value={VINTE_E_CINCO} rows={10} footerCount={<span>25</span>}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+  it('em es-CL os três controles têm nome em espanhol e o inglês do PrimeReact some', () => {
+    montar()
+
+    expect(screen.getByRole('button', { name: 'Página anterior' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Página 2' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Previous Page|Next Page|^Page 2$/ })).toBeNull()
+  })
+
+  it('o nome relê `t` a cada render: trocar o idioma troca o nome, número incluso', async () => {
+    montar()
+
+    await act(async () => {
+      await i18n.changeLanguage('en')
+    })
+
+    expect(screen.getByRole('button', { name: 'Page 2' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeTruthy()
+  })
+})
+
 describe('AppDataTable — dataKey (f3 UI-06)', () => {
   /**
    * `dataKey="id"` é o default do wrapper, e o DTO das linhas de emissão expõe

@@ -88,7 +88,10 @@
     "maximizeDialog": "Maximizar diálogo",
     "restoreDialog": "Restaurar diálogo",
     "tabsScrollPrev": "Rolar abas para a esquerda",
-    "tabsScrollNext": "Rolar abas para a direita"
+    "tabsScrollNext": "Rolar abas para a direita",
+    "paginatorPrev": "Página anterior",
+    "paginatorNext": "Próxima página",
+    "paginatorPage": "Página {{page}}"
   },
   "module": {
     "comercial": {

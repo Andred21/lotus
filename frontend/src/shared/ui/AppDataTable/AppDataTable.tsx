@@ -1,8 +1,13 @@
-import type { ReactNode } from 'react'
+import { cloneElement, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DataTable } from 'primereact/datatable'
 import type { DataTableProps, DataTableValueArray, DataTablePassThroughOptions } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import type {
+  PaginatorNextPageLinkOptions,
+  PaginatorPageLinksOptions,
+  PaginatorPrevPageLinkOptions,
+} from 'primereact/paginator'
 import { loadErrorHint, screenDetail, type ScreenDetailSource } from '@shared/lib'
 import { AppErrorState } from '../AppErrorState'
 import { mergePt } from '../mergePt'
@@ -88,6 +93,16 @@ export function AppDataTable<T extends DataTableValueArray>({
     ? {}
     : { table: { className: '' }, ...(loading ? {} : { thead: { className: 'hidden' } }) }
 
+  const paginatorTemplate = {
+    layout: 'PrevPageLink PageLinks NextPageLink',
+    PrevPageLink: (options: PaginatorPrevPageLinkOptions) =>
+      cloneElement(options.element, { 'aria-label': t('common.paginatorPrev') }),
+    PageLinks: (options: PaginatorPageLinksOptions) =>
+      cloneElement(options.element, { 'aria-label': t('common.paginatorPage', { page: options.page + 1 }) }),
+    NextPageLink: (options: PaginatorNextPageLinkOptions) =>
+      cloneElement(options.element, { 'aria-label': t('common.paginatorNext') }),
+  }
+
   const body = errored ? (
     <AppErrorState
       title={t('common.loadError')}
@@ -116,7 +131,22 @@ export function AppDataTable<T extends DataTableValueArray>({
       // Desligar o paginador durante o `loading` foi recusado: a faixa some e
       // volta, e o card salta de altura a cada GET. O que muda é o TEXTO.
       paginatorLeft={loading ? t('common.loading') : footerCount}
-      paginatorTemplate={paginated ? 'PrevPageLink PageLinks NextPageLink' : ''}
+      // O NOME dos três controles é piso daqui. O PrimeReact os rotula com
+      // `api.ariaLabel('prevPageLabel'|'nextPageLabel'|'pageLabel')`
+      // (`primereact/paginator/paginator.cjs.js:789-795`), que resolve contra a
+      // locale GLOBAL dele — e `locale()` nunca é chamado no projeto
+      // (`primeLocale.ts` só registra), então o nome vinha do default inglês:
+      // "Page 2" em tela espanhola (P-109). Chamar `locale()` foi recusado:
+      // troca um estado global do PrimeReact para dizer o que três chaves nossas
+      // dizem, e ainda precisaria seguir `i18n.language` na troca de idioma.
+      //
+      // Template objeto e não `pt`: o contexto do `pageButton` traz só `active`,
+      // não o número da página, e o nome precisa do número. Para os três
+      // controles usarem um mecanismo só, os três saem do template. Cada
+      // renderizador devolve `cloneElement(options.element, { 'aria-label' })`,
+      // que preserva classe, `pt` e handler; e fecha sobre `t`, relido a cada
+      // render do wrapper — a troca de idioma troca o nome sem remontar.
+      paginatorTemplate={paginated ? paginatorTemplate : ''}
       // `widthPt` funde por ÚLTIMO, e não o `pt` do chamador: o guard "sem
       // linha, sem largura mínima" (comentário acima) tem que vencer o piso
       // default de `appDataTablePt` e também qualquer `pt` de CHAMADOR que

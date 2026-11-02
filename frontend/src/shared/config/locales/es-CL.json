@@ -88,7 +88,10 @@
     "maximizeDialog": "Maximizar diálogo",
     "restoreDialog": "Restaurar diálogo",
     "tabsScrollPrev": "Desplazar pestañas a la izquierda",
-    "tabsScrollNext": "Desplazar pestañas a la derecha"
+    "tabsScrollNext": "Desplazar pestañas a la derecha",
+    "paginatorPrev": "Página anterior",
+    "paginatorNext": "Página siguiente",
+    "paginatorPage": "Página {{page}}"
   },
   "module": {
     "comercial": {
