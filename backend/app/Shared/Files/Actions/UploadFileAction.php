@@ -15,23 +15,14 @@ use Throwable;
  * Sobe um arquivo para o disco (S3 em prod; MinIO/local em dev) e registra
  * em `files` (polimórfico). O binário NÃO passa a ser servido pela app — o
  * acesso é por URL pré-assinada temporária (ADR-11).
+ *
+ * Não há atalho que sobe e registra numa chamada: quem sobe compõe
+ * `put`/`register`/`discard`, com o binário fora da transação e o insert dentro
+ * — ver `StoreRedatorDocumentAction`, `StoreTurmaDocumentAction` (P-49) e
+ * `ReplaceFileOfTypeAction` (Q-5 da revisão do bloco 47).
  */
 class UploadFileAction
 {
-    /**
-     * Sobe e registra numa chamada, fora de transação (hoje só o teste a usa).
-     * Quem abre transação compõe `put`/`register`/`discard` — ver
-     * `StoreRedatorDocumentAction`, `StoreTurmaDocumentAction` (P-49) e
-     * `ReplaceFileOfTypeAction`, por onde sobem os anexos de cotação e orçamento.
-     */
-    public function execute(Model $owner, UploadedFile $file, string $type, ?CarbonInterface $validUntil = null, ?string $disk = null): File
-    {
-        $meta = $this->metadataOf($file);
-        $path = $this->put($owner, $file, $disk);
-
-        return $this->register($owner, $path, $meta, $type, $validUntil);
-    }
-
     /**
      * Metadados do upload, capturados ANTES da escrita: depois dela o arquivo
      * temporário já cumpriu seu papel e ler dele de novo é dependência

@@ -18,15 +18,17 @@ class UploadFileActionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_upload_grava_no_disco_e_registra_em_files(): void
+    public function test_put_e_register_compostos_gravam_no_disco_e_registram_em_files(): void
     {
         /** @var FilesystemAdapter $storage */
         $storage = Storage::fake('s3');
 
         $redator = Redator::create(['user_id' => User::factory()->redator()->create()->id]);
         $upload = UploadedFile::fake()->create('cv.pdf', 500, 'application/pdf');
+        $action = app(UploadFileAction::class);
 
-        $file = app(UploadFileAction::class)->execute($redator, $upload, 'cv', null, 's3');
+        $meta = $action->metadataOf($upload);
+        $file = $action->register($redator, $action->put($redator, $upload, 's3'), $meta, 'cv');
 
         $storage->assertExists($file->path);
         $this->assertDatabaseHas('files', [
@@ -36,6 +38,17 @@ class UploadFileActionTest extends TestCase
             'original_name' => 'cv.pdf',
         ]);
         $this->assertSame('redator', $file->fileable_type);
+    }
+
+    /**
+     * Subir e registrar numa chamada só é a forma que, dentro de uma transação,
+     * deixou binário sem linha em `files` (P-49). Ficou sem chamador em produção
+     * e saiu (Q-5 da revisão do bloco 47): quem sobe compõe `put`/`register`/
+     * `discard`, e o atalho não volta a ficar à mão.
+     */
+    public function test_nao_ha_atalho_que_sobe_e_registra_numa_chamada(): void
+    {
+        $this->assertFalse(method_exists(UploadFileAction::class, 'execute'));
     }
 
     /**
