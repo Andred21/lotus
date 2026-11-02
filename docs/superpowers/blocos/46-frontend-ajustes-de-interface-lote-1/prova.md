@@ -87,5 +87,5 @@ Medido em 2026-11-01 com Playwright (Chromium 1248), por `getComputedStyle` e
 
 ## Gate
 
-`pnpm build` ok (só o aviso de chunk pré-existente); `pnpm lint` limpo; `pnpm test` 199 arquivos,
-1440 testes (no `756b00fe`, rodada fresca do `/finalizar-bloco`), todos passando. O cliente arquivado para a medida foi restaurado (`deleted_at` nulo).
+`pnpm build` ok (só o aviso de chunk pré-existente); `pnpm lint` limpo; `pnpm test` 211 arquivos,
+1569 testes (no `a3c15ba5`, rodada fresca do `/finalizar-bloco`), todos passando. O cliente arquivado para a medida foi restaurado (`deleted_at` nulo).
