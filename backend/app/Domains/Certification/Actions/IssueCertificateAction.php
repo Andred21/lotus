@@ -30,6 +30,19 @@ class IssueCertificateAction
         $this->validationUrl->base();
 
         return DB::transaction(function () use ($enrollment, $redator) {
+            // P-103, ordem de lock: MATRÍCULA primeiro, certificado depois. A
+            // correção do resultado (`RecordEnrollmentResultAction`) faz o mesmo,
+            // então as duas serializam aqui e ninguém trava na ordem inversa.
+            // A matrícula que chegou por parâmetro foi lida ANTES da transação:
+            // decidir a porta 2 e congelar o snapshot nela deixava sair
+            // certificado `aprobado` de um aluno que a correção acabara de
+            // reprovar. A relida, com lock, é a que portas e snapshot veem.
+            $enrollment = Enrollment::query()
+                ->with(['turma.course.modules', 'turma.quote.budget.client.user', 'student.user'])
+                ->whereKey($enrollment->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
             // Um instante para a emissão inteira. A sequência espera pelo lock,
             // e três `now()` separados deixam uma emissão da virada do ano
             // gravar data de 2027 num código LOT-2026.
