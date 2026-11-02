@@ -1,6 +1,11 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppFileActions, AppFileRow, AppSignatureUpload } from '@shared/ui'
+import {
+  AppFileSlot,
+  SIGNATURE_ACCEPT,
+  SIGNATURE_MAX_ORIGINAL_BYTES,
+  SignaturePreview,
+  useSignatureCleaner,
+} from '@shared/ui'
 import type { RedatorDocumentData } from '@shared/types/generated'
 import type { DialogMode } from '@shared/lib'
 
@@ -12,7 +17,7 @@ export type RedatorSignatureSlotProps = {
   /** Em criação ainda não há redator: o PNG limpo fica em stage até o submit. */
   onStage: (file: File) => void
   onUnstage: () => void
-  /** `true` = o servidor aceitou. Só nesse caso o seletor é remontado. */
+  /** `true` = o servidor aceitou. Só nesse caso a prévia é descartada. */
   onUpload: (file: File) => Promise<boolean>
   onRemoveDoc?: (docId: number) => void
   onPreview: (doc: RedatorDocumentData) => void
@@ -21,72 +26,49 @@ export type RedatorSignatureSlotProps = {
 /**
  * A `FIRMA` do redator (spec D2 do bloco 40). Não é documento de compliance:
  * sem tag de status e sem validade — por isso não reusa `RedatorDocumentSlot`.
- * O arquivo sobe já limpo pelo `AppSignatureUpload` (D16).
+ * É o `AppFileSlot` do produto com a limpeza de D16 no meio: o enviar escolhe a
+ * imagem, `useSignatureCleaner` a limpa e o `SignaturePreview` pede a decisão
+ * abaixo da linha. O arquivo só sobe, ou vai para o stage, já limpo.
  */
 export function RedatorSignatureSlot({
   mode, doc, staged, uploading, onStage, onUnstage, onUpload, onRemoveDoc, onPreview,
 }: RedatorSignatureSlotProps) {
   const { t } = useTranslation()
-  // O `AppSignatureUpload` não se reseta depois do `onConfirm`: a prévia ficaria
-  // na tela com o botão ativo, a um clique de reenviar a mesma imagem. Trocar a
-  // `key` o remonta do zero.
-  const [uploadKey, setUploadKey] = useState(0)
+  const cleaner = useSignatureCleaner()
 
-  const empty = (
-    <p className="text-xs" style={{ color: 'var(--text-color-secondary)' }}>{t('common.notLoaded')}</p>
-  )
+  // Criação: escolher é pôr em stage, e com o arquivo em stage só se tira.
+  // Sem nada a mostrar não há corpo: o slot não abre um vão vazio abaixo da linha.
+  const showing = cleaner.processing || cleaner.preview !== null || cleaner.error !== null
+  const canPick = mode === 'edit' || (mode === 'create' && !staged)
 
-  let current = null
-  if (mode === 'create') {
-    current = staged ? (
-      <AppFileRow
-        name={staged.name}
-        mime={staged.type}
-        size={staged.size}
-        actions={
-          <AppButton icon="pi pi-times" text rounded severity="danger" aria-label={t('common.delete')} onClick={onUnstage} />
-        }
-      />
-    ) : null
-  } else if (doc) {
-    current = (
-      <AppFileRow
-        name={doc.original_name}
-        mime={doc.mime}
-        size={doc.size}
-        createdAt={doc.created_at}
-        actions={
-          <AppFileActions
-            file={doc}
-            onPreview={onPreview}
-            onRemove={mode === 'edit' && onRemoveDoc ? () => onRemoveDoc(doc.id) : undefined}
-          />
-        }
-      />
-    )
+  const confirm = (file: File) => {
+    if (mode === 'create') {
+      onStage(file)
+      cleaner.reset()
+      return
+    }
+    // A prévia ficaria na tela, a um clique de reenviar a mesma imagem: só sai
+    // quando o servidor aceita; se recusar, fica para tentar de novo.
+    void onUpload(file).then((ok) => ok && cleaner.reset())
   }
 
-  const canPick = mode === 'create' ? !staged : mode === 'edit'
-
   return (
-    <div className="rounded-surface border p-2" style={{ borderColor: 'var(--surface-border)' }}>
-      <p className="text-sm font-medium">{t('documentType.FIRMA')}</p>
-
-      <div className="mt-2 flex flex-col gap-3">
-        {current ?? (!canPick && empty)}
-        {canPick && (
-          <AppSignatureUpload
-            key={uploadKey}
-            label={t(doc ? 'redator.signatureReplace' : 'redator.signatureChoose')}
-            busy={uploading}
-            disabled={uploading}
-            onConfirm={(file) => {
-              if (mode === 'create') return onStage(file)
-              void onUpload(file).then((ok) => ok && setUploadKey((k) => k + 1))
-            }}
-          />
-        )}
-      </div>
-    </div>
+    <AppFileSlot
+      title={t('documentType.FIRMA')}
+      file={mode === 'create' ? null : doc}
+      staged={staged}
+      onUnstage={onUnstage}
+      onPreview={onPreview}
+      onUpload={canPick ? cleaner.pick : undefined}
+      uploadLabel={t('redator.signatureChoose')}
+      replaceLabel={t('redator.signatureReplace')}
+      accept={SIGNATURE_ACCEPT}
+      maxBytes={SIGNATURE_MAX_ORIGINAL_BYTES}
+      uploading={uploading || cleaner.processing}
+      onSizeReject={cleaner.reject}
+      onRemove={mode === 'edit' && doc && onRemoveDoc ? () => onRemoveDoc(doc.id) : undefined}
+    >
+      {showing && <SignaturePreview cleaner={cleaner} onConfirm={confirm} busy={uploading} disabled={uploading} />}
+    </AppFileSlot>
   )
 }
