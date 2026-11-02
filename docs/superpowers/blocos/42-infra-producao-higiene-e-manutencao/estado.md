@@ -2,9 +2,9 @@
 schema_version: 3
 id: 42
 slug: 42-infra-producao-higiene-e-manutencao
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item aceitacao externa
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/spec.md
 active_plan: docs/superpowers/blocos/42-infra-producao-higiene-e-manutencao/plano.md
@@ -17,9 +17,9 @@ branch: docs/42-infra-producao-higiene-e-manutencao
 worktree: ../lotus-42-infra-producao-higiene-e-manutencao
 offset: 2
 lane_base: d220a04f
-commit: d220a04f
+commit: 2dfde1c8
 blocker: null
-updated_at: 2026-11-02T14:12:30-03:00
+updated_at: 2026-11-02T14:13:18-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
