@@ -136,14 +136,14 @@ describe('QuotesList: um slot de documento por cotação', () => {
     expect(screen.queryByText('antiga.pdf')).toBeNull()
     expect(screen.getByLabelText('common.preview')).toBeTruthy()
     expect(screen.getByLabelText('common.download')).toBeTruthy()
-    expect(screen.getByLabelText('common.replace')).toBeTruthy()
-    expect(screen.getByLabelText('common.delete')).toBeTruthy()
+    expect(screen.getByLabelText('common.replaceNamed')).toBeTruthy()
+    expect(screen.getByLabelText('common.deleteNamed')).toBeTruthy()
   })
 
   it('sem arquivo mostra o enviar com dica', () => {
     render(<QuotesList quotes={[COTACAO]} {...PROPS_ARQUIVADOS} />)
 
     expect(screen.getByText('common.notLoaded')).toBeTruthy()
-    expect(screen.getByLabelText('common.upload')).toBeTruthy()
+    expect(screen.getByLabelText('common.uploadNamed')).toBeTruthy()
   })
 })

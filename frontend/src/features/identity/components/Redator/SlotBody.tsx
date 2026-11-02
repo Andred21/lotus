@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AppFileSlot } from '@shared/ui'
 import type { FileUploadHandlerEvent } from '@shared/ui'
 import type { RedatorDocumentData } from '@shared/types/generated'
@@ -43,7 +44,19 @@ export function SlotBody({
   onSizeReject,
   title,
 }: SlotBodyProps) {
-  const common = { title, onPreview, onSizeReject }
+  const { t } = useTranslation()
+  // Os quatro documentos repetem enviar, substituir e excluir na mesma tela: o
+  // nome acessível leva o tipo, senão o leitor de tela ouve o mesmo verbo quatro
+  // vezes (D-23).
+  const tipo = t(`documentType.${type}`)
+  const common = {
+    title,
+    onPreview,
+    onSizeReject,
+    uploadLabel: t('common.uploadNamed', { tipo }),
+    replaceLabel: t('common.replaceNamed', { tipo }),
+    removeLabel: t('common.deleteNamed', { tipo }),
+  }
 
   if (mode === 'create') {
     return (

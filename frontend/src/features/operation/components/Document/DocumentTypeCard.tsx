@@ -36,6 +36,9 @@ export function DocumentTypeCard({
   const preview = useFilePreview<TurmaDocumentData>()
   const [sizeError, setSizeError] = useState<string | null>(null)
   const delivered = files.length > 0
+  // Três cartões repetem enviar e excluir na mesma tela: o nome acessível leva o
+  // tipo (D-23).
+  const tipo = turmaDocumentTypeLabel(type, t)
 
   // Limpa o filesState/input do Prime JÁ, antes de disparar a mutação
   // (diferente do useBudgetDetail, que limpa só no onSuccess): com
@@ -55,7 +58,7 @@ export function DocumentTypeCard({
   return (
     <section className="rounded-surface border p-4" style={{ borderColor: 'var(--surface-border)' }}>
       <header className="flex items-center justify-between gap-4">
-        <h4 className="font-medium">{turmaDocumentTypeLabel(type, t)}</h4>
+        <h4 className="font-medium">{tipo}</h4>
         <AppTag
           value={t(delivered ? 'operation.documents.delivered' : 'operation.documents.pending')}
           severity={delivered ? 'success' : 'warning'}
@@ -65,7 +68,7 @@ export function DocumentTypeCard({
             accept="application/pdf"
             chooseOptions={UPLOAD_CHOOSE_OPTIONS}
             chooseLabel=""
-            accessibleName={t('operation.documents.upload')}
+            accessibleName={t('common.uploadNamed', { tipo })}
             disabled={uploading}
             onSizeReject={setSizeError}
             uploadHandler={handleUpload}
@@ -87,7 +90,7 @@ export function DocumentTypeCard({
                   onPreview={preview.open}
                   onRemove={canSubmit ? () => onRemove(file) : undefined}
                   removing={removing}
-                  removeLabel={t('operation.documents.remove')}
+                  removeLabel={t('common.deleteNamed', { tipo })}
                   removeError={removeError}
                   confirmTitle={t('operation.documents.removeTitle')}
                   confirmMessage={t('operation.documents.removeBody', { name: file.original_name })}

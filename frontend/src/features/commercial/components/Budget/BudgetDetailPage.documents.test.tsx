@@ -127,6 +127,12 @@ describe('BudgetDocumentsCard — um slot fixo por tipo', () => {
     expect(screen.getByLabelText('common.replaceNamed:budget.documentType.invoice')).toBeTruthy()
   })
 
+  it('o excluir do arquivo também leva o tipo no nome', () => {
+    montar([arquivo(2, 'invoice')])
+
+    expect(screen.getByRole('button', { name: 'common.deleteNamed:budget.documentType.invoice' })).toBeTruthy()
+  })
+
   it('arquivo grande demais mostra o erro de tamanho, não um erro de envio antigo', () => {
     estado.error = { detail: 'Tipo de archivo no permitido' }
     const { container } = montar()

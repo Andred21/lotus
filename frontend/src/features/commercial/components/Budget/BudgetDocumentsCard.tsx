@@ -81,6 +81,7 @@ export function BudgetDocumentsCard({
               onUpload={(e) => send(type, e)}
               uploadLabel={t('common.uploadNamed', { tipo: label })}
               replaceLabel={t('common.replaceNamed', { tipo: label })}
+              removeLabel={t('common.deleteNamed', { tipo: label })}
               uploading={upload.isPending && upload.variables?.type === type}
               onSizeReject={rejectSize}
               onRemove={current ? () => onRemove(current.id) : undefined}

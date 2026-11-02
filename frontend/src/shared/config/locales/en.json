@@ -60,6 +60,7 @@
     "replace": "Replace",
     "uploadNamed": "Upload {{tipo}}",
     "replaceNamed": "Replace {{tipo}}",
+    "deleteNamed": "Delete {{tipo}}",
     "deleteFileTitle": "Delete file",
     "deleteFileMessage": "Delete “{{name}}”? This action cannot be undone.",
     "fileTooLarge": "The file is {{size}} and the maximum is {{limit}}.",

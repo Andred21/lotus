@@ -3,11 +3,22 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import type { RedatorDocumentData } from '@shared/types/generated'
 import { SlotBody, type SlotBodyProps } from './SlotBody'
 
-// `t` devolve a chave: o que se prova é qual texto o slot escolhe.
+// `t` devolve a chave e ecoa o `tipo` da interpolação: o que se prova é qual
+// texto o slot escolhe, e que o nome acessível leva o tipo do documento (D-23).
 vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
-  return { ...(await importOriginal<typeof import('react-i18next')>()), useTranslation: mockUseTranslation() }
+  return {
+    ...(await importOriginal<typeof import('react-i18next')>()),
+    useTranslation: mockUseTranslation({
+      t: (key, opts) => (opts?.tipo === undefined ? key : `${key}:${String(opts.tipo)}`),
+    }),
+  }
 })
+
+const TIPO = 'documentType.curriculum'
+const ENVIAR = `common.uploadNamed:${TIPO}`
+const SUBSTITUIR = `common.replaceNamed:${TIPO}`
+const EXCLUIR = `common.deleteNamed:${TIPO}`
 
 const doc = {
   id: 7,
@@ -41,14 +52,14 @@ describe('SlotBody — o CV do redator sobre o AppFileSlot', () => {
   it('edit com documento: ver, baixar, substituir, excluir', () => {
     render(<SlotBody {...props()} />)
 
-    expect(nomes()).toEqual(['common.preview', 'common.download', 'common.replace', 'common.delete'])
+    expect(nomes()).toEqual(['common.preview', 'common.download', SUBSTITUIR, EXCLUIR])
   })
 
   it('excluir confirma antes de chamar onRemoveDoc com o id', () => {
     const onRemoveDoc = vi.fn()
     render(<SlotBody {...props({ onRemoveDoc })} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'common.delete' }))
+    fireEvent.click(screen.getByRole('button', { name: EXCLUIR }))
     expect(onRemoveDoc).not.toHaveBeenCalled()
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'common.delete' }))
 
@@ -59,7 +70,7 @@ describe('SlotBody — o CV do redator sobre o AppFileSlot', () => {
     render(<SlotBody {...props({ doc: undefined })} />)
 
     expect(screen.getByText('common.notLoaded')).toBeTruthy()
-    expect(nomes()).toEqual(['common.upload'])
+    expect(nomes()).toEqual([ENVIAR])
   })
 
   it('view: só ver e baixar', () => {
@@ -73,7 +84,7 @@ describe('SlotBody — o CV do redator sobre o AppFileSlot', () => {
     const staged = new File(['x'], 'novo.pdf', { type: 'application/pdf' })
     render(<SlotBody {...props({ mode: 'create', doc: undefined, staged, onUnstage })} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'common.delete' }))
+    fireEvent.click(screen.getByRole('button', { name: EXCLUIR }))
 
     expect(onUnstage).toHaveBeenCalledWith('curriculum')
   })
@@ -81,6 +92,6 @@ describe('SlotBody — o CV do redator sobre o AppFileSlot', () => {
   it('create sem arquivo: só o enviar', () => {
     render(<SlotBody {...props({ mode: 'create', doc: undefined })} />)
 
-    expect(nomes()).toEqual(['common.upload'])
+    expect(nomes()).toEqual([ENVIAR])
   })
 })

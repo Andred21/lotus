@@ -99,8 +99,8 @@ export function AppFileSlot<T extends PreviewableFile>({
             text
             rounded
             severity="danger"
-            aria-label={t('common.delete')}
-            tooltip={t('common.delete')}
+            aria-label={removal.removeLabel ?? t('common.delete')}
+            tooltip={removal.removeLabel ?? t('common.delete')}
             tooltipOptions={{ position: 'left' }}
             onClick={onUnstage}
           />

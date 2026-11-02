@@ -102,6 +102,9 @@ export function QuoteRow({
           file={current}
           onPreview={preview.open}
           onUpload={onUpload}
+          uploadLabel={t('common.uploadNamed', { tipo: courseName })}
+          replaceLabel={t('common.replaceNamed', { tipo: courseName })}
+          removeLabel={t('common.deleteNamed', { tipo: courseName })}
           uploading={uploading}
           onSizeReject={onSizeReject}
           onRemove={current ? () => onRemoveFile(current.id) : undefined}
