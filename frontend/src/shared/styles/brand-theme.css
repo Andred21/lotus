@@ -91,7 +91,7 @@
   --tone-info-ink: var(--blue-400);
   --tone-success-ink: var(--green-400);
   --tone-warning-ink: var(--yellow-400);
-  --tone-danger-ink: var(--red-400);
+  --tone-danger-ink: var(--red-300);
 
   /* Tom sem severidade e com hue próprio (a modalidade `Online` do `AppTag`).
    * Entrou neste mapa no BD-16, um bloco depois dos quatro acima, porque era o
@@ -261,7 +261,7 @@ html:not(.dark) {
  * `--tone-danger-ink` já existe: quem muda é a variável, não a regra.
  *
  * Medido depois da troca: 5,83:1 sobre `#f1f5f9` no claro (`--red-700`) e
- * 4,98:1 sobre o card do escuro (`--red-400`) — os mesmos números que a guarda
+ * 6,29:1 sobre o card do escuro (`--red-300`, que subiu do `--red-400` pela P-105) — os mesmos números que a guarda
  * de `tests/tone-ink.test.ts` já defende para os quatro tons do `AppCard`.
  *
  * NÃO vale para o botão preenchido (`p-button-danger` sozinho): ali o vermelho
