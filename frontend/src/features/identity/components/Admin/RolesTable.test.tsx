@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import { setViewportWidth } from '@shared/testing/viewport'
 import type { RoleData } from '@shared/types/generated'
@@ -51,5 +51,30 @@ describe('RolesTable — coluna de ações no telefone', () => {
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('sm:min-w-[42rem]')
     expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('27.75rem')
+  })
+})
+
+/** Item 46: o "ver" da linha passa pelo `RowActions` como as demais tabelas —
+ * centrado na coluna e com o rótulo como dica à esquerda. */
+describe('RolesTable — ação "ver" da linha', () => {
+  it('fica centralizada na célula', () => {
+    renderWithProviders(<RolesTable roles={roles} loading={false} onView={() => {}} />)
+
+    const botao = screen.getAllByRole('button', { name: 'common.view' })[0]
+    expect(botao.closest('div')!.className).toContain('justify-center')
+  })
+
+  it('mostra o rótulo como dica, à esquerda', async () => {
+    renderWithProviders(<RolesTable roles={roles} loading={false} onView={() => {}} />)
+
+    fireEvent.mouseEnter(screen.getAllByRole('button', { name: 'common.view' })[0])
+
+    const dica = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.p-tooltip')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(dica.textContent).toBe('common.view')
+    expect(dica.className).toContain('p-tooltip-left')
   })
 })

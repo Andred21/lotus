@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  AppDataTable, AppColumn, AppTag, AppButton, AppCardToolbar, AppEmptyState, narrowFloorTablePt,
+  AppDataTable, AppColumn, AppTag, RowActions, AppCardToolbar, AppEmptyState, narrowFloorTablePt,
   stickyActionsColumn, useCollapsibleActionsColumn,
 } from '@shared/ui'
 import type { RoleData } from '@shared/types/generated'
@@ -66,7 +66,12 @@ export function RolesTable({
           body={(r: RoleData) => <span className="font-semibold">{r.permissions.length}</span>}
         />
         <AppColumn
-          body={(r: RoleData) => <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(r)} />}
+          body={(r: RoleData) => (
+            <RowActions
+              collapsed={colunaDeAcoes.collapsed}
+              actions={[{ label: t('common.view'), icon: 'pi pi-eye', onClick: () => onView(r) }]}
+            />
+          )}
           style={stickyActionsColumn(colunaDeAcoes.width)}
         />
       </AppDataTable>

@@ -97,6 +97,15 @@ describe('BudgetsTable — ordenação', () => {
     expect(codigos()).toEqual(['Scap 1', 'Scap 3', 'Scap 2', 'Scap 4'])
   })
 
+  it('Cotizaciones ordena pela quantidade de cotações', () => {
+    const cotacoes = (n: number) => Array.from({ length: n }, (_, i) => ({ id: i + 1 }))
+    montar('active', [scap(1, { quotes: cotacoes(2) }), scap(2, { quotes: cotacoes(0) }), scap(3, { quotes: cotacoes(1) })])
+
+    fireEvent.click(cabecalho('budget.quoteCount'))
+
+    expect(codigos()).toEqual(['Scap 2', 'Scap 3', 'Scap 1'])
+  })
+
   it('Código, Estado e Cotizaciones mostram a seta de ordenação', () => {
     montar('active', crescente())
 

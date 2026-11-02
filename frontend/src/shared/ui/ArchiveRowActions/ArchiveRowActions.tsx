@@ -59,34 +59,24 @@ export function ArchiveRowActions({
 
   if (archived) {
     if (!canRestore) return null
-    // O rótulo não cabe na coluna colapsada: fica o ícone, e o rótulo vira o
-    // nome acessível.
-    // Centralizado na célula como os botões do `RowActions`; só-ícone ganha a
-    // dica (abre à esquerda: a coluna mora na borda direita da tabela), e o
-    // rotulado já diz o que faz.
-    return (
+    // Ação única: `RowActions` centraliza na célula e dá a dica (também com o
+    // botão apagado pelo `busy`). Colapsada o rótulo não cabe e vira só o
+    // nome acessível; fora do colapso o restaurar segue rotulado.
+    return collapsed ? (
+      <RowActions
+        collapsed
+        actions={[{ label: t('archive.restoreAction'), icon: 'pi pi-undo', onClick: onRestore, disabled: busy }]}
+      />
+    ) : (
       <div className="flex justify-center">
-        {collapsed ? (
-          <AppButton
-            icon="pi pi-undo"
-            text
-            rounded
-            aria-label={t('archive.restoreAction')}
-            tooltip={t('archive.restoreAction')}
-            tooltipOptions={{ position: 'left' }}
-            disabled={busy}
-            onClick={onRestore}
-          />
-        ) : (
-          <AppButton
-            label={t('archive.restoreAction')}
-            icon="pi pi-undo"
-            text
-            size="small"
-            disabled={busy}
-            onClick={onRestore}
-          />
-        )}
+        <AppButton
+          label={t('archive.restoreAction')}
+          icon="pi pi-undo"
+          text
+          size="small"
+          disabled={busy}
+          onClick={onRestore}
+        />
       </div>
     )
   }

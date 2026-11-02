@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ServerTable } from '@shared/hooks'
-import { AppColumn, IdentityCell, AppButton, AppEmptyState, SearchableTableFrame, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass } from '@shared/ui'
+import { AppColumn, IdentityCell, AppEmptyState, RowActions, SearchableTableFrame, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass } from '@shared/ui'
 import type { StudentData } from '@shared/types/generated'
 import { studentWidths } from './studentColumns'
 
@@ -72,7 +72,10 @@ export function StudentsTable({
       />
       <AppColumn
         body={(s: StudentData) => (
-          <AppButton icon="pi pi-eye" text rounded aria-label={t('common.view')} onClick={() => onView(s)} />
+          <RowActions
+            collapsed={colunaDeAcoes.collapsed}
+            actions={[{ label: t('common.view'), icon: 'pi pi-eye', onClick: () => onView(s) }]}
+          />
         )}
         style={stickyActionsColumn(colunaDeAcoes.width)}
       />

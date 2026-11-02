@@ -17,9 +17,10 @@ const TETO: Record<AppDialogSize, string> = {
 
 /** Passthrough do Dialog (ADR-16): largura, a classe da moldura, o respiro do
  * corpo e o do footer. O corpo tem respiro simétrico de 1.5rem (`pt-6 pb-6`),
- * igual ao lateral do Lara (bloco 46, 2026-11-01, João; antes `pt-2`). A pintura navy do header e do footer mora em `brand-theme.css`
- * (`.lotus-dialog`), porque alcança peças internas do Prime — ícones do header,
- * botões `text` do footer — que o `pt` do Dialog não nomeia. O `py-3` fica: o
+ * igual ao lateral do Lara (bloco 46, 2026-11-01, João; antes `pt-2`). A
+ * pintura navy do header e do footer mora em `brand-theme.css` (`.lotus-dialog`),
+ * porque alcança peças internas do Prime — ícones do header, botões `text` do
+ * footer — que o `pt` do Dialog não nomeia. O `py-3` fica: o
  * Lara dá ao footer padding 0 em cima (ele nasce colado ao conteúdo), e numa
  * faixa de cor própria os botões encostariam na borda. */
 export const appDialogPt = (size: AppDialogSize): DialogPassThroughOptions => ({

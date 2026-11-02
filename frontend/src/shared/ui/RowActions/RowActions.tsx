@@ -20,6 +20,53 @@ export type RowAction = {
   describedBy?: string
 }
 
+/** A dica abre à ESQUERDA do ícone. A coluna presa mora na borda direita da
+ * tabela, e à direita (o default do Prime) a dica passava da moldura e criava
+ * rolagem horizontal na página — achado do João no "Revocar" do Historial
+ * (review do item 23). */
+const DICA: TooltipProps = { position: 'left' }
+
+/**
+ * Um botão solto da linha. Apagado, o `Button` do Prime não abre dica nenhuma
+ * (`showTooltip = !disabled || showOnDisabled`), e o `showOnDisabled` dele
+ * embrulha o botão num `div` criado FORA do React, que a reconciliação não
+ * conhece. Aqui o invólucro é um `span` do próprio React: o `.p-disabled` do
+ * Prime põe `pointer-events: none` no botão, então o hover cai no `span`, e é
+ * nele que a dica se prende — o "Emitir" apagado da Emisión volta a dizer o
+ * que é (Q-1 do review do item 23).
+ *
+ * O `span` existe SEMPRE, e só o `Tooltip` entra quando a ação está apagada:
+ * com a árvore estável o React mantém o mesmo nó de botão quando o `disabled`
+ * alterna, e o foco do teclado não se perde (item 46).
+ */
+function RowActionButton({ acao }: { acao: RowAction }) {
+  const involucro = useRef<HTMLSpanElement>(null)
+
+  return (
+    <>
+      <span ref={involucro} className="inline-flex">
+        <AppButton
+          icon={acao.icon}
+          text
+          rounded
+          severity={acao.severity}
+          aria-label={acao.label}
+          aria-describedby={acao.describedBy}
+          tooltip={!acao.disabled ? acao.label : undefined}
+          tooltipOptions={DICA}
+          disabled={acao.disabled}
+          onClick={acao.onClick}
+        />
+      </span>
+      {/* O `useRef` do React 19 tipa `RefObject<T | null>`, e o d.ts do Prime
+        * ainda pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
+      {acao.disabled && (
+        <Tooltip target={involucro as RefObject<HTMLElement>} content={acao.label} {...DICA} />
+      )}
+    </>
+  )
+}
+
 /**
  * As ações de uma linha de tabela, soltas ou colapsadas num menu.
  *
@@ -43,54 +90,6 @@ export type RowAction = {
  * ícones mudos — o item 46 tirou a opção: um botão só-ícone sem nome visível não
  * tem motivo para calar. Os botões ficam centralizados na coluna.
  */
-/** A dica abre à ESQUERDA do ícone. A coluna presa mora na borda direita da
- * tabela, e à direita (o default do Prime) a dica passava da moldura e criava
- * rolagem horizontal na página — achado do João no "Revocar" do Historial
- * (review do item 23). */
-const DICA: TooltipProps = { position: 'left' }
-
-/**
- * Um botão solto da linha. Apagado, o `Button` do Prime não abre dica nenhuma
- * (`showTooltip = !disabled || showOnDisabled`), e o `showOnDisabled` dele
- * embrulha o botão num `div` criado FORA do React, que a reconciliação não
- * conhece. Aqui o involucro é um `span` do próprio React: o `.p-disabled` do
- * Prime põe `pointer-events: none` no botão, então o hover cai no `span`, e é
- * nele que a dica se prende — o "Emitir" apagado da Emisión volta a dizer o
- * que é (Q-1 do review do item 23).
- */
-function RowActionButton({ acao }: { acao: RowAction }) {
-  const involucro = useRef<HTMLSpanElement>(null)
-  const dicaNoInvolucro = acao.disabled
-
-  const botao = (
-    <AppButton
-      icon={acao.icon}
-      text
-      rounded
-      severity={acao.severity}
-      aria-label={acao.label}
-      aria-describedby={acao.describedBy}
-      tooltip={!acao.disabled ? acao.label : undefined}
-      tooltipOptions={DICA}
-      disabled={acao.disabled}
-      onClick={acao.onClick}
-    />
-  )
-
-  if (!dicaNoInvolucro) return botao
-
-  return (
-    <>
-      <span ref={involucro} className="inline-flex">
-        {botao}
-      </span>
-      {/* O `useRef` do React 19 tipa `RefObject<T | null>`, e o d.ts do Prime
-        * ainda pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
-      <Tooltip target={involucro as RefObject<HTMLElement>} content={acao.label} {...DICA} />
-    </>
-  )
-}
-
 export function RowActions({ actions, collapsed }: { actions: RowAction[]; collapsed: boolean }) {
   const { t } = useTranslation()
   const menu = useRef<AppMenuRef>(null)

@@ -34,8 +34,8 @@ export interface SectionLabelProps {
  *
  * A margem do cabeçalho já é zerada pelo mini-reset de `index.css` (P-46).
  *
- * Tinta do corpo por padrão, não a secundária. A razão ORIGINAL era contraste: a faixa
- * pousa no `--surface-ground`, e ali a secundária de então (`#64748b`) media
+ * Tinta do corpo por padrão, não a secundária. A razão ORIGINAL era contraste:
+ * a faixa pousa no `--surface-ground`, e ali a secundária de então (`#64748b`) media
  * 4,34:1. Essa razão MORREU no BD-16 (D-28) — hoje a secundária mede 6,92:1 no
  * humo. A tinta de corpo fica assim mesmo, agora por hierarquia e não por
  * régua: o degrau vem do peso e da caixa alta, não de um cinza mais claro que
@@ -46,12 +46,17 @@ export interface SectionLabelProps {
  * título de seção de formulário em 2026-11-01 (ver `FormSection`), e a trava
  * encolheu para o default: Dashboard, Sidebar e cartões seguem em `body`.
  */
-export function SectionLabel({ children, as = 'h2', rule = true, tone = 'body', className }: SectionLabelProps) {
+export function SectionLabel({
+  children, as = 'h2', rule = true, tone = 'body', className,
+}: SectionLabelProps) {
   const Heading = as
   const brand = tone === 'brand'
   return (
     <div className={`flex items-center gap-3${className ? ` ${className}` : ''}`}>
-      <Heading className={sectionLabelClass} style={{ color: brand ? 'var(--primary-color)' : 'var(--text-color)' }}>
+      <Heading
+        className={sectionLabelClass}
+        style={{ color: brand ? 'var(--primary-color)' : 'var(--text-color)' }}
+      >
         {children}
       </Heading>
       {rule && (

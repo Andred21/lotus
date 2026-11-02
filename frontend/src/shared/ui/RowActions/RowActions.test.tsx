@@ -142,6 +142,19 @@ describe('RowActions', () => {
   })
 })
 
+describe('RowActions — árvore estável', () => {
+  it('o mesmo nó de botão sobrevive quando o disabled alterna (o foco não se perde)', () => {
+    const { rerender } = render(<RowActions collapsed={false} actions={[acao('Emitir')]} />)
+    const antes = screen.getByRole('button', { name: 'Emitir' })
+
+    rerender(<RowActions collapsed={false} actions={[acao('Emitir', { disabled: true })]} />)
+    expect(screen.getByRole('button', { name: 'Emitir' })).toBe(antes)
+
+    rerender(<RowActions collapsed={false} actions={[acao('Emitir')]} />)
+    expect(screen.getByRole('button', { name: 'Emitir' })).toBe(antes)
+  })
+})
+
 describe('ArchiveRowActions colapsada', () => {
   it('as ações próprias (extra) entram no mesmo menu, entre ver e arquivar', () => {
     render(
@@ -202,6 +215,21 @@ describe('ArchiveRowActions colapsada', () => {
     })
     expect(dica.textContent).toBe('archive.restoreAction')
     expect(dica.className).toContain('p-tooltip-left')
+  })
+
+  it('o restaurar desabilitado (busy) também mostra a dica, pelo invólucro', async () => {
+    render(<ArchiveRowActions collapsed archived busy canRestore onRestore={() => {}} />)
+
+    const botao = screen.getByRole('button', { name: 'archive.restoreAction' })
+    expect(botao.hasAttribute('disabled')).toBe(true)
+    fireEvent.mouseEnter(botao.parentElement!)
+
+    const dica = await waitFor(() => {
+      const el = document.querySelector<HTMLElement>('.p-tooltip')
+      expect(el).not.toBeNull()
+      return el!
+    })
+    expect(dica.textContent).toBe('archive.restoreAction')
   })
 
   it('o restaurar fica centralizado na célula', () => {

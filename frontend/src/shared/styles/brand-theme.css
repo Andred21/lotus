@@ -169,6 +169,9 @@ html:not(.dark) {
    * recuado do BD-16, porque lá a secundária é o RÓTULO do `FormField` em
    * leitura — em tinta de corpo, rótulo e valor ficam no mesmo cinza e no mesmo
    * `text-sm`, e o par "E-mail / joao@…" perde a hierarquia.
+   * (Revertido pelo bloco 46, 2026-11-01, João: a label do `FormField` sai em
+   * `--text-color`, peso 500, e o título de seção do `FormSection` em
+   * `--primary-color`.)
    *
    * `#475569` é o slate-600, e a rampa do tema realmente o pula: `--surface-500`
    * é o slate-500 e `--surface-600` já é o slate-700 (`#334155`, a tinta de
@@ -186,7 +189,8 @@ html:not(.dark) {
    * azul-poste mede 13,37:1 no humo. Aqui ele cabe porque é traço e não texto:
    * não apaga a marca de lugar nenhum. No TEXTO a decisão foi outra (o degrau
    * 700 da rampa), justamente para o celeste não sumir dos botões — ver o
-   * gerador do tema. */
+   * gerador do tema. (Bloco 46, 2026-11-01, João: o título de seção do
+   * `FormSection` voltou à marca, em `--primary-color`.) */
   --focus-stroke: var(--brand-navy);
 
   /* Degraus do claro. NÃO são o mesmo número em todo tom: o que iguala os
