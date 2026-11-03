@@ -40,22 +40,18 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
 | P-107 | O 422 de upload diz "El campo file…": o backend não traduz o atributo `file` | 52 | bloco que tocar a validação de upload ou os atributos do `lang/`; revisar 2026-11-07 |
-| P-108 | Em 1024, o RUT do cliente passa por baixo do "Agregar cotización" no cabeçalho do detalhe do orçamento | 49 | bloco que tocar esse cabeçalho; revisar 2026-11-07 |
-| P-109 | O paginador das tabelas expõe "Previous Page"/"Next Page" em inglês a leitor de tela | 49 | bloco que tocar o `AppDataTable` ou o `pt` do paginador; revisar 2026-11-07 |
 | P-110 | A rule `frontend-estilizacao.md` ainda descreve uma faixa de seção só (12px, tinta de corpo); o título de seção de formulário do item 46 (`formSectionTitleClass`, 13px, na marca) ficou só no `rulings.md` e em docblocks | 58 | bloco que tocar a rule, o `typography.ts` ou o `FormSection`/`SectionLabel`; revisar 2026-11-15 |
+| P-113 | O `COL.rut` dá cerca de 110 a 123 px, menos que os 133 px do RUT em mono, nas tabelas de alunos e de clientes | — | bloco que tocar `studentColumns.ts` ou `clientColumns.ts`; revisar 2026-11-16 |
 | P-83 | Sete decisões de política dos guardas (allowlist da `main` para `.github/`/`.githooks/`/`.codex/`/`.superpowers/`, `merge --ff-only`, o `docker/probe.env` real, os três caminhos do `stop-verify`, o motivo que ensina a alargar a allowlist, `git commit` sem `-m`) ficaram só no ledger, que é **gitignorado** | 57 | João decidir cada linha — a favor ou contra — e a decisão virar commit; revisar 2026-10-31 |
-| P-74 | O botão de severidade reprova AA no estado base do tema claro em quatro das cinco famílias (success 2,28:1, info 2,77:1, danger 3,76:1, help 3,96:1) — o `warning`, que a P-30 fechou, era a quarta pior | 49 | uma régua por estado, no molde do `describe` da P-30 em `frontend/tests/tone-ink.test.ts`, cobrir as cinco severidades nos três estados e todas passarem 4,5:1; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | 58 | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-49 | Eixos **redator** e **turma** fechados em 2026-08-23 (`lockForWrite()` nos cinco escritores + catraca); resta a janela **cotação × orçamento** | 50 | bloco que tocar `RestoreQuoteAction`/`DeleteBudgetAction` e puder travar os dois lados; revisar 2026-10-31 |
 | P-51 | Default literal em DTO de entrada — o campo de **acesso** (`is_active`) fechou em 2026-08-23; restam **cinco** campos sem controle de acesso | 51 | bloco que tocar `UpdateClientAction`/`UpdateCourseAction`, `BudgetController::update` ou `CourseTemplateController::update`; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | 58 | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | 58 | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo — **disparado em 2026-09-04, 2026-09-25 e 2026-10-04, não pago**; revisar 2026-10-31; a linha "transporte de e-mail sem ADR" foi paga pelo item 33 (ADR-23) |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | 55 | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
-| P-101 | O RUT quebra no hífen na tabela de alunos (`EnrollmentTable`, `ArchivedEnrollmentsList`) a 390 px — a coluna não tem `identifierClass` | 49 | bloco que tocar uma das duas tabelas por outro motivo, ou reclamação da Lotus no celular; revisar em 2026-11-07 |
 | P-102 | O `CompliancePanel` e `OperationMetricsQuery::pendencias()` não mostram os requisitos novos da conclusão (redator, `local_aplicacao` do presencial) | 54 | bloco que tocar o `CompliancePanel` ou o `pendencias()`; revisar em 2026-11-07 |
 | P-103 | A emissão do certificado decide a porta 2 e o snapshot fora da transação, e a correção de resultado pode entrar na janela — o certificado sai com o resultado antigo | 48 | bloco que tocar o `IssueCertificateAction`; antes de a correção pós-conclusão ter uso real; revisar em 2026-11-07 |
 | P-104 | O diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado | 48 | o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`; revisar em 2026-11-07 |
-| P-105 | A tinta `danger` do tema escuro (`--tone-danger-ink` = `--red-400`) mede 4,36:1 sobre o fundo de 15% do `severityTone` — o do `AppTag` danger e do ícone da `ConfirmDialog` —, abaixo de 4,5:1; o caso do `tone-ink.test.ts` do item 43 o pula | 49 | bloco que tocar `--tone-danger-ink`, `severityTone` ou a P-74; revisar 2026-11-07 |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
@@ -64,6 +60,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 > Treze fichas saíram de "Travadas" e vieram para esta tabela, entre elas a P-74, cuja decisão
 > entra no brainstorming do 49. A P-31, a P-22 e a P-44 ficam onde estavam. Agrupar não promove nem
 > autoriza nada, e o gatilho de cada ficha continua valendo.
+>
+> **O item 49 (`frontend-acessibilidade-e-respiro`) fechou em 2026-11-02 a P-74, a P-101, a P-105, a
+> P-108 e a P-109**, todas pelo próprio mecanismo ou gatilho, com a medida no `prova.md` do bloco. Abriu
+> a **P-113**: o `COL.rut` das tabelas de alunos e de clientes entrega menos que o RUT em mono pede, e o
+> bloco só corrigiu as duas tabelas de matrícula.
 >
 > **O item 47 (`frontend-ajustes-de-interface-lote-2`) fechou em 2026-11-02 a P-106 e a P-111**, e
 > disparou sem pagar o gatilho da **P-107** (tocou o `UploadFileAction`, mas o atributo `file` segue
