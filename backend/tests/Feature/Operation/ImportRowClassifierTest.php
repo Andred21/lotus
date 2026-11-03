@@ -149,10 +149,15 @@ class ImportRowClassifierTest extends TestCase
     public function test_actualizar_em_branco_preserva_e_nao_reserva(): void
     {
         $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56 9 1111');
+        $this->aluno('44.444.444-4', 'Ana Mora', 'ana@acme.cl');
 
         $d = $this->classificar([
+            // Branco preserva o cadastro (e-mail e telefone) e não reserva e-mail nenhum.
             $this->linha(2, '33.333.333-3', 'Pedro Lagos Díaz', null, null, atualizar: true),
-            $this->linha(3, '11.111.111-1', 'Juan Soto', 'pedro@acme.cl'), // e-mail do cadastro: o branco não o reservou
+            // Outra cadastrada cujo e-mail diverge e é IGUAL ao e-mail do cadastro de Pedro: só a
+            // reserva da linha 2 poderia recusá-la como duplicidade DA PLANILHA; sem ela, quem
+            // recusa é a colisão com o banco (`assertCanUpdate`).
+            $this->linha(3, '44.444.444-4', 'Ana Mora', 'pedro@acme.cl', atualizar: true),
         ]);
 
         $this->assertSame([ImportField::Name], $d[0]->divergent);
@@ -161,9 +166,11 @@ class ImportRowClassifierTest extends TestCase
         $this->assertSame('pedro@acme.cl', $d[0]->updatedIdentity->email);
         $this->assertSame('+56 9 1111', $d[0]->updatedIdentity->phone);
         $this->assertSame('33.333.333-3', $d[0]->updatedIdentity->rut);
-        // A linha 3 cai pela identidade que já existe no banco, NÃO por duplicidade na planilha.
-        $this->assertSame(ImportRowStatus::Error, $d[1]->status);
-        $this->assertNotSame(__('operation.enrollment.import.duplicate_email', ['row' => 2]), $d[1]->refusal);
+
+        $this->assertSame([ImportField::Email], $d[1]->divergent);
+        $this->assertNotSame(__('operation.enrollment.import.duplicate_email', ['row' => 2]), $d[1]->updateRefusal);
+        $this->assertSame(__('identity.errors.email_taken'), $d[1]->updateRefusal);
+        $this->assertTrue($d[1]->updateRefused());
     }
 
     public function test_email_com_caixa_diferente_e_duplicidade_e_nao_divergencia(): void
