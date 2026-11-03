@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Models;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Notifications\PasswordResetLink;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -77,6 +78,34 @@ class User extends Authenticatable implements Auditable
                 $user->uuid = (string) Str::uuid();
             }
         });
+    }
+
+    /**
+     * Só staff (`type = 'admin'`): o recorte que as rotas `{user}` e a listagem
+     * de usuários administram. Cliente, redator e aluno também são `User`, mas
+     * têm controller e permissão próprios.
+     *
+     * @param  Builder<static>  $query
+     */
+    public function scopeStaff(Builder $query): void
+    {
+        $query->where('type', 'admin');
+    }
+
+    /**
+     * Toda rota com `{user}` resolve só staff (card 10, spec D7): id de
+     * cliente/redator/aluno é indistinguível de id inexistente e sai 404 antes
+     * do controller. Aplicado no binding, a rota nova com `{user}` nasce
+     * coberta. Como o binding corre antes do `permission:`, o ator sem
+     * permissão também recebe 404 para id não-staff (D7a). Molde:
+     * `Turma::resolveRouteBinding`.
+     */
+    public function resolveRouteBinding($value, $field = null): ?static
+    {
+        return $this->newQuery()
+            ->staff()
+            ->where($field ?? $this->getRouteKeyName(), $value)
+            ->first();
     }
 
     public function client(): HasOne
