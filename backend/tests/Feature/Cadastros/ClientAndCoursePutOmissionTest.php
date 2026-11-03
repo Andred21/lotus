@@ -57,6 +57,47 @@ class ClientAndCoursePutOmissionTest extends TestCase
         $this->assertNull($client->business_activity);
     }
 
+    public function test_put_de_cliente_sem_type_preserva_o_tipo(): void
+    {
+        $this->actingAsAdmin();
+
+        $client = $this->makeClientWithUser(
+            ['legal_name' => 'ACME', 'type' => 'provider'],
+            ['rut' => '12.345.678-5', 'email' => 'acme@lotus.cl'],
+        );
+
+        $this->putJson("/api/clients/{$client->id}", [
+            'name' => 'ACME Editada',
+            'rut' => '12.345.678-5',
+            'email' => 'acme@lotus.cl',
+            'legal_name' => 'ACME S.A.',
+        ])->assertOk();
+
+        $client->refresh();
+        $this->assertSame('provider', $client->type);
+    }
+
+    public function test_put_de_cliente_com_type_null_e_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $client = $this->makeClientWithUser(
+            ['legal_name' => 'ACME', 'type' => 'provider'],
+            ['rut' => '12.345.678-5', 'email' => 'acme@lotus.cl'],
+        );
+
+        $this->putJson("/api/clients/{$client->id}", [
+            'name' => 'ACME Editada',
+            'rut' => '12.345.678-5',
+            'email' => 'acme@lotus.cl',
+            'legal_name' => 'ACME S.A.',
+            'type' => null,
+        ])->assertStatus(422)->assertJsonValidationErrors('type');
+
+        $client->refresh();
+        $this->assertSame('provider', $client->type);
+    }
+
     public function test_put_de_curso_sem_technical_name_e_description_preserva_os_dois(): void
     {
         $this->actingAsAdmin();

@@ -250,6 +250,17 @@ class ClientCrudTest extends TestCase
             ->assertJsonMissingPath('errors.email');
     }
 
+    public function test_post_de_cliente_sem_type_cria_client(): void
+    {
+        $this->actingAsAdmin();
+        $payload = $this->payload();
+        unset($payload['type']);
+
+        $id = $this->postJson('/api/clients', $payload)->assertCreated()->json('id');
+
+        $this->assertSame('client', Client::findOrFail($id)->type);
+    }
+
     public function test_store_sem_a_chave_addresses_cria_sem_endereco(): void
     {
         $this->actingAsAdmin();
