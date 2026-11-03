@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, IdentityCell, AppTag, AppEmptyState, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppDataTable, AppColumn, IdentityCell, AppTag, AppEmptyState, narrowFloorTablePt, stickyActionsColumn, useCollapsibleActionsColumn, identifierClass } from '@shared/ui'
 import { enrollmentWidths } from './enrollmentColumns'
 import { AttendanceCell, GradeCell } from './EnrollmentResultCells'
 import { useTableFilter, usePermissions } from '@shared/hooks'
@@ -84,7 +84,8 @@ export function EnrollmentTable({
           )}
           style={largura.name}
         />
-        <AppColumn header={t('operation.enrollment.table.rut')} field="rut" style={largura.rut} />
+        <AppColumn header={t('operation.enrollment.table.rut')} style={largura.rut}
+          body={(e: EnrollmentData) => <span className={identifierClass}>{e.rut}</span>} />
         <AppColumn
           header={t('operation.enrollment.table.grade')}
           body={(e: EnrollmentData) => <GradeCell enrollment={e} locale={i18n.language} />}

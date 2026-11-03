@@ -397,6 +397,102 @@ function warningAmarelo(css, receita) {
   })
 }
 
+// ── P-74: o botão filled das quatro severidades passa AA no claro ───────────
+// O Lara pinta `#ffffff` sobre o fundo de stock de cada severidade, e no claro
+// nenhum dos quatro chega a 4,5:1 (success 2,28, info 2,77, danger 3,76, help
+// 3,96). A decisão do João sobre maquete (bloco 49, spec §4.1, opção A) é o
+// molde da P-30: fundo claro da rampa da Lotus e letra no degrau 900 da mesma
+// família, com os estados SUBINDO a rampa — a tinta é escura, então hover e
+// active clareiam (300 → 200 → 100). O anel de foco vai para o 900, o degrau da
+// tinta, como na P-30. O `warning` não entra: a P-30 já o resolveu.
+//
+// Os hex são os de STOCK, porque a passada roda ANTES do mapa de cores. É por
+// isso que o anel de `info` em `:not(:disabled):focus` é `#bfdbfe` (blue-200, que
+// o mapa converteria em `#b2dff5`) e não o hex que o arquivo gerado exibe.
+//
+// O gate é o SELETOR, não o hex — a mesma lição da P-30, agravada: os hex de
+// stock destas famílias (`#ef4444`, `#22c55e`…) aparecem também em outlined/text,
+// AppTag-like, mensagem e borda de input inválido, que ficam como estão. O
+// critério é de forma, em lista separada por vírgula:
+//   - todo seletor é filled da severidade (`p-button-<sev>` sem outlined/text/link):
+//     aplica a receita; o Lara agrupa com o filled os irmãos que herdam a mesma
+//     pintura (`.p-button-group`, `.p-splitbutton`, `.p-fileupload-choose`) e eles
+//     seguem o botão;
+//   - nenhum seletor é filled da severidade: devolve o bloco intacto;
+//   - lista mista: falha alto em vez de adivinhar.
+// `:disabled` não muda: o Lara o trata por opacidade.
+export const SEVERIDADES_CLARAS = {
+  success: {
+    hue: 'green',
+    fundo: { '#22c55e': '#76db9b', '#16a34a': '#a0e6ba', '#15803d': '#caf1d8' }, // 300 / 200 / 100
+    tintaLara: '#ffffff',
+    tinta: '#0e4f26', // --green-900
+    anel: { '#bbf7d0': '#0e4f26', '#88eaac': '#0e4f26' },
+  },
+  info: {
+    hue: 'blue',
+    fundo: { '#0ea5e9': '#96d4f2', '#0284c7': '#c2e6f7', '#0369a1': '#e3f3fb' },
+    tintaLara: '#ffffff',
+    tinta: '#0c3549', // --blue-900
+    anel: { '#bfdbfe': '#0c3549', '#83d3f8': '#0c3549' },
+  },
+  danger: {
+    hue: 'red',
+    fundo: { '#ef4444': '#ff8780', '#dc2626': '#ffaca7', '#b91c1c': '#ffd0ce' },
+    tintaLara: '#ffffff',
+    tinta: '#661814', // --red-900
+    anel: { '#fecaca': '#661814', '#f7a2a2': '#661814' },
+  },
+  help: {
+    hue: 'purple',
+    fundo: { '#a855f7': '#c996fa', '#9333ea': '#dab6fc', '#7e22ce': '#ead6fd' },
+    tintaLara: '#ffffff',
+    tinta: '#432263', // --purple-900
+    anel: { '#e9d5ff': '#432263', '#d4aafb': '#432263' },
+  },
+}
+
+const SEM_FILLED = /p-button-(?:outlined|text|link)\b/
+
+function severidadesFilled(css) {
+  const receitas = Object.entries(SEVERIDADES_CLARAS).map(([sev, receita]) => {
+    const mapa = { ...receita.fundo, ...receita.anel }
+    const chaves = Object.keys(mapa).sort((a, b) => b.length - a.length)
+    return {
+      sev,
+      receita,
+      busca: new RegExp(chaves.map(escapar).join('|'), 'gi'),
+      indice: new Map(Object.entries(mapa).map(([k, v]) => [k.toLowerCase(), v])),
+      tintaLara: new RegExp(`(?<![-\\w])color:(\\s*)${receita.tintaLara}\\b`, 'gi'),
+    }
+  })
+
+  return css.replace(/([^{}]+)\{([^{}]*)\}/g, (bloco, seletor, corpo) => {
+    const seletores = seletor.split(',').map((s) => s.trim())
+    for (const { sev, receita, busca, indice, tintaLara } of receitas) {
+      const daSev = new RegExp(`p-button-${sev}\\b`)
+      const toca = seletores.filter((s) => daSev.test(s))
+      if (toca.length === 0) continue
+      const filled = toca.filter((s) => !SEM_FILLED.test(s))
+      if (filled.length === 0) return bloco // só outlined/text/link da severidade
+      if (filled.length !== seletores.length) {
+        const intruso = seletores.find((s) => !daSev.test(s) || SEM_FILLED.test(s))
+        throw new Error(
+          `severidadesFilled: lista mista em ${sev} — o seletor "${intruso}" não é botão filled da severidade, e o resto é: ${seletor.trim()}`,
+        )
+      }
+      // O `color:` PRIMEIRO, com lookbehind para não pegar `border-color` nem
+      // `background-color`; fundo, borda e anel numa passada só (o `border:` de
+      // stock repete o fundo, e o anel mora no `box-shadow`).
+      const novo = corpo
+        .replace(tintaLara, `color:$1${receita.tinta}`)
+        .replace(busca, (achado) => indice.get(achado.toLowerCase()) ?? achado)
+      return `${seletor}{${novo}}`
+    }
+    return bloco
+  })
+}
+
 export function transform(css, map, tinta) {
   const tabela = { ...map, ...COMUM }
   // Uma passada só: substituir em série faria uma saída ser reescaneada pela
@@ -405,8 +501,9 @@ export function transform(css, map, tinta) {
   const busca = new RegExp(chaves.map(escapar).join('|'), 'gi')
   const indice = new Map(Object.entries(tabela).map(([k, v]) => [k.toLowerCase(), v]))
 
+  const base = textoSobrePrimaria(semFontFace(css))
   const out = warningAmarelo(
-    textoSobrePrimaria(semFontFace(css)),
+    tinta ? severidadesFilled(base) : base,
     tinta ? WARNING_CLARO : WARNING_ESCURO,
   ).replace(busca, (achado) => indice.get(achado.toLowerCase()) ?? achado)
   // Depois do mapa, não antes: é o mapa que transforma o azul do Lara em

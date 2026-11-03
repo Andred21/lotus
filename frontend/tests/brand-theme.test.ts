@@ -12,6 +12,7 @@ import {
   AZUL_POSTE,
   TINTA_CLARA,
   CINZA_BORDA,
+  SEVERIDADES_CLARAS,
 } from '../scripts/generate-brand-theme.mjs'
 
 const root = resolve(__dirname, '..')
@@ -503,5 +504,67 @@ describe('D-68 — borda de controle do tema claro', () => {
 
   it('o escuro não recebe a passada — lá o traço não é o único indicador', () => {
     expect(DECLARACOES_COM(dark(), CINZA_BORDA).filter((d) => /^border/.test(d)).length).toBe(0)
+  })
+})
+
+// ── P-74: o alcance da receita do botão filled das severidades ──────────────
+// O anti-objetivo do bloco 49 é a correção de contraste alcançar um bloco que não
+// é botão filled de severidade: o `#ef4444` e os irmãos de stock vivem também em
+// outlined/text, mensagem e borda de input inválido. A guarda mede o alcance nos
+// DOIS sentidos, sobre a saída — o gate é o SELETOR, não o hex:
+//   - dentro do gate nada de stock sobrevive (fundo, anel, `color: #ffffff`);
+//   - fora do gate nenhum valor NOVO da receita aparece em declaração de bloco.
+describe('P-74 — a receita do filled das severidades só alcança botão filled', () => {
+  const SEVS = Object.entries(SEVERIDADES_CLARAS)
+  const SEM_FILLED = /p-button-(?:outlined|text|link)\b/
+  const blocos = () => [...light().matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+
+  const filledDe = (seletor: string, sev: string) => {
+    const lista = seletor.split(',').map((x) => x.trim())
+    return lista.every((x) => new RegExp(`p-button-${sev}\\b`).test(x) && !SEM_FILLED.test(x))
+  }
+  const declaracoes = (corpo: string) =>
+    corpo
+      .split(';')
+      .map((d) => d.trim())
+      .filter((d) => d && !d.startsWith('--'))
+      .join(';')
+
+  it.each(SEVS)('%s: dentro do gate nenhum hex de stock sobrevive', (sev, receita) => {
+    const gated = blocos().filter(([, seletor]) => filledDe(seletor, sev))
+    const stockHex = Object.keys({ ...receita.fundo, ...receita.anel })
+
+    expect(gated.length).toBe(5) // base, hover, active, `:not(:disabled):focus` e `:enabled:focus`
+    for (const [, seletor, corpo] of gated) {
+      expect(`${seletor.trim()} => ${stockHex.filter((h) => corpo.toLowerCase().includes(h))}`).toBe(
+        `${seletor.trim()} => `,
+      )
+      expect(corpo).not.toMatch(/(?<![-\w])color:\s*#ffffff/i)
+    }
+  })
+
+  it.each(SEVS)('%s: fora do gate nenhum valor novo da receita aparece', (sev, receita) => {
+    const novos = [...new Set([...Object.values(receita.fundo), receita.tinta])]
+    const vazados = blocos()
+      .filter(([, seletor]) => !filledDe(seletor, sev))
+      .filter(([, , corpo]) => novos.some((n) => declaracoes(corpo).toLowerCase().includes(n)))
+      .map(([, seletor]) => seletor.trim().replace(/\s+/g, ' '))
+
+    expect(vazados).toEqual([])
+  })
+
+  it('o tema escuro não recebe a receita', () => {
+    const novos = SEVS.flatMap(([, r]) => [...Object.values(r.fundo), r.tinta])
+    const corpos = [...dark().matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .filter(([, seletor]) => /p-button-(success|info|danger|help)\b/.test(seletor))
+      .map(([, , corpo]) => declaracoes(corpo).toLowerCase())
+
+    expect(corpos.filter((c) => novos.some((n) => c.includes(n)))).toEqual([])
+  })
+
+  it('lista mista (filled e outlined da mesma severidade) falha alto, nomeando o seletor', () => {
+    const css = '.p-button.p-button-danger, .p-button.p-button-danger.p-button-text {\n  color: #ef4444;\n}'
+
+    expect(() => transform(css, LIGHT_MAP, TINTA_CLARA)).toThrow(/p-button-danger\.p-button-text/)
   })
 })

@@ -108,6 +108,70 @@ describe('AppDataTable — modo lazy (spec §5)', () => {
   })
 })
 
+/**
+ * P-109: o PrimeReact rotula os controles do paginador com `api.ariaLabel(...)`,
+ * contra a locale GLOBAL dele, que o projeto nunca troca: "Previous Page",
+ * "Next Page", "Page 2" em tela espanhola. O nome vem das chaves `common.paginator*`.
+ */
+describe('AppDataTable — paginador anuncia no idioma da tela (P-109)', () => {
+  const VINTE_E_CINCO = Array.from({ length: 25 }, (_, i) => ({ id: i + 1 }))
+  const montar = () =>
+    render(
+      <AppDataTable value={VINTE_E_CINCO} rows={10} footerCount={<span>25</span>}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+  it('em es-CL os três controles têm nome em espanhol e o inglês do PrimeReact some', () => {
+    montar()
+
+    expect(screen.getByRole('button', { name: 'Página anterior' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Página 2' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Previous Page|Next Page|^Page 2$/ })).toBeNull()
+  })
+
+  it('o nome relê `t` a cada render: trocar o idioma troca o nome, número incluso', async () => {
+    montar()
+
+    await act(async () => {
+      await i18n.changeLanguage('en')
+    })
+
+    expect(screen.getByRole('button', { name: 'Page 2' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Previous page' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Next page' })).toBeTruthy()
+  })
+})
+
+/**
+ * Review final do bloco 49: o nome do paginador é PISO (spec §4.4, "não se
+ * desliga"), e o `paginatorTemplate` entrava antes do `{...props}` — um chamador
+ * que o passasse trocava o template e o nome voltava ao inglês do PrimeReact em
+ * silêncio. A prop segue aceita pelo tipo (`DataTableProps` é união discriminada e
+ * o `Omit` a quebra), então o que garante o piso é a posição do template depois
+ * do spread — e este teste.
+ */
+describe('AppDataTable — o piso do paginador não se desliga', () => {
+  it('um `paginatorTemplate` do chamador não troca os nomes dos controles', () => {
+    const VINTE_E_CINCO = Array.from({ length: 25 }, (_, i) => ({ id: i + 1 }))
+    render(
+      <AppDataTable
+        value={VINTE_E_CINCO}
+        rows={10}
+        footerCount={<span>25</span>}
+        paginatorTemplate="PrevPageLink PageLinks NextPageLink"
+      >
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Página anterior' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Página 2' })).toBeTruthy()
+  })
+})
+
 describe('AppDataTable — dataKey (f3 UI-06)', () => {
   /**
    * `dataKey="id"` é o default do wrapper, e o DTO das linhas de emissão expõe

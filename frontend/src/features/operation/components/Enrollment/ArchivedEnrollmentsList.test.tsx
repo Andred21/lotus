@@ -76,3 +76,15 @@ describe('ArchivedEnrollmentsList — restaurar', () => {
     expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('31.5rem')
   })
 })
+
+/** P-101: a 390px o RUT quebrava no hífen. */
+describe('ArchivedEnrollmentsList — RUT', () => {
+  it('renderiza o RUT inteiro num span mono e sem quebra de linha', () => {
+    montar()
+    // o RUT da fixture é '11.111.111-1'; o texto precisa vir inteiro, num único span
+    const rut = screen.getByText('11.111.111-1')
+    expect(rut.tagName).toBe('SPAN')
+    expect(rut.className).toContain('whitespace-nowrap')
+    expect(rut.className).toContain('font-mono')
+  })
+})

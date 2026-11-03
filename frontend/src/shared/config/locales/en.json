@@ -88,7 +88,10 @@
     "maximizeDialog": "Maximize dialog",
     "restoreDialog": "Restore dialog",
     "tabsScrollPrev": "Scroll tabs left",
-    "tabsScrollNext": "Scroll tabs right"
+    "tabsScrollNext": "Scroll tabs right",
+    "paginatorPrev": "Previous page",
+    "paginatorNext": "Next page",
+    "paginatorPage": "Page {{page}}"
   },
   "module": {
     "comercial": {
@@ -163,7 +166,7 @@
     "identity_user_view": "View users, editors and students",
     "identity_user_create": "Create users, editors and students",
     "identity_user_update": "Edit users, editors and students",
-    "identity_user_delete": "Remove (soft delete) users",
+    "identity_user_delete": "Archive users",
     "identity_user_restore": "Restore archived editors",
     "identity_access_manage": "Manage other users' roles and permissions (sensitive)",
     "commercial_client_view": "View clients (contracting companies)",
@@ -181,7 +184,7 @@
     "commercial_quote_update": "Edit quotes",
     "commercial_quote_delete": "Remove quotes",
     "commercial_quote_restore": "Restore archived quotes",
-    "commercial_quote_approve": "Approve quote with client acceptance (Flow 2 — superadmin only)",
+    "commercial_quote_approve": "Approve quote with client acceptance (superadmin only)",
     "catalog_course_view": "View courses",
     "catalog_course_create": "Create courses",
     "catalog_course_update": "Edit courses and editor enablement",
@@ -192,15 +195,15 @@
     "operation_turma_update": "Edit classes",
     "operation_turma_delete": "Remove classes",
     "operation_turma_restore": "Restore archived classes",
-    "operation_enrollment_manage": "Enroll students / import spreadsheet (Flow 3)",
-    "operation_enrollment_record_result": "Record enrollment grade and attendance (RN-02 — editor action)",
+    "operation_enrollment_manage": "Enroll students / import spreadsheet",
+    "operation_enrollment_record_result": "Record enrollment grade and attendance (editor action)",
     "operation_enrollment_restore": "Restore archived enrollments",
-    "operation_turma_assign_redator": "Assign a qualified editor to the class (Flow 3)",
-    "operation_turma_complete": "Confirm class completion (Flow 4 — admin confirms)",
-    "operation_turma_submit_docs": "Upload class documentation (Flow 1/4 — editor action)",
+    "operation_turma_assign_redator": "Assign a qualified editor to the class",
+    "operation_turma_complete": "Confirm class completion (admin confirms)",
+    "operation_turma_submit_docs": "Upload class documentation (editor action)",
     "certification_certificate_view": "View certificates",
-    "certification_certificate_issue": "Issue certificate (Flow 5)",
-    "certification_certificate_revoke": "Revoke certificate (Flow 6 — sensitive, legal weight)",
+    "certification_certificate_issue": "Issue certificate",
+    "certification_certificate_revoke": "Revoke certificate (sensitive, legal weight)",
     "certification_settings_manage": "Configure certificates: manager, title and signature (superadmin only)"
   },
   "role": {
