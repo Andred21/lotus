@@ -101,8 +101,11 @@ arquivado.
 
 - `DeleteBudgetAction`: transação, `Budget::lockRow()`, e a checagem de cotação aprovada passa para
   **dentro** da transação, depois do lock.
-- `RestoreQuoteAction`: troca a leitura `$quote->budget->trashed()` por `Budget::lockForWrite()`
-  dentro da transação, antes do `restore()`, mantendo a mensagem `commercial.quote.budget_archived`.
+- `RestoreQuoteAction`: troca a leitura `$quote->budget->trashed()` por `Budget::lockRow()`
+  dentro da transação, antes do `restore()`, e mantém a própria checagem de `trashed()` com a chave
+  `quote` e a mensagem `commercial.quote.budget_archived`. O efeito é o do `lockForWrite`, mas o
+  contrato `errors.quote` (fixado em `QuoteArchiveEndpointTest.php:138`) não muda *(Claude, no
+  plano)*.
 - `CreateQuoteAction` *(Claude)*: escritor de filho do orçamento, toma `Budget::lockForWrite()`
   antes de derivar o `seq_in_budget`. Sem isso, criar cotação concorrente ao arquivar o orçamento
   deixa cotação ativa sob orçamento arquivado, a mesma classe da P-49.
@@ -189,7 +192,7 @@ o `course_id` dela **difere** do da turma. Mensagens novas nos três locales do 
    - mandar outro campo diferente nesse caso dá 422;
    - admin editando aprovada dá 422;
    - aprovar aprovada e recusar recusada dão 422.
-2. `DeleteBudgetAction`, `RestoreQuoteAction` e `CreateQuoteAction` tomam `Budget::lockRow`/`lockForWrite`
+2. `DeleteBudgetAction`, `RestoreQuoteAction` e `CreateQuoteAction` tomam o lock do orçamento
    dentro da transação, e criar cotação em orçamento arquivado dá 422 (Action chamada direto). A P-49
    sai de `abertas.md`.
 2a. Restaurar turma cuja cotação foi recusada, ou teve o curso trocado, dá 422 e a turma continua
