@@ -3,8 +3,8 @@
 namespace App\Domains\Dashboard\Services;
 
 use App\Domains\Catalog\Models\Course;
-use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Services\EmissionStateResolver;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
@@ -15,6 +15,7 @@ use App\Domains\Dashboard\Data\RankingsData;
 use App\Domains\Dashboard\Data\SeriesData;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Support\DataSql;
 use App\Shared\Support\FusoDoNegocio;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -42,12 +43,13 @@ class AnalyticsQuery
     ): SeriesData {
         $startInstant = FusoDoNegocio::inicioDoDia($start);
         $endInstant = FusoDoNegocio::fimDoDia($end);
+        $connection = Turma::query()->getConnection();
 
         return new SeriesData(
             turmas_iniciadas: $includeOperation
                 ? $this->monthlyCounts(
                     Turma::query()
-                        ->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
+                        ->whereBetween('start_date', [DataSql::literal($connection, $start), DataSql::literal($connection, $end)])
                         ->get(['start_date']),
                     'start_date',
                     instant: false,
@@ -95,9 +97,10 @@ class AnalyticsQuery
     ): RankingsData {
         $startInstant = FusoDoNegocio::inicioDoDia($start);
         $endInstant = FusoDoNegocio::fimDoDia($end);
+        $connection = Turma::query()->getConnection();
 
         $courseTurmas = Turma::query()
-            ->whereBetween('start_date', [$start->toDateString(), $end->toDateString()])
+            ->whereBetween('start_date', [DataSql::literal($connection, $start), DataSql::literal($connection, $end)])
             ->selectRaw('course_id AS entity_id, COUNT(*) AS aggregate')
             ->groupBy('course_id')
             ->pluck('aggregate', 'entity_id')
@@ -145,7 +148,7 @@ class AnalyticsQuery
             ->whereNull('budgets.deleted_at')
             ->whereNull('quotes.deleted_at')
             ->whereNull('turmas.deleted_at')
-            ->whereBetween('turmas.start_date', [$start->toDateString(), $end->toDateString()])
+            ->whereBetween('turmas.start_date', [DataSql::literal($connection, $start), DataSql::literal($connection, $end)])
             ->selectRaw('clients.id AS entity_id, COUNT(DISTINCT turmas.id) AS aggregate')
             ->groupBy('clients.id')
             ->pluck('aggregate', 'entity_id')
@@ -178,11 +181,7 @@ class AnalyticsQuery
             ->whereNull('quotes.deleted_at')
             ->whereNull('turmas.deleted_at')
             ->whereNull('enrollments.deleted_at')
-            // Mesma definição de "emitido" do `EmissionStateResolver` (de quem
-            // o `Certificate::scopeEmitidos()` é só delegação) — aqui uma
-            // cópia crua, qualificada pela tabela porque a query nasce em
-            // `clients`; unificá-la fica para o bloco 54.
-            ->where('certificates.status', CertificateStatus::Emitido)
+            ->tap(fn ($query) => EmissionStateResolver::whereVigente($query))
             ->whereBetween('certificates.created_at', [$startInstant, $endInstant])
             ->selectRaw('clients.id AS entity_id, COUNT(DISTINCT certificates.id) AS aggregate')
             ->groupBy('clients.id')

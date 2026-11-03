@@ -373,6 +373,34 @@ class AnalyticsQueryTest extends TestCase
     }
 
     /**
+     * P-85: o cast `date` grava `Y-m-d 00:00:00`; comparar com `Y-m-d` cru
+     * deixava a turma do último dia do período fora (no sqlite, texto).
+     */
+    public function test_turma_que_comeca_no_ultimo_dia_do_periodo_entra_na_serie_e_nos_rankings(): void
+    {
+        $this->createConcludedTurma(
+            approvedAt: '2026-08-01 12:00:00',
+            valueUf: '10.0000',
+            startDate: '2026-08-31',
+            endDate: '2026-09-05',
+            concludedAt: '2026-09-05 12:00:00',
+        );
+
+        $start = CarbonImmutable::parse('2026-08-01')->startOfDay();
+        $end = CarbonImmutable::parse('2026-08-31')->endOfDay();
+        $query = app(AnalyticsQuery::class);
+
+        $this->assertSame(
+            [['month' => '2026-08', 'count' => 1]],
+            $this->series($query, $start, $end)['turmas_iniciadas'],
+        );
+
+        $rankings = $query->rankings($start, $end, true)->toArray();
+        $this->assertSame(1, $rankings['courses'][0]['turmas']);
+        $this->assertSame(1, $rankings['clients'][0]['turmas']);
+    }
+
+    /**
      * As séries com todos os gates abertos. O recorte por gate é do assembler e
      * tem prova própria no `DashboardEndpointTest`.
      */
