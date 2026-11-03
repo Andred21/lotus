@@ -5,6 +5,7 @@ import type { FileData, QuoteData } from '@shared/types/generated'
 import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { formatUf } from '@shared/lib'
 import { dangerText } from '@shared/styles/tokens'
+import { turmaTag, turmaTagSeverity } from '../../lib/turmaTag'
 import { latestFile } from '../../lib/latestFile'
 
 /** Uma cotação da lista do orçamento. `striped` vem do índice: alternância como
@@ -28,6 +29,7 @@ export function QuoteRow({
 }) {
   const { t } = useTranslation()
   const preview = useFilePreview<FileData>()
+  const turma = turmaTag(quote)
   const current = latestFile(quote.files ?? [])
   // O nome das ações do arquivo diz que o alvo é o DOCUMENTO; o curso só
   // distingue a linha. Só o curso fazia o excluir do arquivo soar como o da
@@ -43,11 +45,12 @@ export function QuoteRow({
       }}
     >
       <div className="min-w-64 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="font-medium">{courseName}</span>
           {quote.status && (
             <AppTag value={t(`quoteStatus.${quote.status}`)} severity={quoteStatusSeverity(quote.status)} />
           )}
+          {turma && <AppTag value={t(`quote.turmaTag.${turma}`)} severity={turmaTagSeverity(turma)} />}
         </div>
         <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
           {t('quote.studentsShort', { count: quote.student_count })}

@@ -100,3 +100,25 @@ describe('BudgetsTable — coluna de ações', () => {
     expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('58rem')
   })
 })
+
+describe('BudgetsTable — tags da turma', () => {
+  it('abaixo do status aprovado, uma tag por cotação aprovada com o código dela', () => {
+    const orcamento = {
+      ...ORCAMENTO, status: 'approved', archived_at: null, archived_by: null,
+      quotes: [
+        { id: 1, code: 'Scap 1 - Cot 1', status: 'approved', turma_status: 'em_andamento' },
+        { id: 2, code: 'Scap 1 - Cot 2', status: 'approved' },
+        { id: 3, code: 'Scap 1 - Cot 3', status: 'pending' },
+      ],
+    } as unknown as BudgetRow
+    renderWithProviders(
+      <BudgetsTable budgets={[orcamento]} loading={false} mode="active" onModeChange={() => {}}
+        onRestore={() => {}} busy={false} />,
+      { route: '/comercial' },
+    )
+
+    expect(screen.getByText('Scap 1 - Cot 1 · quote.turmaTag.em_andamento')).toBeTruthy()
+    expect(screen.getByText('Scap 1 - Cot 2 · quote.turmaTag.pending')).toBeTruthy()
+    expect(screen.queryByText(/Scap 1 - Cot 3/)).toBeNull()
+  })
+})

@@ -590,6 +590,11 @@
     "confirmDeleteBody": "As cotações dele são arquivadas junto. Você poderá restaurá-lo em Arquivados."
   },
   "quote": {
+    "turmaTag": {
+      "pending": "Turma: A configurar",
+      "em_andamento": "Turma: Em curso",
+      "concluida": "Turma: Concluída"
+    },
     "new": "Nova cotação",
     "edit": "Editar cotação",
     "create": "Criar cotação",

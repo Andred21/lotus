@@ -2,18 +2,18 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppColumn, AppTag, IdentityCell, stickyActionsColumn,
+  AppColumn, IdentityCell, stickyActionsColumn,
   AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt, useCollapsibleActionsColumn,
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
 import { budgetWidths } from './budgetColumns'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
-import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { budgetSortProps, newestFirst } from '../../lib/budgetOrder'
 import { formatUf, type ArchivableRow } from '@shared/lib'
 import { useCommercialClients } from '../../hooks/useCommercialClients'
 import { BudgetRowActions } from './BudgetRowActions'
+import { BudgetStatusCell } from './BudgetStatusCell'
 import { BudgetStatusFilter } from './BudgetStatusFilter'
 
 /** A mesma tabela serve as duas fontes. O par de campos do rastreio vive em
@@ -125,9 +125,7 @@ export function BudgetsTable({
       <AppColumn
         header={t('budget.status')}
         {...budgetSortProps('status')}
-        body={(b: BudgetData) =>
-          b.status ? <AppTag value={t(`quoteStatus.${b.status}`)} severity={quoteStatusSeverity(b.status)} /> : null
-        }
+        body={(b: BudgetData) => <BudgetStatusCell budget={b} />}
         style={largura.status}
       />
       {archived && archivedColumns(t)}

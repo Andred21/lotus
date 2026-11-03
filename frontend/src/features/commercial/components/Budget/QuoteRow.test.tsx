@@ -60,3 +60,25 @@ describe('QuoteRow — nome acessível do arquivo', () => {
     expect(screen.getByRole('button', { name: 'common.delete' })).toBeTruthy()
   })
 })
+
+describe('QuoteRow — tag da turma', () => {
+  const renderizar = (status: string, turma_status?: string) => {
+    const quote = { id: 1, course_id: 7, status, turma_status, value_uf: '10', student_count: 2, files: [] } as unknown as QuoteData
+    render(
+      <QuoteRow quote={quote} striped={false} courseName="Alta tensión" uploading={false}
+        onUpload={() => {}} onRemoveFile={() => {}} onSizeReject={() => {}} />,
+    )
+  }
+
+  it('cotação aprovada mostra a tag da turma ao lado do status', () => {
+    renderizar('approved', 'em_andamento')
+
+    expect(screen.getByText('quote.turmaTag.em_andamento')).toBeTruthy()
+  })
+
+  it.each(['pending', 'rejected'])('%s não tem tag de turma', (status) => {
+    renderizar(status, 'em_andamento')
+
+    expect(screen.queryByText(/^quote\.turmaTag\./)).toBeNull()
+  })
+})
