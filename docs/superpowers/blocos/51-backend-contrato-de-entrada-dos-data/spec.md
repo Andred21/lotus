@@ -5,6 +5,12 @@
 "FormRequest e Policy" de `audits/2026-11-02-arquitetura-backend.html`.
 **Classificação:** bounded.
 
+> **Errata (2026-11-03, execução, Task 4):** medido em `main@1845d096`, `PUT` e `POST /api/courses`
+> sem `workload_hours` davam 200 e gravavam 0 (o default no construtor fazia o laravel-data tratar a
+> propriedade como não obrigatória, apesar do `#[Required]`). O campo 3 da P-51 era defeito real
+> (fail-open), pago neste bloco pela remoção do `= 0` (commit a34dd253). As menções da §2, do
+> objetivo 2 e do DoD 10 a "código morto"/"já é assim"/"fail-closed" ficam corrigidas por esta errata.
+
 ## 1. Intenção
 
 A lei "ausente não é nulo" (BD-14, D1: **omissão preserva**) só vale onde o DTO entrega `Optional`
