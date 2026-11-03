@@ -58,7 +58,8 @@ class UploadPolicyRatchetTest extends TestCase
      * @var array<string,string>
      */
     private const ISENTOS = [
-        'app/Shared/Files/Actions/UploadFileAction.php' => 'É a escrita no disco, não a porta de entrada: recebe o arquivo já validado por quem o recebeu do cliente.',
+        'app/Shared/Files/Services/FileUploader.php' => 'É a escrita no disco, não a porta de entrada: recebe o arquivo já validado pelo Data do sítio.',
+        'app/Shared/Files/Services/FileStorage.php' => 'É a escrita no disco, não a porta de entrada: recebe o arquivo já validado por quem o recebeu do cliente.',
         'app/Domains/Operation/Services/SpreadsheetRowReader.php' => 'Só itera a planilha que o `EnrollmentController::previewImport` já validou pela classe Planilha, e despacha o leitor pelo MIME de CONTEÚDO — os mesmos três que aquela classe aceita.',
         'app/Domains/Operation/Services/ImportPreviewService.php' => 'Recebe o `UploadedFile` já validado pelo `EnrollmentController::previewImport`, que pede a classe Planilha.',
         'app/Domains/Commercial/Actions/ReplaceFileOfTypeAction.php' => 'Recebe o arquivo já validado pelo `BudgetFileController` e pelo `QuoteFileController`, que pedem a classe Documento.',

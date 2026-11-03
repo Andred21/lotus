@@ -2,8 +2,8 @@
 
 namespace App\Domains\Commercial\Actions;
 
-use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
+use App\Shared\Files\Services\FileStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +19,7 @@ use Throwable;
  */
 class ReplaceFileOfTypeAction
 {
-    public function __construct(private UploadFileAction $uploads) {}
+    public function __construct(private FileStorage $uploads) {}
 
     public function execute(Model $owner, UploadedFile $file, string $type): File
     {

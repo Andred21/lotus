@@ -4,8 +4,8 @@ namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
-use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
+use App\Shared\Files\Services\FileStorage;
 use Carbon\CarbonInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,7 @@ use Throwable;
  */
 class StoreRedatorDocumentAction
 {
-    public function __construct(private UploadFileAction $uploads) {}
+    public function __construct(private FileStorage $uploads) {}
 
     public function execute(Redator $redator, RedatorDocumentType $type, UploadedFile $file, ?CarbonInterface $validUntil = null): File
     {

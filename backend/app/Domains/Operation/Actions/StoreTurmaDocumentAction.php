@@ -6,8 +6,8 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
-use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
+use App\Shared\Files\Services\FileStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -26,7 +26,7 @@ use Throwable;
  */
 class StoreTurmaDocumentAction
 {
-    public function __construct(private UploadFileAction $uploads) {}
+    public function __construct(private FileStorage $uploads) {}
 
     public function execute(Turma $turma, TurmaDocumentType $type, UploadedFile $file, User $actor): File
     {

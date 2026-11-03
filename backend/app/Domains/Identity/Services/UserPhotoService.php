@@ -45,7 +45,7 @@ class UserPhotoService
      * DEPOIS do SQL UPDATE, dentro da mesma chamada. Sem transação, uma
      * auditoria que lança deixava a coluna gravada e a compensação apagava um
      * objeto que o banco já referenciava. A transação cobre UPDATE + auditoria
-     * e NUNCA o delete de storage — esse é o débito do `UploadFileAction`,
+     * e NUNCA o delete de storage — esse é o débito do `FileStorage`,
      * fechado com `put`/`discard`, não com transação em volta do disco.
      */
     public function store(User $user, UploadedFile $photo): void

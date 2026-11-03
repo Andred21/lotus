@@ -51,7 +51,7 @@ class CertificateSignatures
 
     /**
      * O binário sai do disco em que o upload o gravou: `files` não guarda o
-     * disco, e `UploadFileAction` grava sempre em `filesystems.default`.
+     * disco, e `FileStorage` grava sempre em `filesystems.default`.
      */
     private function base64DoArquivo(?File $file): ?string
     {

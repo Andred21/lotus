@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Shared;
 
-use App\Shared\Files\Actions\UploadFileAction;
+use App\Shared\Files\Services\FileStorage;
 use Tests\Support\Files\BuildsRealUploads;
 use Tests\TestCase;
 
@@ -19,7 +19,7 @@ class FileMimeFromContentTest extends TestCase
     {
         $upload = $this->uploadReal($this->pngReal(), 'documento.pdf', 'application/pdf');
 
-        $meta = app(UploadFileAction::class)->metadataOf($upload);
+        $meta = app(FileStorage::class)->metadataOf($upload);
 
         $this->assertSame('image/png', $meta['mime']);
         $this->assertSame('documento.pdf', $meta['original_name'], 'O nome declarado continua sendo o do cliente — é o que a pessoa reconhece.');
@@ -29,6 +29,6 @@ class FileMimeFromContentTest extends TestCase
     {
         $upload = $this->uploadReal($this->pdfReal(), 'cv.pdf', 'application/pdf');
 
-        $this->assertSame('application/pdf', app(UploadFileAction::class)->metadataOf($upload)['mime']);
+        $this->assertSame('application/pdf', app(FileStorage::class)->metadataOf($upload)['mime']);
     }
 }

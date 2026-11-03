@@ -57,7 +57,10 @@ backend/app/
 │
 ├── Shared/                     # transversal. NÃO é domínio. Usado por todos.
 │   ├── Exceptions/             # ProblemDetails (RFC 7807, ADR-03) — ligado no bootstrap/app.php
-│   ├── Files/                  # upload polimórfico S3/MinIO: File (model) + UploadFileAction (ADR-10/11)
+│   ├── Files/                  # upload polimórfico S3/MinIO: File (model), TipoDeArquivo e Data/TypedFileRules (anexo tipado)
+│   │                           #   e Services/ — FileUploader (única entrada: binário fora da transação, insert dentro,
+│   │                           #   discard na falha), StoredFiles (o que a closure de escrita recebe) e FileStorage
+│   │                           #   (primitivos de disco: metadataOf/put/putTo/register/discard/publicDiskFor) (ADR-10/11)
 │   ├── Rules/                  # ValidRut (regra de validação reusável)
 │   ├── Support/                # value objects / helpers puros (Rut, JanelaDeAviso — os 30 dias da D-15, DataSql)
 │   ├── Pagination/             # PageRequest (entrada), PageData/PageMetaData (envelope) e o trait Paginates

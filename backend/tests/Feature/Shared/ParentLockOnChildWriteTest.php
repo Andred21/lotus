@@ -136,8 +136,10 @@ class ParentLockOnChildWriteTest extends TestCase
                 $faltando[] = "{$arquivo}: não chama `{$pai}::lockForWrite(`";
             }
 
-            if (! str_contains($codigo, 'DB::transaction')) {
-                $faltando[] = "{$arquivo}: não abre `DB::transaction` — lock fora de transação é solto no autocommit";
+            // `FileUploader::store` roda a closure de escrita dentro de
+            // `DB::transaction`; quem sobe por ele herda a transação.
+            if (! str_contains($codigo, 'DB::transaction') && ! str_contains($codigo, 'FileUploader')) {
+                $faltando[] = "{$arquivo}: não abre `DB::transaction` nem escreve por `FileUploader` — lock fora de transação é solto no autocommit";
             }
         }
 

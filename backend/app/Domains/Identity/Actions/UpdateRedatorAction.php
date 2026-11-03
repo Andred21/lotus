@@ -8,7 +8,7 @@ use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Services\UserProvisioner;
 use App\Shared\Audit\PivotAudit;
 use App\Shared\Data\WritableAttributes;
-use App\Shared\Files\Actions\UploadFileAction;
+use App\Shared\Files\Services\FileStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
@@ -27,7 +27,7 @@ class UpdateRedatorAction
     public function __construct(
         private UserProvisioner $users,
         private StoreRedatorDocumentAction $documents,
-        private UploadFileAction $uploads,
+        private FileStorage $uploads,
         private PurgeOtherSessionsAction $sessions,
     ) {}
 

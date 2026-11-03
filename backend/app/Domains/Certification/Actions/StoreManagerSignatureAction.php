@@ -3,8 +3,8 @@
 namespace App\Domains\Certification\Actions;
 
 use App\Domains\Certification\Models\CertificateSettings;
-use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
+use App\Shared\Files\Services\FileStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -18,7 +18,7 @@ use Throwable;
  */
 class StoreManagerSignatureAction
 {
-    public function __construct(private UploadFileAction $uploads) {}
+    public function __construct(private FileStorage $uploads) {}
 
     public function execute(UploadedFile $file): File
     {

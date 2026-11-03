@@ -251,7 +251,7 @@ class MensagemLiteralTest extends TestCase
      */
     private const DEBITO_CONHECIDO = [
         // Diagnóstico interno: 500 mascarado em produção, ninguém lê.
-        'UploadFileAction.php:77' => 'RuntimeException interna; 500 mascarado.',
+        'FileStorage.php:76' => 'RuntimeException interna; 500 mascarado.',
         'DashboardController.php:48' => 'RuntimeException interna; 500 mascarado.',
         'UserPhotoService.php:64' => 'RuntimeException interna; 500 mascarado.',
         'PdfRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',

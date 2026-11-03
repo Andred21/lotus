@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\Feature\Cadastros;
+namespace Tests\Feature\Shared;
 
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
-use App\Shared\Files\Actions\UploadFileAction;
+use App\Shared\Files\Services\FileStorage;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -14,7 +14,7 @@ use Mockery;
 use RuntimeException;
 use Tests\TestCase;
 
-class UploadFileActionTest extends TestCase
+class FileStorageTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -25,7 +25,7 @@ class UploadFileActionTest extends TestCase
 
         $redator = Redator::create(['user_id' => User::factory()->redator()->create()->id]);
         $upload = UploadedFile::fake()->create('cv.pdf', 500, 'application/pdf');
-        $action = app(UploadFileAction::class);
+        $action = app(FileStorage::class);
 
         $meta = $action->metadataOf($upload);
         $file = $action->register($redator, $action->put($redator, $upload, 's3'), $meta, 'cv');
@@ -48,7 +48,7 @@ class UploadFileActionTest extends TestCase
      */
     public function test_nao_ha_atalho_que_sobe_e_registra_numa_chamada(): void
     {
-        $this->assertFalse(method_exists(UploadFileAction::class, 'execute'));
+        $this->assertFalse(method_exists(FileStorage::class, 'execute'));
     }
 
     /**
@@ -63,12 +63,12 @@ class UploadFileActionTest extends TestCase
     {
         config(['filesystems.disks.s3_public' => ['driver' => 'local', 'root' => sys_get_temp_dir()]]);
 
-        $this->assertSame('s3_public', UploadFileAction::publicDiskFor('s3'));
+        $this->assertSame('s3_public', FileStorage::publicDiskFor('s3'));
     }
 
     public function test_public_disk_for_cai_no_mesmo_disco_sem_variante_public(): void
     {
-        $this->assertSame('local', UploadFileAction::publicDiskFor('local'));
+        $this->assertSame('local', FileStorage::publicDiskFor('local'));
     }
 
     public function test_put_grava_no_disco_e_devolve_o_path(): void
@@ -77,7 +77,7 @@ class UploadFileActionTest extends TestCase
         $storage = Storage::fake('s3');
         $redator = Redator::create(['user_id' => User::factory()->redator()->create()->id]);
 
-        $path = app(UploadFileAction::class)->put($redator, UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'), 's3');
+        $path = app(FileStorage::class)->put($redator, UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'), 's3');
 
         $this->assertStringStartsWith("redator/{$redator->id}/", $path);
         $storage->assertExists($path);
@@ -99,7 +99,7 @@ class UploadFileActionTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        app(UploadFileAction::class)->put($redator, UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'), 's3');
+        app(FileStorage::class)->put($redator, UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'), 's3');
     }
 
     public function test_put_to_grava_no_diretorio_informado(): void
@@ -107,7 +107,7 @@ class UploadFileActionTest extends TestCase
         /** @var FilesystemAdapter $storage */
         $storage = Storage::fake('s3');
 
-        $path = app(UploadFileAction::class)->putTo('redator', UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'), 's3');
+        $path = app(FileStorage::class)->putTo('redator', UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'), 's3');
 
         $this->assertStringStartsWith('redator/', $path);
         $storage->assertExists($path);
@@ -118,7 +118,7 @@ class UploadFileActionTest extends TestCase
         Storage::fake('s3');
         $redator = Redator::create(['user_id' => User::factory()->redator()->create()->id]);
         $upload = UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf');
-        $action = app(UploadFileAction::class);
+        $action = app(FileStorage::class);
 
         $meta = $action->metadataOf($upload);
         $file = $action->register($redator, 'redator/1/fake.pdf', $meta, 'CV');
@@ -133,7 +133,7 @@ class UploadFileActionTest extends TestCase
         /** @var FilesystemAdapter $storage */
         $storage = Storage::fake('s3');
         $redator = Redator::create(['user_id' => User::factory()->redator()->create()->id]);
-        $action = app(UploadFileAction::class);
+        $action = app(FileStorage::class);
         $path = $action->put($redator, UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'), 's3');
 
         $action->discard($path, 's3');
@@ -152,7 +152,7 @@ class UploadFileActionTest extends TestCase
         $disk->shouldReceive('delete')->once()->andThrow(new RuntimeException('disco fora'));
         Storage::shouldReceive('disk')->with('s3')->andReturn($disk);
 
-        app(UploadFileAction::class)->discard('redator/1/fake.pdf', 's3');
+        app(FileStorage::class)->discard('redator/1/fake.pdf', 's3');
 
         $this->assertTrue(true); // não lançou
     }
@@ -175,6 +175,6 @@ class UploadFileActionTest extends TestCase
         $disk->shouldReceive('delete')->once()->andReturn(false);
         Storage::shouldReceive('disk')->with('s3')->andReturn($disk);
 
-        app(UploadFileAction::class)->discard('redator/1/fake.pdf', 's3');
+        app(FileStorage::class)->discard('redator/1/fake.pdf', 's3');
     }
 }
