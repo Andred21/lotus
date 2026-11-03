@@ -10,10 +10,12 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\ApprovalRule;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
+use App\Shared\Data\Attributes\ReadOnlyCollection;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Attributes\Computed;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
@@ -43,6 +45,8 @@ class TurmaData extends Data
         public array|Optional $missing_requirements,
         public string|null|Optional $concluded_at,
         /** @var TurmaRedatorData[] */
+        #[DataCollectionOf(TurmaRedatorData::class)]
+        #[ReadOnlyCollection]
         public array|Optional $redatores = [],
         public string|Optional $course_name = new Optional,
         public string|Optional $client_name = new Optional,

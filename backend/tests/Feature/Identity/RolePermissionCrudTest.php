@@ -50,6 +50,30 @@ class RolePermissionCrudTest extends TestCase
         ])->assertOk()->assertJsonCount(1, 'permissions');
     }
 
+    public function test_put_de_role_sem_permissions_e_422_e_preserva(): void
+    {
+        $this->actingAsSuperadmin();
+        $role = Role::create(['name' => 'coordinador', 'guard_name' => 'web']);
+        $role->givePermissionTo('catalog.course.view');
+
+        $this->putJson("/api/roles/{$role->id}", ['name' => 'coordinador'])
+            ->assertStatus(422)->assertJsonValidationErrors('permissions');
+
+        $this->assertSame(['catalog.course.view'], $role->fresh()->permissions->pluck('name')->all());
+    }
+
+    public function test_put_de_role_com_permissions_vazio_limpa_as_permissoes(): void
+    {
+        $this->actingAsSuperadmin();
+        $role = Role::create(['name' => 'coordinador', 'guard_name' => 'web']);
+        $role->givePermissionTo('catalog.course.view');
+
+        $this->putJson("/api/roles/{$role->id}", ['name' => 'coordinador', 'permissions' => []])
+            ->assertOk()->assertJsonCount(0, 'permissions');
+
+        $this->assertCount(0, $role->fresh()->permissions);
+    }
+
     public function test_editar_role_de_sistema_e_403(): void
     {
         $this->actingAsSuperadmin();

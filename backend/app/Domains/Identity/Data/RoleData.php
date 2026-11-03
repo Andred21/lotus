@@ -31,7 +31,7 @@ class RoleData extends Data
      */
     public function __construct(
         public string $name,
-        public array $permissions = [],
+        public array $permissions,
         public int|Optional $id = new Optional,
         public bool|Optional $is_system = new Optional,
     ) {}
