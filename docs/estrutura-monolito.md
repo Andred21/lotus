@@ -32,9 +32,12 @@ backend/app/
 │   ├── Identity/               # usuários, auth, RBAC, redator/aluno/cliente como users
 │   │   ├── Actions/            # regra de negócio single-action (ADR-02)
 │   │   ├── Data/               # DTOs spatie/laravel-data (ADR-04) → geram tipos TS. Upload entra por
-│   │   │                       #   `<X>UploadData` (Budget/Quote/TurmaDocument/ManagerSignature/RedatorDocument/
-│   │   │                       #   ProfileDocument/ImportSpreadsheet…): o Data valida o arquivo pela classe de
-│   │   │                       #   conteúdo e o controller só o entrega à Action (nunca `request->file()`)
+│   │   │                       #   `<X>UploadData`, em `Data/` do domínio dono: Commercial (BudgetFileUploadData,
+│   │   │                       #   QuoteFileUploadData), Operation (TurmaDocumentUploadData, ImportSpreadsheetData),
+│   │   │                       #   Certification (ManagerSignatureUploadData), Identity (RedatorDocumentUploadData,
+│   │   │                       #   ProfileDocumentUploadData); a foto é `Shared/Files/Data/PhotoUploadData`. O Data
+│   │   │                       #   valida o arquivo pela classe de conteúdo e o controller só o entrega à Action
+│   │   │                       #   (nunca `request->file()`/`validate`/`Validator::make` de arquivo)
 │   │   ├── Enums/              # enums do domínio (QuoteStatus, RedatorDocumentType…)
 │   │   ├── Models/             # User, ... Eloquent (ADR-10 enforceMorphMap)
 │   │   ├── Services/           # Domain Services (regra entre agregados)
@@ -61,7 +64,7 @@ backend/app/
 ├── Shared/                     # transversal. NÃO é domínio. Usado por todos.
 │   ├── Exceptions/             # ProblemDetails (RFC 7807, ADR-03) — ligado no bootstrap/app.php
 │   ├── Data/                   # peças de Data reusáveis: Casts/DataLivreCast (data de entrada que a regra `date` aceita),
-│   │                           #   ComputedFields, WritableAttributes e ContratanteData
+│   │                           #   ComputedFields, WritableAttributes, ContratanteData e Attributes/ (ReadOnlyCollection)
 │   ├── Files/                  # upload polimórfico S3/MinIO: File (model), TipoDeArquivo, ContentClass (a política de tipo/tamanho),
 │   │                           #   Data/TypedFileRules (anexo tipado) e Data/PhotoUploadData (foto; os demais `<X>UploadData` moram no domínio)
 │   │                           #   e Services/ — FileUploader (única entrada: binário fora da transação, insert dentro,

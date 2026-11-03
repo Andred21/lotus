@@ -32,11 +32,23 @@ class FileStorageAccessRatchetTest extends TestCase
      * @var array<string,string>
      */
     private const PERMITIDOS = [
-        'app/Shared/Files/Services/FileUploader.php' => 'É o módulo: compõe os primitivos na ordem do D6 (metadados antes, binário fora da transação, insert dentro) e é o único que descarta o que gravou quando algo lança.',
+        'app/Shared/Files/Services/FileUploader.php' => 'É o módulo: compõe os primitivos na ordem do D6 (metadados antes, binário fora da transação, insert dentro) e é o único que descarta dentro do envelope do módulo, o que gravou quando algo lança; a carga inicial é a exceção do D6.',
         'app/Shared/Files/Services/StoredFiles.php' => 'É o registrador que o `FileUploader` entrega à closure do dono: `register` delega ao primitivo `FileStorage::register` a linha em `files`, e `replace` soft-deleta (auditado) o anterior do tipo antes, tudo dentro da transação do módulo. Não toca o disco.',
         'app/Shared/Files/Transformers/SignedUrlTransformer.php' => 'Só chama `FileStorage::publicDiskFor()` para assinar a URL contra o disco público certo na leitura; não escreve nem descarta nada.',
         'app/Console/Commands/CarregarCargaInicial.php' => 'D6, decisão do João em 2026-11-03: a carga inicial abre uma transação para a carga inteira e, depois do rollback, descarta e lista ao operador o que não conseguiu apagar. É operação de console em lote com relatório próprio, não o envelope do módulo; fica nos primitivos baixos, e é a única exceção.',
         'app/Console/CargaInicial/CarregadorDeCadastros.php' => 'D6, decisão do João em 2026-11-03: grava o binário DENTRO da transação da carga e pula o documento que já existe; o descarte e o relatório são do comando. Mesma exceção declarada da `CarregarCargaInicial`, a única fora do módulo.',
+    ];
+
+    /**
+     * Quem chama `->discard(` hoje, e por quê. É lista própria e mais curta que
+     * `PERMITIDOS`: nomear `FileStorage` (o `StoredFiles` registra, o
+     * `SignedUrlTransformer` só assina URL) não é licença para descartar.
+     *
+     * @var array<string,string>
+     */
+    private const DESCARTADORES = [
+        'app/Shared/Files/Services/FileUploader.php' => 'Descarta, no envelope do módulo, todo objeto que já gravou quando o put de outro arquivo, a closure do dono ou o commit lança, e nunca deixa o erro do descarte engolir o original.',
+        'app/Console/Commands/CarregarCargaInicial.php' => 'D6, decisão do João em 2026-11-03: depois do rollback da transação da carga inteira, descarta o que a carga gravou e lista ao operador o que não conseguiu apagar. Operação de console em lote com relatório próprio, a única exceção fora do módulo.',
     ];
 
     /**
@@ -96,7 +108,7 @@ class FileStorageAccessRatchetTest extends TestCase
             'A varredura não achou o `->discard(` do `FileUploader`.',
         );
 
-        $fora = array_values(array_diff($chamadores, array_keys(self::PERMITIDOS)));
+        $fora = array_values(array_diff($chamadores, array_keys(self::DESCARTADORES)));
 
         $this->assertSame([], $fora, implode("\n", array_merge(
             [
@@ -121,6 +133,18 @@ class FileStorageAccessRatchetTest extends TestCase
                 "Permitido {$relativo} com motivo curto demais para ser um motivo.",
             );
         }
+
+        foreach (self::DESCARTADORES as $relativo => $motivo) {
+            $this->assertFileExists(base_path($relativo), "Descartador `{$relativo}` não existe mais — tire-o da lista.");
+            $this->assertGreaterThan(40, strlen(trim($motivo)), "Descartador {$relativo} com motivo curto demais para ser um motivo.");
+        }
+
+        $sobrandoDescarte = array_values(array_diff(array_keys(self::DESCARTADORES), $this->quemUsa('->discard(')));
+
+        $this->assertSame([], $sobrandoDescarte, implode("\n", array_merge(
+            ['Descartador que já não chama `->discard(` — tire-o da lista:'],
+            $sobrandoDescarte,
+        )));
 
         // Permitido que já não nomeia `FileStorage` é exceção sobrando: a
         // próxima regressão nele passaria calada.

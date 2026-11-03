@@ -167,12 +167,19 @@ class UploadPolicyRatchetTest extends TestCase
 
     /**
      * O controller NÃO recebe arquivo nem o valida: o `<X>UploadData` injetado
-     * no método (ou `validateAndCreate` dele) é quem pede a classe. Três sinais
-     * de que o controller voltou a fazer o trabalho do Data: ler o arquivo da
-     * requisição, pedir a classe de conteúdo, ou chamar `->validate(` com a
-     * regra de `file`/`photo` na janela de leitura.
+     * no método é quem pede a classe (spec D3/D8, DoD 1). Sinais de que o
+     * controller voltou a fazer o trabalho do Data:
+     *  - ler o arquivo da requisição, por qualquer via (`$request->file(`,
+     *    `request()->file(`, `->hasFile(`, `->allFiles(`);
+     *  - pedir a classe de conteúdo (`ContentClass::`);
+     *  - abrir uma validação (`->validate(`, `->validateWithBag(`,
+     *    `Validator::make(`) com a regra de `file`/`photo` na janela de leitura.
      */
-    private const JANELA_DO_VALIDATE = 300;
+    private const JANELA_DA_VALIDACAO = 300;
+
+    private const LEITURA_DE_ARQUIVO = '/->(?:file|hasFile|allFiles)\(/';
+
+    private const ABERTURA_DE_VALIDACAO = '/(?:->validate|->validateWithBag|Validator::make)\(/';
 
     /** @return list<string> paths relativos de todo controller sob `app/**\/Http/Controllers/` */
     private function controllers(): array
@@ -201,21 +208,22 @@ class UploadPolicyRatchetTest extends TestCase
         foreach ($controllers as $relativo) {
             $codigo = $this->codigoSemComentarios(base_path($relativo));
 
-            foreach (['request->file(', 'ContentClass::'] as $sinal) {
-                if (str_contains($codigo, $sinal)) {
-                    $descobertos[] = "{$relativo} -> {$sinal}";
-                }
+            if (preg_match(self::LEITURA_DE_ARQUIVO, $codigo) === 1) {
+                $descobertos[] = "{$relativo} -> leitura de arquivo da requisição";
             }
 
-            $offset = 0;
-            while (($pos = strpos($codigo, '->validate(', $offset)) !== false) {
-                $janela = substr($codigo, $pos, self::JANELA_DO_VALIDATE);
+            if (str_contains($codigo, 'ContentClass::')) {
+                $descobertos[] = "{$relativo} -> ContentClass::";
+            }
+
+            preg_match_all(self::ABERTURA_DE_VALIDACAO, $codigo, $aberturas, PREG_OFFSET_CAPTURE);
+
+            foreach ($aberturas[0] as [$abertura, $pos]) {
+                $janela = substr($codigo, $pos, self::JANELA_DA_VALIDACAO);
 
                 if (str_contains($janela, "'file'") || str_contains($janela, "'photo'")) {
-                    $descobertos[] = "{$relativo} -> ->validate( com regra de arquivo";
+                    $descobertos[] = "{$relativo} -> {$abertura} com regra de arquivo";
                 }
-
-                $offset = $pos + 1;
             }
         }
 
