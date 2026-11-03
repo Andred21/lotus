@@ -30,6 +30,13 @@ ator sem permissão (relatório da T2), então a troca 403→404 do D7a não alt
 diffs das T1–T4 só criam testes novos: `UnauthenticatedWithoutAcceptTest`, `StaffUserBindingTest`,
 `PermissionRouteMiddlewareTest` e `PermissionCatalogOrphanTest`.
 
+Duas respostas mudaram, as duas da mesma raiz do D7a. `PUT api/users/{user}` com id não-staff e corpo
+inválido era 422 e agora é 404; `POST api/users/{user}/photo` com id não-staff e upload inválido era 422
+e agora é 404. O binding staff recusa antes da validação do Data, e antes o `abort_unless` ficava no
+corpo do método, depois da validação. A spec §7 (`spec.md:155-156`) previu a ordem: "o binding roda
+antes da validação do Data, então o 404 vem antes de 422". Nenhum teste antigo fixava esses 422. A
+troca vai pedir o ok do João na aceitação.
+
 A permissão por método+URI das 130 rotas `api/*` ficou idêntica antes e depois da T3. O
 implementador comparou `route:list --json` e o revisor da T3 conferiu o estado final.
 
@@ -43,6 +50,7 @@ Cada sonda foi revertida por cópia de backup, sem stash.
 | `new Middleware(...)` do `ClientPhotoController` comentado (rota autenticada sem permissão) | `test_toda_rota_autenticada_declara_permissao` | lista `DELETE` e `POST api/clients/{client}/photo` |
 | `'show'` tirado do `only:` de `identity.user.view` no `UserController` (Review Focus 2) | `test_toda_rota_autenticada_declara_permissao` | lista `GET\|HEAD api/users/{user}` |
 | `PermissionMiddleware::using('commercial.client.update')` numa rota (correção da T3) | `test_permissao_vem_so_do_controller` | matcher antigo: 4 passed; matcher novo: 1 failed |
+| `Route::delete('/me', ...)` autenticada e sem permissão, ao lado de `GET me` (exceção por método+URI) | `test_toda_rota_autenticada_declara_permissao` e `test_a_lista_sem_permissao_e_fiel` | lista `DELETE api/me`; com a chave só por URI passava calado |
 
 O vermelho antes de mover (T3 Step 2) foi `1 failed, 3 passed`. O teste
 `permissao_vem_so_do_controller` listou as 22 rotas dos 5 grupos.

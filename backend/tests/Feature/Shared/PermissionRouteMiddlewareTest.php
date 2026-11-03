@@ -27,21 +27,23 @@ use Tests\TestCase;
 class PermissionRouteMiddlewareTest extends TestCase
 {
     /**
-     * As rotas autenticadas que NÃO exigem permissão. A chave é a URI e vale
-     * para todos os métodos dela. Rota nova sem permissão e fora desta lista
+     * As rotas autenticadas que NÃO exigem permissão. A chave é
+     * "{METODOS} {uri}", como o roteador lista a rota: método novo na mesma URI reprova. Rota nova sem permissão e fora desta lista
      * reprova: decidir se ela ganha permissão ou entra aqui é do João, não do
      * builder (spec D3).
      */
     private const SEM_PERMISSAO = [
-        'api/logout' => 'Encerra a própria sessão: quem está logado sempre pode sair, não há o que autorizar.',
-        'api/me' => 'Devolve só a sessão de quem pergunta, sem dado de terceiros: não há recurso a proteger.',
-        'api/versao' => 'Versão da plataforma, informação não sensível exibida a qualquer usuário com sessão.',
-        'api/profile' => 'Perfil próprio (spec D4 do perfil): recurso do próprio usuário, fora do RBAC de gestão.',
-        'api/profile/photo' => 'Foto do perfil próprio (spec D4 do perfil): recurso do próprio usuário, sem permissão.',
-        'api/profile/password' => 'Senha do perfil próprio (spec D4 do perfil): recurso do próprio usuário, sem permissão.',
-        'api/profile/documents' => 'Documentos do perfil próprio (spec D4 do perfil): recurso do próprio usuário, sem permissão.',
-        'api/dashboard/metricas' => 'O gate é por seção dentro do DashboardVisibilityData, não por permissão única da rota.',
-        'api/user' => 'Closure de scaffold do Laravel que devolve o próprio usuário; o front não usa. Decisão do João, 2026-11-03.',
+        'POST api/logout' => 'Encerra a própria sessão: quem está logado sempre pode sair, não há o que autorizar.',
+        'GET|HEAD api/me' => 'Devolve só a sessão de quem pergunta, sem dado de terceiros: não há recurso a proteger.',
+        'GET|HEAD api/versao' => 'Versão da plataforma, informação não sensível exibida a qualquer usuário com sessão.',
+        'GET|HEAD api/profile' => 'Perfil próprio (spec D4 do perfil): recurso do próprio usuário, fora do RBAC de gestão.',
+        'PUT api/profile' => 'Perfil próprio (spec D4 do perfil): recurso do próprio usuário, fora do RBAC de gestão.',
+        'POST api/profile/photo' => 'Foto do perfil próprio (spec D4 do perfil): recurso do próprio usuário, sem permissão.',
+        'DELETE api/profile/photo' => 'Foto do perfil próprio (spec D4 do perfil): recurso do próprio usuário, sem permissão.',
+        'PUT api/profile/password' => 'Senha do perfil próprio (spec D4 do perfil): recurso do próprio usuário, sem permissão.',
+        'POST api/profile/documents' => 'Documentos do perfil próprio (spec D4 do perfil): recurso do próprio usuário, sem permissão.',
+        'GET|HEAD api/dashboard/metricas' => 'O gate é por seção dentro do DashboardVisibilityData, não por permissão única da rota.',
+        'GET|HEAD api/user' => 'Closure de scaffold do Laravel que devolve o próprio usuário; o front não usa. Decisão do João, 2026-11-03.',
     ];
 
     /**
@@ -92,7 +94,7 @@ class PermissionRouteMiddlewareTest extends TestCase
         $descobertas = [];
 
         foreach ($this->rotasDaApi() as $chave => $rota) {
-            if ($rota['autentica'] && $rota['permissoes'] === [] && ! array_key_exists($rota['route']->uri(), self::SEM_PERMISSAO)) {
+            if ($rota['autentica'] && $rota['permissoes'] === [] && ! array_key_exists($chave, self::SEM_PERMISSAO)) {
                 $descobertas[] = $chave;
             }
         }
@@ -112,13 +114,12 @@ class PermissionRouteMiddlewareTest extends TestCase
     {
         $reais = [];
 
-        foreach ($this->rotasDaApi() as $rota) {
+        foreach ($this->rotasDaApi() as $chave => $rota) {
             if ($rota['autentica'] && $rota['permissoes'] === []) {
-                $reais[] = $rota['route']->uri();
+                $reais[] = $chave;
             }
         }
 
-        $reais = array_values(array_unique($reais));
         sort($reais);
 
         $declaradas = array_keys(self::SEM_PERMISSAO);
@@ -129,11 +130,11 @@ class PermissionRouteMiddlewareTest extends TestCase
             'Rota que ganhou permissão sai da lista; rota nova entra só com decisão do João.',
         ]));
 
-        foreach (self::SEM_PERMISSAO as $uri => $motivo) {
+        foreach (self::SEM_PERMISSAO as $chave => $motivo) {
             $this->assertGreaterThan(
                 40,
                 strlen(trim($motivo)),
-                "Rota sem permissão {$uri} com motivo curto demais para ser um motivo.",
+                "Rota sem permissão {$chave} com motivo curto demais para ser um motivo.",
             );
         }
     }
