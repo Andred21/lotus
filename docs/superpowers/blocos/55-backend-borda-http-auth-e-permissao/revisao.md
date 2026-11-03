@@ -2,6 +2,23 @@
 
 ## Em aberto
 
+## Rodada 2 — `803c666e..fb5e8891` — 2026-11-03 · Lente 1: opus · Lente 2: sonnet
+
+Delta das correções dos três Menor da rodada 1, pedidas pelo João (`fb5e8891`). Lente Codex não
+repetida: a conta segue recusando os modelos (`model_not_found`, ver rodada 1). A lente 1 rodou as
+três catracas no container (15 passed). As sondas executáveis reprovam com a checagem desligada,
+provado na correção: desligar `resolveMiddleware` e `outrosParametros` dá 2 failed. Suíte completa
+na correção: 1814 passed, 7 skipped.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | O parágrafo novo da rule dizia "três catracas", mas nomeava duas. Também prometia que `PermissionCatalogOrphanTest` reprova toda permissão exigida que falta no catálogo, quando só as de rota são comparadas: `->can('x.y.z')` literal com typo passa calado. | CONFIRMED | `backend/tests/Feature/Identity/PermissionCatalogOrphanTest.php:108-113` · `.claude/rules/backend-ddd.md:143-147` | corrigido em `b4319f43` (só o texto; a lacuna da catraca fica declarada na rule) |
+
+Fechamento da rodada 1: Q-1, Q-2 e Q-3 corrigidos em `fb5e8891`, confirmados fechados pela lente 1
+desta rodada.
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0 plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
 ## Rodada 1 — `bade28c3..803c666e` — 2026-11-03 · Lente 1: opus · Lente 2: sonnet
 
 Bloco de alto risco (auth/Sanctum + RBAC). A lente Codex somente-leitura do Passo 4 não rodou:
