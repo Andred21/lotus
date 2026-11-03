@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
+import type { QuoteData } from '@shared/types/generated'
 import type { useBudgetQuotesArchived } from '../../hooks/useBudgetQuotesArchived'
 import { BudgetQuotesCard } from './BudgetQuotesCard'
 
@@ -57,14 +58,15 @@ function quotesArchivedFixture(over: Partial<QuotesArchived> = {}): QuotesArchiv
   }
 }
 
-function renderCard(over: Partial<QuotesArchived> = {}) {
+function renderCard(over: Partial<QuotesArchived> = {}, canManageApproved = false, quotes: QuoteData[] = []) {
   const quotesArchived = quotesArchivedFixture(over)
   renderWithProviders(
     <BudgetQuotesCard
       title="budget.quotes"
-      count={0}
-      quotes={[]}
+      count={quotes.length}
+      quotes={quotes}
       quotesArchived={quotesArchived}
+      canManageApproved={canManageApproved}
       onEdit={() => {}}
       onRemove={() => {}}
     />,
@@ -100,5 +102,19 @@ describe('BudgetQuotesCard — alternador no cabeçalho (D-59)', () => {
 
     expect(arquivados.className).toContain('p-button-outlined')
     expect(ativos.className).toContain('p-button-text')
+  })
+})
+
+describe('BudgetQuotesCard — Editar da aprovada', () => {
+  const aprovada = { id: 1, course_id: 7, status: 'approved', value_uf: '10', student_count: 2, files: [] } as unknown as QuoteData
+
+  it('canManageApproved chega até a linha: com ele Editar aparece, sem ele não', () => {
+    renderCard({}, true, [aprovada])
+    expect(screen.getByRole('button', { name: 'common.edit' })).toBeTruthy()
+  })
+
+  it('sem canManageApproved a aprovada não oferece Editar', () => {
+    renderCard({}, false, [aprovada])
+    expect(screen.queryByRole('button', { name: 'common.edit' })).toBeNull()
   })
 })

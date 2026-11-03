@@ -8,11 +8,15 @@ import { CourseStep } from './CourseStep'
 import { DataStep } from './DataStep'
 
 export function QuoteWizard({
-  visible, budgetId, quote, onHide,
+  visible, budgetId, quote, onlyUf, onHide,
 }: {
   visible: boolean
   budgetId: number
   quote: QuoteData | null
+  /** Cotação aprovada com turma: só o `value_uf` muda (spec D2/D8). O curso fica
+   * fora de alcance — o wizard já abre no passo 2 e o Voltar não é oferecido —,
+   * então o envio leva o `course_id` gravado. */
+  onlyUf: boolean
   onHide: () => void
 }) {
   const { t } = useTranslation()
@@ -29,7 +33,7 @@ export function QuoteWizard({
       </div>
     ) : (
       <div className="flex justify-end gap-2">
-        <AppButton label={t('quote.back')} text icon="pi pi-arrow-left" onClick={back} />
+        {!onlyUf && <AppButton label={t('quote.back')} text icon="pi pi-arrow-left" onClick={back} />}
         <AppButton label={t('common.cancel')} text onClick={onHide} />
         <AppButton
           variant="primary"
@@ -74,14 +78,14 @@ export function QuoteWizard({
         <p className="mb-4 text-sm" style={{ color: dangerText }}>{fieldErrors.course_id[0]}</p>
       )}
 
-      {step === 1 ? (
+      {step === 1 && !onlyUf ? (
         <CourseStep
           courses={courses}
           selectedId={form.course_id}
           onSelect={(id) => set('course_id', id)}
         />
       ) : (
-        <DataStep Field={campo.Field} form={form} onChange={set} />
+        <DataStep Field={campo.Field} form={form} onChange={set} onlyUf={onlyUf} />
       )}
     </AppDialog>
   )

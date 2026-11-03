@@ -11,7 +11,7 @@ import { latestFile } from '../../lib/latestFile'
 /** Uma cotação da lista do orçamento. `striped` vem do índice: alternância como
  * separação de item (spec D4) — lista empilhada, não tabela. */
 export function QuoteRow({
-  quote, striped, courseName, uploading,
+  quote, striped, courseName, uploading, canManageApproved,
   onEdit, onRemove, onApprove, onReject,
   onUpload, onRemoveFile, onSizeReject,
 }: {
@@ -19,6 +19,9 @@ export function QuoteRow({
   striped: boolean
   courseName: string
   uploading: boolean
+  /** Quem tem `commercial.quote.approve` edita a cotação aprovada (spec D2/D8);
+   * o backend é a fonte da regra, a UI só não oferece o que daria 422. */
+  canManageApproved: boolean
   onEdit?: () => void
   onRemove?: () => void
   onApprove?: () => void
@@ -70,7 +73,7 @@ export function QuoteRow({
       <span className="font-semibold">{formatUf(quote.value_uf)} UF</span>
 
       <div className="flex items-center gap-2">
-        {onReject && quote.status !== 'rejected' && (
+        {onReject && quote.status !== 'rejected' && !quote.turma_status && (
           /* `px-3 py-2.5 text-sm`: a geometria do `compact` que o Aprobar ao
            * lado usa, 44px/14px, escrita aqui porque o `compact` também pinta a
            * superfície da marca — e esta é a recusa. Com a geometria cheia do
@@ -95,7 +98,7 @@ export function QuoteRow({
       </div>
 
       <div className="flex items-center gap-1">
-        {quote.status !== 'approved' && onEdit && (
+        {(quote.status !== 'approved' || canManageApproved) && onEdit && (
           <AppButton icon="pi pi-pencil" text rounded aria-label={t('common.edit')} onClick={onEdit} />
         )}
         {quote.status !== 'approved' && onRemove && (

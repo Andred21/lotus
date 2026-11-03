@@ -37,6 +37,7 @@ function montar(files: unknown[]) {
       striped={false}
       courseName="Alta tensión"
       uploading={false}
+      canManageApproved={false}
       onRemove={() => {}}
       onUpload={() => {}}
       onRemoveFile={() => {}}
@@ -66,7 +67,7 @@ describe('QuoteRow — tag da turma', () => {
     const quote = { id: 1, course_id: 7, status, turma_status, value_uf: '10', student_count: 2, files: [] } as unknown as QuoteData
     render(
       <QuoteRow quote={quote} striped={false} courseName="Alta tensión" uploading={false}
-        onUpload={() => {}} onRemoveFile={() => {}} onSizeReject={() => {}} />,
+        canManageApproved={false} onUpload={() => {}} onRemoveFile={() => {}} onSizeReject={() => {}} />,
     )
   }
 
@@ -80,5 +81,43 @@ describe('QuoteRow — tag da turma', () => {
     renderizar(status, 'em_andamento')
 
     expect(screen.queryByText(/^quote\.turmaTag\./)).toBeNull()
+  })
+})
+
+describe('QuoteRow — ações seguem a matriz da turma', () => {
+  const renderizar = (quote: Record<string, unknown>, canManageApproved = false) => {
+    const base = { id: 1, course_id: 7, value_uf: '10', student_count: 2, files: [] }
+    render(
+      <QuoteRow quote={{ ...base, ...quote } as unknown as QuoteData} striped={false} courseName="Alta tensión"
+        uploading={false} canManageApproved={canManageApproved} onEdit={() => {}} onRemove={() => {}}
+        onReject={() => {}} onUpload={() => {}} onRemoveFile={() => {}} onSizeReject={() => {}} />,
+    )
+  }
+
+  it('Recusar some quando a cotação tem turma', () => {
+    renderizar({ status: 'approved', turma_status: 'em_andamento' })
+
+    expect(screen.queryByRole('button', { name: 'quote.reject' })).toBeNull()
+  })
+
+  it('Recusar continua na aprovada sem turma', () => {
+    renderizar({ status: 'approved', turma_status: null })
+
+    expect(screen.getByRole('button', { name: 'quote.reject' })).toBeTruthy()
+  })
+
+  it('Editar aparece na aprovada só com canManageApproved', () => {
+    renderizar({ status: 'approved' }, true)
+    expect(screen.getByRole('button', { name: 'common.edit' })).toBeTruthy()
+  })
+
+  it('Editar some na aprovada sem canManageApproved', () => {
+    renderizar({ status: 'approved' }, false)
+    expect(screen.queryByRole('button', { name: 'common.edit' })).toBeNull()
+  })
+
+  it('a lixeira continua escondida na aprovada, mesmo com canManageApproved', () => {
+    renderizar({ status: 'approved' }, true)
+    expect(screen.queryByRole('button', { name: 'common.delete' })).toBeNull()
   })
 })
