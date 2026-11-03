@@ -8,6 +8,8 @@ return [
         'archived' => 'This class was archived and no longer accepts changes.',
         'restore_conflict' => 'An active class already exists for this quote: archive it before restoring this one.',
         'restore_redator_archived' => 'An instructor of this class is archived: restore them before restoring the class.',
+        'restore_quote_not_approved' => 'The quote for this class is not approved: approve it before restoring the class.',
+        'restore_course_changed' => 'The course of the quote changed: this class no longer matches it.',
         'documents_incomplete' => 'Required documentation incomplete (RN-16). Missing: :tipos.',
         'requirements_incomplete' => 'Missing to conclude the class: :itens.',
         'quote_not_approved' => 'The quote must be approved before configuring the class.',
