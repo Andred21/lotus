@@ -124,6 +124,24 @@ export function narrowFloorTablePt(floor: `${number}rem`): DataTablePassThroughO
   }
 }
 
+/** Cabeçalho que quebra o ícone de ordenação para a linha de baixo (D-73 do
+ * bloco 54).
+ *
+ * O título do cabeçalho é item de flex com `min-width: auto`: não encolhe abaixo
+ * da palavra mais longa, e o ícone de ordenação (24px com a margem) ao lado dele
+ * sai da coluna quando a fração da tabela é menor que palavra + ícone. Medido nos
+ * dois painéis de tabela do Dashboard: o ícone do último cabeçalho passava 28–29px
+ * da borda do invólucro e criava a rolagem, e os do meio cobriam o cabeçalho
+ * vizinho (`docs/superpowers/blocos/54-dashboard-agenda-e-pendencias/medicoes-d73.md`).
+ * Com `flex-wrap`, a coluna precisa só da palavra mais longa.
+ *
+ * Opt-in e não default: levar a quebra a toda tabela do produto ficou fora do
+ * bloco 54 (decisão do João, 2026-11-03). Compõe com `narrowFloorTablePt` por
+ * spread, porque os nós não se cruzam (`column` aqui, `table` lá). */
+export const wrappingHeaderTablePt: DataTablePassThroughOptions = {
+  column: { headerContent: { className: 'flex-wrap' } },
+}
+
 /** Faixa de rodapé da tabela (spec D12): o paginador do DataTable É o rodapé —
  * contagem à esquerda em `paginatorLeft`, controles à direita, uma faixa só.
  *

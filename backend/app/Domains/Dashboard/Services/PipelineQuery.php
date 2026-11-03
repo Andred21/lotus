@@ -41,7 +41,7 @@ use Illuminate\Database\Eloquent\Builder;
 class PipelineQuery
 {
     /**
-     * @param  array{em_andamento:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int}  $turmaKpis  `OperationMetricsQuery::kpis()`
+     * @param  array{em_andamento:int, iniciadas:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int}  $turmaKpis  `OperationMetricsQuery::kpis()`; o funil usa o total `em_andamento` (futuras incluídas), não `iniciadas`
      * @param  PendingItemData[]  $certificationPendencias  `CertificationMetricsQuery::pendencias()`
      * @param  ?QuoteKpisData  $quoteKpis  `CommercialMetricsQuery::quoteKpis()`; `null` = sem gate comercial
      * @param  PendingItemData[]  $commercialPendencias  `CommercialMetricsQuery::pendencias()`

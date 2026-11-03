@@ -7,24 +7,54 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-76 — seis frases ao usuário seguem literais em `app/`, por três caminhos que nenhuma catraca alcança
+## P-85 — no sqlite da suíte, o último dia do período some do filtro de `start_date` do `AnalyticsQuery`
 
-**Bloco:** item 52 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
-`Shared/Files/Rules` ou `AuthController::logout()` por outro motivo; cada sítio passa a ler `lang/`
-nos três locales no mesmo commit, **ou** a catraca ganha o caminho que faltava. Revisar em
+**Bloco:** item 54 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de
+período do dashboard; os três filtros de `start_date` passam por `DataSql::literal` e um teste prova
+a turma que começa no **último dia** do período dentro da série e dos dois rankings. Revisar em
 **2026-10-31**.
 
-**ENCERRADA em 2026-11-03, no `backend-arquivo-recepcao-e-upload` (item 52), pelo próprio gatilho:** o bloco tocou `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` e o `AuthController::logout()`, e as seis frases (o duplicado e o arquivado do `UserProvisioner`, os `$fail()` de `ValidRut`, `PrintableGrade` e `ScannedForMalware`, e a resposta do logout) passaram a ler `lang/` nos três locales (`dd29add9`). O `MensagemLiteralTest` ganhou a quarta porta (`$fail` de regra) e a quinta (resposta de sucesso), e perdeu a entrada morta `UserPhotoService.php:64`.
+Achado de passagem no review Q-1 do item 29 (2026-09-25, `audits/2026-09-24-item29-medicoes.md`
+§8), fora do achado, e promovido a ficha no fechamento por decisão do João. O `AnalyticsQuery`
+filtra a coluna `date` `turmas.start_date` com
+`whereBetween('start_date', [$start->toDateString(), $end->toDateString()])` em três lugares
+(`AnalyticsQuery.php:50`, a série `turmas_iniciadas`; `:100`, o ranking de cursos; `:148`, o de
+clientes). No MySQL a coluna é `DATE` e a comparação é de dia com dia — correta. No sqlite da suíte
+o cast `date` grava `Y-m-d 00:00:00` numa coluna texto, e a comparação vira de string:
+`'2026-09-25 00:00:00' <= '2026-09-25'` é falso, então a turma que começa no último dia do período
+cai fora.
 
-## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
+**A produção não erra; a suíte não enxerga.** Um teste que cobrisse a borda do último dia
+reprovaria no sqlite com o código certo, e uma regressão que cortasse o último dia no MySQL
+passaria verde. O `AnalyticsQueryTest` do item 29 evita a borda de propósito — contorna, não
+resolve. Já era assim antes do bloco.
 
-**Bloco:** item 52 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
-(`Shared/Files`) ou os atributos de validação do `lang/`. Revisar em **2026-11-07**.
+O remédio existe no repositório: `App\Shared\Support\DataSql::literal`, que o `display_status` da
+`CertificateQueryBuilder` e a janela do `EmissionPanelQuery` usam exatamente por isso (o docblock
+dele descreve a mesma borda). Não entrou no item 29 porque o Q-1 era sobre os limites de
+**instante**, e a coluna `date` não mudou de comportamento com ele.
 
-**ENCERRADA em 2026-11-03, no `backend-arquivo-recepcao-e-upload` (item 52), pelo próprio gatilho:** o `validation.attributes` ganhou `file`, `valid_until`, `documents` e `documents.*` nos três locales (`dd29add9`, `2ab31e86`). O 422 de upload em es-CL diz "El campo archivo…", provado pelo `UploadAttributeLocaleTest` e contra a API da lane no fechamento (`POST /api/budgets/1/files` com `text/plain`).
+**ENCERRADA em 2026-11-03, no `dashboard-agenda-e-pendencias` (item 54), pelo próprio gatilho:** os três filtros de `start_date` do `AnalyticsQuery` passam por `DataSql::literal` (`8ea87e0e`), e o `AnalyticsQueryTest` prova a turma que começa no último dia do período dentro da série `turmas_iniciadas` e dos dois rankings, vista reprovar no sqlite sem o fix (critério 7 da spec do bloco).
 
+## P-102 — o `CompliancePanel` e o dashboard não mostram os requisitos novos da conclusão
+
+**Bloco:** item 54 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
+`CompliancePanel` ou `OperationMetricsQuery::pendencias()`; dispara se a Lotus perguntar por que uma
+turma presencial "não está habilitada". Revisar em **2026-11-07**.
+
+O item 41 passou a bloquear a conclusão também por redator ausente e por presencial sem
+`local_aplicacao` (`TurmaData.missing_requirements`), e o `ConcludePanel` lista cada pendência. Duas
+telas ficaram para trás:
+
+- o `CompliancePanel` mostra "Habilitada: No" com "—" quando falta redator ou local, sem dizer o quê;
+- `OperationMetricsQuery::pendencias()` sinaliza "turma sem redator", mas não "presencial sem local":
+  a turma nessa situação sai de "aguardando conclusão" sem pendência visível no dashboard.
+
+**ENCERRADA em 2026-11-03, no `dashboard-agenda-e-pendencias` (item 54), pelo próprio gatilho:** o `TurmaComplianceData` ganhou `missing_requirements`, e a coluna "Faltan" do `CompliancePanel` junta documentos e requisitos; o `OperationMetricsQuery::pendencias()` emite `turma_presencial_without_local` (`4a58f394`). Provado contra a API da lane no fechamento: turma presencial sem local e sem relator saiu com `missing_requirements: [redator, local_aplicacao]` e com a pendência nova no payload do admin.
 
 ## Rastro anterior, já removido
+
+**A P-76 e a P-107 saíram no fechamento do `dashboard-agenda-e-pendencias` (item 54, 2026-11-03)**, o primeiro depois do item 52, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-49 e a P-112 saíram no fechamento do `backend-arquivo-recepcao-e-upload` (item 52, 2026-11-03)**, o primeiro depois do item 50, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

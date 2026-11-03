@@ -84,7 +84,7 @@ class DashboardEndpointTest extends TestCase
         $response->assertJsonPath('period_end', '2026-08-14');
 
         $this->assertSame([
-            'turmas_em_andamento' => 2,          // T1 e T3
+            'turmas_em_andamento' => 2,          // T1 e T3: as que já começaram (iniciadas); nenhuma futura no cenário, então igual ao total
             'turmas_encerrando_em_breve' => 1,   // só T1 (termina em 4 dias)
             'turmas_atrasadas' => 1,             // T3 passou do fim e não concluiu
             'conclusoes_por_confirmar' => 0,     // nenhuma tem documentação completa
@@ -108,11 +108,12 @@ class DashboardEndpointTest extends TestCase
         ], $pipeline);
         $this->assertSame(5, array_sum($pipeline));
 
-        // Agenda: as janelas se sobrepõem por definição (T1 está em curso E
-        // termina em breve); só `overdue` é disjunta das outras.
+        // Agenda em baldes disjuntos (bloco 54): T1 termina em breve, então está
+        // só em `ending_soon`; `in_progress` (em curso SEM fim próximo) ficou
+        // vazio — antes repetia a T1.
         $this->assertSame([], $response->json('agenda.starting_soon'));
         $this->assertSame([$cenario['t1']], array_column($response->json('agenda.ending_soon'), 'turma_id'));
-        $this->assertSame([$cenario['t1']], array_column($response->json('agenda.in_progress'), 'turma_id'));
+        $this->assertSame([], array_column($response->json('agenda.in_progress'), 'turma_id'));
         $this->assertSame([$cenario['t3']], array_column($response->json('agenda.overdue'), 'turma_id'));
 
         // O alerta de turma atrasada é DERIVADO da janela `overdue` acima — não
@@ -165,6 +166,35 @@ class DashboardEndpointTest extends TestCase
         ], $response->json('rankings.clients'));
     }
 
+    /**
+     * Critério 3: o card `turmas_em_andamento` conta só as turmas que JÁ
+     * começaram (`iniciadas`); o estágio `turma_in_progress` do funil conta as
+     * futuras também (`em_andamento`, o total). A turma que começa em 10 dias
+     * é o exemplar que separa os dois números — sem ela, a troca de um pelo
+     * outro em `PipelineQuery` passa em branco.
+     */
+    public function test_turma_futura_fica_fora_do_card_e_dentro_do_estagio_em_andamento_do_funil(): void
+    {
+        $this->actingAsAdmin();
+        $cenario = $this->cenarioRico();
+        $client = Client::findOrFail($cenario['client']);
+        $alpha = Course::findOrFail($cenario['alpha']);
+
+        // Hoje é 2026-08-14: começa em 10 dias, status já `em_andamento`.
+        $this->makeTurma($client, $alpha, TurmaStatus::EmAndamento, '2026-08-24', '2026-08-30', '100.0000', '2026-08-10');
+
+        $response = $this->getJson(self::ENDPOINT)->assertOk();
+
+        // T1 e T3 começaram; a futura não entra no card.
+        $this->assertSame(2, $response->json('kpis.turmas_em_andamento'));
+
+        $pipeline = collect($response->json('pipeline'))
+            ->mapWithKeys(fn (array $row): array => [$row['stage'] => $row['count']])
+            ->all();
+        // T1, T3 e a futura: o funil conta a turma desde que ela existe.
+        $this->assertSame(3, $pipeline['turma_in_progress']);
+    }
+
     // ---------------------------------------------------------------- (2)
 
     public function test_admin_sem_gate_comercial_nao_recebe_nenhum_valor_de_uf(): void
@@ -207,6 +237,56 @@ class DashboardEndpointTest extends TestCase
         }
     }
 
+    /**
+     * D8 (D-34): o payload diz EXPLICITAMENTE o que o papel enxerga, por módulo.
+     * O front decide a seção por este objeto, não por farejar `null` no campo.
+     */
+    public function test_admin_recebe_a_visibilidade_explicita_por_modulo(): void
+    {
+        $this->actingAsAdminSemComercial();
+
+        $this->getJson(self::ENDPOINT)->assertOk()->assertJsonPath('visibility', [
+            'operation' => true,
+            'commercial' => false,
+            'certification' => true,
+            'identity' => true,
+        ]);
+    }
+
+    public function test_admin_completo_recebe_os_quatro_modulos_visiveis(): void
+    {
+        $this->actingAsAdminSem('nenhuma.permissao.assim.');
+
+        $this->getJson(self::ENDPOINT)->assertOk()->assertJsonPath('visibility', [
+            'operation' => true,
+            'commercial' => true,
+            'certification' => true,
+            'identity' => true,
+        ]);
+    }
+
+    /** Cotação sem orçamento não existe: as duas permissões andam juntas. */
+    public function test_comercial_visivel_exige_cotacao_e_orcamento(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $role = Role::findOrCreate('sin-orcamento', 'web');
+        $role->syncPermissions(array_values(array_filter(
+            array_keys(PermissionCatalog::descriptions()),
+            fn (string $permissao): bool => $permissao !== 'commercial.budget.view',
+        )));
+
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->assignRole($role);
+        $this->actingAs($user, 'web');
+
+        $response = $this->getJson(self::ENDPOINT)->assertOk();
+
+        $response->assertJsonPath('visibility.commercial', false);
+        $response->assertJsonPath('visibility.operation', true);
+        $response->assertJsonPath('kpis.cotacoes', null);
+    }
+
     // ---------------------------------------------------------------- (3)
 
     public function test_redator_recebe_so_o_proprio_escopo_e_nenhuma_secao_de_admin(): void
@@ -232,7 +312,10 @@ class DashboardEndpointTest extends TestCase
             $this->assertArrayNotHasKey($secao, $response->json());
         }
 
-        $this->assertSame([$cenario['t1']], array_column($response->json('agenda.in_progress'), 'turma_id'));
+        // D-72: T1 termina dentro do horizonte, então é `ending_soon` e já não
+        // aparece também em `in_progress` — os baldes são disjuntos.
+        $this->assertSame([$cenario['t1']], array_column($response->json('agenda.ending_soon'), 'turma_id'));
+        $this->assertSame([], $response->json('agenda.in_progress'));
         $this->assertSame([$cenario['t1']], array_column($response->json('pendencias_documentais'), 'turma_id'));
     }
 
@@ -266,6 +349,8 @@ class DashboardEndpointTest extends TestCase
         $response->assertJsonPath('compliance_turmas.0.turma_id', $cenario['t3']);
         $response->assertJsonPath('compliance_turmas.0.present_types', ['MANUAL']);
         $response->assertJsonPath('compliance_turmas.0.missing_types', ['PRUEBAS', 'EVALUACION_REDATOR']);
+        // Requisitos de configuração saem como código do enum, como os tipos.
+        $response->assertJsonPath('compliance_turmas.0.missing_requirements', ['redator']);
 
         // T1 não tem documento nenhum: lista vazia de um lado, os três do outro.
         $response->assertJsonPath('compliance_turmas.1.turma_id', $cenario['t1']);

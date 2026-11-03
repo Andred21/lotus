@@ -242,8 +242,8 @@
       "redatores": "Relatores",
       "noRedator": "Sem relator",
       "range": "Período",
-      "present": "Documentos presentes",
-      "missing": "Documentos faltantes",
+      "present": "Presentes",
+      "missing": "Faltam",
       "enabled": "Habilitada"
     },
     "redatorLoad": {
@@ -346,6 +346,7 @@
         "quote_awaiting_approval": "Cotação a aprovar",
         "quote_approved_without_turma": "Cotação aprovada sem turma",
         "turma_without_redator": "Turma sem relator",
+        "turma_presencial_without_local": "Turma presencial sem local de aplicação",
         "turma_docs_incomplete": "Documentação incompleta",
         "turma_awaiting_conclusion": "Turma a confirmar conclusão",
         "enrollment_awaiting_certificate": "Matrícula a certificar"
@@ -365,7 +366,7 @@
     },
     "agenda": {
       "title": "Agenda",
-      "startingSoon": "Começam em breve",
+      "startingSoon": "Próximas turmas",
       "endingSoon": "Encerram em breve",
       "inProgress": "Em andamento",
       "overdue": "Atrasadas",

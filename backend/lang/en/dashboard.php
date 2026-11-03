@@ -7,6 +7,7 @@ return [
         'quote_pending_approval' => 'Quote pending approval.',
         'quote_without_turma' => 'Approved quote without a configured class.',
         'turma_without_redator' => 'Class without an assigned instructor.',
+        'turma_presencial_without_local' => 'In-person class without a place of delivery.',
         'turma_docs_incomplete' => 'Required documentation incomplete: :tipos.',
         'turma_awaiting_conclusion' => 'Enabled class awaiting conclusion confirmation.',
         'turma_overdue' => 'Class past its end date and still ongoing.',

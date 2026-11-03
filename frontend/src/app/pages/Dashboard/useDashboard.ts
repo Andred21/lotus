@@ -94,32 +94,20 @@ function podeRepetir(erro: ProblemDetails | null): boolean {
 }
 
 /**
- * Nenhuma seção do B1 legível: todo KPI nulo, as duas seções anuláveis nulas E
- * as duas listas vazias.
+ * Nenhum módulo visível: o papel autentica como admin mas não lê módulo
+ * nenhum. A decisão é da visibilidade explícita que o backend manda (D-34) —
+ * nunca do que sobrou nos campos nulos ou nas listas, que não distinguem "sem
+ * permissão" de "sem dado".
  *
- * As listas entram pelo lado POSITIVO, não pelo negativo. `pendencias` e
- * `alertas` são NÃO-anuláveis, então `[]` não distingue "sem permissão" de "sem
- * pendência" — mas item NA lista distingue com certeza, porque o gate age na
- * origem e só chega item de módulo autorizado. O caso que provou isso é o papel
- * só com `identity.user.view`: `AdminDashboardAssembler.php:157` alimenta os
- * alertas de documento de relator por essa permissão, e ela não liga KPI,
- * pipeline nem agenda — a tela anunciava "nenhum módulo visível" e escondia
- * alerta autorizado, com peso de RN-09 (review de 2026-08-16, segunda lente).
+ * `identity` conta como módulo visível: o papel só com `identity.user.view` vê
+ * os alertas de documento de relator (RN-09, review de 2026-08-16) e não pode
+ * cair em "sem acesso" — com alerta ou sem.
  *
- * Os KPIs se medem por `Object.values`, não campo a campo: a lista à mão vivia
- * aqui E em `KpiRow.cards`, duas fontes da verdade sobre quais KPIs existem, e
- * divergirem esconde KPI legível atrás da mensagem de "sem acesso".
+ * Exaustivo por construção: `Object.values` sobre o DTO inteiro, então uma
+ * quinta flag nasce já contada, sem lista à mão para esquecer.
  */
-function nenhumaSecaoLegivel(d: AdminDashboardData): boolean {
-  const algumKpi = Object.values(d.kpis).some((valor) => valor !== null)
-
-  return (
-    !algumKpi &&
-    d.pipeline === null &&
-    d.agenda === null &&
-    d.pendencias.length === 0 &&
-    d.alertas.length === 0
-  )
+function nenhumModuloVisivel(d: AdminDashboardData): boolean {
+  return !Object.values(d.visibility).some(Boolean)
 }
 
 /**
@@ -198,7 +186,7 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   const staleRetry = query.isError && podeRepetir(query.error) ? retry : undefined
 
   if (data.view === 'redator') return { kind: 'ready-redator', data, staleErrored, staleError, staleHint, staleRetry }
-  if (nenhumaSecaoLegivel(data)) return { kind: 'unauthorized' }
+  if (nenhumModuloVisivel(data)) return { kind: 'unauthorized' }
 
   return { kind: 'ready-admin', data, staleErrored, staleError, staleHint, staleRetry }
 }

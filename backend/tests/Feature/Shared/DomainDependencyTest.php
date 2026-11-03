@@ -63,11 +63,15 @@ class DomainDependencyTest extends TestCase
         // RedatorDocumentType restringe os documentos regulatórios. A Task 5
         // acrescenta só Redator: o RedatorScopeQuery escopa por `turma_redator`
         // e não alcança nenhuma superfície nova além do próprio redator.
+        // O bloco 54 acrescenta TurmaDisplayStatus: OperationMetricsQuery conta
+        // `conclusoes_por_confirmar` pelo `whereDisplayStatus(Habilitada)` do
+        // builder de Turma, a mesma pergunta da lista, em vez de reavaliá-la.
+        // O bloco 54 (Task 5) acrescenta TurmaRequirement: a linha de compliance publica
+        // os requisitos faltantes que o VO de habilitação já responde.
         // As próximas tasks só acrescentam o que seus `use` efetivamente
         // medirem — a lista do plano é indicativa e já errou nos dois sentidos.
         'Dashboard' => [
             'Catalog\Models\Course',
-            'Certification\Enums\CertificateStatus',
             'Certification\Models\Certificate',
             'Certification\Services\EmissionStateResolver',
             'Commercial\Enums\QuoteStatus',
@@ -77,7 +81,9 @@ class DomainDependencyTest extends TestCase
             'Identity\Models\Redator',
             'Identity\Models\User',
             'Operation\Enums\EnrollmentApprovalStatus',
+            'Operation\Enums\TurmaDisplayStatus',
             'Operation\Enums\TurmaDocumentType',
+            'Operation\Enums\TurmaRequirement',
             'Operation\Enums\TurmaStatus',
             'Operation\Models\Enrollment',
             'Operation\Models\Turma',

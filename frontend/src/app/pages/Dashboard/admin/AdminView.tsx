@@ -6,6 +6,7 @@ import { KpiRow } from '../KpiRow'
 import { AlertList } from '../AlertList'
 import { AgendaPanel } from '../AgendaPanel'
 import { kpiCards } from './kpiCards'
+import { secoesVisiveis } from './secoes'
 import { PendingList } from './PendingList'
 import { PipelineFunnel } from './PipelineFunnel'
 import { PeriodFilter } from './PeriodFilter'
@@ -56,7 +57,12 @@ export function AdminView({
   // do BD-6 existe para impedir. O caso é real e já foi medido — o papel só com
   // `identity.user.view` é `ready-admin` pelos alertas e tem `series` e
   // `rankings` nulas (Q-1 da revisão de 2026-08-17).
-  const temAnalise = data.series !== null || data.rankings !== null
+  //
+  // A decisão de cada seção vem da visibilidade que o backend manda por módulo
+  // (D8), combinada num lugar só (`secoesVisiveis`). O `!== null` que sobra nos
+  // ramos abaixo só estreita o tipo: a seção já foi decidida.
+  const secoes = secoesVisiveis(data.visibility)
+  const temAnalise = secoes.series || secoes.rankings
 
   return (
     <div className="space-y-6">
@@ -64,7 +70,7 @@ export function AdminView({
         <InlineLoadState error={staleError} retryLabel={t('common.retry')} onRetry={onRetry} />
       )}
 
-      <KpiRow items={kpiCards(data.kpis)} />
+      <KpiRow items={kpiCards(data.kpis, data.visibility)} />
 
       <section className="space-y-3">
         <SectionLabel>{t('dashboard.section.action')}</SectionLabel>
@@ -78,14 +84,14 @@ export function AdminView({
         </div>
       </section>
 
-      {/* Seção nula por gate não renderiza (D7) — e a faixa some junto quando
+      {/* Seção de módulo fechado não renderiza (D7) — e a faixa some junto quando
         * as DUAS somem, senão o rótulo anunciaria um bloco vazio. */}
-      {(data.agenda !== null || data.pipeline !== null) && (
+      {(secoes.agenda || secoes.pipeline) && (
         <section className="space-y-3">
           <SectionLabel>{t('dashboard.section.context')}</SectionLabel>
           <div className="space-y-4">
-            {data.agenda !== null && <AgendaPanel agenda={data.agenda} />}
-            {data.pipeline !== null && <PipelineFunnel stages={data.pipeline} />}
+            {secoes.agenda && data.agenda !== null && <AgendaPanel agenda={data.agenda} />}
+            {secoes.pipeline && data.pipeline !== null && <PipelineFunnel stages={data.pipeline} />}
           </div>
         </section>
       )}
@@ -104,19 +110,19 @@ export function AdminView({
             onPeriodChange={onPeriodChange}
             onRetry={onRetry}
           />
-          {data.series !== null && <SeriesPanel series={data.series} />}
-          {data.rankings !== null && <RankingsPanel rankings={data.rankings} />}
+          {secoes.series && data.series !== null && <SeriesPanel series={data.series} visibility={data.visibility} />}
+          {secoes.rankings && data.rankings !== null && <RankingsPanel rankings={data.rankings} secoes={secoes} />}
         </section>
       )}
 
       {/* Estado ATUAL, não histórico: por isso fora da seção de análise, e o
         * seletor de janela não as toca (D3 do bloco A). */}
-      {(data.compliance_turmas !== null || data.redatores !== null) && (
+      {(secoes.compliance || secoes.redatores) && (
         <section className="space-y-3">
           <SectionLabel>{t('dashboard.section.compliance')}</SectionLabel>
           <div className="space-y-4">
-            {data.compliance_turmas !== null && <CompliancePanel turmas={data.compliance_turmas} />}
-            {data.redatores !== null && <RedatorLoadPanel redatores={data.redatores} />}
+            {secoes.compliance && data.compliance_turmas !== null && <CompliancePanel turmas={data.compliance_turmas} />}
+            {secoes.redatores && data.redatores !== null && <RedatorLoadPanel redatores={data.redatores} />}
           </div>
         </section>
       )}

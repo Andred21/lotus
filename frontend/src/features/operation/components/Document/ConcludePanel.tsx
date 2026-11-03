@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppButton, AppCard, AppTag, ConfirmDialog, SectionLabel } from '@shared/ui'
-import { formatDate, turmaDocumentTypeLabel } from '@shared/lib'
+import { formatDate, turmaDocumentTypeLabel, turmaRequirementLabel } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { useConclusionSection } from '../../hooks/useConclusionSection'
 import { turmaStatusSeverity } from '../../lib/turmaStatus'
@@ -37,7 +37,7 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
               <p>{t('operation.conclusion.missingTitle')}</p>
               <ul role="list" className="mt-1 list-inside list-disc">
                 {s.missingRequirements.map((req) => (
-                  <li key={req}>{t(`operation.conclusion.requirement.${req}`)}</li>
+                  <li key={req}>{turmaRequirementLabel(req, t)}</li>
                 ))}
                 {s.missingTypes.map((type) => (
                   <li key={type}>{turmaDocumentTypeLabel(type, t)}</li>

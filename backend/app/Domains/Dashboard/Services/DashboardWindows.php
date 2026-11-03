@@ -7,8 +7,9 @@ use App\Shared\Support\JanelaDeAviso;
 use Carbon\CarbonImmutable;
 
 /**
- * Janelas de tempo fixas do dashboard (spec §4.2). `turmaHorizon()` delimita
- * "encerrando em breve"/"vencendo em breve" de turma; `expiryHorizon()` faz o
+ * Janelas de tempo fixas do dashboard (spec §4.2). `turmaHorizon()` delimita só
+ * "encerrando em breve" (`ending_soon`) de turma; `upcoming` não tem teto.
+ * `expiryHorizon()` faz o
  * mesmo para validade de certificado e documento de redator, e os 30 dias dele
  * são os de `JanelaDeAviso::DIAS` (D-15) — o mesmo número que a listagem de
  * certificados e o status do documento de redator usam.

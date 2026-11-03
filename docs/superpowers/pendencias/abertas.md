@@ -46,35 +46,6 @@ no lugar que o fatal de 128M apareceu aqui.
 
 # Backend
 
-## P-85 — no sqlite da suíte, o último dia do período some do filtro de `start_date` do `AnalyticsQuery`
-
-**Bloco:** item 54 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de
-período do dashboard; os três filtros de `start_date` passam por `DataSql::literal` e um teste prova
-a turma que começa no **último dia** do período dentro da série e dos dois rankings. Revisar em
-**2026-10-31**.
-
-Achado de passagem no review Q-1 do item 29 (2026-09-25, `audits/2026-09-24-item29-medicoes.md`
-§8), fora do achado, e promovido a ficha no fechamento por decisão do João. O `AnalyticsQuery`
-filtra a coluna `date` `turmas.start_date` com
-`whereBetween('start_date', [$start->toDateString(), $end->toDateString()])` em três lugares
-(`AnalyticsQuery.php:50`, a série `turmas_iniciadas`; `:100`, o ranking de cursos; `:148`, o de
-clientes). No MySQL a coluna é `DATE` e a comparação é de dia com dia — correta. No sqlite da suíte
-o cast `date` grava `Y-m-d 00:00:00` numa coluna texto, e a comparação vira de string:
-`'2026-09-25 00:00:00' <= '2026-09-25'` é falso, então a turma que começa no último dia do período
-cai fora.
-
-**A produção não erra; a suíte não enxerga.** Um teste que cobrisse a borda do último dia
-reprovaria no sqlite com o código certo, e uma regressão que cortasse o último dia no MySQL
-passaria verde. O `AnalyticsQueryTest` do item 29 evita a borda de propósito — contorna, não
-resolve. Já era assim antes do bloco.
-
-O remédio existe no repositório: `App\Shared\Support\DataSql::literal`, que o `display_status` da
-`CertificateQueryBuilder` e a janela do `EmissionPanelQuery` usam exatamente por isso (o docblock
-dele descreve a mesma borda). Não entrou no item 29 porque o Q-1 era sobre os limites de
-**instante**, e a coluna `date` não mudou de comportamento com ele.
-
----
-
 ## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
 
 **Bloco:** item 55 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** bloco que tocar `backend/bootstrap/app.php`
@@ -1017,20 +988,6 @@ fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-
 **Gatilho disparado e não pago — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e não reconciliou as coordenadas e o mapa que esta ficha lista. O gatilho não se desarma.
 
 **Gatilho disparado e não pago — 2026-11-03, `backend-arquivo-recepcao-e-upload` (item 52).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e não reconciliou as coordenadas e o mapa que esta ficha lista. O gatilho não se desarma.
-
-## P-102 — o `CompliancePanel` e o dashboard não mostram os requisitos novos da conclusão
-
-**Bloco:** item 54 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
-`CompliancePanel` ou `OperationMetricsQuery::pendencias()`; dispara se a Lotus perguntar por que uma
-turma presencial "não está habilitada". Revisar em **2026-11-07**.
-
-O item 41 passou a bloquear a conclusão também por redator ausente e por presencial sem
-`local_aplicacao` (`TurmaData.missing_requirements`), e o `ConcludePanel` lista cada pendência. Duas
-telas ficaram para trás:
-
-- o `CompliancePanel` mostra "Habilitada: No" com "—" quando falta redator ou local, sem dizer o quê;
-- `OperationMetricsQuery::pendencias()` sinaliza "turma sem redator", mas não "presencial sem local":
-  a turma nessa situação sai de "aguardando conclusão" sem pendência visível no dashboard.
 
 ## P-110 — a rule de estilização não conhece o título de seção de formulário em 13px e na marca
 

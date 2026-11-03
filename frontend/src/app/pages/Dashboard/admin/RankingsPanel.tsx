@@ -4,27 +4,25 @@ import { AppCard, AppCardHeader, AppDropdown, AppEmptyState, AppBarChart } from 
 import type { BarDatum } from '@shared/ui'
 import { formatUf } from '@shared/lib'
 import type { RankingRowData, RankingsData } from '@shared/types/generated'
+import type { SecoesAdmin } from './secoes'
 
 type Metrica = 'turmas' | 'matriculas' | 'certificados' | 'uf_aprovada'
 
 const METRICAS: Metrica[] = ['turmas', 'matriculas', 'certificados', 'uf_aprovada']
 
 /**
- * A UF só entra na lista quando ALGUMA linha a traz.
+ * A UF só é ofertada com o módulo comercial visível (`secoes.ufMetrica`).
  *
  * `uf_aprovada` é `null` em toda linha exatamente quando o gate comercial está
- * fechado — `rankingRows` a preenche com `'0.0000'` sempre que `includeUf` é
- * verdadeiro (`AnalyticsQuery.php:319`), e `includeUf` é `$canCommercial`
- * (`AdminDashboardAssembler.php:204`). Ofertar a métrica mesmo assim devolvia
- * "sin datos en el período" ao escolhê-la: "não pode ler" renderizado como "não
- * há", que é o zero que mente da D7. O `SeriesPanel` já esconde a série de UF
- * pelo mesmo gate, e as duas ausências têm de falar a mesma língua na mesma
- * seção (Q-2 da revisão de 2026-08-17).
+ * fechado, e ofertar a métrica mesmo assim devolvia "sin datos en el período"
+ * ao escolhê-la: "não pode ler" renderizado como "não há", que é o zero que
+ * mente da D7. O `SeriesPanel` esconde a série de UF pelo mesmo módulo, e as
+ * duas ausências falam a mesma língua na mesma seção (Q-2 da revisão de
+ * 2026-08-17). A decisão vem da visibilidade explícita (D8), não de farejar as
+ * linhas.
  */
-function metricasDisponiveis(rankings: RankingsData): Metrica[] {
-  const temUf = [...rankings.courses, ...rankings.clients].some((l) => l.uf_aprovada !== null)
-
-  return temUf ? METRICAS : METRICAS.filter((m) => m !== 'uf_aprovada')
+function metricasDisponiveis(secoes: SecoesAdmin): Metrica[] {
+  return secoes.ufMetrica ? METRICAS : METRICAS.filter((m) => m !== 'uf_aprovada')
 }
 
 /** Uma métrica por vez, e não 4 barras agrupadas: `uf_aprovada` é decimal em UF
@@ -94,13 +92,13 @@ function Ranking({
  * página, que já tem a janela, nem para o servidor, que manda as 4 grandezas
  * de uma vez.
  */
-export function RankingsPanel({ rankings }: { rankings: RankingsData }) {
+export function RankingsPanel({ rankings, secoes }: { rankings: RankingsData; secoes: SecoesAdmin }) {
   const { t } = useTranslation()
   const [metrica, setMetrica] = useState<Metrica>('turmas')
 
   // `turmas` é o valor inicial e nunca sai da lista — só a UF pode sumir —,
   // então não há estado apontando para opção inexistente a reconciliar.
-  const opcoes = metricasDisponiveis(rankings).map((m) => ({
+  const opcoes = metricasDisponiveis(secoes).map((m) => ({
     value: m,
     label: t(`dashboard.rankings.metric.${m}`),
   }))

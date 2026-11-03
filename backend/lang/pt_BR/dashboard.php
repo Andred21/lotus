@@ -7,6 +7,7 @@ return [
         'quote_pending_approval' => 'Cotação pendente de aprovação.',
         'quote_without_turma' => 'Cotação aprovada sem turma configurada.',
         'turma_without_redator' => 'Turma sem redator designado.',
+        'turma_presencial_without_local' => 'Turma presencial sem local de aplicação.',
         'turma_docs_incomplete' => 'Documentação obrigatória incompleta: :tipos.',
         'turma_awaiting_conclusion' => 'Turma habilitada aguardando confirmação de conclusão.',
         'turma_overdue' => 'Turma com data de término vencida e ainda em curso.',

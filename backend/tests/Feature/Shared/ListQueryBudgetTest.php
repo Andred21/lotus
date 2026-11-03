@@ -130,8 +130,13 @@ class ListQueryBudgetTest extends TestCase
      * o admin monta as sete seções do painel inteiro, o relator só as turmas
      * dele. Número diferente aqui é mudança de propósito do endpoint —
      * atualize a constante no mesmo commit que a causou, nunca antes.
+     *
+     * Admin 41 -> 39 (bloco 54, Task 3): `OperationMetricsQuery::kpis()` deixou
+     * de fazer três `count()` por KPI de turma (total, encerrando, atrasadas) e
+     * passou a derivá-los da coleção memoizada dos baldes; entrou um `count()`
+     * SQL para `conclusoes_por_confirmar`. Saldo: -3 +1 = -2.
      */
-    private const DASHBOARD = ['admin' => 41, 'redator' => 8];
+    private const DASHBOARD = ['admin' => 39, 'redator' => 8];
 
     private int $seq = 0;
 

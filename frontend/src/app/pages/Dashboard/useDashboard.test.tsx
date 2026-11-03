@@ -33,6 +33,7 @@ beforeEach(() => {
 function admin(overrides: Partial<AdminDashboardData> = {}): AdminDashboardData {
   return {
     view: 'admin',
+    visibility: { operation: true, commercial: true, certification: true, identity: true },
     kpis: {
       turmas_em_andamento: 4,
       turmas_encerrando_em_breve: 1,
@@ -59,6 +60,7 @@ function admin(overrides: Partial<AdminDashboardData> = {}): AdminDashboardData 
  * seções anuláveis do B1 nulas, e as duas listas não-anuláveis vazias. */
 function semNenhumaSecao(): AdminDashboardData {
   return admin({
+    visibility: { operation: false, commercial: false, certification: false, identity: false },
     kpis: {
       turmas_em_andamento: null,
       turmas_encerrando_em_breve: null,
@@ -70,6 +72,25 @@ function semNenhumaSecao(): AdminDashboardData {
     pipeline: null,
     agenda: null,
   })
+}
+
+const ALERTA_DOCUMENTO: AdminDashboardData['alertas'][number] = {
+  type: 'redator_document_expired',
+  severity: 'high',
+  entity_id: 5,
+  description: 'Documento del relator vencido.',
+  date: '2026-08-01',
+  navigation: { redator_id: 5 },
+}
+
+const PENDENCIA: AdminDashboardData['pendencias'][number] = {
+  module: 'operation',
+  type: 'turma_without_redator',
+  severity: 'normal',
+  entity_id: 1,
+  description: 'Turma sin relator.',
+  date: '2026-08-10',
+  navigation: { turma_id: 1 },
 }
 
 /** As 6 chaves do contrato do Redator, nenhuma anulável (`generated.ts:376-383`).
@@ -173,9 +194,10 @@ describe('useDashboard', () => {
     expect(get.mock.calls[antes + 1][1]).toEqual({ params: { period_start: '2026-07-01', period_end: '2026-12-31' } })
   })
 
-  // O caso-limite do §4 da spec: esconder cada seção nula, uma a uma, deixaria
-  // uma página em branco indistinguível de falha silenciosa.
-  it('nenhuma seção legível tem estado próprio, distinto de vazio e de falha', async () => {
+  // O caso-limite do §4 da spec: esconder cada seção de módulo fechado, uma a
+  // uma, deixaria uma página em branco indistinguível de falha silenciosa. A
+  // decisão é da visibilidade explícita (D-34), não dos campos nulos.
+  it('nenhum módulo visível tem estado próprio, distinto de vazio e de falha', async () => {
     get.mockResolvedValue({ data: semNenhumaSecao() })
 
     const { result } = renderHook(() => useDashboard(), { wrapper })
@@ -183,24 +205,40 @@ describe('useDashboard', () => {
     await waitFor(() => expect(result.current.kind).toBe('unauthorized'))
   })
 
-  // Papel só com `identity.user.view`: o backend alimenta os alertas de
-  // documento de relator por essa permissão (`AdminDashboardAssembler.php:157`)
-  // e ela não liga KPI, pipeline nem agenda. Item NA lista prova permissão, e
-  // dizer "nenhum módulo visível" aqui esconderia alerta autorizado.
-  it('alerta na lista impede o estado de sem acesso, mesmo com todo o resto nulo', async () => {
+  // A decisão é a visibilidade, não o conteúdo: com todos os módulos fechados a
+  // tela é `unauthorized` mesmo que o payload traga item em lista.
+  it('módulos todos fechados decidem unauthorized pela visibilidade, não pelas listas', async () => {
+    get.mockResolvedValue({ data: admin({ ...semNenhumaSecao(), pendencias: [PENDENCIA], alertas: [ALERTA_DOCUMENTO] }) })
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('unauthorized'))
+  })
+
+  // Papel só com `identity.user.view` (RN-09, review de 2026-08-16): identidade
+  // sozinha é módulo visível, então a tela é `ready-admin` — com alerta de
+  // documento de relator ou sem nenhum.
+  it('só identidade visível é ready-admin, mesmo sem alerta nenhum', async () => {
     get.mockResolvedValue({
       data: admin({
         ...semNenhumaSecao(),
-        alertas: [
-          {
-            type: 'redator_document_expired',
-            severity: 'high',
-            entity_id: 5,
-            description: 'Documento del relator vencido.',
-            date: '2026-08-01',
-            navigation: { redator_id: 5 },
-          },
-        ],
+        visibility: { operation: false, commercial: false, certification: false, identity: true },
+      }),
+    })
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
+    if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
+    expect(result.current.data.alertas).toEqual([])
+  })
+
+  it('só identidade visível com alerta de documento é ready-admin e entrega o alerta', async () => {
+    get.mockResolvedValue({
+      data: admin({
+        ...semNenhumaSecao(),
+        visibility: { operation: false, commercial: false, certification: false, identity: true },
+        alertas: [ALERTA_DOCUMENTO],
       }),
     })
 

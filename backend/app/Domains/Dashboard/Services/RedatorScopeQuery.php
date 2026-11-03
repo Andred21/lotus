@@ -21,6 +21,7 @@ use App\Shared\Files\Models\File;
 use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * Tudo que o dashboard do redator lê, já escopado ao próprio redator.
@@ -50,20 +51,15 @@ class RedatorScopeQuery
 
     public function resumo(Redator $redator): RedatorResumoData
     {
-        $today = FusoDoNegocio::hoje();
-        $turmas = $this->turmasEmAndamento($redator);
+        $baldes = $this->baldes($redator);
 
-        // Os dois primeiros contadores partem o mesmo conjunto em dois, sem
-        // sobreposição e sem sobra: turma que já começou (incluindo a atrasada,
-        // que continua sendo trabalho aberto) e turma que ainda vai começar.
-        // A agenda mais abaixo é que recorta janelas — aqui é o total.
+        // Os números são o tamanho dos baldes da agenda: mesma classificação,
+        // uma definição só (D-72). `turmas_em_andamento` soma atrasadas,
+        // encerrando e em curso; `proximas_turmas` é o balde das futuras, sem
+        // corte de horizonte — o que o card promete é o que a lista mostra.
         return new RedatorResumoData(
-            turmas_em_andamento: $turmas
-                ->filter(fn (Turma $turma): bool => $turma->start_date->lte($today))
-                ->count(),
-            proximas_turmas: $turmas
-                ->filter(fn (Turma $turma): bool => $turma->start_date->isAfter($today))
-                ->count(),
+            turmas_em_andamento: $baldes->startedCount(),
+            proximas_turmas: $baldes->upcoming->count(),
             pendencias_documentais: count($this->pendenciasDocumentais($redator)),
             documentos_vencendo: count($this->alertasDocumentos($redator)),
         );
@@ -71,31 +67,13 @@ class RedatorScopeQuery
 
     public function agenda(Redator $redator): RedatorAgendaData
     {
-        $today = FusoDoNegocio::hoje();
-        $horizon = DashboardWindows::turmaHorizon();
-        $turmas = $this->turmasEmAndamento($redator);
+        $baldes = $this->baldes($redator);
 
         return new RedatorAgendaData(
-            starting_soon: $this->agendaBucket(
-                $turmas,
-                fn (Turma $turma): bool => $turma->start_date->isAfter($today)
-                    && $turma->start_date->lte($horizon),
-            ),
-            ending_soon: $this->agendaBucket(
-                $turmas,
-                fn (Turma $turma): bool => $turma->start_date->lte($today)
-                    && $turma->end_date->gte($today)
-                    && $turma->end_date->lte($horizon),
-            ),
-            in_progress: $this->agendaBucket(
-                $turmas,
-                fn (Turma $turma): bool => $turma->start_date->lte($today)
-                    && $turma->end_date->gte($today),
-            ),
-            overdue: $this->agendaBucket(
-                $turmas,
-                fn (Turma $turma): bool => $turma->end_date->isBefore($today),
-            ),
+            starting_soon: $this->agendaBucket($baldes->upcoming),
+            ending_soon: $this->agendaBucket($baldes->endingSoon),
+            in_progress: $this->agendaBucket($baldes->inProgress),
+            overdue: $this->agendaBucket($baldes->overdue),
         );
     }
 
@@ -185,14 +163,12 @@ class RedatorScopeQuery
     }
 
     /**
-     * @param  Collection<int, Turma>  $turmas
-     * @param  callable(Turma): bool  $filter
+     * @param  SupportCollection<int, Turma>  $turmas
      * @return RedatorAgendaTurmaData[]
      */
-    private function agendaBucket(Collection $turmas, callable $filter): array
+    private function agendaBucket(SupportCollection $turmas): array
     {
         return $turmas
-            ->filter($filter)
             ->map(fn (Turma $turma): RedatorAgendaTurmaData => new RedatorAgendaTurmaData(
                 turma_id: $turma->id,
                 course_name: $turma->course->name,
@@ -201,6 +177,15 @@ class RedatorScopeQuery
             ))
             ->values()
             ->all();
+    }
+
+    /**
+     * Os baldes saem sempre de `turmasEmAndamento()`, a porta única do escopo:
+     * não há caminho de leitura de turma aqui que não passe por `scoped()`.
+     */
+    private function baldes(Redator $redator): AgendaBuckets
+    {
+        return AgendaClassifier::classify($this->turmasEmAndamento($redator));
     }
 
     /** @return Collection<int, Turma> */
