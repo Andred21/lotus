@@ -131,4 +131,6 @@ Fora dos viewports do DoD, em 800x900 (es-CL, pt-BR e en), as duas tabelas ficam
 42rem (672 px) dentro de um invólucro de 670 px. Sobram 2 px de rolagem, que vêm do piso e não de
 conteúdo: pior cabeçalho e pior célula ficam em 0 nas três línguas, com o Cumplimiento em
 126/118/102/102/119/104. É o comportamento de projeto da faixa entre `sm` e a largura em que o
-invólucro alcança 672 px, e vale para toda tabela do produto.
+invólucro alcança 672 px, e vale para toda tabela do produto. "Relatores" fica em 118 px contra
+um mínimo de 122. O mínimo inclui os 32 px de padding, e a palavra "Instructors" entra 4 px no
+padding direito de 16 px sem passar da borda da célula, por isso o excesso medido é 0.
