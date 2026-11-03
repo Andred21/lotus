@@ -10,9 +10,16 @@ use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\ClientAddress;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class ClientAddressController extends Controller
+class ClientAddressController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [new Middleware('permission:commercial.client.update')];
+    }
+
     public function store(ClientAddressData $data, Client $client, CreateClientAddressAction $action): ClientAddressData
     {
         return ClientAddressData::from($action->execute($client, $data));

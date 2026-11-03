@@ -44,8 +44,10 @@ Route::middleware('auth.active')->group(function () {
     // Versão da plataforma: só para quem tem sessão (spec do bloco 45).
     Route::get('versao', VersaoController::class);
 
-    // Perfil próprio (spec D4): recurso próprio, fora do grupo
-    // `permission:identity.user.update`. `/me` continua servindo só a sessão.
+    // Perfil próprio (spec D4): recurso próprio, sem `permission:`
+    // (os controllers de foto, documento e convite mais abaixo declaram
+    // `identity.user.update` no `HasMiddleware`; estes não). `/me` continua
+    // servindo só a sessão.
     Route::get('profile', [ProfileController::class, 'show']);
     Route::put('profile', [ProfileController::class, 'update']);
     Route::post('profile/photo', [ProfilePhotoController::class, 'store'])->middleware('throttle:upload');
@@ -92,20 +94,21 @@ Route::middleware('auth.active')->group(function () {
     Route::apiResource('roles', RoleController::class)->only(['index', 'store', 'update']);
     Route::get('permissions', [PermissionController::class, 'index']);
 
-    Route::middleware('permission:identity.user.update')->group(function () {
-        Route::post('redatores/{redator}/invitation', [RedatorInvitationController::class, 'store']);
+    // Convite, documentos e fotos de redator/usuário/aluno. A permissão
+    // (`identity.user.update`) vem do `HasMiddleware` de cada controller, não de
+    // grupo aqui (spec D1 do bloco 55).
+    Route::post('redatores/{redator}/invitation', [RedatorInvitationController::class, 'store']);
 
-        Route::post('redatores/{redator}/documents', [RedatorDocumentController::class, 'store'])->middleware('throttle:upload');
-        Route::delete('redatores/{redator}/documents/{document}', [RedatorDocumentController::class, 'destroy'])
-            ->scopeBindings();   // {document} resolve por $redator->documents() — cross-redator = 404
+    Route::post('redatores/{redator}/documents', [RedatorDocumentController::class, 'store'])->middleware('throttle:upload');
+    Route::delete('redatores/{redator}/documents/{document}', [RedatorDocumentController::class, 'destroy'])
+        ->scopeBindings();   // {document} resolve por $redator->documents() — cross-redator = 404
 
-        Route::post('users/{user}/photo', [UserPhotoController::class, 'store'])->middleware('throttle:upload');
-        Route::delete('users/{user}/photo', [UserPhotoController::class, 'destroy']);
+    Route::post('users/{user}/photo', [UserPhotoController::class, 'store'])->middleware('throttle:upload');
+    Route::delete('users/{user}/photo', [UserPhotoController::class, 'destroy']);
 
-        Route::post('redatores/{redator}/photo', [RedatorPhotoController::class, 'store'])->middleware('throttle:upload');
-        Route::delete('redatores/{redator}/photo', [RedatorPhotoController::class, 'destroy']);
+    Route::post('redatores/{redator}/photo', [RedatorPhotoController::class, 'store'])->middleware('throttle:upload');
+    Route::delete('redatores/{redator}/photo', [RedatorPhotoController::class, 'destroy']);
 
-        Route::post('students/{student}/photo', [StudentPhotoController::class, 'store'])->middleware('throttle:upload');
-        Route::delete('students/{student}/photo', [StudentPhotoController::class, 'destroy']);
-    });
+    Route::post('students/{student}/photo', [StudentPhotoController::class, 'store'])->middleware('throttle:upload');
+    Route::delete('students/{student}/photo', [StudentPhotoController::class, 'destroy']);
 });

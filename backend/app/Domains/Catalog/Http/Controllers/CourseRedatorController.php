@@ -7,13 +7,20 @@ use App\Domains\Catalog\Data\CourseRedatorData;
 use App\Domains\Catalog\Models\Course;
 use App\Http\Controllers\Controller;
 use App\Shared\Audit\PivotAudit;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
 /**
  * Habilitação (idoneidade) redator↔curso pelo lado do curso: define quais
  * redatores estão aptos a ministrar este curso. `sync` = substituição total.
  */
-class CourseRedatorController extends Controller
+class CourseRedatorController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [new Middleware('permission:catalog.course.update')];
+    }
+
     public function update(CourseRedatorData $data, Course $course): CourseData
     {
         PivotAudit::sync($course, 'redatores', $data->redator_ids);

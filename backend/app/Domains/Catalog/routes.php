@@ -16,9 +16,7 @@ Route::middleware('auth.active')->group(function () {
 
     Route::apiResource('courses', CourseController::class);
 
-    // Habilitação = editar o curso → catalog.course.update.
-    Route::middleware('permission:catalog.course.update')->group(function () {
-        // Habilitação redator↔curso pelo lado do curso (sync).
-        Route::put('courses/{course}/redatores', [CourseRedatorController::class, 'update']);
-    });
+    // Habilitação redator↔curso pelo lado do curso (sync). A permissão
+    // (`catalog.course.update`) vem do `HasMiddleware` do controller.
+    Route::put('courses/{course}/redatores', [CourseRedatorController::class, 'update']);
 });
