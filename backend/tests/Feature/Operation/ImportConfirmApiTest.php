@@ -64,14 +64,26 @@ class ImportConfirmApiTest extends TestCase
     {
         $this->actingAsAdmin();
 
-        $this->confirmar(['rows' => [
-            $this->linha([]),
-            $this->linha(['row' => 3, 'rut' => 'RUT-INVALIDO', 'email' => null]),
-        ]])
+        $this->confirmar(['rows' => [$this->linha([])]])
             ->assertOk()
             ->assertJsonPath('created', 1)
-            ->assertJsonPath('errors.0.row', 3)
+            ->assertJsonPath('errors', [])
             ->assertJsonPath('contracted_count', 5);
+    }
+
+    public function test_linha_recusavel_recusa_o_lote_com_422_por_linha_e_nao_grava(): void
+    {
+        $this->actingAsAdmin();
+
+        $resposta = $this->confirmar(['rows' => [
+            $this->linha([]),
+            $this->linha(['row' => 3, 'rut' => 'RUT-INVALIDO', 'email' => null]),
+        ]])->assertStatus(422);
+
+        // O contrato que o front consome: uma chave `import.<row>` por linha recusada.
+        $this->assertSame(['import.3'], array_keys($resposta->json('errors')));
+        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
+        $this->assertSame(0, $this->turma->enrollments()->count());
     }
 
     public function test_classificacao_enviada_pelo_cliente_e_ignorada(): void
@@ -93,73 +105,71 @@ class ImportConfirmApiTest extends TestCase
         $this->assertSame($this->client->id, $student->fresh()->current_client_id);
     }
 
-    public function test_nome_vazio_via_http_vira_erro_da_linha_e_nao_derruba_o_lote(): void
+    public function test_nome_vazio_via_http_recusa_o_lote_com_422_por_linha(): void
     {
         $this->actingAsAdmin();
 
-        $this->confirmar(['rows' => [
+        $resposta = $this->confirmar(['rows' => [
             $this->linha(['row' => 2, 'name' => '']),
             $this->linha(['row' => 3, 'rut' => '33.333.333-3', 'name' => 'Pedro', 'email' => 'p@acme.cl']),
             $this->linha(['row' => 4, 'rut' => '', 'name' => 'Sin Rut', 'email' => 's@acme.cl']),
-        ]])
-            ->assertOk()
-            ->assertJsonPath('created', 1)
-            ->assertJsonPath('errors.0.row', 2)
-            ->assertJsonPath('errors.1.row', 4);
+        ]])->assertStatus(422);
+
+        $this->assertSame(['import.2', 'import.4'], array_keys($resposta->json('errors')));
+        $this->assertDatabaseMissing('users', ['rut' => '33.333.333-3']);
     }
 
-    public function test_telefone_ou_email_longo_recusa_so_a_linha_e_nao_grava(): void
+    public function test_telefone_ou_email_longo_recusa_o_lote_e_nao_grava(): void
     {
         $this->actingAsAdmin();
 
-        $this->confirmar(['rows' => [
+        $resposta = $this->confirmar(['rows' => [
             $this->linha(['row' => 2, 'phone' => str_repeat('9', 31)]),
             $this->linha(['row' => 3, 'rut' => '22.222.222-2', 'email' => str_repeat('a', 250).'@acme.cl']),
             $this->linha(['row' => 4, 'rut' => '33.333.333-3', 'name' => 'Pedro', 'email' => 'p@acme.cl']),
-        ]])
-            ->assertOk()
-            ->assertJsonPath('created', 1)
-            ->assertJsonPath('errors.0.row', 2)
-            ->assertJsonPath('errors.1.row', 3);
+        ]])->assertStatus(422);
 
+        $this->assertSame(['import.2', 'import.3'], array_keys($resposta->json('errors')));
+        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
+        $this->assertDatabaseMissing('users', ['rut' => '22.222.222-2']);
+        $this->assertDatabaseMissing('users', ['rut' => '33.333.333-3']);
+    }
+
+    public function test_email_com_formato_invalido_recusa_o_lote_e_nao_grava(): void
+    {
+        $this->actingAsAdmin();
+
+        $resposta = $this->confirmar(['rows' => [
+            $this->linha(['row' => 2, 'email' => 'juan arroba acme']),
+            $this->linha(['row' => 3, 'rut' => '22.222.222-2', 'name' => 'Pedro', 'email' => 'p@acme.cl']),
+        ]])->assertStatus(422);
+
+        $this->assertSame(['import.2'], array_keys($resposta->json('errors')));
+        $this->assertSame(
+            [__('validation.email', ['attribute' => __('validation.attributes.email')])],
+            $resposta->json('errors')['import.2'],
+        );
         $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
         $this->assertDatabaseMissing('users', ['rut' => '22.222.222-2']);
     }
 
-    public function test_email_com_formato_invalido_recusa_so_a_linha_e_nao_grava(): void
-    {
-        $this->actingAsAdmin();
-
-        $this->confirmar(['rows' => [
-            $this->linha(['row' => 2, 'email' => 'juan arroba acme']),
-            $this->linha(['row' => 3, 'rut' => '22.222.222-2', 'name' => 'Pedro', 'email' => 'p@acme.cl']),
-        ]])
-            ->assertOk()
-            ->assertJsonPath('created', 1)
-            ->assertJsonPath('errors.0.row', 2)
-            ->assertJsonPath('errors.0.message', __('validation.email', [
-                'attribute' => __('validation.attributes.email'),
-            ]));
-
-        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
-    }
-
-    public function test_actualizar_com_telefone_longo_vira_erro_da_linha_e_nao_grava(): void
+    public function test_actualizar_com_telefone_longo_recusa_o_lote_e_nao_grava(): void
     {
         $this->actingAsAdmin();
         app(StudentResolver::class)
             ->resolveByRut(new StudentIdentity('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null), $this->client);
 
-        $this->confirmar(['rows' => [
+        $resposta = $this->confirmar(['rows' => [
             $this->linha([
                 'row' => 2, 'rut' => '33.333.333-3', 'name' => 'Pedro Alterado', 'email' => null,
                 'phone' => str_repeat('9', 31), 'update_registration' => true,
             ]),
             $this->linha(['row' => 3]),
-        ]])
-            ->assertOk()
-            ->assertJsonPath('created', 1)
-            ->assertJsonPath('errors.0.row', 2);
+        ]])->assertStatus(422);
+
+        // A recusa é só do Actualizar: a chave leva o sufixo `.update`.
+        $this->assertSame(['import.2.update'], array_keys($resposta->json('errors')));
+        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
 
         $this->assertSame('Pedro Lagos', User::where('rut', '33.333.333-3')->value('name'));
         $this->assertSame(0, $this->turma->enrollments()->where('student_id', User::where('rut', '33.333.333-3')->first()->student->id)->count());
@@ -199,7 +209,7 @@ class ImportConfirmApiTest extends TestCase
             ->assertJsonPath('errors.turma.0', __('operation.turma.concluded_locked'));
     }
 
-    public function test_sem_permissao_de_update_recusa_so_a_linha_que_pede(): void
+    public function test_sem_permissao_de_update_recusa_o_lote_na_linha_que_pede(): void
     {
         $this->seed(RolePermissionSeeder::class);
         $app = app(StudentResolver::class);
@@ -208,16 +218,18 @@ class ImportConfirmApiTest extends TestCase
         $operador->givePermissionTo('operation.enrollment.manage');
         $this->actingAs($operador, 'web');
 
-        $this->confirmar(['rows' => [
-            $this->linha(['row' => 2, 'rut' => '33.333.333-3', 'name' => 'Pedro Alterado', 'update_registration' => true]),
+        $resposta = $this->confirmar(['rows' => [
+            $this->linha(['row' => 2, 'rut' => '33.333.333-3', 'name' => 'Pedro Alterado', 'email' => null, 'update_registration' => true]),
             $this->linha(['row' => 3]),
-        ]])
-            ->assertOk()
-            ->assertJsonPath('created', 1)
-            ->assertJsonPath('errors.0.row', 2)
-            ->assertJsonPath('errors.0.message', __('operation.enrollment.import.update_forbidden'));
+        ]])->assertStatus(422);
 
+        $this->assertSame(['import.2.update'], array_keys($resposta->json('errors')));
+        $this->assertSame(
+            [__('operation.enrollment.import.update_forbidden')],
+            $resposta->json('errors')['import.2.update'],
+        );
         $this->assertSame('Pedro Lagos', User::where('rut', '33.333.333-3')->value('name'));
+        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
     }
 
     public function test_redator_recebe_403(): void

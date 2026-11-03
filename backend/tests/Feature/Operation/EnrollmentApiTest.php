@@ -81,13 +81,19 @@ class EnrollmentApiTest extends TestCase
     {
         $this->actingAsAdmin();
 
-        $this->postJson("/api/turmas/{$this->turma->id}/alunos/importar", ['rows' => [
-            ['row' => 2, 'rut' => '11.111.111-1', 'name' => 'Juan Soto', 'email' => 'juan@acme.cl', 'phone' => null, 'update_registration' => false],
-            ['row' => 3, 'rut' => 'RUT-INVALIDO', 'name' => 'Mal', 'email' => null, 'phone' => null, 'update_registration' => false],
-        ]])
+        $boa = ['row' => 2, 'rut' => '11.111.111-1', 'name' => 'Juan Soto', 'email' => 'juan@acme.cl', 'phone' => null, 'update_registration' => false];
+        $ruim = ['row' => 3, 'rut' => 'RUT-INVALIDO', 'name' => 'Mal', 'email' => null, 'phone' => null, 'update_registration' => false];
+
+        // Tudo ou nada (spec D2): a linha recusável recusa o lote com 422 por linha.
+        $this->postJson("/api/turmas/{$this->turma->id}/alunos/importar", ['rows' => [$boa, $ruim]])
+            ->assertStatus(422)
+            ->assertJsonStructure(['errors' => ['import.3']]);
+        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
+
+        $this->postJson("/api/turmas/{$this->turma->id}/alunos/importar", ['rows' => [$boa]])
             ->assertOk()
             ->assertJsonPath('created', 1)
-            ->assertJsonPath('errors.0.row', 3)
+            ->assertJsonPath('errors', [])
             ->assertJsonPath('contracted_count', 5);
     }
 

@@ -7,14 +7,13 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Data\ImportConfirmData;
-use App\Domains\Operation\Data\ImportConfirmRowData;
 use App\Domains\Operation\Data\ImportResultData;
 use App\Domains\Operation\Data\ImportRowErrorData;
 use App\Domains\Operation\Data\MovedStudentData;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\EnrollOutcome;
-use App\Domains\Operation\Services\ImportBatchLedger;
 use App\Domains\Operation\Services\ImportRowClassifier;
+use App\Domains\Operation\Services\ImportRowDecision;
 use App\Shared\Validation\ValidationMessages;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -22,18 +21,25 @@ use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 
 /**
- * Confirmação da importação (spec D13): recebe as linhas que o admin triou e
- * REVALIDA cada uma no servidor, sem confiar em nada que o navegador classificou.
- * Transação POR LINHA, nunca global — linha com erro é reportada no resumo e o
- * lote segue (tela-turmas). Com `update_registration` em aluno existente, o
- * cadastro é atualizado e o aluno matriculado na MESMA transação: se uma das
- * duas falha, nada daquela linha fica.
+ * Confirmação da importação (spec D2-D7): recebe as linhas que o admin triou e
+ * REVALIDA todas no servidor, sem confiar em nada que o navegador classificou.
+ * Quem decide é o `ImportRowClassifier`, o MESMO código da prévia.
+ *
+ * TUDO OU NADA na checagem: qualquer linha recusada (ou *Actualizar* recusado)
+ * devolve 422 antes de qualquer escrita, com uma chave por recusa — `import.<row>`
+ * para a linha e `import.<row>.update` só para o *Actualizar*, `<row>` sendo o
+ * número da linha na planilha. Passada a checagem, a gravação é por linha, cada
+ * uma na sua transação (D7): com `update_registration` em aluno cadastrado o
+ * cadastro é atualizado e o aluno matriculado na MESMA transação. Só a corrida
+ * entre checar e gravar (outro usuário tomando o e-mail no meio) ainda cai em
+ * `errors` do resumo, e o lote segue.
  */
 class ImportStudentsAction
 {
     public function __construct(
         private readonly EnrollStudentAction $enroll,
         private readonly StudentResolver $resolver,
+        private readonly ImportRowClassifier $classifier,
     ) {}
 
     public function execute(Turma $turma, ImportConfirmData $data, User $actor): ImportResultData
@@ -50,15 +56,21 @@ class ImportStudentsAction
             ['rows' => ['required', 'array', 'min:1', 'max:'.ImportRowClassifier::MAX_LINHAS]],
         )->validate();
 
-        $ledger = new ImportBatchLedger;
-        $podeAtualizar = $actor->can('identity.user.update');
+        $decisions = $this->classifier->classify(
+            $turma,
+            array_values($data->rows),
+            $actor->can('identity.user.update'),
+        );
+
+        $this->assertNothingRefused($decisions);
+
         $created = $relinked = $already = 0;
         $moved = [];
         $errors = [];
 
-        foreach ($data->rows as $line) {
+        foreach ($decisions as $decision) {
             try {
-                $outcome = $this->processRow($turma, $line, $ledger, $podeAtualizar);
+                $outcome = $this->processRow($turma, $decision);
 
                 if ($outcome->alreadyEnrolled) {
                     $already++;
@@ -77,8 +89,9 @@ class ImportStudentsAction
                     ),
                 };
             } catch (ValidationException $e) {
+                // Só a corrida entre a checagem e a gravação chega aqui (D7).
                 $errors[] = new ImportRowErrorData(
-                    row: $line->row,
+                    row: $decision->line->row,
                     message: ValidationMessages::squash($e),
                 );
             }
@@ -96,79 +109,57 @@ class ImportStudentsAction
     }
 
     /**
-     * Uma linha: valida tudo o que a prévia valida (mesmas fontes: o
-     * `StudentResolver` e o `ImportBatchLedger`) e depois grava.
+     * Uma só 422 com TODAS as recusas do lote: o admin corrige a planilha uma vez.
+     *
+     * @param  list<ImportRowDecision>  $decisions
      *
      * @throws ValidationException
      */
-    private function processRow(Turma $turma, ImportConfirmRowData $line, ImportBatchLedger $ledger, bool $podeAtualizar): EnrollOutcome
+    private function assertNothingRefused(array $decisions): void
     {
-        if (($duplicado = $ledger->claimRut($line->rut, $line->row)) !== null) {
-            throw ValidationException::withMessages(['rut' => $duplicado]);
+        $messages = [];
+
+        foreach ($decisions as $decision) {
+            $row = $decision->line->row;
+
+            if ($decision->rowRefused()) {
+                $messages["import.{$row}"] = [$decision->refusal];
+            } elseif ($decision->updateRefused()) {
+                $messages["import.{$row}.update"] = [$decision->updateRefusal];
+            }
         }
 
-        // Nome obrigatório em toda linha, nova ou cadastrada (D17).
-        $this->resolver->assertNameProvided($line->name);
-
-        $lookup = $this->resolver->previewByRut($line->rut);
-        $email = $line->email === '' ? null : $line->email;
-        $phone = $line->phone === '' ? null : $line->phone;
-
-        if (! $lookup->exists) {
-            // `update_registration` em aluno inexistente é ignorada (D13): o
-            // aluno nasce com os dados da linha.
-            $identity = $this->resolver->identity($line->rut, $line->name, $email, $phone);
-            $this->resolver->assertCanCreate($identity);
-            $this->claimEmail($ledger, $email, $line->row);
-
-            return $this->enroll->execute($turma, $identity);
+        if ($messages !== []) {
+            throw ValidationException::withMessages($messages);
         }
-
-        $student = $lookup->student;
-
-        if (! $line->update_registration) {
-            // Os valores da planilha não são gravados: a matrícula segue com a
-            // identidade do cadastro, sem julgar a forma do que não vai ao banco.
-            return $this->enroll->execute($turma, new StudentIdentity(
-                $student->user->rut,
-                $student->user->name,
-                $student->user->email,
-                $student->user->phone,
-            ));
-        }
-
-        // Atualizar o cadastro exige a permissão de editar aluno, mesmo que a
-        // tela não ofereça o botão (D13/D20): recusa só esta linha.
-        if (! $podeAtualizar) {
-            throw ValidationException::withMessages([
-                'update_registration' => __('operation.enrollment.import.update_forbidden'),
-            ]);
-        }
-
-        // O e-mail repetido recusa ANTES de qualquer escrita (D18).
-        $this->claimEmail($ledger, $email, $line->row);
-
-        // Update e matrícula na mesma transação: se uma falha, nada da linha
-        // fica. A validação e a escrita do cadastro moram no `StudentResolver`
-        // (fonte única, D10).
-        return DB::transaction(function () use ($turma, $student, $line, $email, $phone) {
-            $identity = $this->resolver->updatedIdentity($student, $line->name, $email, $phone);
-            $this->resolver->updateRegistration($student, $identity);
-
-            return $this->enroll->execute($turma, $identity);
-        });
     }
 
     /**
-     * E-mail repetido na planilha (D18): vale para quem GRAVA e-mail — aluno novo
-     * e linha de Actualizar com e-mail. E-mail vazio não grava nada.
+     * Uma linha já decidida: só grava. `updates()` atualiza o cadastro e
+     * matricula na mesma transação (se uma falha, nada da linha fica); as demais
+     * matriculam com a identidade que o classificador entregou — a linha validada
+     * no aluno novo, o cadastro nos demais (os valores da planilha não são
+     * gravados em Mantener). `already_enrolled` não tem identidade: usa o cadastro.
      *
      * @throws ValidationException
      */
-    private function claimEmail(ImportBatchLedger $ledger, ?string $email, int $row): void
+    private function processRow(Turma $turma, ImportRowDecision $decision): EnrollOutcome
     {
-        if ($email !== null && ($duplicado = $ledger->claimEmail($email, $row)) !== null) {
-            throw ValidationException::withMessages(['email' => $duplicado]);
+        if ($decision->updates()) {
+            return DB::transaction(function () use ($turma, $decision) {
+                $this->resolver->updateRegistration($decision->lookup->student, $decision->updatedIdentity);
+
+                return $this->enroll->execute($turma, $decision->updatedIdentity);
+            });
         }
+
+        return $this->enroll->execute($turma, $decision->identity ?? $this->registeredIdentity($decision));
+    }
+
+    private function registeredIdentity(ImportRowDecision $decision): StudentIdentity
+    {
+        $user = $decision->lookup->student->user;
+
+        return new StudentIdentity($user->rut, $user->name, $user->email, $user->phone);
     }
 }
