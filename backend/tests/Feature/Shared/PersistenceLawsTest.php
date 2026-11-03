@@ -329,6 +329,14 @@ class PersistenceLawsTest extends TestCase
             $violacoes[] = '#[InputOnlyCollection] com tipo que admite Optional — numa colecao so de entrada a ausencia e recusa, nao "nao mexe"';
         }
 
+        if ($parametro->getType()?->allowsNull()) {
+            $violacoes[] = '#[InputOnlyCollection] com tipo anulavel — `null` entraria como colecao ausente, e a ausencia e recusa';
+        }
+
+        if (! $this->regrasExigemAPropriedade($classe, $parametro->getName())) {
+            $violacoes[] = '#[InputOnlyCollection] sem `required` em `rules()` da classe — nada recusaria a ausencia do campo antes da Action';
+        }
+
         if ($parametro->isDefaultValueAvailable()) {
             $violacoes[] = '#[InputOnlyCollection] com default — a ausencia deixaria de ser recusa';
         }
@@ -338,6 +346,30 @@ class PersistenceLawsTest extends TestCase
         }
 
         return $violacoes;
+    }
+
+    /**
+     * `rules()` estática da classe lista `required` para a propriedade? Sem
+     * `rules()`, ou sem `required` nela, a ausência não vira 422.
+     */
+    private function regrasExigemAPropriedade(string $classe, string $propriedade): bool
+    {
+        $reflexao = new ReflectionClass($classe);
+
+        if (! $reflexao->hasMethod('rules')) {
+            return false;
+        }
+
+        $metodo = $reflexao->getMethod('rules');
+
+        if (! $metodo->isStatic() || ! $metodo->isPublic() || $metodo->getNumberOfRequiredParameters() > 0) {
+            return false;
+        }
+
+        $regras = $metodo->invoke(null)[$propriedade] ?? [];
+        $regras = is_string($regras) ? explode('|', $regras) : $regras;
+
+        return in_array('required', $regras, true);
     }
 
     /**

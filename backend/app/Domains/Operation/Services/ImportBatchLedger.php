@@ -10,8 +10,9 @@ use App\Shared\Support\Rut;
  *
  * RUT compara na forma canônica, e só RUT válido entra (o inválido cai no erro
  * do resolver). E-mail compara sem diferenciar caixa. Quem chama decide QUAIS
- * e-mails reivindicar: só os que a linha de fato grava. A recusa cita a linha
- * que reservou primeiro.
+ * e-mails reivindicar: o e-mail que a planilha propõe gravar, isto é, o de aluno
+ * novo e o divergente de linha cadastrada, independentemente de *Actualizar*.
+ * A recusa cita a linha que reservou primeiro.
  */
 final class ImportBatchLedger
 {

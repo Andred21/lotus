@@ -18,8 +18,9 @@ use Illuminate\Validation\ValidationException;
  * identidade mora no `StudentResolver`; aqui só se ORDENA a decisão e se
  * reserva duplicidade (RUT e e-mail) no `ImportBatchLedger`.
  *
- * Quem reserva e-mail é quem o GRAVA: aluno novo e cadastrado cujo e-mail da
- * planilha diverge do cadastro. Linha recusada antes da reserva não reserva.
+ * Reserva-se o e-mail que a planilha propõe gravar: o de aluno novo e o divergente
+ * de linha cadastrada, independentemente de *Actualizar*. Linha recusada antes
+ * da reserva não reserva.
  */
 class ImportRowClassifier
 {
@@ -102,10 +103,13 @@ class ImportRowClassifier
         $student = $lookup->student;
         $user = $student->user;
 
+        $identity = new StudentIdentity($user->rut, $user->name, $user->email, $user->phone);
+
         // 4. Matrícula ativa nesta turma (a soft-deletada se restaura na
-        // confirmação). A flag é ignorada e nada é reservado (D4).
+        // confirmação). A flag é ignorada e nada é reservado (D4); a identidade
+        // é a do cadastro.
         if ($turma->enrollments()->where('student_id', $student->id)->exists()) {
-            return new ImportRowDecision($line, ImportRowStatus::AlreadyEnrolled, lookup: $lookup);
+            return new ImportRowDecision($line, ImportRowStatus::AlreadyEnrolled, lookup: $lookup, identity: $identity);
         }
 
         // 5. Sem vínculo atual não há o que mover: o primeiro vínculo é `registered`.
@@ -114,7 +118,6 @@ class ImportRowClassifier
             ? ImportRowStatus::Registered
             : ImportRowStatus::Moves;
         $divergent = $this->divergent($line, $user);
-        $identity = new StudentIdentity($user->rut, $user->name, $user->email, $user->phone);
 
         // 6. O e-mail que o Actualizar gravaria é reservado; repetido recusa só
         // o Actualizar, nunca a linha (a matrícula segue com o cadastro).

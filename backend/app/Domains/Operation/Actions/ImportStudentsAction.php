@@ -4,7 +4,6 @@ namespace App\Domains\Operation\Actions;
 
 use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Identity\Models\User;
-use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Data\ImportConfirmData;
 use App\Domains\Operation\Data\ImportResultData;
@@ -130,7 +129,7 @@ class ImportStudentsAction
      * matricula na mesma transação (se uma falha, nada da linha fica); as demais
      * matriculam com a identidade que o classificador entregou — a linha validada
      * no aluno novo, o cadastro nos demais (os valores da planilha não são
-     * gravados em Mantener). `already_enrolled` não tem identidade: usa o cadastro.
+     * gravados em Mantener). `already_enrolled` também traz o cadastro.
      *
      * @throws ValidationException
      */
@@ -144,13 +143,6 @@ class ImportStudentsAction
             });
         }
 
-        return $this->enroll->execute($turma, $decision->identity ?? $this->registeredIdentity($decision));
-    }
-
-    private function registeredIdentity(ImportRowDecision $decision): StudentIdentity
-    {
-        $user = $decision->lookup->student->user;
-
-        return new StudentIdentity($user->rut, $user->name, $user->email, $user->phone);
+        return $this->enroll->execute($turma, $decision->identity);
     }
 }

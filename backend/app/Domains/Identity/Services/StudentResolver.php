@@ -15,8 +15,10 @@ use Illuminate\Validation\ValidationException;
 /**
  * Resolve uma linha de importação de aluno pelo RUT (chave natural, RF-ALU-07):
  * existe? associa : cria (via UserProvisioner). Aplica o vínculo ao cliente da
- * cotação (RN-10) via StudentClientLinkService. Lança por linha; a importação
- * (6c) captura e reporta, sem abortar a planilha inteira.
+ * cotação (RN-10) via StudentClientLinkService. Lança `ValidationException` por
+ * linha. Na importação, a confirmação checa o lote inteiro antes de gravar e
+ * aborta tudo na primeira recusa (tudo ou nada); só a corrida na gravação (um
+ * RUT ou e-mail tomado entre a checagem e a escrita) cai no resumo por linha.
  */
 class StudentResolver
 {
@@ -43,6 +45,13 @@ class StudentResolver
         ])->toIdentity();
     }
 
+    /**
+     * Pré-condição: a `StudentIdentity` chega com a forma já validada
+     * (`StudentIdentity::rules()`), como a entregam `identity()`, o cadastro e a
+     * matrícula individual; aqui só se julga o RUT e o tipo do usuário.
+     *
+     * @throws ValidationException
+     */
     public function resolveByRut(StudentIdentity $identity, Client $client): StudentResolution
     {
         $parsed = Rut::parse($identity->rut);

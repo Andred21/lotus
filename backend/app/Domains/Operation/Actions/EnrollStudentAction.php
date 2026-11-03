@@ -18,6 +18,10 @@ class EnrollStudentAction
 {
     public function __construct(private readonly StudentResolver $resolver) {}
 
+    /**
+     * Pré-condição: a `StudentIdentity` chega com a forma já validada
+     * (`StudentIdentity::rules()`); a action não revalida nome, e-mail nem telefone.
+     */
     public function execute(Turma $turma, StudentIdentity $identity): EnrollOutcome
     {
         $turma->assertAcademicallyWritable();

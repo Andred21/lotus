@@ -16,9 +16,11 @@ use Attribute;
  *
  * A marca é VERIFICADA por `PersistenceLawsTest::test_colecao_nested_read_write_nasce_optional`,
  * não confiada: a guarda a aceita só se a propriedade tiver `#[DataCollectionOf]`,
- * se o tipo NÃO admitir `Optional` e não houver default (senão a ausência voltaria
- * a ser tolerada) e se a classe NÃO declarar `fromModel` (senão a coleção também
- * sai, e a lei read-write volta a valer). Cada violação é uma linha da mensagem.
+ * se o tipo NÃO admitir `Optional` nem `null` e não houver default (senão a
+ * ausência voltaria a ser tolerada), se a `rules()` estática da classe exigir a
+ * propriedade com `required` (é ela que transforma a ausência em 422) e se a
+ * classe NÃO declarar `fromModel` (senão a coleção também sai, e a lei
+ * read-write volta a valer). Cada violação é uma linha da mensagem.
  */
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_PARAMETER)]
 class InputOnlyCollection {}
