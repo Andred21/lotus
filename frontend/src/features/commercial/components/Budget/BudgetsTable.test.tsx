@@ -102,23 +102,33 @@ describe('BudgetsTable — coluna de ações', () => {
 })
 
 describe('BudgetsTable — tags da turma', () => {
-  it('abaixo do status aprovado, uma tag por cotação aprovada com o código dela', () => {
+  const renderizar = (quotes: unknown[]) => {
     const orcamento = {
-      ...ORCAMENTO, status: 'approved', archived_at: null, archived_by: null,
-      quotes: [
-        { id: 1, code: 'Scap 1 - Cot 1', status: 'approved', turma_status: 'em_andamento' },
-        { id: 2, code: 'Scap 1 - Cot 2', status: 'approved' },
-        { id: 3, code: 'Scap 1 - Cot 3', status: 'pending' },
-      ],
+      ...ORCAMENTO, status: 'approved', archived_at: null, archived_by: null, quotes,
     } as unknown as BudgetRow
     renderWithProviders(
       <BudgetsTable budgets={[orcamento]} loading={false} mode="active" onModeChange={() => {}}
         onRestore={() => {}} busy={false} />,
       { route: '/comercial' },
     )
+  }
+
+  it('abaixo do status aprovado, uma tag por cotação aprovada na forma curta (Cot N)', () => {
+    renderizar([
+      { id: 1, code: 'Scap 1 - Cot 1', seq_in_budget: 1, status: 'approved', turma_status: 'em_andamento' },
+      { id: 2, code: 'Scap 1 - Cot 2', seq_in_budget: 2, status: 'approved' },
+      { id: 3, code: 'Scap 1 - Cot 3', seq_in_budget: 3, status: 'pending' },
+    ])
+
+    expect(screen.getByText('Cot 1 · quote.turmaTag.em_andamento')).toBeTruthy()
+    expect(screen.getByText('Cot 2 · quote.turmaTag.pending')).toBeTruthy()
+    expect(screen.queryByText(/Cot 3/)).toBeNull()
+    expect(screen.queryByText(/Scap 1 - Cot/)).toBeNull()
+  })
+
+  it('sem seq_in_budget na cotação, cai no código completo', () => {
+    renderizar([{ id: 1, code: 'Scap 1 - Cot 1', status: 'approved', turma_status: 'em_andamento' }])
 
     expect(screen.getByText('Scap 1 - Cot 1 · quote.turmaTag.em_andamento')).toBeTruthy()
-    expect(screen.getByText('Scap 1 - Cot 2 · quote.turmaTag.pending')).toBeTruthy()
-    expect(screen.queryByText(/Scap 1 - Cot 3/)).toBeNull()
   })
 })
