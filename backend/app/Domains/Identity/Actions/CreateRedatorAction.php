@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Data\RedatorData;
+use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Services\UserProvisioner;
 use App\Shared\Audit\PivotAudit;
@@ -56,7 +57,7 @@ class CreateRedatorAction
             }
 
             foreach (array_keys($documents) as $tipo) {
-                $stored->replace($redator, $tipo, $tipo);
+                $stored->replace($redator, $tipo, RedatorDocumentType::from($tipo)->value);
             }
 
             return $redator->load(['user', 'documents', 'courses']);
