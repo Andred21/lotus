@@ -2,6 +2,9 @@
 
 ## Em aberto
 
+Correções aprovadas pelo João em 2026-11-03, por aplicar: Q-3, Q-5, Q-6 e Q-7, todos Menor. Q-1 e
+Q-2 ficam registrados sem correção. Aplicadas as quatro, a rodada 2 reabre a revisão.
+
 ## Rodada 1 — `60e42f49..5e54cd44` — 2026-11-03 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 
 Bloco classificado como alto risco (upload de documentos e assinaturas de certificado, lang de

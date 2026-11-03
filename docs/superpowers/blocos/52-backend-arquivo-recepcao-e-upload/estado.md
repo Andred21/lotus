@@ -2,9 +2,9 @@
 schema_version: 3
 id: 52
 slug: 52-backend-arquivo-recepcao-e-upload
-workflow_state: ready_for_closure
+workflow_state: reviewing
 next_owner: claude
-next_action: close_active_work_item
+next_action: approve_review_findings Q-3 Q-5 Q-6 Q-7 aprovados, aplicar e repetir o review
 resume_state: null
 active_spec: docs/superpowers/blocos/52-backend-arquivo-recepcao-e-upload/spec.md
 active_plan: docs/superpowers/blocos/52-backend-arquivo-recepcao-e-upload/plano.md
@@ -17,9 +17,9 @@ branch: refactor/52-backend-arquivo-recepcao-e-upload
 worktree: ../lotus-52-backend-arquivo-recepcao-e-upload
 offset: 2
 lane_base: 60e42f49
-commit: 5e54cd44
+commit: 193eb7e0
 blocker: null
-updated_at: 2026-11-03T02:09:52-03:00
+updated_at: 2026-11-03T02:12:19-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
