@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
 import { AppColumn, AppDataTable } from './AppDataTable'
-import { appDataTablePt, narrowFloorTablePt, stickyActionsColumn } from './style'
+import { appDataTablePt, narrowFloorTablePt, stickyActionsColumn, wrappingHeaderTablePt } from './style'
 
 const ISO = '2026-08-19T13:00:00Z'
 const LINHAS = [{ id: 1, archived_at: ISO }]
@@ -348,5 +348,45 @@ describe('narrowFloorTablePt — piso por modo abaixo de sm', () => {
     )
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('32rem')
+  })
+})
+
+/**
+ * D-73 do bloco 54: o título do cabeçalho é item de flex com `min-width: auto`
+ * e não encolhe abaixo da palavra mais longa; o ícone de ordenação ao lado dele
+ * saía da coluna e, no último cabeçalho, do invólucro da tabela. Com o pt, o
+ * ícone desce para a linha de baixo. Opt-in: o default de toda tabela não muda.
+ */
+describe('wrappingHeaderTablePt — cabeçalho que quebra o ícone de ordenação', () => {
+  const conteudoDoCabecalho = () => document.querySelector('.p-column-header-content') as HTMLElement
+
+  it('o conteúdo do cabeçalho quebra linha, e a célula mantém o padding do default', () => {
+    render(
+      <AppDataTable value={LINHAS} pt={wrappingHeaderTablePt}>
+        <AppColumn field="id" header="Documentos por vencer" sortable />
+      </AppDataTable>,
+    )
+    expect(conteudoDoCabecalho().classList).toContain('flex-wrap')
+    expect((document.querySelector('thead th') as HTMLElement).classList).toContain('px-4')
+  })
+
+  it('sem o pt o cabeçalho segue como o default de toda tabela', () => {
+    render(
+      <AppDataTable value={LINHAS}>
+        <AppColumn field="id" header="Documentos por vencer" sortable />
+      </AppDataTable>,
+    )
+    expect(conteudoDoCabecalho().classList).not.toContain('flex-wrap')
+  })
+
+  it('compõe com o piso estreito: os dois chegam à tabela', () => {
+    render(
+      <AppDataTable value={LINHAS} pt={{ ...narrowFloorTablePt('45rem'), ...wrappingHeaderTablePt }}>
+        <AppColumn field="id" header="id" sortable />
+      </AppDataTable>,
+    )
+    const tabela = document.querySelector('table') as HTMLTableElement
+    expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('45rem')
+    expect(conteudoDoCabecalho().classList).toContain('flex-wrap')
   })
 })

@@ -1,6 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, technicalDataClass } from '@shared/ui'
+import {
+  AppCard,
+  AppCardHeader,
+  AppDataTable,
+  AppColumn,
+  AppEmptyState,
+  technicalDataClass,
+  wrappingHeaderTablePt,
+} from '@shared/ui'
 import { dangerText, warningText } from '@shared/styles/tokens'
 import type { RedatorLoadData } from '@shared/types/generated'
 import { redatorLoadWidths } from './panelColumns'
@@ -38,6 +46,9 @@ export function RedatorLoadPanel({ redatores }: { redatores: RedatorLoadData[] }
       <AppDataTable
         value={redatores}
         dataKey="redator_id"
+        // Os quatro contadores são ordenáveis e moram sob cabeçalhos de duas
+        // palavras: o ícone desce para baixo do título em vez de sair da coluna.
+        pt={wrappingHeaderTablePt}
         emptyMessage={<AppEmptyState icon="pi pi-users" title={t('dashboard.redatorLoad.empty')} />}
         footerCount={t('dashboard.redatorLoad.count', { count: redatores.length })}
       >

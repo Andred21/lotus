@@ -242,8 +242,8 @@
       "redatores": "Relatores",
       "noRedator": "Sin relator",
       "range": "Período",
-      "present": "Documentos presentes",
-      "missing": "Documentos faltantes",
+      "present": "Presentes",
+      "missing": "Faltan",
       "enabled": "Habilitada"
     },
     "redatorLoad": {

@@ -1,6 +1,16 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag, technicalDataClass } from '@shared/ui'
+import {
+  AppCard,
+  AppCardHeader,
+  AppDataTable,
+  AppColumn,
+  AppEmptyState,
+  AppTag,
+  narrowFloorTablePt,
+  technicalDataClass,
+  wrappingHeaderTablePt,
+} from '@shared/ui'
 import { formatIsoDate, turmaDocumentTypeList, turmaRequirementList } from '@shared/lib'
 import type { TurmaComplianceData } from '@shared/types/generated'
 import { complianceWidths } from './panelColumns'
@@ -17,6 +27,40 @@ function faltante(r: TurmaComplianceData, t: (key: string) => string): string {
   ].filter((parte) => parte !== '')
 
   return partes.length === 0 ? '—' : partes.join(', ')
+}
+
+/** Marcadores das duas datas na tradução do intervalo: uso privado do Unicode, que
+ * nenhum locale escreve. */
+const MARCA_DATA = { start: '\uE000', end: '\uE001' } as const
+
+/**
+ * O intervalo "início — fim" com cada data inteira (D-73 do bloco 54).
+ *
+ * Inteiro em `whitespace-nowrap`, ele media 182px numa coluna de 103px e cobria o
+ * contador vizinho; solto, a coluna partia UMA data em quatro linhas ("06-07- /
+ * 2026 — / 31-07- / 2026", UI-10 de 2026-08-17). O meio-termo é quebrar só ENTRE
+ * as datas. As datas entram na tradução como marcadores e voltam como nós, para a
+ * ordem e o separador seguirem vindo do locale.
+ */
+function IntervaloDeDatas({ start, end }: { start: string; end: string }) {
+  const { t } = useTranslation()
+  const datas: Record<string, string> = { [MARCA_DATA.start]: start, [MARCA_DATA.end]: end }
+
+  return (
+    <span className={`${technicalDataClass} text-xs`}>
+      {t('dashboard.agenda.range', MARCA_DATA)
+        .split(new RegExp(`(${MARCA_DATA.start}|${MARCA_DATA.end})`))
+        .map((parte, i) =>
+          datas[parte] === undefined ? (
+            parte
+          ) : (
+            <span key={i} className="whitespace-nowrap">
+              {datas[parte]}
+            </span>
+          ),
+        )}
+    </span>
+  )
 }
 
 /**
@@ -41,6 +85,9 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
       <AppDataTable
         value={turmas}
         dataKey="turma_id"
+        // Piso de 45rem abaixo de `sm`: 390x844 repete a geometria de 1024 (tabela de
+        // 718px), onde a soma dos mínimos medidos cabe (`panelColumns.ts`).
+        pt={{ ...narrowFloorTablePt('45rem'), ...wrappingHeaderTablePt }}
         emptyMessage={<AppEmptyState icon="pi pi-verified" title={t('dashboard.compliance.empty')} />}
         footerCount={t('dashboard.compliance.count', { count: turmas.length })}
       >
@@ -50,7 +97,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           style={largura.course}
           sortable
           body={(r: TurmaComplianceData) => (
-            <Link to={`/operacion/turmas/${r.turma_id}`} className="no-underline" style={{ color: 'var(--text-color)' }}>
+            <Link to={`/operacion/turmas/${r.turma_id}`} className="no-underline wrap-break-word" style={{ color: 'var(--text-color)' }}>
               {r.course_name}
             </Link>
           )}
@@ -62,7 +109,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
             r.redatores.length === 0 ? (
               <span style={{ color: 'var(--text-color-secondary)' }}>{t('dashboard.compliance.noRedator')}</span>
             ) : (
-              r.redatores.join(', ')
+              <span className="wrap-break-word">{r.redatores.join(', ')}</span>
             )
           }
         />
@@ -70,17 +117,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           header={t('dashboard.compliance.range')}
           style={largura.range}
           body={(r: TurmaComplianceData) => (
-            // O intervalo empurra a rolagem em vez de se despedaçar: comprimida
-            // até 1024, a coluna quebrava UMA data em quatro linhas
-            // ("06-07- / 2026 — / 31-07- / 2026"), que é o formato de data
-            // deixando de ser legível como data (UI-10 da revisão de
-            // 2026-08-17).
-            <span className={`${technicalDataClass} text-xs whitespace-nowrap`}>
-              {t('dashboard.agenda.range', {
-                start: formatIsoDate(r.start_date),
-                end: formatIsoDate(r.end_date),
-              })}
-            </span>
+            <IntervaloDeDatas start={formatIsoDate(r.start_date)} end={formatIsoDate(r.end_date)} />
           )}
         />
         <AppColumn header={t('dashboard.compliance.present')} style={largura.present} body={(r: TurmaComplianceData) => r.present_types.length} />
@@ -93,7 +130,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           // PENDÊNCIA continua vindo pronta do backend (D17) — a correção é desta
           // coluna, que é montada aqui. O rótulo vem do mapa de `shared/lib`, que
           // é o que reprova tipo novo sem tradução (Q-4 do review de 2026-08-24).
-          body={(r: TurmaComplianceData) => faltante(r, t)}
+          body={(r: TurmaComplianceData) => <span className="wrap-break-word">{faltante(r, t)}</span>}
         />
         <AppColumn
           header={t('dashboard.compliance.enabled')}

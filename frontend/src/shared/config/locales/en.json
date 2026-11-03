@@ -242,8 +242,8 @@
       "redatores": "Instructors",
       "noRedator": "No instructor",
       "range": "Period",
-      "present": "Documents on file",
-      "missing": "Missing documents",
+      "present": "On file",
+      "missing": "Missing",
       "enabled": "Enabled"
     },
     "redatorLoad": {
