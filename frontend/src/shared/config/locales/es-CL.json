@@ -198,7 +198,7 @@
     "operation_turma_assign_redator": "Asignar redactor idóneo al grupo (Flujo 3)",
     "operation_turma_complete": "Confirmar finalización del grupo (Flujo 4 — admin confirma)",
     "operation_turma_submit_docs": "Subir documentación del grupo (Flujo 1/4 — acción del redactor)",
-    "operation_turma_manage_concluded_docs": "Subir y quitar documentos de una turma concluida",
+    "operation_turma_manage_concluded_docs": "Subir y quitar documentos de un grupo concluido",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado (Flujo 5)",
     "certification_certificate_revoke": "Revocar certificado (Flujo 6 — sensible, peso legal)",

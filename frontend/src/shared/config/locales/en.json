@@ -745,7 +745,7 @@
         "conclusion": "Conclusion"
       },
       "lock": {
-        "concluida": "The class is concluded: students, Redator, dates and location no longer change. Only the grade, attendance and status of students without an active certificate can still be corrected."
+        "concluida": "The class is concluded: students, redator, dates and location no longer change. Only the grade, attendance and status of students without an active certificate can still be corrected."
       },
       "comingSoon": "Available in the next delivery."
     },
@@ -923,7 +923,7 @@
       "warning": "On confirmation, certificates for approved students become available for issuing. After that, only an administrator can correct grade, attendance and status, and only for students without a certificate. This action cannot be undone.",
       "confirm": "Confirm completion",
       "confirmTitle": "Confirm class completion",
-      "confirmBody": "Concluding the class is final: it cannot be reopened, and its students, Redator, dates and location become fixed. Afterwards, only the grade, attendance and status of students without an active certificate can be corrected. Confirm the completion of this class?",
+      "confirmBody": "Concluding the class is final: it cannot be reopened, and its students, redator, dates and location become fixed. Afterwards, only the grade, attendance and status of students without an active certificate can be corrected. Confirm the completion of this class?",
       "success": "Completion confirmed. Certificates available for issuing.",
       "concludedAt": "Concluded on {{date}}",
       "noPermission": "You do not have permission to conclude classes.",

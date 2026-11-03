@@ -72,8 +72,8 @@ class PipelineQuery
         $habilitadas = $turmaKpis['conclusoes_por_confirmar'];
         $concluidas = Turma::query()->where('status', TurmaStatus::Concluida)->count();
         // Uma linha por turma concluída com matrícula aprovada sem certificado
-        // — o `CertificationMetricsQuery` já agrega por turma, que é a unidade
-        // do funil.
+        // vigente — o `CertificationMetricsQuery` já agrega por turma, que é a
+        // unidade do funil.
         $emissaoPendente = count($certificationPendencias);
         // Concluída sem nenhuma matrícula APROVADA (D-16). Cai aqui tanto a
         // turma sem matrícula quanto a que só tem reprovados: a pergunta do

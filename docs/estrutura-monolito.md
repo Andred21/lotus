@@ -281,15 +281,13 @@ Pequenos pontos onde o repo real difere do planejamento original — ambos aceit
 
 1. **Wrappers `shared/ui`:** o planejamento escreveu `AppButton.tsx` (arquivo); o repo adotou **pasta-por-componente** (`AppButton/AppButton.tsx` + `index.ts`). Padrão vigente = pasta. Manter uniforme: todo wrapper é pasta.
 2. **`App.tsx`:** resolvido — o shell (task 2.4.1) foi entregue; o entrypoint e os providers vivem em `app/`. `main.tsx` na raiz de `src/` segue como ponto de montagem.
-3. **Features com código real:** `identity`, `commercial`, `catalog` e, desde a Sprint 3, `operation`
-   estão em desenvolvimento (código real — 38 arquivos PHP em `Domains/Operation/`, 32 em
-   `features/operation/`). `certification` segue como **scaffold vazio** dos dois lados — no
-   backend, pastas sob `Domains/Certification/` sem nenhuma classe; no front, pasta com
-   `.gitkeep`/stores vazios. **`feedback` não existe e não vai existir** em nenhum dos dois: a decisão
+3. **Features com código real:** `identity`, `commercial`, `catalog`, `operation` e `certification`
+   têm código real nos dois lados (em `certification`: Actions, Enums, Services, Data, Models e
+   Controllers sob `Domains/Certification/`; emissão, histórico, validação pública e configuração
+   sob `features/certification/`). Resto de scaffold: `features/certification/stores/` guarda só um
+   `.gitkeep`, e nenhum domínio criou classe Policy (ver a nota sob `Providers/`).
+   **`feedback` não existe e não vai existir** em nenhum dos dois: a decisão
    de 2026-08-22 absorveu RF-FBK na documentação de turma (`files` + `TurmaDocumentType` + RN-16).
-   O scaffold vazio de `certification` contraria a regra "não criar pastas vazias especulativas"
-   (dívida consciente, herdada do bootstrap do repo): quando a Sprint 4 abrir `certification`, ou se
-   preenche, ou se enxuga. Não é bloqueante.
 4. **Cliente REST em `shared/api`, não na feature (ADR-18):** a árvore original insinuava `features/<x>/api/` como casa do CRUD. Vigente: `createCrudResource` sempre em `shared/api`; `features/<x>/api/` guarda só hooks de sub-recurso (nested/upload) que invalidam a key do pai.
 
 ---

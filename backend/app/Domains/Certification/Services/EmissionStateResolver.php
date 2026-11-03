@@ -16,9 +16,10 @@ use Illuminate\Database\Eloquent\Builder;
  * Existe porque o critério tinha cópias que podiam divergir num documento de
  * peso legal: o `CertificateVigenciaResolver` e o `Certificate::scopeEmitidos()`
  * se declaravam "fonte única" cada um, e o `CertificationMetricsQuery` do
- * Dashboard carregava uma terceira (`whereDoesntHave` de qualquer certificado),
- * que tratava a matrícula só com certificado revogado como "já emitida" e a
- * escondia da pendência (achado 0.3 da ficha 48). Agora todos delegam aqui.
+ * Dashboard carregava uma terceira (`whereNotIn` sobre o `enrollment_id` de
+ * QUALQUER certificado), que tratava a matrícula só com certificado revogado
+ * como "já emitida" e a escondia da pendência (achado 0.3 da ficha 48). Agora
+ * todos delegam aqui.
  *
  * Três faces, uma regra: o predicado sobre `certificates`
  * ({@see self::whereVigente()}), o escopo sobre `enrollments`
