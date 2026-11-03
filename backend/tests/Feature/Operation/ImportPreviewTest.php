@@ -165,7 +165,23 @@ class ImportPreviewTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('rows.0.status', 'new')
             ->assertJsonPath('rows.1.status', 'error')
-            ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_rut'));
+            ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_rut', ['row' => 2]));
+    }
+
+    public function test_cadastrado_que_perde_o_email_para_um_novo_sai_registered_com_update_refusal(): void
+    {
+        $this->actingAsAdmin();
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null);
+
+        $this->previa([
+            ['11.111.111-1', 'Juan Soto', 'x@acme.cl', ''],
+            ['33.333.333-3', 'Pedro Lagos', 'X@acme.cl', ''],
+        ])->assertOk()
+            ->assertJsonPath('rows.0.update_refusal', null)
+            ->assertJsonPath('rows.1.status', 'registered')
+            ->assertJsonPath('rows.1.message', null)
+            ->assertJsonPath('rows.1.divergent', ['email'])
+            ->assertJsonPath('rows.1.update_refusal', __('operation.enrollment.import.duplicate_email', ['row' => 2]));
     }
 
     public function test_email_repetido_entre_novos_vira_erro_no_segundo(): void
@@ -178,7 +194,7 @@ class ImportPreviewTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('rows.0.status', 'new')
             ->assertJsonPath('rows.1.status', 'error')
-            ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_email'));
+            ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_email', ['row' => 2]));
     }
 
     public function test_nome_vazio_vira_erro_em_linha_nova_e_cadastrada(): void

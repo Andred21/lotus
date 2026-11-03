@@ -10,18 +10,19 @@ use App\Shared\Support\Rut;
  *
  * RUT compara na forma canônica, e só RUT válido entra (o inválido cai no erro
  * do resolver). E-mail compara sem diferenciar caixa. Quem chama decide QUAIS
- * e-mails reivindicar: só os que a linha de fato grava.
+ * e-mails reivindicar: só os que a linha de fato grava. A recusa cita a linha
+ * que reservou primeiro.
  */
 final class ImportBatchLedger
 {
-    /** @var array<string,true> */
+    /** @var array<string,int> chave canônica => linha que reservou primeiro */
     private array $ruts = [];
 
-    /** @var array<string,true> */
+    /** @var array<string,int> */
     private array $emails = [];
 
     /** Reivindica o RUT; devolve a mensagem de recusa se já apareceu antes. */
-    public function claimRut(string $rut): ?string
+    public function claimRut(string $rut, int $row): ?string
     {
         $parsed = Rut::parse($rut);
         if (! $parsed->isValid()) {
@@ -30,21 +31,21 @@ final class ImportBatchLedger
 
         $chave = $parsed->format();
         if (isset($this->ruts[$chave])) {
-            return __('operation.enrollment.import.duplicate_rut');
+            return __('operation.enrollment.import.duplicate_rut', ['row' => $this->ruts[$chave]]);
         }
-        $this->ruts[$chave] = true;
+        $this->ruts[$chave] = $row;
 
         return null;
     }
 
     /** Reivindica o e-mail; devolve a mensagem de recusa se já apareceu antes. */
-    public function claimEmail(string $email): ?string
+    public function claimEmail(string $email, int $row): ?string
     {
         $chave = mb_strtolower($email);
         if (isset($this->emails[$chave])) {
-            return __('operation.enrollment.import.duplicate_email');
+            return __('operation.enrollment.import.duplicate_email', ['row' => $this->emails[$chave]]);
         }
-        $this->emails[$chave] = true;
+        $this->emails[$chave] = $row;
 
         return null;
     }

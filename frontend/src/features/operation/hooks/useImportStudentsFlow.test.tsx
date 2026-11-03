@@ -29,6 +29,7 @@ function previewRow(over: Partial<ImportPreviewRowData>): ImportPreviewRowData {
     phone: '+56 9 1111 1111',
     status: 'new',
     message: null,
+    update_refusal: null,
     current_client: null,
     archived: false,
     divergent: [],

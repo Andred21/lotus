@@ -16,6 +16,7 @@ use App\Domains\Operation\Data\ImportResultData;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\ImportRowClassifier;
 use App\Shared\Support\TetosImpressos;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -112,7 +113,7 @@ class ImportStudentsActionTest extends TestCase
         $this->assertSame('OTRA', $result->moved[0]->previous_client);
         $this->assertSame('ACME', $result->moved[0]->client);
         $this->assertSame([3, 5, 6], array_map(fn ($e) => $e->row, $result->errors));
-        $this->assertSame(__('operation.enrollment.import.duplicate_email'), $result->errors[1]->message);
+        $this->assertSame(__('operation.enrollment.import.duplicate_email', ['row' => 2]), $result->errors[1]->message);
         $this->assertSame(2, $result->enrolled_total);
         $this->assertSame(2, $result->contracted_count); // D3: informa, nunca bloqueia
         $this->assertDatabaseMissing('users', ['rut' => '55.555.555-5']);
@@ -272,7 +273,7 @@ class ImportStudentsActionTest extends TestCase
         $this->assertSame(1, $result->created);
         $this->assertCount(1, $result->errors);
         $this->assertSame(3, $result->errors[0]->row);
-        $this->assertSame(__('operation.enrollment.import.duplicate_rut'), $result->errors[0]->message);
+        $this->assertSame(__('operation.enrollment.import.duplicate_rut', ['row' => 2]), $result->errors[0]->message);
         $this->assertDatabaseMissing('users', ['email' => 'otro@acme.cl']);
     }
 
@@ -285,7 +286,7 @@ class ImportStudentsActionTest extends TestCase
 
         $this->assertSame(1, $result->created);
         $this->assertSame(3, $result->errors[0]->row);
-        $this->assertSame(__('operation.enrollment.import.duplicate_email'), $result->errors[0]->message);
+        $this->assertSame(__('operation.enrollment.import.duplicate_email', ['row' => 2]), $result->errors[0]->message);
     }
 
     public function test_email_de_actualizar_repetido_em_linha_nova_recusa_a_segunda(): void
@@ -301,7 +302,7 @@ class ImportStudentsActionTest extends TestCase
         $this->assertSame(0, $result->created);
         $this->assertCount(1, $result->errors);
         $this->assertSame(3, $result->errors[0]->row);
-        $this->assertSame(__('operation.enrollment.import.duplicate_email'), $result->errors[0]->message);
+        $this->assertSame(__('operation.enrollment.import.duplicate_email', ['row' => 2]), $result->errors[0]->message);
         $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
     }
 
@@ -356,7 +357,7 @@ class ImportStudentsActionTest extends TestCase
     {
         foreach ([[], array_map(
             fn (int $i) => $this->linha($i + 2, '11.111.111-1', "Aluno {$i}", "a{$i}@acme.cl"),
-            range(1, ImportStudentsAction::MAX_LINHAS + 1),
+            range(1, ImportRowClassifier::MAX_LINHAS + 1),
         ), new Optional] as $rows) {
             try {
                 $data = $rows instanceof Optional ? new ImportConfirmData : new ImportConfirmData($rows);

@@ -14,6 +14,7 @@ use App\Domains\Operation\Data\MovedStudentData;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\EnrollOutcome;
 use App\Domains\Operation\Services\ImportBatchLedger;
+use App\Domains\Operation\Services\ImportRowClassifier;
 use App\Shared\Validation\ValidationMessages;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -30,25 +31,6 @@ use Spatie\LaravelData\Optional;
  */
 class ImportStudentsAction
 {
-    /**
-     * Teto de linhas por planilha. Revisado de 500 para 100 no DoD da Task 12
-     * (2026-08-25), medido contra a API real, não suposto: cada aluno NOVO
-     * cria um `User`, e `password` é um cast `hashed` — todo import de linha
-     * nova paga um `Hash::make()` de bcrypt, ~185ms cada neste container. Um
-     * lote de 500 linhas todas novas estourou o `max_execution_time` de 30s do
-     * PHP em produção de teste (fatal 500 aos ~30s, só 179 de 500 linhas
-     * processadas); 120 linhas mediu 29.86s, ainda perto demais da margem. 100
-     * linhas mediu 18.54s e 18.58s em duas corridas — folga real sob os 30s
-     * (metade do `fastcgi_read_timeout` de dev) e larga sob os 60s/120s do
-     * timeout de verdade. Turma real tem 8 a 15 alunos (`OperationDemoSeeder`),
-     * então 100 ainda é ~7× a maior.
-     *
-     * Na prévia o teto é aplicado pelo LEITOR, contando linha iterada (achado
-     * Q-4 do review de 2026-08-25). Na confirmação não há arquivo: o teto é a
-     * exigência `max` de `rows`, checada antes de qualquer escrita.
-     */
-    public const MAX_LINHAS = 100;
-
     public function __construct(
         private readonly EnrollStudentAction $enroll,
         private readonly StudentResolver $resolver,
@@ -65,7 +47,7 @@ class ImportStudentsAction
         // lote não seria recusa, seria meia importação.
         Validator::make(
             ['rows' => $data->rows instanceof Optional ? null : $data->rows],
-            ['rows' => ['required', 'array', 'min:1', 'max:'.self::MAX_LINHAS]],
+            ['rows' => ['required', 'array', 'min:1', 'max:'.ImportRowClassifier::MAX_LINHAS]],
         )->validate();
 
         $ledger = new ImportBatchLedger;
@@ -121,7 +103,7 @@ class ImportStudentsAction
      */
     private function processRow(Turma $turma, ImportConfirmRowData $line, ImportBatchLedger $ledger, bool $podeAtualizar): EnrollOutcome
     {
-        if (($duplicado = $ledger->claimRut($line->rut)) !== null) {
+        if (($duplicado = $ledger->claimRut($line->rut, $line->row)) !== null) {
             throw ValidationException::withMessages(['rut' => $duplicado]);
         }
 
@@ -137,7 +119,7 @@ class ImportStudentsAction
             // aluno nasce com os dados da linha.
             $identity = $this->resolver->identity($line->rut, $line->name, $email, $phone);
             $this->resolver->assertCanCreate($identity);
-            $this->claimEmail($ledger, $email);
+            $this->claimEmail($ledger, $email, $line->row);
 
             return $this->enroll->execute($turma, $identity);
         }
@@ -164,7 +146,7 @@ class ImportStudentsAction
         }
 
         // O e-mail repetido recusa ANTES de qualquer escrita (D18).
-        $this->claimEmail($ledger, $email);
+        $this->claimEmail($ledger, $email, $line->row);
 
         // Update e matrícula na mesma transação: se uma falha, nada da linha
         // fica. A validação e a escrita do cadastro moram no `StudentResolver`
@@ -183,9 +165,9 @@ class ImportStudentsAction
      *
      * @throws ValidationException
      */
-    private function claimEmail(ImportBatchLedger $ledger, ?string $email): void
+    private function claimEmail(ImportBatchLedger $ledger, ?string $email, int $row): void
     {
-        if ($email !== null && ($duplicado = $ledger->claimEmail($email)) !== null) {
+        if ($email !== null && ($duplicado = $ledger->claimEmail($email, $row)) !== null) {
             throw ValidationException::withMessages(['email' => $duplicado]);
         }
     }

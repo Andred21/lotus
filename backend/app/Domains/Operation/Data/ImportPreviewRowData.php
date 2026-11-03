@@ -23,6 +23,8 @@ class ImportPreviewRowData extends Data
         public ?string $phone,
         public ImportRowStatus $status,
         public ?string $message,
+        /** Por que o *Actualizar* desta linha não vale; a linha em si segue matriculável (D3). */
+        public ?string $update_refusal,
         public ?string $current_client,
         public bool $archived,
         /** @var array<ImportField> */
