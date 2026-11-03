@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { alertRoute, pendingItemRoute } from './navigation'
+import en from '@shared/config/locales/en.json'
+import esCL from '@shared/config/locales/es-CL.json'
+import ptBR from '@shared/config/locales/pt-BR.json'
+import { PENDING_ITEM_TYPES, alertRoute, pendingItemRoute } from './navigation'
 import type { DashboardAlertType, PendingItemType } from '@shared/types/generated'
 
 describe('pendingItemRoute', () => {
@@ -57,5 +60,28 @@ describe('alertRoute', () => {
 
   it('devolve null quando a turma não veio no payload', () => {
     expect(alertRoute('turma_overdue', {})).toBeNull()
+  })
+})
+
+const folha = (tree: unknown, caminho: string): unknown =>
+  caminho.split('.').reduce<unknown>(
+    (no, parte) => (no == null ? undefined : (no as Record<string, unknown>)[parte]),
+    tree,
+  )
+
+/** Catraca: `PendingList` imprime `dashboard.pending.type.<tipo>`. Tipo novo no
+ * backend entra no `Record` de navegação (o `tsc` obriga) e este teste obriga a
+ * etiqueta nas 3 locales — sem ele a tela imprimia o caminho da chave. */
+describe('todo tipo de pendência tem rótulo nas 3 locales', () => {
+  it.each([
+    ['es-CL', esCL],
+    ['pt-BR', ptBR],
+    ['en', en],
+  ] as [string, unknown][])('%s: nenhuma chave dashboard.pending.type.* falta', (nome, tree) => {
+    const faltando = PENDING_ITEM_TYPES
+      .map((tipo) => `dashboard.pending.type.${tipo}`)
+      .filter((chave) => typeof folha(tree, chave) !== 'string')
+
+    expect(faltando, `Locale ${nome} não traduz: ${faltando.join(', ') || '—'}.`).toEqual([])
   })
 })

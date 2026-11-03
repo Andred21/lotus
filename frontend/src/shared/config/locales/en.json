@@ -346,6 +346,7 @@
         "quote_awaiting_approval": "Quote awaiting approval",
         "quote_approved_without_turma": "Approved quote without a class",
         "turma_without_redator": "Class without an instructor",
+        "turma_presencial_without_local": "In-person class without a place of delivery",
         "turma_docs_incomplete": "Incomplete documentation",
         "turma_awaiting_conclusion": "Class awaiting conclusion",
         "enrollment_awaiting_certificate": "Enrolment awaiting certificate"

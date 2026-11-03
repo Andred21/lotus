@@ -294,6 +294,7 @@ class OperationMetricsQueryTest extends TestCase
         $presencial = $this->createTurma($this->createApprovedQuote($budget, $course, 1), $course, $hoje->subDays(2), $hoje->addDays(3));
         $presencial->update(['modalidade' => 'presencial', 'local_aplicacao' => '   ']);
         $online = $this->createTurma($this->createApprovedQuote($budget, $course, 2), $course, $hoje->subDays(2), $hoje->addDays(3));
+        $online->update(['modalidade' => 'online', 'local_aplicacao' => null]);
 
         $itens = array_values(array_filter(
             app(OperationMetricsQuery::class)->pendencias(),
@@ -304,7 +305,6 @@ class OperationMetricsQueryTest extends TestCase
         $this->assertSame($presencial->id, $itens[0]->entity_id);
         $this->assertSame($presencial->start_date->toDateString(), $itens[0]->date);
         $this->assertSame(['turma_id' => $presencial->id], $itens[0]->navigation);
-        $this->assertNotSame($online->id, $itens[0]->entity_id);
     }
 
     /** @return array{0: Budget, 1: Course} */

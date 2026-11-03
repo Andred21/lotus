@@ -346,6 +346,7 @@
         "quote_awaiting_approval": "Cotação a aprovar",
         "quote_approved_without_turma": "Cotação aprovada sem turma",
         "turma_without_redator": "Turma sem relator",
+        "turma_presencial_without_local": "Turma presencial sem local de aplicação",
         "turma_docs_incomplete": "Documentação incompleta",
         "turma_awaiting_conclusion": "Turma a confirmar conclusão",
         "enrollment_awaiting_certificate": "Matrícula a certificar"

@@ -43,6 +43,10 @@ const PENDENCIA: Record<PendingItemType, Destino> = {
   enrollment_awaiting_certificate: { path: '/operacion/turmas', key: 'turma_id' },
 }
 
+/** Lista de runtime dos tipos de pendência — o `Record` acima é o que obriga
+ * tipo novo a entrar; a catraca de rótulos (`navigation.test.ts`) a usa. */
+export const PENDING_ITEM_TYPES = Object.keys(PENDENCIA) as PendingItemType[]
+
 const ALERTA: Record<DashboardAlertType, Destino> = {
   turma_overdue: { path: '/operacion/turmas', key: 'turma_id' },
   certificate_expiring_soon: { path: '/certificados', key: null },
