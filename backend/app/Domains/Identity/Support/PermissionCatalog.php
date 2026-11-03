@@ -18,6 +18,7 @@ class PermissionCatalog
         'identity.access.manage',
         'certification.certificate.revoke',
         'certification.settings.manage',
+        'operation.turma.manage_concluded_docs',
     ];
 
     /**

@@ -5,6 +5,7 @@ namespace Tests\Feature\Operation;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Support\PermissionCatalog;
 use App\Domains\Operation\Actions\StoreTurmaDocumentAction;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
@@ -14,6 +15,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -198,6 +200,18 @@ class TurmaDocumentApiTest extends TestCase
 
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertForbidden();
         $this->assertNotSoftDeleted('files', ['id' => $fileId]);
+    }
+
+    public function test_manage_concluded_docs_e_so_do_superadmin(): void
+    {
+        // D8: fora de SEGREGATED, a permissão entraria em role customizada.
+        $this->seed(RolePermissionSeeder::class);
+        $permissao = 'operation.turma.manage_concluded_docs';
+
+        $this->assertTrue(Role::findByName('superadmin', 'web')->hasPermissionTo($permissao));
+        $this->assertFalse(Role::findByName('admin', 'web')->hasPermissionTo($permissao));
+        $this->assertFalse(Role::findByName('redator', 'web')->hasPermissionTo($permissao));
+        $this->assertContains($permissao, PermissionCatalog::SEGREGATED);
     }
 
     public function test_em_andamento_redator_sobe_201_e_remove_204(): void

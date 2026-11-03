@@ -8,22 +8,21 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
- * O que conta como "certificado VIGENTE de uma matrícula" — num lugar só.
+ * A face de `Certificate` do critério "certificado VIGENTE de uma matrícula":
+ * indexação por matrícula e lock para a porta 3 do `CertificateEligibility`, o
+ * painel de emissão e o `ResultLock`.
  *
- * A regra tinha três implementações (a porta 3 do `CertificateEligibility`, a
- * antiga face de lista dele e o painel de emissão), todas repetindo
- * `where('status', Emitido)`. Implementações repetidas da mesma regra são
- * respostas esperando para divergir num documento de peso legal — o mesmo
- * motivo pelo qual o `EmissionCityResolver` existe (B1).
+ * O critério em si NÃO mora aqui: o dono é o `EmissionStateResolver` (bloco 48),
+ * cujo `whereVigente()` esta classe, o `Certificate::scopeEmitidos()` e a
+ * pendência do Dashboard aplicam. Mudar "vigente" — por exemplo, para "emitido
+ * **e** dentro do `valido_ate`" — é mudar `EmissionStateResolver::whereVigente()`;
+ * mexer só em `vigentes()` reabriria a divergência entre a lista e o POST num
+ * documento de peso legal, o mesmo motivo pelo qual o `EmissionCityResolver`
+ * existe (B1).
  *
- * A divergência aqui é concreta, não hipotética: no dia em que "vigente" passar
- * a significar "emitido **e** dentro do `valido_ate`", as portas mudam e o
- * painel continua exibindo um certificado vencido como atual — a lista
- * prometendo o que o POST recusa. Mudar `vigentes()` muda todos de uma vez.
- *
- * O dono do critério é o `EmissionStateResolver` (bloco 48): `vigentes()` só
- * aplica o predicado dele à query de `Certificate`, e a pendência do Dashboard
- * lê o mesmo predicado — a antiga "fonte única" ganhou uma cópia lá fora.
+ * Até o bloco 48 esta classe se dizia a fonte única da regra, que tinha três
+ * implementações repetindo `where('status', Emitido)`; o Dashboard mantinha a
+ * sua cópia fora dela.
  */
 class CertificateVigenciaResolver implements ResultLock
 {
