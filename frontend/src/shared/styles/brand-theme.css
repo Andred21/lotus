@@ -251,9 +251,11 @@ html:not(.dark) {
 /* Botão `text`/`outlined` de severidade `danger`: a tinta vem do TOKEN de tom,
  * não do vermelho compilado do Lara.
  *
- * O gerador deixa as paletas de severidade intactas de propósito — elas
- * comunicam significado, não marca —, e por isso `#ef4444` seguiu sendo o
- * PRIMEIRO PLANO desses dois variants. Sobre o card rebaixado do claro
+ * O gerador deixa a matiz das paletas de severidade fora do mapa de marca de
+ * propósito — elas comunicam significado, não marca —, e por isso `#ef4444`
+ * seguiu sendo o PRIMEIRO PLANO desses dois variants. A única reescrita que ele
+ * faz nelas é no botão PREENCHIDO (P-74, `SEVERIDADES_CLARAS`); text e outlined
+ * ficam como o Lara os pinta. Sobre o card rebaixado do claro
  * (`#f1f5f9`) ele mede 3,44:1 a 16px/700, e 16px em negrito não é texto grande:
  * a régua é 4,5:1 e ele reprova (UI-02 do review de 2026-08-18, no `Eliminar
  * foto` do `AppPhotoField` — a única ação irreversível do cartão era a de menor
@@ -266,8 +268,11 @@ html:not(.dark) {
  * P-105). A guarda de `tests/tone-ink.test.ts` defende os dois degraus.
  *
  * NÃO vale para o botão preenchido (`p-button-danger` sozinho): ali o vermelho
- * é FUNDO e o rótulo é branco. É a mesma fronteira do `--brand-ink`, que só
- * troca o degrau quando a cor vira primeiro plano.
+ * é FUNDO, e a tinta do rótulo é problema de outra regra. No claro o gerador
+ * pinta `--red-900` sobre `--red-300` (`SEVERIDADES_CLARAS`, P-74); no escuro o
+ * Lara já pinta letra escura. É a mesma fronteira do `--brand-ink`, que só
+ * troca o degrau quando a cor vira primeiro plano: esta regra de tinta vale
+ * só para text e outlined.
  *
  * Cada estado tem a própria linha porque a especificidade é do Lara: a regra
  * base dele é (0,3,0), mas `:hover` e `:active` chegam a (0,5,0) repetindo o
