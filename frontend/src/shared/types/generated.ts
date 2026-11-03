@@ -280,6 +280,7 @@ grades: undefined | Array<any> | null,
 result_locked: undefined | boolean,
 photo_url: string | null,
 };
+export type EnrollmentEmissionState = 'vigente' | 'revogado_reemissivel' | 'nunca_emitido';
 export type EnrollmentResultData = {
 grades: Array<any> | null,
 attendance_pct: string | null,

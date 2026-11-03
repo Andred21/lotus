@@ -17,10 +17,10 @@ branch: fix/48-certificacao-estado-de-emissao
 worktree: ../lotus-48-certificacao-estado-de-emissao
 offset: 1
 lane_base: 1575d694
-commit: b665b2b2
+commit: f986d1e0
 blocker: null
-updated_at: 2026-11-02T23:26:15-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-11-02T23:31:46-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 48 — estado
