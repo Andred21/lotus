@@ -116,6 +116,7 @@ class RedatorDocumentRollbackTest extends TestCase
         $this->assertSame([], $storage->allFiles(), 'objeto órfão ficou no bucket');
         $this->assertDatabaseCount('files', 0);
         $this->assertDatabaseCount('redatores', 0);
+        $this->assertDatabaseCount('users', 0);
     }
 
     public function test_caminho_feliz_segue_gravando_e_registrando(): void
