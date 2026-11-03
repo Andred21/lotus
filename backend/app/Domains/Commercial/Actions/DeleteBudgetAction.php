@@ -24,6 +24,11 @@ class DeleteBudgetAction
         DB::transaction(function () use ($budget) {
             $locked = Budget::lockRow($budget->id);
 
+            // No-op idempotente: alguém arquivou entre o binding e a transação.
+            if ($locked->trashed()) {
+                return;
+            }
+
             // Trava as cotações vivas do orçamento: quem aprova toma o lock da
             // cotação, então a leitura abaixo é a do estado já commitado.
             $quotes = $locked->quotes()->lockForUpdate()->get();

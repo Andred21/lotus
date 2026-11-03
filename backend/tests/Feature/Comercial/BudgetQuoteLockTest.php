@@ -8,6 +8,7 @@ use App\Domains\Commercial\Data\QuoteData;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Spatie\LaravelData\Optional;
 use Tests\Support\CreatesDomainRecords;
@@ -115,6 +116,30 @@ class BudgetQuoteLockTest extends TestCase
 
         $this->assertNotNull(Budget::withTrashed()->find($semAprovada->id)->deleted_at);
         $this->assertNotNull($quote->fresh()->deleted_at);
+    }
+
+    public function test_arquivar_orcamento_ja_arquivado_depois_do_binding_e_no_op_idempotente(): void
+    {
+        $this->actingAsAdmin();
+        $budget = $this->makeBudget();
+        $this->makeQuote($budget);
+
+        // O binding já resolveu `$budget` vivo; outra requisição o arquivou na janela.
+        Budget::whereKey($budget->id)->first()->delete();
+
+        $deletedAt = Budget::withTrashed()->find($budget->id)->deleted_at;
+        $audits = fn () => DB::table('audits')
+            ->where('auditable_type', $budget->getMorphClass())
+            ->where('auditable_id', $budget->id)
+            ->where('event', 'deleted')
+            ->count();
+        $auditsAntes = $audits();
+        $this->assertSame(1, $auditsAntes);
+
+        app(DeleteBudgetAction::class)->execute($budget);
+
+        $this->assertEquals($deletedAt, Budget::withTrashed()->find($budget->id)->deleted_at);
+        $this->assertSame($auditsAntes, $audits());
     }
 
     public function test_actions_do_eixo_tomam_o_lock_do_orcamento_dentro_da_transacao(): void

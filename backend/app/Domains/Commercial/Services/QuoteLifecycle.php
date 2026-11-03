@@ -26,10 +26,13 @@ use Spatie\LaravelData\Optional;
  *
  * Todos os métodos rodam DENTRO de `DB::transaction`: travam a linha com
  * `Quote::lockRow()` e julgam o estado SOBRE a linha travada, nunca sobre a
- * instância do binding (que pode estar velha). Ordem de lock da spec D4: a
- * cotação é travada primeiro, e a turma, se houver, só depois, por quem a
- * cria ou restaura — todos os lados na mesma ordem, sem ciclo. O lock é
- * no-op em sqlite: errar aqui só aparece em MySQL.
+ * instância do binding (que pode estar velha). Ordem de lock da spec D4: o
+ * guardião trava SÓ a cotação. Quem também trava o orçamento trava orçamento →
+ * cotação (`DeleteBudgetAction`, `CreateQuoteAction`, `RestoreQuoteAction`);
+ * quem também trava a turma trava turma → cotação (`RestoreTurmaAction`).
+ * Nenhum sítio trava cotação → orçamento nem cotação → turma — todos os lados
+ * na mesma ordem, sem ciclo. O lock é no-op em sqlite: errar aqui só aparece
+ * em MySQL.
  */
 class QuoteLifecycle
 {

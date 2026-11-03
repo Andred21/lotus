@@ -5,12 +5,15 @@ namespace Tests\Feature\Comercial;
 use App\Domains\Commercial\Actions\ApproveQuoteAction;
 use App\Domains\Commercial\Actions\DeleteQuoteAction;
 use App\Domains\Commercial\Actions\RejectQuoteAction;
+use App\Domains\Commercial\Actions\UpdateQuoteAction;
+use App\Domains\Commercial\Data\QuoteData;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Spatie\LaravelData\Optional;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -137,6 +140,30 @@ class QuoteTransitionMatrixTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors('status');
 
         $this->assertEquals($antes, $quote->fresh()->approved_at);
+    }
+
+    public function test_aprovar_aprovada_com_turma_da_422(): void
+    {
+        $this->actingAsSuperadmin();
+        $quote = $this->cenario('approved', 'em_andamento');
+        $antes = $quote->fresh()->approved_at;
+
+        $this->postJson("/api/quotes/{$quote->id}/approve")
+            ->assertStatus(422)->assertJsonValidationErrors('status');
+
+        $this->assertSame('approved', $quote->fresh()->status->value);
+        $this->assertEquals($antes, $quote->fresh()->approved_at);
+    }
+
+    public function test_arquivar_aprovada_com_turma_da_422(): void
+    {
+        $this->actingAsSuperadmin();
+        $quote = $this->cenario('approved', 'em_andamento');
+
+        $this->deleteJson("/api/quotes/{$quote->id}")
+            ->assertStatus(422)->assertJsonValidationErrors('status');
+
+        $this->assertNotSoftDeleted('quotes', ['id' => $quote->id]);
     }
 
     public function test_arquivar_aprovada_da_422_e_pendente_passa(): void
@@ -286,30 +313,56 @@ class QuoteTransitionMatrixTest extends TestCase
         $this->assertSame('pending', $recusada->fresh()->status->value);
     }
 
-    /** @return array<string, array{class-string}> */
-    public static function actionsDeTransicao(): array
+    /** @return array<string, array{string, string}> Verbo e status de partida (o que a escrita indevida mudaria). */
+    public static function verbosSobreCotacaoArquivada(): array
     {
         return [
-            'aprovar' => [ApproveQuoteAction::class],
-            'recusar' => [RejectQuoteAction::class],
-            'arquivar' => [DeleteQuoteAction::class],
+            'aprovar' => ['aprovar', 'pending'],
+            'recusar' => ['recusar', 'pending'],
+            'arquivar' => ['arquivar', 'pending'],
+            'editar' => ['editar', 'rejected'],
         ];
     }
 
-    /** Review Focus 1: o binding entregou a cotação viva, outra requisição a arquivou antes do lock. */
-    #[DataProvider('actionsDeTransicao')]
-    public function test_transicao_sobre_cotacao_arquivada_depois_do_binding_da_422(string $action): void
+    /**
+     * Review Focus 1: o binding entregou a cotação viva, outra requisição a arquivou antes do lock.
+     * Nenhum verbo grava: status e approved_at ficam como estavam (a edição de recusada, por
+     * exemplo, a reabriria para pending se passasse).
+     */
+    #[DataProvider('verbosSobreCotacaoArquivada')]
+    public function test_transicao_sobre_cotacao_arquivada_depois_do_binding_da_422(string $verbo, string $statusInicial): void
     {
-        $quote = $this->cenario('pending');
+        $quote = $this->cenario($statusInicial);
         $emMemoria = Quote::findOrFail($quote->id);
 
         Quote::whereKey($quote->id)->first()->delete();
+        $gravado = Quote::withTrashed()->find($quote->id);
 
         try {
-            app($action)->execute($emMemoria);
-            $this->fail('A transição sobre cotação arquivada deveria dar 422.');
+            match ($verbo) {
+                'aprovar' => app(ApproveQuoteAction::class)->execute($emMemoria),
+                'recusar' => app(RejectQuoteAction::class)->execute($emMemoria),
+                'arquivar' => app(DeleteQuoteAction::class)->execute($emMemoria),
+                'editar' => app(UpdateQuoteAction::class)->execute($emMemoria, new QuoteData(
+                    id: new Optional,
+                    budget_id: new Optional,
+                    seq_in_budget: new Optional,
+                    course_id: $emMemoria->course_id,
+                    student_count: 9,
+                    value_uf: '99.0000',
+                    status: new Optional,
+                    approved_at: new Optional,
+                    code: new Optional,
+                ), true),
+            };
+            $this->fail('O verbo sobre cotação arquivada deveria dar 422.');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('quote', $e->errors());
         }
+
+        $depois = Quote::withTrashed()->find($quote->id);
+        $this->assertSame($gravado->status, $depois->status);
+        $this->assertEquals($gravado->approved_at, $depois->approved_at);
+        $this->assertSame($gravado->student_count, $depois->student_count);
     }
 }

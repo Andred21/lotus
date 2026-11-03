@@ -26,8 +26,9 @@ use Illuminate\Validation\ValidationException;
  * sob pai arquivado é exatamente o que a cascata existe para impedir; restaurar
  * o pai primeiro devolve a cotação junto, sem passar por aqui.
  *
- * Quem trava o quê (P-49, spec D4/D5): a transação toma `Budget::lockRow()` ANTES
- * de qualquer lock da cotação. É o `lockRow` cru, não o `lockForWrite`, porque a
+ * Quem trava o quê (P-49, spec D4/D5): a transação toma `Budget::lockRow()` e
+ * não trava a cotação — o `restore()` é um UPDATE que vem depois, já com o
+ * orçamento travado. É o `lockRow` cru, não o `lockForWrite`, porque a
  * Action precisa ler o estado do pai sob o lock e recusar com a própria chave
  * (`quote`, contrato fixado em `QuoteArchiveEndpointTest`). Do outro lado,
  * `DeleteBudgetAction` toma o mesmo lock antes de arquivar e `CreateQuoteAction`

@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Exclui (soft-delete) uma cotação e cascateia para os anexos (hook do model,
- * auditado instância a instância — ADR-08). Cotação aprovada é imutável
- * (excluir desincronizaria a futura turma) → 422; recuse antes. A regra mora
- * no guardião (`QuoteLifecycle`), que julga sobre a linha travada.
+ * auditado instância a instância — ADR-08). Cotação aprovada não se arquiva
+ * (desincronizaria a turma) → 422; recuse antes. A regra mora no guardião
+ * (`QuoteLifecycle`), que julga sobre a linha travada.
  *
  * A TRANSAÇÃO chegou com a cascata (spec D9): enquanto isto era escrita única
  * ela não fazia falta, mas enumerar-e-apagar sem transação é check-then-act — a
