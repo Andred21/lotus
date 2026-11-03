@@ -9,6 +9,13 @@ import { archivedEnrollmentWidths, enrollmentWidths } from './enrollmentColumns'
  * ativa assenta em 640px a 390 de viewport e a de arquivados em 504px, então a
  * fatia mínima é 133/640 e 133/504. `table-layout: fixed` ignora `min-width`, por
  * isso a garantia é a fatia, e é ela que este teste prende.
+ *
+ * O que ele NÃO mede (review final do bloco 49): a conta ignora o reescalonamento
+ * de `columnWidth.ts:25-31`, em que a coluna de ação é fixa em rem e as demais
+ * dividem o que sobra. A garantia vale com a largura ATUAL da coluna de ação: a
+ * margem real é de ~2px na tabela ativa e ~6px na de arquivadas, e crescer a coluna
+ * de ação (ou o rótulo do `Restaurar`) pode reabrir o vazamento do RUT com este
+ * teste verde. Mexeu nessa largura, remeça o RUT no navegador (`prova.md`).
  */
 const pct = (largura: string | number | undefined) => parseFloat(String(largura))
 
