@@ -50,6 +50,10 @@ class StudentCertificateHistory
     /** @param  Collection<int, Certificate>  $certificados */
     private function resumir(Collection $certificados, CarbonInterface $hoje): StudentCertificateSummary
     {
+        // Em memória de propósito: o critério "vigente" é do `EmissionStateResolver`
+        // (SQL e classificação PHP em lote), mas reescrever esta escolha como
+        // consulta pagaria uma ida ao banco por aluno sobre uma coleção já carregada.
+        //
         // O ATUAL é o emitido — no máximo um existe, porque a porta 3 do
         // `CertificateEligibility` recusa a segunda emissão enquanto houver
         // vigente. Sem nenhum emitido, o atual é o revogado mais recente, que

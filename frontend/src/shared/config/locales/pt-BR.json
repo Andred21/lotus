@@ -201,6 +201,7 @@
     "operation_turma_assign_redator": "Designar redator idôneo à turma",
     "operation_turma_complete": "Confirmar conclusão da turma (admin confirma)",
     "operation_turma_submit_docs": "Subir documentação da turma (ação do redator)",
+    "operation_turma_manage_concluded_docs": "Subir e remover documentos de turma concluída",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado",
     "certification_certificate_revoke": "Revogar certificado (sensível, peso legal)",
@@ -747,7 +748,7 @@
         "conclusion": "Conclusão"
       },
       "lock": {
-        "concluida": "A turma está concluída: só a nota, a presença e o status de alunos ainda sem certificado podem ser corrigidos."
+        "concluida": "A turma está concluída: alunos, redator, datas e local não mudam mais. Só a nota, a presença e o status de alunos ainda sem certificado vigente podem ser corrigidos."
       },
       "comingSoon": "Disponível na próxima entrega."
     },
@@ -925,7 +926,7 @@
       "warning": "Ao confirmar, os certificados dos alunos aprovados passam a estar disponíveis para emissão. Depois disso, só o administrador corrige nota, presença e status, e só de alunos ainda sem certificado. A ação não pode ser desfeita.",
       "confirm": "Confirmar conclusão",
       "confirmTitle": "Confirmar conclusão da turma",
-      "confirmBody": "Esta ação é irreversível. Confirma a conclusão da turma?",
+      "confirmBody": "Concluir a turma é definitivo: ela não poderá ser reaberta, e alunos, redator, datas e local ficam fixos. Depois, só se corrigem nota, presença e status de alunos ainda sem certificado vigente. Confirma a conclusão da turma?",
       "success": "Conclusão confirmada. Certificados disponíveis para emissão.",
       "concludedAt": "Concluída em {{date}}",
       "noPermission": "Você não tem permissão para concluir turmas.",

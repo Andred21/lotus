@@ -69,6 +69,7 @@ class DomainDependencyTest extends TestCase
             'Catalog\Models\Course',
             'Certification\Enums\CertificateStatus',
             'Certification\Models\Certificate',
+            'Certification\Services\EmissionStateResolver',
             'Commercial\Enums\QuoteStatus',
             'Commercial\Models\Client',
             'Commercial\Models\Quote',

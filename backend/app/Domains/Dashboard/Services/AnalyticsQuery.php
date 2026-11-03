@@ -178,8 +178,10 @@ class AnalyticsQuery
             ->whereNull('quotes.deleted_at')
             ->whereNull('turmas.deleted_at')
             ->whereNull('enrollments.deleted_at')
-            // Mesma definição de "emitido" do `Certificate::scopeEmitidos()` —
-            // aqui qualificada pela tabela porque a query nasce em `clients`.
+            // Mesma definição de "emitido" do `EmissionStateResolver` (de quem
+            // o `Certificate::scopeEmitidos()` é só delegação) — aqui uma
+            // cópia crua, qualificada pela tabela porque a query nasce em
+            // `clients`; unificá-la fica para o bloco 54.
             ->where('certificates.status', CertificateStatus::Emitido)
             ->whereBetween('certificates.created_at', [$startInstant, $endInstant])
             ->selectRaw('clients.id AS entity_id, COUNT(DISTINCT certificates.id) AS aggregate')

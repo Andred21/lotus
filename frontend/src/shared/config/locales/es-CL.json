@@ -201,6 +201,7 @@
     "operation_turma_assign_redator": "Asignar redactor idóneo al grupo",
     "operation_turma_complete": "Confirmar finalización del grupo (admin confirma)",
     "operation_turma_submit_docs": "Subir documentación del grupo (acción del redactor)",
+    "operation_turma_manage_concluded_docs": "Subir y quitar documentos de un grupo concluido",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado",
     "certification_certificate_revoke": "Revocar certificado (sensible, peso legal)",
@@ -747,7 +748,7 @@
         "conclusion": "Conclusión"
       },
       "lock": {
-        "concluida": "La turma está concluida: solo se pueden corregir la nota, la asistencia y el estado de alumnos aún sin certificado."
+        "concluida": "La turma está concluida: alumnos, relator, fechas y lugar ya no cambian. Solo se pueden corregir la nota, la asistencia y el estado de alumnos aún sin certificado vigente."
       },
       "comingSoon": "Disponible en la próxima entrega."
     },
@@ -925,7 +926,7 @@
       "warning": "Al confirmar, los certificados de los alumnos aprobados pasan a estar disponibles para emisión. Después, solo el administrador corrige nota, asistencia y estado, y solo de alumnos aún sin certificado. La acción no se puede deshacer.",
       "confirm": "Confirmar conclusión",
       "confirmTitle": "Confirmar conclusión de la turma",
-      "confirmBody": "Esta acción es irreversible. ¿Confirmas la conclusión de la turma?",
+      "confirmBody": "Concluir la turma es definitivo: no podrá reabrirse, y los alumnos, el relator, las fechas y el lugar quedan fijos. Después solo se podrán corregir la nota, la asistencia y el estado de los alumnos aún sin certificado vigente. ¿Confirmas la conclusión de la turma?",
       "success": "Conclusión confirmada. Certificados disponibles para emisión.",
       "concludedAt": "Concluida el {{date}}",
       "noPermission": "No tienes permiso para concluir turmas.",

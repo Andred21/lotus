@@ -3,6 +3,7 @@
 namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
+use App\Domains\Certification\Actions\IssueCertificateAction;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateNumberService;
@@ -18,6 +19,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\Support\CreatesCertificateTemplates;
@@ -386,6 +388,29 @@ class IssueCertificateTest extends TestCase
         $this->postJson($this->issueUrl(), $this->validPayload())
             ->assertCreated()
             ->assertJsonPath('codigo', 'LOT-2026-1000');
+    }
+
+    public function test_matricula_que_some_entre_a_leitura_e_a_emissao_recusa_com_validacao_e_nao_com_404(): void
+    {
+        // A matrícula chegou por parâmetro (lida ANTES da transação) e foi
+        // removida antes da releitura com lock. A Action tem que recusar no
+        // formato de item do lote (`ValidationException`), nunca com
+        // `ModelNotFoundException` — que furaria o contrato de
+        // `BatchIssueCertificatesAction` (um item não derruba a requisição).
+        $enrollment = Enrollment::query()->findOrFail($this->enrollment->id);
+        $this->enrollment->delete();
+
+        try {
+            app(IssueCertificateAction::class)->execute($enrollment, $this->redator);
+            $this->fail('A emissão de matrícula inexistente deveria recusar.');
+        } catch (ValidationException $e) {
+            $this->assertSame(
+                [__('certification.enrollment.not_found')],
+                $e->errors()['enrollment'],
+            );
+        }
+
+        $this->assertSame(0, Certificate::query()->count());
     }
 
     public function test_emissao_grava_auditoria_com_o_usuario_que_emitiu(): void

@@ -20,16 +20,13 @@ use Illuminate\Validation\ValidationException;
  * Matricular/importar/remover/restaurar não mudam: seguem com
  * `assertAcademicallyWritable()`.
  *
- * `isLockedForUpdate` é a mesma leitura (com `lockForUpdate`) da porta 3 da
- * emissão, e o lock só garante UM sentido: com a emissão já dentro da sua
- * transação, a correção espera e, ao ler o certificado vigente, recebe 422.
- * O sentido inverso fica com uma janela: o `IssueCertificateAction` decide a
- * porta 2 (`approval_status`) e monta o snapshot a partir do `$enrollment`
- * carregado ANTES da transação; se a correção commitar nessa janela, a emissão
- * espera o lock, não vê certificado e emite com o resultado antigo. Fechar a
- * janela exige reler a matrícula com `lockForUpdate` dentro da transação da
- * emissão — fora do bloco 41, pendência registrada. Em sqlite o lock é no-op,
- * então a corrida não tem teste automatizado.
+ * Os dois lados da corrida com a emissão travam a MATRÍCULA primeiro (P-103,
+ * `lockForUpdate` relendo-a dentro da transação) e só depois olham o
+ * certificado. A emissão relê a matrícula antes de decidir a porta 2 e montar o
+ * snapshot, então vê o resultado corrigido; a correção, depois de esperar a
+ * emissão, lê o certificado vigente e recebe 422. `isLockedForUpdate` segue
+ * sendo a leitura (com `lockForUpdate`) da porta 3. Em sqlite o lock é no-op:
+ * a prova da ordem é `EmissionResultRaceTest`, só em MySQL.
  */
 class RecordEnrollmentResultAction
 {
@@ -38,6 +35,15 @@ class RecordEnrollmentResultAction
     public function execute(Enrollment $enrollment, EnrollmentResultData $data, User $actor): Enrollment
     {
         return DB::transaction(function () use ($enrollment, $data, $actor): Enrollment {
+            // P-103: a matrícula é relida com lock ANTES de qualquer decisão — o
+            // mesmo primeiro passo da emissão. O `$enrollment` do chamador pode
+            // estar velho se uma emissão commitou entre a leitura dele e aqui.
+            $enrollment = Enrollment::query()
+                ->with('turma')
+                ->whereKey($enrollment->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
             $turma = $enrollment->turma;
 
             if ($turma->status !== TurmaStatus::EmAndamento && ! $actor->can('operation.enrollment.manage')) {

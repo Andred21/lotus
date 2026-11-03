@@ -2,7 +2,9 @@
 
 namespace App\Domains\Operation\Actions;
 
+use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
@@ -26,9 +28,13 @@ class StoreTurmaDocumentAction
 {
     public function __construct(private UploadFileAction $uploads) {}
 
-    public function execute(Turma $turma, TurmaDocumentType $type, UploadedFile $file): File
+    public function execute(Turma $turma, TurmaDocumentType $type, UploadedFile $file, User $actor): File
     {
-        $turma->assertAcademicallyWritable();   // RN-15
+        // RN-15: turma concluída só aceita documento de quem tem a permissão
+        // exclusiva (superadmin); os demais caem na recusa de sempre.
+        if (! ($turma->status === TurmaStatus::Concluida && $actor->can('operation.turma.manage_concluded_docs'))) {
+            $turma->assertAcademicallyWritable();
+        }
 
         $meta = $this->uploads->metadataOf($file);
         $path = $this->uploads->put($turma, $file);

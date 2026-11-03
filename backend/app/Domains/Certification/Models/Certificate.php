@@ -6,6 +6,7 @@ use App\Domains\Catalog\Models\Course;
 use App\Domains\Certification\Casts\CertificateSnapshotCast;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\QueryBuilders\CertificateQueryBuilder;
+use App\Domains\Certification\Services\EmissionStateResolver;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
 use Illuminate\Database\Eloquent\Builder;
@@ -57,13 +58,14 @@ class Certificate extends Model implements AuditableContract
      * certificado emitido — quem conta emissão (série, ranking, histórico do
      * redator) pergunta por aqui, e não escreve o `where` de novo. Antes do
      * review de 2026-08-14 o mesmo rótulo saía com dois números no mesmo
-     * payload (Q-5).
+     * payload (Q-5). O critério em si é do `EmissionStateResolver`; este escopo
+     * só o entrega no formato `Certificate::query()->emitidos()`.
      *
      * @param  Builder<self>  $query
      */
     public function scopeEmitidos(Builder $query): void
     {
-        $query->where('status', CertificateStatus::Emitido);
+        EmissionStateResolver::whereVigente($query);
     }
 
     public function enrollment(): BelongsTo

@@ -44,14 +44,14 @@ class TurmaDocumentController extends Controller implements HasMiddleware
             'file' => ContentClass::DocumentoDeTurma->regras(),
         ]);
 
-        $file = $action->execute($turma, TurmaDocumentType::from($validated['type']), $request->file('file'));
+        $file = $action->execute($turma, TurmaDocumentType::from($validated['type']), $request->file('file'), $request->user());
 
         return TurmaDocumentData::fromModel($file)->toResponse($request)->setStatusCode(201);
     }
 
-    public function destroy(Turma $turma, File $file, DeleteTurmaDocumentAction $action): Response
+    public function destroy(Request $request, Turma $turma, File $file, DeleteTurmaDocumentAction $action): Response
     {
-        $action->execute($turma, $file);
+        $action->execute($turma, $file, $request->user());
 
         return response()->noContent();
     }

@@ -2,8 +2,8 @@
 
 namespace App\Domains\Dashboard\Services;
 
-use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
+use App\Domains\Certification\Services\EmissionStateResolver;
 use App\Domains\Dashboard\Data\AlertData;
 use App\Domains\Dashboard\Data\PendingItemData;
 use App\Domains\Dashboard\Enums\DashboardAlertType;
@@ -55,8 +55,10 @@ class CertificationMetricsQuery
         $today = FusoDoNegocio::hoje();
         $horizon = DashboardWindows::expiryHorizon();
 
-        return Certificate::query()
-            ->where('status', CertificateStatus::Emitido)
+        $vigentes = Certificate::query();
+        EmissionStateResolver::whereVigente($vigentes);
+
+        return $vigentes
             ->whereNotNull('valido_ate')
             ->whereDate('valido_ate', '<=', $horizon)
             ->orderBy('valido_ate')
@@ -86,12 +88,13 @@ class CertificationMetricsQuery
     /** @return Builder<Enrollment> */
     private function pendingEnrollmentQuery(): Builder
     {
-        return Enrollment::query()
+        $aprovadas = Enrollment::query()
             ->where('approval_status', EnrollmentApprovalStatus::Aprobado)
             ->whereHas(
                 'turma',
                 fn (Builder $query): Builder => $query->where('status', TurmaStatus::Concluida),
-            )
-            ->whereNotIn('id', Certificate::query()->select('enrollment_id'));
+            );
+
+        return EmissionStateResolver::whereNotVigente($aprovadas);
     }
 }

@@ -316,6 +316,8 @@ do fechamento. O fechamento só escreve registros, e o João decidiu registrar e
 
 **Gatilho disparado e não pago de novo — 2026-10-21, `seeder-carga-inicial-producao` (item 38).** O bloco tocou `docs/estrutura-monolito.md` (a árvore de `Console/`, com a carga inicial) por outro motivo. `backend-lang` e `frontend-estilizacao` seguem fora do `AGENTS.md` e do `INSTRUÇÕES-DO-PROJETO.md`, e o `shared/ui/Timestamp/` segue fora do `estrutura-monolito.md` (conferido por `grep` nesta data). **As três linhas seguem válidas**; o gatilho não se desarma.
 
+**Gatilho disparado e não pago — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco tocou `docs/estrutura-monolito.md` (Certification e o `EmissionStateResolver`) por outro motivo e não acrescentou `shared/ui/Timestamp/`, nem corrigiu o `AGENTS.md` e o `INSTRUÇÕES-DO-PROJETO.md`. O gatilho não se desarma.
+
 ## P-32 — a guarda da lição 13 confere path, não classe
 
 **Bloco:** item 57 (desde 2026-11-02) · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a
@@ -483,6 +485,8 @@ as arestas de domínio, não para a árvore de pastas), a lista volta a crescer.
 
 ---
 
+**Gatilho disparado e não pago — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e reconciliou só o que era dele: `Certification` passou de scaffold vazio a código real (nota 3 e a árvore, com o `EmissionStateResolver`). O `Dashboard` ausente e as demais divergências seguem. O gatilho não se desarma.
+
 ## P-54 — os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()`
 
 **Bloco:** item 55 (desde 2026-11-02) · **Gatilho:** o próximo bloco que escrever migration de permissão e puder absorver as
@@ -510,6 +514,8 @@ sobrevive ao `up()`; e provar o cache lendo a permissão pelo registrar ANTES do
 > Fichas desta seção que carregam linha `**Bloco:**` foram agrupadas na consolidação de
 > 2026-08-22: a decisão que as trava passa a se resolver no brainstorming do bloco indicado.
 > Agrupar segue não promovendo nada.
+
+**Gatilho disparado e pago pela metade — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco escreveu uma migration de permissão e o `TurmaConcludedDocsPermissionMigrationTest` cumpre as duas assertivas para ela (homônima de outro `guard_name` sobrevive; cache do registrar esquecido). O `RemoveOrphanFeedbackPermissionsMigrationTest`, que é o que esta ficha nomeia, segue sem elas; por isso a ficha fica aberta, e o molde está no teste novo.
 
 ## P-83 — sete decisões de política dos guardas ficaram só no ledger, que é gitignorado
 
@@ -1088,6 +1094,8 @@ no [run 36265032582](https://github.com/Gatika-CL/lotus/actions/runs/36265032582
 migration nova (`inicio` com `"migrations":[]` e `"dump":null`); o dump segue sem deploy real, e o
 bloco fechou sem pagar o gatilho.
 
+**Gatilho armado — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco traz a migration `2026_11_02_000001_add_turma_concluded_docs_permission`. O primeiro release corporativo que a levar é o que dispara a conferência acima: `dump` com a chave `s3://…` no `releases.jsonl`, o objeto no S3 e o `verificar-backup.sh` aprovando. O bloco, por si, não fecha nada.
+
 ## P-90 — o gate `/up` do `deploy.sh` corre contra o php-fpm quando o deploy recria só o `app`
 
 **Bloco:** item 56 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** o próximo commit que mudar
@@ -1151,6 +1159,8 @@ aceitação do item 33 o levou (spec §10).
 bloco mudou o `deploy/aws/README.md` (§3, §3.1 e §16) e não reconciliou a tabela, porque ela ficou
 fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-docs` do fechamento.
 
+**Gatilho disparado e não pago — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e não reconciliou as coordenadas e o mapa que esta ficha lista. O gatilho não se desarma.
+
 ## P-102 — o `CompliancePanel` e o dashboard não mostram os requisitos novos da conclusão
 
 **Bloco:** item 54 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
@@ -1164,37 +1174,6 @@ telas ficaram para trás:
 - o `CompliancePanel` mostra "Habilitada: No" com "—" quando falta redator ou local, sem dizer o quê;
 - `OperationMetricsQuery::pendencias()` sinaliza "turma sem redator", mas não "presencial sem local":
   a turma nessa situação sai de "aguardando conclusão" sem pendência visível no dashboard.
-
-## P-103 — a emissão do certificado decide a porta 2 e o snapshot fora da transação, e a correção de resultado pode entrar na janela
-
-**Bloco:** item 48 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
-`IssueCertificateAction`; dispara antes de a correção pós-conclusão ter uso real em produção, e de
-qualquer forma se aparecer certificado com resultado diferente da matrícula. Revisar em **2026-11-07**.
-
-Achado I-2 da revisão final do item 41 (`rulings.md`). A correção de resultado pós-conclusão
-(`RecordEnrollmentResultAction`) lê o certificado vigente com `lockForUpdate`, a mesma leitura da
-porta 3 da emissão. O lock garante **um** sentido: com a emissão já dentro da transação, a correção
-espera e recebe 422. O sentido inverso tem uma janela: o `IssueCertificateAction` decide a porta 2
-(`approval_status`) e monta o snapshot a partir da matrícula carregada **antes** da transação. Se a
-correção commitar nessa janela, a emissão espera o lock, não vê certificado e emite com o resultado
-antigo. **Certificado tem peso legal.**
-
-A correção é reler a matrícula com `lockForUpdate` dentro da transação da emissão, nos dois lados, com
-a porta 2 dentro da transação. Fica fora do 41 porque mexe no núcleo de Certification, fora dos
-`Files:` do plano. Em sqlite o lock é no-op, então a corrida não tem teste automatizado: a prova
-exige MySQL. Mesma família da **P-49** (`lockForWrite()` nos escritores).
-
-## P-104 — o diálogo de conclusão diz "irreversível", e o aviso da turma concluída diz que o admin ainda corrige o resultado
-
-**Bloco:** item 48 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha quando o João decidir o texto; dispara no
-próximo bloco que tocar `operation.conclusion.confirmBody` ou `operation.detail.lock.concluida`. Revisar em
-**2026-11-07**.
-
-Depois do item 41 a conclusão deixa de trancar o resultado: o admin corrige nota, presença e status
-de matrícula sem certificado vigente. O `ConfirmDialog` da conclusão (`confirmBody`, "Esta acción es
-irreversible. ¿Confirmas la conclusión de la turma?") segue dizendo o contrário do aviso da aba Alumnos.
-É decisão de copy, nas três locales: o que de fato é irreversível (matricular, remover, o resultado
-com certificado emitido) e o que não é.
 
 ## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
 
@@ -1226,6 +1205,20 @@ tamanhos de faixa e o celeste num título, e reabriria a divergência que o audi
 O código não viola a rule: ela ficou atrás dele. Fecha com uma linha na tabela (o título de seção
 de formulário, 13px, na marca, a mesma voz da faixa um degrau acima) e o valor da constante nova
 congelado no `typography.test.ts`, como as outras.
+
+## P-112 — cotação ligada a turma: só o valor UF fica editável, e a cotação ganha a tag do status da turma
+
+**Bloco:** item 50 (desde 2026-11-02) · **Quem decide:** João (decidido 2026-11-02) · **Gatilho:** brainstorming do 50. Revisar em **2026-11-16**.
+
+Decisão do João no bloco 48 (spec D9, literal), para entrar no escopo do 50:
+
+- cotação **aprovada** ligada a turma: só o **valor UF** fica editável (restringe o "demais campos
+  editáveis" do achado 0.2 da ficha 50);
+- cotação/orçamento ganham uma **tag com o status da turma**, prefixo "Turma:" nos três idiomas —
+  *A configurar* (sem turma ainda), *En curso*, *Concluida*; cotação **recusada** não tem a tag;
+- confirmado pelo levantamento do bloco 48: hoje o superadmin recusa uma cotação aprovada com turma
+  concluída (`RejectQuoteAction`, sem guarda) e depois edita curso, número de alunos e UF, ou apaga a
+  cotação; já há teste fixando esse caminho (`QuoteApprovalTest.php:77-85`). Isso é o card 5 do 50.
 
 ## P-113 — o `COL.rut` dá menos que o RUT em mono nas tabelas de alunos e de clientes
 

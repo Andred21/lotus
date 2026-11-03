@@ -144,7 +144,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 1 | **48** `certificacao-estado-de-emissao` | Backend | Certificado tem peso legal: a corrida da P-103 e a pendência que some do Dashboard (achado 0.3) |
 | 2 | **50** `backend-ciclo-de-vida-da-cotacao` | Backend | Recusar cotação com turma em andamento hoje passa (achado 0.2) |
 | 3 | **51** `backend-contrato-de-entrada-dos-data` | Backend | Depende do 50 (`Budget`) |
 | 4 | **52** `backend-arquivo-recepcao-e-upload` | Backend | Recomendação principal do review; a P-107 tem revisão em 2026-11-07 |
@@ -245,35 +244,6 @@ está formalmente resolvida.
 > reemissível é pendência no Dashboard (48); a `D-34` e a `D-71` saem do item 9 para o 54 e o 49; a
 > P-51 vai inteira para o 51, e a marca de coleção só de entrada vai para o 53. **Não decidido:**
 > registrar "não adotar FormRequest nem Policy" em ADR — o João vai estudar o caso (55).
-
-## 48. `certificacao-estado-de-emissao`
-
-**Prioridade:** P1 · **Frente:** Backend (Certification) · **Contexto:** não · **Depende:** —
-**Fonte:** card 4 e achado 0.3 do review de 2026-11-02; `P-103`, `P-104`.
-
-Certificado tem peso legal, por isso vai primeiro.
-
-**Escopo:**
-- **Card 4.** Um módulo de Certification nomeia os estados de emissão da matrícula (vigente,
-  revogado-reemissível, nunca emitido). Ele é consumido em SQL e em PHP, com teste de paridade no
-  molde da ADR-22. Hoje há duas "fontes únicas" (`CertificateVigenciaResolver::vigentes()` e
-  `Certificate::scopeEmitidos`) e cópias cruas de `where status = Emitido`
-  (`CertificationMetricsQuery.php:59,87-96`, `AnalyticsQuery.php:183`, `PipelineQuery.php:103`).
-- **Achado 0.3, decidido pelo João: a matrícula revogada e reemissível É pendência no Dashboard.**
-  `CertificationMetricsQuery.php:94` exclui qualquer certificado, revogado incluído, e o painel de
-  emissão reabre o revogado. O teste `…_nao_reabre_revogado`, que fixa o comportamento divergente,
-  inverte.
-- **P-103.** A porta 2 e o snapshot passam para dentro da transação da emissão, e a matrícula é relida
-  com `lockForUpdate`. A prova da corrida exige MySQL, porque no sqlite o lock é no-op.
-- **P-104.** O texto de `operation.conclusion.confirmBody` e de `operation.detail.lock.concluida`,
-  nos três locales, diz o que de fato é irreversível. O João decide o texto no brainstorming.
-
-**Fora:** consumir o estado novo nas outras queries do Dashboard (série, pipeline). Isso fica com o
-54, que depende deste. Este bloco corrige só a contagem de pendências do 0.3.
-
-**DoD:** os consumidores de Certification perguntam ao módulo novo, e a paridade SQL × domínio está
-verde. A matrícula revogada e reemissível aparece no painel e nas pendências do Dashboard. A
-P-103 está fechada com prova em MySQL, e a P-104 com o texto aprovado.
 
 ---
 
@@ -395,7 +365,7 @@ Depende do 48: as três queries do Dashboard passam a consumir o estado de emiss
 - **D-73.** Os dois painéis de tabela do Dashboard deixam de transbordar por conteúdo de célula.
 - **D-34**, que saiu do item 9 por decisão do João em 2026-11-02: a visibilidade RBAC vira campo
   explícito do payload, e o front para de farejar nulo. Regenera o `generated.ts`.
-- As outras queries de certificado do Dashboard (série, pipeline) consomem o estado de emissão do 48.
+- A série de certificados do `AnalyticsQuery` (`AnalyticsQuery.php:185`, `where certificates.status = Emitido`) passa a consumir o estado de emissão do 48. O funil (`PipelineQuery`) já acompanha a pendência desde o 48, porque particiona `CertificationMetricsQuery::pendencias()`.
 
 **DoD:** a turma que começa em 10 dias aparece no KPI e numa janela da agenda, ou em nenhum dos dois.
 `scrollWidth == clientWidth` nos dois painéis em 1024x768 e 390x844. A borda do último dia está

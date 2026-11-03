@@ -20,6 +20,7 @@ use App\Domains\Identity\Actions\StoreRedatorDocumentAction;
 use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
+use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Actions\ConcludeTurmaAction;
 use App\Domains\Operation\Actions\CreateTurmaAction;
 use App\Domains\Operation\Actions\DesignateRedatorAction;
@@ -557,6 +558,7 @@ class OperationDemoSeeder extends Seeder
     private function attachDocuments(Turma $turma, array $types): void
     {
         $action = app(StoreTurmaDocumentAction::class);
+        $actor = $this->superadmin();
         $seen = [];
 
         foreach ($types as $value) {
@@ -571,8 +573,21 @@ class OperationDemoSeeder extends Seeder
                     Str::slug($value).$suffix.'-turma-'.$turma->id.'.pdf',
                     $value.' — '.$turma->course->name.' ('.$turma->quote->code.')',
                 ),
+                $actor,
             );
         }
+    }
+
+    /**
+     * Ator explícito das Actions de documento de turma: o superadmin que o
+     * `DatabaseSeeder` cria antes de chamar este seeder. Sem ele o seeder para,
+     * em vez de anexar documento "sem ator" — a checagem de permissão das
+     * Actions não tem default de propósito.
+     */
+    private function superadmin(): User
+    {
+        return User::role('superadmin')->first()
+            ?? throw new RuntimeException('OperationDemoSeeder precisa de um usuário superadmin: rode pelo DatabaseSeeder (`migrate:fresh --seed`).');
     }
 
     private function redatorByName(string $name): Redator

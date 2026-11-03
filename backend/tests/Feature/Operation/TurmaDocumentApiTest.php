@@ -5,12 +5,17 @@ namespace Tests\Feature\Operation;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Support\PermissionCatalog;
+use App\Domains\Operation\Actions\StoreTurmaDocumentAction;
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaModalidade;
+use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -137,5 +142,108 @@ class TurmaDocumentApiTest extends TestCase
         $this->deleteJson("/api/turmas/{$outra->id}/documents/{$fileId}")->assertNotFound();
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
         $this->assertSoftDeleted('files', ['id' => $fileId]);
+    }
+
+    // ---- Turma concluída: só quem tem `manage_concluded_docs` (superadmin) ----
+
+    private function concluirTurma(): void
+    {
+        $this->turma->update(['status' => TurmaStatus::Concluida, 'concluded_at' => now()]);
+    }
+
+    /** Doc já anexado, sem passar pela API: o ator da requisição fica só o do teste. */
+    private function docAnexado(): int
+    {
+        return app(StoreTurmaDocumentAction::class)
+            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf(), User::factory()->create())
+            ->id;
+    }
+
+    public function test_concluida_superadmin_sobe_201_e_remove_204(): void
+    {
+        $fileId = $this->docAnexado();
+        $this->concluirTurma();
+        $this->actingAsSuperadmin();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/documents", [
+            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+        ])->assertCreated();
+
+        $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
+        $this->assertSoftDeleted('files', ['id' => $fileId]);
+    }
+
+    public function test_concluida_redator_recebe_422_no_post_e_no_delete(): void
+    {
+        $fileId = $this->docAnexado();
+        $this->concluirTurma();
+        $this->actingAsRedatorRole();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/documents", [
+            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+        ])->assertStatus(422)->assertJsonValidationErrors('turma');
+
+        $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")
+            ->assertStatus(422)->assertJsonValidationErrors('turma');
+        $this->assertNotSoftDeleted('files', ['id' => $fileId]);
+    }
+
+    public function test_concluida_admin_comum_recebe_403_no_post_e_no_delete(): void
+    {
+        $fileId = $this->docAnexado();
+        $this->concluirTurma();
+        $this->actingAsAdmin();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/documents", [
+            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+        ])->assertForbidden();
+
+        $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertForbidden();
+        $this->assertNotSoftDeleted('files', ['id' => $fileId]);
+    }
+
+    public function test_manage_concluded_docs_e_so_do_superadmin(): void
+    {
+        // D8: fora de SEGREGATED, a permissão entraria em role customizada.
+        $this->seed(RolePermissionSeeder::class);
+        $permissao = 'operation.turma.manage_concluded_docs';
+
+        $this->assertTrue(Role::findByName('superadmin', 'web')->hasPermissionTo($permissao));
+        $this->assertFalse(Role::findByName('admin', 'web')->hasPermissionTo($permissao));
+        $this->assertFalse(Role::findByName('redator', 'web')->hasPermissionTo($permissao));
+        $this->assertContains($permissao, PermissionCatalog::SEGREGATED);
+    }
+
+    public function test_em_andamento_redator_sobe_201_e_remove_204(): void
+    {
+        $fileId = $this->docAnexado();
+        $this->actingAsRedatorRole();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/documents", [
+            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+        ])->assertCreated();
+        $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
+    }
+
+    public function test_em_andamento_superadmin_sobe_201_e_remove_204(): void
+    {
+        $fileId = $this->docAnexado();
+        $this->actingAsSuperadmin();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/documents", [
+            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+        ])->assertCreated();
+        $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
+    }
+
+    public function test_em_andamento_admin_comum_recebe_403_no_post_e_no_delete(): void
+    {
+        $fileId = $this->docAnexado();
+        $this->actingAsAdmin();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/documents", [
+            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+        ])->assertForbidden();
+        $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertForbidden();
     }
 }

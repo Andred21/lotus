@@ -4,11 +4,13 @@ namespace Tests\Feature\Operation;
 
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Actions\DeleteTurmaDocumentAction;
 use App\Domains\Operation\Actions\StoreTurmaDocumentAction;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -41,6 +43,16 @@ class TurmaDocumentActionsTest extends TestCase
         ]);
     }
 
+    /** Usuário com a role semeada de verdade — a permissão sai do seeder, não de um mock. */
+    private function actor(string $role): User
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->create(['type' => $role === 'redator' ? 'redator' : 'admin', 'is_active' => true]);
+        $user->assignRole($role);
+
+        return $user;
+    }
+
     private function pdf(): UploadedFile
     {
         return UploadedFile::fake()->create('doc.pdf', 20, 'application/pdf');
@@ -49,9 +61,10 @@ class TurmaDocumentActionsTest extends TestCase
     public function test_store_grava_file_do_tipo_e_e_append(): void
     {
         $action = app(StoreTurmaDocumentAction::class);
+        $redator = $this->actor('redator');
 
-        $action->execute($this->turma, TurmaDocumentType::PRUEBAS, $this->pdf());
-        $action->execute($this->turma, TurmaDocumentType::PRUEBAS, $this->pdf());
+        $action->execute($this->turma, TurmaDocumentType::PRUEBAS, $this->pdf(), $redator);
+        $action->execute($this->turma, TurmaDocumentType::PRUEBAS, $this->pdf(), $redator);
 
         // D8: N por tipo — o 2º upload NÃO substitui o 1º.
         $this->assertSame(2, $this->turma->files()->where('type', 'PRUEBAS')->count());
@@ -59,10 +72,11 @@ class TurmaDocumentActionsTest extends TestCase
 
     public function test_delete_e_soft_e_por_instancia(): void
     {
+        $redator = $this->actor('redator');
         $file = app(StoreTurmaDocumentAction::class)
-            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf());
+            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf(), $redator);
 
-        app(DeleteTurmaDocumentAction::class)->execute($this->turma, $file);
+        app(DeleteTurmaDocumentAction::class)->execute($this->turma, $file, $redator);
 
         $this->assertSoftDeleted('files', ['id' => $file->id]);
         // lição #5: delete por instância dispara evento → owen-it audita.
@@ -71,24 +85,57 @@ class TurmaDocumentActionsTest extends TestCase
         ]);
     }
 
-    public function test_rn15_store_bloqueado_pos_conclusao(): void
+    public function test_store_pos_conclusao_recusa_quem_nao_tem_a_permissao(): void
     {
-        $this->turma->status = TurmaStatus::Concluida;
-        $this->turma->save();
+        $redator = $this->actor('redator');
+        $this->turma->update(['status' => TurmaStatus::Concluida]);
 
-        $this->expectException(ValidationException::class);
-        app(StoreTurmaDocumentAction::class)
-            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf());
+        try {
+            app(StoreTurmaDocumentAction::class)
+                ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf(), $redator);
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame([__('operation.turma.concluded_locked')], $e->errors()['turma']);
+        }
+
+        $this->assertSame(0, $this->turma->files()->count());
     }
 
-    public function test_rn15_delete_bloqueado_pos_conclusao(): void
+    public function test_delete_pos_conclusao_recusa_quem_nao_tem_a_permissao(): void
     {
+        $redator = $this->actor('redator');
         $file = app(StoreTurmaDocumentAction::class)
-            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf());
-        $this->turma->status = TurmaStatus::Concluida;
-        $this->turma->save();
+            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf(), $redator);
+        $this->turma->update(['status' => TurmaStatus::Concluida]);
 
-        $this->expectException(ValidationException::class);
-        app(DeleteTurmaDocumentAction::class)->execute($this->turma, $file);
+        try {
+            app(DeleteTurmaDocumentAction::class)->execute($this->turma, $file, $redator);
+            $this->fail('esperava ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame([__('operation.turma.concluded_locked')], $e->errors()['turma']);
+        }
+
+        $this->assertNotSoftDeleted('files', ['id' => $file->id]);
+    }
+
+    public function test_superadmin_sobe_e_remove_pos_conclusao(): void
+    {
+        $superadmin = $this->actor('superadmin');
+        $this->turma->update(['status' => TurmaStatus::Concluida]);
+
+        $file = app(StoreTurmaDocumentAction::class)
+            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf(), $superadmin);
+
+        $this->assertDatabaseHas('files', ['id' => $file->id, 'type' => 'MANUAL']);
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'file', 'auditable_id' => $file->id, 'event' => 'created',
+        ]);
+
+        app(DeleteTurmaDocumentAction::class)->execute($this->turma, $file, $superadmin);
+
+        $this->assertSoftDeleted('files', ['id' => $file->id]);
+        $this->assertDatabaseHas('audits', [
+            'auditable_type' => 'file', 'auditable_id' => $file->id, 'event' => 'deleted',
+        ]);
     }
 }

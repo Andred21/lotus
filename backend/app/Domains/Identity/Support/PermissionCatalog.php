@@ -18,6 +18,7 @@ class PermissionCatalog
         'identity.access.manage',
         'certification.certificate.revoke',
         'certification.settings.manage',
+        'operation.turma.manage_concluded_docs',
     ];
 
     /**
@@ -80,6 +81,7 @@ class PermissionCatalog
             'operation.turma.assign_redator' => 'Designar redator idôneo à turma (Fluxo 3)',
             'operation.turma.complete' => 'Confirmar conclusão da turma (Fluxo 4 — admin confirma)',
             'operation.turma.submit_docs' => 'Subir documentação da turma (Fluxo 1/4 — ação do redator)',
+            'operation.turma.manage_concluded_docs' => 'Subir e remover documentos de turma concluída (só superadmin)',
 
             // ---- Certification ----
             'certification.certificate.view' => 'Ver certificados',
