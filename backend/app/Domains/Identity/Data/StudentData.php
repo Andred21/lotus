@@ -3,15 +3,10 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Models\Student;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
-use App\Shared\Rules\ValidRut;
-use App\Shared\Support\TetosDeColuna;
-use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
-use Spatie\LaravelData\Attributes\Validation\Email;
-use Spatie\LaravelData\Attributes\Validation\Max;
-use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
@@ -32,13 +27,9 @@ class StudentData extends Data
 {
     public function __construct(
         public int|Optional $id,
-        #[Required, Max(TetosImpressos::NOME_ALUNO)]
         public string $name,
-        #[Required]
         public string $rut,
-        #[Required, Email, Max(TetosDeColuna::EMAIL)]
         public string $email,
-        #[Max(TetosDeColuna::TELEFONE)]
         public string|Optional|null $phone,
         /** Cliente ao qual o aluno é vinculado no cadastro. Só entrada. */
         public int|Optional|null $client_id,
@@ -65,7 +56,9 @@ class StudentData extends Data
                 'current_client_name',
                 'enrollments_count',
             ),
-            'rut' => ['required', 'string', new ValidRut],
+            // RUT, nome, e-mail e telefone: a forma é a de `StudentIdentity`,
+            // a mesma da matrícula individual e da planilha.
+            ...StudentIdentity::rules(emailRequired: true),
             // Só a FORMA aqui. A existência do cliente é regra do cadastro e
             // vive na CreateStudentAction: `exists` neste DTO fazia o PUT
             // recusar um client_id inválido que o UpdateStudentAction ignora

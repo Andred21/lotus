@@ -7,6 +7,7 @@ use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Enums\TurmaModalidade;
@@ -54,7 +55,7 @@ class ImportPreviewTest extends TestCase
     private function aluno(string $rut, string $name, string $email, ?string $phone, ?Client $client = null): Student
     {
         return app(StudentResolver::class)
-            ->resolveByRut($rut, $name, $email, $phone, $client ?? $this->client)->student;
+            ->resolveByRut(new StudentIdentity($rut, $name, $email, $phone), $client ?? $this->client)->student;
     }
 
     private function xlsx(array $rows): UploadedFile
@@ -109,7 +110,7 @@ class ImportPreviewTest extends TestCase
         $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null);
         $this->aluno('44.444.444-4', 'Ana Mora', 'ana@otra.cl', null, $this->otherClient);
         $matriculado = $this->aluno('55.555.555-5', 'Rosa Vera', 'rosa@acme.cl', null);
-        app(EnrollStudentAction::class)->execute($this->turma, '55.555.555-5', 'Rosa Vera', null, null);
+        app(EnrollStudentAction::class)->execute($this->turma, new StudentIdentity('55.555.555-5', 'Rosa Vera', null, null));
 
         $response = $this->previa([
             ['11.111.111-1', 'Juan Soto', 'juan@acme.cl', ''],
@@ -164,7 +165,23 @@ class ImportPreviewTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('rows.0.status', 'new')
             ->assertJsonPath('rows.1.status', 'error')
-            ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_rut'));
+            ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_rut', ['row' => 2]));
+    }
+
+    public function test_cadastrado_que_perde_o_email_para_um_novo_sai_registered_com_update_refusal(): void
+    {
+        $this->actingAsAdmin();
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null);
+
+        $this->previa([
+            ['11.111.111-1', 'Juan Soto', 'x@acme.cl', ''],
+            ['33.333.333-3', 'Pedro Lagos', 'X@acme.cl', ''],
+        ])->assertOk()
+            ->assertJsonPath('rows.0.update_refusal', null)
+            ->assertJsonPath('rows.1.status', 'registered')
+            ->assertJsonPath('rows.1.message', null)
+            ->assertJsonPath('rows.1.divergent', ['email'])
+            ->assertJsonPath('rows.1.update_refusal', __('operation.enrollment.import.duplicate_email', ['row' => 2]));
     }
 
     public function test_email_repetido_entre_novos_vira_erro_no_segundo(): void
@@ -177,7 +194,7 @@ class ImportPreviewTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('rows.0.status', 'new')
             ->assertJsonPath('rows.1.status', 'error')
-            ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_email'));
+            ->assertJsonPath('rows.1.message', __('operation.enrollment.import.duplicate_email', ['row' => 2]));
     }
 
     public function test_nome_vazio_vira_erro_em_linha_nova_e_cadastrada(): void
@@ -259,6 +276,23 @@ class ImportPreviewTest extends TestCase
         $this->actingAs($semEdicao, 'web');
 
         $this->previa([])->assertOk()->assertJsonPath('can_update_registration', false);
+    }
+
+    public function test_sem_permissao_linha_divergente_sai_sem_update_refusal(): void
+    {
+        $this->actingAsAdmin();
+        $this->aluno('11.111.111-1', 'ANA', 'ana@x.cl', null);
+
+        $semEdicao = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $semEdicao->givePermissionTo('operation.enrollment.manage');
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($semEdicao, 'web');
+
+        $this->previa([['11.111.111-1', 'ANA MARIA', 'ana@x.cl', '']])
+            ->assertOk()
+            ->assertJsonPath('rows.0.status', 'registered')
+            ->assertJsonPath('rows.0.divergent', ['name'])
+            ->assertJsonPath('rows.0.update_refusal', null);
     }
 
     public function test_planilha_so_com_cabecalho_devolve_rows_vazio(): void

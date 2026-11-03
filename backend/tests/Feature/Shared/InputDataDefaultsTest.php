@@ -18,7 +18,7 @@ use App\Domains\Identity\Data\RedatorDocumentUploadData;
 use App\Domains\Identity\Data\RoleData;
 use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Data\UserData;
-use App\Domains\Operation\Data\EnrollmentData;
+use App\Domains\Operation\Data\EnrollStudentData;
 use App\Domains\Operation\Data\ImportConfirmRowData;
 use App\Domains\Operation\Data\TurmaData;
 use App\Domains\Operation\Data\TurmaPageQueryData;
@@ -82,6 +82,7 @@ class InputDataDefaultsTest extends TestCase
         RedatorDocumentUploadData::class => 'upload de UM documento do redator: so cria ou substitui o arquivo, nao ha valor anterior a preservar por omissao',
         ProfileDocumentUploadData::class => 'upload de UM documento do proprio perfil: so cria ou substitui o arquivo, nao ha valor anterior a preservar por omissao',
         CourseModuleData::class => 'item de colecao recriada por inteiro a cada PUT do curso: o default e semantica de criacao do modulo, nao rebaixa linha existente',
+        EnrollStudentData::class => 'POST de matricula individual: so cria a matricula, e aluno ja existente nao tem email nem telefone reescrito (StudentResolver::resolveByRut nao le esses campos), entao ausente = null nao rebaixa dado',
         ImportConfirmRowData::class => 'linha de importacao de matriculas: cada confirmacao e entrada completa, nao PUT parcial — o item 53 revisita',
     ];
 
@@ -99,7 +100,7 @@ class InputDataDefaultsTest extends TestCase
         CourseData::class,
         RoleData::class,
         TurmaData::class,
-        EnrollmentData::class,
+        EnrollStudentData::class,
         UserData::class,
         RedatorData::class,
         StudentData::class,

@@ -4,11 +4,7 @@ namespace App\Domains\Operation\Data;
 
 use App\Domains\Operation\Enums\EnrollmentApprovalStatus;
 use App\Domains\Operation\Models\Enrollment;
-use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
-use App\Shared\Rules\ValidRut;
-use App\Shared\Support\TetosDeColuna;
-use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Data;
@@ -16,10 +12,10 @@ use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
- * Contrato da matrícula. Entrada (individual): rut+name obrigatórios, email
- * opcional (o Action exige email só p/ aluno NOVO — D9). Resultado acadêmico
- * (grades/attendance/approval) é read-only aqui; escrita é 6d.
- * `result_locked` também é só saída: certificado vigente tranca a correção.
+ * Contrato da matrícula, só de SAÍDA. A entrada da matrícula individual é o
+ * `EnrollStudentData`. Resultado acadêmico (grades/attendance/approval) é
+ * read-only aqui; escrita é 6d. `result_locked` também é só saída: certificado
+ * vigente tranca a correção.
  */
 #[TypeScript]
 class EnrollmentData extends Data
@@ -40,18 +36,6 @@ class EnrollmentData extends Data
         #[WithTransformer(SignedUrlTransformer::class, 60)]
         public ?string $photo_url = null,
     ) {}
-
-    public static function rules(): array
-    {
-        return [
-            ...ComputedFields::rejected('photo_url'),
-            'rut' => ['required', 'string', new ValidRut],
-            // Teto do que o certificado imprime (D15); `rules()` sobrepõe o atributo.
-            'name' => ['required', 'string', 'max:'.TetosImpressos::NOME_ALUNO],
-            'email' => ['nullable', 'email', 'max:'.TetosDeColuna::EMAIL],
-            'phone' => ['nullable', 'string', 'max:'.TetosDeColuna::TELEFONE],
-        ];
-    }
 
     public static function fromModel(Enrollment $e): self
     {

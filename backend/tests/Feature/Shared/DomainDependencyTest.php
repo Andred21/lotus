@@ -162,6 +162,7 @@ class DomainDependencyTest extends TestCase
             'Identity\Models\Redator',
             'Identity\Models\Student',
             'Identity\Models\User',
+            'Identity\Services\StudentIdentity',
             'Identity\Services\StudentLookup',
             'Identity\Services\StudentResolution',
             'Identity\Services\StudentResolver',

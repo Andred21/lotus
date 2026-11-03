@@ -7,18 +7,22 @@ use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
+use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Actions\ImportStudentsAction;
 use App\Domains\Operation\Data\ImportConfirmData;
 use App\Domains\Operation\Data\ImportConfirmRowData;
 use App\Domains\Operation\Data\ImportResultData;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
+use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\EnrollOutcome;
+use App\Domains\Operation\Services\ImportRowClassifier;
 use App\Shared\Support\TetosImpressos;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\Optional;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -78,10 +82,33 @@ class ImportStudentsActionTest extends TestCase
             ->execute($this->turma, new ImportConfirmData($linhas), $ator ?? $this->admin);
     }
 
+    /**
+     * A confirmação recusa o lote inteiro (D2): 422 com exatamente estas chaves e
+     * nenhuma escrita antes dele.
+     *
+     * @param  array<ImportConfirmRowData>  $linhas
+     * @param  list<string>  $chaves  `import.<row>` / `import.<row>.update`
+     * @return array<string,list<string>> as mensagens por chave
+     */
+    private function confirmarRecusado(array $linhas, array $chaves, ?User $ator = null): array
+    {
+        $antes = [User::withTrashed()->count(), Enrollment::count()];
+
+        try {
+            $this->confirmar($linhas, $ator);
+            $this->fail('A checagem tinha de recusar o lote com 422.');
+        } catch (ValidationException $e) {
+            $this->assertSame($chaves, array_keys($e->errors()));
+            $this->assertSame($antes, [User::withTrashed()->count(), Enrollment::count()], 'o 422 não escreve nada');
+
+            return $e->errors();
+        }
+    }
+
     private function aluno(string $rut, string $name, string $email, ?string $phone = null, ?Client $client = null): Student
     {
         return app(StudentResolver::class)
-            ->resolveByRut($rut, $name, $email, $phone, $client ?? $this->client)->student;
+            ->resolveByRut(new StudentIdentity($rut, $name, $email, $phone), $client ?? $this->client)->student;
     }
 
     private function semPermissaoDeEdicao(): User
@@ -92,16 +119,26 @@ class ImportStudentsActionTest extends TestCase
         return $user;
     }
 
-    public function test_grava_linhas_boas_e_devolve_as_ruins(): void
+    public function test_grava_o_lote_limpo_e_recusa_o_lote_com_linha_ruim(): void
     {
         $this->aluno('44.444.444-4', 'Ana Mora', 'ana@otra.cl', null, $this->otherClient);
 
-        $result = $this->confirmar([
+        $erros = $this->confirmarRecusado([
             $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', '+56 9 1111'),   // novo
             $this->linha(3, 'RUT-INVALIDO', 'Mal Formado'),                                // RUT inválido
             $this->linha(4, '44.444.444-4', 'Ana Mora'),                                   // moved
             $this->linha(5, '55.555.555-5', 'Colide', 'JUAN@acme.cl'),                     // e-mail repetido no lote
             $this->linha(6, '66.666.666-6', 'Sin Correo'),                                 // sem e-mail
+        ], ['import.3', 'import.5', 'import.6']);
+
+        $this->assertSame([__('operation.enrollment.import.duplicate_email', ['row' => 2])], $erros['import.5']);
+        $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
+        $this->assertDatabaseMissing('users', ['rut' => '55.555.555-5']);
+
+        // Sem as linhas ruins, o mesmo lote passa inteiro.
+        $result = $this->confirmar([
+            $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', '+56 9 1111'),
+            $this->linha(4, '44.444.444-4', 'Ana Mora'),
         ]);
 
         $this->assertSame(1, $result->created);
@@ -110,11 +147,9 @@ class ImportStudentsActionTest extends TestCase
         $this->assertCount(1, $result->moved);
         $this->assertSame('OTRA', $result->moved[0]->previous_client);
         $this->assertSame('ACME', $result->moved[0]->client);
-        $this->assertSame([3, 5, 6], array_map(fn ($e) => $e->row, $result->errors));
-        $this->assertSame(__('operation.enrollment.import.duplicate_email'), $result->errors[1]->message);
+        $this->assertSame([], $result->errors);
         $this->assertSame(2, $result->enrolled_total);
         $this->assertSame(2, $result->contracted_count); // D3: informa, nunca bloqueia
-        $this->assertDatabaseMissing('users', ['rut' => '55.555.555-5']);
     }
 
     public function test_troca_de_empresa_fecha_log_e_abre_novo(): void
@@ -182,53 +217,55 @@ class ImportStudentsActionTest extends TestCase
         $this->assertSame('+56 9 0000', $user->phone);
     }
 
-    public function test_actualizar_falho_nao_deixa_matricula(): void
+    public function test_actualizar_recusado_recusa_o_lote_e_nao_deixa_matricula(): void
     {
         $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl');
         $this->aluno('44.444.444-4', 'Ana Mora', 'ana@acme.cl');
 
-        $result = $this->confirmar([
+        $this->confirmarRecusado([
             $this->linha(2, '33.333.333-3', 'Pedro Lagos', 'ana@acme.cl', atualizar: true),
-        ]);
+        ], ['import.2.update']);
 
-        $this->assertCount(1, $result->errors);
-        $this->assertSame(2, $result->errors[0]->row);
-        $this->assertSame(0, $result->relinked);
         $this->assertSame('pedro@acme.cl', $student->user()->first()->email);
         $this->assertSame(0, $this->turma->enrollments()->count());
     }
 
-    public function test_actualizar_com_nome_acima_do_teto_vira_erro_da_linha(): void
+    public function test_actualizar_com_nome_acima_do_teto_recusa_o_lote(): void
     {
         $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl');
 
-        $result = $this->confirmar([
+        $this->confirmarRecusado([
             $this->linha(2, '33.333.333-3', str_repeat('a', TetosImpressos::NOME_ALUNO + 1), atualizar: true),
-        ]);
+        ], ['import.2.update']);
 
-        $this->assertCount(1, $result->errors);
         $this->assertSame('Pedro Lagos', $student->user()->first()->name);
         $this->assertSame(0, $this->turma->enrollments()->count());
     }
 
-    public function test_sem_permissao_de_update_recusa_so_a_linha(): void
+    public function test_sem_permissao_de_update_recusa_o_actualizar_e_o_lote(): void
     {
         $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl');
         $this->aluno('44.444.444-4', 'Ana Mora', 'ana@acme.cl');
 
-        $result = $this->confirmar([
+        $erros = $this->confirmarRecusado([
             $this->linha(2, '33.333.333-3', 'Pedro Alterado', atualizar: true),   // pede update: recusada
             $this->linha(3, '44.444.444-4', 'Ana Mora'),                          // mantener: segue
             $this->linha(4, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', atualizar: true), // aluno novo: flag ignorada
+        ], ['import.2.update'], $this->semPermissaoDeEdicao());
+
+        $this->assertSame([__('operation.enrollment.import.update_forbidden')], $erros['import.2.update']);
+        $this->assertSame('Pedro Lagos', User::where('rut', '33.333.333-3')->value('name'));
+        $this->assertSame(0, $this->turma->enrollments()->count());
+
+        // Sem o Actualizar, o mesmo operador confirma: Mantener e a flag ignorada em aluno novo.
+        $result = $this->confirmar([
+            $this->linha(3, '44.444.444-4', 'Ana Mora'),
+            $this->linha(4, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', atualizar: true),
         ], $this->semPermissaoDeEdicao());
 
-        $this->assertCount(1, $result->errors);
-        $this->assertSame(2, $result->errors[0]->row);
-        $this->assertSame(__('operation.enrollment.import.update_forbidden'), $result->errors[0]->message);
+        $this->assertSame([], $result->errors);
         $this->assertSame(1, $result->relinked);
         $this->assertSame(1, $result->created);
-        $this->assertSame('Pedro Lagos', User::where('rut', '33.333.333-3')->value('name'));
-        $this->assertSame(2, $this->turma->enrollments()->count());
     }
 
     public function test_linha_ja_matriculada_conta_e_nao_duplica(): void
@@ -261,78 +298,69 @@ class ImportStudentsActionTest extends TestCase
         $this->assertSame(2, Student::count()); // Pedro já existia, Juan nasceu uma vez só
     }
 
-    public function test_rut_repetido_em_formatos_diferentes_recusa_o_segundo(): void
+    public function test_rut_repetido_em_formatos_diferentes_recusa_o_lote_na_segunda(): void
     {
-        $result = $this->confirmar([
+        $erros = $this->confirmarRecusado([
             $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl'),
             $this->linha(3, '11111111-1', 'Juan Soto', 'otro@acme.cl'),
-        ]);
+        ], ['import.3']);
 
-        $this->assertSame(1, $result->created);
-        $this->assertCount(1, $result->errors);
-        $this->assertSame(3, $result->errors[0]->row);
-        $this->assertSame(__('operation.enrollment.import.duplicate_rut'), $result->errors[0]->message);
+        $this->assertSame([__('operation.enrollment.import.duplicate_rut', ['row' => 2])], $erros['import.3']);
         $this->assertDatabaseMissing('users', ['email' => 'otro@acme.cl']);
+        $this->assertDatabaseMissing('users', ['email' => 'juan@acme.cl']);
     }
 
-    public function test_email_repetido_entre_novos_recusa_o_segundo(): void
+    public function test_email_repetido_entre_novos_recusa_o_lote_na_segunda(): void
     {
-        $result = $this->confirmar([
+        $erros = $this->confirmarRecusado([
             $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl'),
             $this->linha(3, '33.333.333-3', 'Pedro Lagos', 'JUAN@acme.cl'),
-        ]);
+        ], ['import.3']);
 
-        $this->assertSame(1, $result->created);
-        $this->assertSame(3, $result->errors[0]->row);
-        $this->assertSame(__('operation.enrollment.import.duplicate_email'), $result->errors[0]->message);
+        $this->assertSame([__('operation.enrollment.import.duplicate_email', ['row' => 2])], $erros['import.3']);
     }
 
     public function test_email_de_actualizar_repetido_em_linha_nova_recusa_a_segunda(): void
     {
         $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl');
 
-        $result = $this->confirmar([
+        // O cadastrado reserva o e-mail que o Actualizar gravaria; a linha nova
+        // que repete perde (a linha, não só a flag) e o lote inteiro recusa.
+        $erros = $this->confirmarRecusado([
             $this->linha(2, '33.333.333-3', 'Pedro Lagos', 'Nuevo@acme.cl', atualizar: true),
             $this->linha(3, '11.111.111-1', 'Juan Soto', 'nuevo@acme.cl'),
-        ]);
+        ], ['import.3']);
 
-        $this->assertSame(1, $result->relinked);
-        $this->assertSame(0, $result->created);
-        $this->assertCount(1, $result->errors);
-        $this->assertSame(3, $result->errors[0]->row);
-        $this->assertSame(__('operation.enrollment.import.duplicate_email'), $result->errors[0]->message);
+        $this->assertSame([__('operation.enrollment.import.duplicate_email', ['row' => 2])], $erros['import.3']);
+        $this->assertSame('pedro@acme.cl', User::where('rut', '33.333.333-3')->value('email'));
         $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);
     }
 
-    public function test_nome_vazio_recusa_a_linha_mesmo_de_aluno_cadastrado(): void
+    public function test_nome_vazio_recusa_o_lote_mesmo_de_aluno_cadastrado(): void
     {
         $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl');
         $nomeObrigatorio = __('validation.required', ['attribute' => __('validation.attributes.name')]);
 
-        $result = $this->confirmar([
+        $erros = $this->confirmarRecusado([
             $this->linha(2, '33.333.333-3', ''),
             $this->linha(3, '11.111.111-1', '   ', 'juan@acme.cl'),
-        ]);
+        ], ['import.2', 'import.3']);
 
-        $this->assertCount(2, $result->errors);
-        $this->assertSame($nomeObrigatorio, $result->errors[0]->message);
-        $this->assertSame($nomeObrigatorio, $result->errors[1]->message);
+        $this->assertSame([$nomeObrigatorio], $erros['import.2']);
+        $this->assertSame([$nomeObrigatorio], $erros['import.3']);
         $this->assertSame(0, $this->turma->enrollments()->count());
         $this->assertSame('Pedro Lagos', $student->user()->first()->name);
     }
 
-    public function test_linha_com_nome_acima_do_teto_vira_erro_da_linha(): void
+    public function test_linha_com_nome_acima_do_teto_recusa_o_lote(): void
     {
-        $result = $this->confirmar([
+        $this->confirmarRecusado([
             $this->linha(2, '11.111.111-1', str_repeat('a', TetosImpressos::NOME_ALUNO + 1), 'largo@acme.cl'),
             $this->linha(3, '44.444.444-4', str_repeat('a', TetosImpressos::NOME_ALUNO), 'justo@acme.cl'),
-        ]);
+        ], ['import.2']);
 
-        $this->assertSame(1, $result->created);
-        $this->assertCount(1, $result->errors);
-        $this->assertSame(2, $result->errors[0]->row);
         $this->assertDatabaseMissing('users', ['email' => 'largo@acme.cl']);
-        $this->assertDatabaseHas('users', ['email' => 'justo@acme.cl']);
+        $this->assertDatabaseMissing('users', ['email' => 'justo@acme.cl']);
     }
 
     public function test_aluno_arquivado_e_restaurado_e_atualizado(): void
@@ -351,15 +379,115 @@ class ImportStudentsActionTest extends TestCase
         $this->assertSame(1, $this->turma->enrollments()->count());
     }
 
-    public function test_rows_vazio_ou_acima_de_100_recusa_sem_escrever(): void
+    public function test_ja_matriculado_com_flag_adulterada_nao_atualiza(): void
     {
-        foreach ([[], array_map(
-            fn (int $i) => $this->linha($i + 2, '11.111.111-1', "Aluno {$i}", "a{$i}@acme.cl"),
-            range(1, ImportStudentsAction::MAX_LINHAS + 1),
-        ), new Optional] as $rows) {
+        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56 9 0000');
+        $this->confirmar([$this->linha(2, '33.333.333-3', 'Pedro Lagos')]);
+        $auditoriasAntes = $student->user()->first()->audits()->count();
+
+        // O front não oferece Actualizar em linha já matriculada, mas o corpo é
+        // do navegador: o servidor ignora a flag (D4) e não grava nada.
+        $result = $this->confirmar([
+            $this->linha(2, '33.333.333-3', 'Pedro Adulterado', 'otro@acme.cl', '+56 9 9999', atualizar: true),
+        ]);
+
+        $this->assertSame([], $result->errors);
+        $this->assertSame(1, $result->already_enrolled);
+        $this->assertSame(0, $result->relinked);
+        $user = $student->user()->first();
+        $this->assertSame('Pedro Lagos', $user->name);
+        $this->assertSame('pedro@acme.cl', $user->email);
+        $this->assertSame('+56 9 0000', $user->phone);
+        $this->assertSame($auditoriasAntes, $user->audits()->count());
+    }
+
+    public function test_aluno_arquivado_com_actualizar_restaura_e_atualiza_na_mesma_transacao(): void
+    {
+        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl');
+        $student->delete();
+        $this->assertNotNull(User::withTrashed()->where('rut', '33.333.333-3')->value('deleted_at'));
+
+        // A matrícula roda e, DEPOIS dela, algo falha: atualizar + restaurar +
+        // matricular são uma transação só, e nada da linha pode ficar.
+        $this->app->instance(EnrollStudentAction::class, new class(app(StudentResolver::class)) extends EnrollStudentAction
+        {
+            public function execute(Turma $turma, StudentIdentity $identity): EnrollOutcome
+            {
+                parent::execute($turma, $identity);
+
+                throw ValidationException::withMessages(['turma' => 'falha depois da matrícula']);
+            }
+        });
+
+        $result = $this->confirmar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos Rojas', atualizar: true),
+        ]);
+
+        $this->assertCount(1, $result->errors);
+        $user = User::withTrashed()->where('rut', '33.333.333-3')->firstOrFail();
+        $this->assertSame('Pedro Lagos', $user->name);
+        $this->assertNotNull($user->deleted_at);
+        $this->assertSame(0, Enrollment::count());
+
+        // Sem a falha, a mesma linha restaura, atualiza e matricula, e a checagem
+        // de identidade não toma o próprio user por duplicado (D3).
+        $this->app->forgetInstance(EnrollStudentAction::class);
+
+        $result = $this->confirmar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos Rojas', 'pedro@acme.cl', atualizar: true),
+        ]);
+
+        $this->assertSame([], $result->errors);
+        $user = User::where('rut', '33.333.333-3')->firstOrFail();
+        $this->assertSame('Pedro Lagos Rojas', $user->name);
+        $this->assertNull($user->deleted_at);
+        $this->assertSame(1, $this->turma->enrollments()->count());
+    }
+
+    public function test_corrida_na_escrita_cai_em_errors_e_o_lote_segue(): void
+    {
+        // A checagem passou, mas na hora de gravar a primeira linha perde a
+        // corrida (outro usuário tomou o e-mail no meio): D7, vai ao resumo.
+        $this->app->instance(EnrollStudentAction::class, new class(app(StudentResolver::class)) extends EnrollStudentAction
+        {
+            private int $chamadas = 0;
+
+            public function execute(Turma $turma, StudentIdentity $identity): EnrollOutcome
+            {
+                if (++$this->chamadas === 1) {
+                    throw ValidationException::withMessages(['email' => 'corrida']);
+                }
+
+                return parent::execute($turma, $identity);
+            }
+        });
+
+        $result = $this->confirmar([
+            $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl'),
+            $this->linha(3, '33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl'),
+        ]);
+
+        $this->assertSame(1, $result->created);
+        $this->assertCount(1, $result->errors);
+        $this->assertSame(2, $result->errors[0]->row);
+        $this->assertSame('corrida', $result->errors[0]->message);
+    }
+
+    /**
+     * A exigência de `rows` (`required|array|min:1|max:MAX_LINHAS`) mora no
+     * `ImportConfirmData::rules()`, e não mais na Action: recusa na entrada,
+     * antes de qualquer escrita. O caminho HTTP está em `ImportConfirmApiTest`.
+     */
+    public function test_rows_vazio_ausente_ou_acima_do_teto_recusa_na_entrada_sem_escrever(): void
+    {
+        $acima = array_map(
+            fn (int $i) => $this->linha($i + 2, '11.111.111-1', "Aluno {$i}", "a{$i}@acme.cl")->toArray(),
+            range(1, ImportRowClassifier::MAX_LINHAS + 1),
+        );
+
+        foreach ([['rows' => []], [], ['rows' => $acima]] as $payload) {
             try {
-                $data = $rows instanceof Optional ? new ImportConfirmData : new ImportConfirmData($rows);
-                app(ImportStudentsAction::class)->execute($this->turma, $data, $this->admin);
+                ImportConfirmData::validateAndCreate($payload);
                 $this->fail('A confirmação sem linhas ou acima do teto tinha de ser recusada.');
             } catch (ValidationException $e) {
                 $this->assertArrayHasKey('rows', $e->errors());

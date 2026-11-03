@@ -890,8 +890,10 @@
           "registry": "Cadastro: {{values}}",
           "archived": "Arquivado · será reativado",
           "skipped": "Será ignorada",
-          "edited": "Editada · valida ao confirmar"
+          "edited": "Editada · valida ao confirmar",
+          "updateBlocked": "Não é possível atualizar: {{reason}}"
         },
+        "nothingImported": "Nenhuma linha foi importada: revise as linhas marcadas e confirme de novo.",
         "confirm_one": "Confirmar {{count}} linha",
         "confirm_other": "Confirmar {{count}} linhas"
       }

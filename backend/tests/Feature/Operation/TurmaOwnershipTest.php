@@ -5,6 +5,7 @@ namespace Tests\Feature\Operation;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
@@ -221,11 +222,6 @@ class TurmaOwnershipTest extends TestCase
         $email = 'aluno'.($rutCounter++).'@test.local';
 
         return app(EnrollStudentAction::class)->execute(
-            $turma,
-            $rut,
-            'Aluno Teste',
-            $email,
-            null,
-        )->enrollment;
+            $turma, new StudentIdentity($rut, 'Aluno Teste', $email, null))->enrollment;
     }
 }

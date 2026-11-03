@@ -3,10 +3,12 @@
 namespace App\Domains\Identity\Services;
 
 use App\Domains\Identity\Models\User;
+use App\Shared\Data\WritableAttributes;
 use App\Shared\Support\Rut;
 use Closure;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
+use Spatie\LaravelData\Optional;
 
 /**
  * Domain Service compartilhado: provisiona o User de login de um "ator"
@@ -20,6 +22,11 @@ use Illuminate\Validation\ValidationException;
  * É a fonte única desta regra — as Actions de cada domínio
  * (CreateClientAction, CreateRedatorAction, ...) chamam este service em vez de
  * duplicar o provisionamento.
+ *
+ * `update()` é a contraparte de `provision()`: a mesma checagem de identidade
+ * e a mesma tradução de colisão de índice, para a escrita em um User que já
+ * existe. Os Update* de cada ator chamam-no em vez de montar o par
+ * `ensureIdentityAvailable` + `writing` à mão.
  */
 class UserProvisioner
 {
@@ -47,6 +54,36 @@ class UserProvisioner
             'type' => $type,
             'is_active' => $this->accessDefaultFor($type),
         ]));
+    }
+
+    /**
+     * Grava as colunas de `users` de um user existente: checa RUT e e-mail
+     * (ignorando o próprio) e escreve por `writing()`, então colisão de índice
+     * sobe como 422 do campo.
+     *
+     * `email` é obrigatório. `rut` é `string|null|Optional`: string checa e
+     * formata; `null` apaga a coluna e pula só a checagem de RUT (staff pode
+     * não ter); `Optional` ou ausente pula a checagem e não mexe na coluna —
+     * ausente não é nulo (BD-14). Qualquer valor `Optional` sai pelo
+     * `WritableAttributes::from`.
+     *
+     * O que é de cada ator (transição de `is_active`, senha, roles, tabela
+     * própria) continua na Action dele.
+     *
+     * @param  array<string,mixed>  $attributes  colunas de `users` a gravar
+     */
+    public function update(User $user, array $attributes): void
+    {
+        $rut = $attributes['rut'] ?? null;
+        $rut = $rut instanceof Optional ? null : $rut;
+
+        $formatado = $this->ensureIdentityAvailable($rut, $attributes['email'], $user->id);
+
+        if ($formatado !== null) {
+            $attributes['rut'] = $formatado;
+        }
+
+        $this->writing(fn () => $user->update(WritableAttributes::from($attributes)));
     }
 
     /**

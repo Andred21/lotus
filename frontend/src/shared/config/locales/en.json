@@ -890,8 +890,10 @@
           "registry": "Record: {{values}}",
           "archived": "Archived · will be reactivated",
           "skipped": "Skipped",
-          "edited": "Edited · validated on confirm"
+          "edited": "Edited · validated on confirm",
+          "updateBlocked": "Can't update: {{reason}}"
         },
+        "nothingImported": "No row was imported: review the marked rows and confirm again.",
         "confirm_one": "Confirm {{count}} row",
         "confirm_other": "Confirm {{count}} rows"
       }

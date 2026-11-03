@@ -18,9 +18,9 @@ return [
     'enrollment' => [
         'result_locked' => 'This enrollment already has an issued certificate: its result can no longer be changed.',
         'import' => [
-            'duplicate_rut' => 'This RUT appears more than once in the spreadsheet: only the first row counts.',
-            'duplicate_email' => 'This email appears more than once in the spreadsheet: only the first row counts.',
-            'update_forbidden' => 'You are not allowed to update student records: the row was not saved.',
+            'duplicate_rut' => 'This RUT already appears in row :row of the spreadsheet: only the first one counts.',
+            'duplicate_email' => 'This email already appears in row :row of the spreadsheet: only the first one counts.',
+            'update_forbidden' => "You don't have permission to update the student's record.",
         ],
     ],
     'requirement' => [

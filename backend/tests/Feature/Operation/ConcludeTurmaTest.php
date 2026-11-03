@@ -5,6 +5,7 @@ namespace Tests\Feature\Operation;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Operation\Actions\ConcludeTurmaAction;
 use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Actions\StoreTurmaDocumentAction;
@@ -153,7 +154,7 @@ class ConcludeTurmaTest extends TestCase
         $this->actingAsAdmin();
         $this->completarDocs();
         $enrollment = app(EnrollStudentAction::class)
-            ->execute($this->turma, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', null)
+            ->execute($this->turma, new StudentIdentity('11.111.111-1', 'Juan Soto', 'juan@acme.cl', null))
             ->enrollment;
 
         $this->postJson("/api/turmas/{$this->turma->id}/conclude")

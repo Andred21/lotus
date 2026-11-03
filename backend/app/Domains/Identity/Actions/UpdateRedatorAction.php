@@ -7,7 +7,6 @@ use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Services\UserProvisioner;
 use App\Shared\Audit\PivotAudit;
-use App\Shared\Data\WritableAttributes;
 use App\Shared\Files\Services\FileUploader;
 use App\Shared\Files\Services\StoredFiles;
 use Illuminate\Http\UploadedFile;
@@ -39,13 +38,6 @@ class UpdateRedatorAction
             // `redatores` são varridos pela cascata de `ArchiveRedatorAction`.
             Redator::lockForWrite($redator->id);
 
-            // Unicidade DENTRO da transação que escreve. Consequência
-            // aceita: os binários já subiram (ficam fora da transação por
-            // decisão registrada, D3 da spec do redator), então um RUT
-            // duplicado agora sobe e descarta — o `FileUploader` é a fonte
-            // única desse descarte (RedatorDocumentRollbackTest).
-            $rut = $this->users->ensureIdentityAvailable($data->rut, $data->email, $redator->user_id);
-
             // Revogação é transição, não estado: só purga quem estava
             // ativo e passou a inativo. Reenviar `false` para quem já
             // estava inativo não derruba sessão nenhuma.
@@ -53,13 +45,18 @@ class UpdateRedatorAction
                 && $data->is_active === false
                 && $redator->user->is_active === true;
 
-            $this->users->writing(fn () => $redator->user->update(WritableAttributes::from([
+            // `update()` checa a unicidade DENTRO da transação que escreve. Consequência
+            // aceita: os binários já subiram (ficam fora da transação por
+            // decisão registrada, D3 da spec do redator), então um RUT
+            // duplicado agora sobe e descarta — o `FileUploader` é a fonte
+            // única desse descarte (RedatorDocumentRollbackTest).
+            $this->users->update($redator->user, [
                 'name' => $data->name,
-                'rut' => $rut,
+                'rut' => $data->rut,
                 'email' => $data->email,
                 'phone' => $data->phone,
                 'is_active' => $data->is_active,
-            ])));
+            ]);
 
             if ($revogando) {
                 $this->sessions->all($redator->user);

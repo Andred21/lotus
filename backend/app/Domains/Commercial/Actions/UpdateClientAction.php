@@ -34,14 +34,12 @@ class UpdateClientAction
 
             // Unicidade DENTRO da transação que escreve, pelas duas colunas: o
             // e-mail faltava aqui e a colisão virava 500 (achado 4).
-            $rut = $this->users->ensureIdentityAvailable($data->rut, $data->email, $client->user_id);
-
-            $this->users->writing(fn () => $client->user->update(WritableAttributes::from([
+            $this->users->update($client->user, [
                 'name' => $data->name,
-                'rut' => $rut,
+                'rut' => $data->rut,
                 'email' => $data->email,
                 'phone' => $data->phone,
-            ])));
+            ]);
 
             $client->update(WritableAttributes::from([
                 'legal_name' => $data->legal_name,

@@ -6,7 +6,6 @@ use App\Domains\Identity\Data\UserData;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\SuperadminGuard;
 use App\Domains\Identity\Services\UserProvisioner;
-use App\Shared\Data\WritableAttributes;
 use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 
@@ -39,15 +38,6 @@ class UpdateStaffUserAction
                 $this->guard->assertNotLastActiveSuperadmin($user);
             }
 
-            // Unicidade DENTRO da transação: fora dela, check e write são duas
-            // operações independentes. Porta única — RUT nulo (staff pode não
-            // ter) pula só a checagem de RUT, nunca a de e-mail.
-            $rut = $this->users->ensureIdentityAvailable(
-                ($data->rut instanceof Optional || $data->rut === null) ? null : $data->rut,
-                $data->email,
-                $user->id,
-            );
-
             // Revogação é transição, não estado: só purga quem estava ativo e
             // passou a inativo. Reenviar `false` para conta já desligada não
             // derruba sessão nenhuma. Forma copiada do `UpdateRedatorAction`,
@@ -56,23 +46,26 @@ class UpdateStaffUserAction
                 && $data->is_active === false
                 && $user->is_active === true;
 
-            $attrs = WritableAttributes::from([
+            $attrs = [
                 'name' => $data->name,
                 'email' => $data->email,
-                // `rut` omitido não vira null: o `Optional` segue adiante e a
-                // chave sai do array. Só o `null` explícito apaga (D1).
-                'rut' => $data->rut instanceof Optional ? $data->rut : $rut,
+                // `rut` omitido segue como `Optional` e o provisioner não mexe na
+                // coluna; só o `null` explícito apaga (D1) e pula só a checagem
+                // de RUT, nunca a de e-mail.
+                'rut' => $data->rut,
                 'phone' => $data->phone,
                 'is_active' => $data->is_active,
-            ]);
+            ];
 
-            // `password` NÃO entra no helper: aqui `''` também significa
+            // `password` só entra quando não vazia: aqui `''` também significa
             // "mantém a atual", e isso é regra de senha, não de omissão.
             if (! ($data->password instanceof Optional) && $data->password !== '') {
                 $attrs['password'] = $data->password;
             }
 
-            $this->users->writing(fn () => $user->update($attrs));
+            // Unicidade DENTRO da transação: fora dela, check e write são duas
+            // operações independentes. `update()` é a porta única.
+            $this->users->update($user, $attrs);
 
             if ($revogando) {
                 $this->sessions->all($user);

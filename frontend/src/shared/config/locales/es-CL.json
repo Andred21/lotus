@@ -890,8 +890,10 @@
           "registry": "Registro: {{values}}",
           "archived": "Archivado · se reactivará",
           "skipped": "Se omite",
-          "edited": "Editada · se valida al confirmar"
+          "edited": "Editada · se valida al confirmar",
+          "updateBlocked": "No se puede actualizar: {{reason}}"
         },
+        "nothingImported": "No se importó ninguna fila: revisa las filas marcadas y confirma de nuevo.",
         "confirm_one": "Confirmar {{count}} fila",
         "confirm_other": "Confirmar {{count}} filas"
       }

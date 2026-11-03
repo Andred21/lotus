@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Shared;
 
+use App\Shared\Data\Attributes\InputOnlyCollection;
 use App\Shared\Data\Attributes\ReadOnlyCollection;
 use ReflectionClass;
 use ReflectionNamedType;
+use ReflectionParameter;
 use ReflectionType;
 use ReflectionUnionType;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -215,6 +217,11 @@ class PersistenceLawsTest extends TestCase
      *   ENTRADA que a marca nega. É a medição que a spec §1.5 fez à mão, uma
      *   vez, virando catraca.
      *
+     * `#[InputOnlyCollection]` é a marca irmã, para coleção que só ENTRA (corpo
+     * da confirmação da importação). Também verificada, em `violacoesDaMarcaSoEntrada()`:
+     * exige `#[DataCollectionOf]`, tipo SEM `Optional` e sem default, e classe sem
+     * `fromModel`.
+     *
      * Nasce VERDE: as quatro read-write (`ClientData` ×2, `CourseData` ×2) são
      * `Optional`, e as marcadas (`BudgetData`/`QuoteData`) só se escrevem por
      * rota própria — `POST /budgets/{budget}/quotes`, upload de arquivo.
@@ -246,6 +253,15 @@ class PersistenceLawsTest extends TestCase
                 $nome = $parametro->getName();
                 $marcada = $parametro->getAttributes(ReadOnlyCollection::class) !== [];
                 $colecao = $parametro->getAttributes(DataCollectionOf::class) !== [];
+                $soEntrada = $parametro->getAttributes(InputOnlyCollection::class) !== [];
+
+                if ($soEntrada) {
+                    foreach ($this->violacoesDaMarcaSoEntrada($classe, $parametro, $colecao, $marcada) as $violacao) {
+                        $encontrados[] = "{$classe}::\${$nome}: {$violacao}";
+                    }
+
+                    continue;
+                }
 
                 if ($marcada && ! $colecao) {
                     $encontrados[] = "{$classe}::\${$nome}: #[ReadOnlyCollection] sem #[DataCollectionOf] — marca inerte, a guarda nao olha esta propriedade de nenhum jeito";
@@ -283,10 +299,77 @@ class PersistenceLawsTest extends TestCase
                 'Ausente = nao mexe; [] = apaga. Com `array = []`, o replace-total da Action',
                 'apaga a colecao de quem so omitiu o campo — em silencio.',
                 'Se a colecao so existe na SAIDA, marque com #[ReadOnlyCollection] — e a marca',
-                'so vale enquanto NENHUMA Action ler o campo da entrada. Ocorrencias:',
+                'so vale enquanto NENHUMA Action ler o campo da entrada. Se ela so existe na',
+                'ENTRADA, marque com #[InputOnlyCollection] — obrigatoria, sem Optional nem default,',
+                'e a classe nao pode ter fromModel. Ocorrencias:',
             ],
             $encontrados,
         )));
+    }
+
+    /**
+     * Verifica a marca `#[InputOnlyCollection]` — a irmã de entrada da
+     * `#[ReadOnlyCollection]`. Cada violação é uma linha própria da mensagem.
+     *
+     * @return list<string>
+     */
+    private function violacoesDaMarcaSoEntrada(string $classe, ReflectionParameter $parametro, bool $colecao, bool $marcadaSaida): array
+    {
+        $violacoes = [];
+
+        if (! $colecao) {
+            $violacoes[] = '#[InputOnlyCollection] sem #[DataCollectionOf] — marca inerte, a guarda nao olha esta propriedade de nenhum jeito';
+        }
+
+        if ($marcadaSaida) {
+            $violacoes[] = '#[InputOnlyCollection] junto de #[ReadOnlyCollection] — a colecao nao pode ser so de entrada e so de saida';
+        }
+
+        if ($this->admiteOptional($parametro->getType())) {
+            $violacoes[] = '#[InputOnlyCollection] com tipo que admite Optional — numa colecao so de entrada a ausencia e recusa, nao "nao mexe"';
+        }
+
+        if ($parametro->getType()?->allowsNull()) {
+            $violacoes[] = '#[InputOnlyCollection] com tipo anulavel — `null` entraria como colecao ausente, e a ausencia e recusa';
+        }
+
+        if (! $this->regrasExigemAPropriedade($classe, $parametro->getName())) {
+            $violacoes[] = '#[InputOnlyCollection] sem `required` em `rules()` da classe — nada recusaria a ausencia do campo antes da Action';
+        }
+
+        if ($parametro->isDefaultValueAvailable()) {
+            $violacoes[] = '#[InputOnlyCollection] com default — a ausencia deixaria de ser recusa';
+        }
+
+        if ((new ReflectionClass($classe))->hasMethod('fromModel')) {
+            $violacoes[] = '#[InputOnlyCollection] em classe que declara fromModel — a colecao tambem sai, e a lei read-write vale';
+        }
+
+        return $violacoes;
+    }
+
+    /**
+     * `rules()` estática da classe lista `required` para a propriedade? Sem
+     * `rules()`, ou sem `required` nela, a ausência não vira 422.
+     */
+    private function regrasExigemAPropriedade(string $classe, string $propriedade): bool
+    {
+        $reflexao = new ReflectionClass($classe);
+
+        if (! $reflexao->hasMethod('rules')) {
+            return false;
+        }
+
+        $metodo = $reflexao->getMethod('rules');
+
+        if (! $metodo->isStatic() || ! $metodo->isPublic() || $metodo->getNumberOfRequiredParameters() > 0) {
+            return false;
+        }
+
+        $regras = $metodo->invoke(null)[$propriedade] ?? [];
+        $regras = is_string($regras) ? explode('|', $regras) : $regras;
+
+        return in_array('required', $regras, true);
     }
 
     /**

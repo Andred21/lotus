@@ -3,41 +3,58 @@
 namespace App\Domains\Identity\Services;
 
 use App\Domains\Commercial\Models\Client;
-use App\Domains\Identity\Actions\UpdateStudentAction;
-use App\Domains\Identity\Data\StudentData;
+use App\Domains\Identity\Data\StudentIdentityData;
 use App\Domains\Identity\Enums\LinkOutcome;
 use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
 use App\Shared\Support\Rut;
-use App\Shared\Support\TetosDeColuna;
-use App\Shared\Support\TetosImpressos;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Resolve uma linha de importação de aluno pelo RUT (chave natural, RF-ALU-07):
  * existe? associa : cria (via UserProvisioner). Aplica o vínculo ao cliente da
- * cotação (RN-10) via StudentClientLinkService. Lança por linha; a importação
- * (6c) captura e reporta, sem abortar a planilha inteira.
+ * cotação (RN-10) via StudentClientLinkService. Lança `ValidationException` por
+ * linha. Na importação, a confirmação checa o lote inteiro antes de gravar e
+ * aborta tudo na primeira recusa (tudo ou nada); só a corrida na gravação (um
+ * RUT ou e-mail tomado entre a checagem e a escrita) cai no resumo por linha.
  */
 class StudentResolver
 {
     public function __construct(
         private readonly UserProvisioner $provisioner,
         private readonly StudentClientLinkService $linkService,
-        private readonly UpdateStudentAction $updateStudent,
     ) {}
 
-    public function resolveByRut(
-        string $rut,
-        string $name,
-        ?string $email,
-        ?string $phone,
-        Client $client,
-    ): StudentResolution {
-        $parsed = Rut::parse($rut);
+    /**
+     * A identidade de uma linha, com a FORMA já julgada (RUT, nome, e-mail,
+     * telefone e os tetos de `TetosImpressos`/`TetosDeColuna`): as regras são as
+     * de `StudentIdentity::rules()`, as mesmas do cadastro e da matrícula
+     * individual. Lança a `ValidationException` da linha, com uma chave por campo.
+     *
+     * @throws ValidationException
+     */
+    public function identity(string $rut, string $name, ?string $email, ?string $phone): StudentIdentity
+    {
+        return StudentIdentityData::validateAndCreate([
+            'rut' => $rut,
+            'name' => $name,
+            'email' => $email,
+            'phone' => $phone,
+        ])->toIdentity();
+    }
+
+    /**
+     * Pré-condição: a `StudentIdentity` chega com a forma já validada
+     * (`StudentIdentity::rules()`), como a entregam `identity()`, o cadastro e a
+     * matrícula individual; aqui só se julga o RUT e o tipo do usuário.
+     *
+     * @throws ValidationException
+     */
+    public function resolveByRut(StudentIdentity $identity, Client $client): StudentResolution
+    {
+        $parsed = Rut::parse($identity->rut);
 
         if (! $parsed->isValid()) {
             throw ValidationException::withMessages(['rut' => __('identity.errors.rut_invalid')]);
@@ -53,14 +70,20 @@ class StudentResolver
 
         // Atômico por linha: falha no meio faz rollback, sem User/Student órfão.
         // A transação de link (interna) aninha via savepoint — ok no Laravel.
-        return DB::transaction(function () use ($user, $name, $rut, $email, $phone, $client) {
+        return DB::transaction(function () use ($user, $identity, $client) {
             // Aluno novo: provisiona o User (inativo, sem role) e cria o Student.
             if ($user === null) {
-                // Aluno novo: e-mail, teto do nome e colisão de identidade saem de
-                // assertCanCreate — a mesma validação serve à triagem, sem escrita (D10).
-                $this->assertCanCreate($rut, $name, $email, $phone);
+                // Aluno novo: e-mail e colisão de identidade saem de assertCanCreate
+                // — a mesma validação serve à triagem, sem escrita (D10).
+                $this->assertCanCreate($identity);
 
-                $created = $this->provisioner->provision('aluno', $name, $rut, $email, $phone);
+                $created = $this->provisioner->provision(
+                    'aluno',
+                    $identity->name,
+                    $identity->rut,
+                    $identity->email,
+                    $identity->phone,
+                );
                 $student = Student::create(['user_id' => $created->id]);
                 $this->linkService->link($student, $client);
 
@@ -114,75 +137,84 @@ class StudentResolver
 
     /**
      * Valida, sem escrever, o que o ramo do aluno novo recusa (D10): fonte única
-     * entre a criação e a triagem da importação.
+     * entre a criação e a triagem da importação. A forma da identidade já foi
+     * julgada em `identity()`; aqui ficam as duas regras que dependem do ramo.
      *
      * Aluno novo exige e-mail (D9): users.email é NOT NULL — sem isso não há como
-     * provisionar o User. O nome é o que o certificado imprime (D15): acima do
-     * teto a linha é recusada, como a tela recusa no cadastro. O e-mail passa pela
-     * mesma regra `email` do `StudentData`: gravado malformado, o aluno não
-     * salvaria mais pelo cadastro nem aceitaria Actualizar. Telefone e e-mail
-     * acima do tamanho da coluna (`TetosDeColuna`) também são recusados: em MySQL
-     * estourariam como 500 e derrubariam o lote. Colisão de RUT ou
-     * e-mail, inclusive contra soft-deletados, vira ValidationException por linha
-     * — nunca 500 que aborta a planilha.
+     * provisionar o User. Colisão de RUT ou e-mail, inclusive contra
+     * soft-deletados, vira ValidationException por linha — nunca 500 que aborta
+     * a planilha.
      *
      * @throws ValidationException
      */
-    public function assertCanCreate(string $rut, string $name, ?string $email, ?string $phone): void
+    public function assertCanCreate(StudentIdentity $identity): void
     {
-        $this->assertNameProvided($name);
+        $this->provisioner->ensureIdentityAvailable($identity->rut, $this->requireEmail($identity));
+    }
 
-        if ($email === null || $email === '') {
+    /**
+     * A identidade que o *Actualizar* gravaria no cadastro de um aluno existente
+     * (D13/D17): campo em branco mantém o valor do cadastro e o RUT é sempre o
+     * do cadastro. A forma do resultado é julgada como a de qualquer linha.
+     *
+     * @throws ValidationException
+     */
+    public function updatedIdentity(Student $student, string $name, ?string $email, ?string $phone): StudentIdentity
+    {
+        $user = $student->user;
+
+        return $this->identity(
+            $user->rut,
+            $name,
+            $email === null || $email === '' ? $user->email : $email,
+            $phone === null || $phone === '' ? $user->phone : $phone,
+        );
+    }
+
+    /**
+     * O que o *Actualizar* recusa sem escrever: RUT ou e-mail que já são de
+     * OUTRO user (o próprio é ignorado). Contraparte de `assertCanCreate`.
+     *
+     * @throws ValidationException
+     */
+    public function assertCanUpdate(Student $student, StudentIdentity $identity): void
+    {
+        $this->provisioner->ensureIdentityAvailable(
+            $identity->rut,
+            $this->requireEmail($identity),
+            $student->user_id,
+        );
+    }
+
+    /**
+     * Atualiza o cadastro de um aluno EXISTENTE com a identidade de uma linha da
+     * importação (D13), pela mesma porta da edição de aluno
+     * (`UserProvisioner::update`: checagem de identidade e tradução de colisão).
+     * O vínculo com a empresa não é tocado. Domínios vizinhos só enxergam
+     * `Services`, por isso a porta mora aqui.
+     *
+     * @throws ValidationException
+     */
+    public function updateRegistration(Student $student, StudentIdentity $identity): void
+    {
+        $this->provisioner->update($student->user, [
+            'name' => $identity->name,
+            'rut' => $identity->rut,
+            'email' => $this->requireEmail($identity),
+            'phone' => $identity->phone,
+        ]);
+    }
+
+    /** @throws ValidationException */
+    private function requireEmail(StudentIdentity $identity): string
+    {
+        if ($identity->email === null || $identity->email === '') {
             throw ValidationException::withMessages([
                 'email' => __('identity.errors.student_email_required'),
             ]);
         }
 
-        if (mb_strlen($name) > TetosImpressos::NOME_ALUNO) {
-            throw ValidationException::withMessages([
-                'name' => __('validation.max.string', [
-                    'attribute' => __('validation.attributes.name'),
-                    'max' => TetosImpressos::NOME_ALUNO,
-                ]),
-            ]);
-        }
-
-        Validator::make(['email' => $email], ['email' => ['email']])->validate();
-
-        foreach (['email' => [$email, TetosDeColuna::EMAIL], 'phone' => [$phone, TetosDeColuna::TELEFONE]] as $campo => [$valor, $max]) {
-            if ($valor !== null && mb_strlen($valor) > $max) {
-                throw ValidationException::withMessages([
-                    $campo => __('validation.max.string', [
-                        'attribute' => __("validation.attributes.{$campo}"),
-                        'max' => $max,
-                    ]),
-                ]);
-            }
-        }
-
-        $this->provisioner->ensureIdentityAvailable($rut, $email);
-    }
-
-    /**
-     * Atualiza o cadastro de um aluno EXISTENTE com os dados de uma linha da
-     * importação (D13). Campo em branco mantém o valor do cadastro (D17), e a
-     * validação é a do contrato do aluno (`StudentData`), a mesma da tela de
-     * cadastro. Quem escreve, e audita, é o `UpdateStudentAction`; o vínculo com
-     * a empresa não é tocado. Domínios vizinhos só enxergam `Services`, por isso
-     * a porta mora aqui.
-     *
-     * @throws ValidationException
-     */
-    public function updateRegistration(Student $student, string $name, ?string $email, ?string $phone): void
-    {
-        $user = $student->user;
-
-        $this->updateStudent->execute($student, StudentData::validateAndCreate([
-            'name' => $name,
-            'rut' => $user->rut,
-            'email' => $email ?? $user->email,
-            'phone' => $phone ?? $user->phone,
-        ]));
+        return $identity->email;
     }
 
     /**

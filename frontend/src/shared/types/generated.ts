@@ -273,6 +273,12 @@ current_client: string | null,
 will_move: boolean,
 previous_client: string | null,
 };
+export type EnrollStudentData = {
+rut: string,
+name: string,
+email: string | null,
+phone: string | null,
+};
 export type EnrollmentApprovalStatus = 'pendiente' | 'aprobado' | 'reprobado';
 export type EnrollmentData = {
 id: undefined | number,
@@ -307,7 +313,7 @@ export type ForgotPasswordData = {
 email: string,
 };
 export type ImportConfirmData = {
-rows: ImportConfirmRowData[] | undefined,
+rows: ImportConfirmRowData[],
 };
 export type ImportConfirmRowData = {
 row: number,
@@ -330,6 +336,7 @@ email: string | null,
 phone: string | null,
 status: ImportRowStatus,
 message: string | null,
+update_refusal: string | null,
 current_client: string | null,
 archived: boolean,
 divergent: ImportField[],
