@@ -270,6 +270,8 @@ class DashboardEndpointTest extends TestCase
         $response->assertJsonPath('compliance_turmas.0.turma_id', $cenario['t3']);
         $response->assertJsonPath('compliance_turmas.0.present_types', ['MANUAL']);
         $response->assertJsonPath('compliance_turmas.0.missing_types', ['PRUEBAS', 'EVALUACION_REDATOR']);
+        // Requisitos de configuração saem como código do enum, como os tipos.
+        $response->assertJsonPath('compliance_turmas.0.missing_requirements', ['redator']);
 
         // T1 não tem documento nenhum: lista vazia de um lado, os três do outro.
         $response->assertJsonPath('compliance_turmas.1.turma_id', $cenario['t1']);

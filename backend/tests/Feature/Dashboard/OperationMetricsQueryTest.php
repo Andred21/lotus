@@ -12,6 +12,7 @@ use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaDisplayStatus;
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaRequirement;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
@@ -140,6 +141,7 @@ class OperationMetricsQueryTest extends TestCase
             // Este teste é do serviço e para no serviço.
             'present_types' => [TurmaDocumentType::MANUAL],
             'missing_types' => [TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
+            'missing_requirements' => [TurmaRequirement::Redator],
             'habilitada' => false,
         ], $compliance->get($overdue->id)->toArray());
 
@@ -260,6 +262,49 @@ class OperationMetricsQueryTest extends TestCase
         $this->assertSame([], $query->agenda()->toArray()['starting_soon']);
         $this->assertSame(0, $kpis['em_andamento']);
         $this->assertSame(0, $kpis['iniciadas']);
+    }
+
+    public function test_compliance_lista_requisitos_faltantes(): void
+    {
+        [$budget, $course] = $this->cenarioBase();
+        $hoje = CarbonImmutable::today();
+
+        $presencial = $this->createTurma($this->createApprovedQuote($budget, $course, 1), $course, $hoje->subDays(2), $hoje->addDays(3));
+        $presencial->update(['modalidade' => 'presencial', 'local_aplicacao' => '   ']);
+        foreach (TurmaDocumentType::cases() as $type) {
+            $this->createDocument($presencial, $type);
+        }
+
+        $linhas = app(OperationMetricsQuery::class)->complianceTurmas();
+
+        $this->assertCount(1, $linhas);
+        $this->assertSame([], $linhas[0]->missing_types);
+        $this->assertSame(
+            [TurmaRequirement::Redator, TurmaRequirement::LocalAplicacao],
+            $linhas[0]->missing_requirements,
+        );
+        $this->assertFalse($linhas[0]->habilitada);
+    }
+
+    public function test_pendencias_sinalizam_presencial_sem_local(): void
+    {
+        [$budget, $course] = $this->cenarioBase();
+        $hoje = CarbonImmutable::today();
+
+        $presencial = $this->createTurma($this->createApprovedQuote($budget, $course, 1), $course, $hoje->subDays(2), $hoje->addDays(3));
+        $presencial->update(['modalidade' => 'presencial', 'local_aplicacao' => '   ']);
+        $online = $this->createTurma($this->createApprovedQuote($budget, $course, 2), $course, $hoje->subDays(2), $hoje->addDays(3));
+
+        $itens = array_values(array_filter(
+            app(OperationMetricsQuery::class)->pendencias(),
+            fn ($item): bool => $item->type === PendingItemType::TurmaPresencialWithoutLocal,
+        ));
+
+        $this->assertCount(1, $itens);
+        $this->assertSame($presencial->id, $itens[0]->entity_id);
+        $this->assertSame($presencial->start_date->toDateString(), $itens[0]->date);
+        $this->assertSame(['turma_id' => $presencial->id], $itens[0]->navigation);
+        $this->assertNotSame($online->id, $itens[0]->entity_id);
     }
 
     /** @return array{0: Budget, 1: Course} */

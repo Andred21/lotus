@@ -37,6 +37,7 @@ const PENDENCIA: Record<PendingItemType, Destino> = {
   quote_awaiting_approval: { path: '/comercial/presupuestos', key: 'budget_id' },
   quote_approved_without_turma: { path: '/comercial/presupuestos', key: 'budget_id' },
   turma_without_redator: { path: '/operacion/turmas', key: 'turma_id' },
+  turma_presencial_without_local: { path: '/operacion/turmas', key: 'turma_id' },
   turma_docs_incomplete: { path: '/operacion/turmas', key: 'turma_id' },
   turma_awaiting_conclusion: { path: '/operacion/turmas', key: 'turma_id' },
   enrollment_awaiting_certificate: { path: '/operacion/turmas', key: 'turma_id' },

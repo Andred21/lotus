@@ -11,6 +11,7 @@ use App\Domains\Dashboard\Enums\DashboardSeverity;
 use App\Domains\Dashboard\Enums\PendingItemType;
 use App\Domains\Operation\Enums\TurmaDisplayStatus;
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaRequirement;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
@@ -94,6 +95,7 @@ class OperationMetricsQuery
                         fn (TurmaDocumentType $case): bool => in_array($case->value, $present, true),
                     )),
                     missing_types: $status->missingTypes(),
+                    missing_requirements: $status->missingRequirements(),
                     habilitada: $status->isHabilitada(),
                 );
             })
@@ -114,6 +116,15 @@ class OperationMetricsQuery
                     $turma,
                     PendingItemType::TurmaWithoutRedator,
                     __('dashboard.pending.turma_without_redator'),
+                    $turma->start_date->toDateString(),
+                );
+            }
+
+            if (in_array(TurmaRequirement::LocalAplicacao, $status->missingRequirements(), true)) {
+                $pendencias[] = $this->pendingItem(
+                    $turma,
+                    PendingItemType::TurmaPresencialWithoutLocal,
+                    __('dashboard.pending.turma_presencial_without_local'),
                     $turma->start_date->toDateString(),
                 );
             }

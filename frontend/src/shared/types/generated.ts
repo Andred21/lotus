@@ -20,6 +20,7 @@ conclusoes_por_confirmar: number | null,
 cotacoes: QuoteKpisData | null,
 certificados_a_emitir: number | null,
 };
+export type AgendaBucket = 'overdue' | 'upcoming' | 'ending_soon' | 'in_progress';
 export type AgendaData = {
 starting_soon: AgendaTurmaData[],
 ending_soon: AgendaTurmaData[],
@@ -381,7 +382,7 @@ description: string,
 date: string | null,
 navigation: Record<string, number>,
 };
-export type PendingItemType = 'quote_awaiting_approval' | 'quote_approved_without_turma' | 'turma_without_redator' | 'turma_docs_incomplete' | 'turma_awaiting_conclusion' | 'enrollment_awaiting_certificate';
+export type PendingItemType = 'quote_awaiting_approval' | 'quote_approved_without_turma' | 'turma_without_redator' | 'turma_presencial_without_local' | 'turma_docs_incomplete' | 'turma_awaiting_conclusion' | 'enrollment_awaiting_certificate';
 export type PendingQuoteData = {
 quote_id: number,
 quote_code: string | null,
@@ -687,6 +688,7 @@ start_date: string,
 end_date: string,
 present_types: TurmaDocumentType[],
 missing_types: TurmaDocumentType[],
+missing_requirements: TurmaRequirement[],
 habilitada: boolean,
 };
 export type TurmaData = {

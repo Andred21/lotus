@@ -3,6 +3,7 @@
 namespace App\Domains\Dashboard\Data;
 
 use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Enums\TurmaRequirement;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
@@ -21,6 +22,8 @@ class TurmaComplianceData extends Data
         public array $present_types,
         /** @var TurmaDocumentType[] */
         public array $missing_types,
+        /** @var TurmaRequirement[] */
+        public array $missing_requirements,
         public bool $habilitada,
     ) {}
 }

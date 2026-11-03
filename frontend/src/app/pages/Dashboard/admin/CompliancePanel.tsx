@@ -1,9 +1,23 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppDataTable, AppColumn, AppEmptyState, AppTag, technicalDataClass } from '@shared/ui'
-import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
+import { formatIsoDate, turmaDocumentTypeList, turmaRequirementList } from '@shared/lib'
 import type { TurmaComplianceData } from '@shared/types/generated'
 import { complianceWidths } from './panelColumns'
+
+/**
+ * O que falta para a turma concluir: documentos, depois requisitos de
+ * configuração (redator, local). `—` só quando os dois estão vazios — sem os
+ * requisitos a coluna dizia "—" para uma turma que não podia concluir.
+ */
+function faltante(r: TurmaComplianceData, t: (key: string) => string): string {
+  const partes = [
+    turmaDocumentTypeList(r.missing_types, t),
+    turmaRequirementList(r.missing_requirements, t),
+  ].filter((parte) => parte !== '')
+
+  return partes.length === 0 ? '—' : partes.join(', ')
+}
 
 /**
  * Compliance documental das turmas. Tabela de verdade e não lista compacta
@@ -79,9 +93,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           // PENDÊNCIA continua vindo pronta do backend (D17) — a correção é desta
           // coluna, que é montada aqui. O rótulo vem do mapa de `shared/lib`, que
           // é o que reprova tipo novo sem tradução (Q-4 do review de 2026-08-24).
-          body={(r: TurmaComplianceData) =>
-            r.missing_types.length === 0 ? '—' : turmaDocumentTypeList(r.missing_types, t)
-          }
+          body={(r: TurmaComplianceData) => faltante(r, t)}
         />
         <AppColumn
           header={t('dashboard.compliance.enabled')}

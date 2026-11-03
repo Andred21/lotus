@@ -8,6 +8,7 @@ enum PendingItemType: string
     case QuoteAwaitingApproval = 'quote_awaiting_approval';
     case QuoteApprovedWithoutTurma = 'quote_approved_without_turma';
     case TurmaWithoutRedator = 'turma_without_redator';
+    case TurmaPresencialWithoutLocal = 'turma_presencial_without_local';
     case TurmaDocsIncomplete = 'turma_docs_incomplete';
     case TurmaAwaitingConclusion = 'turma_awaiting_conclusion';
     case EnrollmentAwaitingCertificate = 'enrollment_awaiting_certificate';

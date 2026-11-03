@@ -5,6 +5,7 @@ import type { DashboardAlertType, PendingItemType } from '@shared/types/generate
 describe('pendingItemRoute', () => {
   it.each([
     ['turma_without_redator', { turma_id: 7 }, '/operacion/turmas/7'],
+    ['turma_presencial_without_local', { turma_id: 7 }, '/operacion/turmas/7'],
     ['turma_docs_incomplete', { turma_id: 7 }, '/operacion/turmas/7'],
     ['turma_awaiting_conclusion', { turma_id: 7 }, '/operacion/turmas/7'],
     ['enrollment_awaiting_certificate', { turma_id: 7 }, '/operacion/turmas/7'],
