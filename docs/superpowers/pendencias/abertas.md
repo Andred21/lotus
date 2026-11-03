@@ -1304,3 +1304,17 @@ tamanhos de faixa e o celeste num título, e reabriria a divergência que o audi
 O código não viola a rule: ela ficou atrás dele. Fecha com uma linha na tabela (o título de seção
 de formulário, 13px, na marca, a mesma voz da faixa um degrau acima) e o valor da constante nova
 congelado no `typography.test.ts`, como as outras.
+
+## P-112 — cotação ligada a turma: só o valor UF fica editável, e a cotação ganha a tag do status da turma
+
+**Bloco:** item 50 · **Quem decide:** João (decidido 2026-11-02) · **Gatilho:** brainstorming do 50. Revisar em **2026-11-16**.
+
+Decisão do João no bloco 48 (spec D9, literal), para entrar no escopo do 50:
+
+- cotação **aprovada** ligada a turma: só o **valor UF** fica editável (restringe o "demais campos
+  editáveis" do achado 0.2 da ficha 50);
+- cotação/orçamento ganham uma **tag com o status da turma**, prefixo "Turma:" nos três idiomas —
+  *A configurar* (sem turma ainda), *En curso*, *Concluida*; cotação **recusada** não tem a tag;
+- confirmado pelo levantamento do bloco 48: hoje o superadmin recusa uma cotação aprovada com turma
+  concluída (`RejectQuoteAction`, sem guarda) e depois edita curso, número de alunos e UF, ou apaga a
+  cotação; já há teste fixando esse caminho (`QuoteApprovalTest.php:77-85`). Isso é o card 5 do 50.
