@@ -2,9 +2,28 @@
 
 ## Em aberto
 
-- **Q-1** · Importante · `CONFIRMED` — `operation.turma.manage_concluded_docs` fora de
-  `PermissionCatalog::SEGREGATED`. Falta: aprovação do João para corrigir (ou adiar, virando ficha
-  proposta).
+## Rodada 2 — `1575d694..0df0a0b8` — 2026-11-02 · Lente 1: opus (codex indisponível — `model_not_found` para `gpt-5.5`) · Lente 2: sonnet
+
+O João aprovou a correção do Q-1 e do Q-2 da rodada 1, aplicada em `0df0a0b8`. O Q-1 pôs
+`operation.turma.manage_concluded_docs` em `PermissionCatalog::SEGREGATED`, com o teste
+`TurmaDocumentApiTest::test_manage_concluded_docs_e_so_do_superadmin`, que primeiro falhou na
+asserção de `SEGREGATED` e depois passou. O Q-2 reescreveu o docblock do `CertificateVigenciaResolver`.
+A suíte do backend fechou com 1652 testes passando e 7 pulados. A lente Codex foi tentada de novo e
+falhou com o mesmo `model_not_found`.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | Docblocks fora do diff ainda descrevem a regra antiga, contra a spec §7. `Turma` diz que os documentos (store e delete) sempre passam pelo gate, mas ele agora é pulado com `manage_concluded_docs`. `RedatorScopeQuery` põe o `where` no `scopeEmitidos()`, que só delega. `CertificateEligibility` e `EmissionPanelQuery` dão o critério de "vigente" ao `CertificateVigenciaResolver`, e o dono é o `EmissionStateResolver`. `turmaStatus.ts` diz que a turma concluída tranca "não só a documentação", que agora tem exceção. Nenhum comportamento quebra. | CONFIRMED | `backend/app/Domains/Operation/Models/Turma.php:176-181`; `backend/app/Domains/Dashboard/Services/RedatorScopeQuery.php:165-168`; `backend/app/Domains/Certification/Services/CertificateEligibility.php:76-77`; `backend/app/Domains/Certification/Services/EmissionPanelQuery.php:126-127`; `frontend/src/features/operation/lib/turmaStatus.ts:18-19` | registrado; não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0
+plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+Padrão reincidente: nenhum. É o mesmo texto de "fonte única" do Q-2 da rodada 1, em outros sítios
+do mesmo bloco.
+
+Fora dos achados: o texto em inglês usa "redator" no lugar do "instructor" da spec §5, porque o
+`copy.test.ts` UI-05 proíbe "instructor". Isso já está em `rulings.md` como [DESTACAR — pede o
+João], e o DoD 6 ("literais nos três locales") fecha com o aceite dele.
 
 ## Rodada 1 — `1575d694..14772007` — 2026-11-02 · Lente 1: opus (codex indisponível — `model_not_found` para `gpt-5.5`) · Lente 2: sonnet
 
