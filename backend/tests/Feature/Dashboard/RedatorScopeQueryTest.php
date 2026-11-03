@@ -209,10 +209,9 @@ class RedatorScopeQueryTest extends TestCase
 
         $this->assertSame([$this->aFutura->id], array_column($agenda['starting_soon'], 'turma_id'));
         $this->assertSame([$this->aEmCurso->id], array_column($agenda['ending_soon'], 'turma_id'));
-        $this->assertSame(
-            [$this->aEmCurso->id, $this->compartilhada->id],
-            array_column($agenda['in_progress'], 'turma_id'),
-        );
+        // D-72: baldes disjuntos — a aEmCurso, que termina dentro do horizonte,
+        // fica só em `ending_soon` e sai de `in_progress`.
+        $this->assertSame([$this->compartilhada->id], array_column($agenda['in_progress'], 'turma_id'));
         $this->assertSame([$this->aAtrasada->id], array_column($agenda['overdue'], 'turma_id'));
 
         $todosOsIds = collect($agenda)->flatten(1)->pluck('turma_id')->all();
@@ -236,6 +235,58 @@ class RedatorScopeQueryTest extends TestCase
             $this->aEmCurso->id,
             collect($agendaB)->flatten(1)->pluck('turma_id')->all(),
         );
+    }
+
+    public function test_turma_dez_dias_a_frente_esta_no_kpi_e_na_agenda(): void
+    {
+        $hoje = CarbonImmutable::today();
+        $longe = $this->createTurma($hoje->addDays(10), $hoje->addDays(13));
+        $longe->redatores()->attach($this->redatorA->id);
+
+        $query = app(RedatorScopeQuery::class);
+
+        // Antes o KPI contava toda turma futura e a agenda cortava em 7 dias:
+        // esta turma estava no número e fora da lista. Agora é a mesma lista.
+        $this->assertSame(2, $query->resumo($this->redatorA)->proximas_turmas);
+        $this->assertContains(
+            $longe->id,
+            array_column($query->agenda($this->redatorA)->toArray()['starting_soon'], 'turma_id'),
+        );
+    }
+
+    public function test_turma_alheia_dez_dias_a_frente_nao_aparece(): void
+    {
+        $hoje = CarbonImmutable::today();
+        $alheia = $this->createTurma($hoje->addDays(10), $hoje->addDays(13));
+        $alheia->redatores()->attach($this->redatorB->id);
+
+        $query = app(RedatorScopeQuery::class);
+
+        $this->assertSame(1, $query->resumo($this->redatorA)->proximas_turmas);
+        $this->assertNotContains(
+            $alheia->id,
+            collect($query->agenda($this->redatorA)->toArray())->flatten(1)->pluck('turma_id')->all(),
+        );
+    }
+
+    public function test_resumo_e_o_tamanho_dos_baldes(): void
+    {
+        $hoje = CarbonImmutable::today();
+        $longe = $this->createTurma($hoje->addDays(10), $hoje->addDays(13));
+        $longe->redatores()->attach($this->redatorA->id);
+
+        $query = app(RedatorScopeQuery::class);
+        $resumo = $query->resumo($this->redatorA);
+        $agenda = $query->agenda($this->redatorA)->toArray();
+
+        $this->assertSame(count($agenda['starting_soon']), $resumo->proximas_turmas);
+        $this->assertSame(
+            count($agenda['overdue']) + count($agenda['ending_soon']) + count($agenda['in_progress']),
+            $resumo->turmas_em_andamento,
+        );
+
+        $ids = collect($agenda)->flatten(1)->pluck('turma_id');
+        $this->assertSame($ids->count(), $ids->unique()->count(), 'nenhuma turma em dois baldes');
     }
 
     public function test_pendencias_documentais_listam_so_as_turmas_do_redator(): void

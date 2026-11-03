@@ -233,7 +233,10 @@ class DashboardEndpointTest extends TestCase
             $this->assertArrayNotHasKey($secao, $response->json());
         }
 
-        $this->assertSame([$cenario['t1']], array_column($response->json('agenda.in_progress'), 'turma_id'));
+        // D-72: T1 termina dentro do horizonte, então é `ending_soon` e já não
+        // aparece também em `in_progress` — os baldes são disjuntos.
+        $this->assertSame([$cenario['t1']], array_column($response->json('agenda.ending_soon'), 'turma_id'));
+        $this->assertSame([], $response->json('agenda.in_progress'));
         $this->assertSame([$cenario['t1']], array_column($response->json('pendencias_documentais'), 'turma_id'));
     }
 
