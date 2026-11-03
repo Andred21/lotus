@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Certification;
 
+use App\Domains\Certification\Actions\StoreManagerSignatureAction;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Models\CertificateSettings;
 use App\Domains\Certification\Services\CertificateSignatures;
@@ -9,6 +10,7 @@ use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
 use App\Shared\Files\Models\File;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\Files\BuildsRealUploads;
@@ -156,5 +158,28 @@ class CertificateSignaturesTest extends TestCase
 
         $this->assertSame('NOMBRE DEL RELATOR', $assinaturas->instrutor->nome);
         $this->assertNull($assinaturas->instrutor->pngBase64);
+    }
+
+    public function test_falha_na_troca_preserva_a_firma_anterior(): void
+    {
+        $settings = CertificateSettings::atual();
+        $anterior = $this->subirFirma('certificate_settings', $settings->id, CertificateSettings::TIPO_FIRMA, $this->pngDeLargura(900, 300), 'antiga.png');
+        $objetosAntes = Storage::disk(config('filesystems.default'))->allFiles();
+
+        Event::listen('eloquent.creating: '.File::class, function (): void {
+            throw new \RuntimeException('insert recusado');
+        });
+
+        try {
+            app(StoreManagerSignatureAction::class)->execute(
+                $this->uploadReal($this->pngDeLargura(800, 250), 'nova.png', 'image/png'),
+            );
+            $this->fail('a escrita devia falhar');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('insert recusado', $e->getMessage());
+        }
+
+        $this->assertNull($anterior->fresh()->deleted_at);
+        $this->assertEqualsCanonicalizing($objetosAntes, Storage::disk(config('filesystems.default'))->allFiles());
     }
 }
