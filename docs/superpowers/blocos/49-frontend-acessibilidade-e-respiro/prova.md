@@ -31,17 +31,33 @@ entre folhas de texto do bloco e os botões ou tags da linha):
 | Tela | Largura | Bloco antes → depois | Linha antes → depois | Interseções antes → depois |
 |---|---|---|---|---|
 | Orçamento 1 | 1024 | 165 → 642 px | 88 → 136 px | 1 → 0 |
-| Orçamento 1 | 1280 | — | ações na mesma linha | 0 |
-| Orçamento 1 | 390 | 278 → 278 px | 236 → 236 px | 0 → 0 |
+| Orçamento 1 | 1280 | 421 → 421 px | 80 → 80 px | 0 → 0 |
+| Orçamento 1 | 768 | 85 → 562 px | 88 → 136 px | 1 → 0 |
 | `TurmaDetailHeader` (turma 4) | 1024 | 567 → 567 px | 94 → 94 px | 0 → 0 |
-| `TurmaDetailHeader` (turma 4) | 390 | 278 → 278 px | 204 → 204 px | 0 → 0 |
+| `TurmaDetailHeader` (turma 4) | 768 | 487 → 487 px | 94 → 94 px | 0 → 0 |
 | `TurmaCreatePage` (cotação 7) | 1024 | 720 → 720 px | 48 → 48 px | 0 → 0 |
-| `TurmaCreatePage` (cotação 7) | 390 | 278 → 278 px | 48 → 48 px | 0 → 0 |
+| `TurmaCreatePage` (cotação 7) | 768 | 640 → 640 px | 48 → 48 px | 0 → 0 |
 
-O "antes" dos consumidores foi medido na mesma página, removendo as duas classes novas do DOM.
-Nenhum outro consumidor muda. No orçamento em 1024, a tag fica na linha do título, ao lado dele, e
-as três ações descem para a linha de baixo. Em 1280 tudo continua numa linha só. Captura 1:
-orçamento em 1024.
+O "antes" foi medido na mesma página, removendo do DOM as classes novas (`sm:min-w-min`,
+`sm:flex-wrap` e `sm:ml-auto`). Nenhum outro consumidor muda. As linhas de 768 vieram da revisão
+final do bloco: as de 390 que a prova trazia antes não exercitavam a mudança, porque as classes
+`sm:` só valem a partir de 640 px. A 390 o resultado é idêntico por construção — a linha é coluna
+e o `min-w-0` segue valendo, sem `min-w-min`, sem quebra e sem margem automática. Na turma 4 e na
+criação pela cotação 7 não há ação no cabeçalho a deslocar, e a medida confirma que nada se move.
+Captura 1: orçamento em 1024.
+
+**Alinhamento das ações na quebra** (`sm:ml-auto` no slot `actions`, achado da revisão final).
+Em 1024, com a tag na linha do título, as três ações descem para a linha 2. Medido nas ações
+(esquerda–direita, topo; a linha do cabeçalho vai de 280 a 1000 px):
+
+| Tela | Largura | Sem `sm:ml-auto` | Com `sm:ml-auto` |
+|---|---|---|---|
+| Orçamento 1 | 1024 | 280–750 px, y 254 (à esquerda) | 530–1000 px, y 254 (à direita) |
+| Orçamento 1 | 768 | — | 274–744 px, y 254 (à direita; a linha vai até 744) |
+| Orçamento 1 | 1280 | 786–1256 px, y 182–183 | 786–1256 px, y 182–183 (inalterado) |
+
+A margem automática, sem quebra, recebe zero: em 1280 as ações ficam onde estavam, na mesma
+linha do título. Captura fora do repositório: `orc-1024-depois.png` (orçamento em 1024, ações à direita).
 
 ## P-101 — RUT das matrículas a 390 (turma 4, aba Alumnos)
 
