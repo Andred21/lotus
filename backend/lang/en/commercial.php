@@ -12,6 +12,10 @@ return [
         'approved_cannot_delete' => 'A budget with an approved quote cannot be deleted. Reject it first.',
     ],
     'quote' => [
+        'archived' => 'This quote has been archived.',
+        'already_approved' => 'The quote is already approved.',
+        'already_rejected' => 'The quote is already rejected.',
+        'turma_exists_cannot_reject' => 'The quote has an active or concluded turma: it cannot be rejected.',
         'approved_cannot_delete' => 'An approved quote cannot be deleted. Reject it first.',
         'approved_cannot_edit' => 'An approved quote cannot be edited.',
         'budget_archived' => 'The budget of this quote is archived: restore it first.',
