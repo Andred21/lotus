@@ -2,23 +2,33 @@
 
 namespace App\Domains\Operation\Data;
 
+use App\Domains\Operation\Services\ImportRowClassifier;
+use App\Shared\Data\Attributes\InputOnlyCollection;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
- * Corpo da confirmação da importação (JSON, sem arquivo). A coleção nasce
- * `Optional` (lei de persistência: coleção de entrada); a exigência
- * `required|array|min:1|max:100` mora na `ImportStudentsAction`, que recusa
- * antes de qualquer escrita, com a chave `rows`.
+ * Corpo da confirmação da importação (JSON, sem arquivo). `rows` é coleção só de
+ * ENTRADA (`#[InputOnlyCollection]`): a ausência é recusa (422 com a chave `rows`),
+ * nunca "não mexe" — por isso o campo é obrigatório e a exigência
+ * `required|array|min:1|max:MAX_LINHAS` mora aqui, antes de qualquer escrita.
  */
 #[TypeScript]
 class ImportConfirmData extends Data
 {
     public function __construct(
-        /** @var array<ImportConfirmRowData>|Optional */
+        /** @var array<ImportConfirmRowData> */
         #[DataCollectionOf(ImportConfirmRowData::class)]
-        public array|Optional $rows = new Optional,
+        #[InputOnlyCollection]
+        public array $rows,
     ) {}
+
+    /** @return array<string, array<int, string>> */
+    public static function rules(): array
+    {
+        return [
+            'rows' => ['required', 'array', 'min:1', 'max:'.ImportRowClassifier::MAX_LINHAS],
+        ];
+    }
 }

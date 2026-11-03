@@ -16,9 +16,7 @@ use App\Domains\Operation\Services\ImportRowClassifier;
 use App\Domains\Operation\Services\ImportRowDecision;
 use App\Shared\Validation\ValidationMessages;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\Optional;
 
 /**
  * Confirmação da importação (spec D2-D7): recebe as linhas que o admin triou e
@@ -48,13 +46,6 @@ class ImportStudentsAction
         // linha: recusar o lote inteiro de uma vez é a resposta certa, e não é o
         // mesmo que recusar 40 linhas uma a uma.
         $turma->assertAcademicallyWritable();
-
-        // ANTES de escrever: a recusa por teto depois de matricular parte do
-        // lote não seria recusa, seria meia importação.
-        Validator::make(
-            ['rows' => $data->rows instanceof Optional ? null : $data->rows],
-            ['rows' => ['required', 'array', 'min:1', 'max:'.ImportRowClassifier::MAX_LINHAS]],
-        )->validate();
 
         $decisions = $this->classifier->classify(
             $turma,

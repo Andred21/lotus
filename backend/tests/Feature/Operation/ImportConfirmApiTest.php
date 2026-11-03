@@ -11,6 +11,7 @@ use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\ImportRowClassifier;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\CreatesDomainRecords;
@@ -175,17 +176,33 @@ class ImportConfirmApiTest extends TestCase
         $this->assertSame(0, $this->turma->enrollments()->where('student_id', User::where('rut', '33.333.333-3')->first()->student->id)->count());
     }
 
-    public function test_rows_vazio_ou_ausente_ou_acima_de_100_recusa_422_sem_escrever(): void
+    public function test_rows_ausente_devolve_422_rows(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->confirmar([])->assertStatus(422)->assertJsonValidationErrors('rows');
+
+        $this->assertSame(0, $this->turma->enrollments()->count());
+    }
+
+    public function test_rows_vazio_devolve_422_rows(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->confirmar(['rows' => []])->assertStatus(422)->assertJsonValidationErrors('rows');
+
+        $this->assertSame(0, $this->turma->enrollments()->count());
+    }
+
+    public function test_rows_acima_do_teto_devolve_422_rows_sem_escrever(): void
     {
         $this->actingAsAdmin();
         $muitas = array_map(
             fn (int $i) => $this->linha(['row' => $i + 1, 'rut' => '11.111.111-1', 'email' => "a{$i}@acme.cl"]),
-            range(1, 101),
+            range(1, ImportRowClassifier::MAX_LINHAS + 1),
         );
 
-        foreach ([['rows' => []], [], ['rows' => $muitas]] as $payload) {
-            $this->confirmar($payload)->assertStatus(422)->assertJsonValidationErrors('rows');
-        }
+        $this->confirmar(['rows' => $muitas])->assertStatus(422)->assertJsonValidationErrors('rows');
 
         $this->assertSame(0, $this->turma->enrollments()->count());
         $this->assertDatabaseMissing('users', ['rut' => '11.111.111-1']);

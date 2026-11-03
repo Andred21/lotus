@@ -313,7 +313,7 @@ export type ForgotPasswordData = {
 email: string,
 };
 export type ImportConfirmData = {
-rows: ImportConfirmRowData[] | undefined,
+rows: ImportConfirmRowData[],
 };
 export type ImportConfirmRowData = {
 row: number,

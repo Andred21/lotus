@@ -23,7 +23,6 @@ use App\Domains\Operation\Services\ImportRowClassifier;
 use App\Shared\Support\TetosImpressos;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
-use Spatie\LaravelData\Optional;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
 
@@ -474,15 +473,21 @@ class ImportStudentsActionTest extends TestCase
         $this->assertSame('corrida', $result->errors[0]->message);
     }
 
-    public function test_rows_vazio_ou_acima_de_100_recusa_sem_escrever(): void
+    /**
+     * A exigência de `rows` (`required|array|min:1|max:MAX_LINHAS`) mora no
+     * `ImportConfirmData::rules()`, e não mais na Action: recusa na entrada,
+     * antes de qualquer escrita. O caminho HTTP está em `ImportConfirmApiTest`.
+     */
+    public function test_rows_vazio_ausente_ou_acima_do_teto_recusa_na_entrada_sem_escrever(): void
     {
-        foreach ([[], array_map(
-            fn (int $i) => $this->linha($i + 2, '11.111.111-1', "Aluno {$i}", "a{$i}@acme.cl"),
+        $acima = array_map(
+            fn (int $i) => $this->linha($i + 2, '11.111.111-1', "Aluno {$i}", "a{$i}@acme.cl")->toArray(),
             range(1, ImportRowClassifier::MAX_LINHAS + 1),
-        ), new Optional] as $rows) {
+        );
+
+        foreach ([['rows' => []], [], ['rows' => $acima]] as $payload) {
             try {
-                $data = $rows instanceof Optional ? new ImportConfirmData : new ImportConfirmData($rows);
-                app(ImportStudentsAction::class)->execute($this->turma, $data, $this->admin);
+                ImportConfirmData::validateAndCreate($payload);
                 $this->fail('A confirmação sem linhas ou acima do teto tinha de ser recusada.');
             } catch (ValidationException $e) {
                 $this->assertArrayHasKey('rows', $e->errors());
