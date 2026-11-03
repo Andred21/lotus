@@ -65,7 +65,6 @@ class UploadPolicyRatchetTest extends TestCase
         'app/Domains/Identity/Actions/UpdateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorDocumentsData`, que pede a classe de cada tipo.',
         'app/Domains/Identity/Actions/StoreRedatorDocumentAction.php' => 'Recebe o arquivo já validado pelo `RedatorDocumentUploadData` e pelo `ProfileDocumentUploadData`, que pedem a classe de cada tipo por `TypedFileRules`.',
         'app/Domains/Certification/Actions/StoreManagerSignatureAction.php' => 'Recebe o arquivo já validado pelo `ManagerSignatureUploadData`, que pede a classe Assinatura.',
-        'app/Domains/Identity/Data/RedatorData.php' => 'DTO de leitura e escrita do redator: o campo multipart `documents` é validado pelo `RedatorDocumentsData`, não aqui.',
         'app/Providers/AppServiceProvider.php' => 'A chave `file` que casa aqui é a entrada do morph map do ADR-10, e não tem nada com upload.',
         'app/Domains/Identity/Services/UserPhotoService.php' => 'Recebe o arquivo já validado pelo `PhotoUploadData`, que pede a classe Imagem.',
         'app/Shared/Files/Rules/LarguraMinimaDeImagem.php' => 'É a regra de largura que a própria peça de política publica (só a classe Assinatura a inclui): roda dentro dela, depois do tipo e do tamanho.',
@@ -280,6 +279,18 @@ class UploadPolicyRatchetTest extends TestCase
                 "Isento {$relativo} com motivo curto demais para ser um motivo.",
             );
         }
+    }
+
+    public function test_todo_isento_ainda_e_sitio_de_upload(): void
+    {
+        // Isento que já não casa sinal nenhum deixou de ser sítio: a entrada
+        // sobra e cobre em silêncio o sinal que voltar a aparecer nele.
+        $sobrando = array_values(array_diff(array_keys(self::ISENTOS), $this->sitiosDeUpload()));
+
+        $this->assertSame([], $sobrando, implode("\n", array_merge(
+            ['Isento que já não casa nenhum sinal de upload — tire-o da lista:'],
+            $sobrando,
+        )));
     }
 
     public function test_a_lista_de_isentos_nao_esconde_sitio_que_pede_a_politica(): void
