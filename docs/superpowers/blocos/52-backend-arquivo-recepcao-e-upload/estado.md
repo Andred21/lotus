@@ -2,9 +2,9 @@
 schema_version: 3
 id: 52
 slug: 52-backend-arquivo-recepcao-e-upload
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/52-backend-arquivo-recepcao-e-upload/spec.md
 active_plan: docs/superpowers/blocos/52-backend-arquivo-recepcao-e-upload/plano.md
@@ -17,10 +17,10 @@ branch: refactor/52-backend-arquivo-recepcao-e-upload
 worktree: ../lotus-52-backend-arquivo-recepcao-e-upload
 offset: 2
 lane_base: 60e42f49
-commit: f3be2669
+commit: 7b9e0c43
 blocker: null
-updated_at: 2026-11-03T02:24:39-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+updated_at: 2026-11-03T02:44:14-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 52 — estado

@@ -46,46 +46,6 @@ no lugar que o fatal de 128M apareceu aqui.
 
 # Backend
 
-## P-76 — seis frases ao usuário seguem literais em `app/`, por três caminhos que nenhuma catraca alcança
-
-**Bloco:** item 52 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
-`Shared/Files/Rules` ou `AuthController::logout()` por outro motivo; cada sítio passa a ler `lang/`
-nos três locales no mesmo commit, **ou** a catraca ganha o caminho que faltava. Revisar em
-**2026-10-31**.
-
-Herdada da **`P-71`**, que fechou em 2026-09-03 no `backend-envelope-de-erro-e-recusa-de-dominio`.
-A `P-71` pagou os cinco sítios que ela contava **e mais os seis** de
-`CertificateEligibility::refuse()`, que o Q-7 do review do mesmo dia descobriu — o encaminhador de
-`withMessages` virou a terceira porta coberta por `MensagemLiteralTest`. Estes seis **não** foram
-pagos, e estavam nomeados no corpo da `P-71`: ficha que fecha leva o resto junto se ninguém o
-reabrir, e foi por isso que esta nasceu.
-
-Remedido contra a árvore em 2026-09-03, os três caminhos seguem vivos:
-
-| Sítio | Idioma de hoje | Por que a catraca não alcança |
-|---|---|---|
-| `Identity/Services/UserProvisioner.php:27-28` (RUT e e-mail duplicados) | pt-BR | a frase mora numa **constante de classe** (`DUPLICADO`), longe da chamada a `withMessages`; o detector lê janela, não constante |
-| `Shared/Rules/ValidRut.php:19` | **pt-BR** | `$fail('...')` é o contrato de `ValidationRule`, não `throw` nem `withMessages` — nenhuma das três portas cobertas |
-| `Shared/Rules/PrintableGrade.php:27` | es-CL | idem |
-| `Shared/Files/Rules/ScannedForMalware.php:34` | es-CL | idem |
-| `Identity/Http/Controllers/AuthController.php:107` (`'Sessão encerrada.'`) | pt-BR | é resposta de **sucesso** (`200`), não recusa; catraca de exceção não passa perto |
-
-**Dois defeitos, não um.** O primeiro é o de sempre — frase fora de `lang/` não se traduz. O
-segundo é que **três sítios estão em pt-BR num produto es-CL**: o `ValidRut` e o `UserProvisioner`
-respondem em português a um operador chileno, e o `logout` também. Isso é observável hoje, sem
-mudar locale nenhum.
-
-**Alcance novo (bloco 44):** a frase do `UserProvisioner::DUPLICADO` agora também aparece na tabela
-da triagem da importação (a prévia chama `ensureIdentityAvailable` via `assertCanCreate`) e na recusa
-da linha do Actualizar. O gatilho não muda.
-
-**Por que fica aberta:** fechar pede a quarta porta da catraca (`$fail` de `ValidationRule`) e uma
-quinta para resposta de sucesso — não é dicionário, é mecanismo, e o mecanismo é o que a
-`.claude/rules/backend-lang.md` manda estender junto. O bloco do envelope fechou a lista de quatro
-mudanças que a spec dele declarou; abrir a quarta porta ali seria a quinta.
-
----
-
 ## P-85 — no sqlite da suíte, o último dia do período some do filtro de `start_date` do `AnalyticsQuery`
 
 **Bloco:** item 54 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de
@@ -208,6 +168,8 @@ do fechamento. O fechamento só escreve registros, e o João decidiu registrar e
 **Gatilho disparado e não pago de novo — 2026-10-21, `seeder-carga-inicial-producao` (item 38).** O bloco tocou `docs/estrutura-monolito.md` (a árvore de `Console/`, com a carga inicial) por outro motivo. `backend-lang` e `frontend-estilizacao` seguem fora do `AGENTS.md` e do `INSTRUÇÕES-DO-PROJETO.md`, e o `shared/ui/Timestamp/` segue fora do `estrutura-monolito.md` (conferido por `grep` nesta data). **As três linhas seguem válidas**; o gatilho não se desarma.
 
 **Gatilho disparado e não pago — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco tocou `docs/estrutura-monolito.md` (Certification e o `EmissionStateResolver`) por outro motivo e não acrescentou `shared/ui/Timestamp/`, nem corrigiu o `AGENTS.md` e o `INSTRUÇÕES-DO-PROJETO.md`. O gatilho não se desarma.
+
+**Gatilho disparado e não pago — 2026-11-03, `backend-arquivo-recepcao-e-upload` (item 52).** O bloco tocou `docs/estrutura-monolito.md` (a linha do upload em `Data/` e a de `Shared/Files`) por outro motivo e não acrescentou `shared/ui/Timestamp/`, nem corrigiu o `AGENTS.md` e o `INSTRUÇÕES-DO-PROJETO.md`. O gatilho não se desarma.
 
 ## P-32 — a guarda da lição 13 confere path, não classe
 
@@ -377,6 +339,8 @@ as arestas de domínio, não para a árvore de pastas), a lista volta a crescer.
 ---
 
 **Gatilho disparado e não pago — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e reconciliou só o que era dele: `Certification` passou de scaffold vazio a código real (nota 3 e a árvore, com o `EmissionStateResolver`). O `Dashboard` ausente e as demais divergências seguem. O gatilho não se desarma.
+
+**Gatilho disparado e não pago — 2026-11-03, `backend-arquivo-recepcao-e-upload` (item 52).** O bloco tocou `docs/estrutura-monolito.md` e `.claude/rules/backend-ddd.md` por outro motivo (onde mora o Data de upload e o `FileUploader`) e reconciliou só o que era dele. O `Dashboard` ausente e as demais divergências seguem. O gatilho não se desarma.
 
 ## P-54 — os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()`
 
@@ -1052,6 +1016,8 @@ fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-
 
 **Gatilho disparado e não pago — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e não reconciliou as coordenadas e o mapa que esta ficha lista. O gatilho não se desarma.
 
+**Gatilho disparado e não pago — 2026-11-03, `backend-arquivo-recepcao-e-upload` (item 52).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e não reconciliou as coordenadas e o mapa que esta ficha lista. O gatilho não se desarma.
+
 ## P-102 — o `CompliancePanel` e o dashboard não mostram os requisitos novos da conclusão
 
 **Bloco:** item 54 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
@@ -1065,21 +1031,6 @@ telas ficaram para trás:
 - o `CompliancePanel` mostra "Habilitada: No" com "—" quando falta redator ou local, sem dizer o quê;
 - `OperationMetricsQuery::pendencias()` sinaliza "turma sem redator", mas não "presencial sem local":
   a turma nessa situação sai de "aguardando conclusão" sem pendência visível no dashboard.
-
-## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
-
-**Bloco:** item 52 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
-(`Shared/Files`) ou os atributos de validação do `lang/`. Revisar em **2026-11-07**.
-
-O item 43 enviou um arquivo de tipo recusado ao upload do orçamento, e o erro dentro do diálogo
-saiu "El campo **file** debe ser…": o backend não traduz o nome do atributo `file`. Vale para todos
-os uploads que validam `file`, não só para o orçamento. Parente da P-76 (frases ao usuário fora da
-catraca de idioma).
-
-**Gatilho disparado e não pago no item 47 (2026-11-02):** o bloco tocou o
-`Shared/Files/Actions/UploadFileAction.php` e a validação do upload de cotización e presupuesto, mas
-não traduziu o atributo `file` (`backend/lang/es_CL/validation.php`, `attributes`, segue sem ele).
-O gatilho não se desarma.
 
 ## P-110 — a rule de estilização não conhece o título de seção de formulário em 13px e na marca
 

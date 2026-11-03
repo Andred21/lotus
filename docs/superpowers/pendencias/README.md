@@ -21,13 +21,12 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (38)
+## Abertas (36)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-76 | Seis frases ao usuário seguem literais em `app/` por três caminhos que nenhuma catraca alcança (`UserProvisioner::DUPLICADO`, os três `$fail()` de `ValidationRule`, o `logout`) — e três delas estão em pt-BR num produto es-CL | 52 | bloco que tocar `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` ou `AuthController::logout()`; revisar 2026-10-31 |
 | P-85 | No sqlite da suíte o `whereBetween` de `start_date` do `AnalyticsQuery` (série e dois rankings) deixa de fora o último dia do período — a produção (MySQL) acerta, a suíte não enxerga a borda; `DataSql::literal` já resolve isso em outro lugar | 54 | bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de período do dashboard; revisar 2026-10-31 |
 | P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade); o `cicd-host-alinhado-ao-sha` (item 31) fechou em 2026-09-26 sem pagar o gatilho | 56 | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
 | P-90 | O gate `/up` do `deploy.sh` faz um `curl` só depois de o nginx ficar `healthy`; num deploy que recria o `app` e não o nginx, ele bate antes do php-fpm novo escutar e o botão sai 502 (botão 2 do item 32) | 56 | próximo commit em `deploy/bin/deploy.sh`, ou o próximo botão com `erro: /up respondeu 502`; **disparado em 2026-10-27 (item 42), não pago**; revisar 2026-10-31 |
@@ -39,7 +38,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | 57 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
-| P-107 | O 422 de upload diz "El campo file…": o backend não traduz o atributo `file` | 52 | bloco que tocar a validação de upload ou os atributos do `lang/`; revisar 2026-11-07 |
 | P-110 | A rule `frontend-estilizacao.md` ainda descreve uma faixa de seção só (12px, tinta de corpo); o título de seção de formulário do item 46 (`formSectionTitleClass`, 13px, na marca) ficou só no `rulings.md` e em docblocks | 58 | bloco que tocar a rule, o `typography.ts` ou o `FormSection`/`SectionLabel`; revisar 2026-11-15 |
 | P-113 | O `COL.rut` dá cerca de 110 a 123 px, menos que os 133 px do RUT em mono, nas tabelas de alunos e de clientes | — | bloco que tocar `studentColumns.ts` ou `clientColumns.ts`; revisar 2026-11-16 |
 | P-114 | Cotação `pending` ou `rejected` com turma não arquivada: o `QuoteLifecycle` a trata como sem turma; saber se o dado legado existe exige leitura em produção | — | o João rodar a consulta só-leitura da ficha, ou bloco que tocar `QuoteLifecycle`; revisar 2026-11-17 |
@@ -151,7 +149,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (2)
 
-**A P-49 e a P-112 fecharam no item 50 (2026-11-03)**: a P-49 pelo próprio gatilho (o eixo cotação × orçamento ganhou o lock do orçamento dos dois lados, na ordem D4, sob o `BudgetQuoteLockTest`), a P-112 por mecanismo (a matriz D2 no `QuoteLifecycle`, o `turma_status` no `QuoteData` e a tag "Turma:" na tela). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`. **O item 50 abriu a P-114, a P-115 e a P-116.**
+**A P-76 e a P-107 fecharam no item 52 (2026-11-03)**, as duas pelo próprio gatilho: as seis frases da P-76 leem `lang/` nos três locales, sob as duas portas novas do `MensagemLiteralTest`, e o atributo de upload da P-107 é traduzido (o 422 em es-CL diz "archivo"). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`. O item 52 disparou sem pagar os gatilhos da **P-53**, da **P-96** e da **P-97** (tocou `estrutura-monolito.md` e `backend-ddd.md` por outro motivo); as fichas registram o disparo. Não abriu ficha nova.
+
+**A P-49 e a P-112 saíram no fechamento do item 52 (2026-11-03)**, o primeiro depois do item 50, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-74, a P-101, a P-103, a P-104, a P-105, a P-108 e a P-109 saíram no fechamento do item 50 (2026-11-03)**, o primeiro depois do item 49 que não as removeu: o item 48 encerrou a P-103 e a P-104, e o item 49 a P-74, a P-101, a P-105, a P-108 e a P-109, todas em 2026-11-02. O que a P-104 deixou pendente (o aceite do "redator" no texto em inglês) vive agora na P-116. O rastro durável está nos commits e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
 
