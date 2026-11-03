@@ -12,40 +12,6 @@
 
 # Frontend
 
-## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
-
-**Bloco:** item 49 (desde 2026-11-02) · **Gatilho:** fecha quando uma régua por estado, no molde do `describe` da P-30
-(`frontend/tests/tone-ink.test.ts`), cobrir as cinco severidades e todas passarem 4,5:1 nos três
-estados. Revisar em **2026-10-31**.
-
-Medido em 2026-09-02, ao fechar a P-30 (item 25, Task 5): a tinta branca do Lara sobre o fundo
-compilado de cada severidade reprova AA no `p-button` **filled**, estado base, no tema **claro** —
-
-| Severidade | Contraste (base, claro) |
-|---|---|
-| success  | **2,28:1** |
-| info     | **2,77:1** |
-| warning  | **2,80:1** (era o defeito que a P-30 fechou) |
-| danger   | **3,76:1** |
-| help     | **3,96:1** |
-| secondary | 4,76:1 — passa |
-
-O `warning` não era caso especial: é a quarta pior das cinco que reprovam, e a P-30 resolveu a dele
-trocando de família (laranja → amarelo) porque a coerência com o `AppTag` já pedia a troca. As
-outras quatro não têm essa saída de graça — success/info/danger/help continuam na própria família,
-e cada uma precisaria da mesma medição de três estados (base/hover/active) mais outlined/text antes
-de mexer, porque a lição da P-30 é que trocar degrau a degrau na mesma posição pode reprovar pior
-que o defeito original (o `active` do amarelo degrau-a-degrau media 2,29:1, pior que os 2,80:1 que
-saíram).
-
-O `danger` já tem remédio **parcial**: `frontend/src/shared/styles/brand-theme.css` (achado UI-02 do
-review de 2026-08-18, no `Eliminar foto` do `AppPhotoField`) troca a tinta do `text`/`outlined` para
-`var(--tone-danger-ink)` e mede 5,83:1 no claro / 4,98:1 no escuro — mas o **filled** do `danger`
-(fundo vermelho, texto branco) não foi tocado e é o 3,76:1 medido acima.
-
-Consertar os outros quatro é campanha de tema — mexe em botão, tag, mensagem e badge de cada
-severidade nos dois temas, decisão de design que ninguém tomou ainda — e não é escopo do item 25.
-
 ## P-57 — o `artisan test` do `CLAUDE.md` §6 fatala em worktree com imagem velha
 
 **Bloco:** item 58 (desde 2026-11-02) · **Gatilho:** fecha quando o `CLAUDE.md` §6 (ou o `/executar-bloco`) disser que
@@ -1185,19 +1151,6 @@ aceitação do item 33 o levou (spec §10).
 bloco mudou o `deploy/aws/README.md` (§3, §3.1 e §16) e não reconciliou a tabela, porque ela ficou
 fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-docs` do fechamento.
 
-## P-101 — o RUT quebra no hífen na tabela de alunos a 390 px
-
-**Bloco:** item 49 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar
-`EnrollmentTable.tsx` ou `ArchivedEnrollmentsList.tsx` por outro motivo; dispara de qualquer forma se
-a Lotus reclamar do RUT quebrado no celular. Revisar em **2026-11-07**.
-
-Medido no smoke do item 41 (`blocos/41-turma-resultado-academico-e-conclusao/smoke.md`): a 390 px a
-tabela fica no piso de `40rem` e rola dentro do wrapper, e o RUT quebra em "16.200.021-" / "7" nas dez
-linhas. A coluna é `field="rut"` sem `identifierClass`, desde antes do bloco: ela tinha cerca de
-105 px no piso antigo (`31.5rem`) e 95 px agora, e o RUT em mono precisa de cerca de 133 px. Nem
-`48rem` evita a quebra (115 px medidos). A correção é dar `identifierClass` à coluna RUT nas duas
-tabelas, fora do plano do 41.
-
 ## P-102 — o `CompliancePanel` e o dashboard não mostram os requisitos novos da conclusão
 
 **Bloco:** item 54 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
@@ -1243,20 +1196,6 @@ irreversible. ¿Confirmas la conclusión de la turma?") segue dizendo o contrár
 É decisão de copy, nas três locales: o que de fato é irreversível (matricular, remover, o resultado
 com certificado emitido) e o que não é.
 
-## P-105 — a tinta `danger` do tema escuro reprova AA sobre o fundo de 15% do `AppTag`
-
-**Bloco:** item 49 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** bloco que tocar `--tone-danger-ink`
-(`brand-theme.css`), o `severityTone` do `AppTag` ou a P-74. Revisar em **2026-11-07**.
-
-O item 43 passou a medir no `frontend/tests/tone-ink.test.ts` cada tinta de severidade sobre o
-fundo de 15% do `severityTone`, que é o da tag `AppTag` e o do ícone circular da `ConfirmDialog`.
-Só um par reprova: `danger` no tema escuro, com `--red-400` (#ff6259) sobre
-`color-mix(--red-500 15%, --surface-card)`, a 4,36:1. O defeito é anterior ao bloco: o `AppTag`
-danger já pinta o texto assim no escuro. Na `ConfirmDialog` a tinta só pinta o ícone, que é
-decorativo (`aria-hidden`). O João decidiu em 2026-10-29, na Task 2 do item 43, pular o par no teste e registrar.
-O caminho candidato é clarear a tinta do escuro para `--red-300` (#ff8780), o que muda o `AppTag`
-em todas as telas.
-
 ## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
 
 **Bloco:** item 52 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
@@ -1271,23 +1210,6 @@ catraca de idioma).
 `Shared/Files/Actions/UploadFileAction.php` e a validação do upload de cotización e presupuesto, mas
 não traduziu o atributo `file` (`backend/lang/es_CL/validation.php`, `attributes`, segue sem ele).
 O gatilho não se desarma.
-
-## P-108 — em 1024, o RUT do cliente passa por baixo do "Agregar cotización"
-
-**Bloco:** item 49 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar o cabeçalho do detalhe do
-orçamento. Revisar em **2026-11-07**.
-
-O smoke do item 43 viu, em 1024×768, o RUT do cliente sobreposto pelo botão "Agregar cotización"
-no cabeçalho do detalhe do orçamento. É anterior ao bloco, que não tocou o cabeçalho.
-
-## P-109 — o paginador das tabelas tem nomes acessíveis em inglês
-
-**Bloco:** item 49 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar o `AppDataTable` ou o `pt` do
-paginador. Revisar em **2026-11-07**.
-
-O `lotus-ui-review` do item 43 viu o paginador expor "Previous Page", "Next Page" e "Page N" a
-leitor de tela num produto es-CL. É o `aria-label` padrão do PrimeReact, que o `locale` do Lotus não
-sobrescreve. Anterior ao bloco.
 
 ## P-110 — a rule de estilização não conhece o título de seção de formulário em 13px e na marca
 
@@ -1318,3 +1240,16 @@ Decisão do João no bloco 48 (spec D9, literal), para entrar no escopo do 50:
 - confirmado pelo levantamento do bloco 48: hoje o superadmin recusa uma cotação aprovada com turma
   concluída (`RejectQuoteAction`, sem guarda) e depois edita curso, número de alunos e UF, ou apaga a
   cotação; já há teste fixando esse caminho (`QuoteApprovalTest.php:77-85`). Isso é o card 5 do 50.
+
+## P-113 — o `COL.rut` dá menos que o RUT em mono nas tabelas de alunos e de clientes
+
+**Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar `studentColumns.ts` ou `clientColumns.ts`, ou a
+Lotus reclamar do RUT sobre a coluna vizinha no celular. Revisar em **2026-11-16**.
+
+A revisão final do item 49 (minor 7) mediu que o `COL.rut` (peso 9) entrega cerca de 110 a 123 px à
+coluna, e o RUT em mono pede 133 px de caixa (101 px de texto e 32 de padding). O item 49 corrigiu
+as duas tabelas de matrícula com um peso local (`RUT_MATRICULA`, 14, em `enrollmentColumns.ts`) e
+deixou o `COL.rut` como estava, porque ele vale para outras tabelas que o bloco não mediu. As que o
+usam são `studentColumns.ts:12` (alunos) e `clientColumns.ts:14` (clientes). Com `table-layout:
+fixed`, `min-width` não resolve: a correção é a fatia, como no item 49, ou subir o peso do `COL.rut`
+e medir o que muda nas outras tabelas. Medir a 390 px no navegador antes de mexer.

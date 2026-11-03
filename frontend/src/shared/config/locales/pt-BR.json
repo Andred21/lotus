@@ -88,7 +88,10 @@
     "maximizeDialog": "Maximizar diálogo",
     "restoreDialog": "Restaurar diálogo",
     "tabsScrollPrev": "Rolar abas para a esquerda",
-    "tabsScrollNext": "Rolar abas para a direita"
+    "tabsScrollNext": "Rolar abas para a direita",
+    "paginatorPrev": "Página anterior",
+    "paginatorNext": "Próxima página",
+    "paginatorPage": "Página {{page}}"
   },
   "module": {
     "comercial": {
@@ -163,7 +166,7 @@
     "identity_user_view": "Ver usuários, redatores e alunos",
     "identity_user_create": "Criar usuários, redatores e alunos",
     "identity_user_update": "Editar usuários, redatores e alunos",
-    "identity_user_delete": "Remover (soft delete) usuários",
+    "identity_user_delete": "Arquivar usuários",
     "identity_user_restore": "Restaurar redatores arquivados",
     "identity_access_manage": "Gerir roles e permissões de outros usuários (sensível)",
     "commercial_client_view": "Ver clientes (empresas contratantes)",
@@ -181,7 +184,7 @@
     "commercial_quote_update": "Editar cotações",
     "commercial_quote_delete": "Remover cotações",
     "commercial_quote_restore": "Restaurar cotações arquivadas",
-    "commercial_quote_approve": "Aprovar cotação com aceite do cliente (Fluxo 2 — só superadmin)",
+    "commercial_quote_approve": "Aprovar cotação com aceite do cliente (só superadmin)",
     "catalog_course_view": "Ver cursos",
     "catalog_course_create": "Criar cursos",
     "catalog_course_update": "Editar cursos e habilitação de redatores",
@@ -192,16 +195,16 @@
     "operation_turma_update": "Editar turmas",
     "operation_turma_delete": "Remover turmas",
     "operation_turma_restore": "Restaurar turmas arquivadas",
-    "operation_enrollment_manage": "Matricular alunos / importar planilha (Fluxo 3)",
-    "operation_enrollment_record_result": "Lançar nota e presença da matrícula (RN-02 — ação do redator)",
+    "operation_enrollment_manage": "Matricular alunos / importar planilha",
+    "operation_enrollment_record_result": "Lançar nota e presença da matrícula (ação do redator)",
     "operation_enrollment_restore": "Restaurar matrículas arquivadas",
-    "operation_turma_assign_redator": "Designar redator idôneo à turma (Fluxo 3)",
-    "operation_turma_complete": "Confirmar conclusão da turma (Fluxo 4 — admin confirma)",
-    "operation_turma_submit_docs": "Subir documentação da turma (Fluxo 1/4 — ação do redator)",
+    "operation_turma_assign_redator": "Designar redator idôneo à turma",
+    "operation_turma_complete": "Confirmar conclusão da turma (admin confirma)",
+    "operation_turma_submit_docs": "Subir documentação da turma (ação do redator)",
     "operation_turma_manage_concluded_docs": "Subir e remover documentos de turma concluída",
     "certification_certificate_view": "Ver certificados",
-    "certification_certificate_issue": "Emitir certificado (Fluxo 5)",
-    "certification_certificate_revoke": "Revogar certificado (Fluxo 6 — sensível, peso legal)",
+    "certification_certificate_issue": "Emitir certificado",
+    "certification_certificate_revoke": "Revogar certificado (sensível, peso legal)",
     "certification_settings_manage": "Configurar certificados: gerente, cargo e assinatura (só superadmin)"
   },
   "role": {

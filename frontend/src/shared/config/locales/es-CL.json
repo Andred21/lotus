@@ -88,7 +88,10 @@
     "maximizeDialog": "Maximizar diálogo",
     "restoreDialog": "Restaurar diálogo",
     "tabsScrollPrev": "Desplazar pestañas a la izquierda",
-    "tabsScrollNext": "Desplazar pestañas a la derecha"
+    "tabsScrollNext": "Desplazar pestañas a la derecha",
+    "paginatorPrev": "Página anterior",
+    "paginatorNext": "Página siguiente",
+    "paginatorPage": "Página {{page}}"
   },
   "module": {
     "comercial": {
@@ -163,7 +166,7 @@
     "identity_user_view": "Ver usuarios, redactores y alumnos",
     "identity_user_create": "Crear usuarios, redactores y alumnos",
     "identity_user_update": "Editar usuarios, redactores y alumnos",
-    "identity_user_delete": "Eliminar (soft delete) usuarios",
+    "identity_user_delete": "Archivar usuarios",
     "identity_user_restore": "Restaurar redactores archivados",
     "identity_access_manage": "Gestionar roles y permisos de otros usuarios (sensible)",
     "commercial_client_view": "Ver clientes (empresas contratantes)",
@@ -181,7 +184,7 @@
     "commercial_quote_update": "Editar cotizaciones",
     "commercial_quote_delete": "Eliminar cotizaciones",
     "commercial_quote_restore": "Restaurar cotizaciones archivadas",
-    "commercial_quote_approve": "Aprobar cotización con aceptación del cliente (Flujo 2 — solo superadmin)",
+    "commercial_quote_approve": "Aprobar cotización con aceptación del cliente (solo superadmin)",
     "catalog_course_view": "Ver cursos",
     "catalog_course_create": "Crear cursos",
     "catalog_course_update": "Editar cursos y habilitación de redactores",
@@ -192,16 +195,16 @@
     "operation_turma_update": "Editar grupos",
     "operation_turma_delete": "Eliminar grupos",
     "operation_turma_restore": "Restaurar grupos archivados",
-    "operation_enrollment_manage": "Matricular alumnos / importar planilla (Flujo 3)",
-    "operation_enrollment_record_result": "Registrar nota y asistencia de la matrícula (RN-02 — acción del redactor)",
+    "operation_enrollment_manage": "Matricular alumnos / importar planilla",
+    "operation_enrollment_record_result": "Registrar nota y asistencia de la matrícula (acción del redactor)",
     "operation_enrollment_restore": "Restaurar matrículas archivadas",
-    "operation_turma_assign_redator": "Asignar redactor idóneo al grupo (Flujo 3)",
-    "operation_turma_complete": "Confirmar finalización del grupo (Flujo 4 — admin confirma)",
-    "operation_turma_submit_docs": "Subir documentación del grupo (Flujo 1/4 — acción del redactor)",
+    "operation_turma_assign_redator": "Asignar redactor idóneo al grupo",
+    "operation_turma_complete": "Confirmar finalización del grupo (admin confirma)",
+    "operation_turma_submit_docs": "Subir documentación del grupo (acción del redactor)",
     "operation_turma_manage_concluded_docs": "Subir y quitar documentos de un grupo concluido",
     "certification_certificate_view": "Ver certificados",
-    "certification_certificate_issue": "Emitir certificado (Flujo 5)",
-    "certification_certificate_revoke": "Revocar certificado (Flujo 6 — sensible, peso legal)",
+    "certification_certificate_issue": "Emitir certificado",
+    "certification_certificate_revoke": "Revocar certificado (sensible, peso legal)",
     "certification_settings_manage": "Configurar certificados: gerente, cargo y firma (solo superadmin)"
   },
   "role": {

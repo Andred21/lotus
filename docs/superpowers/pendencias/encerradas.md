@@ -43,6 +43,54 @@ que o nome da pasta engana e prometeu compensar no texto do doc; sem a peça no 
 `shared/ui/AppSignatureUpload/` do `docs/estrutura-monolito.md` passou a citar o `AppSignatureSlot`
 e quem o consome (commit `debc6891`).
 
+## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
+
+**Bloco:** 49 · **Gatilho (original):** régua por estado no molde do `describe` da P-30, as cinco
+severidades passando 4,5:1.
+
+**ENCERRADA em 2026-11-02, no `frontend-acessibilidade-e-respiro` (item 49), por mecanismo:** o
+`tone-ink.test.ts` cobre as cinco severidades × base/hover/active/foco × claro/escuro, e o gerador
+(`frontend/scripts/generate-brand-theme.mjs`, `SEVERIDADES_CLARAS`) pinta o botão filled com fundo
+claro e tinta escura. Medido no navegador pelo `prova.md` do bloco: o "Eliminar" do diálogo vai a
+`#ff8780` com tinta `#661814`, e o anel de foco é red-900.
+
+## P-101 — o RUT quebra no hífen na tabela de alunos a 390 px
+
+**Bloco:** 49 · **Gatilho (original):** primeiro bloco que tocar `EnrollmentTable.tsx` ou
+`ArchivedEnrollmentsList.tsx`.
+
+**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** o RUT ganhou `identifierClass` e a
+coluna ganhou a fatia local `RUT_MATRICULA` (`enrollmentColumns.ts`, preso por `enrollmentColumns.test.ts`).
+Medido a 390 px: uma linha, cabe na célula, nas duas tabelas (`prova.md`, P-101). O mesmo vazamento
+no `COL.rut` de alunos e clientes virou a **P-113**.
+
+## P-105 — a tinta `danger` do tema escuro reprova AA sobre o fundo de 15% do `AppTag`
+
+**Bloco:** 49 · **Gatilho (original):** bloco que tocar `--tone-danger-ink`.
+
+**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** `--tone-danger-ink` do escuro vai a
+`--red-300` (`brand-theme.css`), e o par `danger` × escuro deixou de ser pulado no `tone-ink.test.ts`.
+A tag "Rechazada" mede cerca de 5,5:1 (`prova.md`, P-105).
+
+## P-108 — em 1024, o RUT do cliente passa por baixo do "Agregar cotización"
+
+**Bloco:** 49 · **Gatilho (original):** bloco que tocar o cabeçalho do detalhe do orçamento.
+
+**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** a causa era o `DetailHeader`
+(`sm:flex-1` zerava a base do bloco do título). A linha ganhou `sm:flex-wrap`, o título
+`sm:min-w-min` e as ações `sm:ml-auto`. Em 1024 e 768 as interseções caíram de 1 para 0, e em 1280
+nada se moveu (`prova.md`, P-108; `DetailHeader.test.tsx`).
+
+## P-109 — o paginador das tabelas tem nomes acessíveis em inglês
+
+**Bloco:** 49 · **Gatilho (original):** bloco que tocar o `AppDataTable` ou o `pt` do paginador.
+
+**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** o `paginatorTemplate` do
+`AppDataTable` põe `aria-label` do i18n (`common.paginatorPrev`, `paginatorPage`, `paginatorNext`)
+em anterior, página e seguinte, e o piso não se desliga pelo chamador. Medido na árvore
+de acessibilidade em es-CL e en: "Página anterior", "Página N", "Página siguiente" (`prova.md`, P-109;
+`AppDataTable.test.tsx`).
+
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
 > por engano; as duas foram renumeradas no mesmo dia — a do item 25 para **`P-74`** e as do item 26
