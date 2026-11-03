@@ -16,8 +16,12 @@ export type SecoesAdmin = {
 
 /**
  * Da visibilidade por módulo (D8) à visibilidade por seção — o ÚNICO lugar que
- * combina as flags. `AdminView`, `kpiCards`, `SeriesPanel` e `RankingsPanel`
- * leem o resultado; nenhum deles decide por conta própria nem fareja `null`.
+ * combina as flags em seção. `AdminView`, `kpiCards` e `RankingsPanel` leem o
+ * resultado; nenhum deles decide por conta própria nem fareja `null`. O
+ * `SeriesPanel` é a exceção declarada: lê a `visibility` crua e decide série a
+ * série pelo módulo de cada uma, porque `SecoesAdmin` tem uma flag por SEÇÃO e
+ * não expõe operação × certificação × comercial por série. Ele também não
+ * fareja `null`: o critério é o módulo, e o `null` só estreita o tipo.
  *
  * A regra espelha o `AdminDashboardAssembler`: seção que lê de dois módulos
  * exige os dois (funil e rankings = operação e certificação; carga de
