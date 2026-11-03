@@ -57,14 +57,14 @@ class UploadPolicyRatchetTest extends TestCase
     private const ISENTOS = [
         'app/Shared/Files/Services/FileUploader.php' => 'É a escrita no disco, não a porta de entrada: recebe o arquivo já validado pelo Data do sítio.',
         'app/Shared/Files/Services/FileStorage.php' => 'É a escrita no disco, não a porta de entrada: recebe o arquivo já validado por quem o recebeu do cliente.',
-        'app/Domains/Operation/Services/SpreadsheetRowReader.php' => 'Só itera a planilha que o `EnrollmentController::previewImport` já validou pela classe Planilha, e despacha o leitor pelo MIME de CONTEÚDO — os mesmos três que aquela classe aceita.',
-        'app/Domains/Operation/Services/ImportPreviewService.php' => 'Recebe o `UploadedFile` já validado pelo `EnrollmentController::previewImport`, que pede a classe Planilha.',
-        'app/Domains/Commercial/Actions/ReplaceFileOfTypeAction.php' => 'Recebe o arquivo já validado pelo `BudgetFileController` e pelo `QuoteFileController`, que pedem a classe Documento.',
-        'app/Domains/Operation/Actions/StoreTurmaDocumentAction.php' => 'Recebe o arquivo já validado pelo `TurmaDocumentController`, que pede a classe DocumentoDeTurma.',
+        'app/Domains/Operation/Services/SpreadsheetRowReader.php' => 'Só itera a planilha que chega já validada pelo `ImportSpreadsheetData` (classe Planilha), e despacha o leitor pelo MIME de CONTEÚDO — os mesmos três que aquela classe aceita.',
+        'app/Domains/Operation/Services/ImportPreviewService.php' => 'Recebe o `UploadedFile` já validado pelo `ImportSpreadsheetData`, que pede a classe Planilha.',
+        'app/Domains/Commercial/Actions/ReplaceFileOfTypeAction.php' => 'Recebe o arquivo já validado pelo `BudgetFileUploadData` e pelo `QuoteFileUploadData`, que pedem a classe de cada tipo por `TypedFileRules`.',
+        'app/Domains/Operation/Actions/StoreTurmaDocumentAction.php' => 'Recebe o arquivo já validado pelo `TurmaDocumentUploadData`, que pede a classe de cada tipo (DocumentoDeTurma) por `TypedFileRules`.',
         'app/Domains/Identity/Actions/CreateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorDocumentsData`, que pede a classe de cada tipo.',
         'app/Domains/Identity/Actions/UpdateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorDocumentsData`, que pede a classe de cada tipo.',
-        'app/Domains/Identity/Actions/StoreRedatorDocumentAction.php' => 'Recebe o arquivo já validado pelos controllers de documento de redator e de perfil.',
-        'app/Domains/Certification/Actions/StoreManagerSignatureAction.php' => 'Recebe o arquivo já validado pelo `CertificateSettingsController::storeSignature`, que pede a classe Assinatura.',
+        'app/Domains/Identity/Actions/StoreRedatorDocumentAction.php' => 'Recebe o arquivo já validado pelo `RedatorDocumentUploadData` e pelo `ProfileDocumentUploadData`, que pedem a classe de cada tipo por `TypedFileRules`.',
+        'app/Domains/Certification/Actions/StoreManagerSignatureAction.php' => 'Recebe o arquivo já validado pelo `ManagerSignatureUploadData`, que pede a classe Assinatura.',
         'app/Domains/Identity/Data/RedatorData.php' => 'DTO de leitura e escrita do redator: o campo multipart `documents` é validado pelo `RedatorDocumentsData`, não aqui.',
         'app/Providers/AppServiceProvider.php' => 'A chave `file` que casa aqui é a entrada do morph map do ADR-10, e não tem nada com upload.',
         'app/Domains/Identity/Services/UserPhotoService.php' => 'Recebe o arquivo já validado pelo `PhotoUploadData`, que pede a classe Imagem.',
@@ -163,6 +163,100 @@ class UploadPolicyRatchetTest extends TestCase
             ['Política de tipo escrita à mão fora do `ContentClass`. Foi assim que quatro endpoints ficaram sem tipo:'],
             $descobertos,
         )));
+    }
+
+    /**
+     * O controller NÃO recebe arquivo nem o valida: o `<X>UploadData` injetado
+     * no método (ou `validateAndCreate` dele) é quem pede a classe. Três sinais
+     * de que o controller voltou a fazer o trabalho do Data: ler o arquivo da
+     * requisição, pedir a classe de conteúdo, ou chamar `->validate(` com a
+     * regra de `file`/`photo` na janela de leitura.
+     */
+    private const JANELA_DO_VALIDATE = 300;
+
+    /** @return list<string> paths relativos de todo controller sob `app/**\/Http/Controllers/` */
+    private function controllers(): array
+    {
+        $controllers = [];
+
+        foreach ($this->arquivosPhp(base_path('app')) as $arquivo) {
+            if (str_contains($arquivo, '/Http/Controllers/')) {
+                $controllers[] = ltrim(str_replace(base_path(), '', $arquivo), '/');
+            }
+        }
+
+        return $controllers;
+    }
+
+    public function test_controller_nao_valida_arquivo(): void
+    {
+        $controllers = $this->controllers();
+
+        // Silêncio reprova: sem nenhum controller na varredura, a catraca
+        // passaria vazia (pasta renomeada, prefixo errado).
+        $this->assertNotEmpty($controllers, 'A varredura não achou nenhum controller em `app/**/Http/Controllers/`.');
+
+        $descobertos = [];
+
+        foreach ($controllers as $relativo) {
+            $codigo = $this->codigoSemComentarios(base_path($relativo));
+
+            foreach (['request->file(', 'ContentClass::'] as $sinal) {
+                if (str_contains($codigo, $sinal)) {
+                    $descobertos[] = "{$relativo} -> {$sinal}";
+                }
+            }
+
+            $offset = 0;
+            while (($pos = strpos($codigo, '->validate(', $offset)) !== false) {
+                $janela = substr($codigo, $pos, self::JANELA_DO_VALIDATE);
+
+                if (str_contains($janela, "'file'") || str_contains($janela, "'photo'")) {
+                    $descobertos[] = "{$relativo} -> ->validate( com regra de arquivo";
+                }
+
+                $offset = $pos + 1;
+            }
+        }
+
+        sort($descobertos);
+
+        $this->assertSame([], array_values(array_unique($descobertos)), implode("\n", array_merge(
+            [
+                'Controller que lê ou valida arquivo. A porta é o `<X>UploadData` (spec D3/D8): o',
+                'controller recebe o Data já validado e o entrega à Action. Arquivos:',
+            ],
+            $descobertos,
+        )));
+    }
+
+    public function test_motivo_de_isento_nao_culpa_o_controller_e_cita_data_que_existe(): void
+    {
+        $falhas = [];
+
+        foreach (self::ISENTOS as $relativo => $motivo) {
+            if (preg_match('/controller já|Controller[`:]/i', $motivo) === 1) {
+                $falhas[] = "{$relativo}: o motivo ainda atribui a validação a um controller";
+            }
+
+            // Todo `NomeData`/`NomeUploadData` citado no motivo tem de existir em app/.
+            preg_match_all('/`([A-Z][A-Za-z]*Data)`/', $motivo, $achados);
+            foreach ($achados[1] as $classe) {
+                $existe = false;
+                foreach ($this->arquivosPhp(base_path('app')) as $arquivo) {
+                    if (basename($arquivo) === "{$classe}.php") {
+                        $existe = true;
+                        break;
+                    }
+                }
+
+                if (! $existe) {
+                    $falhas[] = "{$relativo}: cita `{$classe}`, que não existe em app/";
+                }
+            }
+        }
+
+        $this->assertSame([], $falhas, implode("\n", $falhas));
     }
 
     public function test_a_lista_de_isentos_esta_declarada_e_atual(): void

@@ -31,8 +31,9 @@ class UserPhotoService
      * DEPOIS do SQL UPDATE, dentro da mesma chamada. Sem transação, uma
      * auditoria que lança deixava a coluna gravada e a compensação apagava um
      * objeto que o banco já referenciava. A transação cobre UPDATE + auditoria
-     * e NUNCA o delete de storage — esse é o débito do `FileStorage`,
-     * fechado com `put`/`discard`, não com transação em volta do disco.
+     * e NUNCA o delete de storage — o `FileUploader` grava o binário fora
+     * dela e descarta o objeto novo se ela falhar; o objeto anterior só é
+     * apagado depois do commit, e falha nesse delete só loga.
      */
     public function store(User $user, UploadedFile $photo): void
     {
