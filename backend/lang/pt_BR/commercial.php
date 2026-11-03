@@ -18,6 +18,7 @@ return [
         'turma_exists_cannot_reject' => 'A cotação tem uma turma ativa ou concluída: não pode ser recusada.',
         'approved_cannot_delete' => 'Cotação aprovada não pode ser excluída. Recuse-a antes.',
         'approved_cannot_edit' => 'Cotação aprovada não pode ser editada.',
+        'turma_locks_field' => 'A cotação tem uma turma: só o valor UF pode mudar.',
         'budget_archived' => 'O orçamento desta cotação está arquivado: restaure-o primeiro.',
     ],
 ];

@@ -23,6 +23,7 @@ class MensagemComercialLocalizadaTest extends TestCase
         'commercial.quote.already_approved',
         'commercial.quote.already_rejected',
         'commercial.quote.turma_exists_cannot_reject',
+        'commercial.quote.turma_locks_field',
     ];
 
     #[Test]

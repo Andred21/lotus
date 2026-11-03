@@ -2,9 +2,12 @@
 
 namespace App\Domains\Commercial\Services;
 
+use App\Domains\Commercial\Data\QuoteData;
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Quote;
+use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
+use Spatie\LaravelData\Optional;
 
 /**
  * Guardião das transições da cotação: dono da matriz da spec D2.
@@ -12,7 +15,10 @@ use Illuminate\Validation\ValidationException;
  *   aprovar  → recusa aprovada;
  *   recusar  → recusa recusada e recusa cotação com turma (ativa ou concluída;
  *              a arquivada não conta);
- *   arquivar → recusa aprovada.
+ *   arquivar → recusa aprovada;
+ *   editar   → aprovada só com `$podeGerirAprovada` (o controller passa
+ *              `can('commercial.quote.approve')`; o módulo não lê `auth()`),
+ *              e, com turma, só o `value_uf` pode mudar.
  *
  * Antes de qualquer regra, a cotação travada que estiver arquivada é recusada:
  * o route binding entregou a linha viva, mas outra requisição pode tê-la
@@ -72,7 +78,75 @@ class QuoteLifecycle
         return $quote;
     }
 
-    /** Turma ativa ou concluída da cotação (a arquivada fica fora: `exists()` respeita o soft delete). */
+    /**
+     * Editar. Pendente e recusada seguem como sempre (a Action reabre a
+     * recusada). Aprovada: sem `$podeGerirAprovada` é 422 em `status`; com
+     * turma, o primeiro campo (menos `value_uf`) que chega DIFERENTE do
+     * gravado é 422 na chave do próprio campo.
+     *
+     * Comparação (spec D2): `Optional` = não mudou; `null` sobre valor
+     * gravado = mudou; datas por `toDateString()`; `course_id` e
+     * `student_count` como `int`. O front manda o formulário inteiro, então
+     * campo igual ao gravado não recusa.
+     */
+    public static function lockToEdit(int $quoteId, QuoteData $data, bool $podeGerirAprovada): Quote
+    {
+        $quote = self::lockLive($quoteId);
+
+        if ($quote->status !== QuoteStatus::Approved) {
+            return $quote;
+        }
+
+        if (! $podeGerirAprovada) {
+            throw ValidationException::withMessages([
+                'status' => __('commercial.quote.approved_cannot_edit'),
+            ]);
+        }
+
+        if (self::temTurma($quote)) {
+            $gravado = [
+                'course_id' => (int) $quote->course_id,
+                'student_count' => (int) $quote->student_count,
+                'purchase_order' => $quote->purchase_order,
+                'planned_start_date' => $quote->planned_start_date?->toDateString(),
+                'planned_end_date' => $quote->planned_end_date?->toDateString(),
+            ];
+            $recebido = [
+                'course_id' => $data->course_id,
+                'student_count' => $data->student_count,
+                'purchase_order' => $data->purchase_order,
+                'planned_start_date' => $data->planned_start_date,
+                'planned_end_date' => $data->planned_end_date,
+            ];
+
+            foreach ($gravado as $campo => $valorGravado) {
+                $valor = $recebido[$campo];
+
+                if ($valor instanceof Optional) {
+                    continue;
+                }
+
+                $valor = match ($campo) {
+                    'course_id', 'student_count' => (int) $valor,
+                    'planned_start_date', 'planned_end_date' => $valor === null ? null : Carbon::parse($valor)->toDateString(),
+                    default => $valor,
+                };
+
+                if ($valor !== $valorGravado) {
+                    throw ValidationException::withMessages([
+                        $campo => __('commercial.quote.turma_locks_field'),
+                    ]);
+                }
+            }
+        }
+
+        return $quote;
+    }
+
+    /**
+     * Turma ativa ou concluída da cotação (a arquivada fica fora: `exists()`
+     * respeita o soft delete). Exige transação aberta e a cotação travada.
+     */
     public static function temTurma(Quote $locked): bool
     {
         return $locked->turma()->exists();

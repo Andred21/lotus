@@ -27,7 +27,7 @@ class QuoteTransitionMatrixTest extends TestCase
     private function cenario(string $status, ?string $turma = null): Quote
     {
         $clientId = $this->makeClientWithUser()->id;
-        $budgetId = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1'])->id;
+        $budgetId = Budget::create(['client_id' => $clientId, 'code' => 'Scap '.(Budget::count() + 1)])->id;
         $courseId = $this->makeCourse()->id;
 
         $quote = Quote::forceCreate([
@@ -155,6 +155,135 @@ class QuoteTransitionMatrixTest extends TestCase
 
         $this->deleteJson("/api/quotes/{$pendente->id}")->assertNoContent();
         $this->assertSoftDeleted('quotes', ['id' => $pendente->id]);
+    }
+
+    /** @return array<string, mixed> Formulário inteiro, igual ao gravado, com o UF novo. */
+    private function payloadIgualAoGravado(Quote $quote, array $override = []): array
+    {
+        $fresh = $quote->fresh();
+
+        return array_merge([
+            'course_id' => $fresh->course_id,
+            'student_count' => $fresh->student_count,
+            'value_uf' => '25.5000',
+            'purchase_order' => $fresh->purchase_order,
+            'planned_start_date' => $fresh->planned_start_date?->toDateString(),
+            'planned_end_date' => $fresh->planned_end_date?->toDateString(),
+        ], $override);
+    }
+
+    public function test_superadmin_edita_aprovada_sem_turma_inclusive_curso_e_ela_continua_aprovada(): void
+    {
+        $this->actingAsSuperadmin();
+        $quote = $this->cenario('approved');
+        $antes = $quote->fresh()->approved_at;
+        $outroCurso = $this->makeCourse()->id;
+
+        $this->putJson("/api/quotes/{$quote->id}", $this->payloadIgualAoGravado($quote, [
+            'course_id' => $outroCurso, 'student_count' => 20, 'value_uf' => '33.0000',
+        ]))->assertOk()->assertJsonPath('status', 'approved');
+
+        $fresh = $quote->fresh();
+        $this->assertSame($outroCurso, $fresh->course_id);
+        $this->assertSame(20, $fresh->student_count);
+        $this->assertSame('33.0000', (string) $fresh->value_uf);
+        $this->assertSame('approved', $fresh->status->value);
+        $this->assertEquals($antes, $fresh->approved_at);
+    }
+
+    public function test_superadmin_edita_aprovada_com_turma_arquivada_inclusive_curso(): void
+    {
+        $this->actingAsSuperadmin();
+        $quote = $this->cenario('approved', 'arquivada');
+        $outroCurso = $this->makeCourse()->id;
+
+        $this->putJson("/api/quotes/{$quote->id}", $this->payloadIgualAoGravado($quote, [
+            'course_id' => $outroCurso,
+        ]))->assertOk()->assertJsonPath('status', 'approved');
+
+        $this->assertSame($outroCurso, $quote->fresh()->course_id);
+    }
+
+    public function test_superadmin_muda_so_o_uf_de_aprovada_com_turma(): void
+    {
+        $this->actingAsSuperadmin();
+        $quote = $this->cenario('approved', 'em_andamento');
+        $quote->forceFill([
+            'planned_start_date' => '2026-09-01', 'planned_end_date' => '2026-09-05',
+        ])->save();
+
+        $this->putJson("/api/quotes/{$quote->id}", $this->payloadIgualAoGravado($quote))
+            ->assertOk()->assertJsonPath('value_uf', '25.5000')->assertJsonPath('status', 'approved');
+
+        $this->assertSame('25.5000', (string) $quote->fresh()->value_uf);
+    }
+
+    /** @return array<string, array{string, mixed}> */
+    public static function camposTravadosPelaTurma(): array
+    {
+        return [
+            'course_id' => ['course_id', null],
+            'student_count' => ['student_count', 99],
+            'purchase_order' => ['purchase_order', 'OC-9'],
+            'planned_start_date' => ['planned_start_date', '2027-01-01'],
+        ];
+    }
+
+    #[DataProvider('camposTravadosPelaTurma')]
+    public function test_superadmin_muda_outro_campo_de_aprovada_com_turma_da_422(string $campo, mixed $valor): void
+    {
+        $this->actingAsSuperadmin();
+        $quote = $this->cenario('approved', 'em_andamento');
+        $antes = $quote->fresh()->getAttributes();
+        $valor = $campo === 'course_id' ? $this->makeCourse()->id : $valor;
+
+        $this->putJson("/api/quotes/{$quote->id}", $this->payloadIgualAoGravado($quote, [$campo => $valor]))
+            ->assertStatus(422)->assertJsonValidationErrors($campo);
+
+        $this->assertSame($antes, $quote->fresh()->getAttributes());
+    }
+
+    public function test_null_sobre_valor_gravado_conta_como_mudanca(): void
+    {
+        $this->actingAsSuperadmin();
+        $quote = $this->cenario('approved', 'em_andamento');
+        $quote->forceFill(['purchase_order' => 'OC-1'])->save();
+
+        $this->putJson("/api/quotes/{$quote->id}", $this->payloadIgualAoGravado($quote, ['purchase_order' => null]))
+            ->assertStatus(422)->assertJsonValidationErrors('purchase_order');
+
+        $this->assertSame('OC-1', $quote->fresh()->purchase_order);
+    }
+
+    public function test_admin_editando_aprovada_da_422_status(): void
+    {
+        $this->actingAsAdmin();
+
+        foreach ([null, 'em_andamento'] as $turma) {
+            $quote = $this->cenario('approved', $turma);
+
+            $this->putJson("/api/quotes/{$quote->id}", $this->payloadIgualAoGravado($quote))
+                ->assertStatus(422)
+                ->assertJsonValidationErrors('status')
+                ->assertJsonPath('errors.status.0', __('commercial.quote.approved_cannot_edit'));
+
+            $this->assertSame('10.0000', (string) $quote->fresh()->value_uf);
+        }
+    }
+
+    public function test_edicao_de_pendente_e_recusada_segue_como_hoje(): void
+    {
+        $this->actingAsAdmin();
+
+        $pendente = $this->cenario('pending');
+        $this->putJson("/api/quotes/{$pendente->id}", $this->payloadIgualAoGravado($pendente))
+            ->assertOk()->assertJsonPath('status', 'pending');
+        $this->assertSame('pending', $pendente->fresh()->status->value);
+
+        $recusada = $this->cenario('rejected');
+        $this->putJson("/api/quotes/{$recusada->id}", $this->payloadIgualAoGravado($recusada))
+            ->assertOk()->assertJsonPath('status', 'pending');
+        $this->assertSame('pending', $recusada->fresh()->status->value);
     }
 
     /** @return array<string, array{class-string}> */

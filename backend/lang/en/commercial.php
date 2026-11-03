@@ -18,6 +18,7 @@ return [
         'turma_exists_cannot_reject' => 'The quote has an active or concluded turma: it cannot be rejected.',
         'approved_cannot_delete' => 'An approved quote cannot be deleted. Reject it first.',
         'approved_cannot_edit' => 'An approved quote cannot be edited.',
+        'turma_locks_field' => 'The quote has a turma: only the UF value can change.',
         'budget_archived' => 'The budget of this quote is archived: restore it first.',
     ],
 ];
