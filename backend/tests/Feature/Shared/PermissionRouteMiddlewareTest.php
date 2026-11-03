@@ -144,14 +144,8 @@ class PermissionRouteMiddlewareTest extends TestCase
         $descobertas = [];
 
         foreach ($this->rotasDaApi() as $chave => $rota) {
-            // `middleware()` = o que a rota e os grupos declaram; o do controller
-            // vem por `controllerMiddleware()` e não passa por aqui (spec D4).
-            foreach ($rota['route']->middleware() as $m) {
-                // Alias (`permission:x`), classe cheia (`PermissionMiddleware::class.':x'`)
-                // e `PermissionMiddleware::using()` são a mesma declaração.
-                if (is_string($m) && (str_starts_with($m, 'permission:') || str_starts_with($m, PermissionMiddleware::class))) {
-                    $descobertas[] = "{$chave} ({$m})";
-                }
+            foreach ($this->permissoesDeclaradasNaRota($rota['route']) as $m) {
+                $descobertas[] = "{$chave} ({$m})";
             }
         }
 
@@ -164,6 +158,37 @@ class PermissionRouteMiddlewareTest extends TestCase
             ],
             $descobertas,
         )));
+    }
+
+    /**
+     * Permissões que a rota e os grupos de `routes.php` declaram, já resolvidas
+     * pelo roteador. `middleware()` = o que a rota e os grupos declaram; o do
+     * controller vem por `controllerMiddleware()` e não passa por aqui (spec D4).
+     * Resolver expande grupo nomeado e qualquer alias até a classe: alias
+     * (`permission:x`), classe cheia, `PermissionMiddleware::using()`, grupo com
+     * permissão dentro e alias novo do mesmo middleware viram a mesma string.
+     *
+     * @return list<string>
+     */
+    private function permissoesDeclaradasNaRota(Route $rota): array
+    {
+        return array_values(array_filter(
+            app('router')->resolveMiddleware($rota->middleware()),
+            fn ($m) => is_string($m) && str_starts_with($m, PermissionMiddleware::class.':'),
+        ));
+    }
+
+    public function test_catraca_ve_permissao_dentro_de_grupo_nomeado_e_de_alias_novo(): void
+    {
+        // Sonda da revisão do bloco 55 (Q-2): ler o nome cru deixava passar os dois.
+        app('router')->middlewareGroup('grupo-sonda-55', ['permission:sonda.grupo']);
+        app('router')->aliasMiddleware('alias-sonda-55', PermissionMiddleware::class);
+
+        $porGrupo = (new Route(['GET'], 'api/sonda-grupo', fn () => null))->middleware('grupo-sonda-55');
+        $porAlias = (new Route(['GET'], 'api/sonda-alias', fn () => null))->middleware('alias-sonda-55:sonda.alias');
+
+        $this->assertSame([PermissionMiddleware::class.':sonda.grupo'], $this->permissoesDeclaradasNaRota($porGrupo));
+        $this->assertSame([PermissionMiddleware::class.':sonda.alias'], $this->permissoesDeclaradasNaRota($porAlias));
     }
 
     public function test_metodos_do_mesmo_uri_sao_avaliados_separados(): void

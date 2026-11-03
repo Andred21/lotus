@@ -5,6 +5,7 @@ namespace Tests\Feature\Identity;
 use App\Domains\Identity\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Route as RoutingRoute;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -44,6 +45,18 @@ class StaffUserBindingTest extends TestCase
         return $rotas;
     }
 
+    /**
+     * Parâmetros da rota além de `{user}`. O laço abaixo só troca `{user}`: um
+     * `{turma}` ficaria literal na URL, o binding do pai daria o 404 e a catraca
+     * passaria sem o escopo staff ter sido exercido (revisão do bloco 55, Q-1).
+     *
+     * @return list<string>
+     */
+    private function outrosParametros(RoutingRoute $rota): array
+    {
+        return array_values(array_diff($rota->parameterNames(), ['user']));
+    }
+
     private function actingAsRedator(): User
     {
         $this->seed(RolePermissionSeeder::class);
@@ -71,6 +84,34 @@ class StaffUserBindingTest extends TestCase
                     ->assertNotFound("$metodo $uri id=$id");
             }
         }
+    }
+
+    public function test_rota_com_user_nao_tem_outro_parametro(): void
+    {
+        $aninhadas = [];
+
+        foreach (Route::getRoutes() as $rota) {
+            if (str_starts_with($rota->uri(), 'api/') && str_contains($rota->uri(), '{user}') && $this->outrosParametros($rota) !== []) {
+                $aninhadas[] = $rota->uri();
+            }
+        }
+
+        $this->assertSame([], $aninhadas, implode("\n", array_merge(
+            [
+                'Rota com `{user}` e outro parâmetro: o 404 da catraca pode vir do binding do pai.',
+                'Estenda test_toda_rota_com_user_recusa_id_nao_staff_com_404 para montar os demais parâmetros com registro válido. Rotas:',
+            ],
+            $aninhadas,
+        )));
+    }
+
+    public function test_catraca_ve_rota_aninhada(): void
+    {
+        $aninhada = new RoutingRoute(['GET'], 'api/turmas/{turma}/users/{user}', fn () => null);
+        $simples = new RoutingRoute(['GET'], 'api/users/{user}', fn () => null);
+
+        $this->assertSame(['turma'], $this->outrosParametros($aninhada));
+        $this->assertSame([], $this->outrosParametros($simples));
     }
 
     public function test_controle_positivo_staff_resolve(): void
