@@ -78,4 +78,21 @@ class UploadAttributeLocaleTest extends TestCase
             }
         }
     }
+
+    #[Test]
+    public function o_atributo_curinga_de_documentos_nomeia_o_documento_nos_tres_locales(): void
+    {
+        // As regras reais são `documents.{TIPO}`: é a chave curinga que as casa.
+        foreach (['es_CL' => 'documento', 'pt_BR' => 'documento', 'en' => 'document'] as $locale => $nome) {
+            app()->setLocale($locale);
+
+            $mensagem = validator(
+                ['documents' => ['CV' => 'não-é-arquivo']],
+                ['documents.CV' => ['file']],
+            )->errors()->first('documents.CV');
+
+            $this->assertStringContainsString($nome, $mensagem, "documents.CV em {$locale}: {$mensagem}");
+            $this->assertStringNotContainsString('documents.CV', $mensagem, "documents.CV em {$locale}: {$mensagem}");
+        }
+    }
 }
