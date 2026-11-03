@@ -112,12 +112,13 @@ class AdminDashboardAssembler
      * `null`, não 0: "não autorizado" e "não há turma" são respostas
      * diferentes, e o tipo agora sabe distingui-las (D7).
      *
-     * @param  ?array{em_andamento:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int}  $turmaKpis
+     * @param  ?array{em_andamento:int, iniciadas:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int}  $turmaKpis
      */
     private function kpis(?array $turmaKpis, ?QuoteKpisData $quoteKpis, bool $canCertification): AdminKpisData
     {
         return new AdminKpisData(
-            turmas_em_andamento: $turmaKpis['em_andamento'] ?? null,
+            // O card conta as que já começaram; o total (`em_andamento`) é do funil.
+            turmas_em_andamento: $turmaKpis['iniciadas'] ?? null,
             turmas_encerrando_em_breve: $turmaKpis['encerrando'] ?? null,
             turmas_atrasadas: $turmaKpis['atrasadas'] ?? null,
             conclusoes_por_confirmar: $turmaKpis['conclusoes_por_confirmar'] ?? null,

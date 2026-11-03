@@ -84,7 +84,7 @@ class DashboardEndpointTest extends TestCase
         $response->assertJsonPath('period_end', '2026-08-14');
 
         $this->assertSame([
-            'turmas_em_andamento' => 2,          // T1 e T3
+            'turmas_em_andamento' => 2,          // T1 e T3: as que já começaram (iniciadas); nenhuma futura no cenário, então igual ao total
             'turmas_encerrando_em_breve' => 1,   // só T1 (termina em 4 dias)
             'turmas_atrasadas' => 1,             // T3 passou do fim e não concluiu
             'conclusoes_por_confirmar' => 0,     // nenhuma tem documentação completa
@@ -108,11 +108,12 @@ class DashboardEndpointTest extends TestCase
         ], $pipeline);
         $this->assertSame(5, array_sum($pipeline));
 
-        // Agenda: as janelas se sobrepõem por definição (T1 está em curso E
-        // termina em breve); só `overdue` é disjunta das outras.
+        // Agenda em baldes disjuntos (bloco 54): T1 termina em breve, então está
+        // só em `ending_soon`; `in_progress` (em curso SEM fim próximo) ficou
+        // vazio — antes repetia a T1.
         $this->assertSame([], $response->json('agenda.starting_soon'));
         $this->assertSame([$cenario['t1']], array_column($response->json('agenda.ending_soon'), 'turma_id'));
-        $this->assertSame([$cenario['t1']], array_column($response->json('agenda.in_progress'), 'turma_id'));
+        $this->assertSame([], array_column($response->json('agenda.in_progress'), 'turma_id'));
         $this->assertSame([$cenario['t3']], array_column($response->json('agenda.overdue'), 'turma_id'));
 
         // O alerta de turma atrasada é DERIVADO da janela `overdue` acima — não

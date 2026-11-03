@@ -365,7 +365,7 @@
     },
     "agenda": {
       "title": "Agenda",
-      "startingSoon": "Starting soon",
+      "startingSoon": "Upcoming classes",
       "endingSoon": "Ending soon",
       "inProgress": "In progress",
       "overdue": "Overdue",

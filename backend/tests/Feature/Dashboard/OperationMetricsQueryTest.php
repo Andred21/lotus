@@ -10,6 +10,7 @@ use App\Domains\Dashboard\Enums\PendingItemType;
 use App\Domains\Dashboard\Services\OperationMetricsQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
+use App\Domains\Operation\Enums\TurmaDisplayStatus;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
@@ -104,8 +105,12 @@ class OperationMetricsQueryTest extends TestCase
 
         $query = app(OperationMetricsQuery::class);
 
+        // `iniciadas` é novo (bloco 54): overdue + ending_soon + in_progress =
+        // 1 + 1 + 0. A `startingSoon` (começa em +2 dias) conta em `em_andamento`
+        // (o total do funil, 3) mas não em `iniciadas`.
         $this->assertSame([
             'em_andamento' => 3,
+            'iniciadas' => 2,
             'encerrando' => 1,
             'atrasadas' => 1,
             'conclusoes_por_confirmar' => 1,
@@ -114,7 +119,9 @@ class OperationMetricsQueryTest extends TestCase
         $agenda = $query->agenda()->toArray();
         $this->assertSame([$startingSoon->id], array_column($agenda['starting_soon'], 'turma_id'));
         $this->assertSame([$endingSoon->id], array_column($agenda['ending_soon'], 'turma_id'));
-        $this->assertSame([$endingSoon->id], array_column($agenda['in_progress'], 'turma_id'));
+        // Baldes disjuntos (bloco 54): a `endingSoon` deixou de aparecer também
+        // em `in_progress`, que agora guarda só as em curso SEM fim próximo.
+        $this->assertSame([], array_column($agenda['in_progress'], 'turma_id'));
         $this->assertSame([$overdue->id], array_column($agenda['overdue'], 'turma_id'));
         $this->assertSame('Cliente Dashboard SpA', $agenda['ending_soon'][0]['client_name']);
 
@@ -152,6 +159,129 @@ class OperationMetricsQueryTest extends TestCase
         $this->assertFalse($pendencias->contains(
             fn ($item) => $item->entity_id === $concluded->id,
         ));
+    }
+
+    public function test_turma_dez_dias_a_frente_esta_na_agenda_e_no_total(): void
+    {
+        [$budget, $course] = $this->cenarioBase();
+
+        $futura = $this->createTurma(
+            $this->createApprovedQuote($budget, $course, 1),
+            $course,
+            CarbonImmutable::today()->addDays(10),
+            CarbonImmutable::today()->addDays(12),
+        );
+
+        $query = app(OperationMetricsQuery::class);
+
+        $this->assertSame([$futura->id], array_column($query->agenda()->toArray()['starting_soon'], 'turma_id'));
+        $kpis = $query->kpis();
+        $this->assertSame(1, $kpis['em_andamento']);
+        $this->assertSame(0, $kpis['iniciadas']);
+    }
+
+    public function test_kpis_sao_o_tamanho_dos_baldes(): void
+    {
+        [$budget, $course] = $this->cenarioBase();
+        $hoje = CarbonImmutable::today();
+
+        $this->createTurma($this->createApprovedQuote($budget, $course, 1), $course, $hoje->subDays(10), $hoje->subDay());
+        $this->createTurma($this->createApprovedQuote($budget, $course, 2), $course, $hoje->subDays(2), $hoje->addDays(3));
+        $this->createTurma($this->createApprovedQuote($budget, $course, 3), $course, $hoje->subDays(2), $hoje->addDays(30));
+        $this->createTurma($this->createApprovedQuote($budget, $course, 4), $course, $hoje->addDays(10), $hoje->addDays(12));
+
+        $query = app(OperationMetricsQuery::class);
+        $kpis = $query->kpis();
+        $agenda = $query->agenda()->toArray();
+
+        $this->assertSame(count($agenda['ending_soon']), $kpis['encerrando']);
+        $this->assertSame(count($agenda['overdue']), $kpis['atrasadas']);
+        $this->assertSame(
+            count($agenda['overdue']) + count($agenda['ending_soon']) + count($agenda['in_progress']),
+            $kpis['iniciadas'],
+        );
+        $this->assertSame(3, $kpis['iniciadas']);
+        $this->assertSame(4, $kpis['em_andamento']);
+
+        $ids = array_merge(...array_map(
+            fn (string $balde): array => array_column($agenda[$balde], 'turma_id'),
+            ['overdue', 'starting_soon', 'ending_soon', 'in_progress'],
+        ));
+        $this->assertCount(4, $ids);
+        $this->assertSame($ids, array_values(array_unique($ids)), 'Nenhuma turma pode estar em dois baldes.');
+    }
+
+    public function test_conclusoes_por_confirmar_e_o_display_status_habilitada(): void
+    {
+        [$budget, $course] = $this->cenarioBase();
+        $hoje = CarbonImmutable::today();
+        $redatorUser = User::create([
+            'name' => 'Redator Habilitada',
+            'rut' => '12.345.678-5',
+            'email' => 'redator-habilitada@example.test',
+            'password' => 'secret',
+            'type' => 'redator',
+            'is_active' => true,
+        ]);
+        $redator = Redator::create(['user_id' => $redatorUser->id]);
+
+        $habilitada = $this->createTurma($this->createApprovedQuote($budget, $course, 1), $course, $hoje->subDays(2), $hoje->addDays(3));
+        $habilitada->redatores()->attach($redator->id);
+        foreach (TurmaDocumentType::cases() as $type) {
+            $this->createDocument($habilitada, $type);
+        }
+        $this->createTurma($this->createApprovedQuote($budget, $course, 2), $course, $hoje->subDays(2), $hoje->addDays(3));
+
+        $porConfirmar = app(OperationMetricsQuery::class)->kpis()['conclusoes_por_confirmar'];
+
+        $this->assertSame(1, $porConfirmar);
+        $this->assertSame(
+            Turma::query()->whereDisplayStatus(TurmaDisplayStatus::Habilitada)->count(),
+            $porConfirmar,
+        );
+    }
+
+    public function test_turma_concluida_nao_entra_em_agenda_nem_kpi(): void
+    {
+        [$budget, $course] = $this->cenarioBase();
+        $hoje = CarbonImmutable::today();
+
+        $this->createTurma(
+            $this->createApprovedQuote($budget, $course, 1),
+            $course,
+            $hoje->addDays(5),
+            $hoje->addDays(8),
+            TurmaStatus::Concluida,
+        );
+
+        $query = app(OperationMetricsQuery::class);
+        $kpis = $query->kpis();
+
+        $this->assertSame([], $query->agenda()->toArray()['starting_soon']);
+        $this->assertSame(0, $kpis['em_andamento']);
+        $this->assertSame(0, $kpis['iniciadas']);
+    }
+
+    /** @return array{0: Budget, 1: Course} */
+    private function cenarioBase(): array
+    {
+        $clientUser = User::create([
+            'name' => 'Cliente Base',
+            'rut' => '76.543.210-3',
+            'email' => 'cliente-base@example.test',
+            'password' => 'secret',
+            'type' => 'cliente',
+            'is_active' => false,
+        ]);
+        $client = Client::create([
+            'user_id' => $clientUser->id,
+            'legal_name' => 'Cliente Base SpA',
+            'type' => 'client',
+        ]);
+        $budget = Budget::create(['client_id' => $client->id, 'code' => 'Scap Base']);
+        $course = Course::create(['name' => 'Curso Base', 'workload_hours' => 16]);
+
+        return [$budget, $course];
     }
 
     private function createApprovedQuote(Budget $budget, Course $course, int $sequence): Quote

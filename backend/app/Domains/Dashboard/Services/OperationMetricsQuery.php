@@ -9,75 +9,63 @@ use App\Domains\Dashboard\Data\TurmaComplianceData;
 use App\Domains\Dashboard\Enums\DashboardModule;
 use App\Domains\Dashboard\Enums\DashboardSeverity;
 use App\Domains\Dashboard\Enums\PendingItemType;
+use App\Domains\Operation\Enums\TurmaDisplayStatus;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Domains\Operation\Services\TurmaHabilitacaoService;
-use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 class OperationMetricsQuery
 {
     /** @var Collection<int, Turma>|null */
     private ?Collection $emAndamento = null;
 
+    private ?AgendaBuckets $baldes = null;
+
     public function __construct(
         private readonly TurmaHabilitacaoService $habilitacao,
     ) {}
 
-    /** @return array{em_andamento:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int} */
+    /**
+     * `em_andamento` é o TOTAL (o funil de `PipelineQuery` conta as futuras);
+     * `iniciadas` é o que o card do admin mostra — só as que já começaram.
+     * `encerrando`/`atrasadas` têm o tamanho do balde da agenda: mesma
+     * classificação, uma definição só. `conclusoes_por_confirmar` é a pergunta
+     * "habilitada" em SQL, a mesma do filtro da lista de turmas.
+     *
+     * @return array{em_andamento:int, iniciadas:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int}
+     */
     public function kpis(): array
     {
-        $today = FusoDoNegocio::hoje();
-        $query = Turma::query()->where('status', TurmaStatus::EmAndamento);
+        $turmas = $this->turmasEmAndamento();
+        $baldes = $this->baldes();
 
         return [
-            'em_andamento' => (clone $query)->count(),
-            'encerrando' => (clone $query)
-                ->whereDate('start_date', '<=', $today)
-                ->whereDate('end_date', '>=', $today)
-                ->whereDate('end_date', '<=', DashboardWindows::turmaHorizon())
-                ->count(),
-            'atrasadas' => (clone $query)
-                ->whereDate('end_date', '<', $today)
-                ->count(),
-            'conclusoes_por_confirmar' => $this->turmasEmAndamento()
-                ->filter(fn (Turma $turma): bool => $this->habilitacao->for($turma)->isHabilitada())
+            'em_andamento' => $turmas->count(),
+            'iniciadas' => $baldes->startedCount(),
+            'encerrando' => $baldes->endingSoon->count(),
+            'atrasadas' => $baldes->overdue->count(),
+            'conclusoes_por_confirmar' => Turma::query()
+                ->whereDisplayStatus(TurmaDisplayStatus::Habilitada)
                 ->count(),
         ];
     }
 
     public function agenda(): AgendaData
     {
-        $today = FusoDoNegocio::hoje();
-        $horizon = DashboardWindows::turmaHorizon();
-        $turmas = $this->turmasEmAndamento();
+        $baldes = $this->baldes();
+        $mapear = fn (Collection|SupportCollection $turmas): array => $turmas
+            ->map(fn (Turma $turma): AgendaTurmaData => $this->agendaData($turma))
+            ->values()
+            ->all();
 
         return new AgendaData(
-            starting_soon: $turmas
-                ->filter(fn (Turma $turma): bool => $turma->start_date->isAfter($today)
-                    && $turma->start_date->lte($horizon))
-                ->map(fn (Turma $turma): AgendaTurmaData => $this->agendaData($turma))
-                ->values()
-                ->all(),
-            ending_soon: $turmas
-                ->filter(fn (Turma $turma): bool => $turma->start_date->lte($today)
-                    && $turma->end_date->gte($today)
-                    && $turma->end_date->lte($horizon))
-                ->map(fn (Turma $turma): AgendaTurmaData => $this->agendaData($turma))
-                ->values()
-                ->all(),
-            in_progress: $turmas
-                ->filter(fn (Turma $turma): bool => $turma->start_date->lte($today)
-                    && $turma->end_date->gte($today))
-                ->map(fn (Turma $turma): AgendaTurmaData => $this->agendaData($turma))
-                ->values()
-                ->all(),
-            overdue: $turmas
-                ->filter(fn (Turma $turma): bool => $turma->end_date->isBefore($today))
-                ->map(fn (Turma $turma): AgendaTurmaData => $this->agendaData($turma))
-                ->values()
-                ->all(),
+            starting_soon: $mapear($baldes->upcoming),
+            ending_soon: $mapear($baldes->endingSoon),
+            in_progress: $mapear($baldes->inProgress),
+            overdue: $mapear($baldes->overdue),
         );
     }
 
@@ -171,6 +159,11 @@ class OperationMetricsQuery
             ->orderBy('start_date')
             ->orderBy('id')
             ->get();
+    }
+
+    private function baldes(): AgendaBuckets
+    {
+        return $this->baldes ??= AgendaClassifier::classify($this->turmasEmAndamento());
     }
 
     private function agendaData(Turma $turma): AgendaTurmaData

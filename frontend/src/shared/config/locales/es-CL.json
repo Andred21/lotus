@@ -365,7 +365,7 @@
     },
     "agenda": {
       "title": "Agenda",
-      "startingSoon": "Comienzan pronto",
+      "startingSoon": "Próximas clases",
       "endingSoon": "Terminan pronto",
       "inProgress": "En curso",
       "overdue": "Atrasadas",
