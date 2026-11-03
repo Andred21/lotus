@@ -2,13 +2,13 @@
 schema_version: 3
 id: 48
 slug: 48-certificacao-estado-de-emissao
-workflow_state: ready_for_review
-next_owner: claude
-next_action: request_code_review
+workflow_state: reviewing
+next_owner: joao
+next_action: approve_review_findings Q-1
 resume_state: null
 active_spec: docs/superpowers/blocos/48-certificacao-estado-de-emissao/spec.md
 active_plan: docs/superpowers/blocos/48-certificacao-estado-de-emissao/plano.md
-active_review: null
+active_review: docs/superpowers/blocos/48-certificacao-estado-de-emissao/revisao.md
 active_acceptance: null
 context_packet: null
 efeito_externo: nao
@@ -17,9 +17,9 @@ branch: fix/48-certificacao-estado-de-emissao
 worktree: ../lotus-48-certificacao-estado-de-emissao
 offset: 1
 lane_base: 1575d694
-commit: 81640376
+commit: 14772007
 blocker: null
-updated_at: 2026-11-02T21:26:15-03:00
+updated_at: 2026-11-02T22:30:50-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
