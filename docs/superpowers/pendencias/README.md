@@ -21,13 +21,12 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (36)
+## Abertas (34)
 
 ### Agrupadas em bloco de execução
 
 | ID | Pendência | Bloco | Gatilho |
 |---|---|---|---|
-| P-85 | No sqlite da suíte o `whereBetween` de `start_date` do `AnalyticsQuery` (série e dois rankings) deixa de fora o último dia do período — a produção (MySQL) acerta, a suíte não enxerga a borda; `DataSql::literal` já resolve isso em outro lugar | 54 | bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de período do dashboard; revisar 2026-10-31 |
 | P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade); o `cicd-host-alinhado-ao-sha` (item 31) fechou em 2026-09-26 sem pagar o gatilho | 56 | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
 | P-90 | O gate `/up` do `deploy.sh` faz um `curl` só depois de o nginx ficar `healthy`; num deploy que recria o `app` e não o nginx, ele bate antes do php-fpm novo escutar e o botão sai 502 (botão 2 do item 32) | 56 | próximo commit em `deploy/bin/deploy.sh`, ou o próximo botão com `erro: /up respondeu 502`; **disparado em 2026-10-27 (item 42), não pago**; revisar 2026-10-31 |
 | P-91 | `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401: o `Authenticate` monta o redirecionamento por `route('login')`, que não existe (medido em produção pelo item 32) | 55 | bloco que tocar `backend/bootstrap/app.php` ou o middleware de autenticação; revisar 2026-10-31 |
@@ -49,7 +48,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | 58 | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | 58 | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo — **disparado em 2026-09-04, 2026-09-25 e 2026-10-04, não pago**; revisar 2026-10-31; a linha "transporte de e-mail sem ADR" foi paga pelo item 33 (ADR-23) |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | 55 | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
-| P-102 | O `CompliancePanel` e `OperationMetricsQuery::pendencias()` não mostram os requisitos novos da conclusão (redator, `local_aplicacao` do presencial) | 54 | bloco que tocar o `CompliancePanel` ou o `pendencias()`; revisar em 2026-11-07 |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
@@ -149,7 +147,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (2)
 
-**A P-76 e a P-107 fecharam no item 52 (2026-11-03)**, as duas pelo próprio gatilho: as seis frases da P-76 leem `lang/` nos três locales, sob as duas portas novas do `MensagemLiteralTest`, e o atributo de upload da P-107 é traduzido (o 422 em es-CL diz "archivo"). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`. O item 52 disparou sem pagar os gatilhos da **P-53**, da **P-96** e da **P-97** (tocou `estrutura-monolito.md` e `backend-ddd.md` por outro motivo); as fichas registram o disparo. Não abriu ficha nova.
+**A P-85 e a P-102 fecharam no item 54 (2026-11-03)**, as duas pelo próprio gatilho: os três filtros de `start_date` do `AnalyticsQuery` passam por `DataSql::literal`, com a borda do último dia provada no sqlite, e o Cumplimiento e as pendências do admin dizem o que falta (redator, `local_aplicacao`), provado contra a API da lane. Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`. O item 54 não disparou gatilho de outra ficha e não abriu ficha nova.
+
+**A P-76 e a P-107 saíram no fechamento do item 54 (2026-11-03)**, o primeiro depois do item 52, que as encerrou no mesmo dia. O item 52 disparou sem pagar os gatilhos da **P-53**, da **P-96** e da **P-97**; as fichas registram o disparo. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-49 e a P-112 saíram no fechamento do item 52 (2026-11-03)**, o primeiro depois do item 50, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

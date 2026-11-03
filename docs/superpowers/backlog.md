@@ -146,7 +146,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | 3 | **51** `backend-contrato-de-entrada-dos-data` | Backend | Depende do 50 (`Budget`) |
 | 5 | **53** `backend-importacao-e-identidade-do-aluno` | Backend | Depende do 52 (Identity) |
-| 6 | **54** `dashboard-agenda-e-pendencias` | Dashboard | Depende do 48 |
 | 7 | **55** `backend-borda-http-auth-e-permissao` | Backend | Sem urgência funcional; a P-91 é a única que se vê de fora |
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
@@ -297,32 +296,6 @@ Depende do 52 porque os dois mexem em Identity (`RedatorController`, `UpdateReda
 
 ---
 
-## 54. `dashboard-agenda-e-pendencias`
-
-**Prioridade:** P2 · **Frente:** Dashboard (backend e frontend) · **Contexto:** não · **Depende:** 48
-**Fonte:** card 8 do review de 2026-11-02; `D-72`, `D-73`, `D-34`, `P-85`, `P-102`.
-
-Depende do 48: as três queries do Dashboard passam a consumir o estado de emissão que ele cria.
-
-**Escopo:**
-- **Card 8 e D-72.** Um classificador (turma, hoje, horizonte) devolve os baldes da agenda. O KPI
-  "Próximas clases" conta o resultado dele, e o Dashboard reusa o `whereDisplayStatus` em vez de
-  filtrar "habilitada" em PHP.
-- **P-102.** O `CompliancePanel` diz o que falta (redator, `local_aplicacao`), e
-  `OperationMetricsQuery::pendencias()` passa a sinalizar o presencial sem local.
-- **P-85.** Os três filtros de `start_date` do `AnalyticsQuery` passam por `DataSql::literal`, com
-  teste da borda do último dia.
-- **D-73.** Os dois painéis de tabela do Dashboard deixam de transbordar por conteúdo de célula.
-- **D-34**, que saiu do item 9 por decisão do João em 2026-11-02: a visibilidade RBAC vira campo
-  explícito do payload, e o front para de farejar nulo. Regenera o `generated.ts`.
-- A série de certificados do `AnalyticsQuery` (`AnalyticsQuery.php:185`, `where certificates.status = Emitido`) passa a consumir o estado de emissão do 48. O funil (`PipelineQuery`) já acompanha a pendência desde o 48, porque particiona `CertificationMetricsQuery::pendencias()`.
-
-**DoD:** a turma que começa em 10 dias aparece no KPI e numa janela da agenda, ou em nenhum dos dois.
-`scrollWidth == clientWidth` nos dois painéis em 1024x768 e 390x844. A borda do último dia está
-provada no sqlite. Nenhum componente reconstrói permissão a partir de nulo.
-
----
-
 ## 55. `backend-borda-http-auth-e-permissao`
 
 **Prioridade:** P3 · **Frente:** Backend (Identity, rotas) · **Contexto:** não · **Depende:** —
@@ -470,39 +443,14 @@ ficam só como ponteiro, e a ficha delas é lá.
 > | 2026-09-28 | `D-65` | paga — em 1024 a coluna presa não cobre mais nada nas 18 visões com presa, sobre o piso default de 42rem; abaixo de `sm` o `narrowFloorTablePt` medido por visão tira a 1ª coluna de baixo da presa, e o `RowActions` colapsa as ações num `⋮` único, sob a catraca `ACAO_SEM_COLAPSO`. Cursos e Usuarios arquivados ficam como exceção provada, e o diálogo do Alumno, que rola 3px em 1024, virou a `P-94` (`audits/2026-09-27-item23-medicoes.md`) | item 23 |
 > | 2026-11-02 | `D-74` | paga — `mask_bindings_in_exception_messages` nas conexões de `config/database.php`, provado por `backend/tests/Feature/Shared/BindingsForaDaMensagemTest.php` (`d5878d61`) | item 34 |
 > | 2026-11-02 | `D-71` | paga — nenhum rótulo `perm.*` carrega jargão interno (Flujo, RN-N, soft delete) nas três locales, sob `frontend/tests/perm-labels.test.ts` (`81f45817`) | item 49 |
+> | 2026-11-03 | `D-72` | paga — o KPI "Próximas clases" e a agenda contam o mesmo balde do `AgendaClassifier`; turma que começa em 10 dias saiu em `proximas_turmas` e em `starting_soon` no redator e no admin, contra a API da lane (`a2ebea59`, `b2700c72`) | item 54 |
+> | 2026-11-03 | `D-73` | paga — `scrollWidth == clientWidth` nos dois painéis em 1024x768 e, pela leitura emendada, nada passa da tabela em 390x844, medido no navegador (`blocos/54-dashboard-agenda-e-pendencias/medicoes-d73.md` §3, `d78915a7`, `196489c6`) | item 54 |
+> | 2026-11-03 | `D-34` | paga — a visibilidade RBAC vira o campo `visibility` do payload (`DashboardVisibilityData`), e `AdminView`, `kpiCards`, `SeriesPanel` e `RankingsPanel` decidem por ele (`7977f4aa`) | item 54 |
 >
 > **O que aqueles fechamentos deixaram aberto, e que não é débito:** cinco recusas literais fora de
 > `lang/` viraram a **P-71** e o 419 virou a **P-72** — as duas fechadas depois pelo item 26; a
 > legenda do `AppLineChart` fechou como **P-63** em 2026-09-01; e o item 25 abriu a **P-74**. Todas
 > em `pendencias/`.
-
-- **D-72 · O KPI "Próximas clases" e a agenda do dashboard do redator contam conjuntos diferentes** →
-  **item 54 (`dashboard-agenda-e-pendencias`), desde 2026-11-02.** `RedatorScopeQuery::resumo()` conta `proximas_turmas` com
-  `$turma->start_date->isAfter($today)`, **sem teto**; `RedatorScopeQuery::agenda()` recorta
-  `starting_soon` por `DashboardWindows::turmaHorizon()`, que é `TURMA_WINDOW_DAYS = 7`
-  (`backend/app/Domains/Dashboard/Services/DashboardWindows.php:17`) — os dois conferidos vivos
-  nesta leitura. Turma que começa em 10 dias entra no KPI e não aparece em janela nenhuma da agenda —
-  foi a turma 6 na run de 2026-08-22, e o payload confirmou `starting_soon`, `ending_soon` e
-  `in_progress` vazios. Não se corrige aqui: é backend, e o fence desta fatia proíbe `backend/` — a
-  fatia roda em worktree, e tocar backend exige o main tree (P-03). **Quem decide o hospedeiro é o
-  João** — nenhum item da fila atual toca
-  `RedatorScopeQuery`/`DashboardWindows` hoje. Gatilho: o próximo bloco que tocar o dashboard do
-  redator, ou o redesenho do item 9 se ele alcançar o mesmo assembler. Origem: UI-04 da run
-  `ready-redator` de 2026-08-22, classe `B`, herança que a Task 12 da fatia 1 do item 16 prometeu e
-  nunca escreveu.
-
-- **D-73 · Os dois painéis de tabela do Dashboard transbordam por conteúdo, não por piso** →
-  **item 54 (`dashboard-agenda-e-pendencias`), desde 2026-11-02.** `app/pages/Dashboard/admin/CompliancePanel.tsx` e
-  `RedatorLoadPanel.tsx` têm `scrollWidth` maior que a tabela: em 1024x768, 749 e 747px sobre
-  moldura e tabela de 718, ou seja, 31 e 29px a mais. Antes do item 23 eram 25 e 21px sobre 768. Em
-  390x844, 708 e 707 sobre 672. A tabela cabe na moldura (`table` ≤ `frame`, régua do item 23), então
-  o que passa é conteúdo de célula, e o piso não mexe nisso. A spec do item 23 (§1, "Fora") mandou
-  abrir ficha se o transbordo persistisse depois do piso novo. Ele persistiu, medido no audit
-  `audits/2026-09-27-item23-medicoes.md` §6, Observação 1. Não há coluna presa nesses painéis. O
-  remédio provável é achar a célula que força a largura (grafia sem quebra ou `min-width` de
-  conteúdo) e deixá-la quebrar ou truncar. **Quem decide o hospedeiro é o João.** **DoD:**
-  `scrollWidth == clientWidth` no invólucro dos dois painéis em 1024x768 e 390x844, medido no
-  navegador. Origem: Q-3 do review do item 23 (`frontend-tabelas-reserva-e-rolagem`).
 
 - **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
   **entregue PELA METADE em 2026-08-22; a metade que falta está no item 55
@@ -516,23 +464,6 @@ ficam só como ponteiro, e a ficha delas é lá.
   `feedbacks-resolver-escopo` as removeu **à mão** em 2026-08-22 (`f6b04b45`..`629fcfe6`) — o caso
   vivo virou caso de regressão, e **nada mede permissão órfã hoje**. A próxima nasce igual e ninguém
   vê. Quem absorver isto precisa de uma catraca sobre o catálogo de permissões, não sobre `use`.
-
-- **D-34 · O gate RBAC do Dashboard atravessa o seam como `null`, e o cliente o remonta** →
-  **item 54 (`dashboard-agenda-e-pendencias`) desde 2026-11-02**, por decisão do João; ficou sem
-  bloco hospedeiro de 2026-08-23 até então. Estava no item 3 como **condicional** ("só se o
-  contrato for tocado"), e a §2 da spec do `hardening-acesso-ownership-e-integridade` o declarou
-  **fora**: o bloco tocou `generated.ts` pelo `is_active` de `UserData`, **não** pelo payload do
-  Dashboard, e entrar ali abriria `AnalyticsQuery`, o assembler e dois componentes do SPA — frente
-  diferente, com a `lane-c` já no frontend. O item 3 fechou e saiu da fila; **este débito precisa de
-  novo hospedeiro, e escolhê-lo é do João**. Dos dois candidatos naturais sobrou um: o
-  `frontend-hardening-final` fechou em 2026-08-27 sem absorvê-la (conferido na promoção do item 18),
-  restando `administracao-roles-permissoes-redesign` (item 9). A visibilidade nasce como quatro
-  booleanos em `AdminDashboardAssembler.php:56-62`, passa posicionalmente por
-  `AnalyticsQuery::series()`/`::rankings()` e chega ao payload como ausência de dado (sentinela
-  `'0.0000'`, `AnalyticsQuery.php:319`); `RankingsPanel.tsx:25` e `SeriesPanel.tsx:54` reconstroem a
-  permissão farejando nulo — conferido vivo em 2026-09-03. Medido 2026-08-18 contra `b758068`;
-  desfecho do Q-2 do review do B2. Fix: a visibilidade vira campo explícito no payload e módulo
-  próprio no backend — toca contrato e regenera `generated.ts` (lei §5.3).
 
 - **D-37 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo** →
   `go-live-confiabilidade-e-recuperacao` (item 13). A migration `2026_08_18_000001` entra com
