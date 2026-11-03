@@ -72,7 +72,7 @@ backend/app/
 │   │                           #   (primitivos de disco: metadataOf/put/putTo/register/discard/publicDiskFor) (ADR-10/11)
 │   ├── Rules/                  # ValidRut (regra de validação reusável)
 │   ├── Support/                # value objects / helpers puros (Rut, JanelaDeAviso — os 30 dias da D-15, DataSql)
-│   ├── Pagination/             # PageRequest (entrada), PageData/PageMetaData (envelope) e o trait Paginates
+│   ├── Pagination/             # PageQueryData (entrada), PageData/PageMetaData (envelope) e o trait Paginates
 │   │                           #   que os QueryBuilders custom ganham (students, certificates, turmas — ADR-22)
 │   ├── Retention/               # RetentionPolicy — janelas de retenção de `audits`/`login_logs` (ADR-08)
 │   ├── Logging/                 # EventoDeSeguranca — ponto único de escrita do canal `seguranca` (ADR-21)

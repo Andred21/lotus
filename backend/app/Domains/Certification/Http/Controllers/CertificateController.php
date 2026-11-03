@@ -9,8 +9,8 @@ use App\Domains\Certification\Data\BatchIssueData;
 use App\Domains\Certification\Data\BatchIssueItemResultData;
 use App\Domains\Certification\Data\CertificateData;
 use App\Domains\Certification\Data\CertificatePageMetaData;
-use App\Domains\Certification\Data\CertificatePageRequest;
-use App\Domains\Certification\Data\EmissionPanelRequest;
+use App\Domains\Certification\Data\CertificatePageQueryData;
+use App\Domains\Certification\Data\EmissionPanelQueryData;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
 use App\Domains\Certification\Data\RevokeCertificateData;
@@ -54,16 +54,16 @@ class CertificateController extends Controller implements HasMiddleware
      *
      * @return PageData<CertificateData>
      */
-    public function index(CertificatePageRequest $request): PageData
+    public function index(CertificatePageQueryData $query): PageData
     {
         $hoje = CertificateDisplayStatus::hoje();
 
         return Certificate::query()
             ->withListingData()
             ->page(
-                $request,
+                $query,
                 fn (Certificate $certificate) => CertificateData::fromModel($certificate, $hoje),
-                filter: fn (CertificateQueryBuilder $q) => $q->whereDisplayStatus($request->display_status, $hoje),
+                filter: fn (CertificateQueryBuilder $q) => $q->whereDisplayStatus($query->display_status, $hoje),
                 meta: fn (PageMetaData $meta, CertificateQueryBuilder $escopo) => CertificatePageMetaData::withSummary($meta, $escopo->summaryByDisplayStatus($hoje)),
             );
     }
@@ -87,9 +87,9 @@ class CertificateController extends Controller implements HasMiddleware
     }
 
     /** @return array<EmissionPanelTurmaData> */
-    public function emissionPanel(EmissionPanelRequest $request, EmissionPanelQuery $panel): array
+    public function emissionPanel(EmissionPanelQueryData $query, EmissionPanelQuery $panel): array
     {
-        return $panel->get($request->desde());
+        return $panel->get($query->desde());
     }
 
     public function store(

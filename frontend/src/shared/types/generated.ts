@@ -380,6 +380,12 @@ total: number,
 last_page: number,
 total_unfiltered: number,
 };
+export type PageQueryData = {
+page: number,
+per_page: number,
+q: string | null,
+sort: string | null,
+};
 export type PendingItemData = {
 module: DashboardModule,
 type: PendingItemType,

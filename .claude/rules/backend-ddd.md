@@ -155,8 +155,8 @@ arquivado resolve por `onlyTrashed()` à mão (o binding não enxerga trashed) e
 `permission:` do endpoint, não pelo escopo.
 
 **Lista que cresce sem teto pagina pelo trait `Paginates` no builder do agregado (ADR-22).**
-O controller injeta `PageRequest` (ou a extensão com o filtro nomeado — `CertificatePageRequest`,
-`TurmaPageRequest`) e chama `->page($request, $present, filter:, meta:)`; o builder declara
+O controller injeta `PageQueryData` (ou a extensão com o filtro nomeado — `CertificatePageQueryData`,
+`TurmaPageQueryData`) e chama `->page($query, $present, filter:, meta:)`; o builder declara
 `SORTABLE` (allowlist, fora dela 422), `DEFAULT_SORT` e `searchable()`. Filtro que o front
 derivava vira SQL COM teste de paridade contra a classificação de domínio — o `CASE`/`whereHas`
 e o `for()`/`Service` são duas respostas esperando para divergir. `total_unfiltered` mede o escopo
