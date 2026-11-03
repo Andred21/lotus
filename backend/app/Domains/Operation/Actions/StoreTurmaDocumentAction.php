@@ -7,26 +7,22 @@ use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Files\Models\File;
-use App\Shared\Files\Services\FileStorage;
+use App\Shared\Files\Services\FileUploader;
+use App\Shared\Files\Services\StoredFiles;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
-use Throwable;
 
 /**
  * Anexa um documento à turma (RN-16). Append puro — N docs por tipo (D8),
  * sem replace: as provas dos alunos são plural real. Doc de turma não vence
  * (sem valid_until).
  *
- * O `uploads->execute()` de uma chamada só virou put/register separados por
- * causa da P-49: o INSERT em `files` precisa da transação para o
- * `Turma::lockForWrite()` valer, e o binário NÃO pode entrar nela — rollback
- * derrubaria a linha e deixaria o objeto no bucket, documento sem rastro (D3 da
- * spec do redator, e aqui o dado tem peso legal). Molde exato:
- * `StoreRedatorDocumentAction`.
+ * O binário sobe fora da transação e o INSERT em `files` entra nela, com o
+ * `Turma::lockForWrite()` (P-49): tudo isso é o `FileUploader`, que descarta o
+ * objeto se a transação cair — sem documento sem rastro (peso legal).
  */
 class StoreTurmaDocumentAction
 {
-    public function __construct(private FileStorage $uploads) {}
+    public function __construct(private FileUploader $uploader) {}
 
     public function execute(Turma $turma, TurmaDocumentType $type, UploadedFile $file, User $actor): File
     {
@@ -36,19 +32,14 @@ class StoreTurmaDocumentAction
             $turma->assertAcademicallyWritable();
         }
 
-        $meta = $this->uploads->metadataOf($file);
-        $path = $this->uploads->put($turma, $file);
-
-        try {
-            return DB::transaction(function () use ($turma, $type, $path, $meta) {
+        return $this->uploader->store(
+            ['file' => $file],
+            $turma,
+            function (StoredFiles $stored) use ($turma, $type) {
                 Turma::lockForWrite($turma->id);
 
-                return $this->uploads->register($turma, $path, $meta, $type->value);
-            });
-        } catch (Throwable $e) {
-            $this->uploads->discard($path);
-
-            throw $e;
-        }
+                return $stored->register($turma, 'file', $type->value);
+            },
+        );
     }
 }

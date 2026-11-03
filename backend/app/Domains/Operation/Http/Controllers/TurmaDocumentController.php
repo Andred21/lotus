@@ -5,17 +5,15 @@ namespace App\Domains\Operation\Http\Controllers;
 use App\Domains\Operation\Actions\DeleteTurmaDocumentAction;
 use App\Domains\Operation\Actions\StoreTurmaDocumentAction;
 use App\Domains\Operation\Data\TurmaDocumentData;
-use App\Domains\Operation\Enums\TurmaDocumentType;
+use App\Domains\Operation\Data\TurmaDocumentUploadData;
 use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
-use App\Shared\Files\ContentClass;
 use App\Shared\Files\Models\File;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Validation\Rules\Enum;
 
 class TurmaDocumentController extends Controller implements HasMiddleware
 {
@@ -37,14 +35,9 @@ class TurmaDocumentController extends Controller implements HasMiddleware
             ->all();
     }
 
-    public function store(Request $request, Turma $turma, StoreTurmaDocumentAction $action): JsonResponse
+    public function store(TurmaDocumentUploadData $data, Request $request, Turma $turma, StoreTurmaDocumentAction $action): JsonResponse
     {
-        $validated = $request->validate([
-            'type' => ['required', new Enum(TurmaDocumentType::class)],
-            'file' => ContentClass::DocumentoDeTurma->regras(),
-        ]);
-
-        $file = $action->execute($turma, TurmaDocumentType::from($validated['type']), $request->file('file'), $request->user());
+        $file = $action->execute($turma, $data->type, $data->file, $request->user());
 
         return TurmaDocumentData::fromModel($file)->toResponse($request)->setStatusCode(201);
     }
