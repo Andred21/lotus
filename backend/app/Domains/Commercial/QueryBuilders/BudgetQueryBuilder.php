@@ -20,13 +20,14 @@ class BudgetQueryBuilder extends Builder
 {
     use LoadsCascadedChildren;
 
-    public const LISTING = ['quotes.files', 'files'];
+    public const LISTING = ['quotes.files', 'quotes.turma', 'files'];
 
     /**
      * TUDO é cascateado aqui, ao contrário de `Client`/`Course`: a cascata do
      * orçamento leva as cotações, e a de cada cotação leva os anexos dela. A
      * chave aninhada `quotes.files` recebe a MESMA restrição — sem ela a
-     * cotação arquivada apareceria sem anexo nenhum.
+     * cotação arquivada apareceria sem anexo nenhum. `quotes.turma` (o
+     * `turma_status` da cotação) fica de fora: turma não é filha da cascata.
      */
     private const CASCADED = ['quotes', 'quotes.files', 'files'];
 
@@ -38,6 +39,6 @@ class BudgetQueryBuilder extends Builder
     /** Ver `LoadsCascadedChildren::asOfArchiving()` — por que a lista de arquivados não usa `withListingData()`. */
     public function withArchivedListingData(): static
     {
-        return $this->with(self::asOfArchiving(self::CASCADED));
+        return $this->with([...self::asOfArchiving(self::CASCADED), 'quotes.turma']);
     }
 }
