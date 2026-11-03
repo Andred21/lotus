@@ -11,6 +11,7 @@ use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\LaravelData\Optional;
@@ -337,6 +338,15 @@ class QuoteTransitionMatrixTest extends TestCase
 
         Quote::whereKey($quote->id)->first()->delete();
         $gravado = Quote::withTrashed()->find($quote->id);
+        $auditsDeletado = fn () => DB::table('audits')
+            ->where('auditable_type', $quote->getMorphClass())
+            ->where('auditable_id', $quote->id)
+            ->where('event', 'deleted')
+            ->count();
+        $auditsAntes = $auditsDeletado();
+        $this->assertSame(1, $auditsAntes);
+
+        $recusou = false;
 
         try {
             match ($verbo) {
@@ -355,14 +365,21 @@ class QuoteTransitionMatrixTest extends TestCase
                     code: new Optional,
                 ), true),
             };
-            $this->fail('O verbo sobre cotação arquivada deveria dar 422.');
         } catch (ValidationException $e) {
+            $recusou = true;
             $this->assertArrayHasKey('quote', $e->errors());
         }
 
+        // "Não grava" vem ANTES do "recusou": sem o guardião, o 422 some e é esta
+        // prova que pega a escrita indevida (um segundo `delete()` regrava
+        // `deleted_at` e duplica o audit `deleted`).
         $depois = Quote::withTrashed()->find($quote->id);
         $this->assertSame($gravado->status, $depois->status);
         $this->assertEquals($gravado->approved_at, $depois->approved_at);
         $this->assertSame($gravado->student_count, $depois->student_count);
+        $this->assertEquals($gravado->deleted_at, $depois->deleted_at);
+        $this->assertSame($auditsAntes, $auditsDeletado());
+
+        $this->assertTrue($recusou, 'O verbo sobre cotação arquivada deveria dar 422.');
     }
 }
