@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Shared;
 
-use App\Domains\Identity\Services\UserPhotoService;
 use App\Shared\Files\ContentClass;
+use App\Shared\Files\Data\PhotoUploadData;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -126,8 +126,8 @@ class UploadPolicyTest extends TestCase
         // reprovaria duas listas que são a mesma política.
         $this->assertEquals(
             ContentClass::Imagem->regras(),
-            UserPhotoService::rules()['photo'],
-            'O `UserPhotoService` voltou a escrever a própria regra em vez de pedir a classe.',
+            PhotoUploadData::getValidationRules([])['photo'],
+            'O `PhotoUploadData` voltou a escrever a própria regra em vez de pedir a classe.',
         );
     }
 }
