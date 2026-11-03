@@ -140,11 +140,13 @@ session-fixation) e rejeita usuário inativo. Env: `SANCTUM_STATEFUL_DOMAINS`, `
 
 **RBAC de cadastro = middleware `permission:`** (`HasMiddleware` no controller), não Policy. Toda
 permissão nova entra no seeder. **A permissão mora só no controller** (bloco 55): `routes.php` e
-grupo não declaram `permission:`. Três catracas guardam isso. `PermissionRouteMiddlewareTest` exige
-permissão em toda rota autenticada; quem fica sem ela entra em `SEM_PERMISSAO`, com motivo, e
-**só por decisão do João**. A mesma catraca reprova permissão declarada na rota ou num grupo.
-`PermissionCatalogOrphanTest` reprova permissão do `PermissionCatalog` que nada consome (nem rota
-nem checagem em código) e permissão exigida que falta no catálogo.
+grupo não declaram `permission:`. Duas catracas guardam o RBAC das rotas.
+`PermissionRouteMiddlewareTest` exige permissão em toda rota autenticada; quem fica sem ela entra em
+`SEM_PERMISSAO`, com motivo, e **só por decisão do João**. A mesma catraca reprova permissão
+declarada na rota ou num grupo. `PermissionCatalogOrphanTest` reprova permissão do
+`PermissionCatalog` que nada consome (nem rota nem checagem literal em código) e permissão **de
+rota** que falta no catálogo. Checagem literal em código (`->can('x.y.z')`) ausente do catálogo
+**não** reprova: um erro de digitação ali passa calado.
 
 **Data-scoping NÃO é Policy — é QueryBuilder + `resolveRouteBinding`.** Nenhuma classe `Policy`
 existe no repo, e não é omissão: Policy não filtra LISTA, então `index` precisaria de escopo de
