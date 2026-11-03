@@ -74,7 +74,13 @@ Toda entidade segue a **MESMA forma**, independente do domínio. Diferenciar a e
   `array|Optional = []` passaria pelo tipo e apagaria igual. Coleção que só existe na SAÍDA declara
   `#[ReadOnlyCollection]` no sítio, e a marca é **verificada, não confiada**: exige
   `#[DataCollectionOf]` junto e reprova se algum arquivo de `app/` ler `$data-><campo>` da entrada.
-  Ref.: `BudgetData::$quotes`/`$files`, `QuoteData::$files`.
+  Ref.: `BudgetData::$quotes`/`$files`, `QuoteData::$files`, `TurmaData::$redatores`.
+  **A mesma lei vale para o escalar, com catraca própria desde o bloco 51:**
+  `tests/Feature/Shared/InputDataDefaultsTest.php` reprova default literal em qualquer Data de
+  ENTRADA (injetado em controller, criado por `validateAndCreate`/`from($request…)`, ou aninhado
+  neles). Saídas: `new Optional`, `#[Computed]`/`#[ReadOnlyCollection]`, ou a classe na `ISENTAS`
+  com motivo. Default atrás de `#[Required]` NÃO é inofensivo — com default no construtor, a
+  omissão passa e grava o default.
   **Obrigatoriedade que depende do verbo mora na Action, não em `rules()`** — `rules()` é estático e
   não sabe se é POST ou PUT. `contacts` é `sometimes|array|min:1` no DTO e a exigência do create vive
   em `CreateClientAction`, **antes** da transação: checagem de entrada pura não paga banco nem se
