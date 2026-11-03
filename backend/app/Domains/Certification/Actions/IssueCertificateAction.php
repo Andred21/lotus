@@ -13,6 +13,7 @@ use App\Domains\Operation\Models\Enrollment;
 use App\Shared\Support\FusoDoNegocio;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class IssueCertificateAction
 {
@@ -41,7 +42,17 @@ class IssueCertificateAction
                 ->with(['turma.course.modules', 'turma.quote.budget.client.user', 'student.user'])
                 ->whereKey($enrollment->id)
                 ->lockForUpdate()
-                ->firstOrFail();
+                ->first();
+
+            // Removida entre a leitura do chamador e este lock: recusa no
+            // formato de item do lote (`ValidationException`), não 404 — um
+            // `ModelNotFoundException` aqui furaria o contrato de
+            // `BatchIssueCertificatesAction` (um item não derruba a requisição).
+            if ($enrollment === null) {
+                throw ValidationException::withMessages([
+                    'enrollment' => __('certification.enrollment.not_found'),
+                ]);
+            }
 
             // Um instante para a emissão inteira. A sequência espera pelo lock,
             // e três `now()` separados deixam uma emissão da virada do ano
