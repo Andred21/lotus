@@ -241,7 +241,7 @@ describe('useImportStudentsFlow', () => {
       type: 'x', title: 'Unprocessable', status: 422, detail: 'Errores de validación', instance: '', errors,
     })
 
-    it('import.<row>.update deixa a linha em triage, bloqueia o Actualizar e libera com Mantener', async () => {
+    it('import.<row>.update em linha não editada volta ao Mantener, bloqueia o Actualizar e a linha segue enviável', async () => {
       const { result: r } = await loaded()
       act(() => r.current.setUpdate(3, true))
       post.mockRejectedValueOnce(problem({ 'import.3.update': ['Sin permiso para actualizar'] }))
@@ -253,12 +253,27 @@ describe('useImportStudentsFlow', () => {
       expect(r.current.result).toBeNull()
       expect(r.current.rows.map((x) => x.row)).toEqual([2, 3, 4, 5])
       expect(r.current.rows.find((x) => x.row === 3)).toMatchObject({
-        update_blocked: 'Sin permiso para actualizar', update_registration: true, refused: false, edited: false,
+        update_blocked: 'Sin permiso para actualizar', update_registration: false, refused: false, edited: false,
+      })
+      expect(r.current.sendableCount).toBe(2)
+      expect(r.current.message).toBeNull()
+    })
+
+    it('import.<row>.update em linha editada mantém o Actualizar: Mantener descartaria a edição (D16)', async () => {
+      const { result: r } = await loaded()
+      act(() => r.current.edit(3, { rut: '22.222.222-2', name: 'Beto Novo', email: null, phone: null }))
+      post.mockRejectedValueOnce(problem({ 'import.3.update': ['Sin permiso para actualizar'] }))
+
+      act(() => r.current.confirm())
+      await waitFor(() => expect(r.current.nothingImported).toBe(true))
+
+      expect(r.current.rows.find((x) => x.row === 3)).toMatchObject({
+        update_blocked: 'Sin permiso para actualizar', update_registration: true, edited: true, name: 'Beto Novo',
       })
       expect(r.current.sendableCount).toBe(1)
-      expect(r.current.message).toBeNull()
 
       act(() => r.current.setUpdate(3, false))
+      expect(r.current.rows.find((x) => x.row === 3)).toMatchObject({ edited: false, name: 'Beto', update_registration: false })
       expect(r.current.sendableCount).toBe(2)
     })
 

@@ -20,7 +20,7 @@ return [
         'import' => [
             'duplicate_rut' => 'Este RUT ya aparece en la fila :row de la planilla: solo vale la primera.',
             'duplicate_email' => 'Este correo ya aparece en la fila :row de la planilla: solo vale la primera.',
-            'update_forbidden' => 'No tienes permiso para actualizar el registro de alumnos: la fila no se guardó.',
+            'update_forbidden' => 'No tienes permiso para actualizar el registro del alumno.',
         ],
     ],
     'requirement' => [

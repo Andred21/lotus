@@ -162,7 +162,10 @@ export function useImportStudentsFlow(turmaId: number) {
               const refused = refusals.row.get(r.row)
               if (refused !== undefined) return markRefused(r, refused)
               const blocked = refusals.update.get(r.row)
-              return blocked === undefined ? r : { ...r, update_blocked: blocked }
+              if (blocked === undefined) return r
+              // D5: linha não editada volta ao Mantener (Actualizar bloqueado, linha enviável).
+              // Editada mantém a flag: Mantener descartaria a edição (D16).
+              return r.edited ? { ...r, update_blocked: blocked } : { ...r, update_blocked: blocked, update_registration: false }
             }),
           )
         },

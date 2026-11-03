@@ -55,7 +55,7 @@ function Situation({ r, clientName, canUpdate, onSetUpdate }: {
       {r.status === 'already_enrolled' && <Note>{k('note.skipped')}</Note>}
       {(r.status === 'error' || isRefusedPending(r)) && !r.edited && r.message && <Note>{r.message}</Note>}
       {r.edited && <Note>{k('note.edited')}</Note>}
-      {r.update_blocked && <Note>{k('note.updateBlocked', { reason: r.update_blocked })}</Note>}
+      {canUpdate && r.update_blocked && <Note>{k('note.updateBlocked', { reason: r.update_blocked })}</Note>}
       {canUpdate && divergent && (
         <div role="radiogroup" aria-label={k('registrationGroup', { row: r.row })} className="space-y-1 pt-1 text-sm">
           {[false, true].map((update) => (

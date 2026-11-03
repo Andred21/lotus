@@ -6,7 +6,6 @@ use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Data\ImportConfirmRowData;
 use App\Domains\Operation\Data\ImportPreviewData;
 use App\Domains\Operation\Data\ImportPreviewRowData;
-use App\Domains\Operation\Enums\ImportRowStatus;
 use App\Domains\Operation\Models\Turma;
 use Illuminate\Http\UploadedFile;
 
@@ -40,16 +39,16 @@ class ImportPreviewService
         $rows = [];
 
         foreach ($this->classifier->classify($turma, $linhas, $podeAtualizar) as $decision) {
-            $rows[] = $this->project($decision);
+            $rows[] = $this->project($decision, $podeAtualizar);
         }
 
         return new ImportPreviewData($rows, $podeAtualizar);
     }
 
-    private function project(ImportRowDecision $decision): ImportPreviewRowData
+    private function project(ImportRowDecision $decision, bool $podeAtualizar): ImportPreviewRowData
     {
         $line = $decision->line;
-        $cadastrado = in_array($decision->status, [ImportRowStatus::Registered, ImportRowStatus::Moves], true);
+        $cadastrado = $decision->isRegistered();
         $student = $cadastrado ? $decision->lookup?->student : null;
         $user = $student?->user;
 
@@ -61,7 +60,9 @@ class ImportPreviewService
             phone: $line->phone,
             status: $decision->status,
             message: $decision->refusal,
-            update_refusal: $cadastrado && $decision->divergent !== [] ? $decision->updateRefusal : null,
+            // Sem permissão nada muda em relação a hoje (D5/D20): o veredito de
+            // permissão não é projetado; a confirmação segue recusando-o.
+            update_refusal: $podeAtualizar && $cadastrado && $decision->divergent !== [] ? $decision->updateRefusal : null,
             current_client: $student?->currentClient?->legal_name,
             archived: $user !== null && ($user->trashed() || $student->trashed()),
             divergent: $decision->divergent,

@@ -278,6 +278,23 @@ class ImportPreviewTest extends TestCase
         $this->previa([])->assertOk()->assertJsonPath('can_update_registration', false);
     }
 
+    public function test_sem_permissao_linha_divergente_sai_sem_update_refusal(): void
+    {
+        $this->actingAsAdmin();
+        $this->aluno('11.111.111-1', 'ANA', 'ana@x.cl', null);
+
+        $semEdicao = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $semEdicao->givePermissionTo('operation.enrollment.manage');
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($semEdicao, 'web');
+
+        $this->previa([['11.111.111-1', 'ANA MARIA', 'ana@x.cl', '']])
+            ->assertOk()
+            ->assertJsonPath('rows.0.status', 'registered')
+            ->assertJsonPath('rows.0.divergent', ['name'])
+            ->assertJsonPath('rows.0.update_refusal', null);
+    }
+
     public function test_planilha_so_com_cabecalho_devolve_rows_vazio(): void
     {
         $this->actingAsAdmin();

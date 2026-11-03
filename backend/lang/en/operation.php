@@ -20,7 +20,7 @@ return [
         'import' => [
             'duplicate_rut' => 'This RUT already appears in row :row of the spreadsheet: only the first one counts.',
             'duplicate_email' => 'This email already appears in row :row of the spreadsheet: only the first one counts.',
-            'update_forbidden' => 'You are not allowed to update student records: the row was not saved.',
+            'update_forbidden' => "You don't have permission to update the student's record.",
         ],
     ],
     'requirement' => [

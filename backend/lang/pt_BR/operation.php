@@ -20,7 +20,7 @@ return [
         'import' => [
             'duplicate_rut' => 'Este RUT já aparece na linha :row da planilha: só a primeira vale.',
             'duplicate_email' => 'Este e-mail já aparece na linha :row da planilha: só a primeira vale.',
-            'update_forbidden' => 'Você não tem permissão para atualizar o cadastro de alunos: a linha não foi gravada.',
+            'update_forbidden' => 'Você não tem permissão para atualizar o cadastro do aluno.',
         ],
     ],
     'requirement' => [
