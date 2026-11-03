@@ -143,4 +143,41 @@ class BudgetQuoteLockTest extends TestCase
             $faltando,
         )));
     }
+
+    /**
+     * Review Focus 2 da task: o risco do `DeleteBudgetAction` é decidir "há
+     * aprovada?" sem travar as cotações, ou travá-las ANTES do orçamento. Em
+     * sqlite nada disso aparece em runtime, então o ratchet lê a ordem no
+     * código: `DB::transaction` -> `Budget::lockRow(` -> `quotes()->lockForUpdate()`
+     * -> `delete(`, todos dentro do closure da transação.
+     */
+    public function test_delete_budget_trava_orcamento_e_depois_cotacoes_dentro_da_transacao(): void
+    {
+        $codigo = preg_replace(
+            '/\s+/',
+            '',
+            $this->codigoSemComentarios(app_path('Domains/Commercial/Actions/DeleteBudgetAction.php')),
+        );
+
+        $marcos = [
+            'DB::transaction(' => strpos($codigo, 'DB::transaction('),
+            'Budget::lockRow(' => strpos($codigo, 'Budget::lockRow('),
+            'quotes()->lockForUpdate()' => strpos($codigo, 'quotes()->lockForUpdate()'),
+            '->delete()' => strpos($codigo, '->delete()'),
+        ];
+
+        foreach ($marcos as $marco => $posicao) {
+            $this->assertNotFalse($posicao, "DeleteBudgetAction não contém `{$marco}`.");
+        }
+
+        $this->assertSame(
+            array_keys($marcos),
+            array_keys((function () use ($marcos) {
+                asort($marcos);
+
+                return $marcos;
+            })()),
+            'DeleteBudgetAction: a ordem tem de ser transação -> lock do orçamento -> lock das cotações -> delete (spec D4).',
+        );
+    }
 }
