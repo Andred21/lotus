@@ -136,8 +136,8 @@ class ParentLockOnChildWriteTest extends TestCase
                 $faltando[] = "{$arquivo}: não chama `{$pai}::lockForWrite(`";
             }
 
-            if (! str_contains($codigo, 'DB::transaction')) {
-                $faltando[] = "{$arquivo}: não abre `DB::transaction` — lock fora de transação é solto no autocommit";
+            if (str_contains($codigo, "{$pai}::lockForWrite(") && ! $this->lockDentroDeTransacao($codigo, $pai)) {
+                $faltando[] = "{$arquivo}: chama `{$pai}::lockForWrite(` fora do corpo de `DB::transaction(function` e da closure de escrita do `FileUploader` — lock fora de transação é solto no autocommit";
             }
         }
 
@@ -151,6 +151,50 @@ class ParentLockOnChildWriteTest extends TestCase
             ],
             $faltando,
         )));
+    }
+
+    /**
+     * O lock só vale dentro de transação, e a prova é a POSIÇÃO da chamada,
+     * não a menção a uma classe: o `use` do `FileUploader` aparece em quem
+     * chama o lock antes do `store`, em autocommit. Aceita o corpo de
+     * `DB::transaction(function` e o da closure de escrita que o
+     * `FileUploader::store` roda dentro de `DB::transaction`
+     * (`function (StoredFiles`). O corpo vai da `{` que abre a closure até
+     * a `}` que a fecha, contando as chaves do meio.
+     */
+    private function lockDentroDeTransacao(string $codigo, string $pai): bool
+    {
+        $lock = "{$pai}::lockForWrite(";
+
+        foreach (['DB::transaction(function', 'function (StoredFiles'] as $abertura) {
+            $offset = 0;
+
+            while (($inicio = strpos($codigo, $abertura, $offset)) !== false) {
+                $offset = $inicio + 1;
+                $abre = strpos($codigo, '{', $inicio);
+
+                if ($abre === false) {
+                    break;
+                }
+
+                $nivel = 0;
+                $fim = strlen($codigo);
+
+                for ($i = $abre; $i < $fim; $i++) {
+                    if ($codigo[$i] === '{') {
+                        $nivel++;
+                    } elseif ($codigo[$i] === '}' && --$nivel === 0) {
+                        break;
+                    }
+                }
+
+                if (str_contains(substr($codigo, $abre, $i - $abre), $lock)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public function test_todo_motivo_de_isencao_esta_escrito(): void

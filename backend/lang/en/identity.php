@@ -37,6 +37,11 @@ return [
         'system_role_not_deletable' => "The ':role' system role cannot be deleted.",
         'system_role_not_renamable' => "The ':role' system role cannot be renamed.",
         'redator_only_action' => 'Only instructors submit professional documentation.',
+        // P-76: o RUT/e-mail repetido saía de uma constante pt-BR no UserProvisioner.
+        'rut_taken' => 'This RUT is already registered.',
+        'email_taken' => 'This email is already registered.',
+        'rut_archived' => 'This RUT belongs to an archived record. Restore it instead of creating another.',
+        'email_archived' => 'This email belongs to an archived record. Restore it instead of creating another.',
     ],
     'document_type' => [
         'CV' => 'Résumé',

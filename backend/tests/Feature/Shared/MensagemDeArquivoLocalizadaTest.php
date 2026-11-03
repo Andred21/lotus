@@ -8,6 +8,19 @@ use Tests\TestCase;
 class MensagemDeArquivoLocalizadaTest extends TestCase
 {
     #[Test]
+    public function as_frases_de_regra_e_de_antivirus_existem_nos_tres_locales(): void
+    {
+        $chaves = ['shared.file.malware_rejected', 'shared.rule.rut_invalid', 'shared.rule.grade_not_printable', 'auth.logged_out'];
+
+        foreach (['es_CL', 'pt_BR', 'en'] as $locale) {
+            app()->setLocale($locale);
+            foreach ($chaves as $chave) {
+                $this->assertNotSame($chave, __($chave), "{$chave} falta em {$locale}.");
+            }
+        }
+    }
+
+    #[Test]
     public function a_planilha_em_formato_errado_recusa_no_locale_pedido(): void
     {
         app()->setLocale('pt_BR');

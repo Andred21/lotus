@@ -188,6 +188,18 @@ class TurmaDocumentApiTest extends TestCase
         $this->assertNotSoftDeleted('files', ['id' => $fileId]);
     }
 
+    public function test_concluida_sem_permissao_recusa_antes_de_subir(): void
+    {
+        $this->concluirTurma();
+        $this->actingAsRedatorRole();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/documents", [
+            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+        ])->assertStatus(422)->assertJsonValidationErrors('turma');
+
+        $this->assertSame([], Storage::disk('s3')->allFiles());
+    }
+
     public function test_concluida_admin_comum_recebe_403_no_post_e_no_delete(): void
     {
         $fileId = $this->docAnexado();

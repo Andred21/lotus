@@ -50,6 +50,7 @@ const arquivadoVazio = {
   restoring: false,
 }
 const PROPS_ARQUIVADOS = {
+  canManageApproved: false,
   mode: 'active' as const,
   archived: arquivadoVazio,
   onRestore: () => {},

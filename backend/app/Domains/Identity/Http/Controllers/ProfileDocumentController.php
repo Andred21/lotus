@@ -3,13 +3,11 @@
 namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Identity\Actions\StoreRedatorDocumentAction;
+use App\Domains\Identity\Data\ProfileDocumentUploadData;
 use App\Domains\Identity\Data\RedatorDocumentData;
-use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Exceptions\RedatorOnlyActionException;
 use App\Http\Controllers\Controller;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 /**
  * Envio da própria documentação profissional pelo redator. Substituição sim,
@@ -29,23 +27,11 @@ class ProfileDocumentController extends Controller
             throw new RedatorOnlyActionException;
         }
 
-        // O tipo vem primeiro porque é ele quem escolhe a regra do arquivo e a
-        // do `valid_until` (a assinatura não é o documento de idoneidade).
-        $tipo = RedatorDocumentType::from($request->validate([
-            'type' => ['required', Rule::in(RedatorDocumentType::selfServiceValues())],
-        ])['type']);
+        // A checagem de redator precede a validação: por isso o Data não é
+        // parâmetro do método (injetado, validaria o payload antes do 403).
+        $data = ProfileDocumentUploadData::validateAndCreate($request->all());
 
-        $validated = $request->validate([
-            'file' => $tipo->conteudo()->regras(),
-            'valid_until' => $tipo->aceitaValidade() ? ['nullable', 'date'] : ['prohibited'],
-        ]);
-
-        $file = $action->execute(
-            $redator,
-            $tipo,
-            $request->file('file'),
-            isset($validated['valid_until']) ? Carbon::parse($validated['valid_until']) : null,
-        );
+        $file = $action->execute($redator, $data->type, $data->file, $data->valid_until);
 
         return RedatorDocumentData::fromModel($file);
     }

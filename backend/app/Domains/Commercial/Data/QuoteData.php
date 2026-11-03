@@ -4,6 +4,7 @@ namespace App\Domains\Commercial\Data;
 
 use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Operation\Enums\TurmaStatus;
 use App\Shared\Data\Attributes\ReadOnlyCollection;
 use App\Shared\Files\Data\FileData;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
@@ -12,8 +13,8 @@ use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
- * Contrato da cotação. `budget_id`, `seq_in_budget`, `status`, `approved_at` e
- * `code` são read-only (saída). `code` é o composto calculado (ADR-17), nunca
+ * Contrato da cotação. `budget_id`, `seq_in_budget`, `status`, `approved_at`,
+ * `turma_status` e `code` são read-only (saída). `code` é o composto calculado (ADR-17), nunca
  * persistido. `budget` vem da rota no store, não do DTO.
  */
 #[TypeScript]
@@ -31,6 +32,13 @@ class QuoteData extends Data
         public QuoteStatus|Optional $status,
         public string|Optional|null $approved_at,
         public string|Optional $code,
+        /**
+         * Estado da turma VIVA da cotação (spec D6); `null` sem turma — a
+         * arquivada não conta, é `Quote::turma()` sem `withTrashed`. Só saída:
+         * nenhuma regra de entrada o aceita. Quem monta o DTO carrega `turma`
+         * (`QuoteQueryBuilder::LISTING`), porque o lazy loading é proibido.
+         */
+        public TurmaStatus|Optional|null $turma_status = new Optional,
         public string|Optional|null $purchase_order = new Optional,
         public string|Optional|null $planned_start_date = new Optional,
         public string|Optional|null $planned_end_date = new Optional,
@@ -72,6 +80,7 @@ class QuoteData extends Data
             status: $quote->status,
             approved_at: $quote->approved_at?->toIso8601String(),
             code: $quote->code,
+            turma_status: $quote->turma?->status,
             purchase_order: $quote->purchase_order,
             planned_start_date: $quote->planned_start_date?->toDateString(),
             planned_end_date: $quote->planned_end_date?->toDateString(),

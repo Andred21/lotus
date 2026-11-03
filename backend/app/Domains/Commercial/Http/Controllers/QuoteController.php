@@ -16,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Shared\Audit\ArchivedListing;
 use App\Shared\Http\RespostaDeRecurso;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -78,9 +79,11 @@ class QuoteController extends Controller implements HasMiddleware
         return QuoteData::fromModel($quote->loadListingData());
     }
 
-    public function update(QuoteData $data, Quote $quote, UpdateQuoteAction $action): QuoteData
+    public function update(Request $request, QuoteData $data, Quote $quote, UpdateQuoteAction $action): QuoteData
     {
-        return QuoteData::fromModel($action->execute($quote, $data)->loadListingData());
+        $podeGerirAprovada = $request->user()->can('commercial.quote.approve');
+
+        return QuoteData::fromModel($action->execute($quote, $data, $podeGerirAprovada)->loadListingData());
     }
 
     public function destroy(Quote $quote, DeleteQuoteAction $action): Response

@@ -391,7 +391,7 @@ class UserPhotoTest extends TestCase
             $service->store($user, UploadedFile::fake()->image('segunda.png'));
             $this->fail('store() deveria abortar quando a escrita no disco falha');
         } catch (RuntimeException $e) {
-            $this->assertStringContainsString('Falha ao gravar a foto', $e->getMessage());
+            $this->assertStringContainsString('Falha ao gravar arquivo', $e->getMessage());
         } finally {
             chmod($leafDir, 0755);
         }
@@ -455,5 +455,31 @@ class UserPhotoTest extends TestCase
         $this->assertSame($old, $user->fresh()->photo_path);
         $storage->assertExists($old);
         $this->assertCount(1, $storage->allFiles(), 'sobrou objeto além da foto anterior');
+    }
+
+    public function test_falha_no_update_mantem_a_foto_anterior_e_descarta_a_nova(): void
+    {
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::fake('s3');
+        $user = User::factory()->create(['type' => 'admin']);
+        $service = app(UserPhotoService::class);
+
+        $service->store($user, UploadedFile::fake()->image('primeira.png'));
+        $old = $user->fresh()->photo_path;
+
+        User::updating(function (): void {
+            throw new RuntimeException('update fora do ar');
+        });
+
+        try {
+            $service->store($user->fresh(), UploadedFile::fake()->image('segunda.png'));
+            $this->fail('esperava RuntimeException');
+        } catch (RuntimeException) {
+            // esperado
+        }
+
+        $this->assertSame($old, $user->fresh()->photo_path);
+        $storage->assertExists($old);
+        $this->assertSame([$old], $storage->allFiles("user-photos/{$user->id}"), 'a foto nova não foi descartada');
     }
 }

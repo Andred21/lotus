@@ -9,6 +9,7 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ProfileDocumentTest extends TestCase
@@ -98,6 +99,55 @@ class ProfileDocumentTest extends TestCase
         ])->assertCreated();
 
         $this->assertSame('2030-01-31', $redator->documents()->sole()->valid_until->toDateString());
+    }
+
+    /**
+     * A regra `date` aceita tudo que o `strtotime` entende; o cast tem de ir até
+     * onde a regra vai, senão o que ela libera vira 500 em vez de 201.
+     *
+     * @return array<string, array{string}>
+     */
+    public static function datasQueARegraAceita(): array
+    {
+        return [
+            'data e hora' => ['2030-01-01 10:00:00'],
+            'por extenso' => ['Jan 1 2030'],
+            'barras' => ['2030/01/01'],
+            'iso com milissegundos' => ['2030-01-01T00:00:00.000Z'],
+        ];
+    }
+
+    #[DataProvider('datasQueARegraAceita')]
+    public function test_valid_until_fora_de_y_m_d_e_gravado_como_data_pelo_perfil(string $valor): void
+    {
+        Storage::fake('s3');
+        $redator = $this->actingAsRedator();
+
+        $this->postJson('/api/profile/documents', [
+            'type' => 'TITULO',
+            'file' => UploadedFile::fake()->create('titulo.pdf', 20, 'application/pdf'),
+            'valid_until' => $valor,
+        ])->assertCreated();
+
+        $this->assertSame('2030-01-01', $redator->documents()->sole()->valid_until->toDateString());
+    }
+
+    #[DataProvider('datasQueARegraAceita')]
+    public function test_valid_until_fora_de_y_m_d_e_gravado_como_data_pela_rota_admin(string $valor): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+        $redator = Redator::create([
+            'user_id' => User::factory()->create(['type' => 'redator', 'is_active' => true])->id,
+        ]);
+
+        $this->postJson("/api/redatores/{$redator->id}/documents", [
+            'type' => 'TITULO',
+            'file' => UploadedFile::fake()->create('titulo.pdf', 20, 'application/pdf'),
+            'valid_until' => $valor,
+        ])->assertCreated();
+
+        $this->assertSame('2030-01-01', $redator->documents()->sole()->valid_until->toDateString());
     }
 
     /** Admin não é redator: não há documentação profissional dele para enviar. */

@@ -2,15 +2,15 @@
 
 namespace App\Domains\Commercial\Actions;
 
-use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Commercial\Services\QuoteLifecycle;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Exclui (soft-delete) uma cotação e cascateia para os anexos (hook do model,
- * auditado instância a instância — ADR-08). Cotação aprovada é imutável
- * (excluir desincronizaria a futura turma) → 422; recuse antes.
+ * auditado instância a instância — ADR-08). Cotação aprovada não se arquiva
+ * (desincronizaria a turma) → 422; recuse antes. A regra mora no guardião
+ * (`QuoteLifecycle`), que julga sobre a linha travada.
  *
  * A TRANSAÇÃO chegou com a cascata (spec D9): enquanto isto era escrita única
  * ela não fazia falta, mas enumerar-e-apagar sem transação é check-then-act — a
@@ -21,12 +21,8 @@ class DeleteQuoteAction
 {
     public function execute(Quote $quote): void
     {
-        if ($quote->status === QuoteStatus::Approved) {
-            throw ValidationException::withMessages([
-                'status' => __('commercial.quote.approved_cannot_delete'),
-            ]);
-        }
-
-        DB::transaction(fn () => $quote->delete());
+        DB::transaction(function () use ($quote) {
+            QuoteLifecycle::lockToArchive($quote->id)->delete();
+        });
     }
 }

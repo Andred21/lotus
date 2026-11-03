@@ -33,7 +33,10 @@ estrutura de um domínio só quando ele entra em desenvolvimento.
 **`App\Shared\`** = infra transversal: `Exceptions/ProblemDetails` (converte qualquer exceção em
 envelope RFC 7807, ligado em `bootstrap/app.php` para `api/*` e requests JSON — controllers não
 montam erro à mão; validação carrega `errors` por campo), `Support/Rut` + `Rules/ValidRut`,
-`Files/` (`File`, `UploadFileAction`).
+`Files/` (`File`, `ContentClass`; o upload entra pelo `<X>UploadData` do sítio, que valida, e sobe pelo
+`Services/FileUploader` + `StoredFiles`; `FileStorage` são os primitivos e é **fechado ao módulo** — só
+`FileUploader`, `StoredFiles`, `SignedUrlTransformer` e a carga inicial o nomeiam, travado por
+`FileStorageAccessRatchetTest`).
 
 **Morph map (ADR-10):** `Relation::enforceMorphMap` no `AppServiceProvider` é o **único** lugar que
 liga aliases a classes. Registre alias só de classe que existe na sprint; todo model

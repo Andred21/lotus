@@ -115,6 +115,7 @@ export function BudgetDetailPage() {
           count={budget.quotes.length}
           quotes={budget.quotes}
           quotesArchived={quotesArchived}
+          canManageApproved={d.canApprove}
           onEdit={(q) => d.openWizard(q)}
           onRemove={(q) => d.askConfirm('remove', q)}
           onApprove={d.canApprove ? (q) => d.askConfirm('approve', q) : undefined}

@@ -6,10 +6,9 @@ use App\Domains\Certification\Actions\RemoveManagerSignatureAction;
 use App\Domains\Certification\Actions\StoreManagerSignatureAction;
 use App\Domains\Certification\Actions\UpdateCertificateSettingsAction;
 use App\Domains\Certification\Data\CertificateSettingsData;
+use App\Domains\Certification\Data\ManagerSignatureUploadData;
 use App\Domains\Certification\Models\CertificateSettings;
 use App\Http\Controllers\Controller;
-use App\Shared\Files\ContentClass;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -33,11 +32,9 @@ class CertificateSettingsController extends Controller implements HasMiddleware
         return CertificateSettingsData::fromModel($action->execute(CertificateSettings::atual(), $data));
     }
 
-    public function storeSignature(Request $request, StoreManagerSignatureAction $action): CertificateSettingsData
+    public function storeSignature(ManagerSignatureUploadData $data, StoreManagerSignatureAction $action): CertificateSettingsData
     {
-        $request->validate(['file' => ContentClass::Assinatura->regras()]);
-
-        $action->execute($request->file('file'));
+        $action->execute($data->file);
 
         return CertificateSettingsData::fromModel(CertificateSettings::atual());
     }

@@ -8,7 +8,7 @@ use App\Console\CargaInicial\CargaInvalidaException;
 use App\Console\CargaInicial\CarregadorDeCadastros;
 use App\Console\CargaInicial\CarregadorDeHistorico;
 use App\Console\CargaInicial\Contagem;
-use App\Shared\Files\Actions\UploadFileAction;
+use App\Shared\Files\Services\FileStorage;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -142,7 +142,7 @@ class CarregarCargaInicial extends Command
      */
     private function descartar(array $paths): array
     {
-        $upload = app(UploadFileAction::class);
+        $upload = app(FileStorage::class);
         $disk = config('filesystems.default');
         $restantes = [];
 

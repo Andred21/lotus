@@ -2,7 +2,7 @@
 
 namespace App\Shared\Files\Transformers;
 
-use App\Shared\Files\Actions\UploadFileAction;
+use App\Shared\Files\Services\FileStorage;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Spatie\LaravelData\Support\DataProperty;
@@ -21,7 +21,7 @@ use Spatie\LaravelData\Transformers\Transformer;
  * Valor `null` nunca chega aqui: `TransformedDataResolver:102` devolve null antes
  * de chamar o transformer — é o que mantém `photo_url: null` sem linha extra.
  *
- * Assina contra {@see UploadFileAction::publicDiskFor()}, não contra o disco
+ * Assina contra {@see FileStorage::publicDiskFor()}, não contra o disco
  * padrão: em dev o endpoint que grava (`minio:9000`) não é o que o navegador
  * resolve (achado de 2026-07-31).
  */
@@ -32,7 +32,7 @@ final class SignedUrlTransformer implements Transformer
     public function transform(DataProperty $property, mixed $value, TransformationContext $context): string
     {
         /** @var FilesystemAdapter $storage */
-        $storage = Storage::disk(UploadFileAction::publicDiskFor(config('filesystems.default')));
+        $storage = Storage::disk(FileStorage::publicDiskFor(config('filesystems.default')));
 
         return $storage->temporaryUrl($value, now()->addMinutes($this->minutes));
     }

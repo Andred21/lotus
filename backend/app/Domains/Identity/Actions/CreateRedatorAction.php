@@ -7,18 +7,18 @@ use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Services\UserProvisioner;
 use App\Shared\Audit\PivotAudit;
-use App\Shared\Files\Actions\UploadFileAction;
+use App\Shared\Files\Services\FileUploader;
+use App\Shared\Files\Services\StoredFiles;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Spatie\LaravelData\Optional;
 use Throwable;
 
 /**
  * Cria o redator (usuário-redator + redator + habilitação de cursos + documentos)
- * numa transação. O provisionamento do User é delegado ao UserProvisioner, e o
- * upload de documento ao StoreRedatorDocumentAction — mesma regra de replace do
- * update e da rota aninhada. O redator nasce ativo (RN-01) e com a role
- * `redator` (RF-ROL-05); a credencial dele chega pelo convite.
+ * numa transação. O provisionamento do User é delegado ao UserProvisioner, e os
+ * binários sobem pelo FileUploader, na mesma transação dos dados. O redator
+ * nasce ativo (RN-01) e com a role `redator` (RF-ROL-05); a credencial dele
+ * chega pelo convite.
  *
  * @param  array<string,UploadedFile>  $documents
  */
@@ -26,62 +26,42 @@ class CreateRedatorAction
 {
     public function __construct(
         private UserProvisioner $users,
-        private StoreRedatorDocumentAction $documents,
-        private UploadFileAction $uploads,
+        private FileUploader $fileUploader,
         private SendRedatorAccessInvitationAction $invitations,
     ) {}
 
     public function execute(RedatorData $data, array $documents = []): Redator
     {
-        // Todos os binários sobem ANTES da transação (spec D3). Guardamos
-        // path + metadados para registrar lá dentro; se a transação cair,
-        // `discard` limpa cada objeto que ficou sem dono.
-        $uploaded = [];
+        // Dados e documentos entram juntos (spec D2): o `FileUploader` sobe os
+        // binários, abre a transação e roda a escrita; se ela cair, descarta
+        // todos os objetos e relança. O destino é o diretório `redator` e não o
+        // model, porque o redator ainda não existe.
+        $redator = $this->fileUploader->store($documents, 'redator', function (StoredFiles $stored) use ($data, $documents) {
+            $user = $this->users->provision(
+                type: 'redator',
+                name: $data->name,
+                rut: $data->rut,
+                email: $data->email,
+                phone: $data->phone instanceof Optional ? null : $data->phone,
+            );
 
-        try {
-            foreach ($documents as $type => $document) {
-                $uploaded[$type] = [
-                    'meta' => $this->uploads->metadataOf($document),
-                    // `putTo` e não `put`: o redator ainda não existe, então
-                    // não há id para compor `redator/{id}`. O vínculo do
-                    // arquivo é a linha em `files`, não o caminho.
-                    'path' => $this->uploads->putTo('redator', $document),
-                ];
+            // RF-ROL-05: a role corresponde ao tipo e é associada no
+            // cadastro. Sem isto o redator autentica e não enxerga nada —
+            // o gate de todo módulo é permissão, não `type`.
+            $user->syncRoles(['redator']);
+
+            $redator = $user->redator()->create([]);
+
+            if (! $data->course_ids instanceof Optional) {
+                PivotAudit::sync($redator, 'courses', $data->course_ids);
             }
 
-            $redator = DB::transaction(function () use ($data, $uploaded) {
-                $user = $this->users->provision(
-                    type: 'redator',
-                    name: $data->name,
-                    rut: $data->rut,
-                    email: $data->email,
-                    phone: $data->phone instanceof Optional ? null : $data->phone,
-                );
-
-                // RF-ROL-05: a role corresponde ao tipo e é associada no
-                // cadastro. Sem isto o redator autentica e não enxerga nada —
-                // o gate de todo módulo é permissão, não `type`.
-                $user->syncRoles(['redator']);
-
-                $redator = $user->redator()->create([]);
-
-                if (! $data->course_ids instanceof Optional) {
-                    PivotAudit::sync($redator, 'courses', $data->course_ids);
-                }
-
-                foreach ($uploaded as $type => $upload) {
-                    $this->documents->registerUploaded($redator, RedatorDocumentType::from($type), $upload['path'], $upload['meta']);
-                }
-
-                return $redator->load(['user', 'documents', 'courses']);
-            });
-        } catch (Throwable $e) {
-            foreach ($uploaded as $upload) {
-                $this->uploads->discard($upload['path']);
+            foreach (array_keys($documents) as $tipo) {
+                $stored->replace($redator, $tipo, RedatorDocumentType::from($tipo)->value);
             }
 
-            throw $e;
-        }
+            return $redator->load(['user', 'documents', 'courses']);
+        });
 
         // Disparo FORA da transação e fora do try/catch dos uploads: e-mail
         // que falha não desfaz cadastro nem descarta binário já subido. Se

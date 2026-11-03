@@ -591,6 +591,11 @@
     "confirmDeleteBody": "Its quotes are archived along with it. You can restore it from Archived."
   },
   "quote": {
+    "turmaTag": {
+      "pending": "Turma: To be set up",
+      "em_andamento": "Turma: In progress",
+      "concluida": "Turma: Concluded"
+    },
     "new": "New quote",
     "edit": "Edit quote",
     "create": "Create quote",

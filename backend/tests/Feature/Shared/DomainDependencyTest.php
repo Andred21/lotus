@@ -114,6 +114,9 @@ class DomainDependencyTest extends TestCase
             'Identity\Models\User',
             'Identity\Services\UserPhotoService',
             'Identity\Services\UserProvisioner',
+            // Bloco 50 (D6): `QuoteData::$turma_status` é o enum que o contrato
+            // da cotação devolve; o front precisa do tipo fechado, não de string.
+            'Operation\Enums\TurmaStatus',
             'Operation\Models\Turma',
         ],
         // O bloco `certificacao-historico-do-aluno` abre TRÊS arestas para

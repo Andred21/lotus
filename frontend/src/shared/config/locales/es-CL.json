@@ -591,6 +591,11 @@
     "confirmDeleteBody": "Sus cotizaciones se archivarán junto con él. Podrás restaurarlo desde Archivados."
   },
   "quote": {
+    "turmaTag": {
+      "pending": "Turma: A configurar",
+      "em_andamento": "Turma: En curso",
+      "concluida": "Turma: Concluida"
+    },
     "new": "Nueva cotización",
     "edit": "Editar cotización",
     "create": "Crear cotización",

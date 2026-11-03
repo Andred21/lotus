@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Validation\ValidationException;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -92,6 +93,59 @@ class Budget extends Model implements Auditable
     public function loadListingData(): static
     {
         return $this->load(BudgetQueryBuilder::LISTING);
+    }
+
+    /**
+     * Trava o orçamento e recusa se ele estiver arquivado. É o lock de quem
+     * ESCREVE FILHO do orçamento (`CreateQuoteAction`): `lockRow` sozinho
+     * serializa contra o arquivamento, mas deixaria a cotação pousar ativa sob
+     * orçamento recém-arquivado — o modo de falha que a cascata existe para
+     * impedir (P-49, eixo cotação × orçamento; spec D5). Molde: `Client`.
+     *
+     * Ordem de lock do eixo (spec D4): orçamento primeiro, cotação depois.
+     * Nenhum sítio trava cotação e depois orçamento.
+     *
+     * `withTrashed()` porque o lock tem de ser tomado mesmo sobre orçamento
+     * arquivado: pular a linha faria a operação seguir SEM mutex nenhum. O
+     * binding resolveu um orçamento VIVO; descobrir sob o lock que ele foi
+     * arquivado no meio do caminho significa que a escrita não prossegue.
+     *
+     * Reusa a mensagem `commercial.quote.budget_archived`, a mesma do restore
+     * da cotação. Fora de corrida o 422 não é alcançável pela API (o binding
+     * já 404 sobre orçamento arquivado).
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     */
+    public static function lockForWrite(int $budgetId): static
+    {
+        $budget = static::lockRow($budgetId);
+
+        if ($budget->trashed()) {
+            throw ValidationException::withMessages([
+                'budget' => __('commercial.quote.budget_archived'),
+            ]);
+        }
+
+        return $budget;
+    }
+
+    /**
+     * Trava a linha SEM julgar estado. É o lock de quem ARQUIVA o orçamento
+     * (`DeleteBudgetAction`) e de quem RESTAURA a cotação (`RestoreQuoteAction`,
+     * que precisa LER o estado do pai sob o lock e recusa com a própria chave).
+     * `withTrashed()` pelo mesmo motivo do `lockForWrite`.
+     *
+     * Devolve o orçamento TRAVADO, não `void`: quem chama decide sobre o
+     * estado lido sob o lock.
+     *
+     * No-op SILENCIOSO em sqlite (`SQLiteGrammar::compileLock()` devolve `''`).
+     */
+    public static function lockRow(int $budgetId): static
+    {
+        /** @var static $budget */
+        $budget = static::withTrashed()->whereKey($budgetId)->lockForUpdate()->firstOrFail();
+
+        return $budget;
     }
 
     /** @param  QueryBuilder  $query */

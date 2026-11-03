@@ -5,7 +5,7 @@ namespace App\Domains\Commercial\Http\Controllers;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Services\UserPhotoService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Shared\Files\Data\PhotoUploadData;
 use Illuminate\Http\Response;
 
 /**
@@ -15,10 +15,9 @@ use Illuminate\Http\Response;
  */
 class ClientPhotoController extends Controller
 {
-    public function store(Request $request, Client $client, UserPhotoService $service): Response
+    public function store(PhotoUploadData $data, Client $client, UserPhotoService $service): Response
     {
-        $request->validate(UserPhotoService::rules());
-        $service->store($client->user, $request->file('photo'));
+        $service->store($client->user, $data->photo);
 
         return response()->noContent();
     }

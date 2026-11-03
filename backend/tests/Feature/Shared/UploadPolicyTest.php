@@ -2,11 +2,9 @@
 
 namespace Tests\Feature\Shared;
 
-use App\Domains\Identity\Services\UserPhotoService;
 use App\Shared\Files\ContentClass;
-use Illuminate\Http\UploadedFile;
+use App\Shared\Files\Data\PhotoUploadData;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Tests\Support\Files\BuildsRealUploads;
 use Tests\TestCase;
 
@@ -82,33 +80,6 @@ class UploadPolicyTest extends TestCase
         );
     }
 
-    public function test_conjunto_acima_do_teto_e_recusado_pelo_laravel(): void
-    {
-        $metade = intdiv(ContentClass::TETO_AGREGADO_KB, 2) + 1;
-
-        try {
-            ContentClass::assertCabeNoTransporte([
-                'CV' => UploadedFile::fake()->create('cv.pdf', $metade),
-                'TITULO' => UploadedFile::fake()->create('titulo.pdf', $metade),
-            ], 'documents');
-            $this->fail('Dois arquivos que somam acima do teto tinham de ser recusados.');
-        } catch (ValidationException $e) {
-            $this->assertArrayHasKey('documents', $e->errors());
-        }
-    }
-
-    public function test_conjunto_dentro_do_teto_passa(): void
-    {
-        $quarto = intdiv(ContentClass::TETO_AGREGADO_KB, 4);
-
-        ContentClass::assertCabeNoTransporte([
-            'CV' => UploadedFile::fake()->create('cv.pdf', $quarto),
-            'TITULO' => UploadedFile::fake()->create('titulo.pdf', $quarto),
-        ], 'documents');
-
-        $this->addToAssertionCount(1);
-    }
-
     public function test_os_tetos_preservam_os_numeros_de_hoje(): void
     {
         // Mudar um teto é decisão, não efeito colateral de refatoração.
@@ -126,8 +97,8 @@ class UploadPolicyTest extends TestCase
         // reprovaria duas listas que são a mesma política.
         $this->assertEquals(
             ContentClass::Imagem->regras(),
-            UserPhotoService::rules()['photo'],
-            'O `UserPhotoService` voltou a escrever a própria regra em vez de pedir a classe.',
+            PhotoUploadData::getValidationRules([])['photo'],
+            'O `PhotoUploadData` voltou a escrever a própria regra em vez de pedir a classe.',
         );
     }
 }

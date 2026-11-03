@@ -3,12 +3,11 @@
 namespace App\Domains\Identity\Services;
 
 use App\Domains\Identity\Models\User;
-use App\Shared\Files\ContentClass;
+use App\Shared\Files\Services\FileUploader;
+use App\Shared\Files\Services\StoredFiles;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -19,19 +18,6 @@ use Throwable;
  */
 class UserPhotoService
 {
-    /**
-     * Regras de validação da foto. Fonte única — os controllers consomem daqui
-     * em vez de recopiar, e a política de tipo/tamanho vem do `ContentClass`
-     * (spec D4 do hardening). Virou método porque expressão constante não
-     * chama método, e a política deixou de ser um literal.
-     *
-     * @return array<string, array<int, string|object>>
-     */
-    public static function rules(): array
-    {
-        return ['photo' => ContentClass::Imagem->regras()];
-    }
-
     /**
      * Sobe a foto, aponta `photo_path` para ela e só então apaga o objeto
      * anterior (spec D4/J-02: delete imediato, sem retenção).
@@ -45,34 +31,22 @@ class UserPhotoService
      * DEPOIS do SQL UPDATE, dentro da mesma chamada. Sem transação, uma
      * auditoria que lança deixava a coluna gravada e a compensação apagava um
      * objeto que o banco já referenciava. A transação cobre UPDATE + auditoria
-     * e NUNCA o delete de storage — esse é o débito do `UploadFileAction`,
-     * fechado com `put`/`discard`, não com transação em volta do disco.
+     * e NUNCA o delete de storage — o `FileUploader` grava o binário fora
+     * dela e descarta o objeto novo se ela falhar; o objeto anterior só é
+     * apagado depois do commit, e falha nesse delete só loga.
      */
     public function store(User $user, UploadedFile $photo): void
     {
         $old = $user->photo_path;
-        $new = $photo->store("user-photos/{$user->id}", $this->disk());
 
-        // `UploadedFile::store()` devolve `false` (não lança) quando a
-        // escrita falha e o disco não está configurado com `throw`. Achado
-        // real (2026-07-31): sem esta guarda, `false` virava `photo_path =
-        // '0'` no banco (coerção de tipo) e o objeto ANTERIOR — que ainda
-        // funcionava — era apagado, porque o código seguia como se o update
-        // tivesse sido bem-sucedido. Abortar aqui, antes do update, é o que
-        // preserva a garantia de D4: falha nunca corrompe o estado atual.
-        if ($new === false) {
-            throw new RuntimeException("Falha ao gravar a foto do usuário {$user->id} no disco.");
-        }
-
-        try {
-            DB::transaction(fn () => $user->update(['photo_path' => $new]));
-        } catch (Throwable $e) {
-            // Compensação: o rollback desfez o UPDATE, então o objeto novo
-            // está no bucket e ninguém aponta para ele.
-            $this->deleteObject($new);
-
-            throw $e;
-        }
+        // O `FileUploader` grava o binário FORA da transação, roda o UPDATE
+        // (e a auditoria síncrona) DENTRO dela e, se ela falhar, descarta o
+        // objeto novo e relança. O storage nunca fica dentro da transação.
+        app(FileUploader::class)->store(
+            ['photo' => $photo],
+            "user-photos/{$user->id}",
+            fn (StoredFiles $stored) => $user->update(['photo_path' => $stored->path('photo')]),
+        );
 
         if ($old !== null) {
             $this->deleteObject($old);

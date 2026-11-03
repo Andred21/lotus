@@ -7,85 +7,28 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
+## P-76 — seis frases ao usuário seguem literais em `app/`, por três caminhos que nenhuma catraca alcança
 
-**Bloco:** 49 · **Gatilho (original):** régua por estado no molde do `describe` da P-30, as cinco
-severidades passando 4,5:1.
+**Bloco:** item 52 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
+`Shared/Files/Rules` ou `AuthController::logout()` por outro motivo; cada sítio passa a ler `lang/`
+nos três locales no mesmo commit, **ou** a catraca ganha o caminho que faltava. Revisar em
+**2026-10-31**.
 
-**ENCERRADA em 2026-11-02, no `frontend-acessibilidade-e-respiro` (item 49), por mecanismo:** o
-`tone-ink.test.ts` cobre as cinco severidades × base/hover/active/foco × claro/escuro, e o gerador
-(`frontend/scripts/generate-brand-theme.mjs`, `SEVERIDADES_CLARAS`) pinta o botão filled com fundo
-claro e tinta escura. Medido no navegador pelo `prova.md` do bloco: o "Eliminar" do diálogo vai a
-`#ff8780` com tinta `#661814`, e o anel de foco é red-900.
+**ENCERRADA em 2026-11-03, no `backend-arquivo-recepcao-e-upload` (item 52), pelo próprio gatilho:** o bloco tocou `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` e o `AuthController::logout()`, e as seis frases (o duplicado e o arquivado do `UserProvisioner`, os `$fail()` de `ValidRut`, `PrintableGrade` e `ScannedForMalware`, e a resposta do logout) passaram a ler `lang/` nos três locales (`dd29add9`). O `MensagemLiteralTest` ganhou a quarta porta (`$fail` de regra) e a quinta (resposta de sucesso), e perdeu a entrada morta `UserPhotoService.php:64`.
 
-## P-101 — o RUT quebra no hífen na tabela de alunos a 390 px
+## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
 
-**Bloco:** 49 · **Gatilho (original):** primeiro bloco que tocar `EnrollmentTable.tsx` ou
-`ArchivedEnrollmentsList.tsx`.
+**Bloco:** item 52 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
+(`Shared/Files`) ou os atributos de validação do `lang/`. Revisar em **2026-11-07**.
 
-**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** o RUT ganhou `identifierClass` e a
-coluna ganhou a fatia local `RUT_MATRICULA` (`enrollmentColumns.ts`, preso por `enrollmentColumns.test.ts`).
-Medido a 390 px: uma linha, cabe na célula, nas duas tabelas (`prova.md`, P-101). O mesmo vazamento
-no `COL.rut` de alunos e clientes virou a **P-113**.
+**ENCERRADA em 2026-11-03, no `backend-arquivo-recepcao-e-upload` (item 52), pelo próprio gatilho:** o `validation.attributes` ganhou `file`, `valid_until`, `documents` e `documents.*` nos três locales (`dd29add9`, `2ab31e86`). O 422 de upload em es-CL diz "El campo archivo…", provado pelo `UploadAttributeLocaleTest` e contra a API da lane no fechamento (`POST /api/budgets/1/files` com `text/plain`).
 
-## P-105 — a tinta `danger` do tema escuro reprova AA sobre o fundo de 15% do `AppTag`
-
-**Bloco:** 49 · **Gatilho (original):** bloco que tocar `--tone-danger-ink`.
-
-**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** `--tone-danger-ink` do escuro vai a
-`--red-300` (`brand-theme.css`), e o par `danger` × escuro deixou de ser pulado no `tone-ink.test.ts`.
-A tag "Rechazada" mede cerca de 5,5:1 (`prova.md`, P-105).
-
-## P-108 — em 1024, o RUT do cliente passa por baixo do "Agregar cotización"
-
-**Bloco:** 49 · **Gatilho (original):** bloco que tocar o cabeçalho do detalhe do orçamento.
-
-**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** a causa era o `DetailHeader`
-(`sm:flex-1` zerava a base do bloco do título). A linha ganhou `sm:flex-wrap`, o título
-`sm:min-w-min` e as ações `sm:ml-auto`. Em 1024 e 768 as interseções caíram de 1 para 0, e em 1280
-nada se moveu (`prova.md`, P-108; `DetailHeader.test.tsx`).
-
-## P-109 — o paginador das tabelas tem nomes acessíveis em inglês
-
-**Bloco:** 49 · **Gatilho (original):** bloco que tocar o `AppDataTable` ou o `pt` do paginador.
-
-**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** o `paginatorTemplate` do
-`AppDataTable` põe `aria-label` do i18n (`common.paginatorPrev`, `paginatorPage`, `paginatorNext`)
-em anterior, página e seguinte, e o piso não se desliga pelo chamador. Medido na árvore
-de acessibilidade em es-CL e en: "Página anterior", "Página N", "Página siguiente" (`prova.md`, P-109;
-`AppDataTable.test.tsx`).
-
-## P-103 — a emissão do certificado decide a porta 2 e o snapshot fora da transação
-
-**Bloco:** 48 · **Gatilho (original):** primeiro bloco que tocar o `IssueCertificateAction`.
-
-**ENCERRADA em 2026-11-02, no `certificacao-estado-de-emissao` (item 48), por mecanismo:** o `IssueCertificateAction` relê a matrícula com `lockForUpdate` dentro da transação e decide a porta 2 e monta o snapshot sobre a leitura nova; a correção de resultado trava a mesma linha. Provado em MySQL pelo `EmissionResultRaceTest` (pulado em sqlite, não verde falso), que o item viu reprovar contra o código antigo.
-
-## P-104 — o diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado
-
-**Bloco:** 48 · **Gatilho (original):** o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`.
-
-**ENCERRADA em 2026-11-02, no item 48, pela decisão do João:** `operation.conclusion.confirmBody` e `operation.detail.lock.concluida` dizem o que de fato é irreversível, nos três locales (spec §5). **Resta o aceite do João** para a palavra "redator" no texto em inglês no lugar do "instructor" do literal, que o `copy.test.ts` UI-05 proíbe (`rulings.md` do bloco).
-
-> **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
-> `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
-> por engano; as duas foram renumeradas no mesmo dia — a do item 25 para **`P-74`** e as do item 26
-> para **`P-75`** e **`P-76`**, nesta ordem de integração. Número de pendência não se reusa nem se
-> renumera para trás: é a mesma regra que o `state.md` escreveu para o rótulo de bloco na colisão
-> de 2026-09-02.
-
-> **Os números `P-77`, `P-78` e `P-79` foram disputados em 2026-09-20.** Dois blocos fecharam no
-> mesmo dia, em árvores diferentes, e cada um alocou a mesma faixa: o
-> `infra-producao-provisionamento-aws` (item 10 v2, `lane-b`) e o `harness-hooks-de-guarda` (item 28,
-> `lane-a`). O item 10 integrou primeiro, pela **PR #105**, então os três IDs são dele. As três
-> fichas do item 28 foram renumeradas **na integração**, não no fechamento: `P-77` → **`P-82`** (a
-> spec do harness), `P-78` → **`P-83`** (as sete decisões de política) e `P-79` → **`P-84`** (o
-> harness fora de doc versionado). É o mesmo precedente do `P-73`: renumera quem chega depois, nunca
-> quem já está publicado. **A causa é estrutural, não descuido** — a numeração é um contador global
-> sem reserva, e duas lanes que fecham no mesmo dia sem integrar entre si colidem por construção. A
-> **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
 ## Rastro anterior, já removido
+
+**A P-49 e a P-112 saíram no fechamento do `backend-arquivo-recepcao-e-upload` (item 52, 2026-11-03)**, o primeiro depois do item 50, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
+
+**A P-74, a P-101, a P-103, a P-104, a P-105, a P-108 e a P-109 saíram no fechamento do `backend-ciclo-de-vida-da-cotacao` (item 50, 2026-11-03)**, o primeiro depois do item 49, que não as removeu. O item 48 encerrou a P-103 e a P-104, e o item 49 a P-74, a P-101, a P-105, a P-108 e a P-109, todas em 2026-11-02. O aceite do "redator" em inglês, que a P-104 deixou pendente, vive na P-116. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-106 e a P-111 saíram no fechamento do `certificacao-estado-de-emissao` (item 48, 2026-11-02)**, o primeiro depois do item 49 que não as removeu. O item 47 as encerrou em 2026-11-02: a P-106 por mecanismo (a lixeira do presupuesto confirma pelo `AppFileSlot`, medido no `prova.md` do bloco), a P-111 pelo próprio gatilho (o `AppSignatureSlot` na linha do `estrutura-monolito.md`, `debc6891`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

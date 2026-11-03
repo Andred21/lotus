@@ -633,7 +633,7 @@ class OperationDemoSeeder extends Seeder
      * PDF de uma página, mínimo mas VÁLIDO (xref com offsets calculados), para
      * o documento não ser um arquivo quebrado no bucket. Embrulhado em
      * UploadedFile com `$test: true` — não veio de um upload HTTP, e é assim
-     * que passa pelo `UploadFileAction` real.
+     * que passa pelo `FileStorage` real.
      */
     private function pdf(string $filename, string $title): UploadedFile
     {
