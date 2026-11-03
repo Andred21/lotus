@@ -144,7 +144,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 7 | **55** `backend-borda-http-auth-e-permissao` | Backend | Sem urgência funcional; a P-91 é a única que se vê de fora |
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
 | 8 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
@@ -169,6 +168,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | Bloco | Itens pendentes | Desde |
 |---|---|---|
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
+| **55** `backend-borda-http-auth-e-permissao` | 1 | 2026-11-03 |
 
 ---
 

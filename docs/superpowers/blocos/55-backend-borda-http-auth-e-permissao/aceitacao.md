@@ -9,4 +9,4 @@ sobrescreve o que estiver escrito nela. O item manual é do João: feita a açã
 
 | # | Item | Prova | Resultado | Data |
 |---|---|---|---|---|
-| 1 | Deploy em produção da `main` com o conserto do P-91: `/api/*` sem sessão e sem `Accept` devolve 401, não 500. | `producao GET /api/courses/archived -> 401` |  |  |
+| 1 | Deploy em produção da `main` com o conserto do P-91: `/api/*` sem sessão e sem `Accept` devolve 401, não 500. | `producao GET /api/courses/archived -> 401` | `500`, esperado `401`: FALHOU | 2026-11-03 |
