@@ -9,13 +9,20 @@ use App\Http\Controllers\Controller;
 use App\Shared\Files\Data\FileData;
 use App\Shared\Files\Models\File;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
 /**
  * Anexos da cotação: documento/aceite (`quote_document`). Opcional — a
  * aprovação não exige anexo (RN-14).
  */
-class QuoteFileController extends Controller
+class QuoteFileController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [new Middleware('permission:commercial.quote.update')];
+    }
+
     public function store(QuoteFileUploadData $data, Quote $quote, ReplaceFileOfTypeAction $action): FileData
     {
         return FileData::fromModel(

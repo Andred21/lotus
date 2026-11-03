@@ -9,9 +9,16 @@ use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
 use App\Shared\Files\Models\File;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class RedatorDocumentController extends Controller
+class RedatorDocumentController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [new Middleware('permission:identity.user.update')];
+    }
+
     public function store(RedatorDocumentUploadData $data, Redator $redator, StoreRedatorDocumentAction $action): RedatorDocumentData
     {
         return RedatorDocumentData::fromModel(

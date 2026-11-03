@@ -139,7 +139,14 @@ session-fixation) e rejeita usuário inativo. Env: `SANCTUM_STATEFUL_DOMAINS`, `
 (`admin`/`redator`/`aluno`/`cliente`), `is_active` libera login. **Só admin e redator autenticam** (RN-01).
 
 **RBAC de cadastro = middleware `permission:`** (`HasMiddleware` no controller), não Policy. Toda
-permissão nova entra no seeder.
+permissão nova entra no seeder. **A permissão mora só no controller** (bloco 55): `routes.php` e
+grupo não declaram `permission:`. Duas catracas guardam o RBAC das rotas.
+`PermissionRouteMiddlewareTest` exige permissão em toda rota autenticada; quem fica sem ela entra em
+`SEM_PERMISSAO`, com motivo, e **só por decisão do João**. A mesma catraca reprova permissão
+declarada na rota ou num grupo. `PermissionCatalogOrphanTest` reprova permissão do
+`PermissionCatalog` que nada consome (nem rota nem checagem literal em código) e permissão **de
+rota** que falta no catálogo. Checagem literal em código (`->can('x.y.z')`) ausente do catálogo
+**não** reprova: um erro de digitação ali passa calado.
 
 **Data-scoping NÃO é Policy — é QueryBuilder + `resolveRouteBinding`.** Nenhuma classe `Policy`
 existe no repo, e não é omissão: Policy não filtra LISTA, então `index` precisaria de escopo de
@@ -155,6 +162,11 @@ molde vigente é a Turma ("redator só vê as suas", spec D1 de 2026-08-22), em 
   coberta.** Devolve `null` (não `firstOrFail`), que é o contrato do `SubstituteBindings` — vira
   `NotFoundHttpException` e sai 404 pelo `ProblemDetails`. **Turma alheia é indistinguível de turma
   inexistente de propósito**: 403 confirmaria que ela existe (D3).
+
+O `User` segue o mesmo molde desde o bloco 55: `User::resolveRouteBinding()` aplica
+`User::staff()` (`type=admin`), então toda rota `{user}` só enxerga staff e o id de aluno, cliente
+ou redator dá 404. Guarda: `StaffUserBindingTest`, que varre toda rota com `{user}` e reprova rota
+com outro parâmetro além dele.
 
 Entidade nova com ownership por dado copia essa forma — não crie Policy para isso. Restauração de
 arquivado resolve por `onlyTrashed()` à mão (o binding não enxerga trashed) e é gateada pelo

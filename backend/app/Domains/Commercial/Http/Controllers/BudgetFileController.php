@@ -9,14 +9,21 @@ use App\Http\Controllers\Controller;
 use App\Shared\Files\Data\FileData;
 use App\Shared\Files\Models\File;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
 /**
  * Anexos do orçamento: orden de compra, fatura e comprovante
  * (`BudgetDocumentType`). Registro financeiro — NÃO bloqueia nenhuma ação
  * (RN-14).
  */
-class BudgetFileController extends Controller
+class BudgetFileController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [new Middleware('permission:commercial.budget.update')];
+    }
+
     public function store(BudgetFileUploadData $data, Budget $budget, ReplaceFileOfTypeAction $action): FileData
     {
         return FileData::fromModel(

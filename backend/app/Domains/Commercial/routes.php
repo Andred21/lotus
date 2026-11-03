@@ -36,30 +36,25 @@ Route::middleware('auth.active')->group(function () {
     Route::post('quotes/{quote}/approve', [QuoteController::class, 'approve']);
     Route::post('quotes/{quote}/reject', [QuoteController::class, 'reject']);
 
-    // Nested: gerenciar endereços/contatos de um cliente individualmente.
-    // Editar dados do cliente = commercial.client.update.
-    Route::middleware('permission:commercial.client.update')->group(function () {
-        Route::post('clients/{client}/addresses', [ClientAddressController::class, 'store']);
-        Route::put('addresses/{address}', [ClientAddressController::class, 'update']);
-        Route::delete('addresses/{address}', [ClientAddressController::class, 'destroy']);
+    // Nested: gerenciar endereços/contatos/foto de um cliente, e arquivos de
+    // orçamento e cotação. A permissão de cada um vem do `HasMiddleware` do
+    // controller (spec D1 do bloco 55), não de grupo aqui.
+    Route::post('clients/{client}/addresses', [ClientAddressController::class, 'store']);
+    Route::put('addresses/{address}', [ClientAddressController::class, 'update']);
+    Route::delete('addresses/{address}', [ClientAddressController::class, 'destroy']);
 
-        Route::post('clients/{client}/contacts', [ClientContactController::class, 'store']);
-        Route::put('contacts/{contact}', [ClientContactController::class, 'update']);
-        Route::delete('contacts/{contact}', [ClientContactController::class, 'destroy']);
+    Route::post('clients/{client}/contacts', [ClientContactController::class, 'store']);
+    Route::put('contacts/{contact}', [ClientContactController::class, 'update']);
+    Route::delete('contacts/{contact}', [ClientContactController::class, 'destroy']);
 
-        Route::post('clients/{client}/photo', [ClientPhotoController::class, 'store'])->middleware('throttle:upload');
-        Route::delete('clients/{client}/photo', [ClientPhotoController::class, 'destroy']);
-    });
+    Route::post('clients/{client}/photo', [ClientPhotoController::class, 'store'])->middleware('throttle:upload');
+    Route::delete('clients/{client}/photo', [ClientPhotoController::class, 'destroy']);
 
-    Route::middleware('permission:commercial.budget.update')->group(function () {
-        Route::post('budgets/{budget}/files', [BudgetFileController::class, 'store'])->middleware('throttle:upload');
-        Route::delete('budgets/{budget}/files/{file}', [BudgetFileController::class, 'destroy'])
-            ->scopeBindings();   // {file} resolve por $budget->files() — cross-budget = 404
-    });
+    Route::post('budgets/{budget}/files', [BudgetFileController::class, 'store'])->middleware('throttle:upload');
+    Route::delete('budgets/{budget}/files/{file}', [BudgetFileController::class, 'destroy'])
+        ->scopeBindings();   // {file} resolve por $budget->files() — cross-budget = 404
 
-    Route::middleware('permission:commercial.quote.update')->group(function () {
-        Route::post('quotes/{quote}/files', [QuoteFileController::class, 'store'])->middleware('throttle:upload');
-        Route::delete('quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy'])
-            ->scopeBindings();   // {file} resolve por $quote->files() — cross-quote = 404
-    });
+    Route::post('quotes/{quote}/files', [QuoteFileController::class, 'store'])->middleware('throttle:upload');
+    Route::delete('quotes/{quote}/files/{file}', [QuoteFileController::class, 'destroy'])
+        ->scopeBindings();   // {file} resolve por $quote->files() — cross-quote = 404
 });

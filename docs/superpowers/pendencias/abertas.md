@@ -990,3 +990,13 @@ todos `CONFIRMED`, Menores, sem bloqueio; o quarto é o ruling 8 do mesmo bloco:
   um `PUT` de curso com módulo sem a chave recria o módulo com 0 horas, mesma família do `workload_hours`
   (que este bloco pagou). A spec isenta a classe e proíbe mexer na semântica (§4). Custo: carga horária de
   módulo zerada em silêncio, se algum chamador omitir a chave; o SPA manda o campo hoje.
+
+## P-118 — ordem cota de upload × permissão e dois resíduos do item 55
+
+**Bloco:** — (aberta em 2026-11-03, pelo item 55) · **Gatilho:** bloco que tocar `appendToMiddlewarePriority`/`bootstrap/app.php`, as rotas `throttle:upload`, ou `DetectorDeAcessoSuspeito`. Revisar em **2026-11-17**.
+
+Três pontos que o bloco 55 deixou sem correção, por decisão registrada em `blocos/55-backend-borda-http-auth-e-permissao/rulings.md`:
+
+- **Ordem throttle × permissão (ruling 4).** Nas 7 rotas POST com `throttle:upload`, o throttle roda antes do `permission:`: o `SubstituteBindings` do grupo `api` puxa o `throttle:upload` para antes dele pela `middlewarePriority`, e o `permission:` não tem prioridade. Já era assim antes do bloco. Efeito: quem não tem permissão gasta a própria cota de upload antes do 403 e, com a cota esgotada, recebe 429 no lugar de 403. Mudar é comportamento novo (`appendToMiddlewarePriority`); decisão do João.
+- **`DetectorDeAcessoSuspeito.php:112`** ainda faz `where('type', 'admin')` à mão (M-3 da revisão final). Anterior ao bloco e fora da contagem do D7; o escopo `User::staff()` é a fonte única que ele poderia usar.
+- **Lane viva quebra as catracas novas (spec §8).** Uma lane aberta antes do merge do 55 que acrescente rota autenticada ou permissão reprova `PermissionRouteMiddlewareTest`, `PermissionCatalogOrphanTest` ou `StaffUserBindingTest` no merge dela. Ajuste mecânico: declarar a permissão em `HasMiddleware` do controller (ou a rota em `SEM_PERMISSAO`, com chave `"{METODOS} {uri}"`).

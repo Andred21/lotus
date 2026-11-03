@@ -37,6 +37,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
 
+        // P-91: sem sessão e sem `Accept: application/json`, o `Authenticate`
+        // tentava `route('login')` (que não existe: o login é `POST /api/login`)
+        // e virava 500. `null` para `api/*` faz ele lançar a
+        // `AuthenticationException` pura, que o `ProblemDetails` renderiza 401.
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('api/*') ? null : '/login',
+        );
+
         // Aliases de autorização do spatie/laravel-permission (ADR-07).
         $middleware->alias([
             'role' => RoleMiddleware::class,
