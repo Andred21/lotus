@@ -5,7 +5,6 @@ namespace App\Domains\Identity\Actions;
 use App\Domains\Identity\Data\StudentData;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Services\UserProvisioner;
-use App\Shared\Data\WritableAttributes;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -22,14 +21,12 @@ class UpdateStudentAction
         return DB::transaction(function () use ($student, $data) {
             $user = $student->user;
 
-            $rut = $this->provisioner->ensureIdentityAvailable($data->rut, $data->email, $user->id);
-
-            $this->provisioner->writing(fn () => $user->update(WritableAttributes::from([
+            $this->provisioner->update($user, [
                 'name' => $data->name,
-                'rut' => $rut,
+                'rut' => $data->rut,
                 'email' => $data->email,
                 'phone' => $data->phone,
-            ])));
+            ]);
 
             return $student->refresh();
         });
