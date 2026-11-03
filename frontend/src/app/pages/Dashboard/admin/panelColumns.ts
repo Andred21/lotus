@@ -1,6 +1,6 @@
 import { tableWidths } from '@shared/ui'
 
-/**
+/*
  * Largura das duas tabelas do painel administrativo do Dashboard.
  *
  * `{ actions: false }` nas duas: são visões, não superfícies de trabalho — a
@@ -19,12 +19,16 @@ import { tableWidths } from '@shared/ui'
  */
 
 /**
- * Mínimos medidos a 1024x768 (tabela de 718px), em px: curso 130, relatores 122
- * ("Instructors"), período 105 (uma data inteira), presentes 105, faltan 123,
- * habilitada 107 — soma 692, folga de 26px. Os pesos somam 100 e dão a cada
- * coluna o mínimo dela a 718px; curso e faltan levam a sobra porque são o texto
- * livre da tabela. Abaixo de `sm` a tabela usa o piso de 45rem (720px, ver
- * `CompliancePanel`), então 390x844 repete a geometria de 1024.
+ * Peso = mínimo medido da coluna, em px, mais uma parte igual da folga. Mínimos a
+ * 1024x768 (tabela de 718px): curso 130, relatores 122 ("Instructors"), período
+ * 105 (uma data inteira), presentes 105, faltan 123, habilitada 107 — soma 692,
+ * folga de 26px, ~4px para cada coluna. Folga zero numa coluna deixa o cabeçalho
+ * à mercê de qualquer diferença de métrica de fonte (o fallback antes do webfont).
+ * Abaixo de `sm` a tabela usa o piso de 45rem (720px, ver `CompliancePanel`), e
+ * 390x844 repete a geometria de 1024. Entre `sm` e o invólucro de ~690px a
+ * tabela fica no piso de 42rem (672px), abaixo da soma dos mínimos: medido a
+ * 800x900 nas três línguas, nada transborda, e a rede para palavra longa é o
+ * `wrap-break-word` das colunas de texto (medicoes-d73.md §3).
  *
  * `range` não é mais `nowrap` inteiro: cada data é, e o intervalo quebra entre
  * elas — o mínimo dele é UMA data. Com o intervalo inteiro em `nowrap` (UI-10 de
@@ -34,12 +38,12 @@ import { tableWidths } from '@shared/ui'
 export const complianceWidths = () =>
   tableWidths(
     {
-      course: { weight: 19 },
-      redatores: { weight: 17 },
-      range: { weight: 15 },
-      present: { weight: 15 },
-      missing: { weight: 18 },
-      enabled: { weight: 16 },
+      course: { weight: 134 },
+      redatores: { weight: 126 },
+      range: { weight: 109 },
+      present: { weight: 109 },
+      missing: { weight: 127 },
+      enabled: { weight: 111 },
     },
     { actions: false },
   )

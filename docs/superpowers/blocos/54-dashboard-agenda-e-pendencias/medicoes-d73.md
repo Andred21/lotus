@@ -93,8 +93,11 @@ quebrando, os rótulos novos e o intervalo partido). Vale o maior das três lín
 
 Pesos resultantes:
 
-- **Cumplimiento:** 19/17/15/15/18/16, que dão a cada coluna o seu mínimo a 718 px. Piso de
-  45rem (720 px) abaixo de `sm`, para 390 repetir a geometria de 1024.
+- **Cumplimiento:** cada peso é o mínimo da coluna em px mais uma parte igual da folga
+  (134/126/109/109/127/111), cerca de 4 px de sobra por coluna a 718 px. Piso de 45rem (720 px)
+  abaixo de `sm`, para 390 repetir a geometria de 1024. A primeira versão (19/17/15/15/18/16)
+  deixava "Relatores" com 122,06 px para um mínimo de 122. Folga zero assim cede a qualquer
+  diferença de métrica de fonte, e a revisão da task trocou os pesos.
 - **Carga de relatores:** cinco frações iguais, de 134 px no piso de 672 px.
 - **Rede de segurança:** curso, relatores e "Faltan" levam `wrap-break-word`. Palavra mais longa
   que a coluna quebra em vez de transbordar. Com os dados medidos, não dispara em 1024 nem em 390.
@@ -119,9 +122,13 @@ Mesmo stack, sobre a árvore da Task 7. "Pior cabeçalho" e "pior célula" são 
 | 390x844 | en | Cumplimiento | 720 | 276 | 720 | 0 | 0 |
 | 390x844 | en | Carga | 672 | 276 | 672 | 0 | 0 |
 
+Larguras finais do Cumplimiento a 1024: 134/126/109/109/127/111. A 390 elas ficam em
+135/127/110/110/128/112, e as da Carga em 144 (1024) e 134 (390).
+
 O documento não transborda em nenhum caso (1024/1024 e 390/390).
 
-Fora dos viewports do DoD, em 800x900 (es-CL), as duas tabelas ficam no piso de 42rem (672 px)
-dentro de um invólucro de 670 px. Sobram 2 px de rolagem, que vêm do piso e não de conteúdo
-(pior cabeçalho e pior célula = 0). É o comportamento de projeto da faixa entre `sm` e a largura
-em que o invólucro alcança 672 px, e vale para toda tabela do produto.
+Fora dos viewports do DoD, em 800x900 (es-CL, pt-BR e en), as duas tabelas ficam no piso de
+42rem (672 px) dentro de um invólucro de 670 px. Sobram 2 px de rolagem, que vêm do piso e não de
+conteúdo: pior cabeçalho e pior célula ficam em 0 nas três línguas, com o Cumplimiento em
+126/118/102/102/119/104. É o comportamento de projeto da faixa entre `sm` e a largura em que o
+invólucro alcança 672 px, e vale para toda tabela do produto.
