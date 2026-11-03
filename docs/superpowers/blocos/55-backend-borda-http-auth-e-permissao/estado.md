@@ -2,9 +2,9 @@
 schema_version: 3
 id: 55
 slug: 55-backend-borda-http-auth-e-permissao
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/blocos/55-backend-borda-http-auth-e-permissao/spec.md
 active_plan: docs/superpowers/blocos/55-backend-borda-http-auth-e-permissao/plano.md
@@ -17,10 +17,10 @@ branch: refactor/55-backend-borda-http-auth-e-permissao
 worktree: ../lotus-55-backend-borda-http-auth-e-permissao
 offset: 1
 lane_base: bade28c3
-commit: 94e2c543
+commit: 78699465
 blocker: null
-updated_at: 2026-11-03T15:07:00-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-11-03T15:45:14-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 55 — estado
