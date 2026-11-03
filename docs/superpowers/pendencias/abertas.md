@@ -142,6 +142,8 @@ do fechamento. O fechamento só escreve registros, e o João decidiu registrar e
 
 **Gatilho disparado e não pago — 2026-11-03, `backend-arquivo-recepcao-e-upload` (item 52).** O bloco tocou `docs/estrutura-monolito.md` (a linha do upload em `Data/` e a de `Shared/Files`) por outro motivo e não acrescentou `shared/ui/Timestamp/`, nem corrigiu o `AGENTS.md` e o `INSTRUÇÕES-DO-PROJETO.md`. O gatilho não se desarma.
 
+**Gatilho disparado e não pago — 2026-11-03, `backend-contrato-de-entrada-dos-data` (item 51).** O bloco tocou `docs/estrutura-monolito.md` (a linha de paginação, pelo renome `*QueryData`) por outro motivo e não reconciliou o que esta ficha lista. O gatilho não se desarma.
+
 ## P-32 — a guarda da lição 13 confere path, não classe
 
 **Bloco:** item 57 (desde 2026-11-02) · **Gatilho:** fecha quando a lição 13 reincidir por **classe** e não por path — a
@@ -312,6 +314,8 @@ as arestas de domínio, não para a árvore de pastas), a lista volta a crescer.
 **Gatilho disparado e não pago — 2026-11-02, `certificacao-estado-de-emissao` (item 48).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e reconciliou só o que era dele: `Certification` passou de scaffold vazio a código real (nota 3 e a árvore, com o `EmissionStateResolver`). O `Dashboard` ausente e as demais divergências seguem. O gatilho não se desarma.
 
 **Gatilho disparado e não pago — 2026-11-03, `backend-arquivo-recepcao-e-upload` (item 52).** O bloco tocou `docs/estrutura-monolito.md` e `.claude/rules/backend-ddd.md` por outro motivo (onde mora o Data de upload e o `FileUploader`) e reconciliou só o que era dele. O `Dashboard` ausente e as demais divergências seguem. O gatilho não se desarma.
+
+**Gatilho disparado e não pago — 2026-11-03, `backend-contrato-de-entrada-dos-data` (item 51).** O bloco tocou `docs/estrutura-monolito.md` e `.claude/rules/backend-ddd.md` (paginação e a lei do default literal) por outro motivo e reconciliou só o que era dele. As divergências desta ficha seguem. O gatilho não se desarma.
 
 ## P-54 — os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()`
 
@@ -720,120 +724,6 @@ segue de pé: fecha quando o João apagar ou mesclar uma das duas.
 
 ---
 
-## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal, e um dos seis campos é acesso
-
-**Bloco:** item 51 (desde 2026-11-02) · **Gatilho:** o campo **1** (`is_active`) fechou em 2026-08-23 (ver o bloco final
-desta ficha). Restam **cinco**: o primeiro bloco que tocar `UpdateClientAction`/`UpdateCourseAction`,
-`BudgetController::update` ou `CourseTemplateController::update`. Revisar em **2026-10-31**.
-
-Achado pela review final do **BD-14** (2026-08-20, `0fe30b13..dd0cda1`). **Nada aqui é regressão do
-BD-14** — todos os seis campos já se comportavam assim antes do bloco. O que o bloco fez foi criar
-o vocabulário que torna o defeito nomeável, e a própria review mediu que a lei que ele declara não
-vale em todo lugar que devia valer.
-
-### A mecânica
-
-O `DefaultValuesDataPipe` do Spatie entrega o default declarado quando a chave está **ausente do
-corpo**, e faz isso **antes** do ramo que preencheria `Optional`. Então:
-
-| Declaração | Chave ausente vira | Correto? |
-|---|---|---|
-| `public string\|Optional\|null $phone` (sem default) | `Optional::create()` | sim |
-| `public bool\|Optional $is_active = new Optional` | `Optional` | sim |
-| `public bool $is_active = true` | **`true`** | **não** |
-| `public string $type = 'client'` | **`'client'`** | **não** |
-
-O `WritableAttributes::from()` que o BD-14 construiu **funciona**: ele tira do array toda chave que
-chega como `Optional`. O que o derrota é a DTO entregar um valor real onde devia entregar `Optional`
-— o helper não tem como distinguir "o cliente mandou `true`" de "o Spatie preencheu `true`".
-
-### Os seis campos
-
-**1 — `UserData::$is_active = true` ([`UserData.php:40`](../../../backend/app/Domains/Identity/Data/UserData.php#L40)) — controle de acesso.**
-`UpdateStaffUserAction:57` escreve `'is_active' => $data->is_active` dentro do próprio
-`WritableAttributes::from()`. Um `PUT /api/users/{id}` que omita a chave **reativa** um staff
-desativado — e `is_active` é exatamente o portão que `AuthController:52` usa para barrar o login.
-Quem só renomeia um admin desligado devolve o acesso dele sem pedir.
-
-O contraste está na mesma pasta: `RedatorData::$is_active` é `public bool|Optional $is_active`
-**sem default**, e `UpdateRedatorAction:68-73` usa o mesmo helper na mesma forma — e acerta. Um DTO
-está certo, o irmão errado, pela diferença de um default.
-
-**Custo medido dos dois remédios:**
-
-- **(a) `public bool|Optional $is_active = new Optional`** — espelha o redator, coerente com a D1 da
-  spec do BD-14. Muda `generated.ts` de `is_active: boolean` para `is_active: undefined | boolean`,
-  **grafia que a linha 433 do arquivo já carrega hoje para `RedatorData`**. Do lado do SPA são ~5
-  sítios (`useStaffUserForm.ts:34,53`, `StaffUserDialog.tsx:121-128`, `UsersTable.tsx:72-73`) e o
-  idioma de narrowing (`?? true`) já existe no repositório, copiado do redator
-  (`useRedatorForm.ts:28,90`, `RedatorIdentityFields.tsx:73-76`). O SPA sempre manda a chave — o
-  ganho é para chamador parcial, não para a tela.
-- **(b) `'is_active' => ['present', 'boolean']` em `UserData::rules()`** — omissão vira 422 em vez de
-  reativação silenciosa, e `generated.ts` não muda. **Mas contradiz a D1**, que escolheu
-  "omissão preserva" justamente contra "PUT exige a chave".
-
-**2 e 3 — `ClientData::$type = 'client'` ([`ClientData.php:57`](../../../backend/app/Domains/Commercial/Data/ClientData.php#L57)) e `CourseData::$workload_hours = 0` ([`CourseData.php:34`](../../../backend/app/Domains/Catalog/Data/CourseData.php#L34)).**
-Nas duas Actions que o BD-14 **editou**: um PUT que omita `type` rebaixa qualquer `provider`/`other`
-para `client`; um que omita `workload_hours` zera a carga horária contratada — e o docblock do
-próprio `CourseData:17` diz que ela é contratada, não derivada.
-
-**4 a 6 — os que nem chegam ao helper.**
-`BudgetController.php:86-88` escreve
-`'payment_terms' => $data->payment_terms instanceof Optional ? null : $data->payment_terms` — o
-ternário `Optional → null` que o BD-14 removeu de cinco Actions, ainda vivo aqui; e é inalcançável
-de todo jeito, porque `BudgetData.php:44` declara `= null` e a propriedade nunca chega como
-`Optional`. `CourseTemplateController.php:33` faz `$template->update($data->except('id','version')->toArray())`
-sobre `CertificateTemplateData.php:22-23`, onde `$layout_config = []` e `$validity_months = null`:
-omitir `layout_config` **apaga o layout inteiro** do template de certificado.
-
-### Por que não se conserta dentro do BD-14
-
-O `active_work_item` do bloco é o contrato de entrada dos **10 campos** que a D-13 mediu e dos **11**
-campos de foto da D-12. Nenhum destes seis está na lista, e o `/executar-bloco` fecha em
-"implemente somente `active_work_item`". O remédio do `is_active` ainda escolhe entre duas leituras
-da D1 e move `generated.ts` — decisão do João, não do agente.
-
-**A varredura que falta:** a medição da D-13 procurou o idioma `instanceof Optional ? null`. Ela era
-cega a este defeito, porque aqui o valor nunca chega como `Optional`. Um bloco que feche esta ficha
-deve varrer por **default literal em propriedade de DTO de entrada**, não pelo ternário.
-
-### O campo 1 fechou em 2026-08-23; os cinco restantes seguem abertos
-
-O João escolheu o remédio **(a)** — `public bool|Optional $is_active` sem default, espelhando o
-`RedatorData`. O **(b)** (`['present','boolean']`) foi recusado por contradizer a D1 da spec do
-BD-14 ("omissão preserva"): reabrir decisão de dois dias antes para economizar um diff de
-`generated.ts` não paga. Entregue pelo `hardening-acesso-ownership-e-integridade` em `d11169c9`, com
-`d4a8553d` fechando o blast radius no `create` de staff (o `Optional` sem default também alcança o
-cadastro novo, que precisava do `?? true` explícito).
-
-`generated.ts` foi **regenerado**, nunca editado (lei §5.3): `is_active` passou a
-`undefined | boolean`, a mesma grafia que a linha 433 já carregava para `RedatorData`.
-
-**Provado contra a API real no gate de fechamento (2026-08-23):** `PUT /api/users/87` com
-`is_active: false` desliga; o `PUT` seguinte, **omitindo a chave** e só renomeando, devolve 200 com
-o nome novo e `is_active` **ainda `false`** — confirmado no banco. Antes do bloco, esse segundo PUT
-devolvia o acesso ao staff desligado sem ninguém pedir.
-
-Os campos **2 a 6** (`ClientData::$type`, `CourseData::$workload_hours`, `BudgetController::update`,
-`CourseTemplateController::update`) ficaram **fora por escrita explícita** na §2 da spec do bloco:
-nenhum é controle de acesso, e a ficha já os separa por gatilho próprio.
-
-### Gatilho disparado e não pago — 2026-09-04, `dominio-decisoes-de-rbac-e-semantica` (item 22)
-
-O bloco tocou **`UpdateClientAction.php`** e **`ClientData.php`**, que é o gatilho literal desta
-ficha e a casa do **campo 2** (`ClientData::$type = 'client'`). Tocou os dois pelo mesmo motivo
-estreito: `UpdateClientAction` só trocou a chamada renomeada (`ensureSingle` → `ensureExactlyOne`) e
-`ClientData` só ganhou a regra `UmContatoPrincipal` em `contacts`. **Nenhum dos cinco campos foi
-pago.**
-
-Por que não: o `active_work_item` do 22 eram as quatro decisões `D-09`/`D-10`/`D-11`/`D-16`, e o
-`/executar-bloco` fecha em "implemente somente `active_work_item`". O remédio (a) — `$type` sem
-default, como `bool|Optional` — **move `generated.ts`** e o narrowing do SPA, e chegaria depois do
-review do bloco, sem lente nenhuma sobre ele. Decisão do João no gate de fechamento de 2026-09-04:
-**anotar e seguir**, mesma forma da P-54, que registra um bloco que teve a oportunidade e não a
-usou. Este registro é o que faz a ficha valer alguma coisa para o próximo bloco: o gatilho já
-disparou uma vez sem ser pago, e o gatilho não se desarma por isso.
-
 > **As três fichas abaixo foram renumeradas no merge de fechamento (2026-08-28).** Nasceram
 > `P-62`, `P-63` e `P-64` na `lane-a` e viraram `P-64`, `P-65` e `P-66`: a `main` já trazia uma
 > `P-62` (branch protection, `lane-b`) e uma `P-63` (o `role="list"` do mini-reset, `lane-c`),
@@ -989,6 +879,8 @@ fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-
 
 **Gatilho disparado e não pago — 2026-11-03, `backend-arquivo-recepcao-e-upload` (item 52).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e não reconciliou as coordenadas e o mapa que esta ficha lista. O gatilho não se desarma.
 
+**Gatilho disparado e não pago — 2026-11-03, `backend-contrato-de-entrada-dos-data` (item 51).** O bloco tocou `docs/estrutura-monolito.md` por outro motivo e não reconciliou as coordenadas e o mapa que esta ficha lista. O gatilho não se desarma.
+
 ## P-110 — a rule de estilização não conhece o título de seção de formulário em 13px e na marca
 
 **Bloco:** item 58 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar `.claude/rules/frontend-estilizacao.md`,
@@ -1074,3 +966,27 @@ estão no `rulings.md` do 50, seção Processo.
 - **Aceite do "redator" em inglês, herdado da P-104** (encerrada no item 48, que sai do rastro neste
   fechamento): `operation.conclusion.confirmBody` e `operation.detail.lock.concluida` usam "redator"
   no lugar de "instructor", que o `copy.test.ts` UI-05 proíbe. Falta o aceite do João.
+
+## P-117 — três Menores da revisão do 51 e um débito de módulo, registrados sem bloqueio
+
+**Bloco:** — (aberta em 2026-11-03, pelo item 51) · **Gatilho:** bloco que tocar o `InputDataDefaultsTest`, `CourseModuleData`/`UpdateCourseAction` ou o texto de `.claude/rules/generated-types.md` sobre campo de escrita. Revisar em **2026-11-17**.
+
+Os três primeiros saíram da rodada 1 da revisão (`blocos/51-backend-contrato-de-entrada-dos-data/revisao.md`),
+todos `CONFIRMED`, Menores, sem bloqueio; o quarto é o ruling 8 do mesmo bloco:
+
+- **Q-1.** O motivo da isenção de `CourseModuleData` na `ISENTAS` (`InputDataDefaultsTest.php:84`) diz "não
+  rebaixa linha existente", e isso é falso: o `UpdateCourseAction` recria o módulo pelo payload, então item
+  sem `theory_hours`/`practice_hours` grava 0 e sem `learnings`/`contents` grava null. A isenção da classe
+  está certa (§2.1 e §4 da spec); o erro é só na frase. Correção: dizer a verdade e citar o quarto ponto.
+- **Q-2.** A catraca segue o tipo nativo e o `#[DataCollectionOf]`, mas não `array` anotado só com
+  `/** @var XData[] */`, que o laravel-data também hidrata como coleção. Nenhum Data de entrada tem essa
+  forma hoje. O buraco é o mesmo do `PersistenceLawsTest` (reincidente em dois blocos). Duas saídas, escolha
+  do João: uma frase na `generated-types.md` ("docblock `@var XData[]` sozinho não basta") ou uma guarda que
+  reprove `array` de Data cujo `@var` cite um Data sem `#[DataCollectionOf]`.
+- **Q-3.** `.claude/rules/generated-types.md:38` diz "Campo de escrita nasce `X|Optional` SEM default", o que
+  contradiz a linha 32, a `backend-ddd.md:68` e a catraca, que aceitam `= new Optional`. Correção: "SEM
+  default literal (`= new Optional` é equivalente e aceito)".
+- **Débito de módulo (ruling 8).** `CourseModuleData::$theory_hours`/`$practice_hours = 0` sem `#[Required]`:
+  um `PUT` de curso com módulo sem a chave recria o módulo com 0 horas, mesma família do `workload_hours`
+  (que este bloco pagou). A spec isenta a classe e proíbe mexer na semântica (§4). Custo: carga horária de
+  módulo zerada em silêncio, se algum chamador omitir a chave; o SPA manda o campo hoje.

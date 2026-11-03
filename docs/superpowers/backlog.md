@@ -144,7 +144,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 3 | **51** `backend-contrato-de-entrada-dos-data` | Backend | Depende do 50 (`Budget`) |
 | 5 | **53** `backend-importacao-e-identidade-do-aluno` | Backend | Depende do 52 (Identity) |
 | 7 | **55** `backend-borda-http-auth-e-permissao` | Backend | Sem urgência funcional; a P-91 é a única que se vê de fora |
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
@@ -241,34 +240,6 @@ está formalmente resolvida.
 > reemissível é pendência no Dashboard (48); a `D-34` e a `D-71` saem do item 9 para o 54 e o 49; a
 > P-51 vai inteira para o 51, e a marca de coleção só de entrada vai para o 53. **Não decidido:**
 > registrar "não adotar FormRequest nem Policy" em ADR — o João vai estudar o caso (55).
-
----
-
-## 51. `backend-contrato-de-entrada-dos-data`
-
-**Prioridade:** P2 · **Frente:** Backend (transversal) · **Contexto:** não · **Depende:** 50
-**Fonte:** achados 0.1 e 0.4 e a seção "FormRequest" do review de 2026-11-02; `P-51`.
-
-Depende do 50 porque os dois mexem no `Budget` (`BudgetController`, as Actions do orçamento).
-
-**Escopo:**
-- **P-51 inteira, os cinco campos que restam:** `ClientData::$type`, `CourseData::$workload_hours`,
-  `BudgetController::update` (`payment_terms`) e `CourseTemplateController::update`
-  (`layout_config`, `validity_months`). Mais uma catraca que reprova default literal em propriedade
-  de DTO de entrada, porque a varredura pelo ternário era cega a este defeito.
-- **Achado 0.1**, que é o campo 4 da P-51: a escrita sai do `BudgetController` para uma
-  `UpdateBudgetAction`.
-- **Achado 0.4.** `TurmaData::$redatores` ganha `#[DataCollectionOf]` e `#[ReadOnlyCollection]` e
-  volta ao alcance do `PersistenceLawsTest`.
-- **Renomear os Data de query string**, `*PageRequest` e `EmissionPanelRequest`, para `*Query`.
-  O `PageRequest` ganha `#[TypeScript]`, e o `PageQuery` escrito à mão em `shared/api/page.ts:20`
-  morre.
-
-Regenera o `generated.ts` (lei §5.3).
-
-**DoD:** omitir cada um dos cinco campos num PUT preserva o valor, provado contra a API. A catraca nova
-foi vista reprovar por sonda. Nenhum `Request` sobra no nome de Data de query, e o front compila sem
-tipo de paginação escrito à mão.
 
 ---
 
