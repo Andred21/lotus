@@ -3,11 +3,11 @@
 namespace App\Domains\Identity\Data;
 
 use App\Domains\Identity\Enums\RedatorDocumentType;
+use App\Shared\Data\Casts\DataLivreCast;
 use App\Shared\Files\Data\TypedFileRules;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Attributes\WithCast;
-use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
@@ -22,7 +22,7 @@ class ProfileDocumentUploadData extends Data
     public function __construct(
         public RedatorDocumentType $type,
         public UploadedFile $file,
-        #[WithCast(DateTimeInterfaceCast::class, format: ['!Y-m-d', DATE_ATOM])]
+        #[WithCast(DataLivreCast::class)]
         public ?CarbonImmutable $valid_until = null,
     ) {}
 
