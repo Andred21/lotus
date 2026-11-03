@@ -2,8 +2,24 @@
 
 ## Em aberto
 
-Correções aprovadas pelo João em 2026-11-03, por aplicar: Q-3, Q-5, Q-6 e Q-7, todos Menor. Q-1 e
-Q-2 ficam registrados sem correção. Aplicadas as quatro, a rodada 2 reabre a revisão.
+## Rodada 2 — `60e42f49..f3be2669` — 2026-11-03 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
+
+Rodada aberta pelas correções aprovadas da rodada 1: Q-3 em `36ebc57a`, Q-5 em `783480a1`, Q-6 em
+`6371fc2e` e Q-7 em `f3be2669`. A lente 1 conferiu as quatro no código: o lock está dentro da
+closure transacional nas três Actions do uploader, o `RedatorData` saiu dos isentos, a chave passa
+por `RedatorDocumentType::from` dentro da transação e o rollback do create afirma `users` vazio.
+Q-1, Q-2 e Q-4 não mudaram. A lente Codex rodou uma vez e falhou com `model_not_found` para
+`gpt-5.5`; não houve segunda tentativa.
+
+Q-9 não virou pendência: o texto do `estrutura-monolito.md` e da rule nasceu neste diff e ainda não
+está na `main`, então é defeito da entrega do bloco, não divergência de doc já publicada.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-8 | Menor | Os testes do Q-6 não provam o rollback inteiro: o create não afirma `users` 0 e o update não confere que o RUT gravado antes do `ValueError` voltou | CONFIRMED | `backend/tests/Feature/Cadastros/RedatorDocumentRollbackTest.php:236-238`, `:262-263` | registrado, não bloqueia |
+| Q-9 | Menor | O mapa de upload no `estrutura-monolito.md` e na rule omite o `RedatorDocumentsData` (único sítio de vários arquivos), e a regra "`<X>UploadData`" não cobre o nome dele nem o do `ImportSpreadsheetData` | CONFIRMED | `docs/estrutura-monolito.md:34-38`, `.claude/rules/backend-ddd.md:36` | registrado, não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0 plausíveis, 0 refutados · Menor: 2 confirmados, 0 plausíveis, 0 refutados
 
 ## Rodada 1 — `60e42f49..5e54cd44` — 2026-11-03 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 
