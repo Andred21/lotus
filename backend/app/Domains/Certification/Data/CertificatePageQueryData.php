@@ -3,15 +3,15 @@
 namespace App\Domains\Certification\Data;
 
 use App\Domains\Certification\Enums\CertificateDisplayStatus;
-use App\Shared\Pagination\PageRequest;
+use App\Shared\Pagination\PageQueryData;
 use Illuminate\Validation\Rule;
 
-/** `PageRequest` + o filtro nomeado do Historial. Valor fora do enum é 422. */
-class CertificatePageRequest extends PageRequest
+/** `PageQueryData` + o filtro nomeado do Historial. Valor fora do enum é 422. */
+class CertificatePageQueryData extends PageQueryData
 {
     public function __construct(
         int $page = 1,
-        int $per_page = PageRequest::PER_PAGE_DEFAULT,
+        int $per_page = PageQueryData::PER_PAGE_DEFAULT,
         ?string $q = null,
         ?string $sort = null,
         public ?CertificateDisplayStatus $display_status = null,

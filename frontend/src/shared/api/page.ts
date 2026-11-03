@@ -1,5 +1,5 @@
 import { api } from './axios'
-import type { PageMetaData } from '@shared/types/generated'
+import type { PageMetaData, PageQueryData } from '@shared/types/generated'
 
 /** O `meta` gerado do backend (`App\Shared\Pagination\PageMetaData`). Alias
  * para as extensões (`CertificatePageMetaData`) entrarem por `M extends PageMeta`. */
@@ -14,15 +14,15 @@ export interface Page<T, M extends PageMeta = PageMeta> {
   meta: M
 }
 
-/** A query string que o `PageRequest` do backend aceita, mais os filtros
- * nomeados de cada lista (`display_status`, `status`). `undefined` é omitido
- * pelo axios — é assim que "sem filtro" vira "sem parâmetro". */
-export type PageQuery = {
-  page: number
-  per_page: number
-  q?: string
-  sort?: string
-} & Record<string, string | number | undefined>
+/** A query string que o `PageQueryData` do backend aceita, mais os filtros
+ * nomeados de cada lista (`display_status`, `status`). Os campos de paginação
+ * saem do tipo GERADO — `page` e `per_page` obrigatórios, `q` e `sort`
+ * opcionais — e só os filtros por `Record` são escritos aqui. `undefined`
+ * (e `null`) é omitido pelo axios — é assim que "sem filtro" vira "sem
+ * parâmetro". */
+export type PageQuery = Pick<PageQueryData, 'page' | 'per_page'> &
+  Partial<Pick<PageQueryData, 'q' | 'sort'>> &
+  Record<string, string | number | null | undefined>
 
 /** Fábrica do fetch de uma lista paginada. Mora em `shared/api` — e não em
  * `shared/lib` — porque toca o axios; `shared/lib` não importa `shared/api`. */

@@ -3,11 +3,12 @@
 namespace App\Shared\Pagination;
 
 use Spatie\LaravelData\Data;
+use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * Entrada de toda lista paginada (spec §4.1). Injetado direto no controller
- * (`index(PageRequest $request)`): o laravel-data lê a query string, valida por
- * `rules()` e coage `"10"` para `int` — provado em `PageRequestTest`.
+ * (`index(PageQueryData $query)`): o laravel-data lê a query string, valida por
+ * `rules()` e coage `"10"` para `int` — provado em `PageQueryDataTest`.
  *
  * Acima do teto é 422, não clamp (spec D3): recusar é o padrão do projeto
  * (RFC 7807, nunca silêncio). O teto existe para a API não voltar a devolver
@@ -15,9 +16,10 @@ use Spatie\LaravelData\Data;
  *
  * A allowlist de `sort` NÃO mora aqui: é de cada lista (`Paginates::SORTABLE`
  * no builder). Os requests com filtro nomeado ESTENDEM esta classe e chamam
- * `parent::rules()` — `CertificatePageRequest`, `TurmaPageRequest`.
+ * `parent::rules()` — `CertificatePageQueryData`, `TurmaPageQueryData`.
  */
-class PageRequest extends Data
+#[TypeScript]
+class PageQueryData extends Data
 {
     public const PER_PAGE_DEFAULT = 25;
 

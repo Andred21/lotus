@@ -55,7 +55,10 @@ class CreateClientAction
 
             $client = $user->client()->create([
                 'legal_name' => $data->legal_name,
-                'type' => $data->type,
+                // Sem default no DTO: o do laravel-data preenche antes do Optional
+                // e o PUT sem `type` rebaixava provider/other para client. Aqui,
+                // no create, omitido vira 'client' (mesma forma do create de staff).
+                'type' => $data->type instanceof Optional ? 'client' : $data->type,
                 'business_activity' => $data->business_activity instanceof Optional ? null : $data->business_activity,
             ]);
 

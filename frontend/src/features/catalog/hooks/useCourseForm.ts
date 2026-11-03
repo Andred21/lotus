@@ -48,7 +48,7 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
     mode,
     empty: EMPTY,
     toFields,
-    // redator_ids NÃO entra: o backend ignora na escrita do curso.
+    // redator_ids NÃO entra: o backend recusa com 422 (`#[Computed]` em `CourseData`).
     // modules entra SEMPRE: o backend faz replace-total, então omitir o campo
     // apagaria todos os módulos. Só os campos editáveis — sort_order e
     // total_hours são derivados no backend e descartados no except() da Action.

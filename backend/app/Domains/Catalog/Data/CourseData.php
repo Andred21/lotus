@@ -3,7 +3,9 @@
 namespace App\Domains\Catalog\Data;
 
 use App\Domains\Catalog\Models\Course;
+use App\Shared\Data\ComputedFields;
 use App\Shared\Support\TetosImpressos;
+use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Required;
@@ -32,18 +34,30 @@ class CourseData extends Data
         #[Required, Max(TetosImpressos::NOME_CURSO)]
         public string $name,
         #[Max(TetosImpressos::NOME_TECNICO)]
-        public string|Optional|null $technical_name = new Optional,
+        public string|Optional|null $technical_name,
         #[Max(TetosImpressos::DESCRICAO_CURSO)]
-        public string|Optional|null $description = new Optional,
+        public string|Optional|null $description,
         #[Required]
-        public int $workload_hours = 0,
+        public int $workload_hours,
         /** @var array<CourseModuleData>|Optional */
         #[DataCollectionOf(CourseModuleData::class)]
         public array|Optional $modules = new Optional,
-        /** @var array<int> */
+        /**
+         * Saída (habilitação): `#[Computed]` + `rejected()` no `rules()` — a chave no corpo de escrita é 422.
+         *
+         * @var array<int>
+         */
+        #[Computed]
         public array $redator_ids = [],
         public int|Optional $modules_total_hours = new Optional,
     ) {}
+
+    public static function rules(): array
+    {
+        return [
+            ...ComputedFields::rejected('redator_ids'),
+        ];
+    }
 
     /**
      * Hidrata o DTO do model. `redator_ids` vem do pivot de habilitação.

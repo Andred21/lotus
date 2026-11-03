@@ -70,6 +70,32 @@ class BudgetCrudTest extends TestCase
         $this->assertSoftDeleted('budgets', ['id' => $id]);
     }
 
+    public function test_put_de_orcamento_sem_payment_terms_preserva(): void
+    {
+        $this->actingAsAdmin();
+        $clientId = $this->makeClientWithUser()->id;
+        $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1', 'payment_terms' => '30 días']);
+
+        $this->putJson("/api/budgets/{$budget->id}", ['client_id' => $clientId])
+            ->assertOk()
+            ->assertJsonPath('payment_terms', '30 días');
+
+        $this->assertDatabaseHas('budgets', ['id' => $budget->id, 'payment_terms' => '30 días']);
+    }
+
+    public function test_put_de_orcamento_com_payment_terms_null_apaga(): void
+    {
+        $this->actingAsAdmin();
+        $clientId = $this->makeClientWithUser()->id;
+        $budget = Budget::create(['client_id' => $clientId, 'code' => 'Scap 1', 'payment_terms' => '30 días']);
+
+        $this->putJson("/api/budgets/{$budget->id}", ['client_id' => $clientId, 'payment_terms' => null])
+            ->assertOk()
+            ->assertJsonPath('payment_terms', null);
+
+        $this->assertDatabaseHas('budgets', ['id' => $budget->id, 'payment_terms' => null]);
+    }
+
     public function test_destroy_com_cotacao_aprovada_bloqueado(): void
     {
         $this->actingAsAdmin();

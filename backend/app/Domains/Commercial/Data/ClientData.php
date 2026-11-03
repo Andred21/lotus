@@ -45,7 +45,7 @@ class ClientData extends Data
         #[Required, Max(TetosImpressos::RAZAO_SOCIAL)]
         public string $legal_name,
         #[In('client', 'provider', 'other')]
-        public string $type = 'client',
+        public string|Optional $type,
         public string|Optional|null $business_activity = new Optional,
         /** @var array<ClientAddressData>|Optional */
         #[DataCollectionOf(ClientAddressData::class)]

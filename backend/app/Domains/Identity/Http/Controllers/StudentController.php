@@ -12,7 +12,7 @@ use App\Domains\Identity\Data\StudentDetailData;
 use App\Domains\Identity\Models\Student;
 use App\Http\Controllers\Controller;
 use App\Shared\Pagination\PageData;
-use App\Shared\Pagination\PageRequest;
+use App\Shared\Pagination\PageQueryData;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -37,16 +37,16 @@ class StudentController extends Controller implements HasMiddleware
 
     /**
      * Página de alunos (spec D1): a lista cresce sem teto e ordenava em PHP.
-     * `PageRequest` direto porque não há filtro nomeado — quem sabe buscar e
+     * `PageQueryData` direto porque não há filtro nomeado — quem sabe buscar e
      * ordenar é o `StudentQueryBuilder`.
      *
      * @return PageData<StudentData>
      */
-    public function index(PageRequest $request): PageData
+    public function index(PageQueryData $query): PageData
     {
         return Student::query()
             ->withListingData()
-            ->page($request, fn (Student $student) => StudentData::fromModel($student));
+            ->page($query, fn (Student $student) => StudentData::fromModel($student));
     }
 
     /**
