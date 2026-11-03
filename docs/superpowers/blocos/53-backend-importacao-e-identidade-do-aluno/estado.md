@@ -2,9 +2,9 @@
 schema_version: 3
 id: 53
 slug: 53-backend-importacao-e-identidade-do-aluno
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/53-backend-importacao-e-identidade-do-aluno/spec.md
 active_plan: docs/superpowers/blocos/53-backend-importacao-e-identidade-do-aluno/plano.md
@@ -17,9 +17,9 @@ branch: refactor/53-backend-importacao-e-identidade-do-aluno
 worktree: ../lotus-53-backend-importacao-e-identidade-do-aluno
 offset: 2
 lane_base: 1845d096
-commit: 3c98fb27
+commit: 89579ab6
 blocker: null
-updated_at: 2026-11-03T13:17:53-03:00
+updated_at: 2026-11-03T13:39:20-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 

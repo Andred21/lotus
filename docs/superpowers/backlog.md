@@ -144,7 +144,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 5 | **53** `backend-importacao-e-identidade-do-aluno` | Backend | Depende do 52 (Identity) |
 | 7 | **55** `backend-borda-http-auth-e-permissao` | Backend | Sem urgência funcional; a P-91 é a única que se vê de fora |
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
@@ -240,30 +239,6 @@ está formalmente resolvida.
 > reemissível é pendência no Dashboard (48); a `D-34` e a `D-71` saem do item 9 para o 54 e o 49; a
 > P-51 vai inteira para o 51, e a marca de coleção só de entrada vai para o 53. **Não decidido:**
 > registrar "não adotar FormRequest nem Policy" em ADR — o João vai estudar o caso (55).
-
----
-
-## 53. `backend-importacao-e-identidade-do-aluno`
-
-**Prioridade:** P2 · **Frente:** Backend (Operation, Identity) · **Contexto:** não · **Depende:** 52
-**Fonte:** cards 3 e 7 e a seção "FormRequest" (ação barata 2) do review de 2026-11-02.
-
-Depende do 52 porque os dois mexem em Identity (`RedatorController`, `UpdateRedatorAction`).
-
-**Escopo:**
-- **Card 3.** A classificação da linha (criar, atualizar, matricular, recusar com motivo) fica num
-  módulo só: a prévia reporta a decisão e a confirmação a executa. Um teste de paridade prova que o que
-  a prévia mostrou é o que a confirmação fez. Hoje as duas já divergem na reserva de e-mail da linha
-  "Actualizar".
-- **Card 7.** Um Data de identidade do aluno, usado na matrícula, na prévia e na importação. O
-  `UserProvisioner` ganha uma contraparte de update à altura do `provision()`, e os quatro `Update*`
-  deixam de lembrar os três passos.
-- **A marca de "coleção só de entrada"** no `PersistenceLawsTest`, espelho da
-  `#[ReadOnlyCollection]`. O `ImportConfirmData::$rows` deixa de ser `Optional`, e os dois
-  `Validator::make` de domínio (`ImportStudentsAction:65`, `StudentResolver:150`) somem.
-
-**DoD:** o teste de paridade entre prévia e confirmação está verde, e não há `Validator::make` em
-`app/Domains/*/Actions` nem em `Services`. A marca nova foi vista reprovar por sonda.
 
 ---
 
