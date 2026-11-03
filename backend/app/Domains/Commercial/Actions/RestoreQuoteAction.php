@@ -2,6 +2,7 @@
 
 namespace App\Domains\Commercial\Actions;
 
+use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,11 +26,13 @@ use Illuminate\Validation\ValidationException;
  * sob pai arquivado é exatamente o que a cascata existe para impedir; restaurar
  * o pai primeiro devolve a cotação junto, sem passar por aqui.
  *
- * SEM lock sobre o orçamento, e a assimetria é declarada: `DeleteBudgetAction`
- * também não toma nenhum (P8 do plano), então travar só deste lado criaria a
- * ilusão de mutex sobre uma janela que continua aberta do outro. A janela
- * residual — arquivar o orçamento entre a checagem e o `restore()` — é a mesma
- * classe da P-47 e está registrada lá.
+ * Quem trava o quê (P-49, spec D4/D5): a transação toma `Budget::lockRow()` ANTES
+ * de qualquer lock da cotação. É o `lockRow` cru, não o `lockForWrite`, porque a
+ * Action precisa ler o estado do pai sob o lock e recusar com a própria chave
+ * (`quote`, contrato fixado em `QuoteArchiveEndpointTest`). Do outro lado,
+ * `DeleteBudgetAction` toma o mesmo lock antes de arquivar e `CreateQuoteAction`
+ * toma o `lockForWrite`: o orçamento não muda de estado entre a checagem e o
+ * `restore()`. Ordem sem ciclo: orçamento primeiro, cotação depois.
  *
  * `Quote` é o primeiro model deste código que é AO MESMO TEMPO filho de
  * cascata (do orçamento) e raiz com endpoint próprio de restore. Por isso,
@@ -60,9 +63,11 @@ class RestoreQuoteAction
                 return $quote->loadListingData();
             }
 
-            // `Quote::budget()` é `withTrashed()`, então a leitura enxerga o
-            // orçamento arquivado — que é justamente o caso a recusar.
-            if ($quote->budget->trashed()) {
+            // `lockRow` enxerga o orçamento arquivado — que é justamente o caso
+            // a recusar — e o mantém travado até o fim da transação.
+            $budget = Budget::lockRow($quote->budget_id);
+
+            if ($budget->trashed()) {
                 throw ValidationException::withMessages([
                     'quote' => __('commercial.quote.budget_archived'),
                 ]);
