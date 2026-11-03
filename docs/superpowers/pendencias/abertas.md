@@ -1307,7 +1307,7 @@ congelado no `typography.test.ts`, como as outras.
 
 ## P-112 — cotação ligada a turma: só o valor UF fica editável, e a cotação ganha a tag do status da turma
 
-**Bloco:** item 50 · **Quem decide:** João (decidido 2026-11-02) · **Gatilho:** brainstorming do 50. Revisar em **2026-11-16**.
+**Bloco:** item 50 (desde 2026-11-02) · **Quem decide:** João (decidido 2026-11-02) · **Gatilho:** brainstorming do 50. Revisar em **2026-11-16**.
 
 Decisão do João no bloco 48 (spec D9, literal), para entrar no escopo do 50:
 
