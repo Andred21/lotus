@@ -6,10 +6,10 @@ use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Shared\Files\Models\File;
 use App\Shared\Files\Services\FileStorage;
+use App\Shared\Files\Services\FileUploader;
+use App\Shared\Files\Services\StoredFiles;
 use Carbon\CarbonInterface;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
-use Throwable;
 
 /**
  * Adiciona ou substitui um documento do redator. Se já existe um doc ativo do
@@ -18,33 +18,22 @@ use Throwable;
  */
 class StoreRedatorDocumentAction
 {
-    public function __construct(private FileStorage $uploads) {}
+    public function __construct(private FileStorage $uploads, private FileUploader $fileUploader) {}
 
     public function execute(Redator $redator, RedatorDocumentType $type, UploadedFile $file, ?CarbonInterface $validUntil = null): File
     {
-        // Escrita no disco ANTES da transação (spec D1/D3): dentro dela, um
-        // rollback derrubaria a linha e deixaria o binário no bucket — documento
-        // sem rastro. Aqui, o que sobra em caso de falha é objeto órfão, que o
-        // `discard` abaixo apaga.
-        $meta = $this->uploads->metadataOf($file);
-        $path = $this->uploads->put($redator, $file);
-
-        try {
-            return DB::transaction(function () use ($redator, $type, $path, $meta, $validUntil) {
+        return $this->fileUploader->store(
+            ['file' => $file],
+            $redator,
+            function (StoredFiles $stored) use ($redator, $type, $validUntil) {
                 // Mutex do pai (P-49) guardando o INSERT, não o upload: o
-                // binário fora da transação é decisão registrada (D3 da spec do
-                // redator) e não se reabre. A janela que a ficha mede é entre
-                // "o binding resolveu um redator vivo" e "INSERT em `files`" —
-                // é essa que este lock fecha.
+                // binário sobe fora da transação (decisão D3 da spec do
+                // redator) e o `FileUploader` o descarta se ela cair.
                 Redator::lockForWrite($redator->id);
 
-                return $this->registerUploaded($redator, $type, $path, $meta, $validUntil);
-            });
-        } catch (Throwable $e) {
-            $this->uploads->discard($path);
-
-            throw $e;
-        }
+                return $stored->replace($redator, 'file', $type->value, $validUntil);
+            },
+        );
     }
 
     /**

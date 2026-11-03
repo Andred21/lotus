@@ -4,38 +4,19 @@ namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Identity\Actions\StoreRedatorDocumentAction;
 use App\Domains\Identity\Data\RedatorDocumentData;
-use App\Domains\Identity\Enums\RedatorDocumentType;
+use App\Domains\Identity\Data\RedatorDocumentUploadData;
 use App\Domains\Identity\Models\Redator;
 use App\Http\Controllers\Controller;
 use App\Shared\Files\Models\File;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rules\Enum;
 
 class RedatorDocumentController extends Controller
 {
-    public function store(Request $request, Redator $redator, StoreRedatorDocumentAction $action): RedatorDocumentData
+    public function store(RedatorDocumentUploadData $data, Redator $redator, StoreRedatorDocumentAction $action): RedatorDocumentData
     {
-        // O tipo vem primeiro porque é ele quem escolhe a regra do arquivo e a
-        // do `valid_until` (a assinatura não é o documento de idoneidade).
-        $tipo = RedatorDocumentType::from($request->validate([
-            'type' => ['required', new Enum(RedatorDocumentType::class)],
-        ])['type']);
-
-        $validated = $request->validate([
-            'file' => $tipo->conteudo()->regras(),
-            'valid_until' => $tipo->aceitaValidade() ? ['nullable', 'date'] : ['prohibited'],
-        ]);
-
-        $file = $action->execute(
-            $redator,
-            $tipo,
-            $request->file('file'),
-            isset($validated['valid_until']) ? Carbon::parse($validated['valid_until']) : null,
+        return RedatorDocumentData::fromModel(
+            $action->execute($redator, $data->type, $data->file, $data->valid_until),
         );
-
-        return RedatorDocumentData::fromModel($file);
     }
 
     public function destroy(Redator $redator, File $document): Response

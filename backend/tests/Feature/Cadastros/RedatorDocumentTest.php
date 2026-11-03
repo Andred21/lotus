@@ -241,4 +241,14 @@ class RedatorDocumentTest extends TestCase
             ->assertStatus(422)
             ->assertJsonPath('errors.documents.0', __('identity.errors.documents_shape'));
     }
+
+    /** O 403 de "não é redator" vem antes da validação do payload (a checagem precede o Data). */
+    public function test_nao_redator_com_payload_invalido_recebe_403(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $this->postJson('/api/profile/documents', ['type' => 'xxx'])
+            ->assertForbidden();
+    }
 }
