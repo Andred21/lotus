@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (37)
+## Abertas (38)
 
 ### Agrupadas em bloco de execução
 
@@ -41,11 +41,12 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
 | P-107 | O 422 de upload diz "El campo file…": o backend não traduz o atributo `file` | 52 | bloco que tocar a validação de upload ou os atributos do `lang/`; revisar 2026-11-07 |
 | P-110 | A rule `frontend-estilizacao.md` ainda descreve uma faixa de seção só (12px, tinta de corpo); o título de seção de formulário do item 46 (`formSectionTitleClass`, 13px, na marca) ficou só no `rulings.md` e em docblocks | 58 | bloco que tocar a rule, o `typography.ts` ou o `FormSection`/`SectionLabel`; revisar 2026-11-15 |
-| P-112 | Cotação aprovada ligada a turma: só o valor UF fica editável, e a cotação ganha a tag "Turma:" com o status da turma (decisão do João, 2026-11-02; o superadmin hoje recusa e edita cotação com turma concluída, `RejectQuoteAction` sem guarda) | 50 | brainstorming do 50; revisar 2026-11-16 |
 | P-113 | O `COL.rut` dá cerca de 110 a 123 px, menos que os 133 px do RUT em mono, nas tabelas de alunos e de clientes | — | bloco que tocar `studentColumns.ts` ou `clientColumns.ts`; revisar 2026-11-16 |
+| P-114 | Cotação `pending` ou `rejected` com turma não arquivada: o `QuoteLifecycle` a trata como sem turma; saber se o dado legado existe exige leitura em produção | — | o João rodar a consulta só-leitura da ficha, ou bloco que tocar `QuoteLifecycle`; revisar 2026-11-17 |
+| P-115 | Três Menores da revisão do 50: audit `restored` fantasma na corrida `RestoreQuoteAction` × cascata, mensagens `approved_cannot_delete` que mandam "recuse antes", catraca de lock em lista fixa de 3 arquivos | — | bloco que tocar `RestoreQuoteAction`, `RestoreBudgetAction`, `QuoteLifecycle` ou o `BudgetQuoteLockTest`; revisar 2026-11-17 |
+| P-116 | "Turma:" ao lado de "class"/"clase" nas telas en e es-CL, campos travados do wizard sem explicação e o aceite do "redator" no texto em inglês (herdado da P-104) | — | o João decidir cada linha, ou bloco que tocar a tag `Turma:` ou o `QuoteWizard`; revisar 2026-11-17 |
 | P-83 | Sete decisões de política dos guardas (allowlist da `main` para `.github/`/`.githooks/`/`.codex/`/`.superpowers/`, `merge --ff-only`, o `docker/probe.env` real, os três caminhos do `stop-verify`, o motivo que ensina a alargar a allowlist, `git commit` sem `-m`) ficaram só no ledger, que é **gitignorado** | 57 | João decidir cada linha — a favor ou contra — e a decisão virar commit; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | 58 | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
-| P-49 | Eixos **redator** e **turma** fechados em 2026-08-23 (`lockForWrite()` nos cinco escritores + catraca); resta a janela **cotação × orçamento** | 50 | bloco que tocar `RestoreQuoteAction`/`DeleteBudgetAction` e puder travar os dois lados; revisar 2026-10-31 |
 | P-51 | Default literal em DTO de entrada — o campo de **acesso** (`is_active`) fechou em 2026-08-23; restam **cinco** campos sem controle de acesso | 51 | bloco que tocar `UpdateClientAction`/`UpdateCourseAction`, `BudgetController::update` ou `CourseTemplateController::update`; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | 58 | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | 58 | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo — **disparado em 2026-09-04, 2026-09-25 e 2026-10-04, não pago**; revisar 2026-10-31; a linha "transporte de e-mail sem ADR" foi paga pelo item 33 (ADR-23) |
@@ -148,9 +149,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (7)
+## Encerradas (2)
 
-**A P-103 e a P-104 fecharam no item 48 (2026-11-02)**: a P-103 por mecanismo (o `IssueCertificateAction` relê a matrícula sob `lockForUpdate` na transação, provado em MySQL pelo `EmissionResultRaceTest`), a P-104 pela decisão do João (os dois textos nos três locales). **A P-74, a P-101, a P-105, a P-108 e a P-109 fecharam no item 49 (2026-11-02).** Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+**A P-49 e a P-112 fecharam no item 50 (2026-11-03)**: a P-49 pelo próprio gatilho (o eixo cotação × orçamento ganhou o lock do orçamento dos dois lados, na ordem D4, sob o `BudgetQuoteLockTest`), a P-112 por mecanismo (a matriz D2 no `QuoteLifecycle`, o `turma_status` no `QuoteData` e a tag "Turma:" na tela). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`. **O item 50 abriu a P-114, a P-115 e a P-116.**
+
+**A P-74, a P-101, a P-103, a P-104, a P-105, a P-108 e a P-109 saíram no fechamento do item 50 (2026-11-03)**, o primeiro depois do item 49 que não as removeu: o item 48 encerrou a P-103 e a P-104, e o item 49 a P-74, a P-101, a P-105, a P-108 e a P-109, todas em 2026-11-02. O que a P-104 deixou pendente (o aceite do "redator" no texto em inglês) vive agora na P-116. O rastro durável está nos commits e nas linhas de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-106 e a P-111 saíram no fechamento do item 48 (2026-11-02)**, o primeiro depois do item 49 que não as removeu; o item 47 as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

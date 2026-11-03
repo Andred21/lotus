@@ -40,6 +40,7 @@ describe('QuotesList — envio de arquivo recusado', () => {
     const { container } = renderWithProviders(
       <QuotesList
         quotes={[COTACAO]}
+        canManageApproved={false}
         mode="active"
         archived={{ items: [], loading: false, error: null, refetch: () => undefined, restoring: false }}
         onRestore={() => {}}

@@ -144,7 +144,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
-| 2 | **50** `backend-ciclo-de-vida-da-cotacao` | Backend | Recusar cotação com turma em andamento hoje passa (achado 0.2) |
 | 3 | **51** `backend-contrato-de-entrada-dos-data` | Backend | Depende do 50 (`Budget`) |
 | 4 | **52** `backend-arquivo-recepcao-e-upload` | Backend | Recomendação principal do review; a P-107 tem revisão em 2026-11-07 |
 | 5 | **53** `backend-importacao-e-identidade-do-aluno` | Backend | Depende do 52 (Identity) |
@@ -244,30 +243,6 @@ está formalmente resolvida.
 > reemissível é pendência no Dashboard (48); a `D-34` e a `D-71` saem do item 9 para o 54 e o 49; a
 > P-51 vai inteira para o 51, e a marca de coleção só de entrada vai para o 53. **Não decidido:**
 > registrar "não adotar FormRequest nem Policy" em ADR — o João vai estudar o caso (55).
-
----
-
-## 50. `backend-ciclo-de-vida-da-cotacao`
-
-**Prioridade:** P1 · **Frente:** Backend (Commercial) · **Contexto:** não · **Depende:** —
-**Fonte:** card 5 e achados 0.2 e 0.5 do review de 2026-11-02; `P-49`.
-
-**Escopo:**
-- **Card 5.** As transições da cotação (aprovar, recusar, reabrir, arquivar) ganham um módulo dono,
-  que toma o lock da Quote, confere o estado de origem permitido e sabe se há turma. Hoje
-  `ApproveQuoteAction` e `RejectQuoteAction` fazem um `update` cru, sem guarda, sem transação e sem
-  lock, enquanto `CreateTurmaAction`/`RestoreTurmaAction` travam a mesma Quote.
-- **Achado 0.2, decidido pelo João:** é **proibido recusar uma cotação com turma já em andamento**.
-  As demais informações da cotação **continuam editáveis**, menos o status e o curso. O brainstorming
-  confirma a fronteira exata: "em andamento" pelo `display_status` da turma, ou qualquer turma viva.
-- **P-49, o eixo que resta (cotação × orçamento).** `RestoreQuoteAction` e `DeleteBudgetAction`
-  passam a travar os dois lados. Com isso a P-49 fecha inteira.
-- **Achado 0.5.** Os docblocks de `ArchiveRedatorAction:18-23` e `Turma.php:76-79` passam a dizer
-  que os escritores de filho tomam o lock do pai, como de fato tomam desde 2026-08-23
-  (`ParentLockOnChildWriteTest`).
-
-**DoD:** uma tabela de teste origem × verbo × turma prova cada transição. Recusar com turma em
-andamento dá 422, editar campo livre passa, e editar status ou curso recusa. A P-49 está fechada.
 
 ---
 

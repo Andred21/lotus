@@ -74,9 +74,11 @@ class Turma extends Model implements Auditable
                 // ENUMERA-E-APAGA, logo check-then-act: a transação da
                 // `DeleteTurmaAction` é que dá atomicidade a esta cascata.
                 // Não arquive turma por fora dela. O `lockRow` que ela toma
-                // serializa arquivar contra arquivar, mas os escritores de
-                // filho ainda não tomam o mesmo lock — a janela contra eles
-                // segue aberta (pendência P-47).
+                // serializa arquivar contra arquivar; contra os escritores de
+                // filho a janela está fechada desde 2026-08-23: eles tomam
+                // `Turma::lockForWrite()` (`EnrollStudentAction`,
+                // `StoreTurmaDocumentAction`), e o `ParentLockOnChildWriteTest`
+                // reprova escritor novo sem o lock (P-47).
                 //
                 // O pivot `turma_redator` fica FORA: não tem `deleted_at`, e
                 // designação não é registro com ciclo de vida próprio — desfazê-la

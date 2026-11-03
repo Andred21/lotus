@@ -7,65 +7,28 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
+## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
 
-**Bloco:** 49 · **Gatilho (original):** régua por estado no molde do `describe` da P-30, as cinco
-severidades passando 4,5:1.
+**Bloco:** 50 · **Gatilho (original):** bloco que tocar `RestoreQuoteAction` ou `DeleteBudgetAction` e puder travar os dois lados.
 
-**ENCERRADA em 2026-11-02, no `frontend-acessibilidade-e-respiro` (item 49), por mecanismo:** o
-`tone-ink.test.ts` cobre as cinco severidades × base/hover/active/foco × claro/escuro, e o gerador
-(`frontend/scripts/generate-brand-theme.mjs`, `SEVERIDADES_CLARAS`) pinta o botão filled com fundo
-claro e tinta escura. Medido no navegador pelo `prova.md` do bloco: o "Eliminar" do diálogo vai a
-`#ff8780` com tinta `#661814`, e o anel de foco é red-900.
+**ENCERRADA em 2026-11-03, no `backend-ciclo-de-vida-da-cotacao` (item 50), pelo próprio gatilho:** os eixos
+redator e turma já tinham fechado em 2026-08-23. O eixo que restava, cotação × orçamento, fechou com o
+lock do orçamento tomado dos dois lados e dentro da transação: `CreateQuoteAction` (`Budget::lockForWrite`),
+`DeleteBudgetAction` e `RestoreQuoteAction` (`Budget::lockRow`), na ordem D4 (orçamento antes da cotação),
+e criar cotação em orçamento arquivado dá 422. A prova é a catraca `BudgetQuoteLockTest`, que lê código:
+o sqlite da suíte não prova lock (`compileLock()` devolve string vazia), mesma ressalva da ficha. O
+resíduo é a **P-115** (Q-1, a decisão do no-op antes de reler a linha travada; Q-3, a catraca em lista fixa).
 
-## P-101 — o RUT quebra no hífen na tabela de alunos a 390 px
+## P-112 — cotação ligada a turma: só o valor UF fica editável, e a cotação ganha a tag do status da turma
 
-**Bloco:** 49 · **Gatilho (original):** primeiro bloco que tocar `EnrollmentTable.tsx` ou
-`ArchivedEnrollmentsList.tsx`.
+**Bloco:** 50 · **Gatilho (original):** brainstorming do 50.
 
-**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** o RUT ganhou `identifierClass` e a
-coluna ganhou a fatia local `RUT_MATRICULA` (`enrollmentColumns.ts`, preso por `enrollmentColumns.test.ts`).
-Medido a 390 px: uma linha, cabe na célula, nas duas tabelas (`prova.md`, P-101). O mesmo vazamento
-no `COL.rut` de alunos e clientes virou a **P-113**.
-
-## P-105 — a tinta `danger` do tema escuro reprova AA sobre o fundo de 15% do `AppTag`
-
-**Bloco:** 49 · **Gatilho (original):** bloco que tocar `--tone-danger-ink`.
-
-**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** `--tone-danger-ink` do escuro vai a
-`--red-300` (`brand-theme.css`), e o par `danger` × escuro deixou de ser pulado no `tone-ink.test.ts`.
-A tag "Rechazada" mede cerca de 5,5:1 (`prova.md`, P-105).
-
-## P-108 — em 1024, o RUT do cliente passa por baixo do "Agregar cotización"
-
-**Bloco:** 49 · **Gatilho (original):** bloco que tocar o cabeçalho do detalhe do orçamento.
-
-**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** a causa era o `DetailHeader`
-(`sm:flex-1` zerava a base do bloco do título). A linha ganhou `sm:flex-wrap`, o título
-`sm:min-w-min` e as ações `sm:ml-auto`. Em 1024 e 768 as interseções caíram de 1 para 0, e em 1280
-nada se moveu (`prova.md`, P-108; `DetailHeader.test.tsx`).
-
-## P-109 — o paginador das tabelas tem nomes acessíveis em inglês
-
-**Bloco:** 49 · **Gatilho (original):** bloco que tocar o `AppDataTable` ou o `pt` do paginador.
-
-**ENCERRADA em 2026-11-02, no item 49, pelo próprio gatilho:** o `paginatorTemplate` do
-`AppDataTable` põe `aria-label` do i18n (`common.paginatorPrev`, `paginatorPage`, `paginatorNext`)
-em anterior, página e seguinte, e o piso não se desliga pelo chamador. Medido na árvore
-de acessibilidade em es-CL e en: "Página anterior", "Página N", "Página siguiente" (`prova.md`, P-109;
-`AppDataTable.test.tsx`).
-
-## P-103 — a emissão do certificado decide a porta 2 e o snapshot fora da transação
-
-**Bloco:** 48 · **Gatilho (original):** primeiro bloco que tocar o `IssueCertificateAction`.
-
-**ENCERRADA em 2026-11-02, no `certificacao-estado-de-emissao` (item 48), por mecanismo:** o `IssueCertificateAction` relê a matrícula com `lockForUpdate` dentro da transação e decide a porta 2 e monta o snapshot sobre a leitura nova; a correção de resultado trava a mesma linha. Provado em MySQL pelo `EmissionResultRaceTest` (pulado em sqlite, não verde falso), que o item viu reprovar contra o código antigo.
-
-## P-104 — o diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado
-
-**Bloco:** 48 · **Gatilho (original):** o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`.
-
-**ENCERRADA em 2026-11-02, no item 48, pela decisão do João:** `operation.conclusion.confirmBody` e `operation.detail.lock.concluida` dizem o que de fato é irreversível, nos três locales (spec §5). **Resta o aceite do João** para a palavra "redator" no texto em inglês no lugar do "instructor" do literal, que o `copy.test.ts` UI-05 proíbe (`rulings.md` do bloco).
+**ENCERRADA em 2026-11-03, no item 50, por mecanismo:** o `QuoteLifecycle` é o dono da matriz D2 (recusar com
+turma não arquivada dá 422, só o superadmin edita cotação aprovada, e com turma só o `value_uf`),
+provada pela tabela origem × verbo × turma × papel do `QuoteTransitionMatrixTest`; o `QuoteData` carrega
+`turma_status` sem N+1 (`QuoteTurmaStatusTest`, `generated.ts` regenerado) e a tag "Turma:" aparece na
+`QuoteRow` e na tabela de orçamentos. Provado também por curl contra a API real no stack da lane
+(recusar aprovada com turma em andamento, 422; `PUT` com `student_count` alterado, 422, dado intacto).
 
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
@@ -86,6 +49,8 @@ de acessibilidade em es-CL e en: "Página anterior", "Página N", "Página sigui
 > **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
 ## Rastro anterior, já removido
+
+**A P-74, a P-101, a P-103, a P-104, a P-105, a P-108 e a P-109 saíram no fechamento do `backend-ciclo-de-vida-da-cotacao` (item 50, 2026-11-03)**, o primeiro depois do item 49, que não as removeu. O item 48 encerrou a P-103 e a P-104, e o item 49 a P-74, a P-101, a P-105, a P-108 e a P-109, todas em 2026-11-02. O aceite do "redator" em inglês, que a P-104 deixou pendente, vive na P-116. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-106 e a P-111 saíram no fechamento do `certificacao-estado-de-emissao` (item 48, 2026-11-02)**, o primeiro depois do item 49 que não as removeu. O item 47 as encerrou em 2026-11-02: a P-106 por mecanismo (a lixeira do presupuesto confirma pelo `AppFileSlot`, medido no `prova.md` do bloco), a P-111 pelo próprio gatilho (o `AppSignatureSlot` na linha do `estrutura-monolito.md`, `debc6891`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

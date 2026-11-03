@@ -2,6 +2,7 @@
 
 namespace App\Domains\Operation\Actions;
 
+use App\Domains\Commercial\Enums\QuoteStatus;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
@@ -55,6 +56,14 @@ use Illuminate\Validation\ValidationException;
  * existente — ela está escrita para que, no dia em que turma concluída puder ser
  * arquivada, o gate não leve a emissão junto.
  *
+ * O TERCEIRO GATE (D10 da spec 50) confere a COTAÇÃO que a turma carrega. Recusar
+ * cotação aprovada cuja turma está arquivada é permitido (turma arquivada não é
+ * trabalho vivo), e a cotação ainda pode ter o curso trocado enquanto isso.
+ * Restaurar sem olhar devolveria uma turma viva sob cotação recusada ou sob
+ * outro curso — o par cotação/turma que o resto do sistema assume coerente.
+ * Por isso exige cotação APROVADA e `course_id` igual ao da turma, ambos lidos
+ * sob o `Quote::lockRow()` já tomado.
+ *
  * Contraste que vale registrar: `seq_in_budget` da cotação NÃO tem o problema do
  * primeiro gate, porque `CreateQuoteAction` deriva com
  * `Quote::withTrashed()->max(...) + 1`. A D4 do molde ("conflito de unicidade
@@ -80,6 +89,18 @@ class RestoreTurmaAction
             if ($cotacao->turma()->exists()) {
                 throw ValidationException::withMessages([
                     'turma' => __('operation.turma.restore_conflict'),
+                ]);
+            }
+
+            if ($cotacao->status !== QuoteStatus::Approved) {
+                throw ValidationException::withMessages([
+                    'turma' => __('operation.turma.restore_quote_not_approved'),
+                ]);
+            }
+
+            if ($cotacao->course_id !== $locked->course_id) {
+                throw ValidationException::withMessages([
+                    'turma' => __('operation.turma.restore_course_changed'),
                 ]);
             }
 

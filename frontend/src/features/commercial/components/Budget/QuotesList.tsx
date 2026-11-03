@@ -9,10 +9,11 @@ import { QuoteRow } from './QuoteRow'
 import { ArchivedQuotesList, type QuoteRow as ArchivedRow } from './ArchivedQuotesList'
 
 export function QuotesList({
-  quotes, onEdit, onRemove, onApprove, onReject,
+  quotes, canManageApproved, onEdit, onRemove, onApprove, onReject,
   mode, archived, onRestore,
 }: {
   quotes: QuoteData[]
+  canManageApproved: boolean
   onEdit?: (q: QuoteData) => void
   onRemove?: (q: QuoteData) => void
   onApprove?: (q: QuoteData) => void
@@ -98,6 +99,7 @@ export function QuotesList({
             striped={i % 2 === 1}
             courseName={courses.courseName(q.course_id)}
             uploading={files.isUploading(q.id!)}
+            canManageApproved={canManageApproved}
             onEdit={onEdit ? () => onEdit(q) : undefined}
             onRemove={onRemove ? () => onRemove(q) : undefined}
             onApprove={onApprove ? () => onApprove(q) : undefined}

@@ -7,12 +7,13 @@ import { QuotesList } from './QuotesList'
  * arquivados, D-59) + lista. Extraído da `BudgetDetailPage` só para caber na
  * régua de 150 linhas — nenhuma condicional muda de forma. */
 export function BudgetQuotesCard({
-  title, count, quotes, quotesArchived, onEdit, onRemove, onApprove, onReject,
+  title, count, quotes, quotesArchived, canManageApproved, onEdit, onRemove, onApprove, onReject,
 }: {
   title: string
   count: number
   quotes: QuoteData[]
   quotesArchived: ReturnType<typeof useBudgetQuotesArchived>
+  canManageApproved: boolean
   onEdit: (q: QuoteData) => void
   onRemove: (q: QuoteData) => void
   onApprove?: (q: QuoteData) => void
@@ -27,6 +28,7 @@ export function BudgetQuotesCard({
       />
       <QuotesList
         quotes={quotes}
+        canManageApproved={canManageApproved}
         onEdit={onEdit}
         onRemove={onRemove}
         onApprove={onApprove}
