@@ -101,7 +101,13 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
             * para baixo do "Agregar cotización". `sm:min-w-min` para o encolhimento
             * no conteúdo mínimo, e o `sm:flex-wrap` da linha leva tag e ações para
             * a linha de baixo quando nem isso cabe. Abaixo do `sm` a linha é
-            * coluna e o `min-w-0` segue valendo. */}
+            * coluna e o `min-w-0` segue valendo.
+            *
+            * Review final do bloco 49: o `sm:flex-1` só empurra à direita o que
+            * está na MESMA linha do título; na quebra, as ações desciam alinhadas
+            * à esquerda (medido em 1024 no orçamento). `sm:ml-auto` no slot
+            * `actions` as leva à direita na linha 2; sem quebra o título `flex-1`
+            * já consumiu o espaço livre e a margem auto vale zero — nada muda. */}
           <div className="min-w-0 sm:min-w-min sm:flex-1">
             {/* Mesma grafia e mesma margem do `PageHeader`: título de página é
               * um papel só, e sair em duas vozes fazia a tela mudar de voz ao
@@ -124,7 +130,7 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
             <div className="flex flex-wrap items-center gap-2 sm:contents">
               {tags && <div className="flex flex-wrap items-center gap-2 sm:shrink-0">{tags}</div>}
               {actions && (
-                <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:self-center">{actions}</div>
+                <div className="flex flex-wrap items-center gap-2 sm:ml-auto sm:shrink-0 sm:self-center">{actions}</div>
               )}
             </div>
           )}

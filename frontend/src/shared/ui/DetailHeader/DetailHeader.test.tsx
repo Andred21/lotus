@@ -144,6 +144,21 @@ describe('alinhamento do bloco da direita', () => {
     expect(bloco?.className).toContain('sm:min-w-min')
     expect(bloco?.parentElement?.className).toContain('sm:flex-wrap')
   })
+
+  /**
+   * Review final do bloco 49: quando a linha quebra, o bloco de ações desce para
+   * a linha 2 e, sem margem, ficava à ESQUERDA — o `sm:flex-1` do título só
+   * empurra o que está na mesma linha. `sm:ml-auto` o leva à direita; sem quebra
+   * o título `flex-1` já come o espaço e a margem auto recebe zero.
+   */
+  it('as acoes vao para a direita quando descem para a linha de baixo', () => {
+    const { container } = render(
+      <DetailHeader title="Presupuesto 12" subtitle="RUT 76.123.456-0" actions={<button>Editar</button>} />,
+    )
+    const acoes = container.querySelector('button')?.parentElement
+
+    expect(acoes?.className).toContain('sm:ml-auto')
+  })
 })
 
 /**
