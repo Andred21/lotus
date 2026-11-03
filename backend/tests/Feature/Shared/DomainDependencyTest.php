@@ -66,7 +66,7 @@ class DomainDependencyTest extends TestCase
         // O bloco 54 acrescenta TurmaDisplayStatus: OperationMetricsQuery conta
         // `conclusoes_por_confirmar` pelo `whereDisplayStatus(Habilitada)` do
         // builder de Turma, a mesma pergunta da lista, em vez de reavaliá-la.
-        // A Task 5 acrescenta TurmaRequirement: a linha de compliance publica
+        // O bloco 54 (Task 5) acrescenta TurmaRequirement: a linha de compliance publica
         // os requisitos faltantes que o VO de habilitação já responde.
         // As próximas tasks só acrescentam o que seus `use` efetivamente
         // medirem — a lista do plano é indicativa e já errou nos dois sentidos.

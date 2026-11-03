@@ -248,20 +248,42 @@ class OperationMetricsQueryTest extends TestCase
         [$budget, $course] = $this->cenarioBase();
         $hoje = CarbonImmutable::today();
 
-        $this->createTurma(
+        $redatorUser = User::create([
+            'name' => 'Redator Concluida',
+            'rut' => '12.345.678-5',
+            'email' => 'redator-concluida@example.test',
+            'password' => 'secret',
+            'type' => 'redator',
+            'is_active' => true,
+        ]);
+        $redator = Redator::create(['user_id' => $redatorUser->id]);
+
+        // Documentação completa e redator: se o status `concluida` não a
+        // tirasse da conta, ela seria a "habilitada" que o KPI de conclusões
+        // por confirmar procura. Sem documentos nem redator o zero sairia de
+        // qualquer jeito, e o teste não provaria nada sobre o status.
+        $concluida = $this->createTurma(
             $this->createApprovedQuote($budget, $course, 1),
             $course,
             $hoje->addDays(5),
             $hoje->addDays(8),
             TurmaStatus::Concluida,
         );
+        $concluida->redatores()->attach($redator->id);
+        foreach (TurmaDocumentType::cases() as $type) {
+            $this->createDocument($concluida, $type);
+        }
 
         $query = app(OperationMetricsQuery::class);
-        $kpis = $query->kpis();
 
         $this->assertSame([], $query->agenda()->toArray()['starting_soon']);
-        $this->assertSame(0, $kpis['em_andamento']);
-        $this->assertSame(0, $kpis['iniciadas']);
+        $this->assertSame([
+            'em_andamento' => 0,
+            'iniciadas' => 0,
+            'encerrando' => 0,
+            'atrasadas' => 0,
+            'conclusoes_por_confirmar' => 0,
+        ], $query->kpis());
     }
 
     public function test_compliance_lista_requisitos_faltantes(): void

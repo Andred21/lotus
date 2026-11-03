@@ -28,9 +28,12 @@ class AnalyticsQuery
      * muda aqui é não pagar a leitura para depois anular o campo (Q-9).
      *
      * `$start` e `$end` são DIAS do cliente (`DashboardFilterData`). Coluna
-     * `date` (`start_date`) compara com eles direto; instante (`created_at`,
-     * `approved_at`, `concluded_at`) compara com os instantes em que esses dias
-     * começam e terminam em Santiago, e cai no balde do mês de Santiago.
+     * `date` (`start_date`) compara com eles pelo literal de `DataSql::literal`,
+     * não pelo `Y-m-d` cru: no sqlite a coluna guarda `Y-m-d 00:00:00` e a
+     * comparação é textual, então o limite em `Y-m-d` deixava o último dia de
+     * fora (P-85). Instante (`created_at`, `approved_at`, `concluded_at`)
+     * compara com os instantes em que esses dias começam e terminam em
+     * Santiago, e cai no balde do mês de Santiago.
      * Limite e balde mudam juntos — só um dos dois põe linha no mês errado ou
      * fora do período (review Q-1 do item 29).
      */

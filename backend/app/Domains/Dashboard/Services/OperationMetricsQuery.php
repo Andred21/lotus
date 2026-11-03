@@ -111,7 +111,7 @@ class OperationMetricsQuery
         foreach ($this->turmasEmAndamento() as $turma) {
             $status = $this->habilitacao->for($turma);
 
-            if ($turma->redatores->isEmpty()) {
+            if (in_array(TurmaRequirement::Redator, $status->missingRequirements(), true)) {
                 $pendencias[] = $this->pendingItem(
                     $turma,
                     PendingItemType::TurmaWithoutRedator,

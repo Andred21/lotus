@@ -166,6 +166,35 @@ class DashboardEndpointTest extends TestCase
         ], $response->json('rankings.clients'));
     }
 
+    /**
+     * Critério 3: o card `turmas_em_andamento` conta só as turmas que JÁ
+     * começaram (`iniciadas`); o estágio `turma_in_progress` do funil conta as
+     * futuras também (`em_andamento`, o total). A turma que começa em 10 dias
+     * é o exemplar que separa os dois números — sem ela, a troca de um pelo
+     * outro em `PipelineQuery` passa em branco.
+     */
+    public function test_turma_futura_fica_fora_do_card_e_dentro_do_estagio_em_andamento_do_funil(): void
+    {
+        $this->actingAsAdmin();
+        $cenario = $this->cenarioRico();
+        $client = Client::findOrFail($cenario['client']);
+        $alpha = Course::findOrFail($cenario['alpha']);
+
+        // Hoje é 2026-08-14: começa em 10 dias, status já `em_andamento`.
+        $this->makeTurma($client, $alpha, TurmaStatus::EmAndamento, '2026-08-24', '2026-08-30', '100.0000', '2026-08-10');
+
+        $response = $this->getJson(self::ENDPOINT)->assertOk();
+
+        // T1 e T3 começaram; a futura não entra no card.
+        $this->assertSame(2, $response->json('kpis.turmas_em_andamento'));
+
+        $pipeline = collect($response->json('pipeline'))
+            ->mapWithKeys(fn (array $row): array => [$row['stage'] => $row['count']])
+            ->all();
+        // T1, T3 e a futura: o funil conta a turma desde que ela existe.
+        $this->assertSame(3, $pipeline['turma_in_progress']);
+    }
+
     // ---------------------------------------------------------------- (2)
 
     public function test_admin_sem_gate_comercial_nao_recebe_nenhum_valor_de_uf(): void
