@@ -4,6 +4,7 @@ namespace App\Domains\Operation\Actions;
 
 use App\Domains\Identity\Enums\StudentResolutionOutcome;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Data\ImportConfirmData;
 use App\Domains\Operation\Data\ImportConfirmRowData;
@@ -134,14 +135,24 @@ class ImportStudentsAction
         if (! $lookup->exists) {
             // `update_registration` em aluno inexistente é ignorada (D13): o
             // aluno nasce com os dados da linha.
-            $this->resolver->assertCanCreate($line->rut, $line->name, $email, $phone);
+            $identity = $this->resolver->identity($line->rut, $line->name, $email, $phone);
+            $this->resolver->assertCanCreate($identity);
             $this->claimEmail($ledger, $email);
 
-            return $this->enroll->execute($turma, $line->rut, $line->name, $email, $phone);
+            return $this->enroll->execute($turma, $identity);
         }
 
+        $student = $lookup->student;
+
         if (! $line->update_registration) {
-            return $this->enroll->execute($turma, $line->rut, $line->name, $email, $phone);
+            // Os valores da planilha não são gravados: a matrícula segue com a
+            // identidade do cadastro, sem julgar a forma do que não vai ao banco.
+            return $this->enroll->execute($turma, new StudentIdentity(
+                $student->user->rut,
+                $student->user->name,
+                $student->user->email,
+                $student->user->phone,
+            ));
         }
 
         // Atualizar o cadastro exige a permissão de editar aluno, mesmo que a
@@ -152,8 +163,6 @@ class ImportStudentsAction
             ]);
         }
 
-        $student = $lookup->student;
-
         // O e-mail repetido recusa ANTES de qualquer escrita (D18).
         $this->claimEmail($ledger, $email);
 
@@ -161,9 +170,10 @@ class ImportStudentsAction
         // fica. A validação e a escrita do cadastro moram no `StudentResolver`
         // (fonte única, D10).
         return DB::transaction(function () use ($turma, $student, $line, $email, $phone) {
-            $this->resolver->updateRegistration($student, $line->name, $email, $phone);
+            $identity = $this->resolver->updatedIdentity($student, $line->name, $email, $phone);
+            $this->resolver->updateRegistration($student, $identity);
 
-            return $this->enroll->execute($turma, $line->rut, $line->name, $email, $phone);
+            return $this->enroll->execute($turma, $identity);
         });
     }
 

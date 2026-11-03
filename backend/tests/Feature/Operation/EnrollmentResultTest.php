@@ -5,6 +5,7 @@ namespace Tests\Feature\Operation;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Actions\RecordEnrollmentResultAction;
 use App\Domains\Operation\Data\EnrollmentResultData;
@@ -56,12 +57,7 @@ class EnrollmentResultTest extends TestCase
             'status' => TurmaStatus::EmAndamento,
         ]);
         $this->enrollment = app(EnrollStudentAction::class)->execute(
-            $this->turma,
-            '11.111.111-1',
-            'Juan Soto',
-            'juan@acme.cl',
-            null,
-        )->enrollment;
+            $this->turma, new StudentIdentity('11.111.111-1', 'Juan Soto', 'juan@acme.cl', null))->enrollment;
     }
 
     public function test_admin_registra_resultado_academico(): void
@@ -110,12 +106,7 @@ class EnrollmentResultTest extends TestCase
 
         // Segunda matrícula só para o hydrate() abaixo vir com >1 linha.
         app(EnrollStudentAction::class)->execute(
-            $this->turma,
-            '22.222.222-2',
-            'Pedro Diaz',
-            'pedro@acme.cl',
-            null,
-        );
+            $this->turma, new StudentIdentity('22.222.222-2', 'Pedro Diaz', 'pedro@acme.cl', null));
 
         $enrollment = Enrollment::query()->get()->firstWhere('id', $this->enrollment->id);
 

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Operation\Actions;
 
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
@@ -17,11 +18,11 @@ class EnrollStudentAction
 {
     public function __construct(private readonly StudentResolver $resolver) {}
 
-    public function execute(Turma $turma, string $rut, string $name, ?string $email, ?string $phone): EnrollOutcome
+    public function execute(Turma $turma, StudentIdentity $identity): EnrollOutcome
     {
         $turma->assertAcademicallyWritable();
 
-        return DB::transaction(function () use ($turma, $rut, $name, $email, $phone) {
+        return DB::transaction(function () use ($turma, $identity) {
             // Mutex do pai ANTES de qualquer escrita (P-49): a cascata de
             // `DeleteTurmaAction` enumera e apaga `enrollments`, e sem este lock
             // uma matrícula criada na janela sobrevive ATIVA sob turma
@@ -30,7 +31,7 @@ class EnrollStudentAction
             Turma::lockForWrite($turma->id);
 
             $client = $turma->contratanteClient(); // RF-TUR-03: cliente da cotação
-            $resolution = $this->resolver->resolveByRut($rut, $name, $email, $phone, $client);
+            $resolution = $this->resolver->resolveByRut($identity, $client);
 
             $enrollment = Enrollment::withTrashed()
                 ->where('turma_id', $turma->id)

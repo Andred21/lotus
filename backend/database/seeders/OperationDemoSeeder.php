@@ -21,6 +21,7 @@ use App\Domains\Identity\Data\RedatorData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Operation\Actions\ConcludeTurmaAction;
 use App\Domains\Operation\Actions\CreateTurmaAction;
 use App\Domains\Operation\Actions\DesignateRedatorAction;
@@ -533,13 +534,12 @@ class OperationDemoSeeder extends Seeder
             $name = self::STUDENT_FIRST_NAMES[$index % count(self::STUDENT_FIRST_NAMES)]
                 .' '.self::STUDENT_LAST_NAMES[$index % count(self::STUDENT_LAST_NAMES)];
 
-            $enrollments[] = $enroll->execute(
-                $turma,
+            $enrollments[] = $enroll->execute($turma, new StudentIdentity(
                 $this->rut(self::STUDENT_RUT_BASE + $index),
                 $name,
                 $this->email($name, $domain),
                 $this->phone(self::STUDENT_RUT_BASE + $index),
-            )->enrollment;
+            ))->enrollment;
         }
 
         // approval_status direto no model: o endpoint de resultado acadêmico é

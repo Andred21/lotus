@@ -131,12 +131,13 @@ class ComputedKeyInBodyTest extends TestCase
     }
 
     /**
-     * `EnrollmentData` não tem rota PUT própria — `turmas/{turma}/alunos/
-     * {enrollment}/resultado` usa `EnrollmentResultData`, um DTO diferente sem
-     * `photo_url`. A ÚNICA porta HTTP que hidrata `EnrollmentData` do corpo é
-     * o `store` (matrícula individual), por isso o teste é POST, não PUT — a
-     * regra é a mesma (`ComputedFields::rejected('photo_url')` no `rules()`),
-     * só a rota real é diferente das outras três.
+     * `EnrollmentData` é só de saída — a entrada da matrícula individual é o
+     * `EnrollStudentData`, e `turmas/{turma}/alunos/{enrollment}/resultado` usa
+     * `EnrollmentResultData`, um DTO diferente sem `photo_url`. A ÚNICA porta
+     * HTTP que leva `photo_url` no corpo da matrícula é o `store`, por isso o
+     * teste é POST, não PUT — a regra é a mesma
+     * (`ComputedFields::rejected('photo_url')` no `rules()` do
+     * `EnrollStudentData`), só a rota real é diferente das outras três.
      */
     public function test_photo_url_no_corpo_da_matricula_e_422(): void
     {

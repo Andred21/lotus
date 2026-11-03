@@ -5,6 +5,7 @@ namespace Tests\Feature\Operation;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Enums\StudentResolutionOutcome;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
@@ -47,7 +48,7 @@ class EnrollStudentActionTest extends TestCase
 
     public function test_rut_novo_cria_aluno_vinculo_e_matricula(): void
     {
-        $outcome = $this->action()->execute($this->turma, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', null);
+        $outcome = $this->action()->execute($this->turma, new StudentIdentity('11.111.111-1', 'Juan Soto', 'juan@acme.cl', null));
 
         $this->assertSame(StudentResolutionOutcome::Created, $outcome->resolution->outcome);
         $this->assertFalse($outcome->alreadyEnrolled);
@@ -59,8 +60,8 @@ class EnrollStudentActionTest extends TestCase
 
     public function test_repetido_e_idempotente_already_enrolled(): void
     {
-        $this->action()->execute($this->turma, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', null);
-        $outcome = $this->action()->execute($this->turma, '11.111.111-1', 'Juan Soto', null, null);
+        $this->action()->execute($this->turma, new StudentIdentity('11.111.111-1', 'Juan Soto', 'juan@acme.cl', null));
+        $outcome = $this->action()->execute($this->turma, new StudentIdentity('11.111.111-1', 'Juan Soto', null, null));
 
         $this->assertTrue($outcome->alreadyEnrolled);
         $this->assertSame(1, $this->turma->enrollments()->count());
@@ -71,15 +72,15 @@ class EnrollStudentActionTest extends TestCase
         $this->turma->update(['status' => TurmaStatus::Concluida]);
 
         $this->expectException(ValidationException::class);
-        $this->action()->execute($this->turma, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', null);
+        $this->action()->execute($this->turma, new StudentIdentity('11.111.111-1', 'Juan Soto', 'juan@acme.cl', null));
     }
 
     public function test_rematricula_restaura_o_mesmo_registro(): void
     {
-        $first = $this->action()->execute($this->turma, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', null);
+        $first = $this->action()->execute($this->turma, new StudentIdentity('11.111.111-1', 'Juan Soto', 'juan@acme.cl', null));
         $first->enrollment->delete(); // remoção (soft)
 
-        $again = $this->action()->execute($this->turma, '11.111.111-1', 'Juan Soto', null, null);
+        $again = $this->action()->execute($this->turma, new StudentIdentity('11.111.111-1', 'Juan Soto', null, null));
 
         $this->assertSame($first->enrollment->id, $again->enrollment->id);
         $this->assertNull($again->enrollment->fresh()->deleted_at);

@@ -6,6 +6,7 @@ use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Enums\TurmaModalidade;
 use App\Domains\Operation\Enums\TurmaStatus;
@@ -77,7 +78,7 @@ class ImportConfirmApiTest extends TestCase
     {
         $this->actingAsAdmin();
         $student = app(StudentResolver::class)
-            ->resolveByRut('44.444.444-4', 'Ana Mora', 'ana@otra.cl', null, $this->otherClient)->student;
+            ->resolveByRut(new StudentIdentity('44.444.444-4', 'Ana Mora', 'ana@otra.cl', null), $this->otherClient)->student;
 
         $this->confirmar(['rows' => [$this->linha([
             'row' => 2, 'rut' => '44.444.444-4', 'name' => 'Ana Mora', 'email' => null,
@@ -147,7 +148,7 @@ class ImportConfirmApiTest extends TestCase
     {
         $this->actingAsAdmin();
         app(StudentResolver::class)
-            ->resolveByRut('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null, $this->client);
+            ->resolveByRut(new StudentIdentity('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null), $this->client);
 
         $this->confirmar(['rows' => [
             $this->linha([
@@ -202,7 +203,7 @@ class ImportConfirmApiTest extends TestCase
     {
         $this->seed(RolePermissionSeeder::class);
         $app = app(StudentResolver::class);
-        $app->resolveByRut('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null, $this->client);
+        $app->resolveByRut(new StudentIdentity('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null), $this->client);
         $operador = User::factory()->create(['type' => 'admin', 'is_active' => true]);
         $operador->givePermissionTo('operation.enrollment.manage');
         $this->actingAs($operador, 'web');

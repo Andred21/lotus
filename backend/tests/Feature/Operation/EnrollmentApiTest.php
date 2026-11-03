@@ -66,6 +66,17 @@ class EnrollmentApiTest extends TestCase
         ])->assertStatus(422);
     }
 
+    public function test_store_com_email_malformado_devolve_422_do_campo(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson("/api/turmas/{$this->turma->id}/alunos", [
+            'rut' => '11.111.111-1', 'name' => 'Juan Soto', 'email' => 'sem-arroba',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('email');
+    }
+
     public function test_import_endpoint_retorna_resumo(): void
     {
         $this->actingAsAdmin();

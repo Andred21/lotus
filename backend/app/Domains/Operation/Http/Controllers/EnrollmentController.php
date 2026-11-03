@@ -12,6 +12,7 @@ use App\Domains\Operation\Data\ArchivedEnrollmentData;
 use App\Domains\Operation\Data\EnrollmentData;
 use App\Domains\Operation\Data\EnrollmentResultData;
 use App\Domains\Operation\Data\EnrollPreviewData;
+use App\Domains\Operation\Data\EnrollStudentData;
 use App\Domains\Operation\Data\ImportConfirmData;
 use App\Domains\Operation\Data\ImportSpreadsheetData;
 use App\Domains\Operation\Models\Enrollment;
@@ -84,9 +85,9 @@ class EnrollmentController extends Controller implements HasMiddleware
         );
     }
 
-    public function store(EnrollmentData $data, Turma $turma, EnrollStudentAction $action): JsonResponse
+    public function store(EnrollStudentData $data, Turma $turma, EnrollStudentAction $action): JsonResponse
     {
-        $outcome = $action->execute($turma, $data->rut, $data->name, $data->email, $data->phone);
+        $outcome = $action->execute($turma, $data->identity());
 
         return EnrollmentData::fromModel($outcome->enrollment->loadListingData())
             ->toResponse(request())

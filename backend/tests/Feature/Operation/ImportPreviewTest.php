@@ -7,6 +7,7 @@ use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Actions\EnrollStudentAction;
 use App\Domains\Operation\Enums\TurmaModalidade;
@@ -54,7 +55,7 @@ class ImportPreviewTest extends TestCase
     private function aluno(string $rut, string $name, string $email, ?string $phone, ?Client $client = null): Student
     {
         return app(StudentResolver::class)
-            ->resolveByRut($rut, $name, $email, $phone, $client ?? $this->client)->student;
+            ->resolveByRut(new StudentIdentity($rut, $name, $email, $phone), $client ?? $this->client)->student;
     }
 
     private function xlsx(array $rows): UploadedFile
@@ -109,7 +110,7 @@ class ImportPreviewTest extends TestCase
         $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', null);
         $this->aluno('44.444.444-4', 'Ana Mora', 'ana@otra.cl', null, $this->otherClient);
         $matriculado = $this->aluno('55.555.555-5', 'Rosa Vera', 'rosa@acme.cl', null);
-        app(EnrollStudentAction::class)->execute($this->turma, '55.555.555-5', 'Rosa Vera', null, null);
+        app(EnrollStudentAction::class)->execute($this->turma, new StudentIdentity('55.555.555-5', 'Rosa Vera', null, null));
 
         $response = $this->previa([
             ['11.111.111-1', 'Juan Soto', 'juan@acme.cl', ''],

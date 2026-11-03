@@ -66,7 +66,9 @@ class ImportPreviewService
 
             // 4. Aluno novo: as regras do ramo de criação, sem escrita.
             if (! $lookup->exists) {
-                $this->resolver->assertCanCreate($line['rut'], $line['name'], $line['email'], $line['phone']);
+                $this->resolver->assertCanCreate(
+                    $this->resolver->identity($line['rut'], $line['name'], $line['email'], $line['phone']),
+                );
 
                 if (($duplicado = $ledger->claimEmail($line['email'])) !== null) {
                     return $this->row($line, ImportRowStatus::Error, $duplicado);

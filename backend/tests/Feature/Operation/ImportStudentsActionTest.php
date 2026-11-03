@@ -7,6 +7,7 @@ use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\User;
+use App\Domains\Identity\Services\StudentIdentity;
 use App\Domains\Identity\Services\StudentResolver;
 use App\Domains\Operation\Actions\ImportStudentsAction;
 use App\Domains\Operation\Data\ImportConfirmData;
@@ -81,7 +82,7 @@ class ImportStudentsActionTest extends TestCase
     private function aluno(string $rut, string $name, string $email, ?string $phone = null, ?Client $client = null): Student
     {
         return app(StudentResolver::class)
-            ->resolveByRut($rut, $name, $email, $phone, $client ?? $this->client)->student;
+            ->resolveByRut(new StudentIdentity($rut, $name, $email, $phone), $client ?? $this->client)->student;
     }
 
     private function semPermissaoDeEdicao(): User

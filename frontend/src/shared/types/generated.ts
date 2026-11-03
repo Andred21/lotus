@@ -273,6 +273,12 @@ current_client: string | null,
 will_move: boolean,
 previous_client: string | null,
 };
+export type EnrollStudentData = {
+rut: string,
+name: string,
+email: string | null,
+phone: string | null,
+};
 export type EnrollmentApprovalStatus = 'pendiente' | 'aprobado' | 'reprobado';
 export type EnrollmentData = {
 id: undefined | number,
