@@ -2,10 +2,11 @@ import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState, AppLineChart } from '@shared/ui'
 import type { ChartSeries } from '@shared/ui'
 import { formatMonthYear, formatUf } from '@shared/lib'
-import type { SeriesData } from '@shared/types/generated'
+import type { DashboardVisibilityData, SeriesData } from '@shared/types/generated'
 
 /** As 4 séries de CONTAGEM, na ordem do ciclo: a turma começa, termina, o aluno
- * se matricula e o certificado sai.
+ * se matricula e o certificado sai — cada uma com o módulo de que ela lê, que é
+ * o que decide se aparece (D8).
  *
  * `as const` e não `(keyof SeriesData)[]`: tipada pela chave inteira, o
  * elemento alarga para `MonthlyCountData[] | MonthlyAmountData[] | null` e o
@@ -13,7 +14,12 @@ import type { SeriesData } from '@shared/types/generated'
  * literais, `series[chave]` é `MonthlyCountData[] | null` — um tipo só, e
  * `p.count` existe sem guarda. Guarda que nunca dispara é ramo órfão, e o
  * review do B1 matou três. */
-const CONTAGENS = ['turmas_iniciadas', 'turmas_concluidas', 'matriculas', 'certificados_emitidos'] as const
+const CONTAGENS = [
+  { chave: 'turmas_iniciadas', modulo: 'operation' },
+  { chave: 'turmas_concluidas', modulo: 'operation' },
+  { chave: 'matriculas', modulo: 'operation' },
+  { chave: 'certificados_emitidos', modulo: 'certification' },
+] as const
 
 /** `YYYY-MM` -> "ago 2026". O backend projeta o mês em `Y-m`
  * (`AnalyticsQuery.php:230`); `formatMonthYear` ancora ao meio-dia para o fuso
@@ -21,10 +27,11 @@ const CONTAGENS = ['turmas_iniciadas', 'turmas_concluidas', 'matriculas', 'certi
 const mes = (x: string) => formatMonthYear(`${x}-01`)
 
 /**
- * As 5 séries mensais. Série nula SOME — do gráfico e da legenda (D7): o
- * backend manda `null` no que o papel não pode ler, e desenhar uma linha em
- * zero afirmaria "não aconteceu nada" onde a verdade é "não se pode saber".
- * Mesmo molde da D6 do B1: uma tela, uma gramática de ausência.
+ * As 5 séries mensais. Série de módulo fechado SOME — do gráfico e da legenda
+ * (D7): desenhar uma linha em zero afirmaria "não aconteceu nada" onde a
+ * verdade é "não se pode saber". Quem decide é a visibilidade que o backend
+ * manda por módulo (D8); o `null` da série só estreita o tipo. Mesmo molde da
+ * D6 do B1: uma tela, uma gramática de ausência.
  *
  * Dois gráficos porque são duas UNIDADES: as quatro contagens são inteiros e
  * dividem o eixo; `uf_aprovada` é decimal em UF, e no mesmo eixo uma das duas
@@ -35,12 +42,12 @@ const mes = (x: string) => formatMonthYear(`${x}-01`)
  * ser número (é geometria), e é a única conversão: o rótulo do tooltip e do
  * eixo volta pelo formatador.
  */
-export function SeriesPanel({ series }: { series: SeriesData }) {
+export function SeriesPanel({ series, visibility }: { series: SeriesData; visibility: DashboardVisibilityData }) {
   const { t } = useTranslation()
 
-  const contagens: ChartSeries[] = CONTAGENS.flatMap((chave) => {
+  const contagens: ChartSeries[] = CONTAGENS.flatMap(({ chave, modulo }) => {
     const pontos = series[chave]
-    if (pontos === null) return []
+    if (!visibility[modulo] || pontos === null) return []
     return [
       {
         key: chave,
@@ -51,7 +58,7 @@ export function SeriesPanel({ series }: { series: SeriesData }) {
   })
 
   const uf: ChartSeries[] =
-    series.uf_aprovada === null
+    !visibility.commercial || series.uf_aprovada === null
       ? []
       : [
           {
@@ -61,7 +68,7 @@ export function SeriesPanel({ series }: { series: SeriesData }) {
           },
         ]
 
-  // Todas as 5 fechadas por gate: a seção inteira some, sem card vazio (D7).
+  // Os três módulos fechados (ou nenhuma série legível): a seção inteira some, sem card vazio (D7).
   if (contagens.length === 0 && uf.length === 0) return null
 
   return (

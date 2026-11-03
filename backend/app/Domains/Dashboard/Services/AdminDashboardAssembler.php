@@ -7,6 +7,7 @@ use App\Domains\Dashboard\Data\AdminKpisData;
 use App\Domains\Dashboard\Data\AgendaTurmaData;
 use App\Domains\Dashboard\Data\AlertData;
 use App\Domains\Dashboard\Data\DashboardFilterData;
+use App\Domains\Dashboard\Data\DashboardVisibilityData;
 use App\Domains\Dashboard\Data\QuoteKpisData;
 use App\Domains\Dashboard\Data\RankingsData;
 use App\Domains\Dashboard\Data\SeriesData;
@@ -17,6 +18,10 @@ use Carbon\CarbonImmutable;
 
 /**
  * Monta o payload do admin aplicando os gates por seção (D7).
+ *
+ * Os quatro gates saem de `DashboardVisibilityData::forUser()`, montado uma vez
+ * e devolvido no payload (`visibility`, D8): a mesma decisão que o assembler
+ * usa para consultar é a que o front usa para mostrar.
  *
  * Nenhuma permissão nova nasce aqui: o dashboard reusa as cinco permissões de
  * leitura que já existem no `PermissionCatalog`. Quem não pode ver cotação na
@@ -53,41 +58,36 @@ class AdminDashboardAssembler
 
     public function assemble(User $user, DashboardFilterData $filter): AdminDashboardData
     {
-        $canOperation = $user->can('operation.turma.view');
-        // Cotação sem orçamento não existe: o KPI de UF pendente soma valor de
-        // cotação dentro de orçamento, então as duas permissões andam juntas.
-        $canCommercial = $user->can('commercial.quote.view')
-            && $user->can('commercial.budget.view');
-        $canCertification = $user->can('certification.certificate.view');
-        $canIdentity = $user->can('identity.user.view');
+        $v = DashboardVisibilityData::forUser($user);
 
         $start = $filter->start();
         $end = $filter->end();
 
-        $agenda = $canOperation ? $this->operation->agenda() : null;
+        $agenda = $v->operation ? $this->operation->agenda() : null;
 
         // Cada agregação é consultada UMA vez e reusada por quem precisar dela.
         // O funil lia os mesmos três serviços por conta própria e refazia tudo
         // (Q-6); agora recebe pronto o que os KPIs e as pendências já apuraram.
-        $turmaKpis = $canOperation ? $this->operation->kpis() : null;
-        $quoteKpis = $canCommercial ? $this->commercial->quoteKpis() : null;
-        $commercialPendencias = $canCommercial ? $this->commercial->pendencias() : [];
-        $operationPendencias = $canOperation ? $this->operation->pendencias() : [];
-        $certificationPendencias = $canCertification ? $this->certification->pendencias() : [];
+        $turmaKpis = $v->operation ? $this->operation->kpis() : null;
+        $quoteKpis = $v->commercial ? $this->commercial->quoteKpis() : null;
+        $commercialPendencias = $v->commercial ? $this->commercial->pendencias() : [];
+        $operationPendencias = $v->operation ? $this->operation->pendencias() : [];
+        $certificationPendencias = $v->certification ? $this->certification->pendencias() : [];
 
         return new AdminDashboardData(
             view: 'admin',
-            kpis: $this->kpis($turmaKpis, $quoteKpis, $canCertification),
+            visibility: $v,
+            kpis: $this->kpis($turmaKpis, $quoteKpis, $v),
             pendencias: [
                 ...$commercialPendencias,
                 ...$operationPendencias,
                 ...$certificationPendencias,
             ],
-            alertas: $this->alertas($agenda?->overdue ?? [], $canCertification, $canIdentity),
+            alertas: $this->alertas($agenda?->overdue ?? [], $v),
             // O funil atravessa turma e certificado — sem uma das duas leituras
             // a partição de "concluída" mentiria, e etapa de funil errada é pior
             // que funil ausente.
-            pipeline: $canOperation && $canCertification
+            pipeline: $v->operation && $v->certification
                 ? $this->pipeline->stages(
                     turmaKpis: $turmaKpis,
                     certificationPendencias: $certificationPendencias,
@@ -96,12 +96,12 @@ class AdminDashboardAssembler
                 )
                 : null,
             agenda: $agenda,
-            compliance_turmas: $canOperation ? $this->operation->complianceTurmas() : null,
+            compliance_turmas: $v->operation ? $this->operation->complianceTurmas() : null,
             // Carga por redator: pessoa e documento são Identity, contagem de
             // turma é Operation. Lê dos dois, exige os dois.
-            redatores: $canIdentity && $canOperation ? $this->redatores->get() : null,
-            series: $this->series($start, $end, $canOperation, $canCommercial, $canCertification),
-            rankings: $this->rankings($start, $end, $canOperation, $canCommercial, $canCertification),
+            redatores: $v->identity && $v->operation ? $this->redatores->get() : null,
+            series: $this->series($start, $end, $v),
+            rankings: $this->rankings($start, $end, $v),
             period_start: $start->toDateString(),
             period_end: $end->toDateString(),
         );
@@ -114,7 +114,7 @@ class AdminDashboardAssembler
      *
      * @param  ?array{em_andamento:int, iniciadas:int, encerrando:int, atrasadas:int, conclusoes_por_confirmar:int}  $turmaKpis
      */
-    private function kpis(?array $turmaKpis, ?QuoteKpisData $quoteKpis, bool $canCertification): AdminKpisData
+    private function kpis(?array $turmaKpis, ?QuoteKpisData $quoteKpis, DashboardVisibilityData $v): AdminKpisData
     {
         return new AdminKpisData(
             // O card conta as que já começaram; o total (`em_andamento`) é do funil.
@@ -123,7 +123,7 @@ class AdminDashboardAssembler
             turmas_atrasadas: $turmaKpis['atrasadas'] ?? null,
             conclusoes_por_confirmar: $turmaKpis['conclusoes_por_confirmar'] ?? null,
             cotacoes: $quoteKpis,
-            certificados_a_emitir: $canCertification ? $this->certification->certificadosAEmitir() : null,
+            certificados_a_emitir: $v->certification ? $this->certification->certificadosAEmitir() : null,
         );
     }
 
@@ -138,7 +138,7 @@ class AdminDashboardAssembler
      * @param  AgendaTurmaData[]  $overdue
      * @return AlertData[]
      */
-    private function alertas(array $overdue, bool $canCertification, bool $canIdentity): array
+    private function alertas(array $overdue, DashboardVisibilityData $v): array
     {
         $alertas = array_map(
             fn (AgendaTurmaData $turma): AlertData => new AlertData(
@@ -154,8 +154,8 @@ class AdminDashboardAssembler
 
         return [
             ...$alertas,
-            ...$canCertification ? $this->certification->alertas() : [],
-            ...$canIdentity ? $this->identity->alertasDocumentos() : [],
+            ...$v->certification ? $this->certification->alertas() : [],
+            ...$v->identity ? $this->identity->alertasDocumentos() : [],
         ];
     }
 
@@ -168,20 +168,18 @@ class AdminDashboardAssembler
     private function series(
         CarbonImmutable $start,
         CarbonImmutable $end,
-        bool $canOperation,
-        bool $canCommercial,
-        bool $canCertification,
+        DashboardVisibilityData $v,
     ): ?SeriesData {
-        if (! $canOperation && ! $canCommercial && ! $canCertification) {
+        if (! $v->operation && ! $v->commercial && ! $v->certification) {
             return null;
         }
 
         return $this->analytics->series(
             $start,
             $end,
-            includeOperation: $canOperation,
-            includeCertification: $canCertification,
-            includeUf: $canCommercial,
+            includeOperation: $v->operation,
+            includeCertification: $v->certification,
+            includeUf: $v->commercial,
         );
     }
 
@@ -194,14 +192,12 @@ class AdminDashboardAssembler
     private function rankings(
         CarbonImmutable $start,
         CarbonImmutable $end,
-        bool $canOperation,
-        bool $canCommercial,
-        bool $canCertification,
+        DashboardVisibilityData $v,
     ): ?RankingsData {
-        if (! $canOperation || ! $canCertification) {
+        if (! $v->operation || ! $v->certification) {
             return null;
         }
 
-        return $this->analytics->rankings($start, $end, includeUf: $canCommercial);
+        return $this->analytics->rankings($start, $end, includeUf: $v->commercial);
     }
 }

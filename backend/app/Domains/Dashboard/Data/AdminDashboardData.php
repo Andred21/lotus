@@ -12,7 +12,8 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
  * Payload do dashboard para o admin (spec §4.2/D5). `view` discrimina esta
  * classe de `RedatorDashboardData` no union TS — cada seção nula significa
  * "sem permissão para esta seção"; coleção vazia significa "autorizado, sem
- * dados".
+ * dados". `visibility` diz isso por módulo de forma explícita, e é ela que o
+ * front lê para decidir o que renderizar.
  *
  * `view` não leva default em runtime: PHP trata parâmetro promovido opcional
  * seguido de obrigatório como implicitamente obrigatório (deprecation desde
@@ -25,6 +26,8 @@ class AdminDashboardData extends Data
     public function __construct(
         #[LiteralTypeScriptType("'admin'")]
         public string $view,
+        /** O que o papel enxerga por módulo (D8): é por aqui que o front decide, não pelo `null`. */
+        public DashboardVisibilityData $visibility,
         public AdminKpisData $kpis,
         /** @var PendingItemData[] */
         #[DataCollectionOf(PendingItemData::class)]

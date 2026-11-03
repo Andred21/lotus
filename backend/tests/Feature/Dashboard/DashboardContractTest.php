@@ -4,6 +4,7 @@ namespace Tests\Feature\Dashboard;
 
 use App\Domains\Dashboard\Data\AdminDashboardData;
 use App\Domains\Dashboard\Data\AdminKpisData;
+use App\Domains\Dashboard\Data\DashboardVisibilityData;
 use App\Domains\Dashboard\Data\RedatorAgendaData;
 use App\Domains\Dashboard\Data\RedatorDashboardData;
 use App\Domains\Dashboard\Data\RedatorHistoricoData;
@@ -30,6 +31,12 @@ class DashboardContractTest extends TestCase
                 cotacoes: null,
                 certificados_a_emitir: null,
             ),
+            visibility: new DashboardVisibilityData(
+                operation: true,
+                commercial: false,
+                certification: false,
+                identity: true,
+            ),
             pendencias: [],
             alertas: [],
             pipeline: null,
@@ -45,6 +52,14 @@ class DashboardContractTest extends TestCase
         $array = $data->toArray();
 
         $this->assertSame('admin', $array['view']);
+
+        // A visibilidade viaja como objeto com os quatro módulos, todos
+        // booleanos — é ela, e não o `null` de cada seção, que o front lê para
+        // decidir o que mostrar (D8).
+        $this->assertSame(
+            ['operation' => true, 'commercial' => false, 'certification' => false, 'identity' => true],
+            $array['visibility'],
+        );
 
         // Seções não autorizadas ficam PRESENTES como null — nunca ausentes
         // do array. `array_key_exists`, não `isset`, porque `null` faz

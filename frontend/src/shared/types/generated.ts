@@ -1,5 +1,6 @@
 export type AdminDashboardData = {
 view: 'admin',
+visibility: DashboardVisibilityData,
 kpis: AdminKpisData,
 pendencias: PendingItemData[],
 alertas: AlertData[],
@@ -226,6 +227,12 @@ redator_ids: number[],
 export type DashboardAlertType = 'turma_overdue' | 'certificate_expiring_soon' | 'certificate_expired' | 'redator_document_expired' | 'redator_document_expiring_soon';
 export type DashboardModule = 'commercial' | 'operation' | 'certification';
 export type DashboardSeverity = 'high' | 'medium' | 'normal';
+export type DashboardVisibilityData = {
+operation: boolean,
+commercial: boolean,
+certification: boolean,
+identity: boolean,
+};
 export type DocumentValidityStatus = 'vigente' | 'vence_em_breve' | 'vencido' | 'ausente';
 export type EmissionBlockReason = 'sin_ciudad' | 'sin_redactor';
 export type EmissionPanelCertificateData = {

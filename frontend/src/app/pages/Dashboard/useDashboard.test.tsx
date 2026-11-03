@@ -33,6 +33,7 @@ beforeEach(() => {
 function admin(overrides: Partial<AdminDashboardData> = {}): AdminDashboardData {
   return {
     view: 'admin',
+    visibility: { operation: true, commercial: true, certification: true, identity: true },
     kpis: {
       turmas_em_andamento: 4,
       turmas_encerrando_em_breve: 1,
@@ -59,6 +60,7 @@ function admin(overrides: Partial<AdminDashboardData> = {}): AdminDashboardData 
  * seções anuláveis do B1 nulas, e as duas listas não-anuláveis vazias. */
 function semNenhumaSecao(): AdminDashboardData {
   return admin({
+    visibility: { operation: false, commercial: false, certification: false, identity: false },
     kpis: {
       turmas_em_andamento: null,
       turmas_encerrando_em_breve: null,

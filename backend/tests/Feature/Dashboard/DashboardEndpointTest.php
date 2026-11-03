@@ -208,6 +208,56 @@ class DashboardEndpointTest extends TestCase
         }
     }
 
+    /**
+     * D8 (D-34): o payload diz EXPLICITAMENTE o que o papel enxerga, por módulo.
+     * O front decide a seção por este objeto, não por farejar `null` no campo.
+     */
+    public function test_admin_recebe_a_visibilidade_explicita_por_modulo(): void
+    {
+        $this->actingAsAdminSemComercial();
+
+        $this->getJson(self::ENDPOINT)->assertOk()->assertJsonPath('visibility', [
+            'operation' => true,
+            'commercial' => false,
+            'certification' => true,
+            'identity' => true,
+        ]);
+    }
+
+    public function test_admin_completo_recebe_os_quatro_modulos_visiveis(): void
+    {
+        $this->actingAsAdminSem('nenhuma.permissao.assim.');
+
+        $this->getJson(self::ENDPOINT)->assertOk()->assertJsonPath('visibility', [
+            'operation' => true,
+            'commercial' => true,
+            'certification' => true,
+            'identity' => true,
+        ]);
+    }
+
+    /** Cotação sem orçamento não existe: as duas permissões andam juntas. */
+    public function test_comercial_visivel_exige_cotacao_e_orcamento(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+
+        $role = Role::findOrCreate('sin-orcamento', 'web');
+        $role->syncPermissions(array_values(array_filter(
+            array_keys(PermissionCatalog::descriptions()),
+            fn (string $permissao): bool => $permissao !== 'commercial.budget.view',
+        )));
+
+        $user = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $user->assignRole($role);
+        $this->actingAs($user, 'web');
+
+        $response = $this->getJson(self::ENDPOINT)->assertOk();
+
+        $response->assertJsonPath('visibility.commercial', false);
+        $response->assertJsonPath('visibility.operation', true);
+        $response->assertJsonPath('kpis.cotacoes', null);
+    }
+
     // ---------------------------------------------------------------- (3)
 
     public function test_redator_recebe_so_o_proprio_escopo_e_nenhuma_secao_de_admin(): void
