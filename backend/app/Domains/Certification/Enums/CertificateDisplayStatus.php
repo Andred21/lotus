@@ -31,7 +31,7 @@ enum CertificateDisplayStatus: string
     /**
      * D10: o fuso é o do `FusoDoNegocio` (P-59, item 29). Esta `hoje()` devolve
      * meia-noite EM Santiago — não a forma de `FusoDoNegocio::hoje()` — porque
-     * `for()` reconstrói os dois lados por componentes, e `EmissionPanelRequest`
+     * `for()` reconstrói os dois lados por componentes, e `EmissionPanelQueryData`
      * e `CertificateQueryBuilder` já contam com o fuso carregado.
      */
     public const TIMEZONE = FusoDoNegocio::TIMEZONE;

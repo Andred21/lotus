@@ -60,8 +60,8 @@ class TurmaShowTest extends TestCase
 
     /**
      * O que se prova aqui é a serialização do redator DESIGNADO, não a
-     * designação: `redatores` é um array simples de Data (sem
-     * `#[DataCollectionOf]`), e o `WithTransformer` de `photo_url` precisa
+     * designação: `redatores` é saída marcada com `#[ReadOnlyCollection]` +
+     * `#[DataCollectionOf]`, e o `WithTransformer` de `photo_url` precisa
      * atravessar esse aninhamento. Se não atravessar, o campo volta com o
      * path cru do bucket em vez da URL assinada (spec §3).
      */
@@ -92,6 +92,7 @@ class TurmaShowTest extends TestCase
             ->getJson("/api/turmas/{$turma->id}");
 
         $res->assertOk()
+            ->assertJsonPath('redatores.0.id', $redator->id)
             ->assertJsonPath('redatores.0.email', 'ana.silva@lotus.cl');
 
         // URL assinada, não o path cru: é o que o <img> do frontend consome.

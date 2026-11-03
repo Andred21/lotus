@@ -11,7 +11,7 @@ use Spatie\LaravelData\Data;
  * A janela do painel de emissão (spec D7): `concluidas_desde`, `Y-m-d`.
  * Ausente = hoje (America/Santiago) menos `EmissionPanelQuery::JANELA_MESES`.
  */
-class EmissionPanelRequest extends Data
+class EmissionPanelQueryData extends Data
 {
     public function __construct(
         public ?string $concluidas_desde = null,

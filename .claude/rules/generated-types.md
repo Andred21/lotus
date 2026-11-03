@@ -35,9 +35,14 @@ docker compose exec -T app php artisan typescript:transform
   com peso legal. Ref.: `CourseData::$modules`, `ClientData::$addresses`/`$contacts`.
   **Coleção que só existe na saída leva `#[ReadOnlyCollection]`** (`App\Shared\Data\Attributes`).
   Guarda: `tests/Feature/Shared/PersistenceLawsTest.php`.
-- **Campo de escrita com default não-`Optional` rebaixa dado em silêncio** no PUT parcial.
-  Ref.: `ClientContactData.is_primary` (dívida conhecida — ver `docs/superpowers/backlog.md`,
-  "Débitos técnicos").
+- **Campo de escrita nasce `X|Optional` SEM default** (`string|Optional $type`, `string|Optional|null
+  $payment_terms`). O `DefaultValuesDataPipe` do laravel-data preenche o default declarado antes do
+  `Optional`, e com default no construtor nem `#[Required]` segura a omissão: o PUT/POST sem a chave
+  passa e grava o default (`= 0` gravava 0). Default literal rebaixa ou apaga dado em silêncio no PUT
+  parcial. Campo obrigatório fica `#[Required]` e SEM default; saída (calculada, não vem da entrada)
+  leva `#[Computed]`/`#[ReadOnlyCollection]`. Ref.: `ClientData::$type`, `BudgetData::$payment_terms`.
+  Guarda: `tests/Feature/Shared/InputDataDefaultsTest.php` — a classe que precisa mesmo do default
+  (query string, upload que só cria) entra na `ISENTAS` com motivo escrito.
 
 ## Task que regenera ajusta os consumidores NO MESMO commit
 

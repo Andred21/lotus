@@ -31,6 +31,11 @@ class BudgetData extends Data
         public string|Optional $total_approved_uf,
         public string|Optional $total_rejected_uf,
         public int|Optional $total_students,
+        // Sem default: ausente vira `Optional` (não mexe), `null` explícito
+        // apaga. Com `= null` o PUT sem a chave apagava as condições. Fica
+        // antes das coleções porque parâmetro sem default não pode vir depois
+        // de um com default.
+        public string|Optional|null $payment_terms,
         /**
          * Projeção de SAÍDA: o `fromModel` a preenche e nenhuma Action a lê da
          * entrada — cotação se escreve por `POST /budgets/{budget}/quotes`.
@@ -41,7 +46,6 @@ class BudgetData extends Data
         #[DataCollectionOf(QuoteData::class)]
         #[ReadOnlyCollection]
         public array $quotes = [],
-        public string|Optional|null $payment_terms = null,
         /**
          * Projeção de SAÍDA, mesma razão de `$quotes`: arquivo se anexa pela
          * rota própria.

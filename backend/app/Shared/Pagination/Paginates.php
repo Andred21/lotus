@@ -44,9 +44,9 @@ trait Paginates
      * @param  Closure(static): void|null  $filter  filtro nomeado, aplicado DEPOIS de `q`
      * @param  Closure(PageMetaData, static): PageMetaData|null  $meta  estende o `meta` a partir do escopo de `q`
      */
-    public function page(PageRequest $request, Closure $present, ?Closure $filter = null, ?Closure $meta = null): PageData
+    public function page(PageQueryData $query, Closure $present, ?Closure $filter = null, ?Closure $meta = null): PageData
     {
-        [$items, $metaData] = $this->slice($request, $filter, $meta);
+        [$items, $metaData] = $this->slice($query, $filter, $meta);
 
         return new PageData(
             data: $items->map($present)->values()->all(),
@@ -63,13 +63,13 @@ trait Paginates
      * @param  Closure(PageMetaData, static): PageMetaData|null  $meta
      * @return array{0: Collection<int, Model>, 1: PageMetaData}
      */
-    public function slice(PageRequest $request, ?Closure $filter = null, ?Closure $meta = null): array
+    public function slice(PageQueryData $query, ?Closure $filter = null, ?Closure $meta = null): array
     {
-        [$coluna, $direcao] = $this->resolveSort($request->sort);
+        [$coluna, $direcao] = $this->resolveSort($query->sort);
 
         $totalUnfiltered = (clone $this)->count();
 
-        $q = trim((string) $request->q);
+        $q = trim((string) $query->q);
         if ($q !== '') {
             $this->searchable($q);
         }
@@ -85,14 +85,14 @@ trait Paginates
         $items = $this
             ->orderBy($coluna, $direcao)
             ->orderBy($this->getModel()->getQualifiedKeyName(), $direcao)
-            ->forPage($request->page, $request->per_page)
+            ->forPage($query->page, $query->per_page)
             ->get();
 
         $base = new PageMetaData(
-            page: $request->page,
-            per_page: $request->per_page,
+            page: $query->page,
+            per_page: $query->per_page,
             total: $total,
-            last_page: max(1, (int) ceil($total / $request->per_page)),
+            last_page: max(1, (int) ceil($total / $query->per_page)),
             total_unfiltered: $totalUnfiltered,
         );
 

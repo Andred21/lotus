@@ -5,6 +5,7 @@ namespace App\Domains\Commercial\Http\Controllers;
 use App\Domains\Commercial\Actions\CreateBudgetAction;
 use App\Domains\Commercial\Actions\DeleteBudgetAction;
 use App\Domains\Commercial\Actions\RestoreBudgetAction;
+use App\Domains\Commercial\Actions\UpdateBudgetAction;
 use App\Domains\Commercial\Data\ArchivedBudgetData;
 use App\Domains\Commercial\Data\BudgetData;
 use App\Domains\Commercial\Models\Budget;
@@ -16,7 +17,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Spatie\LaravelData\Optional;
 
 class BudgetController extends Controller implements HasMiddleware
 {
@@ -71,14 +71,9 @@ class BudgetController extends Controller implements HasMiddleware
         return BudgetData::fromModel($budget->loadListingData(), $summary);
     }
 
-    public function update(BudgetData $data, Budget $budget, BudgetSummaryService $summary): BudgetData
+    public function update(BudgetData $data, Budget $budget, UpdateBudgetAction $action, BudgetSummaryService $summary): BudgetData
     {
-        // `code` e `client_id` são imutáveis: só payment_terms muda por aqui.
-        $budget->update([
-            'payment_terms' => $data->payment_terms instanceof Optional ? null : $data->payment_terms,
-        ]);
-
-        return BudgetData::fromModel($budget->loadListingData(), $summary);
+        return BudgetData::fromModel($action->execute($budget, $data)->loadListingData(), $summary);
     }
 
     public function destroy(Budget $budget, DeleteBudgetAction $action): Response

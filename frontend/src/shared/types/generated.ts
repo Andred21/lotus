@@ -107,8 +107,8 @@ total_value_uf: undefined | string,
 total_approved_uf: undefined | string,
 total_rejected_uf: undefined | string,
 total_students: undefined | number,
-quotes: QuoteData[],
 payment_terms: undefined | string | null,
+quotes: QuoteData[],
 files: FileData[],
 };
 export type BudgetDocumentType = 'purchase_order' | 'invoice' | 'receipt';
@@ -195,7 +195,7 @@ rut: string,
 email: string,
 phone: undefined | string | null,
 legal_name: string,
-type: string,
+type: undefined | string,
 business_activity: undefined | string | null,
 addresses: ClientAddressData[] | undefined,
 contacts: ClientContactData[] | undefined,
@@ -379,6 +379,12 @@ per_page: number,
 total: number,
 last_page: number,
 total_unfiltered: number,
+};
+export type PageQueryData = {
+page: number,
+per_page: number,
+q: string | null,
+sort: string | null,
 };
 export type PendingItemData = {
 module: DashboardModule,

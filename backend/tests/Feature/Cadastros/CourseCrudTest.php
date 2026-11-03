@@ -66,6 +66,17 @@ class CourseCrudTest extends TestCase
             ->assertJsonValidationErrors('name');
     }
 
+    public function test_post_de_curso_sem_workload_hours_e_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->postJson('/api/courses', ['name' => 'Curso Sem Carga'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('workload_hours');
+
+        $this->assertDatabaseMissing('courses', ['name' => 'Curso Sem Carga']);
+    }
+
     public function test_lista_mostra_edita_remove(): void
     {
         $this->actingAsAdmin();

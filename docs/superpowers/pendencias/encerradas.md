@@ -7,52 +7,22 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-85 — no sqlite da suíte, o último dia do período some do filtro de `start_date` do `AnalyticsQuery`
+## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal
 
-**Bloco:** item 54 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Dashboard/Services/AnalyticsQuery` ou o filtro de
-período do dashboard; os três filtros de `start_date` passam por `DataSql::literal` e um teste prova
-a turma que começa no **último dia** do período dentro da série e dos dois rankings. Revisar em
-**2026-10-31**.
+**Bloco:** item 51 (aberta em 2026-08-20, pela review final do BD-14) · **ENCERRADA em 2026-11-03, no `backend-contrato-de-entrada-dos-data` (item 51).**
 
-Achado de passagem no review Q-1 do item 29 (2026-09-25, `audits/2026-09-24-item29-medicoes.md`
-§8), fora do achado, e promovido a ficha no fechamento por decisão do João. O `AnalyticsQuery`
-filtra a coluna `date` `turmas.start_date` com
-`whereBetween('start_date', [$start->toDateString(), $end->toDateString()])` em três lugares
-(`AnalyticsQuery.php:50`, a série `turmas_iniciadas`; `:100`, o ranking de cursos; `:148`, o de
-clientes). No MySQL a coluna é `DATE` e a comparação é de dia com dia — correta. No sqlite da suíte
-o cast `date` grava `Y-m-d 00:00:00` numa coluna texto, e a comparação vira de string:
-`'2026-09-25 00:00:00' <= '2026-09-25'` é falso, então a turma que começa no último dia do período
-cai fora.
+O `DefaultValuesDataPipe` entrega o default declarado antes do `Optional`, e então um `PUT` parcial grava o default no lugar de preservar. Dos seis campos que a ficha listava, o campo 1 (`UserData::$is_active`, acesso) fechou em 2026-08-23; os cinco restantes fecharam assim:
 
-**A produção não erra; a suíte não enxerga.** Um teste que cobrisse a borda do último dia
-reprovaria no sqlite com o código certo, e uma regressão que cortasse o último dia no MySQL
-passaria verde. O `AnalyticsQueryTest` do item 29 evita a borda de propósito — contorna, não
-resolve. Já era assim antes do bloco.
+- **Campo 2, `ClientData::$type = 'client'` — pago** (`40a4e6f7`). Passou a `string|Optional` sem default; o `CreateClientAction` grava `'client'` explícito quando chega `Optional`, o `UpdateClientAction` pula a chave. Provado contra a API da lane no fechamento: `PUT /api/clients/{id}` sem `type` sobre cliente `provider` devolve 200 e o tipo segue `provider`; `POST` sem `type` cria `client`.
+- **Campo 3, `CourseData::$workload_hours = 0` — defeito real, fail-open, pago** (`a34dd253`). A ficha e a spec supunham o default morto atrás do `#[Required]`; medido em `main@1845d096`, `PUT` e `POST /api/courses` sem a chave davam 200 e **gravavam 0** (com default no construtor o laravel-data trata a propriedade como não obrigatória). Tirado o `= 0`, omitir a chave dá 422 e o valor fica intacto — provado contra a API da lane. A errata datada está na spec do bloco. Para saber se algum curso já ficou com 0 em produção, a consulta de leitura é `SELECT id, name FROM courses WHERE workload_hours = 0`.
+- **Campo 4, `BudgetController::update` — pago** (`498e3308`). A escrita saiu do controller para a `UpdateBudgetAction`; `payment_terms` passou a `string|Optional|null` sem default. Provado contra a API da lane: `PUT` sem a chave preserva "30 dias", `payment_terms: null` explícito apaga. O vermelho contra o código antigo está no relatório da task 3 do SDD ("null is identical to '30 días'").
+- **Campos 5 e 6, `CourseTemplateController::update`/`CertificateTemplateData` — mortos desde o bloco 39** (`09c95f61`, "template sai da API do catálogo"): não há caminho HTTP de escrita para `layout_config`/`validity_months`. Fecham sem código.
 
-O remédio existe no repositório: `App\Shared\Support\DataSql::literal`, que o `display_status` da
-`CertificateQueryBuilder` e a janela do `EmissionPanelQuery` usam exatamente por isso (o docblock
-dele descreve a mesma borda). Não entrou no item 29 porque o Q-1 era sobre os limites de
-**instante**, e a coluna `date` não mudou de comportamento com ele.
-
-**ENCERRADA em 2026-11-03, no `dashboard-agenda-e-pendencias` (item 54), pelo próprio gatilho:** os três filtros de `start_date` do `AnalyticsQuery` passam por `DataSql::literal` (`8ea87e0e`), e o `AnalyticsQueryTest` prova a turma que começa no último dia do período dentro da série `turmas_iniciadas` e dos dois rankings, vista reprovar no sqlite sem o fix (critério 7 da spec do bloco).
-
-## P-102 — o `CompliancePanel` e o dashboard não mostram os requisitos novos da conclusão
-
-**Bloco:** item 54 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** fecha no primeiro bloco que tocar o
-`CompliancePanel` ou `OperationMetricsQuery::pendencias()`; dispara se a Lotus perguntar por que uma
-turma presencial "não está habilitada". Revisar em **2026-11-07**.
-
-O item 41 passou a bloquear a conclusão também por redator ausente e por presencial sem
-`local_aplicacao` (`TurmaData.missing_requirements`), e o `ConcludePanel` lista cada pendência. Duas
-telas ficaram para trás:
-
-- o `CompliancePanel` mostra "Habilitada: No" com "—" quando falta redator ou local, sem dizer o quê;
-- `OperationMetricsQuery::pendencias()` sinaliza "turma sem redator", mas não "presencial sem local":
-  a turma nessa situação sai de "aguardando conclusão" sem pendência visível no dashboard.
-
-**ENCERRADA em 2026-11-03, no `dashboard-agenda-e-pendencias` (item 54), pelo próprio gatilho:** o `TurmaComplianceData` ganhou `missing_requirements`, e a coluna "Faltan" do `CompliancePanel` junta documentos e requisitos; o `OperationMetricsQuery::pendencias()` emite `turma_presencial_without_local` (`4a58f394`). Provado contra a API da lane no fechamento: turma presencial sem local e sem relator saiu com `missing_requirements: [redator, local_aplicacao]` e com a pendência nova no payload do admin.
+**A varredura que a ficha pedia existe agora:** `InputDataDefaultsTest` reprova default literal em qualquer Data de entrada (saídas: `new Optional`, `#[Computed]`/`#[ReadOnlyCollection]`, ou a classe na `ISENTAS` com motivo), vista reprovar por sonda com `ClientData::$type = 'client'` restaurado (`d53d542d`). Os Menores que a revisão do bloco deixou, mais o débito de `CourseModuleData`, estão na **P-117**.
 
 ## Rastro anterior, já removido
+
+**A P-85 e a P-102 saíram no fechamento do `backend-contrato-de-entrada-dos-data` (item 51, 2026-11-03)**, o primeiro depois do item 54, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-76 e a P-107 saíram no fechamento do `dashboard-agenda-e-pendencias` (item 54, 2026-11-03)**, o primeiro depois do item 52, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

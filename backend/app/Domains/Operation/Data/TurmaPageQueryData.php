@@ -3,15 +3,15 @@
 namespace App\Domains\Operation\Data;
 
 use App\Domains\Operation\Enums\TurmaDisplayStatus;
-use App\Shared\Pagination\PageRequest;
+use App\Shared\Pagination\PageQueryData;
 use Illuminate\Validation\Rule;
 
-/** `PageRequest` + o filtro de estado do hub de turmas (ativo e arquivado). */
-class TurmaPageRequest extends PageRequest
+/** `PageQueryData` + o filtro de estado do hub de turmas (ativo e arquivado). */
+class TurmaPageQueryData extends PageQueryData
 {
     public function __construct(
         int $page = 1,
-        int $per_page = PageRequest::PER_PAGE_DEFAULT,
+        int $per_page = PageQueryData::PER_PAGE_DEFAULT,
         ?string $q = null,
         ?string $sort = null,
         public ?TurmaDisplayStatus $status = null,

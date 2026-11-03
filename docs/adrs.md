@@ -553,6 +553,8 @@ teto; as bounded continuam devolvendo array.
 fontes. Cursor foi descartado: sem `total`, o paginador e o rodapé de contagem morrem. Cache e
 Redis ficam fora por decisão (spec D12), não por adiamento.
 
+**Emenda (2026-11-03, bloco 51):** `PageRequest` passou a se chamar `PageQueryData` (e `TurmaPageRequest`, `CertificatePageRequest`, `EmissionPanelRequest` viraram `*QueryData`): é `Data` de query string, não FormRequest; o `PageQueryData` ganhou `#[TypeScript]` e o front deriva o tipo de paginação do `generated.ts`.
+
 ---
 
 ## ADR-23 — E-mail transacional por SES, identidade compartilhada com o site, sem segredo no host
