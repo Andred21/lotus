@@ -3,6 +3,7 @@
 namespace Tests\Feature\Cadastros;
 
 use App\Domains\Identity\Enums\RedatorDocumentType;
+use App\Shared\Files\MalwareScanner;
 use App\Shared\Files\Models\File;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -203,6 +204,44 @@ class RedatorDocumentTest extends TestCase
         ], ['Accept' => 'application/json'])
             ->assertStatus(422)
             ->assertJsonPath('errors.documents.0', __('identity.errors.document_type_invalid', ['tipo' => 'DIPLOMA']));
+    }
+
+    public function test_soma_acima_do_teto_recusa_sem_escanear(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        // Quatro documentos de 2600 KB: cada um cabe no seu teto, a soma
+        // (10400 KB) passa dos 10240 do conjunto.
+        $this->post('/api/redatores', [
+            'name' => 'Ana', 'rut' => '12.345.678-5', 'email' => 'ana@lotus.cl',
+            'documents' => [
+                'CV' => UploadedFile::fake()->create('cv.pdf', 2600, 'application/pdf'),
+                'REUF' => UploadedFile::fake()->create('reuf.pdf', 2600, 'application/pdf'),
+                'TITULO' => UploadedFile::fake()->create('titulo.pdf', 2600, 'application/pdf'),
+                'POSTGRADO' => UploadedFile::fake()->create('postgrado.pdf', 2600, 'application/pdf'),
+            ],
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.documents.0', __('shared.file.set_too_large', ['max' => 10]));
+
+        $this->assertSame([], app(MalwareScanner::class)->escaneados);
+        $this->assertDatabaseCount('redatores', 0);
+    }
+
+    public function test_chave_fora_do_enum_recusa_sem_escanear(): void
+    {
+        Storage::fake('s3');
+        $this->actingAsAdmin();
+
+        $this->post('/api/redatores', [
+            'name' => 'Ana', 'rut' => '12.345.678-5', 'email' => 'ana@lotus.cl',
+            'documents' => ['XX' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf')],
+        ], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.documents.0', __('identity.errors.document_type_invalid', ['tipo' => 'XX']));
+
+        $this->assertSame([], app(MalwareScanner::class)->escaneados);
     }
 
     public function test_documents_com_tipo_valido_mas_array_de_arquivos_devolve_422_com_erro_de_campo(): void

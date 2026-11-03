@@ -61,11 +61,11 @@ class UploadPolicyRatchetTest extends TestCase
         'app/Domains/Operation/Services/ImportPreviewService.php' => 'Recebe o `UploadedFile` já validado pelo `EnrollmentController::previewImport`, que pede a classe Planilha.',
         'app/Domains/Commercial/Actions/ReplaceFileOfTypeAction.php' => 'Recebe o arquivo já validado pelo `BudgetFileController` e pelo `QuoteFileController`, que pedem a classe Documento.',
         'app/Domains/Operation/Actions/StoreTurmaDocumentAction.php' => 'Recebe o arquivo já validado pelo `TurmaDocumentController`, que pede a classe DocumentoDeTurma.',
-        'app/Domains/Identity/Actions/CreateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorController::documentsFromRequest`, um a um.',
-        'app/Domains/Identity/Actions/UpdateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorController::documentsFromRequest`, um a um.',
+        'app/Domains/Identity/Actions/CreateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorDocumentsData`, que pede a classe de cada tipo.',
+        'app/Domains/Identity/Actions/UpdateRedatorAction.php' => 'Recebe os documentos já validados pelo `RedatorDocumentsData`, que pede a classe de cada tipo.',
         'app/Domains/Identity/Actions/StoreRedatorDocumentAction.php' => 'Recebe o arquivo já validado pelos controllers de documento de redator e de perfil.',
         'app/Domains/Certification/Actions/StoreManagerSignatureAction.php' => 'Recebe o arquivo já validado pelo `CertificateSettingsController::storeSignature`, que pede a classe Assinatura.',
-        'app/Domains/Identity/Data/RedatorData.php' => 'DTO de leitura e escrita do redator: o campo multipart `documents` é validado no controller, não aqui.',
+        'app/Domains/Identity/Data/RedatorData.php' => 'DTO de leitura e escrita do redator: o campo multipart `documents` é validado pelo `RedatorDocumentsData`, não aqui.',
         'app/Providers/AppServiceProvider.php' => 'A chave `file` que casa aqui é a entrada do morph map do ADR-10, e não tem nada com upload.',
         'app/Domains/Identity/Services/UserPhotoService.php' => 'Recebe o arquivo já validado pelo `PhotoUploadData`, que pede a classe Imagem.',
         'app/Shared/Files/Rules/LarguraMinimaDeImagem.php' => 'É a regra de largura que a própria peça de política publica (só a classe Assinatura a inclui): roda dentro dela, depois do tipo e do tamanho.',
@@ -94,10 +94,8 @@ class UploadPolicyRatchetTest extends TestCase
     }
 
     /**
-     * A peça é onde a política MORA: ela não a "pede" nem a escreve "à mão", e
-     * desde que ganhou o teto do conjunto (`assertCabeNoTransporte`, achado Q-3
-     * do review de 2026-08-25) ela nomeia `UploadedFile` e passou a casar um
-     * sinal de upload. Isentá-la é dizer o óbvio — não é abrir exceção.
+     * A peça é onde a política MORA: ela não a "pede" nem a escreve "à mão".
+     * Isentá-la é dizer o óbvio — não é abrir exceção.
      */
     private function eAPropriaPeca(string $relativo): bool
     {

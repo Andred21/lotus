@@ -5,7 +5,6 @@ namespace App\Domains\Identity\Actions;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Shared\Files\Models\File;
-use App\Shared\Files\Services\FileStorage;
 use App\Shared\Files\Services\FileUploader;
 use App\Shared\Files\Services\StoredFiles;
 use Carbon\CarbonInterface;
@@ -18,7 +17,7 @@ use Illuminate\Http\UploadedFile;
  */
 class StoreRedatorDocumentAction
 {
-    public function __construct(private FileStorage $uploads, private FileUploader $fileUploader) {}
+    public function __construct(private FileUploader $fileUploader) {}
 
     public function execute(Redator $redator, RedatorDocumentType $type, UploadedFile $file, ?CarbonInterface $validUntil = null): File
     {
@@ -34,24 +33,5 @@ class StoreRedatorDocumentAction
                 return $stored->replace($redator, 'file', $type->value, $validUntil);
             },
         );
-    }
-
-    /**
-     * Para quem JÁ segura a transação e JÁ fez o `put` — hoje, o
-     * `CreateRedatorAction`. Faz o replace do documento ativo do mesmo tipo e
-     * registra o novo.
-     *
-     * @param  array{original_name: string, mime: string, size: int}  $meta
-     */
-    public function registerUploaded(Redator $redator, RedatorDocumentType $type, string $path, array $meta, ?CarbonInterface $validUntil = null): File
-    {
-        // Soft-delete por instância, não pelo query builder: `->delete()` no
-        // builder emite um UPDATE direto, sem eventos de model — e sem
-        // eventos o owen-it não grava a linha em `audits`. A rastreabilidade
-        // do documento removido é requisito (o binário fica no bucket).
-        $redator->documents()->where('type', $type->value)->get()
-            ->each(fn (File $antigo) => $antigo->delete());
-
-        return $this->uploads->register($redator, $path, $meta, $type->value, $validUntil);
     }
 }
