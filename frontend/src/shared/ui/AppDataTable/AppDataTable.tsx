@@ -131,22 +131,6 @@ export function AppDataTable<T extends DataTableValueArray>({
       // Desligar o paginador durante o `loading` foi recusado: a faixa some e
       // volta, e o card salta de altura a cada GET. O que muda é o TEXTO.
       paginatorLeft={loading ? t('common.loading') : footerCount}
-      // O NOME dos três controles é piso daqui. O PrimeReact os rotula com
-      // `api.ariaLabel('prevPageLabel'|'nextPageLabel'|'pageLabel')`
-      // (`primereact/paginator/paginator.cjs.js:789-795`), que resolve contra a
-      // locale GLOBAL dele — e `locale()` nunca é chamado no projeto
-      // (`primeLocale.ts` só registra), então o nome vinha do default inglês:
-      // "Page 2" em tela espanhola (P-109). Chamar `locale()` foi recusado:
-      // troca um estado global do PrimeReact para dizer o que três chaves nossas
-      // dizem, e ainda precisaria seguir `i18n.language` na troca de idioma.
-      //
-      // Template objeto e não `pt`: o contexto do `pageButton` traz só `active`,
-      // não o número da página, e o nome precisa do número. Para os três
-      // controles usarem um mecanismo só, os três saem do template. Cada
-      // renderizador devolve `cloneElement(options.element, { 'aria-label' })`,
-      // que preserva classe, `pt` e handler; e fecha sobre `t`, relido a cada
-      // render do wrapper — a troca de idioma troca o nome sem remontar.
-      paginatorTemplate={paginated ? paginatorTemplate : ''}
       // `widthPt` funde por ÚLTIMO, e não o `pt` do chamador: o guard "sem
       // linha, sem largura mínima" (comentário acima) tem que vencer o piso
       // default de `appDataTablePt` e também qualquer `pt` de CHAMADOR que
@@ -183,6 +167,30 @@ export function AppDataTable<T extends DataTableValueArray>({
       loading={loading && !errored}
       emptyMessage={body}
       {...props}
+      // O NOME dos três controles é piso daqui. O PrimeReact os rotula com
+      // `api.ariaLabel('prevPageLabel'|'nextPageLabel'|'pageLabel')`
+      // (`primereact/paginator/paginator.cjs.js:789-795`), que resolve contra a
+      // locale GLOBAL dele — e `locale()` nunca é chamado no projeto
+      // (`primeLocale.ts` só registra), então o nome vinha do default inglês:
+      // "Page 2" em tela espanhola (P-109). Chamar `locale()` foi recusado:
+      // troca um estado global do PrimeReact para dizer o que três chaves nossas
+      // dizem, e ainda precisaria seguir `i18n.language` na troca de idioma.
+      //
+      // Template objeto e não `pt`: o contexto do `pageButton` traz só `active`,
+      // não o número da página, e o nome precisa do número. Para os três
+      // controles usarem um mecanismo só, os três saem do template. Cada
+      // renderizador devolve `cloneElement(options.element, { 'aria-label' })`,
+      // que preserva classe, `pt` e handler; e fecha sobre `t`, relido a cada
+      // render do wrapper — a troca de idioma troca o nome sem remontar.
+      //
+      // Fica DEPOIS do spread de propósito, como o `customUpload` do
+      // `AppFileUpload`: o piso "não se desliga" (spec §4.4) e, antes do spread,
+      // um `paginatorTemplate` do chamador o trocava em silêncio — o nome voltava
+      // ao inglês do PrimeReact (review final do bloco 49). `Omit` no tipo foi
+      // recusado: `DataTableProps` é união discriminada (`cellSelection`,
+      // `selectionMode`) e o `Omit` a achata, quebrando a checagem do `DataTable`.
+      // A prop continua aceita e é ignorada — o piso vence, e o teste prende isso.
+      paginatorTemplate={paginated ? paginatorTemplate : ''}
     />
   )
 }
