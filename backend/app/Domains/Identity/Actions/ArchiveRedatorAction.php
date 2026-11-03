@@ -17,11 +17,13 @@ use Illuminate\Validation\ValidationException;
  *
  * O `lockRow` serializa ARQUIVAR contra ARQUIVAR — é ele que sustenta o no-op
  * idempotente abaixo. Quem fecha a janela contra quem escreve filho são os
- * escritores: desde 2026-08-23, `StoreRedatorDocumentAction`,
- * `UpdateRedatorAction` e `DesignateRedatorAction` tomam
- * `Redator::lockForWrite()` (molde `Client`), e a lista viva é a
- * `TOMAM_LOCK` do `ParentLockOnChildWriteTest`, que reprova escritor de filho
- * novo sem o lock ou sem isenção declarada (P-47).
+ * escritores: desde 2026-08-23, `StoreRedatorDocumentAction` e
+ * `UpdateRedatorAction` tomam `Redator::lockForWrite()` (molde `Client`), e a
+ * lista viva é a `TOMAM_LOCK` do `ParentLockOnChildWriteTest`, que reprova
+ * escritor de filho novo sem o lock ou sem isenção declarada (P-47).
+ * `DesignateRedatorAction` também toma o lock, mas NÃO fecha este modo de
+ * falha: o pivot `turma_redator` fica fora da cascata de propósito, e o lock
+ * dele só nega designação NOVA contra redator em arquivamento.
  *
  * O GATE recusa redator com turma em andamento: trabalho pendente não some da
  * operação sem aviso (spec D3). Turma CONCLUÍDA não bloqueia — arquivar quem já
