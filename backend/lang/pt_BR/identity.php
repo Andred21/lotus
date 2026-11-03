@@ -37,6 +37,11 @@ return [
         'system_role_not_deletable' => "A role de sistema ':role' não pode ser removida.",
         'system_role_not_renamable' => "A role de sistema ':role' não pode ser renomeada.",
         'redator_only_action' => 'Apenas redatores enviam documentação profissional.',
+        // P-76: o RUT/e-mail repetido saía de uma constante pt-BR no UserProvisioner.
+        'rut_taken' => 'Este RUT já está cadastrado.',
+        'email_taken' => 'Este e-mail já está cadastrado.',
+        'rut_archived' => 'Este RUT pertence a um cadastro arquivado. Restaure-o em vez de criar outro.',
+        'email_archived' => 'Este e-mail pertence a um cadastro arquivado. Restaure-o em vez de criar outro.',
     ],
     'document_type' => [
         'CV' => 'Currículo',

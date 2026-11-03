@@ -54,8 +54,8 @@ class EnsureIdentityAvailableTest extends TestCase
             ->ensureIdentityAvailable('13.456.789-9', 'ana@lotus.cl'));
 
         $this->assertSame(['rut', 'email'], array_keys($erros));
-        $this->assertSame('Este RUT já está cadastrado.', $erros['rut'][0]);
-        $this->assertSame('Este e-mail já está cadastrado.', $erros['email'][0]);
+        $this->assertSame('Este RUT ya está registrado.', $erros['rut'][0]);
+        $this->assertSame('Este correo ya está registrado.', $erros['email'][0]);
     }
 
     public function test_duplicado_arquivado_tem_mensagem_propria_nos_dois_campos(): void
@@ -67,11 +67,11 @@ class EnsureIdentityAvailableTest extends TestCase
             ->ensureIdentityAvailable('13.456.789-9', 'ana@lotus.cl'));
 
         $this->assertSame(
-            'Este RUT pertence a um cadastro arquivado. Restaure-o em vez de criar outro.',
+            'Este RUT pertenece a un registro archivado. Restáurelo en lugar de crear otro.',
             $erros['rut'][0],
         );
         $this->assertSame(
-            'Este e-mail pertence a um cadastro arquivado. Restaure-o em vez de criar outro.',
+            'Este correo pertenece a un registro archivado. Restáurelo en lugar de crear otro.',
             $erros['email'][0],
         );
     }

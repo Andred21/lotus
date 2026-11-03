@@ -7,4 +7,5 @@ return [
     'inactive' => 'Esta conta não está ativa.',
     'password' => 'A senha está errada.',
     'throttle' => 'O número limite de tentativas de login foi atingido. Por favor, tente novamente dentro de :seconds segundos.',
+    'logged_out' => 'Sessão encerrada.',
 ];

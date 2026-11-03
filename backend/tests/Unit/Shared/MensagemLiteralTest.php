@@ -165,6 +165,76 @@ class MensagemLiteralTest extends TestCase
     }
 
     /**
+     * A QUARTA porta: o `$fail('...')` de uma `ValidationRule`.
+     *
+     * É o contrato do Laravel para a regra de validação dizer por que
+     * reprovou, e não é `throw` nem `withMessages` — nenhuma das três portas
+     * acima olhava para ele. `ValidRut` respondia em português a um operador
+     * chileno, e `PrintableGrade` e `ScannedForMalware` escreviam es-CL fixo
+     * (P-76). A frase sai de `lang/`: `$fail(__('chave'))`.
+     */
+    #[Test]
+    public function nenhum_fail_de_regra_carrega_texto_literal(): void
+    {
+        $ofensores = [];
+
+        foreach ($this->arquivosPhp('app') as $caminho) {
+            $linhas = file($caminho);
+            foreach ($linhas as $i => $linha) {
+                if (! preg_match('/\$fail\(/', $linha)) {
+                    continue;
+                }
+
+                $frase = $this->fraseLiteralNaChamada($linhas, $i);
+
+                if ($frase !== null) {
+                    $ofensores[] = basename($caminho).':'.($i + 1).'  '.$frase;
+                }
+            }
+        }
+
+        $this->assertSame([], $ofensores, "Frase literal em \$fail de regra de validação:\n".implode("\n", $ofensores));
+    }
+
+    /**
+     * A QUINTA porta: a resposta de SUCESSO que carrega frase própria.
+     *
+     * `response()->json(['message' => 'Sessão encerrada.'])` não é recusa, e
+     * nenhuma régua de exceção passa perto dela — o `logout` falava português
+     * a um produto es-CL (P-76). O texto sai de `lang/`.
+     */
+    #[Test]
+    public function nenhuma_resposta_de_sucesso_carrega_texto_literal(): void
+    {
+        $ofensores = [];
+
+        foreach ($this->arquivosPhp('app') as $caminho) {
+            $linhas = file($caminho);
+            foreach ($linhas as $i => $linha) {
+                if (! str_contains($linha, 'response()->json(')) {
+                    continue;
+                }
+
+                $bloco = '';
+                for ($n = $i; $n < min($i + 6, count($linhas)); $n++) {
+                    $bloco .= $linhas[$n];
+
+                    if (str_contains($linhas[$n], ';')) {
+                        break;
+                    }
+                }
+
+                if (preg_match('/[\'"]message[\'"]\s*=>\s*(\'(?:[^\'\\\\]|\\\\.)*\'|"(?:[^"\\\\]|\\\\.)*")/', $bloco, $achado)
+                    && preg_match('/\s/', substr($achado[1], 1, -1))) {
+                    $ofensores[] = basename($caminho).':'.($i + 1).'  '.$achado[1];
+                }
+            }
+        }
+
+        $this->assertSame([], $ofensores, "Resposta de sucesso com texto literal fora de lang/:\n".implode("\n", $ofensores));
+    }
+
+    /**
      * Os métodos deste arquivo que repassam para `ValidationException::withMessages`.
      *
      * @param  list<string>  $linhas
@@ -253,7 +323,6 @@ class MensagemLiteralTest extends TestCase
         // Diagnóstico interno: 500 mascarado em produção, ninguém lê.
         'FileStorage.php:76' => 'RuntimeException interna; 500 mascarado.',
         'DashboardController.php:48' => 'RuntimeException interna; 500 mascarado.',
-        'UserPhotoService.php:64' => 'RuntimeException interna; 500 mascarado.',
         'PdfRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',
         'OfficeRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',
         'OfficeRenderException.php:26' => 'RuntimeException interna; 500 mascarado.',

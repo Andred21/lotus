@@ -104,7 +104,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Sessão encerrada.']);
+        return response()->json(['message' => __('auth.logged_out')]);
     }
 
     public function me(Request $request): SessionUserData

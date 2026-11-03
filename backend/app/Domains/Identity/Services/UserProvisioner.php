@@ -23,9 +23,10 @@ use Illuminate\Validation\ValidationException;
  */
 class UserProvisioner
 {
+    /** Chaves de `lang/`, não frases: a tradução acontece no `withMessages`. */
     private const DUPLICADO = [
-        'rut' => 'Este RUT já está cadastrado.',
-        'email' => 'Este e-mail já está cadastrado.',
+        'rut' => 'identity.errors.rut_taken',
+        'email' => 'identity.errors.email_taken',
     ];
 
     public function provision(
@@ -83,16 +84,16 @@ class UserProvisioner
             $formatado = Rut::parse($rut)->format();
 
             if ($estado = $this->duplicateStatus('rut', $formatado, $exceptUserId)) {
-                $erros['rut'] = $estado === 'arquivado'
-                    ? 'Este RUT pertence a um cadastro arquivado. Restaure-o em vez de criar outro.'
-                    : self::DUPLICADO['rut'];
+                $erros['rut'] = __($estado === 'arquivado'
+                    ? 'identity.errors.rut_archived'
+                    : self::DUPLICADO['rut']);
             }
         }
 
         if ($estado = $this->duplicateStatus('email', $email, $exceptUserId)) {
-            $erros['email'] = $estado === 'arquivado'
-                ? 'Este e-mail pertence a um cadastro arquivado. Restaure-o em vez de criar outro.'
-                : self::DUPLICADO['email'];
+            $erros['email'] = __($estado === 'arquivado'
+                ? 'identity.errors.email_archived'
+                : self::DUPLICADO['email']);
         }
 
         if ($erros !== []) {
@@ -129,7 +130,7 @@ class UserProvisioner
                 throw $e;
             }
 
-            throw ValidationException::withMessages([$coluna => self::DUPLICADO[$coluna]]);
+            throw ValidationException::withMessages([$coluna => __(self::DUPLICADO[$coluna])]);
         }
     }
 
