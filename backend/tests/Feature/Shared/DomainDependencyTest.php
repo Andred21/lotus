@@ -67,7 +67,6 @@ class DomainDependencyTest extends TestCase
         // medirem — a lista do plano é indicativa e já errou nos dois sentidos.
         'Dashboard' => [
             'Catalog\Models\Course',
-            'Certification\Enums\CertificateStatus',
             'Certification\Models\Certificate',
             'Certification\Services\EmissionStateResolver',
             'Commercial\Enums\QuoteStatus',
