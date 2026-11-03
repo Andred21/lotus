@@ -5,8 +5,8 @@ namespace Tests\Feature\CargaInicial;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Identity\Models\User;
-use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\Models\File;
+use App\Shared\Files\Services\FileStorage;
 use Carbon\CarbonInterface;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\Eloquent\Model;
@@ -100,7 +100,7 @@ class CarregarCargaInicialCommandTest extends TestCase
     public function test_falha_depois_do_upload_apaga_do_disco_o_que_ja_subiu(): void
     {
         // O segundo upload falha: o primeiro já está no disco, e a transação do banco não o alcança.
-        $this->app->instance(UploadFileAction::class, new class extends UploadFileAction
+        $this->app->instance(FileStorage::class, new class extends FileStorage
         {
             private int $chamadas = 0;
 
@@ -124,7 +124,7 @@ class CarregarCargaInicialCommandTest extends TestCase
     public function test_falha_no_registro_depois_do_put_apaga_do_disco_o_que_acabou_de_subir(): void
     {
         // O binário já está no disco quando o insert em `files` lança: o path tem de estar na contagem antes dele.
-        $this->app->instance(UploadFileAction::class, new class extends UploadFileAction
+        $this->app->instance(FileStorage::class, new class extends FileStorage
         {
             public function register(Model $owner, string $path, array $meta, string $type, ?CarbonInterface $validUntil = null): File
             {
@@ -140,7 +140,7 @@ class CarregarCargaInicialCommandTest extends TestCase
 
     public function test_arquivo_que_nao_se_apaga_e_listado_para_remocao_manual(): void
     {
-        $this->app->instance(UploadFileAction::class, new class extends UploadFileAction
+        $this->app->instance(FileStorage::class, new class extends FileStorage
         {
             private int $chamadas = 0;
 

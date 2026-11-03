@@ -3,13 +3,14 @@
 namespace App\Domains\Identity\Enums;
 
 use App\Shared\Files\ContentClass;
+use App\Shared\Files\TipoDeArquivo;
 
 /**
  * Tipos de documento de idoneidade do redator. Vive no domínio (não é global):
  * a tabela `files` é polimórfica e o `type` é string livre; este enum só
  * restringe/rotula os documentos de redator. Turma terá o seu no futuro.
  */
-enum RedatorDocumentType: string
+enum RedatorDocumentType: string implements TipoDeArquivo
 {
     case CV = 'CV';
     case REUF = 'REUF';

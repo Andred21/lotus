@@ -145,7 +145,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 | # | Bloco | Frente | Por que aqui |
 |---|---|---|---|
 | 3 | **51** `backend-contrato-de-entrada-dos-data` | Backend | Depende do 50 (`Budget`) |
-| 4 | **52** `backend-arquivo-recepcao-e-upload` | Backend | Recomendação principal do review; a P-107 tem revisão em 2026-11-07 |
 | 5 | **53** `backend-importacao-e-identidade-do-aluno` | Backend | Depende do 52 (Identity) |
 | 6 | **54** `dashboard-agenda-e-pendencias` | Dashboard | Depende do 48 |
 | 7 | **55** `backend-borda-http-auth-e-permissao` | Backend | Sem urgência funcional; a P-91 é a única que se vê de fora |
@@ -271,30 +270,6 @@ Regenera o `generated.ts` (lei §5.3).
 **DoD:** omitir cada um dos cinco campos num PUT preserva o valor, provado contra a API. A catraca nova
 foi vista reprovar por sonda. Nenhum `Request` sobra no nome de Data de query, e o front compila sem
 tipo de paginação escrito à mão.
-
----
-
-## 52. `backend-arquivo-recepcao-e-upload`
-
-**Prioridade:** P1 · **Frente:** Backend (Shared/Files + 4 domínios) · **Contexto:** não · **Depende:** —
-**Fonte:** cards 1 e 2 (a recomendação principal) e card 9 do review de 2026-11-02; `P-107`, `P-76`.
-
-**Escopo:**
-- **Card 1.** Uma classe Data de entrada para cada forma de upload (foto, documento tipado, anexo
-  tipado). A escolha "tipo → regra do arquivo e validade" passa para o enum do domínio. Os 17
-  `$request->validate()` dos 13 controllers somem, e também a cópia `RedatorDocument`/
-  `ProfileDocument` e o parser multipart de 45 linhas do `RedatorController`.
-- **Card 2.** `UploadFileAction` vira um módulo de uma entrada só, dono da ordem storage ↔ transação e
-  da compensação. Os seis callers perdem o try/catch.
-- **P-107.** O atributo `file` é traduzido. Com o card 1, isso acontece num lugar só.
-- **P-76.** A catraca de idioma ganha a porta do `$fail` de `ValidationRule` e a da resposta de
-  sucesso, e as seis frases vão para o `lang/` nos três locales.
-- **Card 9** (projeção de `File`) **só entra se** o brainstorming medir que o front já trata os dois
-  formatos de `created_at`. Senão fica fora.
-
-**DoD:** nenhum `validate()` de arquivo em controller. Um teste com disco fake prova que, quando o
-register falha, o arquivo é descartado. O 422 de upload diz o nome do campo em es-CL. A P-76 e a
-P-107 estão fechadas, e a catraca foi vista reprovar.
 
 ---
 

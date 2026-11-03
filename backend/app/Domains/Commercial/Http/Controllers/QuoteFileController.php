@@ -3,12 +3,11 @@
 namespace App\Domains\Commercial\Http\Controllers;
 
 use App\Domains\Commercial\Actions\ReplaceFileOfTypeAction;
+use App\Domains\Commercial\Data\QuoteFileUploadData;
 use App\Domains\Commercial\Models\Quote;
 use App\Http\Controllers\Controller;
-use App\Shared\Files\ContentClass;
 use App\Shared\Files\Data\FileData;
 use App\Shared\Files\Models\File;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
@@ -17,15 +16,10 @@ use Illuminate\Http\Response;
  */
 class QuoteFileController extends Controller
 {
-    public function store(Request $request, Quote $quote, ReplaceFileOfTypeAction $action): FileData
+    public function store(QuoteFileUploadData $data, Quote $quote, ReplaceFileOfTypeAction $action): FileData
     {
-        $validated = $request->validate([
-            'type' => ['required', 'in:quote_document'],
-            'file' => ContentClass::Documento->regras(),
-        ]);
-
         return FileData::fromModel(
-            $action->execute($quote, $request->file('file'), $validated['type']),
+            $action->execute($quote, $data->file, $data->type),
         );
     }
 

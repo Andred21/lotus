@@ -16,7 +16,7 @@ final class ValidRut implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_string($value) || ! Rut::parse($value)->isValid()) {
-            $fail('O RUT informado é inválido.');
+            $fail(__('shared.rule.rut_invalid'));
         }
     }
 }

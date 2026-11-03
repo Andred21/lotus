@@ -43,10 +43,15 @@ class MensagemDeIdentidadeLocalizadaTest extends TestCase
         'identity.errors.system_role_not_deletable',
         'identity.errors.system_role_not_renamable',
         'identity.errors.redator_only_action',
+        // P-76: o duplicado do UserProvisioner saía de uma constante pt-BR.
+        'identity.errors.rut_taken',
+        'identity.errors.email_taken',
+        'identity.errors.rut_archived',
+        'identity.errors.email_archived',
     ];
 
     #[Test]
-    public function as_dezoito_mensagens_existem_nos_tres_locales(): void
+    public function as_mensagens_de_identidade_existem_nos_tres_locales(): void
     {
         foreach (['es_CL', 'pt_BR', 'en'] as $locale) {
             app()->setLocale($locale);

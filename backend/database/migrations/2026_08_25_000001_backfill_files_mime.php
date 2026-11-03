@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Mime\MimeTypes;
 
 /**
- * D5 do bloco de hardening. Até `UploadFileAction::metadataOf()` passar a usar
+ * D5 do bloco de hardening. Até `FileStorage::metadataOf()` passar a usar
  * `getMimeType()`, a coluna `files.mime` guardava o MIME que o CLIENTE
  * declarou no multipart. Migration, e não seeder, pelo mesmo motivo da P-47:
  * seeder não alcança linha que já existe no banco.

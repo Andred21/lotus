@@ -13,8 +13,8 @@ use App\Domains\Identity\Models\Student;
 use App\Domains\Identity\Models\StudentClientLog;
 use App\Domains\Identity\Models\User;
 use App\Shared\Audit\PivotAudit;
-use App\Shared\Files\Actions\UploadFileAction;
 use App\Shared\Files\ContentClass;
+use App\Shared\Files\Services\FileStorage;
 use App\Shared\Support\Rut;
 use Carbon\CarbonImmutable;
 use finfo;
@@ -37,7 +37,7 @@ use Illuminate\Http\UploadedFile;
 final class CarregadorDeCadastros
 {
     public function __construct(
-        private readonly UploadFileAction $upload,
+        private readonly FileStorage $upload,
         private readonly CreateCourseAction $criarCurso,
     ) {}
 

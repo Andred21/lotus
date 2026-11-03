@@ -7,48 +7,26 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
+## P-76 — seis frases ao usuário seguem literais em `app/`, por três caminhos que nenhuma catraca alcança
 
-**Bloco:** 50 · **Gatilho (original):** bloco que tocar `RestoreQuoteAction` ou `DeleteBudgetAction` e puder travar os dois lados.
+**Bloco:** item 52 (desde 2026-11-02) · **Gatilho:** bloco que tocar `Identity/Services/UserProvisioner`, `Shared/Rules`,
+`Shared/Files/Rules` ou `AuthController::logout()` por outro motivo; cada sítio passa a ler `lang/`
+nos três locales no mesmo commit, **ou** a catraca ganha o caminho que faltava. Revisar em
+**2026-10-31**.
 
-**ENCERRADA em 2026-11-03, no `backend-ciclo-de-vida-da-cotacao` (item 50), pelo próprio gatilho:** os eixos
-redator e turma já tinham fechado em 2026-08-23. O eixo que restava, cotação × orçamento, fechou com o
-lock do orçamento tomado dos dois lados e dentro da transação: `CreateQuoteAction` (`Budget::lockForWrite`),
-`DeleteBudgetAction` e `RestoreQuoteAction` (`Budget::lockRow`), na ordem D4 (orçamento antes da cotação),
-e criar cotação em orçamento arquivado dá 422. A prova é a catraca `BudgetQuoteLockTest`, que lê código:
-o sqlite da suíte não prova lock (`compileLock()` devolve string vazia), mesma ressalva da ficha. O
-resíduo é a **P-115** (Q-1, a decisão do no-op antes de reler a linha travada; Q-3, a catraca em lista fixa).
+**ENCERRADA em 2026-11-03, no `backend-arquivo-recepcao-e-upload` (item 52), pelo próprio gatilho:** o bloco tocou `UserProvisioner`, `Shared/Rules`, `Shared/Files/Rules` e o `AuthController::logout()`, e as seis frases (o duplicado e o arquivado do `UserProvisioner`, os `$fail()` de `ValidRut`, `PrintableGrade` e `ScannedForMalware`, e a resposta do logout) passaram a ler `lang/` nos três locales (`dd29add9`). O `MensagemLiteralTest` ganhou a quarta porta (`$fail` de regra) e a quinta (resposta de sucesso), e perdeu a entrada morta `UserPhotoService.php:64`.
 
-## P-112 — cotação ligada a turma: só o valor UF fica editável, e a cotação ganha a tag do status da turma
+## P-107 — o 422 de upload diz "El campo file…" em vez do nome do campo em es-CL
 
-**Bloco:** 50 · **Gatilho (original):** brainstorming do 50.
+**Bloco:** item 52 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar a validação de upload
+(`Shared/Files`) ou os atributos de validação do `lang/`. Revisar em **2026-11-07**.
 
-**ENCERRADA em 2026-11-03, no item 50, por mecanismo:** o `QuoteLifecycle` é o dono da matriz D2 (recusar com
-turma não arquivada dá 422, só o superadmin edita cotação aprovada, e com turma só o `value_uf`),
-provada pela tabela origem × verbo × turma × papel do `QuoteTransitionMatrixTest`; o `QuoteData` carrega
-`turma_status` sem N+1 (`QuoteTurmaStatusTest`, `generated.ts` regenerado) e a tag "Turma:" aparece na
-`QuoteRow` e na tabela de orçamentos. Provado também por curl contra a API real no stack da lane
-(recusar aprovada com turma em andamento, 422; `PUT` com `student_count` alterado, 422, dado intacto).
+**ENCERRADA em 2026-11-03, no `backend-arquivo-recepcao-e-upload` (item 52), pelo próprio gatilho:** o `validation.attributes` ganhou `file`, `valid_until`, `documents` e `documents.*` nos três locales (`dd29add9`, `2ab31e86`). O 422 de upload em es-CL diz "El campo archivo…", provado pelo `UploadAttributeLocaleTest` e contra a API da lane no fechamento (`POST /api/budgets/1/files` com `text/plain`).
 
-> **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
-> `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
-> por engano; as duas foram renumeradas no mesmo dia — a do item 25 para **`P-74`** e as do item 26
-> para **`P-75`** e **`P-76`**, nesta ordem de integração. Número de pendência não se reusa nem se
-> renumera para trás: é a mesma regra que o `state.md` escreveu para o rótulo de bloco na colisão
-> de 2026-09-02.
-
-> **Os números `P-77`, `P-78` e `P-79` foram disputados em 2026-09-20.** Dois blocos fecharam no
-> mesmo dia, em árvores diferentes, e cada um alocou a mesma faixa: o
-> `infra-producao-provisionamento-aws` (item 10 v2, `lane-b`) e o `harness-hooks-de-guarda` (item 28,
-> `lane-a`). O item 10 integrou primeiro, pela **PR #105**, então os três IDs são dele. As três
-> fichas do item 28 foram renumeradas **na integração**, não no fechamento: `P-77` → **`P-82`** (a
-> spec do harness), `P-78` → **`P-83`** (as sete decisões de política) e `P-79` → **`P-84`** (o
-> harness fora de doc versionado). É o mesmo precedente do `P-73`: renumera quem chega depois, nunca
-> quem já está publicado. **A causa é estrutural, não descuido** — a numeração é um contador global
-> sem reserva, e duas lanes que fecham no mesmo dia sem integrar entre si colidem por construção. A
-> **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
 ## Rastro anterior, já removido
+
+**A P-49 e a P-112 saíram no fechamento do `backend-arquivo-recepcao-e-upload` (item 52, 2026-11-03)**, o primeiro depois do item 50, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-74, a P-101, a P-103, a P-104, a P-105, a P-108 e a P-109 saíram no fechamento do `backend-ciclo-de-vida-da-cotacao` (item 50, 2026-11-03)**, o primeiro depois do item 49, que não as removeu. O item 48 encerrou a P-103 e a P-104, e o item 49 a P-74, a P-101, a P-105, a P-108 e a P-109, todas em 2026-11-02. O aceite do "redator" em inglês, que a P-104 deixou pendente, vive na P-116. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Shared\Files\Actions;
+namespace App\Shared\Files\Services;
 
 use App\Shared\Files\Models\File;
 use Carbon\CarbonInterface;
@@ -16,12 +16,11 @@ use Throwable;
  * em `files` (polimórfico). O binário NÃO passa a ser servido pela app — o
  * acesso é por URL pré-assinada temporária (ADR-11).
  *
- * Não há atalho que sobe e registra numa chamada: quem sobe compõe
- * `put`/`register`/`discard`, com o binário fora da transação e o insert dentro
- * — ver `StoreRedatorDocumentAction`, `StoreTurmaDocumentAction` (P-49) e
- * `ReplaceFileOfTypeAction` (Q-5 da revisão do bloco 47).
+ * Estes são os PRIMITIVOS de disco e de `files`. Quem sobe um arquivo entra por
+ * `FileUploader::store`, que os compõe com o binário fora da transação e o
+ * insert dentro (P-49, Q-5 da revisão do bloco 47).
  */
-class UploadFileAction
+class FileStorage
 {
     /**
      * Metadados do upload, capturados ANTES da escrita: depois dela o arquivo

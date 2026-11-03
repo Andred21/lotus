@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Tests\TestCase;
+use ValueError;
 
 /**
  * O upload grava no bucket ANTES da transação (D1/D3 da spec). Se a transação
@@ -115,6 +116,7 @@ class RedatorDocumentRollbackTest extends TestCase
         $this->assertSame([], $storage->allFiles(), 'objeto órfão ficou no bucket');
         $this->assertDatabaseCount('files', 0);
         $this->assertDatabaseCount('redatores', 0);
+        $this->assertDatabaseCount('users', 0);
     }
 
     public function test_caminho_feliz_segue_gravando_e_registrando(): void
@@ -196,6 +198,65 @@ class RedatorDocumentRollbackTest extends TestCase
             $this->fail('esperava ValidationException: o RUT já está cadastrado');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('rut', $e->errors());
+        }
+
+        $this->assertSame([], $storage->allFiles(), 'objeto órfão ficou no bucket');
+        $this->assertDatabaseCount('files', 0);
+    }
+
+    /**
+     * O `RedatorDocumentsData` filtra a chave pelo enum no caminho HTTP, mas a
+     * Action é a última porta antes do INSERT: chave fora de
+     * `RedatorDocumentType` gravaria um `files.type` que a habilitação não
+     * reconhece. A Action resolve a chave pelo enum, e o `ValueError` sai de
+     * dentro da transação, então nada fica no banco nem no bucket.
+     */
+    public function test_create_recusa_chave_de_documento_fora_do_enum(): void
+    {
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::fake('s3');
+        config(['filesystems.default' => 's3']);
+        $this->seed(RolePermissionSeeder::class);
+
+        $data = RedatorData::from([
+            'name' => 'Juan Morales',
+            'rut' => '13.456.789-9',
+            'email' => 'jm@lotus.cl',
+        ]);
+
+        try {
+            app(CreateRedatorAction::class)->execute($data, [
+                'XYZ' => UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'),
+            ]);
+            $this->fail('esperava ValueError');
+        } catch (ValueError) {
+            // esperado
+        }
+
+        $this->assertSame([], $storage->allFiles(), 'objeto órfão ficou no bucket');
+        $this->assertDatabaseCount('files', 0);
+        $this->assertDatabaseCount('redatores', 0);
+    }
+
+    public function test_update_recusa_chave_de_documento_fora_do_enum(): void
+    {
+        /** @var FilesystemAdapter $storage */
+        $storage = Storage::fake('s3');
+        config(['filesystems.default' => 's3']);
+        $redator = $this->redator();
+        $data = RedatorData::from([
+            'name' => $redator->user->name,
+            'rut' => '13.456.789-9',
+            'email' => $redator->user->email,
+        ]);
+
+        try {
+            app(UpdateRedatorAction::class)->execute($redator, $data, [
+                'XYZ' => UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf'),
+            ]);
+            $this->fail('esperava ValueError');
+        } catch (ValueError) {
+            // esperado
         }
 
         $this->assertSame([], $storage->allFiles(), 'objeto órfão ficou no bucket');

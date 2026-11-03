@@ -51,7 +51,7 @@ class ContratoDeIdentidadeTest extends TestCase
         $this->postJson('/api/clients', $this->clientPayload(['email' => 'ocupado@lotus.cl']))
             ->assertStatus(422)
             ->assertHeader('Content-Type', 'application/problem+json')
-            ->assertJsonPath('errors.email.0', 'Este e-mail já está cadastrado.');
+            ->assertJsonPath('errors.email.0', 'Este correo ya está registrado.');
 
         $this->assertDatabaseMissing('clients', ['legal_name' => 'ACME']);
     }
@@ -64,7 +64,7 @@ class ContratoDeIdentidadeTest extends TestCase
         $this->postJson('/api/redatores', $this->redatorPayload(['email' => 'ocupado@lotus.cl']))
             ->assertStatus(422)
             ->assertHeader('Content-Type', 'application/problem+json')
-            ->assertJsonPath('errors.email.0', 'Este e-mail já está cadastrado.');
+            ->assertJsonPath('errors.email.0', 'Este correo ya está registrado.');
 
         $this->assertSame(0, User::where('type', 'redator')->count());
     }
@@ -80,7 +80,7 @@ class ContratoDeIdentidadeTest extends TestCase
             'email' => 'ocupado@lotus.cl',
         ]))
             ->assertStatus(422)
-            ->assertJsonPath('errors.email.0', 'Este e-mail já está cadastrado.');
+            ->assertJsonPath('errors.email.0', 'Este correo ya está registrado.');
 
         $this->assertSame($client->user->email, $client->user->fresh()->email);
     }
@@ -99,7 +99,7 @@ class ContratoDeIdentidadeTest extends TestCase
             'email' => 'ocupado@lotus.cl',
         ]))
             ->assertStatus(422)
-            ->assertJsonPath('errors.email.0', 'Este e-mail já está cadastrado.');
+            ->assertJsonPath('errors.email.0', 'Este correo ya está registrado.');
     }
 
     /**
@@ -113,8 +113,8 @@ class ContratoDeIdentidadeTest extends TestCase
 
         $this->postJson('/api/clients', $this->clientPayload(['email' => 'ocupado@lotus.cl']))
             ->assertStatus(422)
-            ->assertJsonPath('errors.rut.0', 'Este RUT já está cadastrado.')
-            ->assertJsonPath('errors.email.0', 'Este e-mail já está cadastrado.');
+            ->assertJsonPath('errors.rut.0', 'Este RUT ya está registrado.')
+            ->assertJsonPath('errors.email.0', 'Este correo ya está registrado.');
     }
 
     /**

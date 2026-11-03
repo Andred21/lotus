@@ -4,6 +4,7 @@ namespace Tests\Feature\Comercial;
 
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Quote;
+use App\Shared\Files\MalwareScanner;
 use App\Shared\Files\Models\File;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -72,6 +73,36 @@ class CommercialFilesTest extends TestCase
 
         $this->postJson("/api/budgets/{$budget->id}/files", [
             'type' => 'random',
+            'file' => UploadedFile::fake()->create('x.pdf', 1, 'application/pdf'),
+        ])->assertStatus(422)->assertJsonValidationErrors('type');
+    }
+
+    public function test_tipo_invalido_nao_escaneia(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+
+        $this->postJson("/api/budgets/{$budget->id}/files", [
+            'type' => 'xxx',
+            'file' => UploadedFile::fake()->create('x.pdf', 1, 'application/pdf'),
+        ])->assertStatus(422)->assertJsonValidationErrors('type');
+
+        $this->assertSame([], app(MalwareScanner::class)->escaneados);
+    }
+
+    public function test_cotizacion_aceita_so_quote_document(): void
+    {
+        Storage::fake();
+        $this->actingAsAdmin();
+        $budget = $this->budget();
+        $quote = Quote::forceCreate([
+            'budget_id' => $budget->id, 'course_id' => $this->makeCourse()->id, 'seq_in_budget' => 1,
+            'student_count' => 5, 'value_uf' => 10, 'status' => 'pending',
+        ]);
+
+        $this->postJson("/api/quotes/{$quote->id}/files", [
+            'type' => 'invoice',
             'file' => UploadedFile::fake()->create('x.pdf', 1, 'application/pdf'),
         ])->assertStatus(422)->assertJsonValidationErrors('type');
     }

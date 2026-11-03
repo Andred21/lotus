@@ -3,15 +3,12 @@
 namespace App\Domains\Commercial\Http\Controllers;
 
 use App\Domains\Commercial\Actions\ReplaceFileOfTypeAction;
-use App\Domains\Commercial\Enums\BudgetDocumentType;
+use App\Domains\Commercial\Data\BudgetFileUploadData;
 use App\Domains\Commercial\Models\Budget;
 use App\Http\Controllers\Controller;
-use App\Shared\Files\ContentClass;
 use App\Shared\Files\Data\FileData;
 use App\Shared\Files\Models\File;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\Rules\Enum;
 
 /**
  * Anexos do orçamento: orden de compra, fatura e comprovante
@@ -20,15 +17,10 @@ use Illuminate\Validation\Rules\Enum;
  */
 class BudgetFileController extends Controller
 {
-    public function store(Request $request, Budget $budget, ReplaceFileOfTypeAction $action): FileData
+    public function store(BudgetFileUploadData $data, Budget $budget, ReplaceFileOfTypeAction $action): FileData
     {
-        $validated = $request->validate([
-            'type' => ['required', new Enum(BudgetDocumentType::class)],
-            'file' => ContentClass::Documento->regras(),
-        ]);
-
         return FileData::fromModel(
-            $action->execute($budget, $request->file('file'), $validated['type']),
+            $action->execute($budget, $data->file, $data->type),
         );
     }
 

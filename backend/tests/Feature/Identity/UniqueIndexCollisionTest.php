@@ -50,9 +50,20 @@ class UniqueIndexCollisionTest extends TestCase
             app(UserProvisioner::class)->writing(fn () => throw $e);
             $this->fail('esperava ValidationException');
         } catch (ValidationException $validacao) {
-            $this->assertArrayHasKey($colunaEsperada, $validacao->errors());
+            // A FRASE, não só a chave: sem o `__()` no `writing()` o usuário
+            // leria `identity.errors.*_taken` cru (P-76).
+            $this->assertSame(
+                [$colunaEsperada => [self::FRASE_DUPLICADO[$colunaEsperada]]],
+                $validacao->errors(),
+            );
         }
     }
+
+    /** O texto real de `lang/es_CL/identity.php` (a suíte roda em es_CL). */
+    private const FRASE_DUPLICADO = [
+        'rut' => 'Este RUT ya está registrado.',
+        'email' => 'Este correo ya está registrado.',
+    ];
 
     public static function mensagensDoMysql(): array
     {
@@ -89,7 +100,7 @@ class UniqueIndexCollisionTest extends TestCase
             app(UserProvisioner::class)->writing(fn () => throw $e);
             $this->fail('esperava ValidationException');
         } catch (ValidationException $validacao) {
-            $this->assertArrayHasKey('rut', $validacao->errors());
+            $this->assertSame(['rut' => [self::FRASE_DUPLICADO['rut']]], $validacao->errors());
         }
     }
 

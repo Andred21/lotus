@@ -19,7 +19,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
  * Contrato do cadastro de redator (professor). Campos do usuário-redator.
- * Documentos de idoneidade sobem em multipart, tratados no controller.
+ * Documentos de idoneidade sobem em multipart, por `RedatorDocumentsData`.
  */
 #[TypeScript]
 class RedatorData extends Data
@@ -74,7 +74,7 @@ class RedatorData extends Data
 
     /**
      * O payload de escrita usa o campo multipart `documents` (arquivos, lidos
-     * pelo controller via $request->file('documents')) — mesmo nome da
+     * por `RedatorDocumentsData`) — mesmo nome da
      * propriedade #[Computed] de leitura, que espera RedatorDocumentData[].
      * #[Computed] sozinho não impede o CastPropertiesDataPipe de tentar
      * transformar os UploadedFile em RedatorDocumentData (ele não checa

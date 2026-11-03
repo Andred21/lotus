@@ -5,12 +5,12 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Models\User;
 use App\Domains\Identity\Services\UserPhotoService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Shared\Files\Data\PhotoUploadData;
 use Illuminate\Http\Response;
 
 /**
- * Foto do usuário staff. Controller fino: valida pelas RULES do serviço
- * (fonte única) e delega. A permissão está na rota, junto das demais rotas
+ * Foto do usuário staff. Controller fino: recebe o `PhotoUploadData`
+ * (a política é do `ContentClass`) e delega. A permissão está na rota, junto das demais rotas
  * nested do domínio.
  *
  * `abort_unless($user->type === 'admin', 404)` é a MESMA guarda de
@@ -22,12 +22,11 @@ use Illuminate\Http\Response;
  */
 class UserPhotoController extends Controller
 {
-    public function store(Request $request, User $user, UserPhotoService $service): Response
+    public function store(PhotoUploadData $data, User $user, UserPhotoService $service): Response
     {
         abort_unless($user->type === 'admin', 404);
 
-        $request->validate(UserPhotoService::rules());
-        $service->store($user, $request->file('photo'));
+        $service->store($user, $data->photo);
 
         return response()->noContent();
     }

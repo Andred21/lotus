@@ -24,6 +24,6 @@ final class PrintableGrade implements ValidationRule
             return;
         }
 
-        $fail('La nota final debe ser un número o un texto no vacío.');
+        $fail(__('shared.rule.grade_not_printable'));
     }
 }

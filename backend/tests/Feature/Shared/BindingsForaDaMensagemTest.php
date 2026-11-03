@@ -107,7 +107,7 @@ class BindingsForaDaMensagemTest extends TestCase
             app(UserProvisioner::class)->writing(fn () => User::factory()->create(['email' => self::SENTINELA]));
             $this->fail('esperava ValidationException');
         } catch (ValidationException $e) {
-            $this->assertArrayHasKey('email', $e->errors());
+            $this->assertSame(['email' => ['Este correo ya está registrado.']], $e->errors());
         }
     }
 }

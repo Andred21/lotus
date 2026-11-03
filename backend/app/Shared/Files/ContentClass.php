@@ -4,8 +4,6 @@ namespace App\Shared\Files;
 
 use App\Shared\Files\Rules\LarguraMinimaDeImagem;
 use App\Shared\Files\Rules\ScannedForMalware;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\ValidationException;
 use Spatie\TypeScriptTransformer\Attributes\Hidden;
 
 /**
@@ -89,7 +87,10 @@ enum ContentClass: string
      * este bloco estreou a política: `POST /api/redatores` aceita quatro
      * `documents[<TIPO>]`, e quatro documentos de 10 MB somam 40 MB contra os
      * 12 MB do `client_max_body_size` (achado Q-3 do review de 2026-08-25).
-     * Abaixo do transporte pelo mesmo motivo do teto por arquivo.
+     * Abaixo do transporte pelo mesmo motivo do teto por arquivo. Quem o aplica
+     * é o `RedatorDocumentsData`, ANTES das regras por arquivo: escanear quatro
+     * binários no ClamAV para só então recusar o conjunto seria mandar bytes ao
+     * daemon à toa.
      */
     public const TETO_AGREGADO_KB = 10240;
 
@@ -108,31 +109,6 @@ enum ContentClass: string
             self::Documento, self::DocumentoDeTurma, self::Planilha => 10240,
             self::Assinatura => 1024,
         };
-    }
-
-    /**
-     * Guarda do corpo inteiro num sítio que recebe vários arquivos. Vem ANTES
-     * das regras por arquivo de propósito: escanear quatro binários no ClamAV
-     * para só então recusar o conjunto seria mandar bytes ao daemon à toa.
-     *
-     * @param  array<array-key,UploadedFile>  $arquivos
-     *
-     * @throws ValidationException
-     */
-    public static function assertCabeNoTransporte(array $arquivos, string $campo): void
-    {
-        $somaEmKb = array_sum(array_map(
-            fn (UploadedFile $arquivo) => (int) ceil(((int) $arquivo->getSize()) / 1024),
-            $arquivos,
-        ));
-
-        $tetoEmMb = intdiv(self::TETO_AGREGADO_KB, 1024);
-
-        if ($somaEmKb > self::TETO_AGREGADO_KB) {
-            throw ValidationException::withMessages([
-                $campo => __('shared.file.set_too_large', ['max' => $tetoEmMb]),
-            ]);
-        }
     }
 
     /** @return list<string|object> */
