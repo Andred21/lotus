@@ -44,6 +44,10 @@ class UploadPolicyRatchetTest extends TestCase
         // documento: `RedatorDocumentType::conteudo()` devolve `Documento` ou
         // `Assinatura`. A fonte da política segue sendo o `ContentClass`.
         '->conteudo()->regras(',
+        // Os Data de anexo tipado pedem as regras por `TypedFileRules::for()`,
+        // que chama `->conteudo()->regras()` do enum. A fonte da política
+        // segue sendo o `ContentClass`.
+        'TypedFileRules::for(',
     ];
 
     /**
