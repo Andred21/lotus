@@ -44,10 +44,8 @@ Route::middleware('auth.active')->group(function () {
     // Versão da plataforma: só para quem tem sessão (spec do bloco 45).
     Route::get('versao', VersaoController::class);
 
-    // Perfil próprio (spec D4): recurso próprio, sem `permission:`
-    // (os controllers de foto, documento e convite mais abaixo declaram
-    // `identity.user.update` no `HasMiddleware`; estes não). `/me` continua
-    // servindo só a sessão.
+    // Perfil próprio, sem permissão (spec D4 do perfil); abaixo, as permissões
+    // vêm do `HasMiddleware` dos controllers. `/me` continua servindo só a sessão.
     Route::get('profile', [ProfileController::class, 'show']);
     Route::put('profile', [ProfileController::class, 'update']);
     Route::post('profile/photo', [ProfilePhotoController::class, 'store'])->middleware('throttle:upload');

@@ -146,7 +146,9 @@ class PermissionRouteMiddlewareTest extends TestCase
             // `middleware()` = o que a rota e os grupos declaram; o do controller
             // vem por `controllerMiddleware()` e não passa por aqui (spec D4).
             foreach ($rota['route']->middleware() as $m) {
-                if (is_string($m) && str_starts_with($m, 'permission:')) {
+                // Alias (`permission:x`), classe cheia (`PermissionMiddleware::class.':x'`)
+                // e `PermissionMiddleware::using()` são a mesma declaração.
+                if (is_string($m) && (str_starts_with($m, 'permission:') || str_starts_with($m, PermissionMiddleware::class))) {
                     $descobertas[] = "{$chave} ({$m})";
                 }
             }
