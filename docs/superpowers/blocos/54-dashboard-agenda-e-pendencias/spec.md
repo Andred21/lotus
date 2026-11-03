@@ -145,7 +145,7 @@ pela tabela), apagando o comentário "unificá-la fica para o bloco 54".
 
 **D11 — D-73.** Achar a célula que força a largura em `CompliancePanel` e `RedatorLoadPanel` e
 deixá-la quebrar ou truncar com `title`. O piso das colunas (`panelColumns.ts`) não é o culpado
-(medido no item 23).
+(medido no item 23). **Emendado na execução: a medição achou o cabeçalho, ver §8.**
 
 ## 5. Restrições
 
@@ -190,9 +190,36 @@ deixá-la quebrar ou truncar com `title`. O piso das colunas (`panelColumns.ts`)
 6. Ranking de clientes conta só certificado vigente (revogado fora). Teste.
 7. Borda do último dia provada no sqlite (D10), vista reprovar antes do fix.
 8. `scrollWidth == clientWidth` no invólucro dos dois painéis em 1024x768 e 390x844, medido no
-   navegador com o stack da lane.
+   navegador com o stack da lane. **Em 390x844, leitura emendada na execução: ver §8.**
 9. Suíte backend, `pnpm build`, `pnpm lint` e `pnpm test` verdes; `generated.ts` regenerado sem
    diff pendente.
+
+## 8. Emendas de execução (2026-11-03)
+
+Decisões tomadas durante a execução que mudam a leitura de um item acima. A medição das emendas do
+D-73 está em `medicoes-d73.md`. O porquê e o custo de cada decisão estão em `rulings.md`.
+
+- **D11, causa do D-73 (João).** A medição (`medicoes-d73.md` §1) achou o cabeçalho, não uma célula.
+  O ícone de ordenação do último cabeçalho ordenável passava da borda do invólucro, porque as frações
+  de `panelColumns.ts` eram mais estreitas que palavra + ícone + padding nas três línguas. A célula
+  "Período" transbordava sobre a coluna vizinha, sem mexer no invólucro. A correção tem quatro
+  partes: o ícone quebra para baixo do título (`wrappingHeaderTablePt`, opt-in em `shared/ui`), os
+  pesos do `panelColumns.ts` saem do mínimo medido por coluna, o Cumplimiento ganha piso de 45rem
+  abaixo de `sm` e "Período" quebra entre as duas datas (`medicoes-d73.md` §2).
+- **Rótulos da coluna (João).** "Documentos presentes" e "Documentos faltantes" viram "Presentes" e
+  "Faltan" (pt-BR "Presentes"/"Faltam"; en "On file"/"Missing"). Com o D6, "Faltan" junta documentos
+  e requisitos.
+- **Critério 8 em 390x844 (João).** A leitura é "nada passa da tabela": o `scrollWidth` do invólucro
+  é igual à largura da tabela, nenhum cabeçalho ou célula transborda e o documento também não. A
+  rolagem horizontal do piso da tabela dentro do invólucro fica, como em toda tabela do produto. Em
+  1024x768 o critério vale como escrito. A medição está em `medicoes-d73.md` §3.
+- **D8, estado "sem acesso" (D-34).** O `useDashboard` decide o estado `unauthorized` do admin só
+  pela visibilidade. Se nenhum módulo é visível, o estado é sem acesso. Se algum módulo é visível,
+  mesmo que seja só a identidade, o estado é o dashboard. Antes, o estado se decidia farejando `null`
+  nas seções, e o critério 5 proíbe essa decisão.
+- **D7, locales do front.** O tipo novo de `PendingItemType` ganha `dashboard.pending.type.<tipo>`
+  nos três locales do front, além da frase do backend. Uma catraca em `navigation.test.ts` exige o
+  rótulo de cada tipo do `Record` de navegação.
 
 ## Verificação externa
 
