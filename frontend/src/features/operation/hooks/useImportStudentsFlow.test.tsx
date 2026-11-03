@@ -236,6 +236,85 @@ describe('useImportStudentsFlow', () => {
     expect(r.current.sendableCount).toBe(1)
   })
 
+  describe('422 da confirmação', () => {
+    const problem = (errors: Record<string, string[]>) => ({
+      type: 'x', title: 'Unprocessable', status: 422, detail: 'Errores de validación', instance: '', errors,
+    })
+
+    it('import.<row>.update deixa a linha em triage, bloqueia o Actualizar e libera com Mantener', async () => {
+      const { result: r } = await loaded()
+      act(() => r.current.setUpdate(3, true))
+      post.mockRejectedValueOnce(problem({ 'import.3.update': ['Sin permiso para actualizar'] }))
+
+      act(() => r.current.confirm())
+      await waitFor(() => expect(r.current.nothingImported).toBe(true))
+
+      expect(r.current.step).toBe('triage')
+      expect(r.current.result).toBeNull()
+      expect(r.current.rows.map((x) => x.row)).toEqual([2, 3, 4, 5])
+      expect(r.current.rows.find((x) => x.row === 3)).toMatchObject({
+        update_blocked: 'Sin permiso para actualizar', update_registration: true, refused: false, edited: false,
+      })
+      expect(r.current.sendableCount).toBe(1)
+      expect(r.current.message).toBeNull()
+
+      act(() => r.current.setUpdate(3, false))
+      expect(r.current.sendableCount).toBe(2)
+    })
+
+    it('import.<row> marca a linha nova como erro e a cadastrada como recusada, sem ir ao resultado', async () => {
+      const { result: r } = await loaded()
+      post.mockRejectedValueOnce(problem({ 'import.2': ['RUT duplicado'], 'import.3': ['Sin permiso'] }))
+
+      act(() => r.current.confirm())
+      await waitFor(() => expect(r.current.nothingImported).toBe(true))
+
+      expect(r.current.step).toBe('triage')
+      expect(r.current.rows.find((x) => x.row === 2)).toMatchObject({ status: 'error', message: 'RUT duplicado' })
+      expect(r.current.rows.find((x) => x.row === 3)).toMatchObject({
+        status: 'registered', refused: true, message: 'Sin permiso',
+      })
+      expect(r.current.sendableCount).toBe(0)
+    })
+
+    it('422 sem chave import.* segue o caminho genérico', async () => {
+      const { result: r } = await loaded()
+      post.mockRejectedValueOnce(problem({ 'rows.0.email': ['Correo inválido'] }))
+
+      act(() => r.current.confirm())
+      await waitFor(() => expect(r.current.message).toBe('Correo inválido'))
+
+      expect(r.current.nothingImported).toBe(false)
+      expect(r.current.step).toBe('triage')
+    })
+  })
+
+  describe('update_refusal da prévia', () => {
+    const blocked = previewRow({
+      row: 3, status: 'registered', divergent: ['name'], registered_name: 'Beto R.', update_refusal: 'Aluno de otra empresa',
+    })
+
+    it('linha com Actualizar e update_blocked não é enviável', async () => {
+      const { result: r } = await loaded([blocked])
+      expect(r.current.sendableCount).toBe(1)
+
+      act(() => r.current.setUpdate(3, true))
+      expect(r.current.sendableCount).toBe(0)
+      expect(r.current.rows[0].update_blocked).toBe('Aluno de otra empresa')
+    })
+
+    it('editar limpa o update_blocked e Mantener restaura o de origem', async () => {
+      const { result: r } = await loaded([blocked])
+
+      act(() => r.current.edit(3, { rut: blocked.rut, name: 'Novo', email: null, phone: null }))
+      expect(r.current.rows[0].update_blocked).toBeNull()
+      expect(r.current.sendableCount).toBe(1)
+
+      act(() => r.current.setUpdate(3, false))
+      expect(r.current.rows[0]).toMatchObject({ update_blocked: 'Aluno de otra empresa', name: blocked.name, edited: false })
+    })
+  })
+
   it('close no meio da triagem descarta sem chamar a API e volta a upload', async () => {
     const { result: r } = await loaded()
     post.mockClear()

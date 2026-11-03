@@ -111,9 +111,9 @@ export function ImportDialog({ turmaId, visible, onHide, turmaLabel, clientName 
 
         {f.step === 'result' && f.result && <ImportResultSummary result={f.result} />}
 
-        {(f.sizeError || f.message) && (
+        {(f.sizeError || f.message || f.nothingImported) && (
           <p className="text-sm" style={{ color: dangerText }}>
-            {f.sizeError || f.message}
+            {f.sizeError || f.message || k('nothingImported')}
           </p>
         )}
       </div>

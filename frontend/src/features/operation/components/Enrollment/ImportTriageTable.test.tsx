@@ -17,7 +17,7 @@ const base: TriageRow = {
   row: 2, rut: '11.111.111-1', name: 'Ana Pérez', email: 'ana@x.cl', phone: null,
   status: 'new', message: null, update_refusal: null, current_client: null, archived: false, divergent: [],
   registered_name: null, registered_email: null, registered_phone: null,
-  edited: false, removed: false, update_registration: false, refused: false,
+  edited: false, removed: false, update_registration: false, update_blocked: null, refused: false,
 }
 const row = (over: Partial<TriageRow>): TriageRow => ({ ...base, ...over })
 
@@ -67,6 +67,13 @@ describe('ImportTriageTable', () => {
   it('oferece Mantener/Actualizar só em linha cadastrada divergente, com a permissão', () => {
     montar([DIVERGENT, row({ row: 5, status: 'new' }), row({ row: 6, status: 'error', message: 'x' })])
     expect(radios()).toHaveLength(2)
+  })
+
+  it('mostra o motivo da recusa e desabilita o Actualizar, sem tirar o Mantener', () => {
+    montar([{ ...DIVERGENT, update_blocked: 'Aluno de otra empresa' }])
+    expect(screen.getByText(/note\.updateBlocked.*Aluno de otra empresa/)).toBeTruthy()
+    expect((screen.getByLabelText('operation.enrollment.import.update') as HTMLInputElement).disabled).toBe(true)
+    expect((screen.getByLabelText('operation.enrollment.import.keep') as HTMLInputElement).disabled).toBe(false)
   })
 
   it('não oferece Mantener/Actualizar sem a permissão de atualizar', () => {

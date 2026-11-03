@@ -22,7 +22,7 @@ vi.mock('../../hooks/useImportStudentsFlow', async (importOriginal) => ({
 const ROW: TriageRow = {
   row: 2, rut: '11.111.111-1', name: 'Ana Pérez', email: 'ana@x.cl', phone: null, status: 'new',
   message: null, update_refusal: null, current_client: null, archived: false, divergent: [], registered_name: null,
-  registered_email: null, registered_phone: null, edited: false, removed: false, update_registration: false, refused: false,
+  registered_email: null, registered_phone: null, edited: false, removed: false, update_registration: false, update_blocked: null, refused: false,
 }
 const RESULT: ImportResultData = {
   created: 1, relinked: 0, already_enrolled: 0, moved: [], errors: [], enrolled_total: 1, contracted_count: 10,
@@ -66,6 +66,12 @@ describe('ImportDialog', () => {
     setFlow({ message: 'Turma concluída' })
     montar()
     expect(screen.getByText('Turma concluída')).toBeTruthy()
+  })
+
+  it('no 422 da confirmação avisa que nada foi importado, no lugar da mensagem genérica', () => {
+    setFlow({ step: 'triage', rows: [ROW], sendableCount: 1, nothingImported: true, message: null })
+    montar()
+    expect(screen.getByText('operation.enrollment.import.nothingImported')).toBeTruthy()
   })
 
   it('na triagem mostra as contagens e confirma as linhas enviáveis', () => {

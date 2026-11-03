@@ -17,7 +17,7 @@ const base: TriageRow = {
   row: 2, rut: '11.111.111-1', name: 'Ana Pérez', email: 'ana@x.cl', phone: null,
   status: 'new', message: null, update_refusal: null, current_client: null, archived: false, divergent: [],
   registered_name: null, registered_email: null, registered_phone: null,
-  edited: false, removed: false, update_registration: false, refused: false,
+  edited: false, removed: false, update_registration: false, update_blocked: null, refused: false,
 }
 const row = (over: Partial<TriageRow>): TriageRow => ({ ...base, ...over })
 
