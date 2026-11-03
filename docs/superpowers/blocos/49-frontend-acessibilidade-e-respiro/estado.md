@@ -2,9 +2,9 @@
 schema_version: 3
 id: 49
 slug: 49-frontend-acessibilidade-e-respiro
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/blocos/49-frontend-acessibilidade-e-respiro/spec.md
 active_plan: docs/superpowers/blocos/49-frontend-acessibilidade-e-respiro/plano.md
@@ -17,10 +17,10 @@ branch: fix/49-frontend-acessibilidade-e-respiro
 worktree: ../lotus-49-frontend-acessibilidade-e-respiro
 offset: 2
 lane_base: 1575d694
-commit: 3d533e93
+commit: adc3debb
 blocker: null
-updated_at: 2026-11-02T19:49:47-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-11-02T21:23:08-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 49 — estado
