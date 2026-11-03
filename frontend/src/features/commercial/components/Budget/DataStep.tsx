@@ -9,13 +9,19 @@ import { parseUfInput } from '@shared/lib'
  * campos convertem valor nos dois sentidos (contagem em string de dígitos,
  * UF com vírgula, ordem de compra que troca `''` por `null`) e o `Field`
  * sozinho não resolve conversão — só passa o valor cru do form (item 24,
- * spec §5). O que sai é `fieldErrors`: as 5 extrações `?.[0]` viram `Field`. */
+ * spec §5). O que sai é `fieldErrors`: as 5 extrações `?.[0]` viram `Field`.
+ *
+ * `onlyUf` (cotação aprovada com turma, spec D2/D8): só o `value_uf` segue
+ * editável. Os outros quatro entram em modo leitura pelo próprio `Field`, que
+ * mostra o valor gravado como texto — o idioma do repositório para campo
+ * travado, e não `disabled`, que trunca o valor (spec BD-3 §4). */
 export function DataStep({
-  Field, form, onChange,
+  Field, form, onChange, onlyUf = false,
 }: {
   Field: FieldComponent<QuoteFormFields>
   form: QuoteFormFields
   onChange: <K extends keyof QuoteFormFields>(k: K, v: QuoteFormFields[K]) => void
+  onlyUf?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -24,7 +30,7 @@ export function DataStep({
       <FormSection title={t('quote.stepData')} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field name="student_count" label={t('quote.students')}>
+        <Field name="student_count" label={t('quote.students')} readOnly={onlyUf}>
           <AppInputText
             value={String(form.student_count)}
             onChange={(e) => onChange('student_count', Number(e.target.value.replace(/\D/g, '')) || 0)}
@@ -48,7 +54,7 @@ export function DataStep({
         </Field>
       </div>
 
-      <Field name="purchase_order" label={t('quote.purchaseOrder')}>
+      <Field name="purchase_order" label={t('quote.purchaseOrder')} readOnly={onlyUf}>
         <AppInputText
           onChange={(e) => onChange('purchase_order', e.target.value || null)}
           className="w-full"
@@ -56,10 +62,10 @@ export function DataStep({
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field name="planned_start_date" label={t('quote.plannedStart')}>
+        <Field name="planned_start_date" label={t('quote.plannedStart')} readOnly={onlyUf}>
           <AppDatePicker />
         </Field>
-        <Field name="planned_end_date" label={t('quote.plannedEnd')}>
+        <Field name="planned_end_date" label={t('quote.plannedEnd')} readOnly={onlyUf}>
           <AppDatePicker />
         </Field>
       </div>

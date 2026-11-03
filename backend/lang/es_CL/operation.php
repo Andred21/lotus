@@ -8,6 +8,8 @@ return [
         'archived' => 'Esta clase fue archivada y ya no acepta cambios.',
         'restore_conflict' => 'Ya existe una clase activa para esta cotización: archívala antes de restaurar esta.',
         'restore_redator_archived' => 'Un relator de esta clase está archivado: restáuralo antes de restaurar la clase.',
+        'restore_quote_not_approved' => 'La cotización de esta clase no está aprobada: apruébala antes de restaurar la clase.',
+        'restore_course_changed' => 'El curso de la cotización cambió: esta clase ya no corresponde a ella.',
         'documents_incomplete' => 'Documentación obligatoria incompleta (RN-16). Falta: :tipos.',
         'requirements_incomplete' => 'Falta para concluir la clase: :itens.',
         'quote_not_approved' => 'La cotización debe estar aprobada para configurar la clase.',

@@ -115,115 +115,6 @@ dele descreve a mesma borda). Não entrou no item 29 porque o Q-1 era sobre os l
 
 ---
 
-## P-49 — o `lockRow` de redator e turma é meio mutex: só quem arquiva toma o lock
-
-**Bloco:** item 50 (desde 2026-11-02) · **Gatilho:** os eixos **redator** e **turma** fecharam em 2026-08-23 (ver o bloco
-final desta ficha). O que resta é o eixo **cotação × orçamento**: fecha quando um bloco tocar
-`RestoreQuoteAction` ou `DeleteBudgetAction` e puder travar os DOIS lados, ou quando um filho ativo
-sob pai arquivado for observado em uso real. Revisar em **2026-10-31**.
-
-**Nasceu como `P-47` e foi renumerada no merge da `main` (2026-08-19), que já havia publicado uma
-P-47 — a das roles do seed. Mesmo precedente da [P-35](#p-35).** Texto e blocos que a citam como
-`P-47` são anteriores a esse merge.
-
-`ArchiveRedatorAction:31` abre transação e toma `Redator::lockRow()` antes da cascata. Um lock de
-linha só fecha janela se **os dois lados** o tomarem — e do lado do redator só existe um tomador.
-Os escritores de filho não tomam:
-
-| Sítio | O que escreve | Toma o lock? |
-|---|---|---|
-| `StoreRedatorDocumentAction:29-33` | `files` do redator | não |
-| `UpdateRedatorAction` | `users`/`redatores` | não |
-| `Operation\Actions\DesignateRedatorAction:18-25` | pivot `turma_redator` | não |
-
-O molde `Client` faz certo: seis escritores de filho tomam `Client::lockRow()`
-(`CreateClientContactAction:22`, `CreateClientAddressAction:22`, `UpdateClientAction:32`,
-`UpdateClientContactAction:23`, `UpdateClientAddressAction:23`, `DeleteClientContactAction:38`).
-
-**Consequência medida por leitura, não por corrida observada:** `StoreRedatorDocumentAction` faz o
-`uploads->put()` **antes** de abrir a transação, então a janela entre "o binding resolveu um redator
-vivo" e "INSERT em `files`" tem a largura de um upload no S3. Um documento criado nessa janela
-sobrevive **ativo** sob redator arquivado — exatamente o modo de falha que a cascata existe para
-impedir. Pelo mesmo caminho, uma designação concorrente pode pousar um redator arquivado numa turma
-viva, furando o gate de turma em andamento.
-
-**Por que ficou aberta:** o texto dos comentários veio verbatim do plano do
-`arquivados-roots-restantes` e afirmava que a janela estava fechada; o review da Task 7 mediu que
-não estava. Fechar de verdade custa três Actions fora da lista do plano — uma delas em **outro
-domínio** (`Operation`), o que criaria aresta de lock cruzando domínio — e a suíte roda em sqlite,
-onde `SQLiteGrammar::compileLock()` devolve string vazia: **nenhum teste deste repositório prova
-lock**. A prova seria o molde, não o teste. Em vez de fechar mal no fim de um bloco de 15 tasks, os
-dois comentários passaram a dizer o que o lock faz de fato e o resto virou esta ficha. Proporcional
-a ~10 usuários internos: exige upload de documento e arquivamento do mesmo redator no mesmo
-instante.
-
-**A turma repete a forma (Task 11 do mesmo bloco, 2026-08-19).** `DeleteTurmaAction` nasceu com
-`DB::transaction` + `Turma::lockRow()`, e do lado de lá também há um tomador só:
-
-| Sítio | O que escreve | Toma o lock? |
-|---|---|---|
-| `EnrollStudentAction:24` | `enrollments` da turma (abre transação, sem lock da turma) | não |
-| `ImportStudentsAction` | `enrollments` em lote | não |
-| `StoreTurmaDocumentAction` | `files` da turma | não |
-
-O texto do plano para a `DeleteTurmaAction` voltou à redação anterior à correção da Task 7 —
-afirmava que o `lockRow` fechava "a outra ponta" logo depois de descrever a corrida da matrícula
-concorrente. O review da Task 11 mediu que não fecha; o comentário foi reescrito no molde honesto da
-`ArchiveRedatorAction` e a ficha passou a cobrir os dois roots. É o segundo bloco a copiar a
-afirmação do plano sem medir: **o plano não é fonte sobre o que o código faz.**
-
-**O eixo da COTAÇÃO foi fechado no review de 2026-08-19 (Q-5), e o resto da ficha segue aberto.**
-O gate da `RestoreTurmaAction` perguntava sobre a turma irmã travando a turma que volta — a linha
-disputada é a **cotação**, que o `UNIQUE` de `turmas.active_quote_id` protege. `Quote::lockRow()`
-nasceu e os DOIS caminhos que decidem sobre ela a travam: `CreateTurmaAction` (que também moveu as
-duas checagens para dentro da transação) e `RestoreTurmaAction`. É o primeiro eixo desta ficha com
-tomador dos dois lados. Os três escritores de filho da tabela acima **continuam sem tomar o lock da
-turma**, e o eixo do redator continua inteiro.
-
-**Uma janela nova, da mesma classe, entrou com o gate do Q-1.** `RestoreQuoteAction` recusa
-restaurar cotação sob orçamento arquivado lendo `$quote->budget->trashed()` sem travar o orçamento —
-arquivar o orçamento entre a leitura e o `restore()` deixa o mesmo filho ativo sob pai arquivado. Não
-foi fechada pela razão declarada na Action: `DeleteBudgetAction` também não toma lock nenhum (P8 do
-plano), e travar só de um lado é a meia proteção que esta ficha existe para nomear.
-
-### Os eixos REDATOR e TURMA fecharam em 2026-08-23
-
-Fechados pelo `hardening-acesso-ownership-e-integridade` (`7b6123c7`, `2772d8cb`, `cc6d411e`,
-`3282f4ac`, `48ed1840`). **A ficha errava em dois pontos, e o plano os corrigiu por medição:**
-
-- **O lock é `lockForWrite()`, não `lockRow()` cru.** O molde `Client` que esta ficha cita chama
-  `Client::lockForWrite()` (`Client.php:139-148`) — `lockRow()` **mais** a recusa se o pai já está
-  arquivado. A diferença é a ficha inteira: `lockRow` sozinho SERIALIZA e depois deixa B pousar o
-  filho sob o pai recém-arquivado. `Turma::lockForWrite()` e `Redator::lockForWrite()` nasceram
-  neste bloco, no molde do `Client`.
-- **`ImportStudentsAction` sai da lista dos seis escritores.** Ela não abre transação — a transação
-  do import é POR LINHA e mora no `EnrollStudentAction`. `lockForUpdate()` fora de transação é
-  solto no autocommit da própria consulta: o lock ali seria teatro. São **cinco** tomadores, e a
-  cobertura do import vem da linha.
-
-Os cinco tomadores: `StoreRedatorDocumentAction`, `UpdateRedatorAction` (eixo redator),
-`DesignateRedatorAction` (aresta de lock cruzando domínio, declarada no `DomainDependencyTest`),
-`EnrollStudentAction` e `StoreTurmaDocumentAction` (eixo turma).
-
-**A catraca é `tests/Feature/Shared/ParentLockOnChildWriteTest.php`.** Arch test de lista dupla —
-toda Action sob `app/Domains/*/Actions/` que recebe `Turma $` ou `Redator $` está em `TOMAM_LOCK`
-ou em `ISENTAS` com o motivo escrito ao lado, e **silêncio reprova**. Roda em sqlite porque lê
-código, não corrida: `SQLiteGrammar::compileLock()` devolve string vazia e nenhum teste deste
-repositório prova lock.
-
-**Provado no gate de fechamento (2026-08-23), em duas camadas:**
-
-- **Sonda vista reprovar, nos dois braços da catraca.** Tirar o `Turma::lockForWrite()` do
-  `EnrollStudentAction` reprova o braço do lock; criar uma Action nova recebendo `Turma $` e não
-  declarada em nenhuma das duas listas reprova o braço do silêncio. As duas sondas foram
-  revertidas e o teste voltou a **4 passed**.
-- **Corrida real no MySQL de dev.** Conexão A abre transação e toma `SELECT … FOR UPDATE` sobre
-  `turmas.id=7`; B dispara `EnrollStudentAction` sobre a mesma turma e **bloqueia por 6,2 s**; A
-  arquiva e commita; B destrava e **recusa** com `Esta clase fue archivada y ya no acepta cambios.`
-  As duas metades de uma vez — o lock bloqueou (senão a matrícula entraria imediatamente) e a
-  recusa aconteceu (senão a matrícula entraria ATIVA sob turma arquivada, que é o modo de falha
-  desta ficha). Turma 7 restaurada ao fim do gate.
-
 ## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
 
 **Bloco:** item 55 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** bloco que tocar `backend/bootstrap/app.php`
@@ -1206,20 +1097,6 @@ O código não viola a rule: ela ficou atrás dele. Fecha com uma linha na tabel
 de formulário, 13px, na marca, a mesma voz da faixa um degrau acima) e o valor da constante nova
 congelado no `typography.test.ts`, como as outras.
 
-## P-112 — cotação ligada a turma: só o valor UF fica editável, e a cotação ganha a tag do status da turma
-
-**Bloco:** item 50 (desde 2026-11-02) · **Quem decide:** João (decidido 2026-11-02) · **Gatilho:** brainstorming do 50. Revisar em **2026-11-16**.
-
-Decisão do João no bloco 48 (spec D9, literal), para entrar no escopo do 50:
-
-- cotação **aprovada** ligada a turma: só o **valor UF** fica editável (restringe o "demais campos
-  editáveis" do achado 0.2 da ficha 50);
-- cotação/orçamento ganham uma **tag com o status da turma**, prefixo "Turma:" nos três idiomas —
-  *A configurar* (sem turma ainda), *En curso*, *Concluida*; cotação **recusada** não tem a tag;
-- confirmado pelo levantamento do bloco 48: hoje o superadmin recusa uma cotação aprovada com turma
-  concluída (`RejectQuoteAction`, sem guarda) e depois edita curso, número de alunos e UF, ou apaga a
-  cotação; já há teste fixando esse caminho (`QuoteApprovalTest.php:77-85`). Isso é o card 5 do 50.
-
 ## P-113 — o `COL.rut` dá menos que o RUT em mono nas tabelas de alunos e de clientes
 
 **Bloco:** — · **Quem decide:** — · **Gatilho:** bloco que tocar `studentColumns.ts` ou `clientColumns.ts`, ou a
@@ -1232,3 +1109,60 @@ deixou o `COL.rut` como estava, porque ele vale para outras tabelas que o bloco 
 usam são `studentColumns.ts:12` (alunos) e `clientColumns.ts:14` (clientes). Com `table-layout:
 fixed`, `min-width` não resolve: a correção é a fatia, como no item 49, ou subir o peso do `COL.rut`
 e medir o que muda nas outras tabelas. Medir a 390 px no navegador antes de mexer.
+
+## P-114 — cotação não aprovada com turma viva: o `QuoteLifecycle` não foi desenhado para esse estado
+
+**Bloco:** — (aberta em 2026-11-03, pelo item 50) · **Quem decide:** João · **Gatilho:** a leitura de produção abaixo, ou bloco que tocar `QuoteLifecycle` (`lockToEdit`/`lockToReject`). Revisar em **2026-11-17**.
+
+A revisão final do 50 apontou que um dado legado pode ter cotação `pending` ou `rejected` com turma
+**não arquivada**. A matriz D2 trata a cotação não aprovada como sem turma, então uma cotação nesse
+estado seria recusada, aprovada ou editada como se não houvesse turma. Saber se o estado existe exige
+leitura no banco de produção, que é ação fora da worktree e efeito externo que o `estado.md` do 50
+não autorizava (`efeito_externo: nao`).
+
+Consulta sugerida, **só leitura**:
+
+```sql
+SELECT q.id, q.status FROM quotes q
+JOIN turmas t ON t.quote_id = q.id AND t.deleted_at IS NULL
+WHERE q.status <> 'approved' AND q.deleted_at IS NULL;
+```
+
+Resultado vazio fecha a ficha. Linha devolvida pede decisão do João: corrigir o dado ou estender a
+guarda. Fonte: `rulings.md` do 50, I-2.
+
+## P-115 — três Menores da revisão do 50, registrados sem bloqueio
+
+**Bloco:** — (aberta em 2026-11-03, pelo item 50) · **Gatilho:** bloco que tocar `RestoreQuoteAction`, `RestoreBudgetAction`, `QuoteLifecycle`, as mensagens `*.approved_cannot_delete` ou o `BudgetQuoteLockTest`. Revisar em **2026-11-17**.
+
+Os três saíram da rodada 1 da revisão (`blocos/50-backend-ciclo-de-vida-da-cotacao/revisao.md`), todos
+`CONFIRMED`, Menores, sem bloqueio:
+
+- **Q-1.** `RestoreQuoteAction` decide o no-op (`trashed()`) na instância do binding, antes de
+  `Budget::lockRow`, e chama `restore()` nela sem reler a linha travada. Na corrida com a cascata do
+  `RestoreBudgetAction`, grava um audit `restored` fantasma. O estado final é válido, só a trilha de
+  auditoria mente, e a tela não alcança o caminho. O docblock do `RestoreBudgetAction` não descreve
+  essa ordem. Fere a D3 ("decide sobre a linha travada").
+- **Q-2.** `budget.approved_cannot_delete` e `quote.approved_cannot_delete` mandam "recuse antes",
+  mas recusar aprovada com turma viva agora dá 422 `turma_exists_cannot_reject`. Nenhuma mensagem
+  aponta o caminho real, que é arquivar a turma (nos três locales).
+- **Q-3.** A catraca do eixo cotação × orçamento é uma lista fixa de três arquivos, sem descobrir o
+  universo de chamadores, e o `QuoteLifecycle` declara "exige transação aberta" sem que nada
+  verifique. Um chamador novo fora de transação perde o lock em silêncio, e o sqlite segue verde.
+
+Os itens que a triagem da execução deixou "do jeito que estão" (T1 a T7, docblocks, lacunas de teste)
+estão no `rulings.md` do 50, seção Processo.
+
+## P-116 — vocabulário e texto que o 50 deixou para o João
+
+**Bloco:** — (aberta em 2026-11-03, pelo item 50) · **Quem decide:** João · **Gatilho:** o João decidir cada linha, ou bloco que tocar a tag `Turma:` ou o `QuoteWizard` em `onlyUf`. Revisar em **2026-11-17**.
+
+- **"Turma:" ao lado de "class"/"clase".** A tag do front mantém "Turma:" em en e es-CL (spec D7, decisão
+  do João). As mensagens novas do backend dizem "class" em en e "clase" em es_CL. Na tela em inglês
+  aparecem lado a lado "Turma: In progress" e "…has an active or concluded class…". Custo se errado:
+  vocabulário misto na mesma tela.
+- **Campos travados sem explicação.** Na edição `onlyUf` do wizard os campos ficam `readOnly` sem texto
+  dizendo por quê. Explicar pede chave nova de locale e texto que a spec não aprovou.
+- **Aceite do "redator" em inglês, herdado da P-104** (encerrada no item 48, que sai do rastro neste
+  fechamento): `operation.conclusion.confirmBody` e `operation.detail.lock.concluida` usam "redator"
+  no lugar de "instructor", que o `copy.test.ts` UI-05 proíbe. Falta o aceite do João.

@@ -16,7 +16,13 @@ export function BudgetOverlays({ d, budgetId, budget }: { d: ReturnType<typeof u
       )}
 
       {d.wizard && (
-        <QuoteWizard visible budgetId={budgetId} quote={d.wizard.quote} onHide={d.closeWizard} />
+        <QuoteWizard
+          visible
+          budgetId={budgetId}
+          quote={d.wizard.quote}
+          onlyUf={d.wizard.quote?.status === 'approved' && !!d.wizard.quote.turma_status}
+          onHide={d.closeWizard}
+        />
       )}
 
       {d.confirm && (

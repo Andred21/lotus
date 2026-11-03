@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Operation;
 
+use App\Domains\Catalog\Models\Course;
+use App\Domains\Commercial\Models\Quote;
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Models\Turma;
 use Database\Seeders\RolePermissionSeeder;
@@ -137,6 +139,44 @@ class TurmaArchiveEndpointTest extends TestCase
         $this->postJson("/api/redatores/{$redator->id}/restore")->assertOk();
         $this->postJson("/api/turmas/{$turma->id}/restore")->assertOk();
         $this->assertNotSoftDeleted('turmas', ['id' => $turma->id]);
+    }
+
+    public function test_restore_com_cotacao_recusada_da_422_e_a_turma_segue_arquivada(): void
+    {
+        // Terceiro gate (D10): a Task 1 libera recusar cotação aprovada cuja
+        // turma está arquivada; restaurar a turma depois não pode ressuscitá-la
+        // sob uma cotação recusada.
+        $this->actingAsSuperadmin();
+        $builder = IssuableEnrollmentBuilder::make()->turmaNaoConcluida()->create();
+        $turma = $builder->turmaModel();
+
+        $this->deleteJson("/api/turmas/{$turma->id}")->assertNoContent();
+        $this->postJson("/api/quotes/{$turma->quote_id}/reject")->assertOk();
+
+        $this->postJson("/api/turmas/{$turma->id}/restore")
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.turma.0', __('operation.turma.restore_quote_not_approved'));
+
+        $this->assertSoftDeleted('turmas', ['id' => $turma->id]);
+    }
+
+    public function test_restore_com_curso_trocado_na_cotacao_da_422(): void
+    {
+        $this->actingAsAdmin();
+        $builder = IssuableEnrollmentBuilder::make()->turmaNaoConcluida()->create();
+        $turma = $builder->turmaModel();
+
+        $this->deleteJson("/api/turmas/{$turma->id}")->assertNoContent();
+
+        $outroCurso = Course::create(['name' => 'Outro', 'workload_hours' => 8]);
+        Quote::query()->whereKey($turma->quote_id)->firstOrFail()
+            ->forceFill(['course_id' => $outroCurso->id])->saveQuietly();
+
+        $this->postJson("/api/turmas/{$turma->id}/restore")
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.turma.0', __('operation.turma.restore_course_changed'));
+
+        $this->assertSoftDeleted('turmas', ['id' => $turma->id]);
     }
 
     public function test_restore_de_turma_ativa_da_404(): void

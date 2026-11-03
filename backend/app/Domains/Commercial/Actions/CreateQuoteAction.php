@@ -12,13 +12,19 @@ use Spatie\LaravelData\Optional;
 /**
  * Cria a cotação sob um orçamento. `seq_in_budget` é atômico: lockForUpdate no
  * MAX(seq) do orçamento dentro da transação (ADR-17). O UNIQUE(budget_id,seq) é
- * a defesa extra. Cliente vem do orçamento (não é input).
+ * a defesa extra. Cliente vem do orçamento (não é input). Toma
+ * `Budget::lockForWrite()` primeiro (P-49).
  */
 class CreateQuoteAction
 {
     public function execute(Budget $budget, QuoteData $data): Quote
     {
         return DB::transaction(function () use ($budget, $data) {
+            // P-49 (spec D5): o orçamento é travado e recusado se arquivado ANTES
+            // de derivar o seq — senão a cotação nasce ativa sob orçamento
+            // arquivado na janela entre o binding e a transação.
+            Budget::lockForWrite($budget->id);
+
             $seq = (int) Quote::withTrashed()
                 ->where('budget_id', $budget->id)
                 ->lockForUpdate()
