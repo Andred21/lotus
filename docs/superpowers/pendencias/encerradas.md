@@ -7,42 +7,6 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-106 — a lixeira de um documento do orçamento remove sem confirmação
-
-**Bloco:** — · **Gatilho (original):** bloco que tocar `useBudgetDetail.ts` ou o
-`BudgetDocumentsCard`. Revisar em **2026-11-07**.
-
-O smoke do item 43 viu que a lixeira de um documento no detalhe do orçamento chama
-`removeFile.mutate` direto (`frontend/src/features/commercial/hooks/useBudgetDetail.ts:99`), sem
-`ConfirmDialog`. Um clique errado tira do orçamento uma OC, factura ou comprobante, que têm peso
-legal. O soft delete preserva o metadado e o arquivo fica no bucket, mas o documento some da tela.
-O `TurmaDocuments` já confirma a remoção com `severity="danger"`, e o orçamento deveria fazer o
-mesmo.
-
-**ENCERRADA em 2026-11-02, no `frontend-ajustes-de-interface-lote-2` (item 47), por mecanismo:** os
-documentos do presupuesto passaram ao `AppFileSlot`, que confirma antes de chamar `onRemove`
-(`frontend/src/shared/ui/AppFileSlot/AppFileSlot.test.tsx:102`), e o `useBudgetDetail.ts` deixou de
-remover direto. Medido na tela pelo `prova.md` do bloco (ticket 07): um diálogo "Delete “fatura-b.pdf”?",
-e cancelar manteve o arquivo.
-
-## P-111 — o `estrutura-monolito.md` não registra o `AppSignatureSlot`
-
-**Bloco:** — · **Gatilho (original):** fechamento do item 47 (`/finalizar-bloco 47`), que
-já tocou o `estrutura-monolito.md` (a linha do `AppFileSlot`), ou o bloco seguinte que tocar o doc.
-Revisar em **2026-11-15**.
-
-A rodada 2 da revisão do item 47 (Q-2, `CONFIRMED`) mediu que a linha da pasta
-`shared/ui/AppSignatureUpload/` (`docs/estrutura-monolito.md:128`) cita só `useSignatureCleaner`,
-`SignaturePreview` e `SignatureHint`. A correção do Q-3 da rodada 1 (`d8c7dded`) criou nessa pasta o
-`AppSignatureSlot` (`frontend/src/shared/ui/AppSignatureUpload/index.ts:1`): o `AppFileSlot` com a
-limpeza de D16, que a firma do redator, Mi perfil e a firma da gerente consomem. O ruling 24 aceitou
-que o nome da pasta engana e prometeu compensar no texto do doc; sem a peça no texto, quem procura
-"slot de assinatura" monta uma quarta fiação. Fecha acrescentando o `AppSignatureSlot` à mesma linha.
-
-**ENCERRADA em 2026-11-02, no fechamento do item 47, pelo próprio gatilho:** a linha da pasta
-`shared/ui/AppSignatureUpload/` do `docs/estrutura-monolito.md` passou a citar o `AppSignatureSlot`
-e quem o consome (commit `debc6891`).
-
 ## P-74 — o botão de severidade reprova AA no estado base do claro, fora o `warning`
 
 **Bloco:** 49 · **Gatilho (original):** régua por estado no molde do `describe` da P-30, as cinco
@@ -91,6 +55,18 @@ em anterior, página e seguinte, e o piso não se desliga pelo chamador. Medido 
 de acessibilidade em es-CL e en: "Página anterior", "Página N", "Página siguiente" (`prova.md`, P-109;
 `AppDataTable.test.tsx`).
 
+## P-103 — a emissão do certificado decide a porta 2 e o snapshot fora da transação
+
+**Bloco:** 48 · **Gatilho (original):** primeiro bloco que tocar o `IssueCertificateAction`.
+
+**ENCERRADA em 2026-11-02, no `certificacao-estado-de-emissao` (item 48), por mecanismo:** o `IssueCertificateAction` relê a matrícula com `lockForUpdate` dentro da transação e decide a porta 2 e monta o snapshot sobre a leitura nova; a correção de resultado trava a mesma linha. Provado em MySQL pelo `EmissionResultRaceTest` (pulado em sqlite, não verde falso), que o item viu reprovar contra o código antigo.
+
+## P-104 — o diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado
+
+**Bloco:** 48 · **Gatilho (original):** o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`.
+
+**ENCERRADA em 2026-11-02, no item 48, pela decisão do João:** `operation.conclusion.confirmBody` e `operation.detail.lock.concluida` dizem o que de fato é irreversível, nos três locales (spec §5). **Resta o aceite do João** para a palavra "redator" no texto em inglês no lugar do "instructor" do literal, que o `copy.test.ts` UI-05 proíbe (`rulings.md` do bloco).
+
 > **O número `P-73` está queimado, e o `P-74` foi disputado.** O `P-73` pertenceu à advisory do
 > `browserslist`. Os fechamentos do item 25 e do item 26 abriram, cada um, uma ficha que o reusou
 > por engano; as duas foram renumeradas no mesmo dia — a do item 25 para **`P-74`** e as do item 26
@@ -110,6 +86,8 @@ de acessibilidade em es-CL e en: "Página anterior", "Página N", "Página sigui
 > **`P-55`** é o lugar onde esse tipo de invariante de `state.md` está sendo discutido.
 
 ## Rastro anterior, já removido
+
+**A P-106 e a P-111 saíram no fechamento do `certificacao-estado-de-emissao` (item 48, 2026-11-02)**, o primeiro depois do item 49 que não as removeu. O item 47 as encerrou em 2026-11-02: a P-106 por mecanismo (a lixeira do presupuesto confirma pelo `AppFileSlot`, medido no `prova.md` do bloco), a P-111 pelo próprio gatilho (o `AppSignatureSlot` na linha do `estrutura-monolito.md`, `debc6891`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-28 e a P-78 saíram no fechamento do `frontend-ajustes-de-interface-lote-2` (item 47,
 2026-11-02)**. O item 40 as encerrou em 2026-10-29, e os fechamentos de 2026-11-01 passaram sem

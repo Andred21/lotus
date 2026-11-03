@@ -2,9 +2,9 @@
 schema_version: 3
 id: 48
 slug: 48-certificacao-estado-de-emissao
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/48-certificacao-estado-de-emissao/spec.md
 active_plan: docs/superpowers/blocos/48-certificacao-estado-de-emissao/plano.md
@@ -17,10 +17,10 @@ branch: fix/48-certificacao-estado-de-emissao
 worktree: ../lotus-48-certificacao-estado-de-emissao
 offset: 1
 lane_base: 1575d694
-commit: 0df0a0b8
+commit: b665b2b2
 blocker: null
-updated_at: 2026-11-02T22:57:47-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+updated_at: 2026-11-02T23:26:15-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 48 — estado

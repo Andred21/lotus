@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (43)
+## Abertas (37)
 
 ### Agrupadas em bloco de execução
 
@@ -51,8 +51,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-53 | A auditoria do fechamento do BD-15 mediu 12 divergências de doc que nenhum bloco tinha no escopo — `Certification` e `Dashboard` na frente | 58 | bloco que tocar `estrutura-monolito.md` ou `backend-ddd.md` por outro motivo — **disparado em 2026-09-04, 2026-09-25 e 2026-10-04, não pago**; revisar 2026-10-31; a linha "transporte de e-mail sem ADR" foi paga pelo item 33 (ADR-23) |
 | P-54 | Os testes da migration de permissões de feedback não cobrem o filtro `guard_name` nem o `forgetCachedPermissions()` (achado Q-4) | 55 | próximo bloco que escrever migration de permissão e puder absorver as duas assertivas; revisar 2026-10-31 |
 | P-102 | O `CompliancePanel` e `OperationMetricsQuery::pendencias()` não mostram os requisitos novos da conclusão (redator, `local_aplicacao` do presencial) | 54 | bloco que tocar o `CompliancePanel` ou o `pendencias()`; revisar em 2026-11-07 |
-| P-103 | A emissão do certificado decide a porta 2 e o snapshot fora da transação, e a correção de resultado pode entrar na janela — o certificado sai com o resultado antigo | 48 | bloco que tocar o `IssueCertificateAction`; antes de a correção pós-conclusão ter uso real; revisar em 2026-11-07 |
-| P-104 | O diálogo de conclusão diz "irreversível" e o aviso da turma concluída diz que o admin ainda corrige o resultado | 48 | o João decidir o texto, ou bloco que tocar `operation.conclusion.confirmBody`; revisar em 2026-11-07 |
 
 > `BD-15` = `BD-15-docs-guardrails-e-sincronizacao`, item 14 da fila.
 >
@@ -150,9 +148,11 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (2)
+## Encerradas (7)
 
-**A P-106 e a P-111 fecharam no item 47 (2026-11-02)**: a P-106 por mecanismo (a lixeira do presupuesto confirma pelo `AppFileSlot`, medido no `prova.md` do bloco), a P-111 pelo próprio gatilho (o `AppSignatureSlot` na linha do `estrutura-monolito.md`, `debc6891`). Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+**A P-103 e a P-104 fecharam no item 48 (2026-11-02)**: a P-103 por mecanismo (o `IssueCertificateAction` relê a matrícula sob `lockForUpdate` na transação, provado em MySQL pelo `EmissionResultRaceTest`), a P-104 pela decisão do João (os dois textos nos três locales). **A P-74, a P-101, a P-105, a P-108 e a P-109 fecharam no item 49 (2026-11-02).** Ficam em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+
+**A P-106 e a P-111 saíram no fechamento do item 48 (2026-11-02)**, o primeiro depois do item 49 que não as removeu; o item 47 as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-28 e a P-78 saíram no fechamento do item 47 (2026-11-02)**, o item 40 as encerrou em 2026-10-29 e os fechamentos de 2026-11-01 passaram sem removê-las. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
