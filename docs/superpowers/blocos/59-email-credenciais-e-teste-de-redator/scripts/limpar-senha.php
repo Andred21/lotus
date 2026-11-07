@@ -6,6 +6,8 @@ $ids = app()->environment('production') ? [252, 253] : [2, 5];
 
 echo 'env='.app()->environment().' session='.config('session.driver')."\n";
 
+// Fecha em erro: tinker segue depois de uma excecao; so $guardaOk === true libera a escrita.
+$guardaOk = false;
 $recusas = [];
 
 // Sem driver database as sessoes nao se apagam por user_id: recusa inteira.
@@ -24,11 +26,12 @@ foreach ($ids as $id) {
         $recusas[] = "RECUSADO: {$id} inativo";
     }
 }
+$guardaOk = true;
 foreach ($recusas as $r) {
     echo $r."\n";
 }
 
-if ($recusas === [] && count($ids) === 2) {
+if ($guardaOk === true && $recusas === [] && count($ids) === 2) {
     foreach ($ids as $id) {
         $u = \App\Domains\Identity\Models\User::find($id);
         $u->password = \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(64));

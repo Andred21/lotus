@@ -7,6 +7,8 @@ $ids = app()->environment('production') ? [252, 253] : [2, 5];
 echo 'env='.app()->environment().' session='.config('session.driver')."\n";
 
 // Guarda: checa TODOS os ids antes do primeiro save(); um recusado e nenhum e escrito.
+// Fecha em erro: tinker segue depois de uma excecao; so $guardaOk === true libera a escrita.
+$guardaOk = false;
 $recusas = [];
 foreach ($ids as $id) {
     $u = \App\Domains\Identity\Models\User::find($id);
@@ -18,11 +20,12 @@ foreach ($ids as $id) {
         $recusas[] = "RECUSADO: {$id} inativo";
     }
 }
+$guardaOk = true;
 foreach ($recusas as $r) {
     echo $r."\n";
 }
 
-if ($recusas === [] && count($ids) === 2) {
+if ($guardaOk === true && $recusas === [] && count($ids) === 2) {
     foreach ($ids as $id) {
         $u = \App\Domains\Identity\Models\User::find($id);
         $senha = \Illuminate\Support\Str::password(32);

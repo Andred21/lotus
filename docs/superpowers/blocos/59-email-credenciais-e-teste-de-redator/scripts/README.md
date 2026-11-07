@@ -11,12 +11,15 @@ João navegar pela UI do redator e depois apagam a senha. Allowlist fixa nos tr�
 | `limpar-senha.php` | sim | recusa se `session.driver !== 'database'`; guarda; senha aleatória descartada, `remember_token` nulo, `DELETE FROM sessions` do id; **não** imprime senha |
 
 Linha de impressão digital: `<id> type=… ativo=… hash=<8 hex do sha256 da senha> sessoes=… convites=…
-resets=… logins=… updated_at=…`. Só o `hash` e `updated_at` mudam numa troca/limpeza; é a prova de que
+resets=… logins=… updated_at=…`. Só o `hash` e `updated_at` mudam numa troca; na limpeza `sessoes` também vai a 0. É a prova de que
 nada além do esperado foi escrito.
 
 **Guarda (igual nos três).** Para cada id: existe, `type === 'redator'`, `is_active === true`. Qualquer
 falha imprime `RECUSADO: <id> <motivo>` e **nenhum** id é escrito (todos são checados antes do primeiro
 `save()`). A escrita passa por Eloquent de propósito: a auditoria (owen-it) só dispara por `save()`.
+`password` não está no `$auditInclude` do `User`: a linha de `audits` de uma troca/limpeza sai com
+`old_values`/`new_values` vazios e, vindo do tinker, sem autor. O registro do que foi feito e por quê é o
+`audit.md` do bloco (spec D8).
 
 ## Como rodar (provado no Step 3, local)
 
@@ -34,7 +37,7 @@ ssh -i ~/.ssh/lotus-prod.pem ubuntu@18.230.53.197 \
 ```
 
 A forma de produção usa o mesmo stdin e **não foi executada** nesta task (escrita remota em produção é do
-João); só a forma local foi provada. Confira o `env=production` na primeira linha antes de seguir.
+João); só a forma local foi provada. Confira o `env=production` na primeira linha depois do eco do codigo antes de seguir.
 
 ## Ordem
 
