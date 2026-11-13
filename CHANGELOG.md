@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.13.0](https://github.com/Andred21/lotus/compare/v1.12.0...v1.13.0) (2026-11-13)
+
+
+### Funcionalidades
+
+* **59:** e-mail de credenciais e teste do redator ([fbf2993](https://github.com/Andred21/lotus/commit/fbf29936a7f8834c10d5abbde74838344367cc18))
+
+
+### Correções
+
+* **deps:** laravel 13.42 e symfony 7.4.23 para o composer audit ([ee8820e](https://github.com/Andred21/lotus/commit/ee8820e052095f9b739b15d4be2ba4c68195b80f))
+* **identity:** rodape do e-mail em es-CL trata por tu ([3c89177](https://github.com/Andred21/lotus/commit/3c891771676073a7ed586157a45f3fa19b4116f5))
+
 ## [1.12.0](https://github.com/Andred21/lotus/compare/v1.11.0...v1.12.0) (2026-11-03)
 
 
