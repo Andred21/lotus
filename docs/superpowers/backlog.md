@@ -169,6 +169,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 |---|---|---|
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **55** `backend-borda-http-auth-e-permissao` | 1 | 2026-11-03 |
+| **59** `email-credenciais-e-teste-de-redator` | 1, 2, 5 | 2026-11-13 |
 
 ---
 
@@ -306,6 +307,33 @@ worktree nova (**P-57**). Fecha com uma `auditar-docs` fresca.
 
 **DoD:** as seis fichas estão fechadas, e a `auditar-docs` do fechamento não acusa nada fora de
 `pendencias/`.
+
+---
+
+## 59. `email-credenciais-e-teste-de-redator`
+
+**Prioridade:** P2 · **Frente:** Infra (SES) / Identity · **Contexto:** não · **Depende:** —
+**Fonte:** pedido do João em 2026-11-07; medição do mesmo dia (SES em sandbox, 3 redatores ativos
+de fora de `@lotusotec.cl`, nenhum verificado, nenhum convidado, nenhum login); `P-98`, `FUT-4`.
+
+Ficha e bloco saem na mesma branch, worktree e PR, a pedido do João (desvio da invariante 10, como
+o item 42).
+
+**Objetivo:** o e-mail do Lotus entrega a qualquer domínio sem verificar destinatário um a um, e o
+João valida em produção a experiência real de um redator (turmas dele, módulos negados, turma alheia).
+
+**Escopo:** production access do SES (emenda do ADR-23, runbook §13); sonda a dois domínios
+externos não verificados; ensaio local e teste em produção com senha temporária nos redatores 252 e
+253, sem trocar e-mail, com limpeza e rastro no `audit.md`; o rodapé "usted" do e-mail em es-CL.
+
+**Fora:** convite aos redatores reais (o João libera quando decidir); "ver como" ou qualquer código
+novo de acesso; e-mail ao cliente (FUT-4 segue como feature futura, com o pré-requisito pago);
+correção do que o teste de interface revelar (vira ticket).
+
+**DoD:** `ProductionAccessEnabled: true`; sonda entregue nos dois domínios com SPF, DKIM e DMARC
+`pass`; o checklist do redator percorrido local e em produção; as senhas de teste limpas e
+conferidas por leitura; P-98 reduzida à metade do alerta (ou fechada, se o João confirmar leitor na
+caixa `@lotusotec.cl` do admin 2).
 
 ---
 

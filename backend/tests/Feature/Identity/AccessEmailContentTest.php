@@ -40,4 +40,17 @@ class AccessEmailContentTest extends TestCase
             $this->assertStringNotContainsString('identity.invitation', __('identity.invitation.subject', [], $locale));
         }
     }
+
+    public function test_o_rodape_do_convite_em_es_cl_trata_por_tu(): void
+    {
+        app()->setLocale('es_CL');
+        $user = User::factory()->create(['email' => 'ana@lotus.cl']);
+
+        $html = (string) (new RedatorAccessInvitation('tok-123'))->toMail($user)->render();
+
+        $this->assertStringContainsString('Si tienes problemas para hacer clic en el botón', $html);
+        $this->assertStringContainsString('copia y pega la URL de abajo', $html);
+        $this->assertStringNotContainsString('copie y pegue', $html);
+        $this->assertStringNotContainsString('Si está teniendo', $html);
+    }
 }
