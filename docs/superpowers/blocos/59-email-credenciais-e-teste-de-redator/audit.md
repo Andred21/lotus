@@ -66,3 +66,62 @@ Três tickets em `tickets/`, nenhum corrigido neste bloco (spec §4.3):
 - `03-texto-de-admin-e-sobreposicao-na-lista-de-turmas.md`
 
 Nenhuma falha de autorização: toda recusa esperada veio da API.
+
+## Fase B — pedido de production access à AWS
+
+**Conta:** SES `sa-east-1`, perfil `lotus`. **Quem:** o João roda toda escrita na AWS; a sessão lê
+(`sesv2 get-account`). Support API indisponível (plano Basic: `SubscriptionRequiredException`).
+
+| Quando | Fato | Readback |
+|---|---|---|
+| 2026-11-07 ~17:25 | `put-account-details --production-access-enabled`, `TRANSACTIONAL`, site `https://app.lotusotec.cl`, descrição em português | 17:27: `DENIED`, caso `179408306900526`, `prod=false` |
+| 2026-11-07 ~18:20 | A AWS pede, em resposta automática, seis itens (URL, tipo, volume, origem dos destinatários, bounce/complaint, amostra); o João responde no caso, em inglês | 18:22: `DENIED` |
+| 2026-11-08 ~14:58 | Segunda resposta no mesmo caso | `DENIED` |
+| 2026-11-13 ~13:30 | O João encerra o caso para abrir outro; `put-account-details` com descrição nova em inglês e site `https://lotusotec.cl` → `ConflictException` (HTTP 409) duas vezes | conta inalterada: `DENIED`, mesmo caso, site antigo |
+| 2026-11-13 ~15:35 | Caso reaberto pelo console, com a descrição nova completa e o pedido de nova revisão ou de limpeza da revisão presa | 15:36: `DENIED`, `prod=false` |
+
+O 409 é a revisão `DENIED` presa à conta: nenhuma operação da `sesv2` a limpa, e a orientação da
+AWS no aws-cli#6652 é resolver pelo suporte no console. A descrição enviada em 11-13 cobre os seis
+itens pedidos; o texto fica no ledger local do bloco. Sem aprovação, a Task 5 (sondas, docs, Fase D)
+não roda.
+
+## Fase C — teste do redator em produção
+
+**Quando:** 2026-11-13, 16:01–16:25. **Onde:** `https://app.lotusotec.cl`. **Contas:** 252 (redator,
+12 turmas: 31–42) e 253 (redator, 0 turma). **Quem:** o João roda `trocar-senha` e `limpar-senha` em
+terminal próprio e digita o login; a sessão conduz o checklist num Chromium visível e lê a
+impressão digital.
+
+**Trava de só leitura (D14):** antes do login, um `context.route` no navegador aborta toda
+requisição que não seja `GET`/`HEAD`/`OPTIONS`, salvo `POST /api/login` e `POST /api/logout`. Provada
+na própria página: `POST`, `PUT`, `PATCH` e `DELETE` bloqueados no cliente, `GET /sanctum/csrf-cookie`
+204. Nenhuma requisição de escrita saiu do navegador no checklist; toda chamada à API registrada foi
+`GET`.
+
+### Impressão digital
+
+| Momento | Conta 252 | Conta 253 |
+|---|---|---|
+| H0, antes da troca (2026-11-07) | `hash=15d4b19e sessoes=0 logins=0` | `hash=89a7ef4d sessoes=0 logins=0` |
+| H1, depois da troca (16:01) | `hash=e722ee72 sessoes=0 logins=0` | `hash=ca2600f2 sessoes=0 logins=0` |
+| H2, depois da limpeza (16:25) | `hash=1b739373 sessoes=0 logins=2` | `hash=c99e9dc8 sessoes=0 logins=1` |
+| H3, conferência (16:26) | igual a H2 | igual a H2 |
+
+As três impressões diferem por conta, a limpeza deixou zero sessão e `convites=0 resets=0` ficou
+inalterado: nenhum e-mail saiu. `login_logs` da janela (sem IP): 252 às 16:04:56 e 16:06:05, 253 às
+16:18:01, todos Chrome — os logins digitados pelo João (o 252 entrou duas vezes antes do checklist).
+
+### Checklist §4.3
+
+| Item | Conta 252 (12 turmas) | Conta 253 (0 turma) |
+|---|---|---|
+| 1. Login e menu | menu lateral: Painel, Operação; painel do redator (`/api/dashboard/metricas` 200) | mesmo menu |
+| 2. Lista de turmas | `GET /api/turmas` 200, `total=12` (10 por página) | "Nenhuma turma ainda.", `total=0` |
+| 3. Turma própria | `/operacion/turmas/31`: abas Configuração, Alunos, Redator, Documentação, Conclusão; só leitura, nenhum botão acionado | — |
+| 4. Turma alheia pela URL | não aplicável: toda turma de produção é do 252 (coberto na Fase A) | `/operacion/turmas/31`: "O recurso solicitado não existe."; `GET /api/turmas/31` 404 |
+| 5. Módulos sem permissão | 403 em `/api/clients`, `/api/budgets`, `/api/redatores`, `/api/users`, `/api/courses`; SPA mostra "Você não tem permissão para esta ação." em `/comercial`, `/personas`, `/administracion`, `/cursos`; `/comercial/presupuestos/1` → `GET /api/budgets/1` 404; `/certificados` só título, sem chamada à API — ticket 01 | mesmos resultados |
+| 6. Logout | volta a `/login`; `/operacion` depois do logout redireciona a `/login` | idem |
+
+Console: 403 em `GET /api/turmas/pendientes-configuracion` (lista) e `GET /api/courses` (turma),
+nas duas contas — o mesmo do ensaio local, já no ticket 02. Nenhum defeito novo, nenhuma gravação
+acidental, nenhuma falha de autorização.
