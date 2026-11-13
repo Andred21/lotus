@@ -2,13 +2,13 @@
 schema_version: 3
 id: 59
 slug: 59-email-credenciais-e-teste-de-redator
-workflow_state: ready_for_review
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: request_code_review
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/spec.md
 active_plan: docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/plano.md
-active_review: null
+active_review: docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/revisao.md
 active_acceptance: docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/aceitacao.md
 context_packet: null
 efeito_externo: sim
@@ -17,9 +17,9 @@ branch: feat/59-email-credenciais-e-teste-de-redator
 worktree: ../lotus-59-email-credenciais-e-teste-de-redator
 offset: 1
 lane_base: cd2a8a57
-commit: 9d6a1956
+commit: 0ed825f4
 blocker: null
-updated_at: 2026-11-13T16:46:04-03:00
+updated_at: 2026-11-13T16:53:32-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
