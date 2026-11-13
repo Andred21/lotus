@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (34)
+## Abertas (35)
 
 ### Agrupadas em bloco de execução
 
@@ -44,6 +44,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-116 | "Turma:" ao lado de "class"/"clase" nas telas en e es-CL, campos travados do wizard sem explicação e o aceite do "redator" no texto em inglês (herdado da P-104) | — | o João decidir cada linha, ou bloco que tocar a tag `Turma:` ou o `QuoteWizard`; revisar 2026-11-17 |
 | P-117 | Três Menores da revisão do 51 (motivo falso da isenção de `CourseModuleData`, catraca cega a coleção declarada só por docblock, texto da rule "SEM default" contradizendo a catraca) e o débito `CourseModuleData::$theory_hours`/`$practice_hours = 0` | — | bloco que tocar o `InputDataDefaultsTest`, `CourseModuleData`/`UpdateCourseAction` ou a `generated-types.md`; revisar 2026-11-17 |
 | P-118 | Ordem cota de upload × permissão (429 antes do 403 nas 7 rotas `throttle:upload`), `DetectorDeAcessoSuspeito` ainda com `where('type', 'admin')` e o aviso de que lane viva quebra as catracas novas do 55 | — | bloco que tocar `appendToMiddlewarePriority`/`bootstrap/app.php`, as rotas `throttle:upload` ou `DetectorDeAcessoSuspeito`; revisar 2026-11-17 |
+| P-119 | Falha intermitente sem nome na suíte PHP: 1 vermelha em 16 rodadas no HEAD do fechamento do 59, nome perdido por `tail` | — | a próxima rodada vermelha com `1 failed` num HEAD que depois passa: dar nome, causa e correção; revisar 2026-11-27 |
 | P-83 | Sete decisões de política dos guardas (allowlist da `main` para `.github/`/`.githooks/`/`.codex/`/`.superpowers/`, `merge --ff-only`, o `docker/probe.env` real, os três caminhos do `stop-verify`, o motivo que ensina a alargar a allowlist, `git commit` sem `-m`) ficaram só no ledger, que é **gitignorado** | 57 | João decidir cada linha — a favor ou contra — e a decisão virar commit; revisar 2026-10-31 |
 | P-57 | O `artisan test` do `CLAUDE.md` §6 fatala por memória em worktree cuja imagem `app` é anterior ao `memory-cli.ini` | 58 | §6 mandar construir a imagem em worktree nova; revisar 2026-10-31 |
 | P-52 | `invitation_tokens` existe desde 2026-08-18 e não tem ficha de colunas no `der-fisico.md` | 58 | João apontar o bloco que a documenta, ou bloco que tocar `invitation_tokens`; revisar 2026-10-31 |

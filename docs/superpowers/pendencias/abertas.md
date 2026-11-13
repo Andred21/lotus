@@ -1000,3 +1000,25 @@ Três pontos que o bloco 55 deixou sem correção, por decisão registrada em `b
 - **Ordem throttle × permissão (ruling 4).** Nas 7 rotas POST com `throttle:upload`, o throttle roda antes do `permission:`: o `SubstituteBindings` do grupo `api` puxa o `throttle:upload` para antes dele pela `middlewarePriority`, e o `permission:` não tem prioridade. Já era assim antes do bloco. Efeito: quem não tem permissão gasta a própria cota de upload antes do 403 e, com a cota esgotada, recebe 429 no lugar de 403. Mudar é comportamento novo (`appendToMiddlewarePriority`); decisão do João.
 - **`DetectorDeAcessoSuspeito.php:112`** ainda faz `where('type', 'admin')` à mão (M-3 da revisão final). Anterior ao bloco e fora da contagem do D7; o escopo `User::staff()` é a fonte única que ele poderia usar.
 - **Lane viva quebra as catracas novas (spec §8).** Uma lane aberta antes do merge do 55 que acrescente rota autenticada ou permissão reprova `PermissionRouteMiddlewareTest`, `PermissionCatalogOrphanTest` ou `StaffUserBindingTest` no merge dela. Ajuste mecânico: declarar a permissão em `HasMiddleware` do controller (ou a rota em `SEM_PERMISSAO`, com chave `"{METODOS} {uri}"`).
+
+## P-119 — a suíte PHP teve uma falha intermitente sem nome no fechamento do item 59
+
+**Bloco:** — (aberta em 2026-11-13, pelo item 59) · **Gatilho:** a próxima rodada da suíte inteira
+que vier vermelha com o mesmo resumo (`1 failed`) num HEAD que depois passa sem mudança: a ficha
+fecha quando esse teste tiver nome, causa e correção (ou veredito escrito). Revisar em
+**2026-11-27**.
+
+Medido em 2026-11-13, no `/finalizar-bloco 59`, HEAD `e9f6d0b7`, stack da lane (offset 1). A suíte
+`php artisan test` rodou 16 vezes sem nenhuma mudança de código entre elas: 15 deram `7 skipped,
+1815 passed (13570 assertions)` e uma — a segunda, que começou perto das 17:00 — deu `1 failed,
+7 skipped, 1814 passed (13569 assertions)`. O nome do teste se perdeu: aquela rodada foi lida com
+`| tail -3`, e nada guardou a saída inteira. As dez rodadas seguintes, com a saída inteira salva,
+ficaram verdes.
+
+- **Não vem do item 59:** o bloco só toca `backend/lang/es_CL.json` e
+  `AccessEmailContentTest`, e os dois passaram nas 16 rodadas.
+- **Hipóteses não provadas:** colisão de dado aleatório numa factory (a ordem do PHPUnit é fixa,
+  então a variação vem do dado ou do relógio); virada de hora — o grep por lógica de granularidade
+  de hora em `app/` e `tests/` só achou `CargaInicial/Instante.php`, sem relação.
+- **Como pegar da próxima vez:** rodar a suíte salvando a saída inteira num arquivo
+  (`php artisan test > "$f" 2>&1`) e ler o resumo e as linhas `FAIL` dele, nunca por `tail` direto.

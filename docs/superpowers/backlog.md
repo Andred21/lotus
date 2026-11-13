@@ -169,6 +169,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 |---|---|---|
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **55** `backend-borda-http-auth-e-permissao` | 1 | 2026-11-03 |
+| **59** `email-credenciais-e-teste-de-redator` | 1, 2, 5 | 2026-11-13 |
 
 ---
 
