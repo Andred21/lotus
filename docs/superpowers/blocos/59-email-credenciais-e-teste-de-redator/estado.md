@@ -2,10 +2,10 @@
 schema_version: 3
 id: 59
 slug: 59-email-credenciais-e-teste-de-redator
-workflow_state: blocked
-next_owner: joao
-next_action: "resolve_blocker aguardando aceitação: itens 1, 2, 5"
-resume_state: ready_for_closure
+workflow_state: reviewing
+next_owner: claude
+next_action: "approve_review_findings rodada 2: revisar o bump de laravel/framework e symfony/* que destrava o composer audit do CI"
+resume_state: null
 active_spec: docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/spec.md
 active_plan: docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/plano.md
 active_review: docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/revisao.md
@@ -17,9 +17,9 @@ branch: feat/59-email-credenciais-e-teste-de-redator
 worktree: ../lotus-59-email-credenciais-e-teste-de-redator
 offset: 1
 lane_base: cd2a8a57
-commit: e9f6d0b7
-blocker: "aguardando aceitação depois do merge: itens 1, 2, 5 da ## Verificação externa"
-updated_at: 2026-11-13T17:46:39-03:00
+commit: 49cec778
+blocker: null
+updated_at: 2026-11-13T17:56:48-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
