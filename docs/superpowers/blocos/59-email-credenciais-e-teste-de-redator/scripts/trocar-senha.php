@@ -7,7 +7,9 @@ $ids = app()->environment('production') ? [252, 253] : [2, 5];
 echo 'env='.app()->environment().' session='.config('session.driver')."\n";
 
 // Guarda: checa TODOS os ids antes do primeiro save(); um recusado e nenhum e escrito.
-// Fecha em erro: tinker segue depois de uma excecao; so $guardaOk === true libera a escrita.
+// Fecha em erro: por stdin o PsySH le o arquivo como um buffer so e uma excecao aborta o resto,
+// entao a escrita nao roda. $guardaOk e defesa em profundidade. NAO cole linha a linha no tinker
+// interativo: ali a execucao segue depois da excecao e $guardaOk = true roda mesmo assim.
 $guardaOk = false;
 $recusas = [];
 foreach ($ids as $id) {

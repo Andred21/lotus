@@ -82,8 +82,10 @@ Nenhuma falha de autorização: toda recusa esperada veio da API.
 
 O 409 é a revisão `DENIED` presa à conta: nenhuma operação da `sesv2` a limpa, e a orientação da
 AWS no aws-cli#6652 é resolver pelo suporte no console. A descrição enviada em 11-13 cobre os seis
-itens pedidos; o texto fica no ledger local do bloco. Sem aprovação, a Task 5 (sondas, docs, Fase D)
-não roda.
+itens pedidos; o texto enviado está em `ses-pedido-2026-11-13.md`, com dois pontos a corrigir antes
+de ir para o runbook. Sem aprovação, a Task 5 (sondas, docs, Fase D) não roda. O João decidiu, em
+2026-11-13, manter o recurso no caso em vez do plano B do D1 e mesclar o bloco em `blocked`
+aguardando aceitação (`rulings.md`).
 
 ## Fase C — teste do redator em produção
 
@@ -107,7 +109,8 @@ na própria página: `POST`, `PUT`, `PATCH` e `DELETE` bloqueados no cliente, `G
 | H2, depois da limpeza (16:25) | `hash=1b739373 sessoes=0 logins=2` | `hash=c99e9dc8 sessoes=0 logins=1` |
 | H3, conferência (16:26) | igual a H2 | igual a H2 |
 
-As três impressões diferem por conta, a limpeza deixou zero sessão e `convites=0 resets=0` ficou
+O H0 é de seis dias antes da troca, sem um H0 fresco às 16:01. Os contadores zerados em H1
+limitam o que pode ter mudado no intervalo. As três impressões diferem por conta, a limpeza deixou zero sessão e `convites=0 resets=0` ficou
 inalterado: nenhum e-mail saiu. `login_logs` da janela (sem IP): 252 às 16:04:56 e 16:06:05, 253 às
 16:18:01, todos Chrome — os logins digitados pelo João (o 252 entrou duas vezes antes do checklist).
 
@@ -117,11 +120,14 @@ inalterado: nenhum e-mail saiu. `login_logs` da janela (sem IP): 252 às 16:04:5
 |---|---|---|
 | 1. Login e menu | menu lateral: Painel, Operação; painel do redator (`/api/dashboard/metricas` 200) | mesmo menu |
 | 2. Lista de turmas | `GET /api/turmas` 200, `total=12` (10 por página) | "Nenhuma turma ainda.", `total=0` |
-| 3. Turma própria | `/operacion/turmas/31`: abas Configuração, Alunos, Redator, Documentação, Conclusão; só leitura, nenhum botão acionado | — |
+| 3. Turma própria | `/operacion/turmas/31` (turma concluída): abas Configuração, Alunos, Redator, Documentação, Conclusão; aviso de turma concluída; aba Alunos com filtros Ativos/Arquivados, sem adicionar ou importar; link Orçamento · Cotação visível (ticket 02). Registro só do que coube na tela, nenhum botão acionado | — |
 | 4. Turma alheia pela URL | não aplicável: toda turma de produção é do 252 (coberto na Fase A) | `/operacion/turmas/31`: "O recurso solicitado não existe."; `GET /api/turmas/31` 404 |
-| 5. Módulos sem permissão | 403 em `/api/clients`, `/api/budgets`, `/api/redatores`, `/api/users`, `/api/courses`; SPA mostra "Você não tem permissão para esta ação." em `/comercial`, `/personas`, `/administracion`, `/cursos`; `/comercial/presupuestos/1` → `GET /api/budgets/1` 404; `/certificados` só título, sem chamada à API — ticket 01 | mesmos resultados |
+| 5. Módulos sem permissão | 403 em `/api/clients`, `/api/budgets`, `/api/redatores`, `/api/users`, `/api/courses`; SPA mostra "Você não tem permissão para esta ação." em `/comercial`, `/personas`, `/administracion`, `/cursos`; `/comercial/presupuestos/1` → `GET /api/budgets/1` 404 (no local, 403); `/certificados` só título, sem chamada à API, então `/api/certificates` não foi medido em produção (403 provado na Fase A) — ticket 01 | mesmos resultados |
 | 6. Logout | volta a `/login`; `/operacion` depois do logout redireciona a `/login` | idem |
 
 Console: 403 em `GET /api/turmas/pendientes-configuracion` (lista) e `GET /api/courses` (turma),
-nas duas contas — o mesmo do ensaio local, já no ticket 02. Nenhum defeito novo, nenhuma gravação
-acidental, nenhuma falha de autorização.
+nas duas contas — o mesmo do ensaio local, já no ticket 02. Uma diferença do ensaio: `GET
+/api/budgets/1` deu 404 em produção e 403 no local. A causa provável é o route model binding,
+que resolve antes do `authorize`: id inexistente dá 404, id existente dá 403, e o redator consegue
+descobrir quais ids existem. O risco é baixo (só usuários internos). Ficou anotado no ticket 01.
+Nenhuma gravação acidental e nenhuma escrita sem permissão aceita.

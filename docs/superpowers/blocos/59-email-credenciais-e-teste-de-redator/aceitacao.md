@@ -11,6 +11,6 @@ sobrescreve o que estiver escrito nela. O item manual é do João: feita a açã
 |---|---|---|---|---|
 | 1 | Production access do SES aprovado em `sa-east-1`. | manual |  |  |
 | 2 | Sonda entregue a um endereço `@prismusai.com` e a um Gmail não verificado, com SPF, DKIM e DMARC `pass`. | manual |  |  |
-| 3 | Checklist do redator percorrido em produção com as contas 252 e 253. | manual |  |  |
-| 4 | Senhas de teste limpas nas contas 252 e 253, conferidas por leitura (impressão digital e sessões). | manual |  |  |
+| 3 | Checklist do redator percorrido em produção com as contas 252 e 253. | manual | Percorrido 16:01–16:25 com trava D14 no navegador; sem defeito novo nem gravação (`audit.md`, Fase C) | 2026-11-13 |
+| 4 | Senhas de teste limpas nas contas 252 e 253, conferidas por leitura (impressão digital e sessões). | manual | H2=H3, hash ≠ H0 e H1, sessoes=0, convites/resets inalterados (`audit.md`, Fase C) | 2026-11-13 |
 | 5 | Aviso ao `lotus-site` sobre o fim do teto do sandbox entregue. | manual |  |  |

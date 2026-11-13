@@ -7,6 +7,10 @@ action", vindo do 403 da API. Em `/certificados` nem o aviso aparece: a página 
 cartão vazio. A API está correta (403 em todos, medido no ensaio local); falta a SPA tratar a rota
 pela permissão do usuário, como já trata o menu lateral, que mostra só Dashboard e Operations.
 
+Em produção (Fase C, 2026-11-13), `GET /api/budgets/1` deu 404 em vez de 403. O provável é o route
+model binding resolver antes do `authorize`, e aí id inexistente dá 404, id existente dá 403. Vale
+conferir junto: o redator consegue sondar quais ids existem.
+
 Origem: ensaio local do bloco 59 (Fase A do `audit.md`), checklist §4.3 item 5, contas 2 e 5 do seed
 (2026-11-07).
 

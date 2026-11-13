@@ -36,8 +36,8 @@ ssh -i ~/.ssh/lotus-prod.pem ubuntu@18.230.53.197 \
   < docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/scripts/impressao-digital.php
 ```
 
-A forma de produção usa o mesmo stdin e **não foi executada** nesta task (escrita remota em produção é do
-João); só a forma local foi provada. Confira o `env=production` na primeira linha depois do eco do codigo antes de seguir.
+A forma de produção usa o mesmo stdin. Foi provada na Task 4 (H0, H1 e H2 da Fase C do `audit.md`), e
+quem roda a escrita em produção é o João. Confira o `env=production` na primeira linha depois do eco do codigo antes de seguir.
 
 ## Ordem
 
