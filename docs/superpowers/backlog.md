@@ -382,11 +382,10 @@ ficam só como ponteiro, e a ficha delas é lá.
   eventos/condições dos domínios; badge/central/leitura primeiro; e-mail apenas como canal futuro
   para eventos críticos. Exige levantamento funcional próprio.
 - **FUT-4 · Destinatário de e-mail fora dos usuários internos** — cliente, aluno ou usuário de
-  outra empresa recebendo e-mail do sistema. A conta SES está em sandbox por decisão (ADR-23,
-  emenda de 2026-10-01): sem production access, cada destinatário fora de `@lotusotec.cl` precisa
-  clicar antes num link da AWS. Pré-requisito do bloco que trouxer a feature: pedir o production
-  access logo no início (runbook `deploy/aws/README.md` §13.6, cerca de 1 dia útil de espera). Se
-  a feature der login a cliente ou aluno, ela também reabre a RN-01 (lei 5 do `CLAUDE.md`).
+  outra empresa recebendo e-mail do sistema. O pré-requisito do production access foi pago no
+  item 59: a conta SES saiu do sandbox em 2026-11-20 (ADR-23, emenda de 2026-11-07), e qualquer
+  destinatário recebe sem verificação. Se a feature der login a cliente ou aluno, ela reabre a
+  RN-01 (lei 5 do `CLAUDE.md`).
 
 ---
 

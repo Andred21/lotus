@@ -131,3 +131,29 @@ nas duas contas — o mesmo do ensaio local, já no ticket 02. Uma diferença do
 que resolve antes do `authorize`: id inexistente dá 404, id existente dá 403, e o redator consegue
 descobrir quais ids existem. O risco é baixo (só usuários internos). Ficou anotado no ticket 01.
 Nenhuma gravação acidental e nenhuma escrita sem permissão aceita.
+
+## Fase D — sonda e docs (lane de aceitação, 2026-11-20)
+
+**Readback** (`sesv2 get-account`, perfil `lotus`, lido pelo João e pela sessão):
+`ProductionAccessEnabled: true`, revisão `GRANTED`, caso `179408306900526`, cota 50 000/24 h e
+14/s. Identidades: o domínio `lotusotec.cl` e o Gmail do João (D12) — o Gmail da sonda não está na
+lista.
+
+**Sonda positiva** (João, `tinker` interativo em produção, ~15:30). A negativa do runbook §13.3 não
+rodou: fora do sandbox ela entregaria a `example.com` e voltaria como bounce na reputação da conta.
+
+| Destino (só o domínio) | MX | SPF | DKIM | DMARC |
+|---|---|---|---|---|
+| `prismusai.com` | Hostinger (`fr-int-smtpin23.hostinger.io`) | `pass`, MAIL FROM `ses.lotusotec.cl` | `pass` (`lotusotec.cl` e `amazonses.com`) | `pass` (`policy=none`) |
+| `gmail.com`, não verificado | `mx.google.com` | `pass`, MAIL FROM `ses.lotusotec.cl` | `pass` (`lotusotec.cl` e `amazonses.com`) | `pass` (`p=NONE`) |
+
+`get-send-statistics`: ponto de 2026-11-20T18:32Z com `Bounces 0`, `Complaints 0`, `Rejects 0`.
+
+**`lotus@lotusotec.cl` não existe.** `RCPT TO` sem `DATA` em `aspmx.l.google.com` (mesmo método
+do `lotus-site`, `docs/infra/delegacao-2026-09-26.md`): `lotus@` e `sitio@` → `550 5.1.1`, igual a
+um endereço inventado; `contacto@` → `250`. Não é caixa, alias nem grupo do Workspace. O feedback
+forwarding do SES (`true`) aponta para ele. O item 5 do pedido à AWS ("which our administrators
+read") não procede. Vai para a P-98 e o runbook §13.6.
+
+**Docs:** ADR-23 (emenda de 2026-11-07), runbook §13.1 (histórico) e §13.6 (pedido, readback,
+texto corrigido, `lotus@`), P-98 (metade do redator paga), FUT-4 (pré-requisito pago).

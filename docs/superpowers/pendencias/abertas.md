@@ -580,6 +580,13 @@ verificada em `create-email-identity`, runbook §13.1), e o João troca o e-mail
 que ele não recebe e-mail. Com production access (runbook §13.6, FUT-4) o problema da verificação
 some, mas a caixa com leitor continua sendo necessária.
 
+**2026-11-20, item 59: metade do redator paga.** A conta SES saiu do sandbox (ADR-23, emenda de
+2026-11-07): reset e convite chegam a qualquer domínio, sem verificação. Fica a metade do alerta, o
+D7 numa caixa pessoal. Medido no mesmo dia: o remetente `lotus@lotusotec.cl` **não existe** no
+Google Workspace (`550 5.1.1` no `RCPT TO`, runbook §13.6), então o feedback de bounce/complaint
+do SES e as respostas dos usuários se perdem. Fecha quando a Lotus criar `lotus@` (caixa ou alias
+de caixa lida) e o admin tiver caixa `@lotusotec.cl` com leitor. Revisar em **2026-12-07**.
+
 **Gatilho disparou em 2026-10-06, no fechamento do item 13** (`go-live-confiabilidade-e-recuperacao`),
 apontado pela `auditar-docs` do Passo 3. O João decidiu manter a ficha aberta e fora do bloco: ela
 segue com ele.
