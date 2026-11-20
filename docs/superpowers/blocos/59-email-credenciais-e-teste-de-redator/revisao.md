@@ -2,6 +2,15 @@
 
 ## Em aberto
 
+## Rodada 2 — `ee8820e0` — 2026-11-20 · não rodada
+
+O `ee8820e0` (`fix(deps)`: laravel/framework 13.42 e symfony/* 7.4.23, só o `composer.lock`) voltou
+o `estado.md` a `reviewing` para a rodada 2, mas o PR #170 mesclou na `main` em 2026-11-13 antes
+dela rodar. Sem diff a revisar depois do merge (merge-base = HEAD). A prova do bump é a do próprio
+commit: `composer audit --locked` limpo, suíte 1815 passed, `generated.ts` sem drift. Decisão do João
+(2026-11-20): o bump fica registrado como mesclado sem a rodada 2, e o estado volta ao `blocked`
+aguardando aceitação do `49cec778`.
+
 ## Rodada 1 — `cd2a8a57..0ed825f4` — 2026-11-13 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4)
 
 Classificação: alto risco (scripts que trocam e limpam senha de usuário em produção; texto do e-mail
