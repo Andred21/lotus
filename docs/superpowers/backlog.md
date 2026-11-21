@@ -146,12 +146,19 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
-| 8 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
-| 9 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
+| 8 | **60** `codigos-mascaras-comercial-e-avaliacoes` | Backend + Frontend | Pedido da Lotus. Entrega o código `Scap x - R y` e o `PeriodFilter` em `shared/`, que o 62 usa |
+| 8 | **61** `certificacao-validacao-no-site` | Backend + Site | Pedido da Lotus. Corre ao lado do 60, em outro domínio e com metade em outro repositório, e entrega o download público que o 62 usa |
+| 9 | **62** `certificacao-paineis-lote-e-planilha` | Backend + Frontend | Pedido da Lotus. Depende do 60 e do 61 |
+| 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
+| 11 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
 
 **Emendada em 2026-11-02, por decisão do João:** os itens 48 a 58 entram na frente do 9. Os
 números iguais na primeira coluna (o 48 e o 49) correm em paralelo, e o `—` corre em frente
 própria, sem disputar árvore.
+
+**Emendada em 2026-11-21, na PR das fichas 60 a 62:** os três entram na frente do 58 e do 9. O 58
+vai por último de propósito, e os três também deslocam linhas que a P-97 coordena. É uma
+proposta: a ordem continua sendo do João.
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
 Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
@@ -292,6 +299,139 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 
 ---
 
+> **Os itens 60 a 62 nasceram em 2026-11-21**, abertos pelo João com um lote de pedidos da Lotus
+> (Cursos, Comercial, Operación, Certificación, interface e validação), medidos contra
+> `main@c6b06e2f`. O João pediu o menor número de blocos. Ficaram três porque duas divisões são
+> reais: a validação tem metade no repositório `Andred21/lotus-site`, e a Certificação precisa do
+> código de cotação novo (60) e do download público (61).
+
+---
+
+## 60. `codigos-mascaras-comercial-e-avaliacoes`
+
+**Prioridade:** P1 · **Frente:** Backend + Frontend (Catalog, Commercial, Operation, Identity) · **Contexto:** não · **Depende:** —
+**Fonte:** pedidos da Lotus de 2026-11-21 (Cursos 1 e 2, Comercial 1 e 2, Operación 1 e 2,
+Interface 1); `P-09`.
+
+**Escopo:**
+- **Código do curso.** Todo curso ganha um código `C-<n>` (`C-1`), persistido e imutável, e a tela
+  o mostra onde o curso aparece. O molde é o `budgets.code`: `'Scap '.id`, derivado na Action e
+  na mesma transação (ADR-17). Os cursos que já existem recebem o código por backfill na
+  migration.
+- **Código SENCE.** O identificador numérico que o SENCE atribui a um curso registrado vira campo
+  do curso, no cadastro e no `der-fisico.md`.
+- **`Scap x - R y`.** No código composto da cotação, `Cot y` vira `R y` (`Scap 190 - R1`). O texto
+  nasce em `Quote::code()` (`Quote.php:94`) e não é persistido. Os pontos que repetem o formato à
+  parte vão junto (`TurmaQueryBuilder.php:110`, os comentários e os testes que o fixam). Toda tela
+  que cita uma cotação mostra o código completo: Turmas, **Turmas a configurar**
+  (`PendingQuotesPanel`), Certificación e Dashboard. Certificado já emitido não muda, porque o
+  `snapshot` é retrato com peso legal.
+- **Abas do Comercial.** `Presupuestos` passa a ser a primeira aba (`CommercialPage.tsx:36-71`).
+- **Orçamentos no diálogo do cliente.** Uma seção nova lista em tabela os orçamentos do cliente,
+  no molde da seção de certificados do diálogo do alumno (`StudentDetailSections`). Ela tem busca
+  e dois filtros: estado (aprobado, rechazado, pendiente) e período (semana, mes, año,
+  personalizado). O `PeriodFilter` mora em `app/pages/Dashboard/admin/`, e feature não importa de
+  `app/`. Por isso ele sobe para `shared/` neste bloco, e o 62 o reusa.
+- **Documentos da turma.** O Manual de clase fica como está. `PRUEBAS` e `EVALUACION_REDATOR` dão
+  lugar a um quadro de evaluaciones com três slots fixos com tag: Instructor, Cliente (o dono do
+  orçamento) e Alumnos. O molde é o `BudgetDocumentsCard`. Só a falta do Manual ou da evaluación
+  do Instructor bloqueia a conclusão pelo superadmin (`ConcludeTurmaAction`,
+  `TurmaHabilitacaoService`, `TurmaDocumentType::values()`). As de Cliente e Alumnos avisam e não
+  bloqueiam. A turma habilitada do status de exibição e o `OperationMetricsQuery` seguem a mesma
+  regra. Paga a **P-09**: a Lotus decidiu a taxonomia, e ela não é a dos quatro tipos do Figma.
+- **Máscaras.** RUT, telefone e os outros campos com formato ganham máscara na digitação e na
+  exibição. O banco guarda o valor cru, sem `.`, `-` nem espaço. Os componentes moram em
+  `shared/ui` (lei 6). Antes de trocar, medir como produção grava esses campos hoje, porque a
+  carga inicial trouxe RUT da v1.
+
+**Para o brainstorming:**
+- De onde sai o número do `C-<n>`: do `id`, como o `Scap`, ou de uma sequência própria.
+- Se o código SENCE é único, se é obrigatório e se vai impresso no certificado.
+- O que acontece com os arquivos que produção já tem: `EVALUACION_REDATOR` vira Instructor, e
+  `PRUEBAS` vira Alumnos?
+- E-mail não tem máscara. O pedido quer validação na digitação, normalização (minúsculas, sem
+  espaço) ou as duas?
+
+**DoD:** curso novo nasce com `C-<n>`, e cada curso antigo tem o seu. O código SENCE persiste e
+aparece no curso. Nenhuma tela mostra mais `Cot`. Presupuestos abre primeiro. O diálogo do cliente
+lista e filtra os orçamentos dele. Um teste prova que a turma conclui sem as evaluaciones de
+Cliente e Alumnos, com aviso, e é recusada sem o Manual ou sem a do Instructor. RUT e telefone
+aparecem formatados e ficam crus no banco, provado por teste e no navegador.
+
+---
+
+## 61. `certificacao-validacao-no-site`
+
+**Prioridade:** P1 · **Frente:** Backend + Site (`Andred21/lotus-site`) + Infra · **Contexto:** sim · **Depende:** —
+**Fonte:** pedido da Lotus de 2026-11-21 (validação de certificado); `D-70`; `P-89`.
+
+**Hoje:** a validação é a página `/validar/<uuid>` do próprio app (`ValidationPage`). Ela lê
+`GET /api/publico/certificados/{uuid}` (`Certification/routes.php:11`). O QR leva a
+`config('app.certificate_validation_url')` + `/validar/{uuid}` (`CertificateValidationUrl.php:41`).
+
+**Escopo:**
+- **Página no site.** A validação vira uma página do site da Lotus, no layout dele. Ela confere o
+  certificado no endpoint público do Lotus, como hoje. Chega-se a ela pelo QR ou pelo código
+  digitado (`LOT-2026-XXX`).
+- **Download pelo site.** Certificado válido baixa por lá, e revogado não baixa. O PDF é renderizado
+  no Gotenberg a cada pedido (`routes.php:21-24`, a rota mais cara do sistema). Por isso a rota
+  pública nasce com limitador próprio por IP, no molde do `throttle:public-certificate`.
+- **API pública.** Busca pelo `codigo`, além do `uuid`. PDF público. CORS para a origem do site.
+- **QR.** Certificado emitido depois do bloco aponta para o site. O QR já impresso, que leva a
+  `app.lotusotec.cl/validar/<uuid>`, continua chegando a uma validação. Certificado tem peso legal,
+  e nenhum QR emitido pode quebrar.
+- **Duas PRs.** A página mora no `Andred21/lotus-site` (Vite + React, CloudFront), com PR própria.
+  A lane do Lotus leva o endpoint, o CORS e o QR. O QR só passa a apontar para o site depois que a
+  página estiver no ar.
+
+**Para o brainstorming:**
+- O código é sequencial (`LOT-2026-144`, `-145`…), e a busca pública por ele permite percorrer
+  todos os certificados. Decidir o que a resposta por código expõe (nome, RUT) ou se a busca pede
+  um segundo dado. O `uuid` do QR não tem esse problema.
+- O QR antigo redireciona para o site, ou a página atual do app fica no ar?
+- **D-70**: a página do site tem o canal de contato do próprio site. Se a Lotus aceitar, isso paga
+  a D-70.
+- **P-89**: o endereço que o gatilho dela confere muda quando o QR passa a apontar para o site.
+
+**DoD:** o QR de um certificado novo abre a página do site com o estado certo, e o código digitado
+chega ao mesmo resultado. O PDF baixa pelo site e é recusado para revogado. Um QR antigo continua
+chegando a uma validação. O limitador da rota pública foi visto recusar. A prova final é contra
+produção, depois do deploy (aceitação, invariante 11).
+
+---
+
+## 62. `certificacao-paineis-lote-e-planilha`
+
+**Prioridade:** P1 · **Frente:** Backend + Frontend (Certification) · **Contexto:** não · **Depende:** 60 61
+**Fonte:** pedidos da Lotus de 2026-11-21 (Certificación 1 a 3). O modelo da planilha é a tabela de
+um e-mail que a Lotus envia ao cliente com os certificados de uma turma.
+
+**Escopo:**
+- **Emisión.** Ficam o filtro de período (semana, mes, año, personalizado), com o `PeriodFilter`
+  que o 60 sobe para `shared/`, e o de turma. O combo de turma mostra `Scap x - R y`, o nome do
+  curso e a data. Onde hoje fica o vazio "Selecciona una turma para ver los alumnos certificables"
+  entram cards das turmas concluídas com emissão pendente. Clicar num card abre a tabela de
+  alunos, a mesma que o combo abre hoje (`EmissionPanel`, `EmissionStudentsTable`).
+- **Historial.** Coluna e filtro de orçamento e cotação (`Scap x - R y`), em `historialColumns.ts`.
+- **Download em lote.** Os certificados de uma turma, ou de uma seleção do Historial, saem num
+  arquivo só (ZIP). Cada PDF é uma renderização do Gotenberg (`routes.php:21-24`).
+- **Planilha.** A mesma seleção sai em planilha com as colunas do e-mail modelo: Código, Fecha
+  curso, RUT, Nombre completo, Curso e Link de descarga. O link é o download público do 61, e daí
+  vem a dependência.
+
+**Para o brainstorming:**
+- O teto de certificados por pedido de ZIP, e se o lote roda na fila. O molde do limitador é o
+  `throttle:certificate-batch`.
+- xlsx ou CSV. O modelo é uma tabela colada num e-mail.
+- "Fecha curso" é o fim da turma ou a data de emissão? No modelo, todas as linhas têm 12/10/26.
+- O RUT sai formatado na planilha, no formato de exibição que o 60 definir?
+
+**DoD:** os cards listam só turmas concluídas com pendência e abrem a tabela certa. O Historial
+filtra por cotação. O ZIP de uma turma traz um PDF por certificado emitido. A planilha abre no
+Excel com as seis colunas, e o link baixa o PDF certo, provado no navegador.
+
+---
+
 ## 58. `docs-sincronizacao-de-mapa`
 
 **Prioridade:** P3 · **Frente:** Docs · **Contexto:** não · **Depende:** 50 51 52 53 54 55
@@ -323,7 +463,6 @@ ficam só como ponteiro, e a ficha delas é lá.
 | `P-57` | João | `artisan test` fatala por memória em worktree com imagem `app` velha |
 | `P-28` | Lotus / João | Fundo final do certificado: aprovar ou corrigir |
 | `P-08` | Lotus | Manual varia por curso ou não |
-| `P-09` | Lotus | Quarto tipo de documento de turma: confirmar ou descopar |
 | `P-10` | Lotus | Tabela de alunos exibe Cliente ou não |
 | `P-13` | Lotus | Turma terá código próprio ou não |
 | `P-16` | Lotus | Aba inicial de Turma |
