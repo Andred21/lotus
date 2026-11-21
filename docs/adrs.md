@@ -610,8 +610,8 @@ rotina" disparou: três redatores externos, nenhum em `@lotusotec.cl`, e o convi
 falhando calados (P-98). Pedido em 2026-11-07 (`put-account-details`, `TRANSACTIONAL`), caso
 `179408306900526`: recusado três vezes, preso em `DENIED` (`ConflictException` em pedido novo) e
 reaberto pelo console em 2026-11-13 com a descrição completa
-(`blocos/59-email-credenciais-e-teste-de-redator/ses-pedido-2026-11-13.md`). Readback de
-2026-11-20: `ProductionAccessEnabled: true`, revisão `GRANTED`, cota de **50 000/24 h e 14/s**.
+(`docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/ses-pedido-2026-11-13.md`).
+Readback de 2026-11-20: `ProductionAccessEnabled: true`, revisão `GRANTED`, cota de **50 000/24 h e 14/s**.
 Desde então, qualquer destinatário recebe sem verificação (runbook §13.1). A identidade de domínio,
 o remetente único e a `lotus-ses` não mudam, e a identidade do Gmail do João fica (D12 do item
 59). Efeito no site: o teto de 200/24 h que dividia com o `/api/contacto` deixou
