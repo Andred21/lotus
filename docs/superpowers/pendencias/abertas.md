@@ -552,10 +552,10 @@ devolve 1 chave, nenhuma nova depois da inline `lotus-ses`. Segue com o João.
 
 ## P-98 — em produção, o único admin ativo recebe pelo Gmail pessoal do João, e o redator externo não recebe
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha quando existir uma caixa `@lotusotec.cl`
-com leitor para o admin de produção e o redator externo estiver verificado no SES (ou a conta sair
-do sandbox, runbook §13.6); dispara de qualquer forma antes do go-live (item 13). Revisar em
-**2026-10-31**.
+**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha quando a Lotus criar `lotus@lotusotec.cl`
+(caixa lida) e existir uma caixa `@lotusotec.cl` com leitor para o admin de produção; a metade do
+redator foi paga pela saída do sandbox (item 59, 2026-11-20). Dispara de qualquer forma antes do
+go-live (item 13). Revisar em **2026-12-07**.
 
 Medido em 2026-10-04, na aceitação do item 33 (`blocos/33-infra-producao-email-ses/audit.md`, B3 e
 Desvios):

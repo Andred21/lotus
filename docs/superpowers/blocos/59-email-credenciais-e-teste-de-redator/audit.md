@@ -157,3 +157,11 @@ read") não procede. Vai para a P-98 e o runbook §13.6.
 
 **Docs:** ADR-23 (emenda de 2026-11-07), runbook §13.1 (histórico) e §13.6 (pedido, readback,
 texto corrigido, `lotus@`), P-98 (metade do redator paga), FUT-4 (pré-requisito pago).
+
+**Aviso ao site (item 5), 2026-11-21 01:00.** Mensagem entre sessões para `lotus-site-6d`, com o
+seguinte conteúdo: fim do sandbox, caso `GRANTED`, cota de 50 000/24 h e 14/s, bounce real fora do
+sandbox, e o fato de que `sitio@` e `lotus@` não existem no Workspace. A sessão do site confirmou
+que registrou o recebimento sob a D-54 no `backlog.md` de lá. A D-54 segue aberta do lado deles: o
+gatilho de production access disparou, mas falta rate limit no `/api/contacto`, e o teto de abuso
+agora é de 50 000 por dia. `sitio@` é o From por desenho (spec D9 do site: o Reply-To é o
+visitante).
