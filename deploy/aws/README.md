@@ -890,6 +890,11 @@ Pré-condições: a inline `lotus-ses` aplicada (§4) e a `main` do corporativo 
 
 ### 13.1 Destinatários em sandbox
 
+> **Histórico desde 2026-11-20.** A conta saiu do sandbox (13.6, ADR-23 emenda de 2026-11-07):
+> qualquer destinatário recebe sem verificação, e nada abaixo é passo obrigatório. Fica como
+> referência caso a conta volte ao sandbox. A identidade do Gmail do João fica, por decisão (D12
+> do item 59).
+
 Todo endereço `@lotusotec.cl` recebe pela identidade de domínio. Qualquer outro precisa virar
 identidade própria **antes** do primeiro envio — vale para admin e redator com e-mail de outro
 domínio:
@@ -1070,6 +1075,64 @@ Guarde o número do caso; a resposta leva de um a alguns dias úteis. Aprovado, 
 site deixa de existir, porque o production access é da conta, não do Lotus (D-54 do `lotus-site`:
 avise a sessão de lá); e as identidades pessoais do 13.1 deixam de ser necessárias e podem sair com
 `delete-email-identity`. A policy `lotus-ses` não muda.
+
+**Pedido feito (item 59).** O gatilho "verificar externo virando rotina" disparou em 2026-11-07:
+
+| Quando | Fato | Readback |
+|---|---|---|
+| 2026-11-07 | `put-account-details` como acima, site `https://app.lotusotec.cl` | `DENIED`, caso `179408306900526` |
+| 2026-11-07 e 2026-11-08 | a AWS pede seis itens (URL, tipo, volume, origem dos destinatários, bounce/complaint, amostra); duas respostas no caso | `DENIED` |
+| 2026-11-13 | pedido novo recusado com `ConflictException` (409): a revisão `DENIED` fica presa à conta, e nenhuma operação da `sesv2` a limpa; caso reaberto pelo **console**, com o texto abaixo | `DENIED` |
+| 2026-11-20 | — | `ProductionAccessEnabled: true`, `GRANTED`, 50 000/24 h, 14/s |
+
+Lição: a resposta automática da AWS pede os seis itens; mande-os já no primeiro pedido. Recusado,
+não reenvie pela CLI: responda no caso pelo console (plano Basic: sem Support API).
+
+O texto que passou, com dois ajustes de fato (a credencial é a role, e a caixa de feedback):
+
+```text
+1. Website or application
+- Application: https://app.lotusotec.cl (private intranet; visitors only see a login page).
+- Company website: https://lotusotec.cl
+Lotus is a Chilean company that delivers professional training for the regulated high-voltage
+electrical sector. The intranet manages quotes, courses, classes and certificates. Only our own
+staff and our contracted instructors can log in (about 10 to 20 accounts).
+
+2. Email type: transactional only
+No marketing, newsletters or promotional email. Account invitation (single-use link, 7 days);
+password reset (only on request, 60 minutes); security alerts to our own administrators; later,
+class confirmations to the contact person of a corporate client. All messages come from
+lotus@lotusotec.cl; the application's IAM role is restricted by policy (ses:FromAddress) to that
+address only.
+
+3. Volume
+A few dozen emails per month today, well under 500 per month in the next year, never more than
+about 50 in one day. One email per user action, never batch campaigns.
+
+4. Recipient source
+No mailing list, no public sign-up. Staff and instructors: typed by an administrator under an
+existing contract. Resets: only to the address on the account, on request. Corporate clients
+(later): provided by the client when it hires a course. We never buy, rent, scrape or import lists.
+
+5. Bounce and complaint handling
+Account-level suppression list on for BOUNCE and COMPLAINT. Feedback forwarding on the
+lotusotec.cl identity. On a bounce, an administrator fixes the address; on a complaint, the
+account is deactivated. lotusotec.cl is a verified domain identity in sa-east-1 with DKIM, custom
+MAIL FROM (ses.lotusotec.cl), SPF and DMARC.
+
+6. Sample email (account invitation, in Spanish), with an English translation.
+```
+
+**`lotus@lotusotec.cl` não é caixa.** O texto enviado afirmava que os administradores leem
+`lotus@`. Em 2026-11-20, o MX (`aspmx.l.google.com`, Google Workspace) respondeu `550 5.1.1` a
+`RCPT TO:<lotus@lotusotec.cl>`, sem `DATA`, como a um endereço inventado, enquanto `contacto@` deu
+`250`. Alias e grupo do Workspace também dariam `250`. O feedback forwarding da identidade manda
+bounce e complaint a esse endereço, e a resposta de um usuário a e-mail do Lotus volta. A
+suppression list segue protegendo a conta. Criar a caixa (ou um alias para uma caixa lida) é da
+Lotus (P-98).
+
+O texto literal enviado, com o parágrafo que pedia a reabertura, está em
+`docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/ses-pedido-2026-11-13.md`.
 
 ## 14. Observabilidade — agente, sonda e os quatro alarmes
 

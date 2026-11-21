@@ -552,10 +552,10 @@ devolve 1 chave, nenhuma nova depois da inline `lotus-ses`. Segue com o João.
 
 ## P-98 — em produção, o único admin ativo recebe pelo Gmail pessoal do João, e o redator externo não recebe
 
-**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha quando existir uma caixa `@lotusotec.cl`
-com leitor para o admin de produção e o redator externo estiver verificado no SES (ou a conta sair
-do sandbox, runbook §13.6); dispara de qualquer forma antes do go-live (item 13). Revisar em
-**2026-10-31**.
+**Bloco:** — · **Quem decide:** João · **Gatilho:** fecha quando a Lotus criar `lotus@lotusotec.cl`
+(caixa lida) e existir uma caixa `@lotusotec.cl` com leitor para o admin de produção; a metade do
+redator foi paga pela saída do sandbox (item 59, 2026-11-20). Dispara de qualquer forma antes do
+go-live (item 13). Revisar em **2026-12-07**.
 
 Medido em 2026-10-04, na aceitação do item 33 (`blocos/33-infra-producao-email-ses/audit.md`, B3 e
 Desvios):
@@ -579,6 +579,13 @@ verificada em `create-email-identity`, runbook §13.1), e o João troca o e-mail
 `tinker` — a troca é `update` do Eloquent, o model é `Auditable`; e verifica o redator, ou decide
 que ele não recebe e-mail. Com production access (runbook §13.6, FUT-4) o problema da verificação
 some, mas a caixa com leitor continua sendo necessária.
+
+**2026-11-20, item 59: metade do redator paga.** A conta SES saiu do sandbox (ADR-23, emenda de
+2026-11-07): reset e convite chegam a qualquer domínio, sem verificação. Fica a metade do alerta, o
+D7 numa caixa pessoal. Medido no mesmo dia: o remetente `lotus@lotusotec.cl` **não existe** no
+Google Workspace (`550 5.1.1` no `RCPT TO`, runbook §13.6), então o feedback de bounce/complaint
+do SES e as respostas dos usuários se perdem. Fecha quando a Lotus criar `lotus@` (caixa ou alias
+de caixa lida) e o admin tiver caixa `@lotusotec.cl` com leitor. Revisar em **2026-12-07**.
 
 **Gatilho disparou em 2026-10-06, no fechamento do item 13** (`go-live-confiabilidade-e-recuperacao`),
 apontado pela `auditar-docs` do Passo 3. O João decidiu manter a ficha aberta e fora do bloco: ela

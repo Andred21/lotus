@@ -605,6 +605,20 @@ empresa (FUT-4 do backlog) —, verificar externo virando rotina, ou o volume so
 chegando perto de 200/24 h. Aprovado, o teto que freia o `/api/contacto` do site deixa de existir:
 efeito a avisar ao site (D-54 de lá).
 
+**Emenda de 2026-11-07 — conta fora do sandbox (item 59).** O gatilho "verificar externo virando
+rotina" disparou: três redatores externos, nenhum em `@lotusotec.cl`, e o convite e o reset deles
+falhando calados (P-98). Pedido em 2026-11-07 (`put-account-details`, `TRANSACTIONAL`), caso
+`179408306900526`: recusado três vezes, preso em `DENIED` (`ConflictException` em pedido novo) e
+reaberto pelo console em 2026-11-13 com a descrição completa
+(`docs/superpowers/blocos/59-email-credenciais-e-teste-de-redator/ses-pedido-2026-11-13.md`).
+Readback de 2026-11-20: `ProductionAccessEnabled: true`, revisão `GRANTED`, cota de **50 000/24 h e 14/s**.
+Desde então, qualquer destinatário recebe sem verificação (runbook §13.1). A identidade de domínio,
+o remetente único e a `lotus-ses` não mudam, e a identidade do Gmail do João fica (D12 do item
+59). Efeito no site: o teto de 200/24 h que dividia com o `/api/contacto` deixou
+de existir, porque o production access é da conta (D-54 de lá, avisado). Prova: sonda positiva a
+`@prismusai.com` e a um Gmail não verificado, `spf`, `dkim` e `dmarc` `pass` nos dois
+(`audit.md` do item 59, Fase D).
+
 ---
 
 ## Pendências abertas (não decidir sem o João Victor)
