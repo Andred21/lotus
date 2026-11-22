@@ -259,6 +259,7 @@ return [
         'rule'                     => 'regra',
         'rules'                    => 'regras',
         'second'                   => 'segundo',
+        'sence_code'               => 'código SENCE',
         'sex'                      => 'sexo',
         'shipment'                 => 'envio',
         'short_text'               => 'texto pequeno',

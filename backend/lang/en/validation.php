@@ -259,6 +259,7 @@ return [
         'rule'                     => 'rule',
         'rules'                    => 'rules',
         'second'                   => 'second',
+        'sence_code'               => 'SENCE code',
         'sex'                      => 'sex',
         'shipment'                 => 'shipment',
         'short_text'               => 'short text',

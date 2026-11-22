@@ -24,15 +24,19 @@ class Course extends Model implements Auditable
     use ArchivesChildren, AuditableTrait, SoftDeletes;
 
     protected $fillable = [
+        'code',
         'name',
         'technical_name',
+        'sence_code',
         'description',
         'workload_hours',
     ];
 
     protected $auditInclude = [
+        'code',
         'name',
         'technical_name',
+        'sence_code',
         'description',
         'workload_hours',
     ];

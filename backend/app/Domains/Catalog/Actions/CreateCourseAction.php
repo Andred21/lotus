@@ -19,9 +19,14 @@ class CreateCourseAction
             $course = Course::create([
                 'name' => $data->name,
                 'technical_name' => $data->technical_name instanceof Optional ? null : $data->technical_name,
+                'sence_code' => $data->sence_code instanceof Optional ? null : $data->sence_code,
                 'description' => $data->description instanceof Optional ? null : $data->description,
                 'workload_hours' => $data->workload_hours,
             ]);
+
+            // O id só existe depois do insert: o código "C-<id>" nasce na mesma
+            // transação e é imutável (nenhum DTO o grava). Mesmo molde do orçamento.
+            $course->update(['code' => "C-{$course->id}"]);
 
             // Coleção ausente (Optional) = curso nasce sem ela. Mesma leitura do
             // UpdateCourseAction — `CreateX` sincroniza o que `UpdateX` sincroniza.

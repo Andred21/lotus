@@ -203,8 +203,10 @@ photo_url: string | null,
 };
 export type CourseData = {
 id: undefined | number,
+code: undefined | string,
 name: string,
 technical_name: undefined | string | null,
+sence_code: undefined | string | null,
 description: undefined | string | null,
 workload_hours: number,
 modules: CourseModuleData[] | undefined,
