@@ -2,24 +2,24 @@
 schema_version: 3
 id: 60
 slug: 60-codigos-mascaras-comercial-e-avaliacoes
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
-active_spec: null
-active_plan: null
+active_spec: docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/spec.md
+active_plan: docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/plano.md
 active_review: null
-active_acceptance: null
+active_acceptance: docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/aceitacao.md
 context_packet: null
-efeito_externo: null
-executor: null
+efeito_externo: sim
+executor: claude
 branch: feat/60-codigos-mascaras-comercial-e-avaliacoes
 worktree: ../lotus-60-codigos-mascaras-comercial-e-avaliacoes
 offset: 1
 lane_base: 7982828e
-commit: 7982828e
+commit: 7e7b94d7
 blocker: null
-updated_at: 2026-11-22T15:49:25-03:00
+updated_at: 2026-11-22T20:37:12-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
