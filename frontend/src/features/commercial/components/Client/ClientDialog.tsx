@@ -7,6 +7,7 @@ import {
   FormPhotoRow,
   useFormField,
 } from "@shared/ui";
+import { usePermissions } from "@shared/hooks";
 import type { ClientData } from "@shared/types/generated";
 import {
   useClientForm,
@@ -31,6 +32,7 @@ export function ClientDialog({
   onEdit?: () => void;
 }) {
   const { t } = useTranslation();
+  const { can } = usePermissions();
   const f = useClientForm(client, mode, onHide);
   const {
     form,
@@ -91,7 +93,8 @@ export function ClientDialog({
           onRemove={removeContact}
         />
 
-        {mode !== "create" && client?.id !== undefined && (
+        {/* Sem `budget.view` a API recusa a lista: a seção nem monta (review Q-2). */}
+        {mode !== "create" && client?.id !== undefined && can("commercial.budget.view") && (
           <ClientBudgetsSection clientId={client.id} />
         )}
       </section>
