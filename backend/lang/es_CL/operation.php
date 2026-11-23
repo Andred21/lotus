@@ -8,7 +8,7 @@ return [
         'document_type_forbidden' => 'No tienes permiso para subir ni quitar este tipo de documento del grupo.',
         'archived' => 'Esta clase fue archivada y ya no acepta cambios.',
         'restore_conflict' => 'Ya existe una clase activa para esta cotización: archívala antes de restaurar esta.',
-        'restore_redator_archived' => 'Un relator de esta clase está archivado: restáuralo antes de restaurar la clase.',
+        'restore_redator_archived' => 'Un instructor de esta clase está archivado: restáuralo antes de restaurar la clase.',
         'restore_quote_not_approved' => 'La cotización de esta clase no está aprobada: apruébala antes de restaurar la clase.',
         'restore_course_changed' => 'El curso de la cotización cambió: esta clase ya no corresponde a ella.',
         'documents_incomplete' => 'Documentación obligatoria incompleta (RN-16). Falta: :tipos.',
@@ -25,7 +25,7 @@ return [
         ],
     ],
     'requirement' => [
-        'redator' => 'relator designado',
+        'redator' => 'instructor designado',
         'local_aplicacao' => 'lugar de aplicación (clase presencial)',
     ],
     'document_type' => [

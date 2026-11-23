@@ -6,7 +6,7 @@ return [
     'pending' => [
         'quote_pending_approval' => 'Cotización pendiente de aprobación.',
         'quote_without_turma' => 'Cotización aprobada sin clase configurada.',
-        'turma_without_redator' => 'Clase sin relator designado.',
+        'turma_without_redator' => 'Clase sin instructor designado.',
         'turma_presencial_without_local' => 'Clase presencial sin lugar de aplicación.',
         'turma_docs_incomplete' => 'Documentación obligatoria incompleta: :tipos.',
         'turma_awaiting_conclusion' => 'Clase habilitada pendiente de confirmación de conclusión.',
@@ -16,8 +16,8 @@ return [
     'alert' => [
         'certificate_expired' => 'Certificado vencido.',
         'certificate_expiring' => 'Certificado próximo a vencer.',
-        'redator_document_expired' => 'Documento :tipo de relator vencido.',
-        'redator_document_expiring' => 'Documento :tipo de relator próximo a vencer.',
+        'redator_document_expired' => 'Documento :tipo de instructor vencido.',
+        'redator_document_expiring' => 'Documento :tipo de instructor próximo a vencer.',
         'document_expired' => 'Documento :tipo vencido.',
         'document_expiring' => 'Documento :tipo próximo a vencer.',
     ],
