@@ -5,11 +5,11 @@ import type { ProblemDetails } from '@shared/api/axios'
 import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/generated'
 import { loadFailure } from '@shared/hooks'
 import { loadErrorHint, screenDetail } from '@shared/lib'
-import type { LoadErrorHintKey } from '@shared/lib'
+import type { LoadErrorHintKey, Period } from '@shared/lib'
 
 /** Janela histórica. Só séries e rankings a respeitam (D3 do bloco A). A UI do
- * seletor mora em `admin/PeriodFilter.tsx` (D5 do B2). */
-export type DashboardPeriod = { start: string; end: string }
+ * seletor é o `PeriodFilter` de `shared/ui` (D5 do B2). */
+export type DashboardPeriod = Period
 
 export const dashboardKeys = {
   /** A key varia pelo período para o B2 ligar o seletor sem mexer no cache.

@@ -1,3 +1,4 @@
+import { toLocalIsoDate as iso } from '@shared/lib'
 import type { DashboardPeriod } from '../useDashboard'
 
 export type PeriodPresetKey = 'last12' | 'last6' | 'currentYear' | 'custom'
@@ -10,16 +11,6 @@ export const PERIOD_PRESETS: readonly PeriodPresetKey[] = ['last12', 'last6', 'c
  * `DashboardFilterData.php:24`: a primeira carga precisa pedir a MESMA janela
  * que o servidor resolveria sozinho. */
 export const PERIOD_PRESET_PADRAO: PeriodPresetKey = 'last12'
-
-/** `Date` -> `YYYY-MM-DD` pelos componentes LOCAIS. Nunca `toISOString()`:
- * o Chile é UTC-3/-4 e a meia-noite local vira o dia ANTERIOR em UTC. Mesma
- * razão do `dateToIso` do `AppDatePicker`. */
-function iso(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const dia = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${dia}`
-}
 
 /** Recua `meses` preservando o dia, e ancorando no ÚLTIMO dia do mês quando o
  * dia não existe lá. `setMonth` sozinho estoura para o mês seguinte — 31 de

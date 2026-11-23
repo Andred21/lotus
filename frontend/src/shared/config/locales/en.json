@@ -29,6 +29,11 @@
     "sector": "High-voltage electrical sector"
   },
   "common": {
+    "period": {
+      "label": "Period",
+      "start": "From",
+      "end": "To"
+    },
     "language": "Language",
     "toggleMenu": "Toggle menu",
     "toggleTheme": "Toggle theme",
@@ -284,13 +289,10 @@
       }
     },
     "period": {
-      "label": "Period",
       "last12": "Last 12 months",
       "last6": "Last 6 months",
       "currentYear": "Current year",
-      "custom": "Custom",
-      "start": "From",
-      "end": "To"
+      "custom": "Custom"
     },
     "series": {
       "countsTitle": "Monthly trend",

@@ -29,6 +29,11 @@
     "sector": "Sector eléctrico de alta tensión"
   },
   "common": {
+    "period": {
+      "label": "Período",
+      "start": "Desde",
+      "end": "Hasta"
+    },
     "language": "Idioma",
     "toggleMenu": "Alternar menú",
     "toggleTheme": "Cambiar tema",
@@ -284,13 +289,10 @@
       }
     },
     "period": {
-      "label": "Período",
       "last12": "Últimos 12 meses",
       "last6": "Últimos 6 meses",
       "currentYear": "Año en curso",
-      "custom": "Personalizado",
-      "start": "Desde",
-      "end": "Hasta"
+      "custom": "Personalizado"
     },
     "series": {
       "countsTitle": "Evolución mensual",
