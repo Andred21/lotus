@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppInputText, RutInput, FormField, FormErrorSummary } from '@shared/ui'
+import { AppDialog, AppButton, AppInputText, PhoneInput, RutInput, FormField, FormErrorSummary } from '@shared/ui'
 import { useEnrollStudentFlow } from '../../hooks/useEnrollStudentFlow'
 import { MoveConfirmDialog } from './MoveConfirmDialog'
 import { dangerText } from '@shared/styles/tokens'
@@ -80,7 +80,7 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
               <AppInputText className="w-full" value={f.details.email} onChange={(e) => f.setField('email', e.target.value)} />
             </FormField>
             <FormField label={t('operation.enrollment.form.phoneLabel')} error={err('phone')}>
-              <AppInputText className="w-full" value={f.details.phone} onChange={(e) => f.setField('phone', e.target.value)} />
+              <PhoneInput value={f.details.phone} onChange={(phone) => f.setField('phone', phone ?? '')} />
             </FormField>
             {f.isNewStudent && (
               <p className="text-sm sm:col-span-2" style={{ color: 'var(--text-color-secondary)' }}>

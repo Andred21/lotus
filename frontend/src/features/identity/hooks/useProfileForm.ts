@@ -3,7 +3,7 @@ import { useMutationErrors } from '@shared/hooks'
 import type { ProfileData } from '@shared/types/generated'
 import { useUpdateProfile } from '../api/useProfile'
 
-type Campos = { name: string; phone: string }
+type Campos = { name: string; phone: string | null }
 
 function toFields(profile: ProfileData): Campos {
   return { name: profile.name, phone: profile.phone ?? '' }
@@ -31,11 +31,11 @@ export function useProfileForm(profile: ProfileData, onSaved?: () => void) {
 
   return {
     form,
-    set: (k: keyof Campos, v: string) => setForm((f) => ({ ...f, [k]: v })),
+    set: (k: keyof Campos, v: string | null) => setForm((f) => ({ ...f, [k]: v })),
     // Telefone em branco é AUSÊNCIA, e o DTO aceita `null`. Mandar `''` gravaria
     // string vazia numa coluna que distingue "sem telefone" de "telefone vazio".
     submit: () =>
-      update.mutate({ name: form.name, phone: form.phone.trim() || null }, { onSuccess: onSaved }),
+      update.mutate({ name: form.name, phone: form.phone?.trim() || null }, { onSuccess: onSaved }),
     pending: update.isPending,
     fieldErrors,
     generalError,

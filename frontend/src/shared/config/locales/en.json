@@ -51,6 +51,7 @@
     "lastLogin": "Last login",
     "email": "Email",
     "phone": "Phone",
+    "phoneCountry": "Phone country",
     "search": "Search...",
     "notLoaded": "Not uploaded",
     "loading": "Loading...",

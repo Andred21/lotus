@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { AppInputText, RutInput, type FieldComponent } from '@shared/ui'
+import { AppInputText, PhoneInput, RutInput, type FieldComponent } from '@shared/ui'
+import { formatPhoneDisplay } from '@shared/lib'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { StudentFormFields } from '../../hooks/useStudentForm'
 
@@ -14,8 +15,10 @@ import type { StudentFormFields } from '../../hooks/useStudentForm'
  * Sem escape nenhum aqui — os quatro campos colapsam inteiros no `Field`. */
 export function StudentIdentityFields({
   Field,
+  form,
 }: {
   Field: FieldComponent<StudentFormFields>
+  form: StudentFormFields
 }) {
   const { t } = useTranslation()
 
@@ -33,8 +36,8 @@ export function StudentIdentityFields({
         <AppInputText className="w-full" />
       </Field>
 
-      <Field name="phone" label={t('common.phone')}>
-        <AppInputText className="w-full" />
+      <Field name="phone" label={t('common.phone')} value={formatPhoneDisplay(form.phone)}>
+        <PhoneInput />
       </Field>
     </div>
   )

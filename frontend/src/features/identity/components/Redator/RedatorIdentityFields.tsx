@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { AppDropdown, AppInputText, RutInput, type FieldComponent } from '@shared/ui'
+import { AppDropdown, AppInputText, PhoneInput, RutInput, type FieldComponent } from '@shared/ui'
+import { formatPhoneDisplay } from '@shared/lib'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { RedatorFormFields } from '../../hooks/useRedatorForm'
 
@@ -39,8 +40,8 @@ export function RedatorIdentityFields({
           <AppInputText className="w-full" />
         </Field>
 
-        <Field name="phone" label={t('common.phone')}>
-          <AppInputText className="w-full" />
+        <Field name="phone" label={t('common.phone')} value={formatPhoneDisplay(form.phone)}>
+          <PhoneInput />
         </Field>
 
         {/* Só em redator já existente: no cadastro o acesso nasce ativo pelo

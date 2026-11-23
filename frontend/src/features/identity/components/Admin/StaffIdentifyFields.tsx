@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { AppInputText, AppPassword, RutInput, type FieldComponent } from "@shared/ui";
+import { AppInputText, AppPassword, PhoneInput, RutInput, type FieldComponent } from "@shared/ui";
+import { formatPhoneDisplay } from "@shared/lib";
 import type { StaffUserFormFields } from "../../hooks/useStaffUserForm";
 
 /** Os quatro campos de identificação do aluno, no grid 2×2 de sempre.
@@ -9,9 +10,11 @@ import type { StaffUserFormFields } from "../../hooks/useStaffUserForm";
  * telefone), e unificá-los mudaria o que três telas renderizam. */
 export function StaffIdentityFields({
   Field,
+  form,
   mode,
 }: {
   Field: FieldComponent<StaffUserFormFields>;
+  form: StaffUserFormFields;
   mode: "create" | "edit" | "view";
 }) {
   const { t } = useTranslation();
@@ -31,8 +34,8 @@ export function StaffIdentityFields({
           <AppInputText className="w-full" />
         </Field>
 
-        <Field name="phone" label={t("common.phone")}>
-          <AppInputText className="w-full" />
+        <Field name="phone" label={t("common.phone")} value={formatPhoneDisplay(form.phone)}>
+          <PhoneInput />
         </Field>
 
         {mode === "create" && (

@@ -6,6 +6,7 @@ import {
   FormErrorBanner,
   FormErrorSummary,
   FormSection,
+  PhoneInput,
   technicalDataClass,
   useFormField,
   useToast,
@@ -59,11 +60,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
           {/* `technicalDataClass` (D-29): único sítio da decisão que pousa num
               controle EDITÁVEL, e não num valor de leitura — a auditoria o cita
               explicitamente ("vale também para telefone"). */}
-          <AppInputText
-            className={`w-full ${technicalDataClass}`}
-            autoComplete="tel"
-            disabled={pending}
-          />
+          <PhoneInput inputClassName={technicalDataClass} disabled={pending} />
         </campo.Field>
 
         <div>

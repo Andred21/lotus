@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppCard, AppInputText, AppRadioButton, AppTag, FormField } from '@shared/ui'
+import { AppButton, AppCard, AppInputText, AppRadioButton, AppTag, FormField, PhoneInput } from '@shared/ui'
+import { formatPhoneDisplay } from '@shared/lib'
 import type { ClientContactData } from '@shared/types/generated'
 
 /** Um contato do cliente. O principal usa `tone="info"` do AppCard mais um
@@ -102,13 +103,9 @@ export function ContactCard({
             label={t('common.phone')}
             error={fieldErrors?.[`contacts.${index}.phone`]?.[0]}
             readOnly={readOnly}
-            value={contact.phone ?? ''}
+            value={formatPhoneDisplay(contact.phone)}
           >
-            <AppInputText
-              value={contact.phone ?? ''}
-              onChange={(e) => onPatch({ phone: e.target.value })}
-              className="w-full"
-            />
+            <PhoneInput value={contact.phone ?? null} onChange={(phone) => onPatch({ phone })} />
           </FormField>
         </div>
       </div>

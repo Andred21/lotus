@@ -51,6 +51,7 @@
     "lastLogin": "Último acceso",
     "email": "Correo electrónico",
     "phone": "Teléfono",
+    "phoneCountry": "País del teléfono",
     "search": "Buscar...",
     "notLoaded": "No cargado",
     "loading": "Cargando...",
