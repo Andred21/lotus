@@ -2,11 +2,22 @@
 
 ## Em aberto
 
-Correção aprovada pelo João em 2026-11-23, ainda por aplicar; depois dela, rodada 2:
+## Rodada 2 — `7982828e..83b837a0` — 2026-11-23 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
 
-- Q-1 · Menor · backfill de `courses.code` com `lazyById`, mais um teste que pegue o caso de mais de 1000 cursos.
-- Q-2 · Menor · `ClientBudgetsSection` só monta com `can('commercial.budget.view')`.
-- Q-3 · Menor · docblock do `HabilitacaoStatus` alinhado aos tipos bloqueantes.
+Classificação: **alto risco** (mesmas migrations, RBAC e `generated.ts` da rodada 1). A lente Codex
+foi tentada uma vez e falhou de novo com `model_not_found` para `gpt-5.5`; sem nova tentativa com
+`gpt-5.4`, que já falhou na rodada 1.
+
+Correções da rodada 1 conferidas pela lente 1: Q-1 (`abea6604`) e Q-2 (`83b837a0`) estão completas e
+não introduziram problema novo. Q-3 (`ef2b9926`) ficou incompleta, e é o achado abaixo.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| 1 | Menor | O docblock do `HabilitacaoStatus` ainda diz que turma concluída "sempre tem" os tipos bloqueantes. Não vale para a turma criada já concluída pela carga de histórico, nem para o superadmin com `manage_concluded_docs`, que remove documento bloqueante de turma concluída. O código está certo; só o comentário promete um invariante falso. | CONFIRMED | `backend/app/Domains/Operation/Services/HabilitacaoStatus.php:14-17`; `backend/app/Console/CargaInicial/CarregadorDeHistorico.php:195`; `backend/app/Domains/Operation/Services/TurmaDocumentGate.php:47-57` | registrado; não bloqueia |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0 plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+Nenhum padrão reincidente e nenhuma divergência de documentação a registrar em `pendencias/`.
 
 ## Rodada 1 — `7982828e..b74258de` — 2026-11-23 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 
