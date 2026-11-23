@@ -74,7 +74,7 @@ export function TurmasTable({
         * `whitespace-nowrap` é só do código — identificador atômico. */}
       {/* Sem `sortable`: `field="created_at" sortable` sob o cabeçalho CÓDIGO
         * ordenava a lista pela data de criação da turma enquanto a célula
-        * mostra `Scap {budget_id} - Cot {seq}` — ordem visível diferente da
+        * mostra `Scap {budget_id} - R{seq}` — ordem visível diferente da
         * ordem pedida (Q-4 do review de 2026-08-29). A allowlist do
         * `TurmaQueryBuilder` é `created_at`/`start_date`/`end_date`, e nenhuma
         * das colunas desta tabela mostra data; coluna de data que um dia entre

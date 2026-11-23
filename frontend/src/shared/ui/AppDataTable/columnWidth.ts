@@ -39,7 +39,7 @@ import type { CSSProperties } from 'react'
 export type ColClass = { readonly weight: number; readonly cap?: true }
 
 export const COL = {
-  /** Identificador atômico, mono, que não quebra: `Scap 1 - Cot 2`, código de certificado. */
+  /** Identificador atômico, mono, que não quebra: `Scap 1 - R2`, código de certificado. */
   code: { weight: 8 },
   /** `IdentityCell`: avatar + duas linhas. Único com teto — é contra ele que o `truncate` mede. */
   identity: { weight: 18, cap: true },
