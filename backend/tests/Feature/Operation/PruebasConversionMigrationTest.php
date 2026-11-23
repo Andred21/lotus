@@ -63,6 +63,26 @@ class PruebasConversionMigrationTest extends TestCase
             ->count();
     }
 
+    /** O filtro muda a coluna que a migration converte: paginar por offset pularia linhas depois do 1º lote. */
+    public function test_converte_todas_as_linhas_alem_do_primeiro_lote(): void
+    {
+        $turma = $this->turma();
+        $agora = now();
+        $linhas = array_fill(0, 1100, [
+            'fileable_type' => 'turma', 'fileable_id' => $turma->id, 'type' => 'PRUEBAS',
+            'path' => 'x.pdf', 'original_name' => 'x.pdf', 'mime' => 'application/pdf', 'size' => 10,
+            'created_at' => $agora, 'updated_at' => $agora,
+        ]);
+        foreach (array_chunk($linhas, 200) as $lote) {
+            DB::table('files')->insert($lote);
+        }
+
+        $this->migration()->up();
+
+        $this->assertSame(0, File::withTrashed()->where('type', 'PRUEBAS')->count());
+        $this->assertSame(1100, File::withTrashed()->where('type', 'EVALUACION_ALUNO')->count());
+    }
+
     public function test_converte_o_pruebas_ativo_e_o_soft_deletado_da_turma(): void
     {
         $turma = $this->turma();
