@@ -495,6 +495,20 @@
     "sectionGeneral": "Dados gerais",
     "sectionAddress": "Endereço",
     "sectionContacts": "Pessoas de contato",
+    "budgets": {
+      "title": "Orçamentos",
+      "empty": "Este cliente ainda não tem orçamentos.",
+      "emptyFiltered": "Nenhum orçamento para os filtros aplicados.",
+      "searchPlaceholder": "Buscar por código...",
+      "date": "Data",
+      "period": {
+        "all": "Todos",
+        "week": "Semana",
+        "month": "Mês",
+        "year": "Ano",
+        "custom": "Personalizado"
+      }
+    },
     "addContact": "Adicionar contato",
     "region": "Região",
     "commune": "Comuna",

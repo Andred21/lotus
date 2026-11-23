@@ -15,6 +15,7 @@ import {
 import { AddressFields } from "./AddressFields";
 import { ContactFields } from "./ContactFields";
 import { ClientGeneralFields } from "./ClientGeneralFields";
+import { ClientBudgetsSection } from "./ClientBudgetsSection";
 
 export function ClientDialog({
   visible,
@@ -89,6 +90,10 @@ export function ClientDialog({
           onAdd={addContact}
           onRemove={removeContact}
         />
+
+        {mode !== "create" && client?.id !== undefined && (
+          <ClientBudgetsSection clientId={client.id} />
+        )}
       </section>
     </CrudDialog>
   );

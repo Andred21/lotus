@@ -49,4 +49,12 @@ class DtoTest extends TestCase
         $this->assertSame(15, $data->total_students);
         $this->assertCount(1, $data->quotes);
     }
+
+    public function test_budget_data_exposes_created_at_as_iso8601(): void
+    {
+        $budget = $this->seedBudget();
+        $data = BudgetData::fromModel($budget, app(BudgetSummaryService::class));
+
+        $this->assertSame($budget->created_at->toIso8601String(), $data->created_at);
+    }
 }
