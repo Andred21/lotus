@@ -31,8 +31,10 @@ function linha(over: Partial<TurmaComplianceData> = {}): TurmaComplianceData {
     end_date: '2026-08-18',
     present_types: [],
     missing_types: [],
+    missing_optional_types: [],
     missing_requirements: [],
     habilitada: false,
+    concluded: false,
     ...over,
   }
 }

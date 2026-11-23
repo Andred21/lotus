@@ -583,6 +583,7 @@ turma_id: number,
 course_name: string,
 end_date: string,
 missing_types: TurmaDocumentType[],
+missing_optional_types: TurmaDocumentType[],
 };
 export type ResetPasswordData = {
 token: string,
@@ -712,8 +713,10 @@ start_date: string,
 end_date: string,
 present_types: TurmaDocumentType[],
 missing_types: TurmaDocumentType[],
+missing_optional_types: TurmaDocumentType[],
 missing_requirements: TurmaRequirement[],
 habilitada: boolean,
+concluded: boolean,
 };
 export type TurmaData = {
 id: undefined | number,

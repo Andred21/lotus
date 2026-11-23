@@ -9,6 +9,7 @@ use App\Domains\Dashboard\Data\TurmaComplianceData;
 use App\Domains\Dashboard\Enums\DashboardModule;
 use App\Domains\Dashboard\Enums\DashboardSeverity;
 use App\Domains\Dashboard\Enums\PendingItemType;
+use App\Domains\Dashboard\Support\CorteDeEvaluaciones;
 use App\Domains\Operation\Enums\TurmaDisplayStatus;
 use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaRequirement;
@@ -70,37 +71,23 @@ class OperationMetricsQuery
         );
     }
 
-    /** @return TurmaComplianceData[] */
+    /**
+     * As turmas em andamento e as concluídas depois do corte que ainda devem
+     * alguma evaluación opcional. Para a concluída, a linha existe só pelo
+     * aviso: sem opcional faltando ela não entra.
+     *
+     * @return TurmaComplianceData[]
+     */
     public function complianceTurmas(): array
     {
-        return $this->turmasEmAndamento()
-            ->map(function (Turma $turma): TurmaComplianceData {
-                $status = $this->habilitacao->for($turma);
-                $present = $turma->documentos
-                    ->pluck('type')
-                    ->unique()
-                    ->all();
+        $andamento = $this->turmasEmAndamento()
+            ->map(fn (Turma $turma): TurmaComplianceData => $this->complianceData($turma, concluded: false));
 
-                return new TurmaComplianceData(
-                    turma_id: $turma->id,
-                    course_name: $turma->course->name,
-                    redatores: $turma->redatores
-                        ->map(fn ($redator): string => $redator->user->name)
-                        ->values()
-                        ->all(),
-                    start_date: $turma->start_date->toDateString(),
-                    end_date: $turma->end_date->toDateString(),
-                    present_types: array_values(array_filter(
-                        TurmaDocumentType::cases(),
-                        fn (TurmaDocumentType $case): bool => in_array($case->value, $present, true),
-                    )),
-                    missing_types: $status->missingTypes(),
-                    missing_requirements: $status->missingRequirements(),
-                    habilitada: $status->isHabilitada(),
-                );
-            })
-            ->values()
-            ->all();
+        $concluidas = $this->turmasConcluidasAposOCorte()
+            ->filter(fn (Turma $turma): bool => $this->habilitacao->for($turma)->missingOptionalTypes() !== [])
+            ->map(fn (Turma $turma): TurmaComplianceData => $this->complianceData($turma, concluded: true));
+
+        return $andamento->concat($concluidas)->values()->all();
     }
 
     /** @return PendingItemData[] */
@@ -170,6 +157,53 @@ class OperationMetricsQuery
             ->orderBy('start_date')
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * Concluídas desde o início do dia do corte. O `redatores.user` e o
+     * `course` entram porque `complianceData()` os lê; sem eles o
+     * `preventLazyLoading` derruba a segunda turma.
+     *
+     * @return Collection<int, Turma>
+     */
+    private function turmasConcluidasAposOCorte(): Collection
+    {
+        return Turma::query()
+            ->where('status', TurmaStatus::Concluida)
+            ->where('concluded_at', '>=', CorteDeEvaluaciones::inicio())
+            ->with(['documentos', 'course', 'redatores.user'])
+            ->orderBy('concluded_at')
+            ->orderBy('id')
+            ->get();
+    }
+
+    private function complianceData(Turma $turma, bool $concluded): TurmaComplianceData
+    {
+        $status = $this->habilitacao->for($turma);
+        $present = $turma->documentos
+            ->pluck('type')
+            ->unique()
+            ->all();
+
+        return new TurmaComplianceData(
+            turma_id: $turma->id,
+            course_name: $turma->course->name,
+            redatores: $turma->redatores
+                ->map(fn ($redator): string => $redator->user->name)
+                ->values()
+                ->all(),
+            start_date: $turma->start_date->toDateString(),
+            end_date: $turma->end_date->toDateString(),
+            present_types: array_values(array_filter(
+                TurmaDocumentType::cases(),
+                fn (TurmaDocumentType $case): bool => in_array($case->value, $present, true),
+            )),
+            missing_types: $status->missingTypes(),
+            missing_optional_types: $status->missingOptionalTypes(),
+            missing_requirements: $status->missingRequirements(),
+            habilitada: $status->isHabilitada(),
+            concluded: $concluded,
+        );
     }
 
     private function baldes(): AgendaBuckets

@@ -14,7 +14,9 @@ class RedatorTurmaPendenciaData extends Data
         public int $turma_id,
         public string $course_name,
         public string $end_date,
-        /** @var TurmaDocumentType[] */
+        /** @var TurmaDocumentType[] só os bloqueantes. */
         public array $missing_types,
+        /** @var TurmaDocumentType[] só `EVALUACION_ALUNO`: aviso, não pendência. */
+        public array $missing_optional_types,
     ) {}
 }

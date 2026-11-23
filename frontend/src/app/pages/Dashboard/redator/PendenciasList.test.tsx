@@ -22,8 +22,8 @@ vi.mock('react-i18next', async (importOriginal) => {
 // provaria nada — a UI-01 era exatamente uma ação com destino único (`/perfil`)
 // para N turmas.
 const items: RedatorTurmaPendenciaData[] = [
-  { turma_id: 4, course_name: 'Alta tensión — Módulo 1', end_date: '2026-09-01', missing_types: ['MANUAL'] },
-  { turma_id: 7, course_name: 'Baja tensión — Módulo 2', end_date: '2026-09-10', missing_types: ['MANUAL', 'EVALUACION_REDATOR'] },
+  { turma_id: 4, course_name: 'Alta tensión — Módulo 1', end_date: '2026-09-01', missing_types: ['MANUAL'], missing_optional_types: [] },
+  { turma_id: 7, course_name: 'Baja tensión — Módulo 2', end_date: '2026-09-10', missing_types: ['MANUAL', 'EVALUACION_REDATOR'], missing_optional_types: [] },
 ]
 
 const montar = () =>
