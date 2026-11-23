@@ -2,10 +2,10 @@
 schema_version: 3
 id: 60
 slug: 60-codigos-mascaras-comercial-e-avaliacoes
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: "resolve_blocker aguardando aceitação: itens 1, 2"
+resume_state: ready_for_closure
 active_spec: docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/spec.md
 active_plan: docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/plano.md
 active_review: docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/revisao.md
@@ -17,10 +17,10 @@ branch: feat/60-codigos-mascaras-comercial-e-avaliacoes
 worktree: ../lotus-60-codigos-mascaras-comercial-e-avaliacoes
 offset: 1
 lane_base: 7982828e
-commit: 83b837a0
-blocker: null
-updated_at: 2026-11-23T13:16:06-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+commit: 67d8c8f7
+blocker: "aguardando aceitação depois do merge: itens 1, 2 da ## Verificação externa"
+updated_at: 2026-11-23T14:19:57-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 60 — estado

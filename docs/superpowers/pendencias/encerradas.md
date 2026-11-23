@@ -15,20 +15,9 @@ Motivo: taxonomia decidida pela Lotus em 2026-11-21: Instructor, Cliente, Alumno
 
 A decisão não foi a dos quatro tipos do Figma (Lista de asistencia e Acta de cierre ficaram de fora): `TurmaDocumentType` passou a `MANUAL`, `EVALUACION_REDATOR`, `EVALUACION_CLIENTE` e `EVALUACION_ALUNO`. Os dois primeiros bloqueiam conclusão e habilitação; os dois últimos são opcionais, e a falta vira aviso no dashboard (D-60). `PRUEBAS` foi convertido em `EVALUACION_ALUNO` por migration. A lista canônica tem um dono só (`TurmaDocumentType::bloqueantes()`), como a ficha antecipava em 2026-08-10. Schema e regra em `docs/der-fisico.md` (seção Feedback).
 
-## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal
-
-**Bloco:** item 51 (aberta em 2026-08-20, pela review final do BD-14) · **ENCERRADA em 2026-11-03, no `backend-contrato-de-entrada-dos-data` (item 51).**
-
-O `DefaultValuesDataPipe` entrega o default declarado antes do `Optional`, e então um `PUT` parcial grava o default no lugar de preservar. Dos seis campos que a ficha listava, o campo 1 (`UserData::$is_active`, acesso) fechou em 2026-08-23; os cinco restantes fecharam assim:
-
-- **Campo 2, `ClientData::$type = 'client'` — pago** (`40a4e6f7`). Passou a `string|Optional` sem default; o `CreateClientAction` grava `'client'` explícito quando chega `Optional`, o `UpdateClientAction` pula a chave. Provado contra a API da lane no fechamento: `PUT /api/clients/{id}` sem `type` sobre cliente `provider` devolve 200 e o tipo segue `provider`; `POST` sem `type` cria `client`.
-- **Campo 3, `CourseData::$workload_hours = 0` — defeito real, fail-open, pago** (`a34dd253`). A ficha e a spec supunham o default morto atrás do `#[Required]`; medido em `main@1845d096`, `PUT` e `POST /api/courses` sem a chave davam 200 e **gravavam 0** (com default no construtor o laravel-data trata a propriedade como não obrigatória). Tirado o `= 0`, omitir a chave dá 422 e o valor fica intacto — provado contra a API da lane. A errata datada está na spec do bloco. Para saber se algum curso já ficou com 0 em produção, a consulta de leitura é `SELECT id, name FROM courses WHERE workload_hours = 0`.
-- **Campo 4, `BudgetController::update` — pago** (`498e3308`). A escrita saiu do controller para a `UpdateBudgetAction`; `payment_terms` passou a `string|Optional|null` sem default. Provado contra a API da lane: `PUT` sem a chave preserva "30 dias", `payment_terms: null` explícito apaga. O vermelho contra o código antigo está no relatório da task 3 do SDD ("null is identical to '30 días'").
-- **Campos 5 e 6, `CourseTemplateController::update`/`CertificateTemplateData` — mortos desde o bloco 39** (`09c95f61`, "template sai da API do catálogo"): não há caminho HTTP de escrita para `layout_config`/`validity_months`. Fecham sem código.
-
-**A varredura que a ficha pedia existe agora:** `InputDataDefaultsTest` reprova default literal em qualquer Data de entrada (saídas: `new Optional`, `#[Computed]`/`#[ReadOnlyCollection]`, ou a classe na `ISENTAS` com motivo), vista reprovar por sonda com `ClientData::$type = 'client'` restaurado (`d53d542d`). Os Menores que a revisão do bloco deixou, mais o débito de `CourseModuleData`, estão na **P-117**.
-
 ## Rastro anterior, já removido
+
+**A P-51 saiu no fechamento do `codigos-mascaras-comercial-e-avaliacoes` (item 60, 2026-11-23)**, o primeiro depois do item 51, que a encerrou em 2026-11-03 e passou sem removê-la. O rastro durável está nos commits (`40a4e6f7`, `a34dd253`, `498e3308`, `09c95f61`) e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-85 e a P-102 saíram no fechamento do `backend-contrato-de-entrada-dos-data` (item 51, 2026-11-03)**, o primeiro depois do item 54, que as encerrou no mesmo dia. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

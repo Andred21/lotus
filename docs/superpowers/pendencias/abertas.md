@@ -874,7 +874,9 @@ fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-
 ## P-110 — a rule de estilização não conhece o título de seção de formulário em 13px e na marca
 
 **Bloco:** item 58 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar `.claude/rules/frontend-estilizacao.md`,
-`shared/ui/typography.ts` ou o `FormSection`/`SectionLabel`. Revisar em **2026-11-15**.
+`shared/ui/typography.ts` ou o `FormSection`/`SectionLabel`. Revisar em **2026-11-15**. **Disparado em 2026-11-23
+(item 60), não pago:** o bloco acrescentou à rule a linha do `<RecordCode>` e o parágrafo do código de registro,
+sem tocar a tabela de tipografia nem o D-63; o gatilho não se desarma por isso.
 
 A revisão do item 46 (Q-2, `CONFIRMED`) mediu que a tabela de tipografia da rule
 (`.claude/rules/frontend-estilizacao.md:37`) e o parágrafo do D-63 (`:74-78`) ainda descrevem uma
