@@ -603,23 +603,6 @@ Bloco 6d (2026-07-21, spec D6, respaldo em `modulo-operacao.md`): o manual de cl
 única (`operation/manual-turma`) renderizada com os dados atuais para o Gotenberg, não materializado.
 Schema não tem `course_manual_templates`. YAGNI: ~10 usuários, um formato padrão basta.
 
-## P-09 — Figma mostra 4 tipos de documento de turma; implementados são 3
-
-**Gatilho:** se a Lotus confirmar que quer os 4 tipos.
-
-O protótipo mostra Manual, Pruebas/evaluaciones, Lista de asistencia e Acta de cierre; implementados
-são `MANUAL`/`PRUEBAS`/`EVALUACION_REDATOR`.
-
-Bloco 6-frontend (2026-07-21, decisão D6 da spec
-`specs/archive/2026-07-21-bloco6-frontend-operacao-design.md`): a taxonomia de RN-16 tem peso legal
-(define quando a turma habilita) e não se muda no escuro — o front renderiza os 3 do backend; os
-rótulos extras do Figma eram exploratórios.
-
-**Ficou mais barato em 2026-08-10** (`turma-habilitacao-listagem`): a lista canônica dos tipos
-obrigatórios saiu de dois pontos de uso para `TurmaDocumentType::values()`, consumido pela relação
-`Turma::documentacaoObrigatoria()` e pelo `TurmaHabilitacaoService` — o service **não** precisa mais
-mudar, e o custo do enum virou uma linha. A decisão de negócio segue com a Lotus.
-
 ## P-10 — coluna CLIENTE da tabela de alunos foi omitida
 
 **Gatilho:** se a Lotus pedir alunos de múltiplos clientes na mesma turma, expor `client_name` em
@@ -891,7 +874,9 @@ fora da spec do 42. A tabela ganhou as duas linhas acima, medidas pela `auditar-
 ## P-110 — a rule de estilização não conhece o título de seção de formulário em 13px e na marca
 
 **Bloco:** item 58 (desde 2026-11-02) · **Quem decide:** — · **Gatilho:** bloco que tocar `.claude/rules/frontend-estilizacao.md`,
-`shared/ui/typography.ts` ou o `FormSection`/`SectionLabel`. Revisar em **2026-11-15**.
+`shared/ui/typography.ts` ou o `FormSection`/`SectionLabel`. Revisar em **2026-11-15**. **Disparado em 2026-11-23
+(item 60), não pago:** o bloco acrescentou à rule a linha do `<RecordCode>` e o parágrafo do código de registro,
+sem tocar a tabela de tipografia nem o D-63; o gatilho não se desarma por isso.
 
 A revisão do item 46 (Q-2, `CONFIRMED`) mediu que a tabela de tipografia da rule
 (`.claude/rules/frontend-estilizacao.md:37`) e o parágrafo do D-63 (`:74-78`) ainda descrevem uma

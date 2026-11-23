@@ -4,7 +4,7 @@ return [
     'invitation' => [
         'subject' => 'Acceso a la plataforma Lotus',
         'greeting' => 'Hola :name,',
-        'line' => 'Tu cuenta de relator fue creada. Define tu clave para entrar.',
+        'line' => 'Tu cuenta de instructor fue creada. Define tu clave para entrar.',
         'action' => 'Definir mi clave',
         'expiry' => 'Este enlace vence en 7 días. Si vence, puedes pedir uno nuevo en "Olvidé mi clave".',
     ],
@@ -27,8 +27,8 @@ return [
         'staff_password_required' => 'La contraseña es obligatoria.',
         'role_name_taken' => 'Ya existe un rol con ese nombre.',
         'last_superadmin' => 'No es posible dejar el sistema sin un superadministrador activo.',
-        'redator_archived' => 'Este relator fue archivado y ya no acepta cambios.',
-        'redator_has_active_turmas' => 'El relator tiene clases en curso: concluye o reasigna antes de archivarlo.',
+        'redator_archived' => 'Este instructor fue archivado y ya no acepta cambios.',
+        'redator_has_active_turmas' => 'El instructor tiene clases en curso: concluye o reasigna antes de archivarlo.',
         'documents_shape' => 'El campo documents debe ser un mapa de tipo => archivo.',
         'document_type_invalid' => 'Tipo de documento inválido: :tipo',
         'permission_invalid' => 'Permiso inválido o no asignable a un rol personalizado.',
@@ -36,7 +36,7 @@ return [
         'system_role_permissions_immutable' => "Los permisos del rol de sistema ':role' son inmutables.",
         'system_role_not_deletable' => "El rol de sistema ':role' no puede ser eliminado.",
         'system_role_not_renamable' => "El rol de sistema ':role' no puede ser renombrado.",
-        'redator_only_action' => 'Solo los relatores envían documentación profesional.',
+        'redator_only_action' => 'Solo los instructores envían documentación profesional.',
         // P-76: o RUT/e-mail repetido saía de uma constante pt-BR no UserProvisioner.
         'rut_taken' => 'Este RUT ya está registrado.',
         'email_taken' => 'Este correo ya está registrado.',

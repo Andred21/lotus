@@ -39,6 +39,7 @@ sustenta, porque regra sem catraca é recomendação solta.
 | Número de estatística | `<StatValue>` | KPI (`size="page"`), cartão (`size="card"`) |
 | Folio de certificado | `<CertificateFolio>` | validação pública, diálogo de emissão |
 | Rótulo de campo de formulário | `<FormField>` | todo formulário, inclusive login, recuperação e senha |
+| Código de registro — `Scap 100`, `Scap 2 - R1`, `C-7` | `<RecordCode>` | coluna Código das tabelas, fila de cotizações da Operação, passo de curso da cotización |
 
 - O `h1` tem **dono único** por tela: `PageHeader` no módulo, `DetailHeader` no detalhe. Tela sem
   nenhum dos dois titula o próprio estado, mesmo que escondido (`sr-only`).
@@ -70,6 +71,11 @@ metade do par, e a fase 1 um RUT partido em "76.123.456-" / "0". Mecanismo: `MON
 definida.
 
 Prosa não é dado técnico: o travessão que marca ausência legítima fica em texto normal.
+
+O código de REGISTRO não é identificador mono: `Scap 100`, `Scap 2 - R1` e `C-7` são o nome curto
+do documento na conversa com a Lotus e saem no `<RecordCode>` — negrito, corpo da tabela, cor
+primária, sem mono. Pedido do João no bloco 60 (2026-11-23), que juntou as quatro cópias literais
+do Scap e tirou o curso e a fila da Operação do `identifierClass`. RUT e folio seguem mono.
 
 **Faixa de seção e título de card são dois REGISTROS, não dois degraus de uma escala** (D-63,
 2026-08-31). A faixa (`sectionLabelClass`, 12px) codifica profundidade por CAIXA e posição; o

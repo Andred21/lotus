@@ -41,6 +41,8 @@ class TurmaData extends Data
         public bool|Optional $habilitada,
         /** @var TurmaDocumentType[]|Optional */
         public array|Optional $missing_document_types,
+        /** @var TurmaDocumentType[]|Optional */
+        public array|Optional $missing_optional_document_types,
         /** @var TurmaRequirement[]|Optional */
         public array|Optional $missing_requirements,
         public string|null|Optional $concluded_at,
@@ -98,6 +100,7 @@ class TurmaData extends Data
             status: $turma->status,
             habilitada: $habilitacaoStatus->isHabilitada(),
             missing_document_types: $habilitacaoStatus->missingTypes(),
+            missing_optional_document_types: $habilitacaoStatus->missingOptionalTypes(),
             missing_requirements: $habilitacaoStatus->missingRequirements(),
             concluded_at: $turma->concluded_at?->toISOString(),
             redatores: $turma->redatores->map(fn (Redator $r) => TurmaRedatorData::fromModel($r))->all(),

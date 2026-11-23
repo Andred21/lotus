@@ -5,7 +5,7 @@ import { quoteStatusSeverity } from '../../lib/quoteStatus'
 import { turmaTag, turmaTagSeverity } from '../../lib/turmaTag'
 
 /** Célula de status do orçamento: a tag de status e, abaixo, uma tag da turma
- * por cotação aprovada, na forma curta `Cot N` (o `Scap N` já está na 1ª coluna
+ * por cotação aprovada, na forma curta `R N` (o `Scap N` já está na 1ª coluna
  * da linha; sem `seq_in_budget`, cai no código completo). A coluna `tag` é estreita a 1024px,
  * então cada tag fica no próprio bloco e o texto longo quebra dentro dela em
  * vez de empurrar a coluna. */
@@ -19,7 +19,7 @@ export function BudgetStatusCell({ budget }: { budget: BudgetData }) {
       )}
       {budget.quotes.map((q) => {
         const tag = turmaTag(q)
-        const rotulo = typeof q.seq_in_budget === 'number' ? `Cot ${q.seq_in_budget}` : q.code
+        const rotulo = typeof q.seq_in_budget === 'number' ? `R${q.seq_in_budget}` : q.code
 
         return tag && (
           <AppTag

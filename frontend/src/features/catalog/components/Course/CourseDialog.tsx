@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { CrudDialog, AppInputText, AppTextarea, useFormField, FormSection, FormErrorSummary, FormErrorBanner } from '@shared/ui'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
+import { courseLabel } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { useCourseForm, type CourseDialogMode } from '../../hooks/useCourseForm'
 import { useCourseRedatores } from '../../hooks/useCourseRedatores'
@@ -31,7 +32,7 @@ export function CourseDialog({
       size="lg"
       visible={visible}
       mode={mode}
-      title={isCreate ? t('course.new') : form.name}
+      title={isCreate ? t('course.new') : courseLabel({ code: course?.code, name: form.name })}
       onHide={onHide}
       onEdit={onEdit}
       onSubmit={submit}
@@ -54,6 +55,17 @@ export function CourseDialog({
         </campo.Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
+          {/* sence_code é opcional e só dígitos (o backend valida `^\d{1,20}$`); o
+              C-<n> não é campo: vem pronto do backend e aparece no título. */}
+          <campo.Field name="sence_code" label={t('course.senceCode')}>
+            <AppInputText
+              inputMode="numeric"
+              placeholder={t('course.senceCodePlaceholder')}
+              className="w-full"
+              maxLength={20}
+              onChange={(e) => f.set('sence_code', e.target.value.replace(/\D/g, '') || null)}
+            />
+          </campo.Field>
           {/* technical_name chega null do backend: quem cuida é o `?? ''` do
               wrapper (Task 3), não a tela. */}
           <campo.Field name="technical_name" label={t('course.technicalName')}>

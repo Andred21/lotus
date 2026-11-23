@@ -59,21 +59,21 @@ class TurmaHabilitacaoServiceTest extends TestCase
     {
         $missing = $this->service->for($this->turma)->missingTypes();
 
-        $this->assertCount(3, $missing);
+        $this->assertCount(2, $missing);
         $this->assertContainsOnlyInstancesOf(TurmaDocumentType::class, $missing);
         $this->assertSame(
-            [TurmaDocumentType::MANUAL, TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
+            [TurmaDocumentType::MANUAL, TurmaDocumentType::EVALUACION_REDATOR],
             $missing,
         );
     }
 
-    public function test_sem_docs_lista_os_3_tipos_faltantes(): void
+    public function test_sem_docs_lista_so_os_bloqueantes_faltantes(): void
     {
         $status = $this->service->for($this->turma);
 
         $this->assertFalse($status->isHabilitada());
         $this->assertSame(
-            [TurmaDocumentType::MANUAL, TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
+            [TurmaDocumentType::MANUAL, TurmaDocumentType::EVALUACION_REDATOR],
             $status->missingTypes(),
         );
     }
@@ -81,7 +81,7 @@ class TurmaHabilitacaoServiceTest extends TestCase
     public function test_doc_parcial_lista_so_o_que_falta(): void
     {
         $this->addDoc(TurmaDocumentType::MANUAL);
-        $this->addDoc(TurmaDocumentType::PRUEBAS);
+        $this->addDoc(TurmaDocumentType::EVALUACION_CLIENTE);
 
         $status = $this->service->for($this->turma);
 
@@ -89,7 +89,7 @@ class TurmaHabilitacaoServiceTest extends TestCase
         $this->assertSame([TurmaDocumentType::EVALUACION_REDATOR], $status->missingTypes());
     }
 
-    public function test_3_tipos_presentes_habilita(): void
+    public function test_todos_os_tipos_presentes_habilita(): void
     {
         foreach (TurmaDocumentType::cases() as $type) {
             $this->addDoc($type);
@@ -99,6 +99,36 @@ class TurmaHabilitacaoServiceTest extends TestCase
 
         $this->assertTrue($status->isHabilitada());
         $this->assertSame([], $status->missingTypes());
+    }
+
+    public function test_so_bloqueantes_presentes_habilita_e_lista_as_opcionais_faltantes(): void
+    {
+        foreach (TurmaDocumentType::bloqueantes() as $type) {
+            $this->addDoc($type);
+        }
+
+        $status = $this->service->for($this->turma);
+
+        $this->assertTrue($status->isHabilitada());
+        $this->assertSame([], $status->missingTypes());
+        $this->assertSame(
+            [TurmaDocumentType::EVALUACION_CLIENTE, TurmaDocumentType::EVALUACION_ALUNO],
+            $status->missingOptionalTypes(),
+        );
+    }
+
+    public function test_missing_optional_types_devolve_as_duas_sem_elas_e_vazio_com_elas(): void
+    {
+        $this->assertSame(
+            [TurmaDocumentType::EVALUACION_CLIENTE, TurmaDocumentType::EVALUACION_ALUNO],
+            $this->service->for($this->turma)->missingOptionalTypes(),
+        );
+
+        foreach (TurmaDocumentType::opcionais() as $type) {
+            $this->addDoc($type);
+        }
+
+        $this->assertSame([], $this->service->for($this->turma->fresh())->missingOptionalTypes());
     }
 
     public function test_doc_soft_deletada_nao_conta(): void

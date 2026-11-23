@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { AppInputText, AppPassword, type FieldComponent } from "@shared/ui";
+import { AppInputText, AppPassword, PhoneInput, RutInput, type FieldComponent } from "@shared/ui";
+import { formatPhoneDisplay } from "@shared/lib";
 import type { StaffUserFormFields } from "../../hooks/useStaffUserForm";
 
 /** Os quatro campos de identificação do aluno, no grid 2×2 de sempre.
@@ -9,9 +10,11 @@ import type { StaffUserFormFields } from "../../hooks/useStaffUserForm";
  * telefone), e unificá-los mudaria o que três telas renderizam. */
 export function StaffIdentityFields({
   Field,
+  form,
   mode,
 }: {
   Field: FieldComponent<StaffUserFormFields>;
+  form: StaffUserFormFields;
   mode: "create" | "edit" | "view";
 }) {
   const { t } = useTranslation();
@@ -23,24 +26,26 @@ export function StaffIdentityFields({
           <AppInputText className="w-full" />
         </Field>
         <Field name="rut" label={t("common.rut")}>
-          <AppInputText className="w-full" />
+          <RutInput className="w-full" />
         </Field>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Email e telefone em linha inteira, em qualquer largura: ao lado da
+            coluna da foto, meia linha deixava 116px para o número a 1440px
+            (pedido do João, bloco 60). */}
         <Field name="email" label={t("common.email")}>
           <AppInputText className="w-full" />
         </Field>
 
-        <Field name="phone" label={t("common.phone")}>
-          <AppInputText className="w-full" />
+        <Field name="phone" label={t("common.phone")} value={formatPhoneDisplay(form.phone)}>
+          <PhoneInput />
         </Field>
-
-        {mode === "create" && (
+      </div>
+      {mode === "create" && (
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field name="password" label={t("common.password")}>
             <AppPassword className="w-full" inputClassName="w-full" />
           </Field>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

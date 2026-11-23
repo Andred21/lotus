@@ -90,7 +90,10 @@ describe('StaffUserDialog — campo Rol (UI-01)', () => {
     // O `Dialog` do Prime monta em portal, fora do container do render — o
     // painel do dropdown se lê no `document`, como `AppDropdown.test.tsx` já
     // fazia.
-    fireEvent.click(document.querySelector('.p-dropdown') as HTMLElement)
+    // O seletor de país do `PhoneInput` também é um `.p-dropdown` e vem antes:
+    // o do Rol se acha pelo campo da label.
+    const campoRol = screen.getByText('admin.role').parentElement as HTMLElement
+    fireEvent.click(campoRol.querySelector('.p-dropdown') as HTMLElement)
     const itens = Array.from(document.querySelectorAll('.p-dropdown-item')).map((li) => li.textContent)
 
     expect(itens).toEqual([

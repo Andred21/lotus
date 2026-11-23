@@ -11,7 +11,7 @@ return [
         'enrollment_not_approved' => 'El alumno no fue aprobado: no se puede emitir el certificado.',
         'certificate_already_active' => 'Ya existe un certificado vigente para esta matrícula.',
         'emission_city_missing' => 'No hay una ciudad de emisión configurada para esta clase.',
-        'redator_not_designated' => 'El relator no está designado en esta clase.',
+        'redator_not_designated' => 'El instructor no está designado en esta clase.',
     ],
     'enrollment' => [
         'not_found' => 'La matrícula no existe.',

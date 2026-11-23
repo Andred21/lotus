@@ -30,7 +30,7 @@ class ConcludeTurmaAction
             // cache — e um documento arquivado depois daquela carga concluiria
             // a turma, em escrita terminal, sem a documentação da RN-16.
             // O mesmo vale para os redatores (requisito de configuração).
-            $turma->load(['documentacaoObrigatoria', 'redatores']);
+            $turma->load(['documentos', 'redatores']);
 
             $habilitacao = $this->habilitacao->for($turma);
             $messages = [];

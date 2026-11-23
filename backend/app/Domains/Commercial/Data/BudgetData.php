@@ -31,6 +31,10 @@ class BudgetData extends Data
         public string|Optional $total_approved_uf,
         public string|Optional $total_rejected_uf,
         public int|Optional $total_students,
+        // ISO 8601, só de SAÍDA: o diálogo do cliente recorta os orçamentos por
+        // período no navegador. Nenhuma Action a lê (`created_at` não é
+        // atribuível em massa).
+        public string|Optional $created_at,
         // Sem default: ausente vira `Optional` (não mexe), `null` explícito
         // apaga. Com `= null` o PUT sem a chave apagava as condições. Fica
         // antes das coleções porque parâmetro sem default não pode vir depois
@@ -87,6 +91,7 @@ class BudgetData extends Data
             total_approved_uf: $summary->totalApprovedUf($budget),
             total_rejected_uf: $summary->totalRejectedUf($budget),
             total_students: $summary->totalStudents($budget),
+            created_at: $budget->created_at->toIso8601String(),
             quotes: QuoteData::collect($budget->quotes->all()),
             payment_terms: $budget->payment_terms,
             files: $budget->files->map(fn ($f) => FileData::fromModel($f))->all(),

@@ -21,14 +21,15 @@ class TurmaDocumentController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:operation.turma.view', only: ['index']),
-            new Middleware('permission:operation.turma.submit_docs', only: ['store', 'destroy']),
+            // Basta uma das duas: qual tipo cada uma libera é o `TurmaDocumentGate`.
+            new Middleware('permission:operation.turma.submit_docs|operation.turma.submit_client_evaluation', only: ['store', 'destroy']),
         ];
     }
 
     /** @return array<TurmaDocumentData> */
     public function index(Turma $turma): array
     {
-        return $turma->documentacaoObrigatoria()
+        return $turma->documentos()
             ->orderBy('created_at')
             ->get()
             ->map(fn (File $f) => TurmaDocumentData::fromModel($f))

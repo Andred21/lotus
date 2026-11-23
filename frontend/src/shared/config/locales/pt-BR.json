@@ -29,6 +29,11 @@
     "sector": "Setor elétrico de alta tensão"
   },
   "common": {
+    "period": {
+      "label": "Período",
+      "start": "De",
+      "end": "Até"
+    },
     "language": "Idioma",
     "toggleMenu": "Alternar menu",
     "toggleTheme": "Alternar tema",
@@ -46,6 +51,7 @@
     "lastLogin": "Último acesso",
     "email": "E-mail",
     "phone": "Telefone",
+    "phoneCountry": "País do telefone",
     "search": "Buscar...",
     "notLoaded": "Não enviado",
     "loading": "Carregando...",
@@ -201,6 +207,7 @@
     "operation_turma_assign_redator": "Designar redator idôneo à turma",
     "operation_turma_complete": "Confirmar conclusão da turma (admin confirma)",
     "operation_turma_submit_docs": "Subir documentação da turma (ação do redator)",
+    "operation_turma_submit_client_evaluation": "Subir avaliação do cliente",
     "operation_turma_manage_concluded_docs": "Subir e remover documentos de turma concluída",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado",
@@ -244,7 +251,9 @@
       "range": "Período",
       "present": "Presentes",
       "missing": "Faltam",
-      "enabled": "Habilitada"
+      "enabled": "Habilitada",
+      "concluded": "Concluída",
+      "warning": "Avaliações opcionais: {{types}}"
     },
     "redatorLoad": {
       "title": "Carga de relatores",
@@ -277,6 +286,7 @@
         "empty": "Sem documentação pendente",
         "emptyHint": "Todas as suas turmas estão com a documentação em dia.",
         "missing": "Falta: {{types}}",
+        "warning": "Faltam avaliações opcionais: {{types}}",
         "until": "Até {{date}}"
       },
       "alerts": {
@@ -284,13 +294,10 @@
       }
     },
     "period": {
-      "label": "Período",
       "last12": "Últimos 12 meses",
       "last6": "Últimos 6 meses",
       "currentYear": "Ano corrente",
-      "custom": "Personalizado",
-      "start": "De",
-      "end": "Até"
+      "custom": "Personalizado"
     },
     "series": {
       "countsTitle": "Evolução mensal",
@@ -493,6 +500,20 @@
     "sectionGeneral": "Dados gerais",
     "sectionAddress": "Endereço",
     "sectionContacts": "Pessoas de contato",
+    "budgets": {
+      "title": "Orçamentos",
+      "empty": "Este cliente ainda não tem orçamentos.",
+      "emptyFiltered": "Nenhum orçamento para os filtros aplicados.",
+      "searchPlaceholder": "Buscar por código...",
+      "date": "Data",
+      "period": {
+        "all": "Todos",
+        "week": "Semana",
+        "month": "Mês",
+        "year": "Ano",
+        "custom": "Personalizado"
+      }
+    },
     "addContact": "Adicionar contato",
     "region": "Região",
     "commune": "Comuna",
@@ -510,6 +531,9 @@
     "contacts": "Contatos"
   },
   "course": {
+    "code": "Código",
+    "senceCode": "Código SENCE",
+    "senceCodePlaceholder": "ex.: 1237954321",
     "certificatePreview": "Ver certificado de amostra",
     "new": "Novo curso",
     "create": "Criar curso",
@@ -754,7 +778,7 @@
         "conclusion": "Conclusão"
       },
       "lock": {
-        "concluida": "A turma está concluída: alunos, redator, datas e local não mudam mais. Só a nota, a presença e o status de alunos ainda sem certificado vigente podem ser corrigidos."
+        "concluida": "A turma está concluída: alunos, redator, datas e local não mudam mais. Só a nota, a presença e o status de alunos ainda sem certificado vigente podem ser corrigidos, e as avaliações de Alunos e de Cliente ainda podem ser anexadas."
       },
       "comingSoon": "Disponível na próxima entrega."
     },
@@ -906,8 +930,9 @@
       "progress": "{{done}} de {{total}} documentos completos",
       "type": {
         "MANUAL": "Manual",
-        "PRUEBAS": "Provas / avaliações",
-        "EVALUACION_REDATOR": "Avaliação do redator"
+        "EVALUACION_REDATOR": "Avaliação Instrutor",
+        "EVALUACION_CLIENTE": "Avaliação Cliente",
+        "EVALUACION_ALUNO": "Avaliação Alunos"
       },
       "delivered": "Entregue",
       "pending": "Pendente",
@@ -920,7 +945,16 @@
       "lock": {
         "permission": "Você não tem permissão para subir ou remover documentação."
       },
-      "uploaded": "Documento enviado."
+      "uploaded": "Documento enviado.",
+      "evaluaciones": {
+        "title": "Avaliações",
+        "warning": "Faltam avaliações opcionais: {{types}}. Elas não impedem a conclusão da turma.",
+        "tag": {
+          "EVALUACION_REDATOR": "Instrutor",
+          "EVALUACION_ALUNO": "Alunos",
+          "clienteFallback": "Cliente"
+        }
+      }
     },
     "conclusion": {
       "title": "Conclusão da turma",
@@ -934,7 +968,7 @@
       "warning": "Ao confirmar, os certificados dos alunos aprovados passam a estar disponíveis para emissão. Depois disso, só o administrador corrige nota, presença e status, e só de alunos ainda sem certificado. A ação não pode ser desfeita.",
       "confirm": "Confirmar conclusão",
       "confirmTitle": "Confirmar conclusão da turma",
-      "confirmBody": "Concluir a turma é definitivo: ela não poderá ser reaberta, e alunos, redator, datas e local ficam fixos. Depois, só se corrigem nota, presença e status de alunos ainda sem certificado vigente. Confirma a conclusão da turma?",
+      "confirmBody": "Concluir a turma é definitivo: ela não poderá ser reaberta, e alunos, redator, datas e local ficam fixos. Depois, só se corrigem nota, presença e status de alunos ainda sem certificado vigente, e se anexam as avaliações de Alunos e de Cliente. Confirma a conclusão da turma?",
       "success": "Conclusão confirmada. Certificados disponíveis para emissão.",
       "concludedAt": "Concluída em {{date}}",
       "noPermission": "Você não tem permissão para concluir turmas.",

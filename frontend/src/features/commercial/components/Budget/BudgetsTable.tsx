@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   AppColumn, IdentityCell, stickyActionsColumn,
-  AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt, useCollapsibleActionsColumn,
+  AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt, useCollapsibleActionsColumn, RecordCode
 } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
@@ -104,7 +104,7 @@ export function BudgetsTable({
       <AppColumn
         header={t('budget.code')}
         field="id" sortable
-        body={(b: BudgetData) => <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{b.code}</span>}
+        body={(b: BudgetData) => <RecordCode>{b.code}</RecordCode>}
         style={largura.code}
       />
       <AppColumn

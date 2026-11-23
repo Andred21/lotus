@@ -1,7 +1,7 @@
 {
   "login": {
     "title": "Iniciar sesión",
-    "subtitle": "Acceso para administradores y redactores",
+    "subtitle": "Acceso para administradores y instructores",
     "email": "Correo electrónico",
     "emailPlaceholder": "correo@empresa.cl",
     "password": "Contraseña",
@@ -29,6 +29,11 @@
     "sector": "Sector eléctrico de alta tensión"
   },
   "common": {
+    "period": {
+      "label": "Período",
+      "start": "Desde",
+      "end": "Hasta"
+    },
     "language": "Idioma",
     "toggleMenu": "Alternar menú",
     "toggleTheme": "Cambiar tema",
@@ -46,6 +51,7 @@
     "lastLogin": "Último acceso",
     "email": "Correo electrónico",
     "phone": "Teléfono",
+    "phoneCountry": "País del teléfono",
     "search": "Buscar...",
     "notLoaded": "No cargado",
     "loading": "Cargando...",
@@ -104,11 +110,11 @@
     },
     "cursos": {
       "title": "Cursos",
-      "description": "Catálogo de cursos y sus redactores habilitados."
+      "description": "Catálogo de cursos y sus instructores habilitados."
     },
     "personas": {
       "title": "Personas",
-      "description": "Registro canónico de alumnos y redactores"
+      "description": "Registro canónico de alumnos y instructores"
     },
     "administracion": {
       "title": "Administración",
@@ -148,12 +154,12 @@
   },
   "roleSection": {
     "admin": "ADMINISTRADOR",
-    "redator": "REDACTOR"
+    "redator": "INSTRUCTOR"
   },
   "roleName": {
     "superadmin": "SuperAdmin",
     "admin": "Administrador",
-    "redator": "Redactor"
+    "redator": "Instructor"
   },
   "permGroup": {
     "identity": "Identidad",
@@ -163,11 +169,11 @@
     "certification": "Certificación"
   },
   "perm": {
-    "identity_user_view": "Ver usuarios, redactores y alumnos",
-    "identity_user_create": "Crear usuarios, redactores y alumnos",
-    "identity_user_update": "Editar usuarios, redactores y alumnos",
+    "identity_user_view": "Ver usuarios, instructores y alumnos",
+    "identity_user_create": "Crear usuarios, instructores y alumnos",
+    "identity_user_update": "Editar usuarios, instructores y alumnos",
     "identity_user_delete": "Archivar usuarios",
-    "identity_user_restore": "Restaurar redactores archivados",
+    "identity_user_restore": "Restaurar instructores archivados",
     "identity_access_manage": "Gestionar roles y permisos de otros usuarios (sensible)",
     "commercial_client_view": "Ver clientes (empresas contratantes)",
     "commercial_client_create": "Crear clientes",
@@ -187,7 +193,7 @@
     "commercial_quote_approve": "Aprobar cotización con aceptación del cliente (solo superadmin)",
     "catalog_course_view": "Ver cursos",
     "catalog_course_create": "Crear cursos",
-    "catalog_course_update": "Editar cursos y habilitación de redactores",
+    "catalog_course_update": "Editar cursos y habilitación de instructores",
     "catalog_course_delete": "Eliminar cursos",
     "catalog_course_restore": "Restaurar cursos archivados",
     "operation_turma_view": "Ver grupos",
@@ -196,11 +202,12 @@
     "operation_turma_delete": "Eliminar grupos",
     "operation_turma_restore": "Restaurar grupos archivados",
     "operation_enrollment_manage": "Matricular alumnos / importar planilla",
-    "operation_enrollment_record_result": "Registrar nota y asistencia de la matrícula (acción del redactor)",
+    "operation_enrollment_record_result": "Registrar nota y asistencia de la matrícula (acción del instructor)",
     "operation_enrollment_restore": "Restaurar matrículas archivadas",
-    "operation_turma_assign_redator": "Asignar redactor idóneo al grupo",
+    "operation_turma_assign_redator": "Asignar instructor idóneo al grupo",
     "operation_turma_complete": "Confirmar finalización del grupo (admin confirma)",
-    "operation_turma_submit_docs": "Subir documentación del grupo (acción del redactor)",
+    "operation_turma_submit_docs": "Subir documentación del grupo (acción del instructor)",
+    "operation_turma_submit_client_evaluation": "Subir evaluación del cliente",
     "operation_turma_manage_concluded_docs": "Subir y quitar documentos de un grupo concluido",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado",
@@ -239,19 +246,21 @@
       "count_one": "{{count}} clase",
       "count_other": "{{count}} clases",
       "course": "Curso",
-      "redatores": "Relatores",
-      "noRedator": "Sin relator",
+      "redatores": "Instructores",
+      "noRedator": "Sin instructor",
       "range": "Período",
       "present": "Presentes",
       "missing": "Faltan",
-      "enabled": "Habilitada"
+      "enabled": "Habilitada",
+      "concluded": "Concluida",
+      "warning": "Evaluaciones opcionales: {{types}}"
     },
     "redatorLoad": {
-      "title": "Carga de relatores",
-      "empty": "Sin relatores",
-      "count_one": "{{count}} relator",
-      "count_other": "{{count}} relatores",
-      "name": "Relator",
+      "title": "Carga de instructores",
+      "empty": "Sin instructores",
+      "count_one": "{{count}} instructor",
+      "count_other": "{{count}} instructores",
+      "name": "Instructor",
       "current": "Clases en curso",
       "upcoming": "Próximas clases",
       "expired": "Documentos vencidos",
@@ -277,6 +286,7 @@
         "empty": "Sin documentación pendiente",
         "emptyHint": "Todas tus clases tienen la documentación al día.",
         "missing": "Falta: {{types}}",
+        "warning": "Faltan evaluaciones opcionales: {{types}}",
         "until": "Hasta {{date}}"
       },
       "alerts": {
@@ -284,13 +294,10 @@
       }
     },
     "period": {
-      "label": "Período",
       "last12": "Últimos 12 meses",
       "last6": "Últimos 6 meses",
       "currentYear": "Año en curso",
-      "custom": "Personalizado",
-      "start": "Desde",
-      "end": "Hasta"
+      "custom": "Personalizado"
     },
     "series": {
       "countsTitle": "Evolución mensual",
@@ -345,7 +352,7 @@
       "type": {
         "quote_awaiting_approval": "Cotización por aprobar",
         "quote_approved_without_turma": "Cotización aprobada sin clase",
-        "turma_without_redator": "Clase sin relator",
+        "turma_without_redator": "Clase sin instructor",
         "turma_presencial_without_local": "Clase presencial sin lugar de aplicación",
         "turma_docs_incomplete": "Documentación incompleta",
         "turma_awaiting_conclusion": "Clase por confirmar conclusión",
@@ -360,8 +367,8 @@
         "turma_overdue": "Clase vencida",
         "certificate_expiring_soon": "Certificado por vencer",
         "certificate_expired": "Certificado vencido",
-        "redator_document_expired": "Documento de relator vencido",
-        "redator_document_expiring_soon": "Documento de relator por vencer"
+        "redator_document_expired": "Documento de instructor vencido",
+        "redator_document_expiring_soon": "Documento de instructor por vencer"
       }
     },
     "agenda": {
@@ -493,6 +500,20 @@
     "sectionGeneral": "Datos generales",
     "sectionAddress": "Dirección",
     "sectionContacts": "Personas de contacto",
+    "budgets": {
+      "title": "Presupuestos",
+      "empty": "Este cliente aún no tiene presupuestos.",
+      "emptyFiltered": "Sin presupuestos para los filtros aplicados.",
+      "searchPlaceholder": "Buscar por código...",
+      "date": "Fecha",
+      "period": {
+        "all": "Todos",
+        "week": "Semana",
+        "month": "Mes",
+        "year": "Año",
+        "custom": "Personalizado"
+      }
+    },
     "addContact": "Agregar contacto",
     "region": "Región",
     "commune": "Comuna",
@@ -510,6 +531,9 @@
     "contacts": "Contactos"
   },
   "course": {
+    "code": "Código",
+    "senceCode": "Código SENCE",
+    "senceCodePlaceholder": "ej.: 1237954321",
     "certificatePreview": "Ver certificado de muestra",
     "new": "Nuevo curso",
     "create": "Crear curso",
@@ -521,17 +545,17 @@
     "description": "Descripción",
     "workloadHours": "Carga horaria (h)",
     "sectionGeneral": "Datos del curso",
-    "sectionRedatores": "Redactores habilitados",
-    "redatoresReadonlyNote": "La habilitación se edita en el perfil del redactor (Personas).",
-    "noRedatores": "Sin redactores habilitados.",
+    "sectionRedatores": "Instructores habilitados",
+    "redatoresReadonlyNote": "La habilitación se edita en el perfil del instructor (Personas).",
+    "noRedatores": "Sin instructores habilitados.",
     "searchPlaceholder": "Buscar curso...",
     "empty": "No hay cursos.",
     "emptyHint": "Crea el primer curso para comenzar.",
     "count_one": "{{count}} curso",
     "count_other": "{{count}} cursos",
-    "redatorCount": "Redactores",
+    "redatorCount": "Instructores",
     "workloadShort": "{{hours}} h",
-    "redatoresSelectNote": "Seleccione los redactores habilitados para este curso."
+    "redatoresSelectNote": "Seleccione los instructores habilitados para este curso."
   },
   "courseModule": {
     "section": "Módulos",
@@ -636,14 +660,14 @@
     "other": "Otro"
   },
   "redator": {
-    "new": "Nuevo redactor",
-    "create": "Registrar redactor",
-    "tabRedatores": "Redactores",
+    "new": "Nuevo instructor",
+    "create": "Registrar instructor",
+    "tabRedatores": "Instructores",
     "tabStudents": "Alumnos",
-    "empty": "Sin redactores",
-    "emptyHint": "Registra el primer redactor para comenzar.",
-    "count_one": "{{count}} redactor",
-    "count_other": "{{count}} redactores",
+    "empty": "Sin instructores",
+    "emptyHint": "Registra el primer instructor para comenzar.",
+    "count_one": "{{count}} instructor",
+    "count_other": "{{count}} instructores",
     "searchPlaceholder": "Buscar por nombre o RUT...",
     "name": "Nombre completo",
     "sectionUser": "Datos de usuario",
@@ -722,7 +746,7 @@
       "course": "Curso",
       "client": "Cliente",
       "modality": "Modalidad",
-      "redator": "Redactor",
+      "redator": "Instructor",
       "students": "Alumnos",
       "status": "Estado",
       "search": "Buscar por curso, cliente o código…",
@@ -749,12 +773,12 @@
       "tabs": {
         "config": "Configuración",
         "students": "Alumnos",
-        "redator": "Redactor",
+        "redator": "Instructor",
         "docs": "Documentación",
         "conclusion": "Conclusión"
       },
       "lock": {
-        "concluida": "La turma está concluida: alumnos, relator, fechas y lugar ya no cambian. Solo se pueden corregir la nota, la asistencia y el estado de alumnos aún sin certificado vigente."
+        "concluida": "La turma está concluida: alumnos, instructor, fechas y lugar ya no cambian. Solo se pueden corregir la nota, la asistencia y el estado de alumnos aún sin certificado vigente, y aún se pueden adjuntar las evaluaciones de Alumnos y de Cliente."
       },
       "comingSoon": "Disponible en la próxima entrega."
     },
@@ -774,15 +798,15 @@
       "title": "Configurar turma"
     },
     "redator": {
-      "title": "Redactor asignado",
+      "title": "Instructor asignado",
       "idoneo": "Idóneo",
       "change": "Cambiar",
-      "designate": "Designar redactor",
+      "designate": "Designar instructor",
       "remove": "Quitar",
-      "none": "Ningún redactor asignado.",
-      "helpNote": "Se listan todos los redactores. Los que no cumplen la idoneidad aparecen con aviso y piden confirmación.",
-      "pickerTitle": "Designar redactor",
-      "pickerEmpty": "No hay redactores disponibles para designar.",
+      "none": "Ningún instructor asignado.",
+      "helpNote": "Se listan todos los instructores. Los que no cumplen la idoneidad aparecen con aviso y piden confirmación.",
+      "pickerTitle": "Designar instructor",
+      "pickerEmpty": "No hay instructores disponibles para designar.",
       "motivo": {
         "not_qualified": "No habilitado para el curso",
         "reuf_invalid": "Sin REUF vigente"
@@ -906,8 +930,9 @@
       "progress": "{{done}} de {{total}} documentos completos",
       "type": {
         "MANUAL": "Manual",
-        "PRUEBAS": "Pruebas / evaluaciones",
-        "EVALUACION_REDATOR": "Evaluación del redactor"
+        "EVALUACION_REDATOR": "Evaluación Instructor",
+        "EVALUACION_CLIENTE": "Evaluación Cliente",
+        "EVALUACION_ALUNO": "Evaluación Alumnos"
       },
       "delivered": "Entregado",
       "pending": "Pendiente",
@@ -920,7 +945,16 @@
       "lock": {
         "permission": "No tienes permiso para subir o quitar documentación."
       },
-      "uploaded": "Documento subido."
+      "uploaded": "Documento subido.",
+      "evaluaciones": {
+        "title": "Evaluaciones",
+        "warning": "Faltan evaluaciones opcionales: {{types}}. No impiden concluir la turma.",
+        "tag": {
+          "EVALUACION_REDATOR": "Instructor",
+          "EVALUACION_ALUNO": "Alumnos",
+          "clienteFallback": "Cliente"
+        }
+      }
     },
     "conclusion": {
       "title": "Conclusión de la turma",
@@ -934,12 +968,12 @@
       "warning": "Al confirmar, los certificados de los alumnos aprobados pasan a estar disponibles para emisión. Después, solo el administrador corrige nota, asistencia y estado, y solo de alumnos aún sin certificado. La acción no se puede deshacer.",
       "confirm": "Confirmar conclusión",
       "confirmTitle": "Confirmar conclusión de la turma",
-      "confirmBody": "Concluir la turma es definitivo: no podrá reabrirse, y los alumnos, el relator, las fechas y el lugar quedan fijos. Después solo se podrán corregir la nota, la asistencia y el estado de los alumnos aún sin certificado vigente. ¿Confirmas la conclusión de la turma?",
+      "confirmBody": "Concluir la turma es definitivo: no podrá reabrirse, y los alumnos, el instructor, las fechas y el lugar quedan fijos. Después solo se podrán corregir la nota, la asistencia y el estado de los alumnos aún sin certificado vigente, y adjuntar las evaluaciones de Alumnos y de Cliente. ¿Confirmas la conclusión de la turma?",
       "success": "Conclusión confirmada. Certificados disponibles para emisión.",
       "concludedAt": "Concluida el {{date}}",
       "noPermission": "No tienes permiso para concluir turmas.",
       "requirement": {
-        "redator": "Redactor designado",
+        "redator": "Instructor designado",
         "local_aplicacao": "Lugar de aplicación (turma presencial)"
       },
       "incomplete": {
@@ -983,7 +1017,7 @@
     "pendiente": "Pendiente",
     "blocked": {
       "sin_ciudad": "Sin ciudad de emisión configurada",
-      "sin_redactor": "La turma no tiene redactor designado"
+      "sin_redactor": "La turma no tiene instructor designado"
     },
     "warnings": {
       "managerSignatureMissing": "La firma de la gerente no está cargada. Los certificados saldrán con el espacio en blanco sobre la línea, para firmar a mano, hasta que el superadministrador la cargue en Administración › Configuración › Certificados.",
@@ -995,7 +1029,7 @@
     "fieldRut": "RUT",
     "fieldCurso": "Curso",
     "fieldVigencia": "Vigencia",
-    "fieldRedator": "Redactor",
+    "fieldRedator": "Instructor",
     "vigenciaIndefinida": "Indefinida",
     "confirmEmit": "Confirmar emisión",
     "issuedTitle": "Certificado emitido",

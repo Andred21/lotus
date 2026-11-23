@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppTag, IdentityCell } from '@shared/ui'
+import { AppTag, IdentityCell, RecordCode } from '@shared/ui'
 import type { TurmaData } from '@shared/types/generated'
 import { turmaDisplayStatus, turmaStatusSeverity, turmaModalidadeTagProps } from '../../lib/turmaStatus'
 
@@ -14,9 +14,7 @@ import { turmaDisplayStatus, turmaStatusSeverity, turmaModalidadeTagProps } from
 
 export function TurmaCodeCell({ turma }: { turma: TurmaData }) {
   return (
-    <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>
-      {turma.quote_code ?? '—'}
-    </span>
+    turma.quote_code ? <RecordCode>{turma.quote_code}</RecordCode> : <>—</>
   )
 }
 

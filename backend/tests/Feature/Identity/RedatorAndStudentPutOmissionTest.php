@@ -29,7 +29,7 @@ class RedatorAndStudentPutOmissionTest extends TestCase
             'email' => 'red@lotus.cl',
         ])->assertOk();
 
-        $this->assertSame('+56 9 3333 3333', $user->refresh()->phone);
+        $this->assertSame('+56933333333', $user->refresh()->phone);
     }
 
     public function test_put_de_redator_com_phone_null_apaga(): void
@@ -97,7 +97,7 @@ class RedatorAndStudentPutOmissionTest extends TestCase
             'email' => 'aluno@lotus.cl',
         ])->assertOk();
 
-        $this->assertSame('+56 9 4444 4444', $user->refresh()->phone);
+        $this->assertSame('+56944444444', $user->refresh()->phone);
     }
 
     public function test_put_de_aluno_com_phone_null_apaga(): void

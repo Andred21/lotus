@@ -15,7 +15,7 @@ vi.mock('react-i18next', async (importOriginal) => {
 })
 
 const CURSO = {
-  id: 1, name: 'Alta tensión', technical_name: 'AT-01', description: null, workload_hours: 16,
+  id: 1, code: 'C-1', name: 'Alta tensión', technical_name: 'AT-01', description: null, workload_hours: 16,
   modules: [], redator_ids: [], modules_total_hours: 16,
   archived_at: '2026-09-01T10:00:00Z', archived_by: 'Admin Lotus',
 } as unknown as CourseRow
@@ -107,5 +107,14 @@ describe('CoursesTable — coluna de ações', () => {
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.className).toContain('sm:min-w-[42rem]')
     expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('51rem')
+  })
+})
+
+describe('CoursesTable — código do curso', () => {
+  it('mostra o C-<n> numa coluna própria', () => {
+    comPermissoes([])
+    montar('active')
+    expect(screen.getByText('C-1')).toBeTruthy()
+    expect(screen.getByText('course.code')).toBeTruthy()
   })
 })

@@ -56,7 +56,7 @@ class CertificateEligibilityTest extends TestCase
         'turma não concluída' => 'La clase aún no fue concluida: no se puede emitir el certificado (RN-08).',
         'matrícula não aprovada' => 'El alumno no fue aprobado: no se puede emitir el certificado.',
         'certificado vigente' => 'Ya existe un certificado vigente para esta matrícula.',
-        'sem redator designado' => 'El relator no está designado en esta clase.',
+        'sem redator designado' => 'El instructor no está designado en esta clase.',
     ];
 
     private Turma $emitivel;

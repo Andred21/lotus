@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppInputText, AppDropdown, type FieldComponent } from '@shared/ui'
+import { AppInputText, AppDropdown, RutInput, type FieldComponent } from '@shared/ui'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { ClientFormFields } from '../../hooks/useClientForm'
 
@@ -32,7 +32,7 @@ export function ClientGeneralFields({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field name="rut" label={t('common.rut')}>
-          <AppInputText className="w-full" />
+          <RutInput className="w-full" />
         </Field>
         <Field name="email" label={t('common.email')}>
           <AppInputText className="w-full" />

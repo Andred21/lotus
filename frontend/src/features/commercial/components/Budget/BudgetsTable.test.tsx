@@ -113,22 +113,22 @@ describe('BudgetsTable — tags da turma', () => {
     )
   }
 
-  it('abaixo do status aprovado, uma tag por cotação aprovada na forma curta (Cot N)', () => {
+  it('abaixo do status aprovado, uma tag por cotação aprovada na forma curta (R N)', () => {
     renderizar([
-      { id: 1, code: 'Scap 1 - Cot 1', seq_in_budget: 1, status: 'approved', turma_status: 'em_andamento' },
-      { id: 2, code: 'Scap 1 - Cot 2', seq_in_budget: 2, status: 'approved' },
-      { id: 3, code: 'Scap 1 - Cot 3', seq_in_budget: 3, status: 'pending' },
+      { id: 1, code: 'Scap 1 - R1', seq_in_budget: 1, status: 'approved', turma_status: 'em_andamento' },
+      { id: 2, code: 'Scap 1 - R2', seq_in_budget: 2, status: 'approved' },
+      { id: 3, code: 'Scap 1 - R3', seq_in_budget: 3, status: 'pending' },
     ])
 
-    expect(screen.getByText('Cot 1 · quote.turmaTag.em_andamento')).toBeTruthy()
-    expect(screen.getByText('Cot 2 · quote.turmaTag.pending')).toBeTruthy()
-    expect(screen.queryByText(/Cot 3/)).toBeNull()
-    expect(screen.queryByText(/Scap 1 - Cot/)).toBeNull()
+    expect(screen.getByText('R1 · quote.turmaTag.em_andamento')).toBeTruthy()
+    expect(screen.getByText('R2 · quote.turmaTag.pending')).toBeTruthy()
+    expect(screen.queryByText(/R3/)).toBeNull()
+    expect(screen.queryByText(/Scap 1 - R/)).toBeNull()
   })
 
   it('sem seq_in_budget na cotação, cai no código completo', () => {
-    renderizar([{ id: 1, code: 'Scap 1 - Cot 1', status: 'approved', turma_status: 'em_andamento' }])
+    renderizar([{ id: 1, code: 'Scap 1 - R1', status: 'approved', turma_status: 'em_andamento' }])
 
-    expect(screen.getByText('Scap 1 - Cot 1 · quote.turmaTag.em_andamento')).toBeTruthy()
+    expect(screen.getByText('Scap 1 - R1 · quote.turmaTag.em_andamento')).toBeTruthy()
   })
 })

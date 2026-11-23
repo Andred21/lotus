@@ -25,6 +25,7 @@ const base = (over: Partial<Section> = {}): Section => ({
   concluida: false,
   missingTypes: [],
   missingRequirements: [],
+  missingOptionalTypes: [],
   incompleteStudents: [],
   canComplete: true,
   concludedAt: null,
@@ -59,6 +60,21 @@ describe('ConcludePanel', () => {
     const dialog = screen.getByRole('dialog')
     expect(within(dialog).getByText('operation.conclusion.incomplete.title|{"count":1}')).toBeTruthy()
     expect((within(dialog).getByRole('button', { name: /operation.conclusion.confirm/ }) as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('habilitada com evaluaciones opcionais faltando, o aviso as lista e o confirmar segue habilitado', () => {
+    section = base({ missingOptionalTypes: ['EVALUACION_CLIENTE'] })
+    renderPanel()
+
+    expect(screen.getByText(/operation\.documents\.evaluaciones\.warning.*operation\.documents\.type\.EVALUACION_CLIENTE/)).toBeTruthy()
+    expect(screen.queryByText('operation.conclusion.missingTitle')).toBeNull()
+    expect((screen.getByRole('button', { name: /operation.conclusion.confirm/ }) as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('sem opcionais faltando, não há aviso', () => {
+    renderPanel()
+
+    expect(screen.queryByText(/operation\.documents\.evaluaciones\.warning/)).toBeNull()
   })
 
   it('sem incompletos, a confirmação não mostra a lista', () => {

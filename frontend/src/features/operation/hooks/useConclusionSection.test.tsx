@@ -77,6 +77,28 @@ describe('useConclusionSection — alunos sem nota ou presença', () => {
     expect(result.current.missingRequirements).toEqual(['redator', 'local_aplicacao'])
   })
 
+  it('repassa as evaluaciones opcionais que faltam, sem tratá-las como pendência', () => {
+    get.mockReturnValue(new Promise(() => {}))
+    const { wrapper } = createWrapper()
+
+    const { result } = renderHook(
+      () => useConclusionSection(turma({ habilitada: true, missing_optional_document_types: ['EVALUACION_CLIENTE'] })),
+      { wrapper },
+    )
+
+    expect(result.current.missingOptionalTypes).toEqual(['EVALUACION_CLIENTE'])
+    expect(result.current.missingTypes).toEqual([])
+  })
+
+  it('sem `missing_optional_document_types` na turma devolve lista vazia', () => {
+    get.mockReturnValue(new Promise(() => {}))
+    const { wrapper } = createWrapper()
+
+    const { result } = renderHook(() => useConclusionSection(turma()), { wrapper })
+
+    expect(result.current.missingOptionalTypes).toEqual([])
+  })
+
   it('sem `missing_requirements` na turma devolve lista vazia', () => {
     get.mockReturnValue(new Promise(() => {}))
     const { wrapper } = createWrapper()

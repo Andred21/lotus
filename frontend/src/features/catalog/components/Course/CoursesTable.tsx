@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePermissions, useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, RecordCode, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
@@ -35,7 +35,7 @@ export function CoursesTable({
   const { can } = usePermissions()
   const archived = mode === 'archived'
   const largura = courseWidths(archived)
-  const table = useTableFilter(courses, (c) => [c.name, c.technical_name])
+  const table = useTableFilter(courses, (c) => [c.code, c.name, c.technical_name, c.sence_code])
   // Abaixo de `sm` a linha carrega um controle só e a presa encolhe junto
   // (item 23, `D-65`).
   // Com a amostra do certificado a linha ativa leva um terceiro botão.
@@ -66,6 +66,11 @@ export function CoursesTable({
       // margem 1px). Não alcança o col1 da ativa (218px): nenhum piso fecha as duas pernas.
       pt={narrowFloorTablePt(archived ? '51rem' : '39.5rem')}
     >
+      <AppColumn
+        header={t('course.code')}
+        style={largura.code}
+        body={(c: CourseData) => (c.code ? <RecordCode className="whitespace-nowrap">{c.code}</RecordCode> : '—')}
+      />
       <AppColumn
         field="name"
         header={t('course.name')}

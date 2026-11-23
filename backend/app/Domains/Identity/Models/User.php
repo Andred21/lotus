@@ -4,8 +4,10 @@ namespace App\Domains\Identity\Models;
 
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Identity\Notifications\PasswordResetLink;
+use App\Shared\Support\Phone;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -70,6 +72,27 @@ class User extends Authenticatable implements Auditable
         'is_active',
         'photo_path',
     ];
+
+    /**
+     * D-P2 (bloco 60): único ponto por tabela de verdade para o telefone e o
+     * e-mail, porque várias Actions gravam estes campos sem passar pelo
+     * provisioner. Telefone válido sai em E.164 e o inválido passa intacto (a
+     * recusa é do `ValidPhone`, na borda); e-mail sai `trim` + minúsculas. O
+     * mutator age só na ESCRITA do atributo, então o legado em caixa mista não
+     * é reescrito por uma gravação que não o toca.
+     *
+     * @return Attribute<string|null, string|null>
+     */
+    protected function phone(): Attribute
+    {
+        return Attribute::make(set: fn (?string $value) => Phone::normalizar($value));
+    }
+
+    /** @return Attribute<string|null, string|null> D-P2: ver `phone()`. */
+    protected function email(): Attribute
+    {
+        return Attribute::make(set: fn (?string $value) => $value === null ? null : mb_strtolower(trim($value)));
+    }
 
     public static function booted(): void
     {

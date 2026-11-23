@@ -11,8 +11,10 @@ use App\Domains\Dashboard\Data\RedatorResumoData;
 use App\Domains\Dashboard\Data\RedatorTurmaPendenciaData;
 use App\Domains\Dashboard\Enums\DashboardAlertType;
 use App\Domains\Dashboard\Enums\DashboardSeverity;
+use App\Domains\Dashboard\Support\CorteDeEvaluaciones;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
+use App\Domains\Operation\Enums\TurmaDocumentType;
 use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
@@ -45,6 +47,9 @@ class RedatorScopeQuery
     /** @var array<int, Collection<int, Turma>> */
     private array $emAndamento = [];
 
+    /** @var array<int, Collection<int, Turma>> */
+    private array $concluidas = [];
+
     public function __construct(
         private readonly TurmaHabilitacaoService $habilitacao,
     ) {}
@@ -60,7 +65,10 @@ class RedatorScopeQuery
         return new RedatorResumoData(
             turmas_em_andamento: $baldes->startedCount(),
             proximas_turmas: $baldes->upcoming->count(),
-            pendencias_documentais: count($this->pendenciasDocumentais($redator)),
+            pendencias_documentais: count(array_filter(
+                $this->pendenciasDocumentais($redator),
+                fn (RedatorTurmaPendenciaData $linha): bool => $linha->missing_types !== [],
+            )),
             documentos_vencendo: count($this->alertasDocumentos($redator)),
         );
     }
@@ -77,20 +85,33 @@ class RedatorScopeQuery
         );
     }
 
-    /** @return RedatorTurmaPendenciaData[] */
+    /**
+     * Uma linha por turma que deve algo: a em andamento com tipo bloqueante ou
+     * evaluación dos alunos faltando, e a concluída depois do corte com a dos
+     * alunos faltando. O redator só enxerga o aviso dos ALUNOS — a evaluación
+     * do cliente não é dele. `missing_types` (bloqueantes) é o que conta como
+     * pendência; `missing_optional_types` é só aviso. Na concluída
+     * `missing_types` sai vazio: ela já passou pelo gate, e antes do corte
+     * nunca foi pendência.
+     *
+     * @return RedatorTurmaPendenciaData[]
+     */
     public function pendenciasDocumentais(Redator $redator): array
     {
-        return $this->turmasEmAndamento($redator)
-            ->map(fn (Turma $turma): array => [
-                'turma' => $turma,
-                'missing' => $this->habilitacao->for($turma)->missingTypes(),
-            ])
-            ->filter(fn (array $row): bool => $row['missing'] !== [])
+        $andamento = $this->turmasEmAndamento($redator)
+            ->map(fn (Turma $turma): array => $this->pendenciaRow($turma, comBloqueantes: true));
+
+        $concluidas = $this->turmasConcluidasAposOCorte($redator)
+            ->map(fn (Turma $turma): array => $this->pendenciaRow($turma, comBloqueantes: false));
+
+        return $andamento->concat($concluidas)
+            ->filter(fn (array $row): bool => $row['missing'] !== [] || $row['optional'] !== [])
             ->map(fn (array $row): RedatorTurmaPendenciaData => new RedatorTurmaPendenciaData(
                 turma_id: $row['turma']->id,
                 course_name: $row['turma']->course->name,
                 end_date: $row['turma']->end_date->toDateString(),
                 missing_types: $row['missing'],
+                missing_optional_types: $row['optional'],
             ))
             ->values()
             ->all();
@@ -193,10 +214,44 @@ class RedatorScopeQuery
     {
         return $this->emAndamento[$redator->id] ??= $this->scoped($redator)
             ->where('status', TurmaStatus::EmAndamento)
-            ->with(['documentacaoObrigatoria', 'redatores', 'course'])
+            ->with(['documentos', 'redatores', 'course'])
             ->orderBy('start_date')
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * As concluídas do redator desde o início do dia do corte, pela mesma
+     * porta `scoped()`. O `redatores` entra porque a habilitação o lê.
+     *
+     * @return Collection<int, Turma>
+     */
+    private function turmasConcluidasAposOCorte(Redator $redator): Collection
+    {
+        return $this->concluidas[$redator->id] ??= $this->scoped($redator)
+            ->where('status', TurmaStatus::Concluida)
+            ->where('concluded_at', '>=', CorteDeEvaluaciones::inicio())
+            ->with(['documentos', 'redatores', 'course'])
+            ->orderBy('concluded_at')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * @return array{turma: Turma, missing: array<TurmaDocumentType>, optional: array<TurmaDocumentType>}
+     */
+    private function pendenciaRow(Turma $turma, bool $comBloqueantes): array
+    {
+        $status = $this->habilitacao->for($turma);
+
+        return [
+            'turma' => $turma,
+            'missing' => $comBloqueantes ? $status->missingTypes() : [],
+            'optional' => array_values(array_filter(
+                $status->missingOptionalTypes(),
+                fn (TurmaDocumentType $tipo): bool => $tipo === TurmaDocumentType::EVALUACION_ALUNO,
+            )),
+        ];
     }
 
     /**

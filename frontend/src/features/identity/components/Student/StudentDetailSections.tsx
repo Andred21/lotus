@@ -7,6 +7,7 @@ import {
   AppErrorState,
   InlineLoadState,
   FormSection,
+  RecordCode,
 } from "@shared/ui";
 import type { StudentTurmaData } from "@shared/types/generated";
 import { studentTurmaWidths } from "./studentColumns";
@@ -98,12 +99,7 @@ export function StudentDetailSections({
             header={t("student.turmaCode")}
             style={largura.code}
             body={(turma: StudentTurmaData) => (
-              <span
-                className="font-bold text-sm"
-                style={{ color: "var(--primary-color)" }}
-              >
-                {turma.quote_code}
-              </span>
+              <RecordCode>{turma.quote_code}</RecordCode>
             )}
           />
           <AppColumn

@@ -15,8 +15,9 @@ import type { TurmaDocumentType } from '@shared/types/generated'
  */
 export const TURMA_DOCUMENT_TYPE_KEY: Record<TurmaDocumentType, string> = {
   MANUAL: 'operation.documents.type.MANUAL',
-  PRUEBAS: 'operation.documents.type.PRUEBAS',
   EVALUACION_REDATOR: 'operation.documents.type.EVALUACION_REDATOR',
+  EVALUACION_CLIENTE: 'operation.documents.type.EVALUACION_CLIENTE',
+  EVALUACION_ALUNO: 'operation.documents.type.EVALUACION_ALUNO',
 }
 
 /**

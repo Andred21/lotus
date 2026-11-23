@@ -3,8 +3,8 @@
 namespace App\Domains\Operation\Actions;
 
 use App\Domains\Identity\Models\User;
-use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\TurmaDocumentGate;
 use App\Shared\Files\Models\File;
 
 /**
@@ -14,13 +14,13 @@ use App\Shared\Files\Models\File;
  */
 class DeleteTurmaDocumentAction
 {
+    public function __construct(private TurmaDocumentGate $gate) {}
+
     public function execute(Turma $turma, File $file, User $actor): void
     {
-        // RN-15: turma concluída só libera a remoção para quem tem a permissão
-        // exclusiva (superadmin); os demais caem na recusa de sempre.
-        if (! ($turma->status === TurmaStatus::Concluida && $actor->can('operation.turma.manage_concluded_docs'))) {
-            $turma->assertAcademicallyWritable();
-        }
+        // Papel por tipo do arquivo e RN-15 (turma concluída só com
+        // `manage_concluded_docs`) na matriz do gate (spec §4.6).
+        $this->gate->assertPodeRemover($turma, $file, $actor);
 
         $file->delete();   // por instância — audita (lição #5)
     }

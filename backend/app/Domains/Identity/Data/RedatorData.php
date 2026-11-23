@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Data;
 use App\Domains\Identity\Models\Redator;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
+use App\Shared\Rules\ValidPhone;
 use App\Shared\Rules\ValidRut;
 use App\Shared\Support\TetosDeColuna;
 use App\Shared\Support\TetosImpressos;
@@ -32,7 +33,6 @@ class RedatorData extends Data
         public string $rut,
         #[Required, Email, Max(TetosDeColuna::EMAIL)]
         public string $email,
-        #[Max(TetosDeColuna::TELEFONE)]
         public string|Optional|null $phone,
         /**
          * Acesso do redator. `Optional` de propósito: um PUT que não fala de
@@ -67,6 +67,8 @@ class RedatorData extends Data
             // upload legítimo — ver `RedatorCrudTest`/`RedatorDocumentTest`.
             ...ComputedFields::rejected('photo_url', 'last_login'),
             'rut' => ['required', 'string', new ValidRut],
+            // `sobrepõe` o auto-rule do atributo, então o teto e o `ValidPhone` moram juntos aqui.
+            'phone' => ['bail', 'sometimes', 'nullable', 'string', 'max:'.TetosDeColuna::TELEFONE, new ValidPhone],
             'course_ids' => ['sometimes', 'array'],
             'course_ids.*' => ['integer', 'exists:courses,id'],
         ];

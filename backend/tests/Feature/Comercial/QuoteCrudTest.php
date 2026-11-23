@@ -41,7 +41,7 @@ class QuoteCrudTest extends TestCase
 
         $r2 = $this->postJson("/api/budgets/{$this->budgetId}/quotes", $this->payload());
         $r2->assertCreated()->assertJsonPath('seq_in_budget', 2)
-            ->assertJsonPath('code', "Scap {$this->budgetId} - Cot 2");
+            ->assertJsonPath('code', "Scap {$this->budgetId} - R2");
 
         $this->assertDatabaseHas('quotes', ['budget_id' => $this->budgetId, 'seq_in_budget' => 1]);
         $this->assertDatabaseHas('quotes', ['budget_id' => $this->budgetId, 'seq_in_budget' => 2]);

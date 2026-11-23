@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppInputText, FormField } from '@shared/ui'
+import { AppButton, AppInputText, RutInput, FormField } from '@shared/ui'
 import { isRegistered, type TriageRow } from '../../hooks/useImportStudentsFlow'
 
 export type RowFields = Pick<TriageRow, 'rut' | 'name' | 'email' | 'phone'>
@@ -45,7 +45,12 @@ export function ImportRowEditor({ row, onSave, onCancel }: Props) {
     <div role="group" aria-label={t('operation.enrollment.import.editRow')} className="space-y-3 p-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <FormField label={t('operation.enrollment.import.col.rut')}>
-          <AppInputText value={draft.rut} onChange={set('rut')} disabled={rutLocked} className="w-full" />
+          <RutInput
+            value={draft.rut}
+            onChange={(rut) => setDraft((cur) => ({ ...cur, rut }))}
+            disabled={rutLocked}
+            className="w-full"
+          />
         </FormField>
         <FormField label={t('operation.enrollment.import.col.name')}>
           <AppInputText value={draft.name} onChange={set('name')} className="w-full" />

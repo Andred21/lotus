@@ -29,7 +29,7 @@ class ClientAndCoursePutOmissionTest extends TestCase
         ])->assertOk();
 
         $client->refresh();
-        $this->assertSame('+56 9 5555 5555', $client->user->phone);
+        $this->assertSame('+56955555555', $client->user->phone);
         $this->assertSame('Montagem elétrica', $client->business_activity);
     }
 

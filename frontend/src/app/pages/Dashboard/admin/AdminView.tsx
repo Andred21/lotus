@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { InlineLoadState, SectionLabel } from '@shared/ui'
+import { InlineLoadState, PeriodFilter, SectionLabel } from '@shared/ui'
 import type { AdminDashboardData } from '@shared/types/generated'
 import type { DashboardPeriod } from '../useDashboard'
 import { KpiRow } from '../KpiRow'
@@ -9,11 +9,11 @@ import { kpiCards } from './kpiCards'
 import { secoesVisiveis } from './secoes'
 import { PendingList } from './PendingList'
 import { PipelineFunnel } from './PipelineFunnel'
-import { PeriodFilter } from './PeriodFilter'
 import { SeriesPanel } from './SeriesPanel'
 import { RankingsPanel } from './RankingsPanel'
 import { CompliancePanel } from './CompliancePanel'
 import { RedatorLoadPanel } from './RedatorLoadPanel'
+import { PERIOD_PRESETS } from './periodPresets'
 import type { PeriodPresetKey } from './periodPresets'
 
 /**
@@ -104,6 +104,8 @@ export function AdminView({
           <SectionLabel>{t('dashboard.section.analysis')}</SectionLabel>
           <PeriodFilter
             preset={preset}
+            presets={PERIOD_PRESETS.map((chave) => ({ value: chave, label: t(`dashboard.period.${chave}`) }))}
+            customKey="custom"
             period={period}
             staleError={staleError}
             onPresetChange={onPresetChange}

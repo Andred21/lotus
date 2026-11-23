@@ -148,7 +148,7 @@ class ImportRowClassifierTest extends TestCase
 
     public function test_actualizar_em_branco_preserva_e_nao_reserva(): void
     {
-        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56 9 1111');
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56 9 8765 4321');
         $this->aluno('44.444.444-4', 'Ana Mora', 'ana@acme.cl');
 
         $d = $this->classificar([
@@ -164,7 +164,7 @@ class ImportRowClassifierTest extends TestCase
         $this->assertNull($d[0]->updateRefusal);
         $this->assertTrue($d[0]->updates());
         $this->assertSame('pedro@acme.cl', $d[0]->updatedIdentity->email);
-        $this->assertSame('+56 9 1111', $d[0]->updatedIdentity->phone);
+        $this->assertSame('+56987654321', $d[0]->updatedIdentity->phone);
         $this->assertSame('33.333.333-3', $d[0]->updatedIdentity->rut);
 
         $this->assertSame([ImportField::Email], $d[1]->divergent);
@@ -219,5 +219,91 @@ class ImportRowClassifierTest extends TestCase
         $this->assertSame(__('operation.enrollment.import.update_forbidden'), $d[0]->updateRefusal);
         $this->assertTrue($d[0]->updateRefused());
         $this->assertFalse($d[0]->updates());
+    }
+
+    /** D-P2/spec 4.8: célula preenchida é validada pela API com o `ValidPhone`. */
+    public function test_aluno_novo_com_telefone_invalido_tem_erro_na_linha(): void
+    {
+        $d = $this->classificar([
+            $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', 'abc'),
+        ]);
+
+        $this->assertSame(ImportRowStatus::Error, $d[0]->status);
+        $this->assertSame(__('shared.rule.phone_invalid'), $d[0]->refusal);
+    }
+
+    public function test_aluno_cadastrado_com_telefone_invalido_perde_so_o_actualizar(): void
+    {
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl');
+
+        $d = $this->classificar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos', null, 'abc', atualizar: true),
+        ]);
+
+        $this->assertSame(ImportRowStatus::Registered, $d[0]->status);
+        $this->assertNull($d[0]->refusal);
+        $this->assertSame(__('shared.rule.phone_invalid'), $d[0]->updateRefusal);
+        $this->assertFalse($d[0]->updates());
+        $this->assertSame('pedro@acme.cl', $d[0]->identity->email); // a matrícula segue com o cadastro
+    }
+
+    public function test_celula_de_telefone_vazia_e_aceita_nos_dois_casos(): void
+    {
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl');
+
+        $d = $this->classificar([
+            $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', ''),
+            $this->linha(3, '33.333.333-3', 'Pedro Lagos', null, null, atualizar: true),
+        ]);
+
+        $this->assertSame(ImportRowStatus::New, $d[0]->status);
+        $this->assertNull($d[0]->refusal);
+        $this->assertSame(ImportRowStatus::Registered, $d[1]->status);
+        $this->assertNull($d[1]->updateRefusal);
+    }
+
+    /** O cadastro guarda E.164 e a planilha traz formato humano: o mesmo número não é divergência. */
+    public function test_mesmo_telefone_em_outro_formato_nao_diverge(): void
+    {
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56987654321');
+        $this->aluno('44.444.444-4', 'Ana Mora', 'ana@acme.cl', '+56987654321');
+
+        $d = $this->classificar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos', null, '9 8765 4321'),
+            $this->linha(3, '44.444.444-4', 'Ana Mora', null, '+56 9 8765 4321'),
+        ], podeAtualizar: false);
+
+        $this->assertSame([], $d[0]->divergent);
+        $this->assertNull($d[0]->updateRefusal);
+        $this->assertSame([], $d[1]->divergent);
+        $this->assertNull($d[1]->updateRefusal);
+    }
+
+    /** O NBSP da planilha (Excel, Outlook, PDF) não faz o mesmo número virar inválido nem divergente. */
+    public function test_telefone_com_nbsp_nao_diverge_nem_e_invalido(): void
+    {
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56987654321');
+
+        $d = $this->classificar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos', null, "9\u{00A0}8765\u{00A0}4321"),
+            $this->linha(3, '55.555.555-5', 'Ana Mora', 'ana@acme.cl', "9\u{00A0}8765\u{2013}4322"),
+        ], podeAtualizar: false);
+
+        $this->assertSame([], $d[0]->divergent);
+        $this->assertNull($d[0]->updateRefusal);
+        $this->assertNull($d[1]->refusal);
+    }
+
+    public function test_telefone_diferente_continua_divergindo(): void
+    {
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56987654321');
+
+        $d = $this->classificar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos', null, '9 7654 3210'),
+        ]);
+
+        $this->assertSame([ImportField::Phone], $d[0]->divergent);
+        $this->assertNull($d[0]->updateRefusal);
+        $this->assertNotNull($d[0]->updatedIdentity); // há o que atualizar
     }
 }

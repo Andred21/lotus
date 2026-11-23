@@ -54,10 +54,18 @@ class ConcludeTurmaTest extends TestCase
 
     private function completarDocs(): void
     {
+        $this->enviarDocs(TurmaDocumentType::cases());
+    }
+
+    /** @param  array<TurmaDocumentType>  $types */
+    private function enviarDocs(array $types): void
+    {
         $action = app(StoreTurmaDocumentAction::class);
-        // Turma em andamento: as Actions não consultam permissão, qualquer ator serve.
-        $actor = User::factory()->create();
-        foreach (TurmaDocumentType::cases() as $type) {
+        // O gate recusa quem não tem a permissão do tipo: o ator de fundo é superadmin.
+        $this->seed(RolePermissionSeeder::class);
+        $actor = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $actor->assignRole('superadmin');
+        foreach ($types as $type) {
             $action->execute($this->turma, $type,
                 UploadedFile::fake()->create('d.pdf', 10, 'application/pdf'), $actor);
         }
@@ -70,7 +78,7 @@ class ConcludeTurmaTest extends TestCase
         $this->getJson("/api/turmas/{$this->turma->id}")
             ->assertOk()
             ->assertJsonPath('habilitada', false)
-            ->assertJsonPath('missing_document_types', ['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'])
+            ->assertJsonPath('missing_document_types', ['MANUAL', 'EVALUACION_REDATOR'])
             ->assertJsonPath('concluded_at', null);
 
         $this->completarDocs();
@@ -88,6 +96,32 @@ class ConcludeTurmaTest extends TestCase
         $this->postJson("/api/turmas/{$this->turma->id}/conclude")
             ->assertStatus(422)
             ->assertJsonValidationErrors('documents');
+
+        $this->assertSame('em_andamento', $this->turma->fresh()->status->value);
+    }
+
+    public function test_conclui_com_so_manual_e_instructor(): void
+    {
+        $this->actingAsAdmin();
+        $this->enviarDocs(TurmaDocumentType::bloqueantes());
+
+        $this->postJson("/api/turmas/{$this->turma->id}/conclude")
+            ->assertOk()
+            ->assertJsonPath('status', 'concluida');
+
+        $this->assertSame('concluida', $this->turma->fresh()->status->value);
+    }
+
+    public function test_recusa_sem_evaluacion_do_instructor(): void
+    {
+        $this->actingAsAdmin();
+        $this->enviarDocs([TurmaDocumentType::MANUAL]);
+
+        $this->postJson("/api/turmas/{$this->turma->id}/conclude")
+            ->assertStatus(422)
+            ->assertJsonPath('errors.documents.0', __('operation.turma.documents_incomplete', [
+                'tipos' => __('operation.document_type.EVALUACION_REDATOR'),
+            ]));
 
         $this->assertSame('em_andamento', $this->turma->fresh()->status->value);
     }
@@ -185,7 +219,7 @@ class ConcludeTurmaTest extends TestCase
 
     /**
      * O gate da RN-16 decide sobre o banco, não sobre a relação que o model já
-     * trazia carregada. `loadListingData()` carrega `documentacaoObrigatoria`,
+     * trazia carregada. `loadListingData()` carrega `documentos`,
      * e sem a leitura fresca dentro da transação um documento arquivado depois
      * dessa carga deixaria o cache dizer "completa" — concluindo, em escrita
      * TERMINAL, uma turma sem documentação obrigatória.
@@ -195,7 +229,7 @@ class ConcludeTurmaTest extends TestCase
         $this->completarDocs();
 
         $turma = Turma::findOrFail($this->turma->id)->loadListingData();
-        $turma->documentacaoObrigatoria
+        $turma->documentos
             ->firstWhere('type', TurmaDocumentType::MANUAL->value)
             ->delete();
 
@@ -231,7 +265,7 @@ class ConcludeTurmaTest extends TestCase
         $this->actingAs($user, 'web');
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS',
+            'type' => 'MANUAL',
             'file' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
         ])->assertStatus(422);
 

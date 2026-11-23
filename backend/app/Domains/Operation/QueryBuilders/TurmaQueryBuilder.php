@@ -27,13 +27,13 @@ class TurmaQueryBuilder extends Builder
      * do User do contratante (B4). Parar em `.client` deixa um SELECT por turma
      * — guarda em `ContratanteEagerLoadTest`.
      *
-     * `documentacaoObrigatoria` é o que faz a RN-16 custar UMA query para a
+     * `documentos` é o que faz a RN-16 custar UMA query para a
      * listagem inteira em vez de uma por linha — guarda de contagem em
      * `TurmaQueryBuilderTest`. O `TurmaHabilitacaoService` lê essa relação como
      * propriedade (`for()`); sem a carga aqui, a listagem faz lazy-load por
      * turma e viola o `Model::preventLazyLoading()` da mesma guarda acima.
      */
-    public const LISTING = ['redatores.user', 'course', 'quote.budget.client.user', 'documentacaoObrigatoria'];
+    public const LISTING = ['redatores.user', 'course', 'quote.budget.client.user', 'documentos'];
 
     /**
      * As coleções que a cascata de arquivamento leva junto (spec D2).
@@ -41,7 +41,7 @@ class TurmaQueryBuilder extends Builder
      * é filho desta cascata, e as três relações já são `withTrashed()` do lado do
      * model.
      */
-    private const CASCADED = ['documentacaoObrigatoria'];
+    private const CASCADED = ['documentos'];
 
     public function withListingData(): static
     {
@@ -53,7 +53,7 @@ class TurmaQueryBuilder extends Builder
      * o mesmo Q-8: a lista existe para o operador RECONHECER a turma antes de
      * restaurá-la, e a projeção normal mostra o contrário do que aconteceu.
      *
-     * 1. `documentacaoObrigatoria` entra por `asOfArchiving` — sem isso a turma
+     * 1. `documentos` entra por `asOfArchiving` — sem isso a turma
      *    arquivada aparece sem nenhum documento e a habilitação da RN-16 é lida
      *    ao contrário.
      * 2. A CONTAGEM de matrículas é reescrita. `withCount('enrollments')` conta
@@ -107,7 +107,7 @@ class TurmaQueryBuilder extends Builder
     /**
      * Curso, contratante e código do orçamento (spec §4.2). `quotes.code` não
      * existe como coluna — `Quote::getCodeAttribute()` monta "Scap {budget_id}
-     * - Cot {seq}" em PHP —, então a metade que identifica (`budgets.code`,
+     * - R{seq}" em PHP —, então a metade que identifica (`budgets.code`,
      * `'Scap '.id`) é o que se varre. `whereHas` respeita os `withTrashed()`
      * das relações: turma de cliente arquivado continua achável.
      */
@@ -123,7 +123,7 @@ class TurmaQueryBuilder extends Builder
 
     /**
      * O status de exibição em SQL (spec §4.2): `concluida` pelo status;
-     * `habilitada` = em andamento E um doc de CADA `TurmaDocumentType` E redator
+     * `habilitada` = em andamento E um doc de CADA tipo `TurmaDocumentType::bloqueantes()` E redator
      * designado E, na presencial, local não vazio; `em_andamento` = em andamento
      * e algo disso faltando. É a `HabilitacaoStatus` escrita como `whereHas`, e a
      * paridade é catraca (`TurmaStatusParityTest`). O pivot `turma_redator` não é
@@ -143,8 +143,8 @@ class TurmaQueryBuilder extends Builder
             TurmaDisplayStatus::Habilitada => $this
                 ->where('turmas.status', TurmaStatus::EmAndamento)
                 ->where(function (Builder $w) use ($asOfArchiving): void {
-                    foreach (TurmaDocumentType::cases() as $type) {
-                        $w->whereHas('documentacaoObrigatoria', fn (Builder $d) => $this->documentoDoTipo($d, $type, $asOfArchiving));
+                    foreach (TurmaDocumentType::bloqueantes() as $type) {
+                        $w->whereHas('documentos', fn (Builder $d) => $this->documentoDoTipo($d, $type, $asOfArchiving));
                     }
                 })
                 ->whereHas('redatores')
@@ -154,8 +154,8 @@ class TurmaQueryBuilder extends Builder
             TurmaDisplayStatus::EmAndamento => $this
                 ->where('turmas.status', TurmaStatus::EmAndamento)
                 ->where(function (Builder $w) use ($asOfArchiving): void {
-                    foreach (TurmaDocumentType::cases() as $type) {
-                        $w->orWhereDoesntHave('documentacaoObrigatoria', fn (Builder $d) => $this->documentoDoTipo($d, $type, $asOfArchiving));
+                    foreach (TurmaDocumentType::bloqueantes() as $type) {
+                        $w->orWhereDoesntHave('documentos', fn (Builder $d) => $this->documentoDoTipo($d, $type, $asOfArchiving));
                     }
 
                     $w->orWhereDoesntHave('redatores')

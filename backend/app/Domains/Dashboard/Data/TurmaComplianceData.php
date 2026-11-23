@@ -20,10 +20,14 @@ class TurmaComplianceData extends Data
         public string $end_date,
         /** @var TurmaDocumentType[] */
         public array $present_types,
-        /** @var TurmaDocumentType[] */
+        /** @var TurmaDocumentType[] só os bloqueantes. */
         public array $missing_types,
+        /** @var TurmaDocumentType[] evaluaciones opcionais que faltam: aviso, não pendência. */
+        public array $missing_optional_types,
         /** @var TurmaRequirement[] */
         public array $missing_requirements,
         public bool $habilitada,
+        /** A turma já foi concluída: só entra na seção pelo aviso, depois do corte. */
+        public bool $concluded,
     ) {}
 }

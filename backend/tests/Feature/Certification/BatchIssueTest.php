@@ -329,7 +329,7 @@ class BatchIssueTest extends TestCase
             ->assertJsonPath('1.ok', false);
 
         $this->assertStringContainsString(
-            'El relator no está designado en esta clase.',
+            'El instructor no está designado en esta clase.',
             $response->json('0.error'),
         );
 

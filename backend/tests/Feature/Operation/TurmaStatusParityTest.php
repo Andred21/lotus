@@ -16,9 +16,9 @@ use Tests\TestCase;
  * Catraca de paridade (spec D4, §4.3): `whereDisplayStatus()` em SQL tem de
  * devolver o MESMO conjunto que a derivação de domínio — `concluida` pelo
  * status, `habilitada` pela `HabilitacaoStatus` da RN-16, `em_andamento` o
- * resto. Oito turmas: concluída; em andamento com os três documentos; com
- * dois; com nenhum; com os três, um deles arquivado (não conta); com os três
- * mas sem redator; com os três e presencial sem local, nulo ou só de espaços
+ * resto. Nove turmas: concluída; em andamento com os quatro documentos; com
+ * só os dois bloqueantes (habilita); com um bloqueante e uma opcional; com nenhum; com todos, um bloqueante arquivado (não conta); com todos
+ * mas sem redator; com todos e presencial sem local, nulo ou só de espaços
  * (nenhuma das três habilita). Mais a lista de arquivados, onde a leitura é "como estava no instante do arquivamento"
  * (`asOfArchiving`): documento levado pela cascata conta, documento arquivado
  * ANTES do pai não.
@@ -45,7 +45,9 @@ class TurmaStatusParityTest extends TestCase
     {
         $this->turma(concluida: true, docs: TurmaDocumentType::cases());
         $this->turma(concluida: false, docs: TurmaDocumentType::cases());
-        $this->turma(concluida: false, docs: [TurmaDocumentType::MANUAL, TurmaDocumentType::PRUEBAS]);
+        $this->turma(concluida: false, docs: [TurmaDocumentType::MANUAL, TurmaDocumentType::EVALUACION_ALUNO]);
+        // Só os bloqueantes (Manual e Evaluación Instructor): habilita sem as duas opcionais.
+        $this->turma(concluida: false, docs: TurmaDocumentType::bloqueantes());
         $this->turma(concluida: false, docs: []);
         $comDocArquivado = $this->turma(concluida: false, docs: TurmaDocumentType::cases());
         $comDocArquivado->files()->where('type', TurmaDocumentType::EVALUACION_REDATOR->value)->first()->delete();
@@ -55,7 +57,7 @@ class TurmaStatusParityTest extends TestCase
         $this->turma(concluida: false, docs: TurmaDocumentType::cases(), local: '   ');
 
         $todas = Turma::query()->withListingData()->get();
-        $this->assertCount(8, $todas);
+        $this->assertCount(9, $todas);
 
         foreach (TurmaDisplayStatus::cases() as $status) {
             $esperado = $todas->filter(fn (Turma $t) => $this->derivada($t) === $status)->pluck('id')->sort()->values()->all();

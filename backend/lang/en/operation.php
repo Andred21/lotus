@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'turma' => [
         'concluded_locked' => 'The class has already been concluded: the academic record is locked (RN-15).',
+        'document_type_forbidden' => 'You are not allowed to submit or remove this type of class document.',
         'archived' => 'This class was archived and no longer accepts changes.',
         'restore_conflict' => 'An active class already exists for this quote: archive it before restoring this one.',
         'restore_redator_archived' => 'An instructor of this class is archived: restore them before restoring the class.',
@@ -29,7 +30,8 @@ return [
     ],
     'document_type' => [
         'MANUAL' => 'Manual',
-        'PRUEBAS' => 'Tests',
         'EVALUACION_REDATOR' => 'Instructor evaluation',
+        'EVALUACION_CLIENTE' => 'Client evaluation',
+        'EVALUACION_ALUNO' => 'Students evaluation',
     ],
 ];

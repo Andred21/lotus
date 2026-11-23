@@ -9,7 +9,13 @@ import {
   useUploadTurmaDocument,
 } from '../api/useTurmaDocuments'
 import { TURMA_DOCUMENT_TYPES } from '../lib/turmaDocuments'
+import { podeAnexar, podeRemover } from '../lib/evaluacionGate'
 import { registroAcademicoBloqueado } from '../lib/turmaStatus'
+
+/** Os tipos que habilitam a turma. Só para o PROGRESSO da aba: quem decide o que
+ * falta é o backend (`missing_document_types`). Cliente e Alumnos são opcionais
+ * e aparecem no aviso do cartão de evaluaciones, não nesta contagem. */
+const TIPOS_BLOQUEANTES: TurmaDocumentType[] = ['MANUAL', 'EVALUACION_REDATOR']
 
 /** Orquestra a aba Documentación. O componente só consome.
  * `habilitada` NÃO é recalculada aqui: vem derivada do backend em `TurmaData`. */
@@ -22,7 +28,7 @@ export function useTurmaDocsSection(turma: TurmaData) {
   const removeMutation = useRemoveTurmaDocument()
   // Erro de carregamento é distinto de erro de mutação (upload/remoção): o
   // primeiro substitui a aba inteira por AppErrorState com Reintentar (peso
-  // legal — "0 de 4 entregados" não pode ser lido como confirmado quando a
+  // legal — "0 de 2 entregados" não pode ser lido como confirmado quando a
   // lista nem carregou); o segundo continua no FormErrorBanner do corpo.
   const { message: error } = useMutationErrors([uploadMutation.error, removeMutation.error])
   // Escopo próprio para o dialog de remoção: o banner do painel usa o agregado
@@ -41,18 +47,21 @@ export function useTurmaDocsSection(turma: TurmaData) {
 
   const { can } = usePermissions()
   const concluida = registroAcademicoBloqueado(turma)
+  const status = turma.status ?? 'em_andamento'
   // `can()` é conveniência de interface; a autorização real é da API (ADR-07).
-  const hasPermission = can('operation.turma.submit_docs')
+  // A matriz por tipo e por status mora em `evaluacionGate` e espelha o gate do
+  // backend: o admin com `submit_client_evaluation` anexa Cliente, o redator em
+  // turma concluída ainda anexa Alumnos, e só `manage_concluded_docs` mexe no
+  // resto da turma concluída.
+  const canUpload = (type: TurmaDocumentType) => podeAnexar(type, status, can)
+  const canRemove = (type: TurmaDocumentType) => podeRemover(type, status, can)
   // A conclusão saiu daqui como MOTIVO exibido: ela tranca a página inteira, não
   // só esta aba, e o cartão que a explica passou a ser da `TurmaDetailPage`
   // (UI-01) — mantê-lo aqui diria o mesmo motivo duas vezes na mesma tela. Falta
   // de permissão continua, porque é específico desta aba e não aparece em lugar
-  // nenhum.
-  // Turma concluída tranca o registro (RN-15), e o documento é a exceção de um
-  // só papel: quem tem `manage_concluded_docs` (superadmin) ainda sobe e remove.
-  // `submit_docs` continua sendo o portão da rota — a permissão nova só abre o
-  // caso concluído, e a API recusa o resto com 422.
-  const lockReason: 'permission' | null = hasPermission ? null : 'permission'
+  // nenhum: vale quando o ator não anexa tipo nenhum.
+  const lockReason: 'permission' | null = TURMA_DOCUMENT_TYPES.some(canUpload) ? null : 'permission'
+  const faltamBloqueantes = turma.missing_document_types ?? TIPOS_BLOQUEANTES
 
   return {
     turmaId,
@@ -61,11 +70,13 @@ export function useTurmaDocsSection(turma: TurmaData) {
     reload: (): Promise<unknown> => list.refetch(),
     error,
     byType,
-    deliveredCount: TURMA_DOCUMENT_TYPES.filter((type) => byType[type].length > 0).length,
-    totalTypes: TURMA_DOCUMENT_TYPES.length,
+    deliveredCount: TIPOS_BLOQUEANTES.length - faltamBloqueantes.length,
+    totalTypes: TIPOS_BLOQUEANTES.length,
+    missingOptional: turma.missing_optional_document_types ?? [],
     habilitada: turma.habilitada === true,
     concluida,
-    canSubmit: hasPermission && (!concluida || can('operation.turma.manage_concluded_docs')),
+    canUpload,
+    canRemove,
     lockReason,
     upload: (type: TurmaDocumentType, file: File) =>
       uploadMutation.mutate(

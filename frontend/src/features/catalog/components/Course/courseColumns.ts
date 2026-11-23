@@ -3,6 +3,7 @@ import { COL, tableWidths } from '@shared/ui'
 /**
  * Classificação das colunas da `CoursesTable`.
  *
+ * `code` é o `C-<n>`: identificador atômico, mono, que não quebra (`COL.code`).
  * `name` é o `text` desta tabela — é o único campo livre e o mais longo. O
  * `technical_name` é `short` porque é nomenclatura normalizada do setor, de
  * tamanho conhecido, e não frase. `redatorCount` é `short`, não `count`: o
@@ -14,6 +15,7 @@ import { COL, tableWidths } from '@shared/ui'
 export const courseWidths = (archived: boolean) =>
   tableWidths(
     {
+      code: COL.code,
       name: COL.text,
       technicalName: COL.short,
       workload: COL.count,
