@@ -2,9 +2,9 @@
 schema_version: 3
 id: 60
 slug: 60-codigos-mascaras-comercial-e-avaliacoes
-workflow_state: ready_for_closure
+workflow_state: reviewing
 next_owner: claude
-next_action: close_active_work_item
+next_action: approve_review_findings Q-1 Q-2 Q-3 aprovados, correcao em curso
 resume_state: null
 active_spec: docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/spec.md
 active_plan: docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/plano.md
@@ -17,9 +17,9 @@ branch: feat/60-codigos-mascaras-comercial-e-avaliacoes
 worktree: ../lotus-60-codigos-mascaras-comercial-e-avaliacoes
 offset: 1
 lane_base: 7982828e
-commit: b74258de
+commit: 7ebf91ce
 blocker: null
-updated_at: 2026-11-23T12:28:45-03:00
+updated_at: 2026-11-23T12:31:44-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 

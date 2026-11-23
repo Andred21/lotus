@@ -2,6 +2,12 @@
 
 ## Em aberto
 
+Correção aprovada pelo João em 2026-11-23, ainda por aplicar; depois dela, rodada 2:
+
+- Q-1 · Menor · backfill de `courses.code` com `lazyById`, mais um teste que pegue o caso de mais de 1000 cursos.
+- Q-2 · Menor · `ClientBudgetsSection` só monta com `can('commercial.budget.view')`.
+- Q-3 · Menor · docblock do `HabilitacaoStatus` alinhado aos tipos bloqueantes.
+
 ## Rodada 1 — `7982828e..b74258de` — 2026-11-23 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 
 Classificação: **alto risco** — 4 migrations (backfill de `courses.code`, conversão de `PRUEBAS` em
