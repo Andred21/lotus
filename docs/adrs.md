@@ -362,7 +362,7 @@ reescreve todos os wrappers e abandona o visual Lara. Desproporcional ao estági
   o `id` só existe depois do insert; a Action preenche na mesma transação.
 - `quotes.seq_in_budget` (smallint) = contador atômico por orçamento via `lockForUpdate()` em
   transação; índice `UNIQUE(budget_id, seq_in_budget)` como defesa extra.
-- O código composto (`Scap 100 - Cot 2`) é **calculado** (accessor/DTO), nunca persistido como string.
+- O código composto (`Scap 100 - R2`) é **calculado** (accessor/DTO), nunca persistido como string.
 - Geração na **aplicação**, não em trigger (coerente com ADR-08). `id` bigint continua sendo a FK
   em todo relacionamento — `codigo` nunca vira FK.
 - `course_certificate_templates.version` (int) = **segundo consumidor do mesmo padrão** (2026-08-12):

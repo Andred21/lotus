@@ -12,7 +12,7 @@ use App\Shared\Files\TipoDeArquivo;
  *
  * Só `MANUAL` e `EVALUACION_REDATOR` bloqueiam a conclusão e a habilitação; as
  * evaluaciones do cliente e dos alunos são opcionais — a turma conclui sem
- * elas e o dashboard cobra a falta (D-60).
+ * elas e o dashboard cobra a falta (bloco 60).
  */
 enum TurmaDocumentType: string implements TipoDeArquivo
 {
