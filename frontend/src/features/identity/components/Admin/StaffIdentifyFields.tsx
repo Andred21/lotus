@@ -28,8 +28,9 @@ export function StaffIdentityFields({
         <Field name="rut" label={t("common.rut")}>
           <RutInput className="w-full" />
         </Field>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Email e telefone em linha inteira, em qualquer largura: ao lado da
+            coluna da foto, meia linha deixava 116px para o número a 1440px
+            (pedido do João, bloco 60). */}
         <Field name="email" label={t("common.email")}>
           <AppInputText className="w-full" />
         </Field>
@@ -37,13 +38,14 @@ export function StaffIdentityFields({
         <Field name="phone" label={t("common.phone")} value={formatPhoneDisplay(form.phone)}>
           <PhoneInput />
         </Field>
-
-        {mode === "create" && (
+      </div>
+      {mode === "create" && (
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field name="password" label={t("common.password")}>
             <AppPassword className="w-full" inputClassName="w-full" />
           </Field>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }
