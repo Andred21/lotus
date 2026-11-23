@@ -193,4 +193,29 @@ class CourseCodeTest extends TestCase
             $this->assertSame("C-{$id}", DB::table('courses')->where('id', $id)->value('code'));
         }
     }
+
+    /**
+     * Review Q-1 do bloco 60: o backfill altera o próprio filtro (`whereNull('code')`).
+     * Paginação por offset (`each()` = `chunk(1000)`) pula da página 2 em diante;
+     * com 1001 cursos sobrava um sem código.
+     */
+    public function test_backfill_preenche_todos_alem_de_um_lote(): void
+    {
+        $migration = require base_path('database/migrations/2026_11_22_000001_add_code_and_sence_code_to_courses.php');
+        $migration->down();
+
+        $agora = now();
+        $linhas = array_map(
+            fn (int $i) => ['name' => "Curso {$i}", 'workload_hours' => 8, 'created_at' => $agora, 'updated_at' => $agora],
+            range(1, 1001),
+        );
+        foreach (array_chunk($linhas, 200) as $lote) {
+            DB::table('courses')->insert($lote);
+        }
+
+        $migration->up();
+
+        $this->assertSame(0, DB::table('courses')->whereNull('code')->count());
+        $this->assertSame(1001, DB::table('courses')->whereColumn('code', DB::raw("'C-' || id"))->count());
+    }
 }

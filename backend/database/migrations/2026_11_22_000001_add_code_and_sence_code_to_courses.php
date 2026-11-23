@@ -25,7 +25,9 @@ return new class extends Migration
             $table->string('sence_code', 20)->nullable()->unique()->after('technical_name');
         });
 
-        DB::table('courses')->whereNull('code')->orderBy('id')->each(
+        // `lazyById`, não `each()`: o update tira a linha do `whereNull`, e a
+        // paginação por offset pularia da página 2 em diante (review Q-1).
+        DB::table('courses')->whereNull('code')->lazyById()->each(
             fn (object $course) => DB::table('courses')->where('id', $course->id)->update(['code' => 'C-'.$course->id]),
         );
     }
