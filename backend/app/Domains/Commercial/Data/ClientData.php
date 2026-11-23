@@ -6,6 +6,7 @@ use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Rules\UmContatoPrincipal;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
+use App\Shared\Rules\ValidPhone;
 use App\Shared\Rules\ValidRut;
 use App\Shared\Support\TetosDeColuna;
 use App\Shared\Support\TetosImpressos;
@@ -40,7 +41,6 @@ class ClientData extends Data
         public string $rut,
         #[Required, Email, Max(TetosDeColuna::EMAIL)]
         public string $email,
-        #[Max(TetosDeColuna::TELEFONE)]
         public string|Optional|null $phone,
         #[Required, Max(TetosImpressos::RAZAO_SOCIAL)]
         public string $legal_name,
@@ -63,6 +63,8 @@ class ClientData extends Data
         return [
             ...ComputedFields::rejected('photo_url'),
             'rut' => ['required', 'string', new ValidRut],
+            // `sobrepõe` o auto-rule do atributo, então o teto e o `ValidPhone` moram juntos aqui.
+            'phone' => ['bail', 'sometimes', 'nullable', 'string', 'max:'.TetosDeColuna::TELEFONE, new ValidPhone],
             // `sometimes`, não `required`: a coleção é `Optional`, e omitir a
             // chave num PUT significa "não mexi nos contatos" — antes apagava
             // todos em silêncio. `min:1` segue valendo quando a chave VEM, e a

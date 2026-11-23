@@ -8,9 +8,13 @@ use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\Max;
+use Spatie\LaravelData\Attributes\Validation\Nullable;
+use Spatie\LaravelData\Attributes\Validation\Regex;
 use Spatie\LaravelData\Attributes\Validation\Required;
+use Spatie\LaravelData\Attributes\Validation\Unique;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
+use Spatie\LaravelData\Support\Validation\References\RouteParameterReference;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
@@ -31,10 +35,23 @@ class CourseData extends Data
 {
     public function __construct(
         public int|Optional $id,
+        /**
+         * Saída ("C-<id>", gerado na Action e imutável): `#[Computed]` + `rejected()`
+         * no `rules()` — a chave no corpo de escrita é 422.
+         */
+        #[Computed]
+        public string|Optional $code,
         #[Required, Max(TetosImpressos::NOME_CURSO)]
         public string $name,
         #[Max(TetosImpressos::NOME_TECNICO)]
         public string|Optional|null $technical_name,
+        /**
+         * Código SENCE digitado: só dígitos, único entre TODOS os cursos — o
+         * arquivado inclusive (sem `withoutTrashed`). No update o próprio curso
+         * é ignorado pelo parâmetro de rota.
+         */
+        #[Nullable, Regex('/^\d{1,20}$/'), Unique('courses', 'sence_code', ignore: new RouteParameterReference('course', 'id', nullable: true))]
+        public string|Optional|null $sence_code,
         #[Max(TetosImpressos::DESCRICAO_CURSO)]
         public string|Optional|null $description,
         #[Required]
@@ -55,7 +72,7 @@ class CourseData extends Data
     public static function rules(): array
     {
         return [
-            ...ComputedFields::rejected('redator_ids'),
+            ...ComputedFields::rejected('code', 'redator_ids'),
         ];
     }
 
@@ -66,8 +83,12 @@ class CourseData extends Data
     {
         return new self(
             id: $course->id,
+            // Nulo só existe entre o insert e o `update` da Action (e em linha criada
+            // fora dela): sem código, a chave sai ausente em vez de estourar o tipo.
+            code: $course->code ?? new Optional,
             name: $course->name,
             technical_name: $course->technical_name,
+            sence_code: $course->sence_code,
             description: $course->description,
             workload_hours: $course->workload_hours,
             modules: CourseModuleData::collect($course->modules->all()),

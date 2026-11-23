@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppCard, AppInputText, AppRadioButton, AppTag, FormField } from '@shared/ui'
+import { AppButton, AppCard, AppInputText, AppRadioButton, AppTag, FormField, PhoneInput } from '@shared/ui'
+import { formatPhoneDisplay } from '@shared/lib'
 import type { ClientContactData } from '@shared/types/generated'
 
 /** Um contato do cliente. O principal usa `tone="info"` do AppCard mais um
@@ -86,30 +87,32 @@ export function ContactCard({
               className="w-full"
             />
           </FormField>
-          <FormField
-            label={t('common.email')}
-            error={fieldErrors?.[`contacts.${index}.email`]?.[0]}
-            readOnly={readOnly}
-            value={contact.email ?? ''}
-          >
-            <AppInputText
+          {/* Abaixo de `lg`, meia linha deixava o número com 89px a 640px: email e
+              telefone tomam a linha inteira até lá (pedido do João, bloco 60). */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <FormField
+              label={t('common.email')}
+              error={fieldErrors?.[`contacts.${index}.email`]?.[0]}
+              readOnly={readOnly}
               value={contact.email ?? ''}
-              onChange={(e) => onPatch({ email: e.target.value })}
-              className="w-full"
-            />
-          </FormField>
-          <FormField
-            label={t('common.phone')}
-            error={fieldErrors?.[`contacts.${index}.phone`]?.[0]}
-            readOnly={readOnly}
-            value={contact.phone ?? ''}
-          >
-            <AppInputText
-              value={contact.phone ?? ''}
-              onChange={(e) => onPatch({ phone: e.target.value })}
-              className="w-full"
-            />
-          </FormField>
+            >
+              <AppInputText
+                value={contact.email ?? ''}
+                onChange={(e) => onPatch({ email: e.target.value })}
+                className="w-full"
+              />
+            </FormField>
+          </div>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <FormField
+              label={t('common.phone')}
+              error={fieldErrors?.[`contacts.${index}.phone`]?.[0]}
+              readOnly={readOnly}
+              value={formatPhoneDisplay(contact.phone)}
+            >
+              <PhoneInput value={contact.phone ?? null} onChange={(phone) => onPatch({ phone })} />
+            </FormField>
+          </div>
         </div>
       </div>
     </AppCard>

@@ -75,7 +75,7 @@ export function StaffUserDialog({
       <section className="space-y-4">
         <FormSection title={t("admin.sectionUser")} />
         <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
-          <StaffIdentityFields Field={campo.Field} mode={mode} />
+          <StaffIdentityFields Field={campo.Field} form={form} mode={mode} />
         </FormPhotoRow>
         <div className="grid gap-4 sm:grid-cols-3 mt-10">
           {/* type é sempre 'admin' para staff — atributo fixo, não editável.

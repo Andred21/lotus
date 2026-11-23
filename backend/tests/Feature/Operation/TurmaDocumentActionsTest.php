@@ -63,11 +63,11 @@ class TurmaDocumentActionsTest extends TestCase
         $action = app(StoreTurmaDocumentAction::class);
         $redator = $this->actor('redator');
 
-        $action->execute($this->turma, TurmaDocumentType::PRUEBAS, $this->pdf(), $redator);
-        $action->execute($this->turma, TurmaDocumentType::PRUEBAS, $this->pdf(), $redator);
+        $action->execute($this->turma, TurmaDocumentType::EVALUACION_ALUNO, $this->pdf(), $redator);
+        $action->execute($this->turma, TurmaDocumentType::EVALUACION_ALUNO, $this->pdf(), $redator);
 
         // D8: N por tipo — o 2º upload NÃO substitui o 1º.
-        $this->assertSame(2, $this->turma->files()->where('type', 'PRUEBAS')->count());
+        $this->assertSame(2, $this->turma->files()->where('type', 'EVALUACION_ALUNO')->count());
     }
 
     public function test_delete_e_soft_e_por_instancia(): void

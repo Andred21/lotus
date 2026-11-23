@@ -2,6 +2,7 @@
 
 namespace App\Domains\Identity\Services;
 
+use App\Shared\Rules\ValidPhone;
 use App\Shared\Rules\ValidRut;
 use App\Shared\Support\TetosDeColuna;
 use App\Shared\Support\TetosImpressos;
@@ -38,7 +39,7 @@ final readonly class StudentIdentity
             // Teto do que o certificado imprime (D15).
             'name' => ['required', 'string', 'max:'.TetosImpressos::NOME_ALUNO],
             'email' => [$emailRequired ? 'required' : 'nullable', 'email', 'max:'.TetosDeColuna::EMAIL],
-            'phone' => ['nullable', 'string', 'max:'.TetosDeColuna::TELEFONE],
+            'phone' => ['bail', 'nullable', 'string', 'max:'.TetosDeColuna::TELEFONE, new ValidPhone],
         ];
     }
 }

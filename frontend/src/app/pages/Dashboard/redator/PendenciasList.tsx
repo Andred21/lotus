@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AppCard, AppCardHeader, AppEmptyState, technicalDataClass } from '@shared/ui'
 import { formatIsoDate, turmaDocumentTypeList } from '@shared/lib'
 import { turmaTabPath } from '@features/operation/lib/turmaTabs'
-import { warningText } from '@shared/styles/tokens'
+import { infoText, warningText } from '@shared/styles/tokens'
 import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
 
 /**
@@ -23,10 +23,13 @@ import type { RedatorTurmaPendenciaData } from '@shared/types/generated'
  */
 export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }) {
   const { t } = useTranslation()
+  // Contagem só dos bloqueantes: a turma que só tem aviso das evaluaciones opcionais
+  // (ruling R13 do bloco 60: concluída, `missing_types=[]`) aparece na lista, mas não é pendência.
+  const pendentes = items.filter((item) => item.missing_types.length > 0).length
 
   return (
     <AppCard>
-      <AppCardHeader title={t('dashboard.redator.pendencias.title')} count={items.length} />
+      <AppCardHeader title={t('dashboard.redator.pendencias.title')} count={pendentes} />
       {items.length === 0 ? (
         <AppEmptyState
           icon="pi pi-check-circle"
@@ -64,17 +67,28 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
                     scroll que recuperasse (UI-03 da revisão de 2026-08-22). `title`
                     não serviria de saída aqui: hover não existe em toque, que é
                     justamente o viewport do defeito. */}
-                  <span className="block text-xs" style={{ color: warningText }}>
-                    {/* O código do enum não vai à tela: `EVALUACION_REDATOR` é identificador
-                    de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
-                    pelas mesmas chaves (UI-07 da revisão de 2026-08-22). O mapa é de
-                    `shared/lib` e não uma chave montada por template aqui: quatro sítios
-                    imprimiam esta mesma lista e nenhum reprovava tipo sem tradução (Q-4 do
-                    review de 2026-08-24). */}
-                    {t('dashboard.redator.pendencias.missing', {
-                      types: turmaDocumentTypeList(item.missing_types, t),
-                    })}
-                  </span>
+                  {item.missing_types.length > 0 && (
+                    <span className="block text-xs" style={{ color: warningText }}>
+                      {/* O código do enum não vai à tela: `EVALUACION_REDATOR` é identificador
+                      de banco, e o mesmo dado já aparece traduzido no módulo de Operação,
+                      pelas mesmas chaves (UI-07 da revisão de 2026-08-22). O mapa é de
+                      `shared/lib` e não uma chave montada por template aqui: quatro sítios
+                      imprimiam esta mesma lista e nenhum reprovava tipo sem tradução (Q-4 do
+                      review de 2026-08-24). */}
+                      {t('dashboard.redator.pendencias.missing', {
+                        types: turmaDocumentTypeList(item.missing_types, t),
+                      })}
+                    </span>
+                  )}
+                  {/* Aviso, não pendência: abaixo dos bloqueantes e em tom informativo —
+                    o redator vê o que ainda pode subir sem achar que algo o trava. */}
+                  {item.missing_optional_types.length > 0 && (
+                    <span className="block text-xs" style={{ color: infoText }}>
+                      {t('dashboard.redator.pendencias.warning', {
+                        types: turmaDocumentTypeList(item.missing_optional_types, t),
+                      })}
+                    </span>
+                  )}
                 </span>
                 <span className={`shrink-0 ${technicalDataClass} text-xs`} style={{ color: 'var(--text-color-secondary)' }}>
                   {t('dashboard.redator.pendencias.until', { date: formatIsoDate(item.end_date) })}

@@ -29,6 +29,11 @@
     "sector": "High-voltage electrical sector"
   },
   "common": {
+    "period": {
+      "label": "Period",
+      "start": "From",
+      "end": "To"
+    },
     "language": "Language",
     "toggleMenu": "Toggle menu",
     "toggleTheme": "Toggle theme",
@@ -46,6 +51,7 @@
     "lastLogin": "Last login",
     "email": "Email",
     "phone": "Phone",
+    "phoneCountry": "Phone country",
     "search": "Search...",
     "notLoaded": "Not uploaded",
     "loading": "Loading...",
@@ -201,6 +207,7 @@
     "operation_turma_assign_redator": "Assign a qualified editor to the class",
     "operation_turma_complete": "Confirm class completion (admin confirms)",
     "operation_turma_submit_docs": "Upload class documentation (editor action)",
+    "operation_turma_submit_client_evaluation": "Upload the client evaluation",
     "operation_turma_manage_concluded_docs": "Upload and remove documents of a concluded class",
     "certification_certificate_view": "View certificates",
     "certification_certificate_issue": "Issue certificate",
@@ -244,7 +251,9 @@
       "range": "Period",
       "present": "On file",
       "missing": "Missing",
-      "enabled": "Enabled"
+      "enabled": "Enabled",
+      "concluded": "Completed",
+      "warning": "Optional evaluations: {{types}}"
     },
     "redatorLoad": {
       "title": "Instructor workload",
@@ -277,6 +286,7 @@
         "empty": "No pending documents",
         "emptyHint": "All your classes have their documents up to date.",
         "missing": "Missing: {{types}}",
+        "warning": "Optional evaluations missing: {{types}}",
         "until": "Until {{date}}"
       },
       "alerts": {
@@ -284,13 +294,10 @@
       }
     },
     "period": {
-      "label": "Period",
       "last12": "Last 12 months",
       "last6": "Last 6 months",
       "currentYear": "Current year",
-      "custom": "Custom",
-      "start": "From",
-      "end": "To"
+      "custom": "Custom"
     },
     "series": {
       "countsTitle": "Monthly trend",
@@ -493,6 +500,20 @@
     "sectionGeneral": "General information",
     "sectionAddress": "Address",
     "sectionContacts": "Contact persons",
+    "budgets": {
+      "title": "Budgets",
+      "empty": "This client has no budgets yet.",
+      "emptyFiltered": "No budgets match the applied filters.",
+      "searchPlaceholder": "Search by code...",
+      "date": "Date",
+      "period": {
+        "all": "All",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year",
+        "custom": "Custom"
+      }
+    },
     "addContact": "Add contact",
     "region": "Region",
     "commune": "Commune",
@@ -510,6 +531,9 @@
     "contacts": "Contacts"
   },
   "course": {
+    "code": "Code",
+    "senceCode": "SENCE code",
+    "senceCodePlaceholder": "e.g. 1237954321",
     "certificatePreview": "View sample certificate",
     "new": "New course",
     "create": "Create course",
@@ -754,7 +778,7 @@
         "conclusion": "Conclusion"
       },
       "lock": {
-        "concluida": "The class is concluded: students, redator, dates and location no longer change. Only the grade, attendance and status of students without an active certificate can still be corrected."
+        "concluida": "The class is concluded: students, redator, dates and location no longer change. Only the grade, attendance and status of students without an active certificate can still be corrected, and the Students and Client evaluations can still be attached."
       },
       "comingSoon": "Available in the next delivery."
     },
@@ -906,8 +930,9 @@
       "progress": "{{done}} of {{total}} documents complete",
       "type": {
         "MANUAL": "Manual",
-        "PRUEBAS": "Tests / assessments",
-        "EVALUACION_REDATOR": "Redator assessment"
+        "EVALUACION_REDATOR": "Instructor evaluation",
+        "EVALUACION_CLIENTE": "Client evaluation",
+        "EVALUACION_ALUNO": "Students evaluation"
       },
       "delivered": "Delivered",
       "pending": "Pending",
@@ -920,7 +945,16 @@
       "lock": {
         "permission": "You do not have permission to upload or remove documentation."
       },
-      "uploaded": "Document uploaded."
+      "uploaded": "Document uploaded.",
+      "evaluaciones": {
+        "title": "Evaluations",
+        "warning": "Optional evaluations missing: {{types}}. They do not prevent completing the class.",
+        "tag": {
+          "EVALUACION_REDATOR": "Instructor",
+          "EVALUACION_ALUNO": "Students",
+          "clienteFallback": "Client"
+        }
+      }
     },
     "conclusion": {
       "title": "Class completion",
@@ -934,7 +968,7 @@
       "warning": "On confirmation, certificates for approved students become available for issuing. After that, only an administrator can correct grade, attendance and status, and only for students without a certificate. This action cannot be undone.",
       "confirm": "Confirm completion",
       "confirmTitle": "Confirm class completion",
-      "confirmBody": "Concluding the class is final: it cannot be reopened, and its students, redator, dates and location become fixed. Afterwards, only the grade, attendance and status of students without an active certificate can be corrected. Confirm the completion of this class?",
+      "confirmBody": "Concluding the class is final: it cannot be reopened, and its students, redator, dates and location become fixed. Afterwards, only the grade, attendance and status of students without an active certificate can be corrected, and the Students and Client evaluations attached. Confirm the completion of this class?",
       "success": "Completion confirmed. Certificates available for issuing.",
       "concludedAt": "Concluded on {{date}}",
       "noPermission": "You do not have permission to conclude classes.",

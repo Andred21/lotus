@@ -18,11 +18,11 @@ class ProfileUpdateTest extends TestCase
         $this->putJson('/api/profile', ['name' => 'Ana Nova', 'phone' => '+56 9 2222 2222'])
             ->assertOk()
             ->assertJsonPath('name', 'Ana Nova')
-            ->assertJsonPath('phone', '+56 9 2222 2222');
+            ->assertJsonPath('phone', '+56922222222');
 
         $user->refresh();
         $this->assertSame('Ana Nova', $user->name);
-        $this->assertSame('+56 9 2222 2222', $user->phone);
+        $this->assertSame('+56922222222', $user->phone);
     }
 
     /**
@@ -58,7 +58,7 @@ class ProfileUpdateTest extends TestCase
 
         $this->putJson('/api/profile', ['name' => 'Ana'])->assertOk();
 
-        $this->assertSame('+56 9 3333 3333', $user->refresh()->phone);
+        $this->assertSame('+56933333333', $user->refresh()->phone);
     }
 
     /** `phone: null` explícito apaga — ausente e nulo são coisas diferentes. */

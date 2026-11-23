@@ -41,6 +41,15 @@ describe('todo tipo de documento de turma tem rótulo nas 3 locales', () => {
   })
 })
 
+it('o mapa cobre os 4 tipos do enum, sem o PRUEBAS que saiu', () => {
+  expect(Object.keys(TURMA_DOCUMENT_TYPE_KEY)).toEqual([
+    'MANUAL',
+    'EVALUACION_REDATOR',
+    'EVALUACION_CLIENTE',
+    'EVALUACION_ALUNO',
+  ])
+})
+
 describe('turmaDocumentTypeLabel', () => {
   it('tipo conhecido sai pela chave do mapa', () => {
     expect(turmaDocumentTypeLabel('MANUAL', eco)).toBe('t:operation.documents.type.MANUAL')
@@ -56,8 +65,8 @@ describe('turmaDocumentTypeLabel', () => {
   })
 
   it('a lista junta os rótulos traduzidos com ", "', () => {
-    expect(turmaDocumentTypeList(['MANUAL', 'PRUEBAS'], eco)).toBe(
-      't:operation.documents.type.MANUAL, t:operation.documents.type.PRUEBAS',
+    expect(turmaDocumentTypeList(['MANUAL', 'EVALUACION_ALUNO'], eco)).toBe(
+      't:operation.documents.type.MANUAL, t:operation.documents.type.EVALUACION_ALUNO',
     )
   })
 })

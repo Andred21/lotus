@@ -7,7 +7,7 @@ import { usersApi } from '@shared/api/usersApi'
  * vazio no update = manter a senha atual. */
 export type StaffUserFormFields = Pick<UserData, 'id' | 'name' | 'email' | 'role' | 'is_active'> & {
   rut: string
-  phone: string
+  phone: string | null
   password: string
 }
 

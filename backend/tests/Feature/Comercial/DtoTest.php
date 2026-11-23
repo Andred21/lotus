@@ -35,7 +35,7 @@ class DtoTest extends TestCase
         $quote = $this->seedBudget()->quotes->first();
         $data = QuoteData::fromModel($quote);
 
-        $this->assertSame("Scap {$quote->budget_id} - Cot 2", $data->code);
+        $this->assertSame("Scap {$quote->budget_id} - R2", $data->code);
         $this->assertSame(QuoteStatus::Approved, $data->status);
         $this->assertSame('120.0000', $data->value_uf);   // string, com as 4 casas do decimal(12,4)
     }
@@ -48,5 +48,13 @@ class DtoTest extends TestCase
         $this->assertSame('120.0000', $data->total_value_uf);
         $this->assertSame(15, $data->total_students);
         $this->assertCount(1, $data->quotes);
+    }
+
+    public function test_budget_data_exposes_created_at_as_iso8601(): void
+    {
+        $budget = $this->seedBudget();
+        $data = BudgetData::fromModel($budget, app(BudgetSummaryService::class));
+
+        $this->assertSame($budget->created_at->toIso8601String(), $data->created_at);
     }
 }

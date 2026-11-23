@@ -12,6 +12,7 @@ return [
     ],
     'rule' => [
         'rut_invalid' => 'El RUT informado no es válido.',
+        'phone_invalid' => 'El teléfono informado no es válido. Ingréselo con el código de país, por ejemplo +56 9 8765 4321.',
         'grade_not_printable' => 'La nota final debe ser un número o un texto no vacío.',
     ],
     'spreadsheet' => [

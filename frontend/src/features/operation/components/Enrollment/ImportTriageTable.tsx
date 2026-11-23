@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ImportField } from '@shared/types/generated'
+import { formatPhoneDisplay } from '@shared/lib'
 import {
   AppColumn, AppDataTable, AppEmptyState, AppRadioButton, AppTag, COL, RowActions, tableWidths,
   identifierClass, narrowFloorTablePt, stickyActionsColumn, technicalDataClass,
@@ -43,7 +44,9 @@ function Situation({ r, clientName, canUpdate, onSetUpdate }: {
   const divergent = isRegistered(r) && (r.divergent.length > 0 || r.edited)
   // Recusada sem edição: a tag e a contagem dizem `error`, o resto (RUT, par, empresa) segue.
   const status = displayStatus(r)
-  const registry = r.divergent.map((f) => r[FIELD_VALUE[f]]).filter(Boolean).join(' · ')
+  // O telefone do cadastro é E.164; o cru da linha do arquivo segue como veio.
+  const registered = (f: ImportField) => (f === 'phone' ? formatPhoneDisplay(r.registered_phone) : r[FIELD_VALUE[f]])
+  const registry = r.divergent.map(registered).filter(Boolean).join(' · ')
   return (
     <div className="space-y-1">
       <AppTag severity={divergent && status === 'registered' ? 'warning' : STATUS_TONE[status]} value={k(divergent && status === 'registered' ? 'situation.divergent' : `situation.${status}`)} />

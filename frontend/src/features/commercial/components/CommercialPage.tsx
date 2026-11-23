@@ -33,6 +33,23 @@ export function CommercialPage() {
     <ModulePage title={t('module.comercial.title')} description={t('module.comercial.description')}>
       <AppCard>
         <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
+          <ModuleTab header={t('budget.tab')}>
+            <BudgetsTable
+              budgets={fonteOrcamentos.items}
+              loading={fonteOrcamentos.loading}
+              error={fonteOrcamentos.error}
+              onRetry={fonteOrcamentos.refetch}
+              mode={budgetsArchived.mode}
+              onModeChange={budgetsArchived.setMode}
+              onRestore={(b) => b.id != null && budgetsArchived.restore(b.id)}
+              busy={budgetsArchived.restoring}
+              actions={
+                can('commercial.budget.create')
+                  ? <AppButton variant="primary" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />
+                  : undefined
+              }
+            />
+          </ModuleTab>
           <ModuleTab header={t('client.tabClients')}>
             <ClientsTable
               clients={fonteClientes.items}
@@ -48,23 +65,6 @@ export function CommercialPage() {
               actions={
                 can('commercial.client.create')
                   ? <AppButton variant="primary" label={t('client.new')} icon="pi pi-user-plus" onClick={clients.openCreate} />
-                  : undefined
-              }
-            />
-          </ModuleTab>
-          <ModuleTab header={t('budget.tab')}>
-            <BudgetsTable
-              budgets={fonteOrcamentos.items}
-              loading={fonteOrcamentos.loading}
-              error={fonteOrcamentos.error}
-              onRetry={fonteOrcamentos.refetch}
-              mode={budgetsArchived.mode}
-              onModeChange={budgetsArchived.setMode}
-              onRestore={(b) => b.id != null && budgetsArchived.restore(b.id)}
-              busy={budgetsArchived.restoring}
-              actions={
-                can('commercial.budget.create')
-                  ? <AppButton variant="primary" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />
                   : undefined
               }
             />

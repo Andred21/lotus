@@ -46,7 +46,7 @@ class TurmaDataEnrichmentTest extends TestCase
         $this->assertSame(1, $data->enrolled_count);
         $this->assertSame($budget->id, $data->budget_id);
         $this->assertSame('Scap 7', $data->budget_code);
-        $this->assertSame("Scap {$budget->id} - Cot 1", $data->quote_code);
+        $this->assertSame("Scap {$budget->id} - R1", $data->quote_code);
         // O RUT já vinha no ContratanteData e era descartado: a projeção usava
         // só o ->name. Sem descrição, a coluna Cliente do TurmasTable não tem
         // o que pôr na segunda linha da célula (spec D3).

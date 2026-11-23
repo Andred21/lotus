@@ -12,12 +12,15 @@ export type CourseDialogMode = DialogMode
  * sincronizado pelo endpoint dedicado. `templates` saiu do contrato no bloco 39
  * (template de certificado é legado, sem leitura nem escrita da aplicação).
  *
+ * `code` (C-<n>) NÃO está aqui de propósito: é só saída, derivado do id pela Action;
+ * enviá-lo dá 422. A tela o mostra direto do `course`.
+ *
  * `modules` é `Optional` no contrato (ausente = não mexe), mas aqui é array
  * sempre: esta tela é a dona do quadro de módulos e manda a coleção inteira.
  */
 export type CourseFormFields = Pick<
   CourseData,
-  'id' | 'name' | 'technical_name' | 'description' | 'workload_hours' | 'redator_ids'
+  'id' | 'name' | 'technical_name' | 'sence_code' | 'description' | 'workload_hours' | 'redator_ids'
 > & { modules: CourseModuleData[] }
 
 /** Módulo novo do formulário. `sort_order`/`total_hours` ficam undefined: o
@@ -28,13 +31,13 @@ export const EMPTY_MODULE: CourseModuleData = {
 }
 
 const EMPTY: CourseFormFields = {
-  id: undefined, name: '', technical_name: null, description: null, workload_hours: 0,
+  id: undefined, name: '', technical_name: null, sence_code: null, description: null, workload_hours: 0,
   redator_ids: [], modules: [],
 }
 
 const toFields = (c: CourseFormFields): CourseFormFields => {
-  const { id, name, technical_name, description, workload_hours, redator_ids, modules } = c
-  return structuredClone({ id, name, technical_name, description, workload_hours, redator_ids, modules })
+  const { id, name, technical_name, sence_code, description, workload_hours, redator_ids, modules } = c
+  return structuredClone({ id, name, technical_name, sence_code, description, workload_hours, redator_ids, modules })
 }
 
 export function useCourseForm(course: CourseData | null, mode: CourseDialogMode, onDone: () => void) {
@@ -55,6 +58,8 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
     toPayload: (f) => ({
       name: f.name,
       technical_name: f.technical_name,
+      // Campo limpo vira null: o backend só aceita dígitos, e '' não é código.
+      sence_code: f.sence_code?.trim() || null,
       description: f.description,
       workload_hours: f.workload_hours,
       modules: f.modules.map((m) => ({
@@ -65,7 +70,7 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
         practice_hours: m.practice_hours,
       })),
     }),
-    mapped: ['name', 'technical_name', 'description', 'workload_hours'],
+    mapped: ['name', 'technical_name', 'sence_code', 'description', 'workload_hours'],
     // `modules` é a lista inteira (cada módulo mostra o próprio erro pelo
     // prefixo). `redator_ids` NÃO está no payload do curso: é a chave que um
     // 422 do `sync` traria, e sem ela aqui o erro não teria onde aparecer.

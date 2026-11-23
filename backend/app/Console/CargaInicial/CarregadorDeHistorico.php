@@ -126,7 +126,7 @@ final class CarregadorDeHistorico
 
         if ($quote !== null) {
             if ($quote->course_id !== $curso->id || $quote->status !== $status) {
-                $contagem->conflito(sprintf('cotação %s - Cot 1: já existe com outro curso ou outro status', $budget->code));
+                $contagem->conflito(sprintf('cotação %s - R1: já existe com outro curso ou outro status', $budget->code));
 
                 return null;
             }

@@ -146,7 +146,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
-| 8 | **60** `codigos-mascaras-comercial-e-avaliacoes` | Backend + Frontend | Pedido da Lotus. Entrega o código `Scap x - R y` e o `PeriodFilter` em `shared/`, que o 62 usa |
 | 8 | **61** `certificacao-validacao-no-site` | Backend + Site | Pedido da Lotus. Corre ao lado do 60, em outro domínio e com metade em outro repositório, e entrega o download público que o 62 usa |
 | 9 | **62** `certificacao-paineis-lote-e-planilha` | Backend + Frontend | Pedido da Lotus. Depende do 60 e do 61 |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
@@ -176,6 +175,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 |---|---|---|
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **55** `backend-borda-http-auth-e-permissao` | 1 | 2026-11-03 |
+| **60** `codigos-mascaras-comercial-e-avaliacoes` | 1, 2 | 2026-11-23 |
 
 ---
 

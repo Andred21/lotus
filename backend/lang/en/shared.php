@@ -12,6 +12,7 @@ return [
     ],
     'rule' => [
         'rut_invalid' => 'The RUT provided is not valid.',
+        'phone_invalid' => 'The phone number provided is not valid. Enter it with the country code, e.g. +56 9 8765 4321.',
         'grade_not_printable' => 'The final grade must be a number or a non-empty text.',
     ],
     'spreadsheet' => [

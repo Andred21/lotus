@@ -107,6 +107,7 @@ total_value_uf: undefined | string,
 total_approved_uf: undefined | string,
 total_rejected_uf: undefined | string,
 total_students: undefined | number,
+created_at: undefined | string,
 payment_terms: undefined | string | null,
 quotes: QuoteData[],
 files: FileData[],
@@ -203,8 +204,10 @@ photo_url: string | null,
 };
 export type CourseData = {
 id: undefined | number,
+code: undefined | string,
 name: string,
 technical_name: undefined | string | null,
+sence_code: undefined | string | null,
 description: undefined | string | null,
 workload_hours: number,
 modules: CourseModuleData[] | undefined,
@@ -580,6 +583,7 @@ turma_id: number,
 course_name: string,
 end_date: string,
 missing_types: TurmaDocumentType[],
+missing_optional_types: TurmaDocumentType[],
 };
 export type ResetPasswordData = {
 token: string,
@@ -709,8 +713,10 @@ start_date: string,
 end_date: string,
 present_types: TurmaDocumentType[],
 missing_types: TurmaDocumentType[],
+missing_optional_types: TurmaDocumentType[],
 missing_requirements: TurmaRequirement[],
 habilitada: boolean,
+concluded: boolean,
 };
 export type TurmaData = {
 id: undefined | number,
@@ -723,6 +729,7 @@ end_date: string,
 status: TurmaStatus | undefined,
 habilitada: undefined | boolean,
 missing_document_types: TurmaDocumentType[] | undefined,
+missing_optional_document_types: TurmaDocumentType[] | undefined,
 missing_requirements: TurmaRequirement[] | undefined,
 concluded_at: undefined | string | null,
 redatores: TurmaRedatorData[],
@@ -746,7 +753,7 @@ size: number,
 created_at: string,
 download_url: string,
 };
-export type TurmaDocumentType = 'MANUAL' | 'PRUEBAS' | 'EVALUACION_REDATOR';
+export type TurmaDocumentType = 'MANUAL' | 'EVALUACION_REDATOR' | 'EVALUACION_CLIENTE' | 'EVALUACION_ALUNO';
 export type TurmaModalidade = 'presencial' | 'online';
 export type TurmaRedatorData = {
 id: number,

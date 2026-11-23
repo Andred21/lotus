@@ -74,6 +74,26 @@ class StudentPaginationTest extends TestCase
         $this->assertSame(['Bruno Díaz'], array_column($porRut->json('data'), 'name'));
     }
 
+    /** @return array<string, array{0: string}> */
+    public static function termosDeRut(): array
+    {
+        return [
+            'só dígitos do corpo' => ['12345678'],
+            'com pontos' => ['12.345.678'],
+            'corpo e DV sem pontuação' => ['123456785'],
+            'com hífen' => ['12345678-5'],
+            'formato completo com espaço' => [' 12.345.678-5 '],
+        ];
+    }
+
+    #[DataProvider('termosDeRut')]
+    public function test_q_acha_o_aluno_pelo_rut_com_ou_sem_pontuacao(string $termo): void
+    {
+        $response = $this->getJson('/api/students?q='.rawurlencode($termo))->assertOk();
+
+        $this->assertSame(['Carla Rojas'], array_column($response->json('data'), 'name'));
+    }
+
     public function test_sort_com_sinal_inverte_e_rut_esta_na_allowlist(): void
     {
         $desc = $this->getJson('/api/students?sort=-name')->assertOk();

@@ -4,8 +4,8 @@ namespace App\Domains\Operation\Actions;
 
 use App\Domains\Identity\Models\User;
 use App\Domains\Operation\Enums\TurmaDocumentType;
-use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Domains\Operation\Services\TurmaDocumentGate;
 use App\Shared\Files\Models\File;
 use App\Shared\Files\Services\FileUploader;
 use App\Shared\Files\Services\StoredFiles;
@@ -22,15 +22,12 @@ use Illuminate\Http\UploadedFile;
  */
 class StoreTurmaDocumentAction
 {
-    public function __construct(private FileUploader $uploader) {}
+    public function __construct(private FileUploader $uploader, private TurmaDocumentGate $gate) {}
 
     public function execute(Turma $turma, TurmaDocumentType $type, UploadedFile $file, User $actor): File
     {
-        // RN-15: turma concluída só aceita documento de quem tem a permissão
-        // exclusiva (superadmin); os demais caem na recusa de sempre.
-        if (! ($turma->status === TurmaStatus::Concluida && $actor->can('operation.turma.manage_concluded_docs'))) {
-            $turma->assertAcademicallyWritable();
-        }
+        // Papel e RN-15 (turma concluída) na matriz do gate (spec §4.6).
+        $this->gate->assertPodeAnexar($turma, $type, $actor);
 
         return $this->uploader->store(
             ['file' => $file],

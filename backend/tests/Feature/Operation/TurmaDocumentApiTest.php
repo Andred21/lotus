@@ -103,7 +103,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsSuperadmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertCreated();
     }
 
@@ -154,8 +154,13 @@ class TurmaDocumentApiTest extends TestCase
     /** Doc já anexado, sem passar pela API: o ator da requisição fica só o do teste. */
     private function docAnexado(): int
     {
+        // O gate recusa quem não tem a permissão do tipo: o ator de fundo é superadmin.
+        $this->seed(RolePermissionSeeder::class);
+        $fundo = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $fundo->assignRole('superadmin');
+
         return app(StoreTurmaDocumentAction::class)
-            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf(), User::factory()->create())
+            ->execute($this->turma, TurmaDocumentType::MANUAL, $this->pdf(), $fundo)
             ->id;
     }
 
@@ -166,7 +171,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsSuperadmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertCreated();
 
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
@@ -180,7 +185,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsRedatorRole();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'MANUAL', 'file' => $this->pdf(),
         ])->assertStatus(422)->assertJsonValidationErrors('turma');
 
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")
@@ -194,7 +199,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsRedatorRole();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'MANUAL', 'file' => $this->pdf(),
         ])->assertStatus(422)->assertJsonValidationErrors('turma');
 
         $this->assertSame([], Storage::disk('s3')->allFiles());
@@ -207,7 +212,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsAdmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertForbidden();
 
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertForbidden();
@@ -232,7 +237,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsRedatorRole();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertCreated();
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
     }
@@ -243,7 +248,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsSuperadmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertCreated();
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
     }
@@ -254,7 +259,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsAdmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertForbidden();
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertForbidden();
     }

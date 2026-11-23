@@ -37,7 +37,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-32 | Guarda da lição 13 confere path, não classe — o caso que a motivou passa verde | 57 | lição 13 reincidir por **classe**, ou decisão explícita do João; revisar 2026-10-31 |
 | P-31 | O ponto 5 do ADR-16 está em `docs/adrs.md` e não no espelho do Drive | BD-15 | ponto 5 no `decisao-stack.md` do Drive; revisar 2026-10-31 (renovada no fechamento do item 35) |
 | P-22 | H.1.3.1 existe duas vezes dentro da base Notion canônica | BD-15 | João apagar ou mesclar uma das cópias |
-| P-110 | A rule `frontend-estilizacao.md` ainda descreve uma faixa de seção só (12px, tinta de corpo); o título de seção de formulário do item 46 (`formSectionTitleClass`, 13px, na marca) ficou só no `rulings.md` e em docblocks | 58 | bloco que tocar a rule, o `typography.ts` ou o `FormSection`/`SectionLabel`; revisar 2026-11-15 |
+| P-110 | A rule `frontend-estilizacao.md` ainda descreve uma faixa de seção só (12px, tinta de corpo); o título de seção de formulário do item 46 (`formSectionTitleClass`, 13px, na marca) ficou só no `rulings.md` e em docblocks | 58 | bloco que tocar a rule, o `typography.ts` ou o `FormSection`/`SectionLabel`; revisar 2026-11-15; **disparado em 2026-11-23 (item 60 acrescentou a linha `<RecordCode>` à rule), não pago** |
 | P-113 | O `COL.rut` dá cerca de 110 a 123 px, menos que os 133 px do RUT em mono, nas tabelas de alunos e de clientes | — | bloco que tocar `studentColumns.ts` ou `clientColumns.ts`; revisar 2026-11-16 |
 | P-114 | Cotação `pending` ou `rejected` com turma não arquivada: o `QuoteLifecycle` a trata como sem turma; saber se o dado legado existe exige leitura em produção | — | o João rodar a consulta só-leitura da ficha, ou bloco que tocar `QuoteLifecycle`; revisar 2026-11-17 |
 | P-115 | Três Menores da revisão do 50: audit `restored` fantasma na corrida `RestoreQuoteAction` × cascata, mensagens `approved_cannot_delete` que mandam "recuse antes", catraca de lock em lista fixa de 3 arquivos | — | bloco que tocar `RestoreQuoteAction`, `RestoreBudgetAction`, `QuoteLifecycle` ou o `BudgetQuoteLockTest`; revisar 2026-11-17 |
@@ -134,7 +134,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
 | P-08 | RF-CUR-04 promete Manual por curso; implementado é Blade única | Lotus | contratante pedir manual personalizado por curso |
-| P-09 | Figma mostra 4 tipos de documento de turma; implementados são 3 | Lotus | Lotus confirmar que quer os 4 |
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
@@ -149,7 +148,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (1)
 
-**A P-51 fechou no item 51 (2026-11-03)**, pelo próprio gatilho: `ClientData::$type` e `BudgetData::$payment_terms` passaram a `X|Optional` sem default (provado contra a API da lane: `PUT` sem a chave preserva), `CourseData::$workload_hours` era defeito real fail-open e agora dá 422 sem a chave, e os campos 5 e 6 estavam mortos desde o bloco 39. A varredura que a ficha pedia virou catraca (`InputDataDefaultsTest`). Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`. O item 51 abriu a **P-117** (Menores da revisão e o débito de `CourseModuleData`) e disparou sem pagar os gatilhos da **P-53**, da **P-96** e da **P-97** (tocou `estrutura-monolito.md` e `backend-ddd.md` por outro motivo); as fichas registram o disparo.
+**A P-09 fechou no bloco 60 (2026-11-23)**: taxonomia decidida pela Lotus em 2026-11-21 (Instructor, Cliente, Alumnos; só Manual e Instructor bloqueiam). `TurmaDocumentType` ganhou `EVALUACION_CLIENTE` e `EVALUACION_ALUNO` (a antiga `PRUEBAS`, convertida por migration), e a falta das duas opcionais vira aviso no dashboard. Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+
+**A P-51 saiu no fechamento do item 60 (2026-11-23)**, o primeiro depois do item 51, que a encerrou em 2026-11-03 pelo próprio gatilho (`InputDataDefaultsTest` virou a catraca). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md). O item 51 abriu a **P-117** (Menores da revisão e o débito de `CourseModuleData`) e disparou sem pagar os gatilhos da **P-53**, da **P-96** e da **P-97** (tocou `estrutura-monolito.md` e `backend-ddd.md` por outro motivo); as fichas registram o disparo.
 
 **A P-85 e a P-102 saíram no fechamento do item 51 (2026-11-03)**, o primeiro depois do item 54, que as encerrou no mesmo dia: os três filtros de `start_date` do `AnalyticsQuery` passam por `DataSql::literal`, com a borda do último dia provada no sqlite, e o Cumplimiento e as pendências do admin dizem o que falta (redator, `local_aplicacao`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

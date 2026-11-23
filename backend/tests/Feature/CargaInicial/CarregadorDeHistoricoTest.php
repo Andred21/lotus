@@ -113,7 +113,7 @@ class CarregadorDeHistoricoTest extends TestCase
     {
         $this->carregarPadrao();
         $this->assertSame('Scap 176', Budget::findOrFail(176)->code);
-        $this->assertSame('Scap 176 - Cot 1', Quote::where('budget_id', 176)->sole()->code);
+        $this->assertSame('Scap 176 - R1', Quote::where('budget_id', 176)->sole()->code);
         $this->assertTrue(Budget::findOrFail(176)->created_at->equalTo(Instante::meioDia('2026-02-13')));
         $this->assertSame($this->cadastros->cliente->id, Budget::findOrFail(176)->client_id);
     }

@@ -348,16 +348,16 @@ class DashboardEndpointTest extends TestCase
         // T3 vem primeiro (ordem por `start_date`, asserida no cenário 1).
         $response->assertJsonPath('compliance_turmas.0.turma_id', $cenario['t3']);
         $response->assertJsonPath('compliance_turmas.0.present_types', ['MANUAL']);
-        $response->assertJsonPath('compliance_turmas.0.missing_types', ['PRUEBAS', 'EVALUACION_REDATOR']);
+        $response->assertJsonPath('compliance_turmas.0.missing_types', ['EVALUACION_REDATOR']);
         // Requisitos de configuração saem como código do enum, como os tipos.
         $response->assertJsonPath('compliance_turmas.0.missing_requirements', ['redator']);
 
-        // T1 não tem documento nenhum: lista vazia de um lado, os três do outro.
+        // T1 não tem documento nenhum: lista vazia de um lado, os dois bloqueantes do outro.
         $response->assertJsonPath('compliance_turmas.1.turma_id', $cenario['t1']);
         $response->assertJsonPath('compliance_turmas.1.present_types', []);
         $response->assertJsonPath(
             'compliance_turmas.1.missing_types',
-            ['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'],
+            ['MANUAL', 'EVALUACION_REDATOR'],
         );
     }
 
@@ -367,7 +367,7 @@ class DashboardEndpointTest extends TestCase
         $redator = $this->actingAsRedator();
         $cenario = $this->cenarioRico();
         Turma::find($cenario['t1'])->redatores()->attach($redator->id);
-        $this->makeTurmaDocument($cenario['t1'], TurmaDocumentType::PRUEBAS);
+        $this->makeTurmaDocument($cenario['t1'], TurmaDocumentType::EVALUACION_ALUNO);
 
         $response = $this->getJson(self::ENDPOINT)->assertOk();
 

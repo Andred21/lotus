@@ -25,6 +25,7 @@ class UpdateCourseAction
             $course->update(WritableAttributes::from([
                 'name' => $data->name,
                 'technical_name' => $data->technical_name,
+                'sence_code' => $data->sence_code,
                 'description' => $data->description,
                 'workload_hours' => $data->workload_hours,
             ]));

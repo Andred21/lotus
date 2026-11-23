@@ -11,7 +11,7 @@ import { COL, tableWidths } from '@shared/ui'
  *
  * 1. **Sem largura nenhuma** (UI-02 da revisão de 2026-08-22, 1440x900): a
  *    largura vinha 100% do conteúdo e saía o inverso da importância. CÓDIGO
- *    ficava com 67px de `th` em inglês e `Scap 1 - Cot 2` quebrava em QUATRO
+ *    ficava com 67px de `th` em inglês e `Scap 1 - R2` quebrava em QUATRO
  *    caixas de linha dentro de um `span` de 34px. CLIENTE (249px) e REDATOR
  *    (263px) somavam 45% dos 1147px da tabela, porque o bloco de texto do
  *    `IdentityCell` não encolhia (ver o `min-w-0` de lá; sem ele, teto de

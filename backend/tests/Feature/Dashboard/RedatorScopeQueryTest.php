@@ -131,7 +131,7 @@ class RedatorScopeQueryTest extends TestCase
             $turma->redatores()->attach($this->redatorB->id);
         }
 
-        // Documentação obrigatória: aEmCurso fica devendo 2 tipos, aFutura os 3,
+        // Documentação obrigatória: aEmCurso fica devendo 1 tipo bloqueante, aFutura os 2,
         // aAtrasada e compartilhada estão completas. bEmCurso também fica
         // devendo — e é justamente o que não pode vazar para A.
         $this->createTurmaDocument($this->aEmCurso, TurmaDocumentType::MANUAL);
@@ -298,13 +298,15 @@ class RedatorScopeQueryTest extends TestCase
                 'turma_id' => $this->aEmCurso->id,
                 'course_name' => 'Trabajos en Altura de Alta Tensión',
                 'end_date' => '2026-08-17',
-                'missing_types' => [TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
+                'missing_types' => [TurmaDocumentType::EVALUACION_REDATOR],
+                'missing_optional_types' => [TurmaDocumentType::EVALUACION_ALUNO],
             ],
             [
                 'turma_id' => $this->aFutura->id,
                 'course_name' => 'Trabajos en Altura de Alta Tensión',
                 'end_date' => '2026-08-19',
-                'missing_types' => [TurmaDocumentType::MANUAL, TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
+                'missing_types' => [TurmaDocumentType::MANUAL, TurmaDocumentType::EVALUACION_REDATOR],
+                'missing_optional_types' => [TurmaDocumentType::EVALUACION_ALUNO],
             ],
         ], array_map(fn ($item): array => $item->toArray(), $pendencias));
 

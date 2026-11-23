@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { AppDropdown, AppInputText, type FieldComponent } from '@shared/ui'
+import { AppDropdown, AppInputText, PhoneInput, RutInput, type FieldComponent } from '@shared/ui'
+import { formatPhoneDisplay } from '@shared/lib'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { RedatorFormFields } from '../../hooks/useRedatorForm'
 
@@ -30,18 +31,24 @@ export function RedatorIdentityFields({
         </Field>
 
         <Field name="rut" label={t('common.rut')}>
-          <AppInputText className="w-full" />
+          <RutInput className="w-full" />
         </Field>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field name="email" label={t('common.email')}>
-          <AppInputText className="w-full" />
-        </Field>
+        {/* Abaixo de `xl`, meia linha deixava o número com 26px a 640px: email e
+            telefone tomam a linha inteira até lá (pedido do João, bloco 60). */}
+        <div className="sm:col-span-2 xl:col-span-1">
+          <Field name="email" label={t('common.email')}>
+            <AppInputText className="w-full" />
+          </Field>
+        </div>
 
-        <Field name="phone" label={t('common.phone')}>
-          <AppInputText className="w-full" />
-        </Field>
+        <div className="sm:col-span-2 xl:col-span-1">
+          <Field name="phone" label={t('common.phone')} value={formatPhoneDisplay(form.phone)}>
+            <PhoneInput />
+          </Field>
+        </div>
 
         {/* Só em redator já existente: no cadastro o acesso nasce ativo pelo
             `UserProvisioner`, e um controle que o POST ignora mentiria. Molde

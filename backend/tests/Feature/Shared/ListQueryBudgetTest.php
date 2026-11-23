@@ -135,8 +135,13 @@ class ListQueryBudgetTest extends TestCase
      * de fazer três `count()` por KPI de turma (total, encerrando, atrasadas) e
      * passou a derivá-los da coleção memoizada dos baldes; entrou um `count()`
      * SQL para `conclusoes_por_confirmar`. Saldo: -3 +1 = -2.
+     *
+     * Admin 39 -> 40 e relator 8 -> 9 (bloco 60, Task 11): a leitura das turmas
+     * concluídas depois do corte de evaluaciones (`CorteDeEvaluaciones`) é uma
+     * query a mais por papel. Com concluída a listar entram as cargas
+     * (`documentos`, `course`, `redatores`), em número fixo — não crescem com N.
      */
-    private const DASHBOARD = ['admin' => 39, 'redator' => 8];
+    private const DASHBOARD = ['admin' => 40, 'redator' => 9];
 
     private int $seq = 0;
 

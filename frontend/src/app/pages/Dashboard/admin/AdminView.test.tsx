@@ -48,8 +48,10 @@ const TURMA: TurmaComplianceData = {
   end_date: '2026-08-18',
   present_types: [],
   missing_types: [],
+  missing_optional_types: [],
   missing_requirements: ['redator'],
   habilitada: false,
+  concluded: false,
 }
 
 function montar(data: AdminDashboardData) {

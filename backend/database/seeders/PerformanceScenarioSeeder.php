@@ -248,7 +248,7 @@ class PerformanceScenarioSeeder extends Seeder
             DB::table('turma_redator')->insert(['turma_id' => $turmaId, 'redator_id' => $redatorId, 'created_at' => $agora, 'updated_at' => $agora]);
             $redatorPorTurma[$turmaId] = $redatorId;
 
-            $tipos = $concluida || $i % 5 < 3 ? ['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'] : ['MANUAL'];
+            $tipos = $concluida || $i % 5 < 3 ? ['MANUAL', 'EVALUACION_ALUNO', 'EVALUACION_REDATOR'] : ['MANUAL'];
             foreach ($tipos as $tipo) {
                 DB::table('files')->insert([
                     'fileable_type' => 'turma', 'fileable_id' => $turmaId, 'type' => $tipo, 'path' => "perf/turma-{$turmaId}-{$tipo}.pdf",

@@ -9,6 +9,7 @@ use App\Domains\Operation\Data\ImportConfirmRowData;
 use App\Domains\Operation\Enums\ImportField;
 use App\Domains\Operation\Enums\ImportRowStatus;
 use App\Domains\Operation\Models\Turma;
+use App\Shared\Support\Phone;
 use App\Shared\Validation\ValidationMessages;
 use Illuminate\Validation\ValidationException;
 
@@ -172,7 +173,8 @@ class ImportRowClassifier
         if ($email !== null && mb_strtolower($email) !== mb_strtolower((string) $user->email)) {
             $divergent[] = ImportField::Email;
         }
-        if ($phone !== null && $phone !== (string) $user->phone) {
+        // O cadastro guarda E.164 e a planilha traz formato humano: compara o normalizado.
+        if ($phone !== null && Phone::normalizar($phone) !== (string) $user->phone) {
             $divergent[] = ImportField::Phone;
         }
 

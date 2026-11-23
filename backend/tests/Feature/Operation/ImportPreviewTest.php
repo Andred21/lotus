@@ -221,7 +221,7 @@ class ImportPreviewTest extends TestCase
         $this->previa([
             ['11.111.111-1', 'Juan Soto', 'juan@acme.cl', str_repeat('9', 31)],
             ['22.222.222-2', 'Pedro Lagos', str_repeat('a', 250).'@acme.cl', ''],
-            ['33.333.333-3', 'Ana Mora', 'ana@acme.cl', str_repeat('9', 30)],
+            ['33.333.333-3', 'Ana Mora', 'ana@acme.cl', str_pad('+56 9 8765 4321', 30)], // 30 exatos e válido
         ])->assertOk()
             ->assertJsonPath('rows.0.status', 'error')
             ->assertJsonPath('rows.0.message', __('validation.max.string', [

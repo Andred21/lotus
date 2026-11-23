@@ -243,7 +243,7 @@ class StudentResolverTest extends TestCase
             '11.111.111-1',
             'Juan Soto',
             str_repeat('a', 255 - strlen('@acme.cl')).'@acme.cl',
-            str_repeat('9', 30),
+            str_pad('+56 9 8765 4321', 30), // 30 caracteres exatos e um telefone válido
         );
     }
 
@@ -283,7 +283,7 @@ class StudentResolverTest extends TestCase
     {
         $client = $this->makeClientWithUser(['legal_name' => 'Empresa A']);
         $student = $this->resolver()->resolveByRut(
-            $this->resolver()->identity('11.111.111-1', 'Juan Soto', 'juan@acme.cl', '+56 9 1111 1111'),
+            $this->resolver()->identity('11.111.111-1', 'Juan Soto', 'juan@acme.cl', '+56 9 8111 1111'),
             $client,
         )->student;
 
@@ -292,11 +292,11 @@ class StudentResolverTest extends TestCase
         $this->assertSame('11.111.111-1', $identity->rut);
         $this->assertSame('Juan P. Soto', $identity->name);
         $this->assertSame('juan@acme.cl', $identity->email);
-        $this->assertSame('+56 9 1111 1111', $identity->phone);
+        $this->assertSame('+56981111111', $identity->phone);
 
-        $novo = $this->resolver()->updatedIdentity($student, 'Juan P. Soto', 'novo@acme.cl', '222');
+        $novo = $this->resolver()->updatedIdentity($student, 'Juan P. Soto', 'novo@acme.cl', '+56 9 8222 2222');
         $this->assertSame('novo@acme.cl', $novo->email);
-        $this->assertSame('222', $novo->phone);
+        $this->assertSame('+56 9 8222 2222', $novo->phone);
     }
 
     public function test_assert_can_update_ignora_o_proprio_user(): void

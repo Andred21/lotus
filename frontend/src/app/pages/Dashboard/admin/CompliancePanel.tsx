@@ -8,58 +8,47 @@ import {
   AppEmptyState,
   AppTag,
   narrowFloorTablePt,
-  technicalDataClass,
   wrappingHeaderTablePt,
 } from '@shared/ui'
 import { formatIsoDate, turmaDocumentTypeList, turmaRequirementList } from '@shared/lib'
 import type { TurmaComplianceData } from '@shared/types/generated'
+import { infoText } from '@shared/styles/tokens'
+import { IntervaloDeDatas } from './IntervaloDeDatas'
 import { complianceWidths } from './panelColumns'
 
 /**
  * O que falta para a turma concluir: documentos, depois requisitos de
- * configuração (redator, local). `—` só quando os dois estão vazios — sem os
+ * configuração (redator, local). Vazio quando os dois estão vazios — sem os
  * requisitos a coluna dizia "—" para uma turma que não podia concluir.
  */
 function faltante(r: TurmaComplianceData, t: (key: string) => string): string {
-  const partes = [
-    turmaDocumentTypeList(r.missing_types, t),
-    turmaRequirementList(r.missing_requirements, t),
-  ].filter((parte) => parte !== '')
-
-  return partes.length === 0 ? '—' : partes.join(', ')
+  return [turmaDocumentTypeList(r.missing_types, t), turmaRequirementList(r.missing_requirements, t)]
+    .filter((parte) => parte !== '')
+    .join(', ')
 }
 
-/** Marcadores das duas datas na tradução do intervalo: uso privado do Unicode, que
- * nenhum locale escreve. */
-const MARCA_DATA = { start: '\uE000', end: '\uE001' } as const
-
 /**
- * O intervalo "início — fim" com cada data inteira (D-73 do bloco 54).
- *
- * Inteiro em `whitespace-nowrap`, ele media 182px numa coluna de 103px e cobria o
- * contador vizinho; solto, a coluna partia UMA data em quatro linhas ("06-07- /
- * 2026 — / 31-07- / 2026", UI-10 de 2026-08-17). O meio-termo é quebrar só ENTRE
- * as datas. As datas entram na tradução como marcadores e voltam como nós, para a
- * ordem e o separador seguirem vindo do locale.
+ * A coluna "Faltan": o que BLOQUEIA e, abaixo, o aviso das evaluaciones opcionais
+ * (bloco 60) em tom informativo — o aviso não impede concluir e não é pendência.
+ * O `—` só aparece quando não há bloqueante nem aviso: uma turma concluída que
+ * só tem aviso não pode mostrar "—" como se estivesse completa.
  */
-function IntervaloDeDatas({ start, end }: { start: string; end: string }) {
+function CelulaFaltan({ r }: { r: TurmaComplianceData }) {
   const { t } = useTranslation()
-  const datas: Record<string, string> = { [MARCA_DATA.start]: start, [MARCA_DATA.end]: end }
+  const bloqueante = faltante(r, t)
+  const aviso = turmaDocumentTypeList(r.missing_optional_types, t)
+
+  if (bloqueante === '' && aviso === '') return <span>—</span>
 
   return (
-    <span className={`${technicalDataClass} text-xs`}>
-      {t('dashboard.agenda.range', MARCA_DATA)
-        .split(new RegExp(`(${MARCA_DATA.start}|${MARCA_DATA.end})`))
-        .map((parte, i) =>
-          datas[parte] === undefined ? (
-            parte
-          ) : (
-            <span key={i} className="whitespace-nowrap">
-              {datas[parte]}
-            </span>
-          ),
-        )}
-    </span>
+    <>
+      {bloqueante !== '' && <span className="wrap-break-word">{bloqueante}</span>}
+      {aviso !== '' && (
+        <span className="block wrap-break-word text-xs" style={{ color: infoText }}>
+          {t('dashboard.compliance.warning', { types: aviso })}
+        </span>
+      )}
+    </>
   )
 }
 
@@ -97,9 +86,16 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           style={largura.course}
           sortable
           body={(r: TurmaComplianceData) => (
-            <Link to={`/operacion/turmas/${r.turma_id}`} className="no-underline wrap-break-word" style={{ color: 'var(--text-color)' }}>
-              {r.course_name}
-            </Link>
+            <>
+              <Link to={`/operacion/turmas/${r.turma_id}`} className="no-underline wrap-break-word" style={{ color: 'var(--text-color)' }}>
+                {r.course_name}
+              </Link>
+              {r.concluded && (
+                <span className="block pt-1">
+                  <AppTag value={t('dashboard.compliance.concluded')} severity="secondary" />
+                </span>
+              )}
+            </>
           )}
         />
         <AppColumn
@@ -130,17 +126,18 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           // PENDÊNCIA continua vindo pronta do backend (D17) — a correção é desta
           // coluna, que é montada aqui. O rótulo vem do mapa de `shared/lib`, que
           // é o que reprova tipo novo sem tradução (Q-4 do review de 2026-08-24).
-          body={(r: TurmaComplianceData) => <span className="wrap-break-word">{faltante(r, t)}</span>}
+          body={(r: TurmaComplianceData) => <CelulaFaltan r={r} />}
         />
         <AppColumn
           header={t('dashboard.compliance.enabled')}
           style={largura.enabled}
           sortable
           field="habilitada"
+          // Concluída não é "não habilitada": `isHabilitada()` exige turma em andamento (bloco 60).
           body={(r: TurmaComplianceData) => (
             <AppTag
-              value={r.habilitada ? t('common.yes') : t('common.no')}
-              severity={r.habilitada ? 'success' : 'warning'}
+              value={r.concluded ? t('dashboard.compliance.concluded') : r.habilitada ? t('common.yes') : t('common.no')}
+              severity={r.concluded ? 'secondary' : r.habilitada ? 'success' : 'warning'}
             />
           )}
         />

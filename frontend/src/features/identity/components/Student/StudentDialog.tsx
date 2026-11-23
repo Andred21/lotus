@@ -71,7 +71,7 @@ export function StudentDialog({
         <FormSection title={t("student.sectionPersonal")} />
 
         <FormPhotoRow name={form.name} photo={photo} readOnly={readOnly}>
-          <StudentIdentityFields Field={campo.Field} />
+          <StudentIdentityFields Field={campo.Field} form={form} />
         </FormPhotoRow>
 
         <StudentClientField
