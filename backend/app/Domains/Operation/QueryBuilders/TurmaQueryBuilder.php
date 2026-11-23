@@ -107,7 +107,7 @@ class TurmaQueryBuilder extends Builder
     /**
      * Curso, contratante e código do orçamento (spec §4.2). `quotes.code` não
      * existe como coluna — `Quote::getCodeAttribute()` monta "Scap {budget_id}
-     * - Cot {seq}" em PHP —, então a metade que identifica (`budgets.code`,
+     * - R{seq}" em PHP —, então a metade que identifica (`budgets.code`,
      * `'Scap '.id`) é o que se varre. `whereHas` respeita os `withTrashed()`
      * das relações: turma de cliente arquivado continua achável.
      */

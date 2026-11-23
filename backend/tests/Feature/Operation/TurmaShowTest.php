@@ -53,7 +53,7 @@ class TurmaShowTest extends TestCase
             ->assertJsonPath('course_name', 'Trabajos en líneas 220kV')
             ->assertJsonPath('client_name', 'Subestación Norte S.A.')
             ->assertJsonPath('enrolled_count', 1)
-            ->assertJsonPath('quote_code', "Scap {$budget->id} - Cot 1")
+            ->assertJsonPath('quote_code', "Scap {$budget->id} - R1")
             ->assertJsonPath('budget_code', 'Scap 9')
             ->assertJsonPath('budget_id', $budget->id);
     }

@@ -35,7 +35,7 @@ class DtoTest extends TestCase
         $quote = $this->seedBudget()->quotes->first();
         $data = QuoteData::fromModel($quote);
 
-        $this->assertSame("Scap {$quote->budget_id} - Cot 2", $data->code);
+        $this->assertSame("Scap {$quote->budget_id} - R2", $data->code);
         $this->assertSame(QuoteStatus::Approved, $data->status);
         $this->assertSame('120.0000', $data->value_uf);   // string, com as 4 casas do decimal(12,4)
     }
