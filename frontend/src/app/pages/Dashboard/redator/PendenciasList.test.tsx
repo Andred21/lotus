@@ -26,6 +26,18 @@ const items: RedatorTurmaPendenciaData[] = [
   { turma_id: 7, course_name: 'Baja tensión — Módulo 2', end_date: '2026-09-10', missing_types: ['MANUAL', 'EVALUACION_REDATOR'], missing_optional_types: [] },
 ]
 
+const itemsComAviso: RedatorTurmaPendenciaData[] = [
+  { turma_id: 4, course_name: 'Alta tensión — Módulo 1', end_date: '2026-09-01', missing_types: ['MANUAL'], missing_optional_types: ['EVALUACION_ALUNO'] },
+  { turma_id: 9, course_name: 'Media tensión — Módulo 3', end_date: '2026-09-12', missing_types: [], missing_optional_types: ['EVALUACION_ALUNO'] },
+]
+
+const montarComAviso = () =>
+  render(
+    <MemoryRouter>
+      <PendenciasList items={itemsComAviso} />
+    </MemoryRouter>,
+  )
+
 const montar = () =>
   render(
     <MemoryRouter>
@@ -78,5 +90,34 @@ describe('PendenciasList — a lista "Falta:" traduz o tipo de documento, não o
     // EVALUACION_REDATOR" — o código cru do enum, sem passar por t() por item.
     expect(screen.queryByText('dashboard.redator.pendencias.missing:MANUAL')).toBeNull()
     expect(screen.queryByText('dashboard.redator.pendencias.missing:MANUAL, EVALUACION_REDATOR')).toBeNull()
+  })
+})
+
+describe('PendenciasList — aviso das evaluaciones opcionais (bloco 60)', () => {
+  it('o aviso de Alumnos vem abaixo dos bloqueantes, em tom diferente', () => {
+    montarComAviso()
+
+    const bloqueante = screen.getByText('dashboard.redator.pendencias.missing:operation.documents.type.MANUAL')
+    const [avisoDaTurma4] = screen.getAllByText('dashboard.redator.pendencias.warning:operation.documents.type.EVALUACION_ALUNO')
+
+    expect(bloqueante.compareDocumentPosition(avisoDaTurma4) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(avisoDaTurma4.style.color).not.toBe('')
+    expect(avisoDaTurma4.style.color).not.toBe(bloqueante.style.color)
+  })
+
+  it('a turma só com aviso aparece sem item bloqueante, e não entra na contagem', () => {
+    montarComAviso()
+
+    const linhas = screen.getAllByRole('listitem')
+    expect(linhas).toHaveLength(2)
+
+    // Turma 9: aviso, e nenhuma linha "Falta:" (nem o rótulo com lista vazia).
+    expect(linhas[1].textContent).toContain('dashboard.redator.pendencias.warning:')
+    expect(linhas[1].textContent).not.toContain('dashboard.redator.pendencias.missing')
+
+    // Só a turma 4 é pendência: o aviso não conta.
+    const titulo = screen.getByText('dashboard.redator.pendencias.title')
+    expect(titulo.parentElement?.textContent).toContain('1')
+    expect(titulo.parentElement?.textContent).not.toContain('2')
   })
 })

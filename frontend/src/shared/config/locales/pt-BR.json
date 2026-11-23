@@ -250,7 +250,9 @@
       "range": "Período",
       "present": "Presentes",
       "missing": "Faltam",
-      "enabled": "Habilitada"
+      "enabled": "Habilitada",
+      "concluded": "Concluída",
+      "warning": "Avaliações opcionais: {{types}}"
     },
     "redatorLoad": {
       "title": "Carga de relatores",
@@ -283,6 +285,7 @@
         "empty": "Sem documentação pendente",
         "emptyHint": "Todas as suas turmas estão com a documentação em dia.",
         "missing": "Falta: {{types}}",
+        "warning": "Faltam avaliações opcionais: {{types}}",
         "until": "Até {{date}}"
       },
       "alerts": {

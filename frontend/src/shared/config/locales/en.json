@@ -250,7 +250,9 @@
       "range": "Period",
       "present": "On file",
       "missing": "Missing",
-      "enabled": "Enabled"
+      "enabled": "Enabled",
+      "concluded": "Completed",
+      "warning": "Optional evaluations: {{types}}"
     },
     "redatorLoad": {
       "title": "Instructor workload",
@@ -283,6 +285,7 @@
         "empty": "No pending documents",
         "emptyHint": "All your classes have their documents up to date.",
         "missing": "Missing: {{types}}",
+        "warning": "Optional evaluations missing: {{types}}",
         "until": "Until {{date}}"
       },
       "alerts": {

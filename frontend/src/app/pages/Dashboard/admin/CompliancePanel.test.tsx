@@ -8,12 +8,16 @@ import { CompliancePanel } from './CompliancePanel'
 // `t` devolve a chave, que é o que os testes provam: QUAL texto a coluna escolhe.
 // A exceção é o intervalo, cuja tradução real recebe os marcadores das duas datas
 // em `start`/`end` — sem isso o `IntervaloDeDatas` não teria o que partir.
+// Com `types`, o `t` ecoa a interpolação: prova que o aviso chega com RÓTULOS resolvidos.
 vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')
   return {
     ...(await importOriginal<typeof import('react-i18next')>()),
     useTranslation: mockUseTranslation({
-      t: (key, opts) => (key === 'dashboard.agenda.range' ? `${opts?.start} a ${opts?.end}` : key),
+      t: (key, opts) => {
+        if (key === 'dashboard.agenda.range') return `${opts?.start} a ${opts?.end}`
+        return opts?.types === undefined ? key : `${key}:${String(opts.types)}`
+      },
     }),
   }
 })
@@ -21,6 +25,8 @@ vi.mock('react-i18next', async (importOriginal) => {
 const REDATOR = 'operation.conclusion.requirement.redator'
 const LOCAL = 'operation.conclusion.requirement.local_aplicacao'
 const MANUAL = 'operation.documents.type.MANUAL'
+const ALUMNOS = 'operation.documents.type.EVALUACION_ALUNO'
+const CLIENTE = 'operation.documents.type.EVALUACION_CLIENTE'
 
 function linha(over: Partial<TurmaComplianceData> = {}): TurmaComplianceData {
   return {
@@ -71,6 +77,50 @@ describe('CompliancePanel — coluna "Faltan" (D6)', () => {
     renderWithProviders(<CompliancePanel turmas={[linha({ habilitada: true })]} />, { route: '/' })
 
     expect(celulaFaltan().textContent).toBe('—')
+  })
+})
+
+describe('CompliancePanel — evaluaciones opcionais (bloco 60)', () => {
+  it('turma concluída: só o aviso com os rótulos, sem traço, e o marcador "concluída"', () => {
+    renderWithProviders(
+      <CompliancePanel
+        turmas={[linha({ concluded: true, habilitada: true, missing_optional_types: ['EVALUACION_CLIENTE', 'EVALUACION_ALUNO'] })]}
+      />,
+      { route: '/' },
+    )
+
+    const [, corpo] = screen.getAllByRole('row')
+    expect(within(corpo).getByText('dashboard.compliance.concluded')).toBeTruthy()
+
+    const faltan = celulaFaltan()
+    expect(faltan.textContent).toBe(`dashboard.compliance.warning:${CLIENTE}, ${ALUMNOS}`)
+    expect(faltan.textContent).not.toContain('—')
+  })
+
+  it('o aviso tem tom diferente do bloqueante e fica abaixo dele', () => {
+    renderWithProviders(
+      <CompliancePanel turmas={[linha({ missing_types: ['MANUAL'], missing_optional_types: ['EVALUACION_ALUNO'] })]} />,
+      { route: '/' },
+    )
+
+    const faltan = celulaFaltan()
+    const bloqueante = within(faltan).getByText(MANUAL)
+    const aviso = within(faltan).getByText(/dashboard\.compliance\.warning/)
+
+    // O bloqueante não perde o texto nem ganha o do aviso.
+    expect(bloqueante.textContent).toBe(MANUAL)
+    expect(aviso.textContent).toContain(ALUMNOS)
+    expect(aviso.style.color).not.toBe('')
+    expect(aviso.style.color).not.toBe(bloqueante.style.color)
+    // Abaixo: o bloqueante vem antes no documento.
+    expect(bloqueante.compareDocumentPosition(aviso) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('turma não concluída sem aviso não ganha marcador nem frase de aviso', () => {
+    renderWithProviders(<CompliancePanel turmas={[linha({ missing_types: ['MANUAL'] })]} />, { route: '/' })
+
+    expect(screen.queryByText('dashboard.compliance.concluded')).toBeNull()
+    expect(celulaFaltan().textContent).not.toContain('dashboard.compliance.warning')
   })
 })
 
