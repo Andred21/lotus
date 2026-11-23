@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { AppButton, AppCard, AppCardHeader, AppErrorState, identifierClass } from '@shared/ui'
+import { AppButton, AppCard, AppCardHeader, AppErrorState, RecordCode } from '@shared/ui'
 import type { PendingQuoteData } from '@shared/types/generated'
 import { loadErrorHint, screenDetail } from '@shared/lib'
 
@@ -47,7 +47,7 @@ export function PendingQuotesPanel({
             <span className="text-sm" style={{ color: 'var(--text-color)' }}>
               <i className="pi pi-file mr-2" style={{ color: 'var(--text-color-secondary)' }} aria-hidden="true" />
               {(q.quote_code ?? q.budget_code) && (
-                <><span className={identifierClass}>{q.quote_code ?? q.budget_code}</span> · </>
+                <><RecordCode className="whitespace-nowrap">{q.quote_code ?? q.budget_code}</RecordCode> · </>
               )}
               <strong>{q.client_name}</strong> · {q.course_name} ·{' '}
               <span style={{ color: 'var(--text-color-secondary)' }}>

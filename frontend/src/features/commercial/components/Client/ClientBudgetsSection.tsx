@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import {
-  AppButton, AppColumn, AppDataTable, AppInputText, COL, FormSection, PeriodFilter, tableWidths,
+  AppButton, AppColumn, AppDataTable, AppInputText, COL, FormSection, PeriodFilter, tableWidths, RecordCode
 } from '@shared/ui'
 import { formatDate } from '@shared/lib'
 import type { BudgetData } from '@shared/types/generated'
@@ -61,7 +61,7 @@ export function ClientBudgetsSection({ clientId }: { clientId: number }) {
             header={t('budget.code')}
             style={largura.code}
             body={(row: BudgetData) => (
-              <span className="font-bold text-sm" style={{ color: 'var(--primary-color)' }}>{row.code}</span>
+              <RecordCode>{row.code}</RecordCode>
             )}
           />
           <AppColumn

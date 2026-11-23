@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePermissions, useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, identifierClass, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, RecordCode, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
@@ -69,7 +69,7 @@ export function CoursesTable({
       <AppColumn
         header={t('course.code')}
         style={largura.code}
-        body={(c: CourseData) => <span className={identifierClass}>{c.code ?? '—'}</span>}
+        body={(c: CourseData) => (c.code ? <RecordCode className="whitespace-nowrap">{c.code}</RecordCode> : '—')}
       />
       <AppColumn
         field="name"

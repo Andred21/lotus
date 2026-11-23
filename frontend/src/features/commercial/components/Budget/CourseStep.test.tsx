@@ -66,7 +66,9 @@ describe('CourseStep — os cinco estados', () => {
     // teste acima força `list: []`, então `isError` cru parecia correto (Q-1).
     renderStep({ isError: true, errorDetail: 'Sin conexión' })
 
-    expect(screen.getByText('C-1 · Alta tensión')).toBeTruthy()
+    // O código sai destacado (RecordCode), o nome em texto normal (bloco 60, 2026-11-23).
+    expect(screen.getByText('C-1').style.color).toBe('var(--primary-color)')
+    expect(screen.getByText(/Alta tensión/)).toBeTruthy()
     expect(screen.getByPlaceholderText('quote.courseSearchPlaceholder')).toBeTruthy()
     expect(screen.getByRole('alert').textContent).toContain('Sin conexión')
     // Substituir o passo é do ramo sem cache; aqui o `AppErrorState` não entra.
@@ -85,13 +87,15 @@ describe('CourseStep — os cinco estados', () => {
 
     expect(screen.getByPlaceholderText('quote.courseSearchPlaceholder')).toBeTruthy()
     expect(screen.getByText('common.noResults')).toBeTruthy()
-    expect(screen.queryByText('C-1 · Alta tensión')).toBeNull()
+    expect(screen.queryByText(/Alta tensión/)).toBeNull()
   })
 
   it('lista: busca e curso na tela', () => {
     renderStep({})
 
     expect(screen.getByPlaceholderText('quote.courseSearchPlaceholder')).toBeTruthy()
-    expect(screen.getByText('C-1 · Alta tensión')).toBeTruthy()
+    // O código sai destacado (RecordCode), o nome em texto normal (bloco 60, 2026-11-23).
+    expect(screen.getByText('C-1').style.color).toBe('var(--primary-color)')
+    expect(screen.getByText(/Alta tensión/)).toBeTruthy()
   })
 })

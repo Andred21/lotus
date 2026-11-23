@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { AppErrorState, AppInputText, AppRadioButton, AppSkeleton, FormSection, InlineLoadState } from '@shared/ui'
-import { courseLabel, loadMessage } from '@shared/lib'
+import { AppErrorState, AppInputText, AppRadioButton, AppSkeleton, FormSection, InlineLoadState, RecordCode } from '@shared/ui'
+import { loadMessage } from '@shared/lib'
 import type { useQuoteCourseSearch } from '../../hooks/useQuoteCourseSearch'
 
 /**
@@ -98,7 +98,8 @@ export function CourseStep({
                 onChange={() => onSelect(c.id as number)}
               />
               <span className="text-sm">
-                {courseLabel(c)}
+                {c.code && <><RecordCode>{c.code}</RecordCode>{' · '}</>}
+                {c.name}
                 <span className="ml-2" style={{ color: 'var(--text-color-secondary)' }}>{c.workload_hours}h</span>
               </span>
             </label>
