@@ -7,6 +7,14 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
+## P-09 — Figma mostra 4 tipos de documento de turma; implementados são 3
+
+**Bloco:** 6-frontend (aberta em 2026-07-21) · **ENCERRADA em 2026-11-23, no bloco 60 (`codigos-mascaras-comercial-e-avaliacoes`).**
+
+Motivo: taxonomia decidida pela Lotus em 2026-11-21: Instructor, Cliente, Alumnos; só Manual e Instructor bloqueiam.
+
+A decisão não foi a dos quatro tipos do Figma (Lista de asistencia e Acta de cierre ficaram de fora): `TurmaDocumentType` passou a `MANUAL`, `EVALUACION_REDATOR`, `EVALUACION_CLIENTE` e `EVALUACION_ALUNO`. Os dois primeiros bloqueiam conclusão e habilitação; os dois últimos são opcionais, e a falta vira aviso no dashboard (D-60). `PRUEBAS` foi convertido em `EVALUACION_ALUNO` por migration. A lista canônica tem um dono só (`TurmaDocumentType::bloqueantes()`), como a ficha antecipava em 2026-08-10. Schema e regra em `docs/der-fisico.md` (seção Feedback).
+
 ## P-51 — a lei "ausente não é nulo" não alcança propriedade com default literal
 
 **Bloco:** item 51 (aberta em 2026-08-20, pela review final do BD-14) · **ENCERRADA em 2026-11-03, no `backend-contrato-de-entrada-dos-data` (item 51).**

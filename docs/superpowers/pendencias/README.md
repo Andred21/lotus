@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (35)
+## Abertas (34)
 
 ### Agrupadas em bloco de execução
 
@@ -134,7 +134,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | ID | Pendência | Quem decide | Gatilho |
 |---|---|---|---|
 | P-08 | RF-CUR-04 promete Manual por curso; implementado é Blade única | Lotus | contratante pedir manual personalizado por curso |
-| P-09 | Figma mostra 4 tipos de documento de turma; implementados são 3 | Lotus | Lotus confirmar que quer os 4 |
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
@@ -147,7 +146,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (2)
+
+**A P-09 fechou no bloco 60 (2026-11-23)**: taxonomia decidida pela Lotus em 2026-11-21 (Instructor, Cliente, Alumnos; só Manual e Instructor bloqueiam). `TurmaDocumentType` ganhou `EVALUACION_CLIENTE` e `EVALUACION_ALUNO` (a antiga `PRUEBAS`, convertida por migration), e a falta das duas opcionais vira aviso no dashboard. Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
 
 **A P-51 fechou no item 51 (2026-11-03)**, pelo próprio gatilho: `ClientData::$type` e `BudgetData::$payment_terms` passaram a `X|Optional` sem default (provado contra a API da lane: `PUT` sem a chave preserva), `CourseData::$workload_hours` era defeito real fail-open e agora dá 422 sem a chave, e os campos 5 e 6 estavam mortos desde o bloco 39. A varredura que a ficha pedia virou catraca (`InputDataDefaultsTest`). Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`. O item 51 abriu a **P-117** (Menores da revisão e o débito de `CourseModuleData`) e disparou sem pagar os gatilhos da **P-53**, da **P-96** e da **P-97** (tocou `estrutura-monolito.md` e `backend-ddd.md` por outro motivo); as fichas registram o disparo.
 

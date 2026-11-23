@@ -17,7 +17,7 @@ use Carbon\CarbonImmutable;
 final class CorteDeEvaluaciones
 {
     /** `Y-m-d`, dia do negócio. A data do merge do bloco 60 a acerta (Task 17). */
-    public const DESDE = '2026-11-22';
+    public const DESDE = '2026-11-24';
 
     /** O primeiro instante do dia `DESDE`, no fuso do negócio. */
     public static function inicio(): CarbonImmutable

@@ -20,17 +20,17 @@
 ## Tabelas IMPLEMENTADAS (inglês — refletem as migrations)
 
 ### Identity
-- **users** — `id PK`, `uuid UK`, `name`, `rut UK` (nullable, 20), `email UK`, `phone` (nullable, 30), `photo_path` (nullable), `password`, `type` enum(`admin`,`redator`,`aluno`,`cliente`), `is_active` (bool, default false), `remember_token`, `deleted_at`. Índices: `type`, (`type`,`is_active`). **Sem índice em `name`:** candidato recusado pelo `EXPLAIN` no bloco de performance (a lista de alunos começa o join por `students` e o otimizador não troca a ordem) — ver `docs/superpowers/audits/2026-08-28-hardening-performance-e-dados-medicoes.md`. Só admin/redator autenticam (RN-01).
+- **users** — `id PK`, `uuid UK`, `name`, `rut UK` (nullable, 20), `email UK`, `phone` (nullable, 30, **E.164** — `+` e 8 a 15 dígitos, ex.: `+56987654321`; `ValidPhone` na entrada, normalizado na API, nunca formatado no banco; a migration `2026_11_22_000004` converteu o legado e zerou o que não validava, com o valor antigo no `audits`), `photo_path` (nullable), `password`, `type` enum(`admin`,`redator`,`aluno`,`cliente`), `is_active` (bool, default false), `remember_token`, `deleted_at`. Índices: `type`, (`type`,`is_active`). **Sem índice em `name`:** candidato recusado pelo `EXPLAIN` no bloco de performance (a lista de alunos começa o join por `students` e o otimizador não troca a ordem) — ver `docs/superpowers/audits/2026-08-28-hardening-performance-e-dados-medicoes.md`. Só admin/redator autenticam (RN-01).
 - **login_logs** — `id PK`, `user_id FK` → users cascade, `ip_address` (nullable, 45), `user_agent` (nullable, text), `created_at`. Índice composto (`user_id`,`created_at`) e `login_logs_created_at_index` em `created_at` (poda — P-66, fechada em 2026-08-28: o composto não serve consulta sem a coluna líder). Log **append-only** de logins bem-sucedidos (sem `updated_at`, sem soft-delete, não Auditable). O "último acesso" das telas de Usuários e Redatores é derivado daqui por `User::latestLogin()` — **não existe coluna `users.last_login`**. Bloco `last-login` (BD-7). **Retenção:** descarte direto aos 12 meses (`RetentionPolicy::LOGIN_LOGS_DESCARTAR_MESES`, `backend/app/Shared/Retention/RetentionPolicy.php`) — sem fase de anonimização, porque a tabela não guarda trilha de mudança a preservar (P-33, fechada por este mecanismo). Executado por `lotus:podar-logins` (`PodarLogins`), agendado às 03:40 America/Santiago (`routes/console.php`). Consequência aceita: conta sem login há mais de 12 meses perde o "último acesso" que este parágrafo descreve.
 - **clients** — `id PK`, `user_id FK,UK` → users cascade, `legal_name` (razón social), `type` enum(`client`,`provider`,`other`) default `client`, `business_activity` (nullable, giro), `deleted_at`. Extensão 1:1 de users. **RUT do cliente vive em `users.rut`** (sem coluna própria).
 - **client_addresses** — `id PK`, `client_id FK` → clients cascade, `line1`, `line2`, `number`, `commune`, `city`, `region`, `zip_code` (todos nullable), `is_primary` (bool, default false), `deleted_at`. Índice: `is_primary`. 1:N.
-- **client_contacts** — `id PK`, `client_id FK` → clients cascade, `name`, `email` (nullable), `phone` (nullable, 30), `job_title` (nullable, cargo/área do contato — `job_title` e não `role` porque `role` é RBAC), `is_primary` (bool, default false), `deleted_at`. Índice: `is_primary`. 1:N.
+- **client_contacts** — `id PK`, `client_id FK` → clients cascade, `name`, `email` (nullable), `phone` (nullable, 30, **E.164**, mesma regra de `users.phone`), `job_title` (nullable, cargo/área do contato — `job_title` e não `role` porque `role` é RBAC), `is_primary` (bool, default false), `deleted_at`. Índice: `is_primary`. 1:N.
 - **redatores** — `id PK`, `user_id FK,UK` → users cascade, `deleted_at`. Extensão 1:1 de users. (Nome em PT — ver banner.)
 - **students** (alunos) — `id PK`, `user_id FK,UK` → users cascade, `current_client_id FK` (nullable) → clients `nullOnDelete`, `deleted_at`. Extensão 1:1 de users (`type=aluno`, `is_active=false`, **sem role** — não autentica, RN-01). `current_client_id` = ponteiro do vínculo aberto, mantido pelo `StudentClientLinkService` (fonte única). Soft-delete cascateia p/ o user (hook `deleting`). Auditable. Bloco 6a.
 - **student_client_logs** — `id PK`, `student_id FK` → students **`restrictOnDelete`**, `client_id FK` → clients `restrictOnDelete`, `started_on` (date), `ended_on` (date, nullable — `NULL` = vínculo aberto), `open_link_student_id` (**gerada STORED** = `CASE WHEN ended_on IS NULL THEN student_id END`, **`UNIQUE`**), timestamps. Histórico append-only do vínculo aluno↔cliente (RN-10): **sem soft-delete**, sem auditoria (é o próprio registro histórico). A coluna gerada + índice único garantem **1 vínculo aberto por aluno** no banco. **`student_id` é `restrict` (não cascade):** o InnoDB proíbe `ON DELETE CASCADE` numa FK cuja coluna uma coluna gerada STORED referencia (erro 1215; sqlite ignora — lição #15). Bloco 6a.
 
 ### Catalog
-- **courses** — `id PK`, `name`, `technical_name` (nullable), `description` (text, nullable), `workload_hours` (smallint, carga horária), `deleted_at`.
+- **courses** — `id PK`, `code` (`varchar(20)`, `UNIQUE`, `C-{id}`, gerado pela aplicação e preenchido nos cursos existentes pela migration — nunca digitado), `name`, `technical_name` (nullable), `sence_code` (`varchar(20)`, `UNIQUE`, nullable, código SENCE digitado; o único não inclui `deleted_at`, então o de um curso arquivado não se reaproveita), `description` (text, nullable), `workload_hours` (smallint, carga horária), `deleted_at`.
 - **course_certificate_templates** — **Legado desde o bloco 39 (2026-10-17):** nenhuma leitura nem escrita da aplicação; a emissão usa o Blade padrão. Tabela, dados e cascata ficam por rastro. `id PK`, `course_id FK` → courses cascade, `version` (int, **derivado** por `MAX+1` sob `lockForUpdate` na Action — nunca input do cliente, mesmo padrão do `seq_in_budget`/ADR-17), `layout_config` (json), `validity_months` (smallint, nullable, vigência), `deleted_at`. **`UNIQUE(course_id, version)`** — índice cru, sem `deleted_at` na chave: número arquivado não se reaproveita, então a derivação conta os arquivados.
 - **course_redator** — `id PK`, `course_id FK`, `redator_id FK` → redatores cascade, `unique(course_id, redator_id)`. Pivô N:N puro (idoneidade: quais redatores podem ministrar cada curso), **sem soft-delete**.
 - **course_modules** — `id PK`, `course_id FK` → courses cascade, `sort_order` (smallint, o "Item" 1..N — derivado do índice do array na Action, nunca do payload), `name`, `learnings` (text, nullable), `contents` (text, nullable, tópicos 1.1/1.2 em texto livre), `theory_hours` / `practice_hours` (smallint, default 0), `deleted_at`. Índice: `(course_id, sort_order)`. **Sem coluna de total** — horas do módulo e soma do curso são derivadas em runtime (`CourseModuleData`/`CourseData`); `courses.workload_hours` é a carga contratada, independente da soma (divergência é aviso de tela, não gate).
@@ -80,13 +80,16 @@
 
 Não existe tabela `feedbacks` e não haverá na v2. RF-FBK-01/02/04 são atendidos pela documentação de
 turma: `files` polimórfica sobre `turmas`, com `type` restrito por
-`Operation\Enums\TurmaDocumentType` — `PRUEBAS` (avaliações dos alunos) e `EVALUACION_REDATOR`
-(avaliação do próprio redator), ao lado de `MANUAL`. A exigência de completude antes de finalizar a
-turma (RF-FBK-04) é a RN-16, em `ConcludeTurmaAction` sobre `TurmaHabilitacaoService`.
+`Operation\Enums\TurmaDocumentType` — `MANUAL`, `EVALUACION_REDATOR` (avaliação do instrutor),
+`EVALUACION_CLIENTE` e `EVALUACION_ALUNO` (a antiga `PRUEBAS`, convertida em `EVALUACION_ALUNO` pela
+migration `2026_11_22_000002`). Só `MANUAL` e `EVALUACION_REDATOR` bloqueiam a conclusão (e a
+habilitação); os outros dois são opcionais e a falta vira aviso no dashboard (D-60). A exigência de
+completude antes de finalizar a turma (RF-FBK-04) é a RN-16, em `ConcludeTurmaAction` sobre
+`TurmaHabilitacaoService`.
 
-RF-FBK-03 — avaliação do cliente, cadastrada pelo admin ao final da ordem de serviço — segue
-**futuro**, junto do resto de RF-TUR-07 (fatura final, comprovante de pagamento). Quando entrar,
-entra pelo encerramento da OS, não pela turma.
+RF-FBK-03 — avaliação do cliente — passou a ser o documento opcional `EVALUACION_CLIENTE` da turma
+(bloco 60). O que segue **futuro**, junto do resto de RF-TUR-07 (fatura final, comprovante de
+pagamento), é cadastrá-la pelo encerramento da ordem de serviço, não pela turma.
 
 ---
 
