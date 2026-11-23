@@ -61,8 +61,10 @@ class ConcludeTurmaTest extends TestCase
     private function enviarDocs(array $types): void
     {
         $action = app(StoreTurmaDocumentAction::class);
-        // Turma em andamento: as Actions não consultam permissão, qualquer ator serve.
-        $actor = User::factory()->create();
+        // O gate recusa quem não tem a permissão do tipo: o ator de fundo é superadmin.
+        $this->seed(RolePermissionSeeder::class);
+        $actor = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $actor->assignRole('superadmin');
         foreach ($types as $type) {
             $action->execute($this->turma, $type,
                 UploadedFile::fake()->create('d.pdf', 10, 'application/pdf'), $actor);
@@ -263,7 +265,7 @@ class ConcludeTurmaTest extends TestCase
         $this->actingAs($user, 'web');
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'EVALUACION_ALUNO',
+            'type' => 'MANUAL',
             'file' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
         ])->assertStatus(422);
 

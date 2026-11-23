@@ -206,6 +206,7 @@
     "operation_turma_assign_redator": "Designar redator idôneo à turma",
     "operation_turma_complete": "Confirmar conclusão da turma (admin confirma)",
     "operation_turma_submit_docs": "Subir documentação da turma (ação do redator)",
+    "operation_turma_submit_client_evaluation": "Subir avaliação do cliente",
     "operation_turma_manage_concluded_docs": "Subir e remover documentos de turma concluída",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado",

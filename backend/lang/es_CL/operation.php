@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'turma' => [
         'concluded_locked' => 'La clase ya fue concluida: el registro académico está bloqueado (RN-15).',
+        'document_type_forbidden' => 'No tienes permiso para subir ni quitar este tipo de documento del grupo.',
         'archived' => 'Esta clase fue archivada y ya no acepta cambios.',
         'restore_conflict' => 'Ya existe una clase activa para esta cotización: archívala antes de restaurar esta.',
         'restore_redator_archived' => 'Un relator de esta clase está archivado: restáuralo antes de restaurar la clase.',

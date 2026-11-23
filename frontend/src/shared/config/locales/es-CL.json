@@ -206,6 +206,7 @@
     "operation_turma_assign_redator": "Asignar redactor idóneo al grupo",
     "operation_turma_complete": "Confirmar finalización del grupo (admin confirma)",
     "operation_turma_submit_docs": "Subir documentación del grupo (acción del redactor)",
+    "operation_turma_submit_client_evaluation": "Subir evaluación del cliente",
     "operation_turma_manage_concluded_docs": "Subir y quitar documentos de un grupo concluido",
     "certification_certificate_view": "Ver certificados",
     "certification_certificate_issue": "Emitir certificado",
