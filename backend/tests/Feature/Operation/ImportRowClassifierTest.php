@@ -279,6 +279,21 @@ class ImportRowClassifierTest extends TestCase
         $this->assertNull($d[1]->updateRefusal);
     }
 
+    /** O NBSP da planilha (Excel, Outlook, PDF) não faz o mesmo número virar inválido nem divergente. */
+    public function test_telefone_com_nbsp_nao_diverge_nem_e_invalido(): void
+    {
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56987654321');
+
+        $d = $this->classificar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos', null, "9\u{00A0}8765\u{00A0}4321"),
+            $this->linha(3, '55.555.555-5', 'Ana Mora', 'ana@acme.cl', "9\u{00A0}8765\u{2013}4322"),
+        ], podeAtualizar: false);
+
+        $this->assertSame([], $d[0]->divergent);
+        $this->assertNull($d[0]->updateRefusal);
+        $this->assertNull($d[1]->refusal);
+    }
+
     public function test_telefone_diferente_continua_divergindo(): void
     {
         $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56987654321');

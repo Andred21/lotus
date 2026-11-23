@@ -63,6 +63,28 @@ class PhoneTest extends TestCase
         $this->assertSame('+5491123456789', Phone::parse('+54 9 11 2345 6789')->e164());
     }
 
+    /** Colado do Excel, Outlook ou PDF: NBSP no lugar do espaço e travessão Unicode no lugar do hífen. */
+    #[DataProvider('unicode')]
+    public function test_aceita_nbsp_e_travessao_unicode(string $raw, string $esperado): void
+    {
+        $this->assertTrue(Phone::isValid($raw));
+        $this->assertSame($esperado, Phone::parse($raw)->e164());
+        $this->assertSame($esperado, Phone::normalizar($raw));
+        $this->assertSame($esperado, Phone::corrigirLegado($raw));
+    }
+
+    /** @return array<string, array{0: string, 1: string}> */
+    public static function unicode(): array
+    {
+        return [
+            'NBSP' => ["9\u{00A0}8765\u{00A0}4321", '+56987654321'],
+            'NBSP com mais' => ["+56\u{00A0}9\u{00A0}8765\u{00A0}4321", '+56987654321'],
+            'travessão en U+2013' => ["9 8765\u{2013}4321", '+56987654321'],
+            'travessão em U+2014' => ["9 8765\u{2014}4321", '+56987654321'],
+            'hífen não quebrável U+2011' => ["9 8765\u{2011}4321", '+56987654321'],
+        ];
+    }
+
     public function test_parse_de_numero_invalido_lanca(): void
     {
         $this->expectException(InvalidArgumentException::class);

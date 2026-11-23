@@ -114,8 +114,10 @@ final class Phone
     private static function tentar(string $raw, string $regiao): ?string
     {
         // A lib aceita letra (vanity) e ramal e os descarta no E.164: o número gravado
-        // não seria o digitado. Só dígito, `+` e separador de telefone valem.
-        if (preg_match('/^[0-9+\s().\-]+$/', $raw) !== 1) {
+        // não seria o digitado. Só dígito, `+` e separador de telefone valem, com o
+        // espaço (`\s` Unicode, o NBSP do Excel/Outlook/PDF) e o travessão (U+2010-2015)
+        // que o texto colado traz no lugar do hífen.
+        if (preg_match('/^[0-9+\s().\-\x{2010}-\x{2015}]+$/u', $raw) !== 1) {
             return null;
         }
 
