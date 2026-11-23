@@ -64,6 +64,11 @@ describe('ImportTriageTable', () => {
     expect(screen.getByText(/note\.registry.*Marta R\. Díaz/)).toBeTruthy()
   })
 
+  it('mostra o telefone do cadastro (E.164) em formato internacional', () => {
+    montar([row({ row: 5, status: 'registered', divergent: ['phone'], phone: '99999999', registered_phone: '+56987654321' })])
+    expect(screen.getByText(/note\.registry.*\+56 9 8765 4321/)).toBeTruthy()
+  })
+
   it('oferece Mantener/Actualizar só em linha cadastrada divergente, com a permissão', () => {
     montar([DIVERGENT, row({ row: 5, status: 'new' }), row({ row: 6, status: 'error', message: 'x' })])
     expect(radios()).toHaveLength(2)
