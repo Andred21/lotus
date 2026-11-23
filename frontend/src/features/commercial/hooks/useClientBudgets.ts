@@ -3,6 +3,7 @@ import { useLoadState } from '@shared/hooks'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { currentCalendarPeriod, isWithinPeriod, type ListSource, type Period } from '@shared/lib'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
+import { newestFirst } from '../lib/budgetOrder'
 
 export type ClientPeriodKey = 'all' | 'week' | 'month' | 'year' | 'custom'
 
@@ -34,7 +35,8 @@ export function useClientBudgets(clientId: number | null) {
   const period = presetPeriod(preset, custom)
   const term = search.trim().toLowerCase()
 
-  const rows = state.data.filter(
+  // A API não ordena: mais novo primeiro, como a aba Presupuestos (`BudgetsTable`).
+  const rows = newestFirst(state.data).filter(
     (b) =>
       clientId !== null &&
       b.client_id === clientId &&

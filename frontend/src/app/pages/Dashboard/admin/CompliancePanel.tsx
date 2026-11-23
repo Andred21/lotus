@@ -133,10 +133,11 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           style={largura.enabled}
           sortable
           field="habilitada"
+          // Concluída não é "não habilitada": `isHabilitada()` exige turma em andamento (bloco 60).
           body={(r: TurmaComplianceData) => (
             <AppTag
-              value={r.habilitada ? t('common.yes') : t('common.no')}
-              severity={r.habilitada ? 'success' : 'warning'}
+              value={r.concluded ? t('dashboard.compliance.concluded') : r.habilitada ? t('common.yes') : t('common.no')}
+              severity={r.concluded ? 'secondary' : r.habilitada ? 'success' : 'warning'}
             />
           )}
         />

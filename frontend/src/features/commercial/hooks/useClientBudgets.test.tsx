@@ -30,7 +30,8 @@ describe('useClientBudgets', () => {
   it('padrão: todos os orçamentos do cliente, sem recorte de período', () => {
     const { result } = renderHook(() => useClientBudgets(1), { wrapper })
     expect(result.current.preset).toBe('all')
-    expect(result.current.rows.map((b) => b.id)).toEqual([1, 2])
+    // Mais novo primeiro (id maior), como a aba Presupuestos.
+    expect(result.current.rows.map((b) => b.id)).toEqual([2, 1])
   })
 
   it('o preset de ano deixa só os criados no ano corrente', () => {
@@ -64,7 +65,7 @@ describe('useClientBudgets', () => {
     const { result } = renderHook(() => useClientBudgets(1), { wrapper })
     act(() => { result.current.setSearch('x'); result.current.setStatus('approved'); result.current.setPreset('week') })
     act(() => result.current.clear())
-    expect(result.current.rows.map((b) => b.id)).toEqual([1, 2])
+    expect(result.current.rows.map((b) => b.id)).toEqual([2, 1])
     expect(result.current.preset).toBe('all')
   })
 

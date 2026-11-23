@@ -90,11 +90,31 @@ describe('CompliancePanel — evaluaciones opcionais (bloco 60)', () => {
     )
 
     const [, corpo] = screen.getAllByRole('row')
-    expect(within(corpo).getByText('dashboard.compliance.concluded')).toBeTruthy()
+    expect(within(corpo).getAllByText('dashboard.compliance.concluded').length).toBeGreaterThan(0)
 
     const faltan = celulaFaltan()
     expect(faltan.textContent).toBe(`dashboard.compliance.warning:${CLIENTE}, ${ALUMNOS}`)
     expect(faltan.textContent).not.toContain('—')
+  })
+
+  it('turma concluída: a coluna "Habilitada" mostra o marcador "concluída" e não "No"', () => {
+    renderWithProviders(<CompliancePanel turmas={[linha({ concluded: true, habilitada: false })]} />, { route: '/' })
+
+    const [, corpo] = screen.getAllByRole('row')
+    const habilitada = within(corpo).getAllByRole('cell')[5]
+    expect(habilitada.textContent).toBe('dashboard.compliance.concluded')
+    expect(within(corpo).queryByText('common.no')).toBeNull()
+  })
+
+  it('turma não concluída mantém Sí/No na coluna "Habilitada"', () => {
+    renderWithProviders(
+      <CompliancePanel turmas={[linha({ turma_id: 1, habilitada: true }), linha({ turma_id: 2, habilitada: false })]} />,
+      { route: '/' },
+    )
+
+    const [, sim, nao] = screen.getAllByRole('row')
+    expect(within(sim).getAllByRole('cell')[5].textContent).toBe('common.yes')
+    expect(within(nao).getAllByRole('cell')[5].textContent).toBe('common.no')
   })
 
   it('o aviso tem tom diferente do bloqueante e fica abaixo dele', () => {
