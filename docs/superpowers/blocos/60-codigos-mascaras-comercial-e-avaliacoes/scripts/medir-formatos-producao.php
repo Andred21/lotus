@@ -1,9 +1,10 @@
 <?php
 // Bloco 60, §5.1 da spec. Só leitura: contagens de formato. Não imprime nenhum RUT, telefone nem e-mail.
-// Rodar:
-//   ssh -i ~/.ssh/lotus-prod.pem ubuntu@18.230.53.197 \
-//     'docker exec -i $(docker ps -qf label=com.docker.compose.service=app) php artisan tinker' \
-//     < docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/scripts/medir-formatos-producao.php
+// Rodar da raiz da worktree da lane (o tinker por stdin recusa a linha `<?php`, daí o `tail`):
+//   tail -n +2 docs/superpowers/blocos/60-codigos-mascaras-comercial-e-avaliacoes/scripts/medir-formatos-producao.php | \
+//     ssh -i ~/.ssh/lotus-prod.pem ubuntu@18.230.53.197 \
+//     'sudo docker exec -i $(sudo docker ps -qf label=com.docker.compose.service=app) php artisan tinker' \
+//     | grep -oE '(RUT|FONE|EMAIL|FILES_TURMA) .*'
 
 $fmt = '^[0-9]{1,3}([.][0-9]{3})*-[0-9K]$';   // 12.345.678-5
 $cru = '^[0-9]{6,9}[0-9K]$';                  // 123456785
