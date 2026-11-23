@@ -510,6 +510,9 @@
     "contacts": "Contactos"
   },
   "course": {
+    "code": "Código",
+    "senceCode": "Código SENCE",
+    "senceCodePlaceholder": "ej.: 1237954321",
     "certificatePreview": "Ver certificado de muestra",
     "new": "Nuevo curso",
     "create": "Crear curso",

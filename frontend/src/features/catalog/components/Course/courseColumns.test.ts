@@ -5,9 +5,17 @@ import { courseWidths } from './courseColumns'
 describe('courseWidths', () => {
   it('reserva a "Redactores" a largura de um texto curto, não a de um numeral (UI-01)', () => {
     const esperado = tableWidths(
-      { name: COL.text, technicalName: COL.short, workload: COL.count, redatorCount: COL.short },
+      { code: COL.code, name: COL.text, technicalName: COL.short, workload: COL.count, redatorCount: COL.short },
       { archived: false },
     )
     expect(courseWidths(false).redatorCount).toEqual(esperado.redatorCount)
+  })
+
+  it('o código C-<n> leva a faixa de identificador', () => {
+    const esperado = tableWidths(
+      { code: COL.code, name: COL.text, technicalName: COL.short, workload: COL.count, redatorCount: COL.short },
+      { archived: false },
+    )
+    expect(courseWidths(false).code).toEqual(esperado.code)
   })
 })

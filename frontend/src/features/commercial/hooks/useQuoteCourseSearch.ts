@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLoadState } from '@shared/hooks'
+import { courseLabel } from '@shared/lib'
 import { coursesApi } from '@shared/api/coursesApi'
 
 /** Busca de curso do passo 1 do wizard de cotação: query, termo e lista filtrada.
@@ -12,7 +13,9 @@ export function useQuoteCourseSearch() {
   const load = useLoadState(coursesApi.useList())
   const [search, setSearch] = useState('')
 
-  const list = load.data.filter((c) => c.name.toLowerCase().includes(search.trim().toLowerCase()))
+  // Casa código (`C-12`) ou nome: é o rótulo que o seletor mostra.
+  const term = search.trim().toLowerCase()
+  const list = load.data.filter((c) => courseLabel(c).toLowerCase().includes(term))
 
   return {
     ...load,

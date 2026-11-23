@@ -1,5 +1,6 @@
 export * from './archivable'
 export * from './certificateStatus'
+export * from './courseLabel'
 export * from './datetime'
 export * from './enrollmentStatus'
 export * from './redatorStatus'
