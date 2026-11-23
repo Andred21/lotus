@@ -103,7 +103,7 @@ class TurmaModelTest extends TestCase
         ]);
     }
 
-    public function test_documentacao_obrigatoria_filtra_tipo_fora_do_enum_e_doc_arquivada(): void
+    public function test_documentos_filtra_tipo_fora_do_enum_e_doc_arquivada(): void
     {
         $quote = $this->makeApprovedQuote();
         $turma = Turma::create([
@@ -123,12 +123,12 @@ class TurmaModelTest extends TestCase
             'type' => 'OTRO', 'path' => 'y.pdf', 'original_name' => 'y.pdf',
             'mime' => 'application/pdf', 'size' => 10,
         ]);
-        $turma->files()->where('type', TurmaDocumentType::PRUEBAS->value)
+        $turma->files()->where('type', TurmaDocumentType::EVALUACION_ALUNO->value)
             ->get()->each(fn ($f) => $f->delete());   // lição 5: por instância
 
-        $tipos = $turma->documentacaoObrigatoria()->pluck('type')->all();
+        $tipos = $turma->documentos()->pluck('type')->all();
 
         sort($tipos);
-        $this->assertSame(['EVALUACION_REDATOR', 'MANUAL'], $tipos);
+        $this->assertSame(['EVALUACION_CLIENTE', 'EVALUACION_REDATOR', 'MANUAL'], $tipos);
     }
 }

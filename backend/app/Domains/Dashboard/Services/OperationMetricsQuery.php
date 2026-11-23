@@ -76,7 +76,7 @@ class OperationMetricsQuery
         return $this->turmasEmAndamento()
             ->map(function (Turma $turma): TurmaComplianceData {
                 $status = $this->habilitacao->for($turma);
-                $present = $turma->documentacaoObrigatoria
+                $present = $turma->documentos
                     ->pluck('type')
                     ->unique()
                     ->all();
@@ -162,7 +162,7 @@ class OperationMetricsQuery
         return $this->emAndamento ??= Turma::query()
             ->where('status', TurmaStatus::EmAndamento)
             ->with([
-                'documentacaoObrigatoria',
+                'documentos',
                 'course',
                 'redatores.user',
                 'quote.budget.client',

@@ -23,7 +23,7 @@ vi.mock('react-i18next', async (importOriginal) => {
 // para N turmas.
 const items: RedatorTurmaPendenciaData[] = [
   { turma_id: 4, course_name: 'Alta tensión — Módulo 1', end_date: '2026-09-01', missing_types: ['MANUAL'] },
-  { turma_id: 7, course_name: 'Baja tensión — Módulo 2', end_date: '2026-09-10', missing_types: ['PRUEBAS', 'EVALUACION_REDATOR'] },
+  { turma_id: 7, course_name: 'Baja tensión — Módulo 2', end_date: '2026-09-10', missing_types: ['MANUAL', 'EVALUACION_REDATOR'] },
 ]
 
 const montar = () =>
@@ -65,18 +65,18 @@ describe('PendenciasList — a lista "Falta:" traduz o tipo de documento, não o
     const linhas = screen.getAllByText(/^dashboard\.redator\.pendencias\.missing:/)
     expect(linhas).toHaveLength(2)
 
-    // Turma 4 tem um tipo só (`MANUAL`); turma 7 tem dois (`PRUEBAS`,
+    // Turma 4 tem um tipo só (`MANUAL`); turma 7 tem dois (`MANUAL`,
     // `EVALUACION_REDATOR`) — o par prova o separador ", " entre RÓTULOS
     // resolvidos, não entre códigos crus.
     expect(linhas[0].textContent).toBe('dashboard.redator.pendencias.missing:operation.documents.type.MANUAL')
     expect(linhas[1].textContent).toBe(
-      'dashboard.redator.pendencias.missing:operation.documents.type.PRUEBAS, operation.documents.type.EVALUACION_REDATOR',
+      'dashboard.redator.pendencias.missing:operation.documents.type.MANUAL, operation.documents.type.EVALUACION_REDATOR',
     )
 
     // O bug (UI-02) era `item.missing_types.join(', ')` direto: com o `t` mockado
-    // acima, isso apareceria como "...missing:MANUAL" e "...missing:PRUEBAS,
+    // acima, isso apareceria como "...missing:MANUAL" e "...missing:MANUAL,
     // EVALUACION_REDATOR" — o código cru do enum, sem passar por t() por item.
     expect(screen.queryByText('dashboard.redator.pendencias.missing:MANUAL')).toBeNull()
-    expect(screen.queryByText('dashboard.redator.pendencias.missing:PRUEBAS, EVALUACION_REDATOR')).toBeNull()
+    expect(screen.queryByText('dashboard.redator.pendencias.missing:MANUAL, EVALUACION_REDATOR')).toBeNull()
   })
 })

@@ -925,8 +925,9 @@
       "progress": "{{done}} de {{total}} documentos completos",
       "type": {
         "MANUAL": "Manual",
-        "PRUEBAS": "Provas / avaliações",
-        "EVALUACION_REDATOR": "Avaliação do redator"
+        "EVALUACION_REDATOR": "Avaliação Instrutor",
+        "EVALUACION_CLIENTE": "Avaliação Cliente",
+        "EVALUACION_ALUNO": "Avaliação Alunos"
       },
       "delivered": "Entregue",
       "pending": "Pendente",

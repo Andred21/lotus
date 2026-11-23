@@ -103,7 +103,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsSuperadmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertCreated();
     }
 
@@ -166,7 +166,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsSuperadmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertCreated();
 
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
@@ -180,7 +180,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsRedatorRole();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertStatus(422)->assertJsonValidationErrors('turma');
 
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")
@@ -194,7 +194,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsRedatorRole();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertStatus(422)->assertJsonValidationErrors('turma');
 
         $this->assertSame([], Storage::disk('s3')->allFiles());
@@ -207,7 +207,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsAdmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertForbidden();
 
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertForbidden();
@@ -232,7 +232,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsRedatorRole();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertCreated();
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
     }
@@ -243,7 +243,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsSuperadmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertCreated();
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertNoContent();
     }
@@ -254,7 +254,7 @@ class TurmaDocumentApiTest extends TestCase
         $this->actingAsAdmin();
 
         $this->postJson("/api/turmas/{$this->turma->id}/documents", [
-            'type' => 'PRUEBAS', 'file' => $this->pdf(),
+            'type' => 'EVALUACION_ALUNO', 'file' => $this->pdf(),
         ])->assertForbidden();
         $this->deleteJson("/api/turmas/{$this->turma->id}/documents/{$fileId}")->assertForbidden();
     }

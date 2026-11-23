@@ -242,7 +242,7 @@ class OperationDemoSeeder extends Seeder
                         'modalidade' => 'presencial',
                         'local_aplicacao' => 'Transelec — Centro de Entrenamiento, Providencia, Santiago',
                         'redator' => 'Pedro Soto',
-                        'documents' => ['MANUAL', 'PRUEBAS', 'EVALUACION_REDATOR'],
+                        'documents' => ['MANUAL', 'EVALUACION_ALUNO', 'EVALUACION_REDATOR'],
                         'conclude' => false,
                         'approval' => ['pendiente' => 6, 'aprobado' => 1, 'reprobado' => 1],
                     ],
@@ -261,9 +261,10 @@ class OperationDemoSeeder extends Seeder
                         'modalidade' => 'online',
                         'local_aplicacao' => null,
                         'redator' => 'Ana Reyes',
-                        // PRUEBAS repetido: N arquivos por tipo (6d/D8) — as provas
-                        // dos alunos são plural real.
-                        'documents' => ['MANUAL', 'PRUEBAS', 'PRUEBAS', 'EVALUACION_REDATOR'],
+                        // EVALUACION_ALUNO repetido: N arquivos por tipo (6d/D8) — as
+                        // avaliações dos alunos são plural real. Esta é a turma com
+                        // as quatro (a EVALUACION_CLIENTE é opcional).
+                        'documents' => ['MANUAL', 'EVALUACION_ALUNO', 'EVALUACION_ALUNO', 'EVALUACION_REDATOR', 'EVALUACION_CLIENTE'],
                         'conclude' => true,
                         'approval' => ['aprobado' => 13, 'reprobado' => 2],
                     ],
@@ -282,7 +283,7 @@ class OperationDemoSeeder extends Seeder
                         'modalidade' => 'presencial',
                         'local_aplicacao' => 'CGE — Recinto de capacitación Ñuñoa, Santiago',
                         'redator' => null,   // "— Sin asignar" no hub, de propósito
-                        'documents' => ['MANUAL', 'PRUEBAS'],
+                        'documents' => ['MANUAL', 'EVALUACION_ALUNO'],
                         'conclude' => false,
                         'approval' => ['pendiente' => 10],
                     ],

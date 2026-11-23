@@ -140,7 +140,7 @@ class OperationMetricsQueryTest extends TestCase
             // `test_compliance_do_admin_publica_os_tipos_como_codigo_do_enum`.
             // Este teste é do serviço e para no serviço.
             'present_types' => [TurmaDocumentType::MANUAL],
-            'missing_types' => [TurmaDocumentType::PRUEBAS, TurmaDocumentType::EVALUACION_REDATOR],
+            'missing_types' => [TurmaDocumentType::EVALUACION_REDATOR],
             'missing_requirements' => [TurmaRequirement::Redator],
             'habilitada' => false,
         ], $compliance->get($overdue->id)->toArray());

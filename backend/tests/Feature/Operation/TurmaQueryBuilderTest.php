@@ -129,8 +129,13 @@ class TurmaQueryBuilderTest extends TestCase
         $this->assertSame([], $linhas->firstWhere('id', $completa->id)['missing_document_types']);
         $this->assertFalse($linhas->firstWhere('id', $incompleta->id)['habilitada']);
         $this->assertSame(
-            ['PRUEBAS', 'EVALUACION_REDATOR'],
+            ['EVALUACION_REDATOR'],
             $linhas->firstWhere('id', $incompleta->id)['missing_document_types'],
         );
+        $this->assertSame(
+            ['EVALUACION_CLIENTE', 'EVALUACION_ALUNO'],
+            $linhas->firstWhere('id', $incompleta->id)['missing_optional_document_types'],
+        );
+        $this->assertSame([], $linhas->firstWhere('id', $completa->id)['missing_optional_document_types']);
     }
 }

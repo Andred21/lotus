@@ -726,6 +726,7 @@ end_date: string,
 status: TurmaStatus | undefined,
 habilitada: undefined | boolean,
 missing_document_types: TurmaDocumentType[] | undefined,
+missing_optional_document_types: TurmaDocumentType[] | undefined,
 missing_requirements: TurmaRequirement[] | undefined,
 concluded_at: undefined | string | null,
 redatores: TurmaRedatorData[],
@@ -749,7 +750,7 @@ size: number,
 created_at: string,
 download_url: string,
 };
-export type TurmaDocumentType = 'MANUAL' | 'PRUEBAS' | 'EVALUACION_REDATOR';
+export type TurmaDocumentType = 'MANUAL' | 'EVALUACION_REDATOR' | 'EVALUACION_CLIENTE' | 'EVALUACION_ALUNO';
 export type TurmaModalidade = 'presencial' | 'online';
 export type TurmaRedatorData = {
 id: number,

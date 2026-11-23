@@ -28,7 +28,7 @@ class TurmaDocumentController extends Controller implements HasMiddleware
     /** @return array<TurmaDocumentData> */
     public function index(Turma $turma): array
     {
-        return $turma->documentacaoObrigatoria()
+        return $turma->documentos()
             ->orderBy('created_at')
             ->get()
             ->map(fn (File $f) => TurmaDocumentData::fromModel($f))

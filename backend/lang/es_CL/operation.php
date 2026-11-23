@@ -29,7 +29,8 @@ return [
     ],
     'document_type' => [
         'MANUAL' => 'Manual',
-        'PRUEBAS' => 'Pruebas',
-        'EVALUACION_REDATOR' => 'Evaluación del relator',
+        'EVALUACION_REDATOR' => 'Evaluación Instructor',
+        'EVALUACION_CLIENTE' => 'Evaluación Cliente',
+        'EVALUACION_ALUNO' => 'Evaluación Alumnos',
     ],
 ];

@@ -53,6 +53,12 @@ describe('sem código de regra de negócio na tela', () => {
  * e o operador em inglês não tem como saber que são a mesma coisa. */
 const SINONIMO_REDATOR_EN = /\b(editors?|writers?|instructors?)\b/i
 
+/** Exceção decidida no bloco 60: o rótulo do documento `EVALUACION_REDATOR` é "Instructor
+ * evaluation" nas três locales (es-CL "Evaluación Instructor", pt-BR "Avaliação Instrutor") —
+ * é o nome que a Lotus usa para a avaliação que o redator entrega, não um sinônimo do papel.
+ * A exceção é por chave, para que qualquer outra folha de `operation.*` continue vigiada. */
+const EXCECOES_SINONIMO_REDATOR_EN = new Set(['operation.documents.type.EVALUACION_REDATOR'])
+
 /** Varredura restrita à sub-árvore `operation.*` do locale `en` — é o módulo que a run 2
  * mediu em tela. As outras 33 grafias do mesmo sinônimo (`roleName.redator`,
  * `course.sectionRedatores`, `dashboard.redatorLoad.*`, `redator.*`, `perm.*`, ...) vivem
@@ -64,7 +70,10 @@ describe('vocabulário de domínio: papel "Redator" não vira sinônimo em ingl�
   it('en: nenhuma chave de operation.* chama o redator de editor/writer/instructor', () => {
     const operationEn = flattenEntries(en.operation as LocaleTree, 'operation.')
     const comSinonimo = operationEn
-      .filter(([, valor]) => typeof valor === 'string' && SINONIMO_REDATOR_EN.test(valor))
+      .filter(
+        ([chave, valor]) =>
+          typeof valor === 'string' && SINONIMO_REDATOR_EN.test(valor) && !EXCECOES_SINONIMO_REDATOR_EN.has(chave),
+      )
       .map(([chave]) => chave)
 
     expect(
