@@ -12,9 +12,11 @@ use App\Domains\Operation\Enums\TurmaStatus;
  * disso, se ela está habilitada.
  *
  * O status entra no VO de propósito (D-B1): "habilitada" nunca foi só
- * documentação — turma concluída não é habilitada, ainda que tenha os tipos
- * bloqueantes (e ela sempre tem, porque concluir os exige). Os opcionais podem
- * faltar depois da conclusão.
+ * documentação — turma concluída não é habilitada, tenha ou não os tipos
+ * bloqueantes. Concluir pela Action os exige, mas turma concluída pode estar
+ * sem eles: a carga de histórico já a cria concluída, e quem tem
+ * `manage_concluded_docs` remove documento dela. `missingTypes()` não é vazio
+ * por garantia só porque a turma concluiu.
  *
  * Os tipos opcionais ficam de fora do `isHabilitada()`: faltar uma evaluación
  * do cliente ou dos alunos é informação (o dashboard cobra), não bloqueio.
