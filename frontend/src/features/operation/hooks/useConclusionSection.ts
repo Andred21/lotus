@@ -26,6 +26,8 @@ export function useConclusionSection(turma: TurmaData) {
     habilitada,
     concluida,
     missingTypes: turma.missing_document_types ?? [],
+    // Opcionais (Cliente e Alumnos): aviso, nunca pendência — não entram em `habilitada`.
+    missingOptionalTypes: turma.missing_optional_document_types ?? [],
     missingRequirements: turma.missing_requirements ?? [],
     // Só com a lista carregada: sem dado (carregando ou falha) não há como afirmar
     // quem está completo, então a lista some em vez de sugerir "todos completos".

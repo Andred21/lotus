@@ -941,7 +941,16 @@
       "lock": {
         "permission": "You do not have permission to upload or remove documentation."
       },
-      "uploaded": "Document uploaded."
+      "uploaded": "Document uploaded.",
+      "evaluaciones": {
+        "title": "Evaluations",
+        "warning": "Optional evaluations missing: {{types}}. They do not prevent completing the class.",
+        "tag": {
+          "EVALUACION_REDATOR": "Instructor",
+          "EVALUACION_ALUNO": "Students",
+          "clienteFallback": "Client"
+        }
+      }
     },
     "conclusion": {
       "title": "Class completion",

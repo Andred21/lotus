@@ -1,15 +1,22 @@
 import { useTranslation } from 'react-i18next'
 import { AppCard, FormErrorBanner, AppDetailSkeleton, AppErrorState, SectionLabel } from '@shared/ui'
-import type { TurmaData } from '@shared/types/generated'
+import type { TurmaData, TurmaDocumentData } from '@shared/types/generated'
 import { useTurmaDocsSection } from '../../hooks/useTurmaDocsSection'
-import { TURMA_DOCUMENT_TYPES } from '../../lib/turmaDocuments'
 import { DocumentTypeCard } from './DocumentTypeCard'
+import { EvaluacionesCard } from './EvaluacionesCard'
 import { ManualButton } from './ManualButton'
 import { loadErrorHint, screenDetail } from '@shared/lib'
 
 export function TurmaDocuments({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
   const s = useTurmaDocsSection(turma)
+
+  const removeFile = (file: TurmaDocumentData) => {
+    if (s.removing) return
+    return new Promise<void>((resolve, reject) =>
+      s.remove(file.id, { onSuccess: () => resolve(), onError: () => reject(new Error('remove')) }),
+    )
+  }
 
   if (s.loading) return <AppDetailSkeleton />
   if (s.loadError)
@@ -60,28 +67,32 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
         </AppCard>
       )}
 
+      {/* A confirmação de remoção é do `AppFileActions`, dentro dos cartões; a guarda
+        * fica aqui. A Promise mantém o diálogo aberto até o servidor responder, e a
+        * rejeição o deixa aberto mostrando `removeError`. */}
       <div className="space-y-3">
-        {TURMA_DOCUMENT_TYPES.map((type) => (
-          <DocumentTypeCard
-            key={type}
-            type={type}
-            files={s.byType[type]}
-            uploading={s.uploading}
-            onUpload={(file) => s.upload(type, file)}
-            removing={s.removing}
-            // A confirmação é do `AppFileActions`, dentro do cartão; a guarda
-            // fica aqui. A Promise mantém o diálogo aberto até o servidor
-            // responder, e a rejeição o deixa aberto mostrando `removeError`.
-            onRemove={(file) => {
-              if (s.removing || !s.canSubmit) return
-              return new Promise<void>((resolve, reject) =>
-                s.remove(file.id, { onSuccess: () => resolve(), onError: () => reject(new Error('remove')) }),
-              )
-            }}
-            removeError={s.removeError}
-            canSubmit={s.canSubmit}
-          />
-        ))}
+        <DocumentTypeCard
+          type="MANUAL"
+          files={s.byType.MANUAL}
+          uploading={s.uploading}
+          onUpload={(file) => s.upload('MANUAL', file)}
+          removing={s.removing}
+          onRemove={removeFile}
+          removeError={s.removeError}
+          canSubmit={s.canUpload('MANUAL')}
+        />
+        <EvaluacionesCard
+          clientName={turma.client_name}
+          byType={s.byType}
+          missingOptional={s.missingOptional}
+          uploading={s.uploading}
+          onUpload={s.upload}
+          canUpload={s.canUpload}
+          removing={s.removing}
+          removeError={s.removeError}
+          onRemove={removeFile}
+          canRemove={s.canRemove}
+        />
       </div>
     </div>
   )

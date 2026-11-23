@@ -57,7 +57,11 @@ const SINONIMO_REDATOR_EN = /\b(editors?|writers?|instructors?)\b/i
  * evaluation" nas três locales (es-CL "Evaluación Instructor", pt-BR "Avaliação Instrutor") —
  * é o nome que a Lotus usa para a avaliação que o redator entrega, não um sinônimo do papel.
  * A exceção é por chave, para que qualquer outra folha de `operation.*` continue vigiada. */
-const EXCECOES_SINONIMO_REDATOR_EN = new Set(['operation.documents.type.EVALUACION_REDATOR'])
+const EXCECOES_SINONIMO_REDATOR_EN = new Set([
+  'operation.documents.type.EVALUACION_REDATOR',
+  // Mesmo documento, na tag curta do cartão de evaluaciones ("Instructor" ao lado de "Alumnos").
+  'operation.documents.evaluaciones.tag.EVALUACION_REDATOR',
+])
 
 /** Varredura restrita à sub-árvore `operation.*` do locale `en` — é o módulo que a run 2
  * mediu em tela. As outras 33 grafias do mesmo sinônimo (`roleName.redator`,

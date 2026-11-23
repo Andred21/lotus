@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppButton, AppCard, AppTag, ConfirmDialog, SectionLabel } from '@shared/ui'
-import { formatDate, turmaDocumentTypeLabel, turmaRequirementLabel } from '@shared/lib'
+import { formatDate, turmaDocumentTypeLabel, turmaDocumentTypeList, turmaRequirementLabel } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { useConclusionSection } from '../../hooks/useConclusionSection'
 import { turmaStatusSeverity } from '../../lib/turmaStatus'
@@ -43,6 +43,12 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
                   <li key={type}>{turmaDocumentTypeLabel(type, t)}</li>
                 ))}
               </ul>
+            </AppCard>
+          )}
+
+          {s.missingOptionalTypes.length > 0 && (
+            <AppCard tone="info" className="px-3 py-2 text-sm">
+              {t('operation.documents.evaluaciones.warning', { types: turmaDocumentTypeList(s.missingOptionalTypes, t) })}
             </AppCard>
           )}
 

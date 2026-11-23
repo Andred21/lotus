@@ -941,7 +941,16 @@
       "lock": {
         "permission": "Você não tem permissão para subir ou remover documentação."
       },
-      "uploaded": "Documento enviado."
+      "uploaded": "Documento enviado.",
+      "evaluaciones": {
+        "title": "Avaliações",
+        "warning": "Faltam avaliações opcionais: {{types}}. Elas não impedem a conclusão da turma.",
+        "tag": {
+          "EVALUACION_REDATOR": "Instrutor",
+          "EVALUACION_ALUNO": "Alunos",
+          "clienteFallback": "Cliente"
+        }
+      }
     },
     "conclusion": {
       "title": "Conclusão da turma",
