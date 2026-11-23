@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { AppInputText, AppPassword, type FieldComponent } from "@shared/ui";
+import { AppInputText, AppPassword, RutInput, type FieldComponent } from "@shared/ui";
 import type { StaffUserFormFields } from "../../hooks/useStaffUserForm";
 
 /** Os quatro campos de identificação do aluno, no grid 2×2 de sempre.
@@ -23,7 +23,7 @@ export function StaffIdentityFields({
           <AppInputText className="w-full" />
         </Field>
         <Field name="rut" label={t("common.rut")}>
-          <AppInputText className="w-full" />
+          <RutInput className="w-full" />
         </Field>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

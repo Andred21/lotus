@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, AppInputText, FormField, FormErrorSummary } from '@shared/ui'
+import { AppDialog, AppButton, AppInputText, RutInput, FormField, FormErrorSummary } from '@shared/ui'
 import { useEnrollStudentFlow } from '../../hooks/useEnrollStudentFlow'
 import { MoveConfirmDialog } from './MoveConfirmDialog'
 import { dangerText } from '@shared/styles/tokens'
@@ -57,10 +57,10 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
 
         <div className={f.step === 'rut' ? 'sm:col-span-2' : undefined}>
           <FormField label={t('operation.enrollment.form.rutLabel')} error={err('rut')}>
-            <AppInputText
+            <RutInput
               className="w-full"
               value={f.rut}
-              onChange={(e) => f.setRut(e.target.value)}
+              onChange={f.setRut}
               disabled={f.step === 'details'}
             />
           </FormField>

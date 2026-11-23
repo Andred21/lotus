@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppInputText, type FieldComponent } from '@shared/ui'
+import { AppInputText, RutInput, type FieldComponent } from '@shared/ui'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { StudentFormFields } from '../../hooks/useStudentForm'
 
@@ -26,7 +26,7 @@ export function StudentIdentityFields({
       </Field>
 
       <Field name="rut" label={t('common.rut')}>
-        <AppInputText className="w-full" />
+        <RutInput className="w-full" />
       </Field>
 
       <Field name="email" label={t('common.email')}>

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDropdown, AppInputText, type FieldComponent } from '@shared/ui'
+import { AppDropdown, AppInputText, RutInput, type FieldComponent } from '@shared/ui'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { RedatorFormFields } from '../../hooks/useRedatorForm'
 
@@ -30,7 +30,7 @@ export function RedatorIdentityFields({
         </Field>
 
         <Field name="rut" label={t('common.rut')}>
-          <AppInputText className="w-full" />
+          <RutInput className="w-full" />
         </Field>
       </div>
 

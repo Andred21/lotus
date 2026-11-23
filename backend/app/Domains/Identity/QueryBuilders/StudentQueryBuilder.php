@@ -42,12 +42,27 @@ class StudentQueryBuilder extends Builder
             ->withCount('enrollments');
     }
 
+    /**
+     * Nome casa pelo termo como veio. O RUT casa pela forma sem pontuação nos
+     * dois lados: gravado é `12.345.678-5`, mas quem busca digita `12345678`,
+     * `12.345.678` ou `123456785`. `REPLACE` encadeado roda igual em MySQL e
+     * em sqlite; só entra quando o termo, limpo de `.`, `-` e espaço, é dígito
+     * (mais um `k`/`K` final) — texto qualquer cai na comparação de antes.
+     */
     public function searchable(string $q): static
     {
         $like = '%'.addcslashes($q, '%_\\').'%';
+        $clean = preg_replace('/[.\-\s]/', '', $q) ?? '';
+        $rutLike = '%'.$clean.'%';
 
-        return $this->where(fn (Builder $w) => $w
-            ->where('users.name', 'like', $like)
-            ->orWhere('users.rut', 'like', $like));
+        return $this->where(function (Builder $w) use ($like, $clean, $rutLike) {
+            $w->where('users.name', 'like', $like);
+
+            if (preg_match('/^\d+[kK]?$/', $clean) === 1) {
+                $w->orWhereRaw("REPLACE(REPLACE(users.rut, '.', ''), '-', '') LIKE ?", [$rutLike]);
+            } else {
+                $w->orWhere('users.rut', 'like', $like);
+            }
+        });
     }
 }
