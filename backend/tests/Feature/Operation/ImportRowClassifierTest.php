@@ -261,4 +261,34 @@ class ImportRowClassifierTest extends TestCase
         $this->assertSame(ImportRowStatus::Registered, $d[1]->status);
         $this->assertNull($d[1]->updateRefusal);
     }
+
+    /** O cadastro guarda E.164 e a planilha traz formato humano: o mesmo número não é divergência. */
+    public function test_mesmo_telefone_em_outro_formato_nao_diverge(): void
+    {
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56987654321');
+        $this->aluno('44.444.444-4', 'Ana Mora', 'ana@acme.cl', '+56987654321');
+
+        $d = $this->classificar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos', null, '9 8765 4321'),
+            $this->linha(3, '44.444.444-4', 'Ana Mora', null, '+56 9 8765 4321'),
+        ], podeAtualizar: false);
+
+        $this->assertSame([], $d[0]->divergent);
+        $this->assertNull($d[0]->updateRefusal);
+        $this->assertSame([], $d[1]->divergent);
+        $this->assertNull($d[1]->updateRefusal);
+    }
+
+    public function test_telefone_diferente_continua_divergindo(): void
+    {
+        $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56987654321');
+
+        $d = $this->classificar([
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos', null, '9 7654 3210'),
+        ]);
+
+        $this->assertSame([ImportField::Phone], $d[0]->divergent);
+        $this->assertNull($d[0]->updateRefusal);
+        $this->assertNotNull($d[0]->updatedIdentity); // há o que atualizar
+    }
 }
