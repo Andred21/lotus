@@ -2,6 +2,7 @@
 
 namespace App\Domains\Commercial\Data;
 
+use App\Shared\Rules\ValidPhone;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -23,4 +24,15 @@ class ClientContactData extends Data
         public string|Optional|null $job_title,
         public bool|Optional $is_primary = new Optional,
     ) {}
+
+    /**
+     * O telefone do contato é validado aqui, e vale também aninhado em
+     * `ClientData::$contacts` (`contacts.0.phone`).
+     */
+    public static function rules(): array
+    {
+        return [
+            'phone' => ['sometimes', 'nullable', 'string', new ValidPhone],
+        ];
+    }
 }

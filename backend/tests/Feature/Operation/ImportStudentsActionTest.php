@@ -124,7 +124,7 @@ class ImportStudentsActionTest extends TestCase
         $this->aluno('44.444.444-4', 'Ana Mora', 'ana@otra.cl', null, $this->otherClient);
 
         $erros = $this->confirmarRecusado([
-            $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', '+56 9 1111'),   // novo
+            $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', '+56981111111'),   // novo
             $this->linha(3, 'RUT-INVALIDO', 'Mal Formado'),                                // RUT inválido
             $this->linha(4, '44.444.444-4', 'Ana Mora'),                                   // moved
             $this->linha(5, '55.555.555-5', 'Colide', 'JUAN@acme.cl'),                     // e-mail repetido no lote
@@ -137,7 +137,7 @@ class ImportStudentsActionTest extends TestCase
 
         // Sem as linhas ruins, o mesmo lote passa inteiro.
         $result = $this->confirmar([
-            $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', '+56 9 1111'),
+            $this->linha(2, '11.111.111-1', 'Juan Soto', 'juan@acme.cl', '+56981111111'),
             $this->linha(4, '44.444.444-4', 'Ana Mora'),
         ]);
 
@@ -168,10 +168,10 @@ class ImportStudentsActionTest extends TestCase
 
     public function test_actualizar_altera_cadastro_e_audita(): void
     {
-        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56 9 0000');
+        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56980000000');
 
         $result = $this->confirmar([
-            $this->linha(2, '33.333.333-3', 'Pedro Lagos Rojas', 'pedro.lagos@acme.cl', '+56 9 2222', atualizar: true),
+            $this->linha(2, '33.333.333-3', 'Pedro Lagos Rojas', 'pedro.lagos@acme.cl', '+56982222222', atualizar: true),
         ]);
 
         $this->assertSame([], $result->errors);
@@ -179,7 +179,7 @@ class ImportStudentsActionTest extends TestCase
         $user = $student->user()->withTrashed()->first();
         $this->assertSame('Pedro Lagos Rojas', $user->name);
         $this->assertSame('pedro.lagos@acme.cl', $user->email);
-        $this->assertSame('+56 9 2222', $user->phone);
+        $this->assertSame('+56982222222', $user->phone);
 
         $auditoria = $user->audits()->where('event', 'updated')->latest('id')->first();
         $this->assertNotNull($auditoria);
@@ -188,23 +188,23 @@ class ImportStudentsActionTest extends TestCase
 
     public function test_mantener_nao_altera_cadastro(): void
     {
-        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56 9 0000');
+        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56980000000');
 
         $result = $this->confirmar([
-            $this->linha(2, '33.333.333-3', 'Outro Nome', 'outro@acme.cl', '+56 9 9999'),
+            $this->linha(2, '33.333.333-3', 'Outro Nome', 'outro@acme.cl', '+56989999999'),
         ]);
 
         $this->assertSame(1, $result->relinked);
         $user = $student->user()->withTrashed()->first();
         $this->assertSame('Pedro Lagos', $user->name);
         $this->assertSame('pedro@acme.cl', $user->email);
-        $this->assertSame('+56 9 0000', $user->phone);
+        $this->assertSame('+56980000000', $user->phone);
         $this->assertSame(0, $user->audits()->where('event', 'updated')->count());
     }
 
     public function test_actualizar_com_celula_vazia_preserva_valor(): void
     {
-        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56 9 0000');
+        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56980000000');
 
         $result = $this->confirmar([
             $this->linha(2, '33.333.333-3', 'Pedro Lagos Rojas', null, null, atualizar: true),
@@ -214,7 +214,7 @@ class ImportStudentsActionTest extends TestCase
         $user = $student->user()->withTrashed()->first();
         $this->assertSame('Pedro Lagos Rojas', $user->name);
         $this->assertSame('pedro@acme.cl', $user->email);
-        $this->assertSame('+56 9 0000', $user->phone);
+        $this->assertSame('+56980000000', $user->phone);
     }
 
     public function test_actualizar_recusado_recusa_o_lote_e_nao_deixa_matricula(): void
@@ -381,14 +381,14 @@ class ImportStudentsActionTest extends TestCase
 
     public function test_ja_matriculado_com_flag_adulterada_nao_atualiza(): void
     {
-        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56 9 0000');
+        $student = $this->aluno('33.333.333-3', 'Pedro Lagos', 'pedro@acme.cl', '+56980000000');
         $this->confirmar([$this->linha(2, '33.333.333-3', 'Pedro Lagos')]);
         $auditoriasAntes = $student->user()->first()->audits()->count();
 
         // O front não oferece Actualizar em linha já matriculada, mas o corpo é
         // do navegador: o servidor ignora a flag (D4) e não grava nada.
         $result = $this->confirmar([
-            $this->linha(2, '33.333.333-3', 'Pedro Adulterado', 'otro@acme.cl', '+56 9 9999', atualizar: true),
+            $this->linha(2, '33.333.333-3', 'Pedro Adulterado', 'otro@acme.cl', '+56989999999', atualizar: true),
         ]);
 
         $this->assertSame([], $result->errors);
@@ -397,7 +397,7 @@ class ImportStudentsActionTest extends TestCase
         $user = $student->user()->first();
         $this->assertSame('Pedro Lagos', $user->name);
         $this->assertSame('pedro@acme.cl', $user->email);
-        $this->assertSame('+56 9 0000', $user->phone);
+        $this->assertSame('+56980000000', $user->phone);
         $this->assertSame($auditoriasAntes, $user->audits()->count());
     }
 

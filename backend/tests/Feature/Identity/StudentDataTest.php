@@ -33,7 +33,7 @@ class StudentDataTest extends TestCase
         $this->assertSame('María González Rojas', $data->name);
         $this->assertSame('12.876.543-K', $data->rut);
         $this->assertSame('mgonzalez@transelec.cl', $data->email);
-        $this->assertSame('+56 9 8765 4321', $data->phone);
+        $this->assertSame('+56987654321', $data->phone);
         $this->assertSame($client->id, $data->current_client_id);
         $this->assertSame('Transelec', $data->current_client_name);
         $this->assertSame(0, $data->enrollments_count);
@@ -55,10 +55,9 @@ class StudentDataTest extends TestCase
             }
         }
 
-        $this->assertSame(
-            str_repeat('9', 30),
-            StudentData::validateAndCreate([...$base, 'phone' => str_repeat('9', 30)])->phone,
-        );
+        // 30 caracteres exatos e um telefone válido: o preenchimento é de espaços.
+        $noTeto = str_pad('+56 9 8765 4321', 30);
+        $this->assertSame($noTeto, StudentData::validateAndCreate([...$base, 'phone' => $noTeto])->phone);
     }
 
     public function test_data_aceita_aluno_sem_cliente_atual(): void

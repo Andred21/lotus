@@ -5,6 +5,7 @@ namespace App\Domains\Identity\Data;
 use App\Domains\Identity\Models\User;
 use App\Shared\Data\ComputedFields;
 use App\Shared\Files\Transformers\SignedUrlTransformer;
+use App\Shared\Rules\ValidPhone;
 use App\Shared\Rules\ValidRut;
 use App\Shared\Support\TetosDeColuna;
 use Illuminate\Validation\Rule;
@@ -37,7 +38,6 @@ class UserData extends Data
         #[Required, Email, Max(TetosDeColuna::EMAIL)]
         public string $email,
         public string|Optional|null $rut,
-        #[Max(TetosDeColuna::TELEFONE)]
         public string|Optional|null $phone,
         public string $role,
         /**
@@ -70,6 +70,8 @@ class UserData extends Data
         return [
             ...ComputedFields::rejected('photo_url', 'last_login'),
             'rut' => ['nullable', 'string', new ValidRut],
+            // `sobrepõe` o auto-rule do atributo, então o teto e o `ValidPhone` moram juntos aqui.
+            'phone' => ['bail', 'sometimes', 'nullable', 'string', 'max:'.TetosDeColuna::TELEFONE, new ValidPhone],
             'password' => ['sometimes', 'string', 'min:8'],
             'role' => ['required', 'string', 'exists:roles,name', Rule::notIn(['redator'])],
         ];

@@ -3,6 +3,7 @@
 namespace App\Domains\Identity\Data;
 
 use App\Shared\Data\ComputedFields;
+use App\Shared\Rules\ValidPhone;
 use App\Shared\Support\TetosDeColuna;
 use App\Shared\Support\TetosImpressos;
 use Spatie\LaravelData\Data;
@@ -47,7 +48,7 @@ class ProfileUpdateData extends Data
             // Teto do que o certificado imprime (D15): o nome da redatora vira
             // assinatura. `rules()` sobrepõe o atributo, então o teto mora aqui.
             'name' => ['required', 'string', 'max:'.TetosImpressos::NOME_ASSINANTE],
-            'phone' => ['sometimes', 'nullable', 'string', 'max:'.TetosDeColuna::TELEFONE],
+            'phone' => ['bail', 'sometimes', 'nullable', 'string', 'max:'.TetosDeColuna::TELEFONE, new ValidPhone],
             'email' => ['missing'],
             'rut' => ['missing'],
             'type' => ['missing'],
