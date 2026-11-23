@@ -82,6 +82,36 @@ decisão estiver errada.
     bloco.** São pré-existentes, decisão pendente do João (o vocabulário turma, clase e grupo no
     es-CL) ou sem efeito. Se errado: nenhum custo novo.
 
+## Ajustes pedidos pelo João depois da execução (2026-11-23)
+
+O João pediu quatro ajustes antes da revisão. Eles estão fora da spec, mas dentro do escopo do bloco
+por decisão dele. Commits `7e5eab64`, `50145e07` e `b25ed6e3`.
+
+1. **O código de registro ganhou a grafia do Scap da tabela de presupuestos** (pedidos 1 e 2):
+   negrito, cor primária, sem mono. Vale para o `C-n` do curso e para o código da fila de
+   cotizações da Operação. Decisões da sessão dentro do pedido:
+   - A grafia virou a peça `RecordCode` em `shared/ui`, e as quatro cópias literais que já existiam
+     passaram a usá-la. A rule de estilização registra a peça. Se errado: voltar a quatro literais.
+   - O título do diálogo de curso e o link "Presupuesto … · Cotización …" do cabeçalho da turma não
+     mudaram, porque um é título e o outro é botão sublinhado. Se errado: dois sítios a trocar.
+2. **O telefone ganhou linha inteira** (pedido 3). O ajuste foi medido no navegador antes e depois.
+   - **Admin:** o email e o telefone passaram para linha inteira em qualquer largura. Antes o campo
+     do número tinha 116px; agora tem 384px a 1440px.
+   - **Aluno e redator:** linha inteira abaixo de `xl`. Antes o número tinha 26px a 640px; agora
+     tem 160px.
+   - **Contato do cliente:** linha inteira abaixo de `lg`. Antes 89px a 640px; agora 326px.
+   - Decisão da sessão: o email acompanha o telefone, para não sobrar buraco ao lado dele na grade.
+     O de inscrição de aluno e o de Meu Perfil não foram pedidos e não mudaram. Se errado: as
+     larguras de corte são uma classe por sítio.
+3. **Em es-CL, o papel passou a se chamar Instructor** (pedido 4): 47 trocas no front e 10
+   mensagens da API, no singular e no plural. Decisões da sessão:
+   - A API dizia "relator", não "Redactor", e também trocou, para a tela ter um nome só.
+   - O PDF do manual ("Relator(es)") e o marcador da prévia do certificado ("NOMBRE DEL RELATOR")
+     não mudaram, porque são documento com peso legal, não interface. A decisão sobre eles é do
+     João.
+   - O pt-BR ("Redator") e o en ficaram como estavam, porque o pedido foi só para o es-CL.
+   - Se errado: uma troca de string por locale.
+
 ## Pendências para o João antes do merge
 
 - Ratificar a decisão 16 depois de rodar a consulta da decisão 18.
