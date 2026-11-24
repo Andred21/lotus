@@ -15,6 +15,14 @@ use Throwable;
  */
 class GotenbergHtmlToPdf implements HtmlToPdf
 {
+    /**
+     * Tempo-limite de cada requisição do lote, em segundos. O maior tempo por
+     * item medido foi de ~6,5 s (N=6, `medicao-gotenberg.md`); o do `render()`
+     * unitário segue no padrão do client (30 s). Um conversor travado não pode
+     * segurar o worker do FPM por 30 s a cada item do lote.
+     */
+    private const BATCH_REQUEST_TIMEOUT = 15;
+
     public function render(string $html, PageOptions $options): string
     {
         try {
@@ -42,12 +50,13 @@ class GotenbergHtmlToPdf implements HtmlToPdf
         $endpoint = $this->endpoint();
 
         // O limite é do client (`EachPromise`): a requisição só é construída e
-        // enviada quando uma vaga abre, então o timeout de 30 s do Http conta
+        // enviada quando uma vaga abre, então o timeout de 15 s da requisição conta
         // da hora em que o Gotenberg a recebe, não do tempo de espera na fila
         // daqui. Sem este teto o pool mandaria o lote inteiro de uma vez.
         $responses = Http::pool(function (Pool $pool) use ($htmls, $endpoint, $options): void {
             foreach ($htmls as $key => $html) {
                 $pool->as((string) $key)
+                    ->timeout(self::BATCH_REQUEST_TIMEOUT)
                     ->asMultipart()
                     ->post($endpoint, $this->parts($html, $options));
             }

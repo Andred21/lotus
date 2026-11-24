@@ -5,6 +5,7 @@ namespace Tests\Support\Pdf;
 use App\Shared\Pdf\HtmlToPdf;
 use App\Shared\Pdf\PageOptions;
 use App\Shared\Pdf\PdfRenderException;
+use Illuminate\Support\Carbon;
 use LogicException;
 
 /**
@@ -20,7 +21,18 @@ class FakeHtmlToPdf implements HtmlToPdf
     /** @var list<array{needle: string, remaining: int}> */
     private array $failures = [];
 
+    private float $secondsPerCall = 0.0;
+
     public function __construct(private readonly string $bytes = '%PDF-fake') {}
+
+    /**
+     * Cada conversão gasta `$seconds` do relógio de teste (`Carbon::setTestNow`):
+     * o conversor lento, sem dormir de verdade.
+     */
+    public function takesSeconds(float $seconds): void
+    {
+        $this->secondsPerCall = $seconds;
+    }
 
     /**
      * Faz as próximas `$times` conversões de um HTML que contém `$needle`
@@ -35,6 +47,10 @@ class FakeHtmlToPdf implements HtmlToPdf
     public function render(string $html, PageOptions $options): string
     {
         $this->calls[] = ['html' => $html, 'options' => $options];
+
+        if ($this->secondsPerCall > 0.0) {
+            Carbon::setTestNow(Carbon::now()->addMilliseconds((int) ($this->secondsPerCall * 1000)));
+        }
 
         foreach ($this->failures as &$failure) {
             if ($failure['remaining'] > 0 && str_contains($html, $failure['needle'])) {

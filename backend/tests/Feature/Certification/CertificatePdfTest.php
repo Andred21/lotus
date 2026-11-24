@@ -17,6 +17,7 @@ use App\Shared\Pdf\PdfRenderException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -973,6 +974,59 @@ class CertificatePdfTest extends TestCase
             $this->assertStringContainsString('LOT-2026-2002', $e->getMessage());
             $this->assertStringNotContainsString('LOT-2026-1000', $e->getMessage());
         }
+    }
+
+    /**
+     * O conversor lento: o lote já gastou mais que o orçamento de tempo, e cada
+     * nova tentativa serial custaria mais um tempo-limite inteiro. Sem este
+     * teto o PHP seguia trabalhando muito depois de o nginx devolver 504, com
+     * os workers do FPM presos.
+     */
+    public function test_render_many_nao_tenta_de_novo_depois_do_orcamento_de_tempo(): void
+    {
+        $this->fakeGotenberg();
+        Carbon::setTestNow(Carbon::parse('2026-11-24 10:00:00'));
+        $um = $this->certificadoIrmao('LOT-2026-2006', 'Irma Lenta Um');
+        $dois = $this->certificadoIrmao('LOT-2026-2007', 'Irma Lenta Dois');
+        $this->pdf->failTimes('Irma Lenta', 99);
+        // 3 conversões de 25 s = 75 s: o orçamento (60 s) estourou no lote.
+        $this->pdf->takesSeconds(25);
+
+        try {
+            app(CertificatePdfService::class)->renderMany([$this->certificate, $um, $dois]);
+            $this->fail('O lote lento tinha de falhar.');
+        } catch (PdfRenderException $e) {
+            $this->assertSame(['LOT-2026-2006', 'LOT-2026-2007'], $e->failedKeys);
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        // Só as 3 do lote: nenhuma nova tentativa foi ao conversor.
+        $this->assertSame(3, $this->pdf->callCount());
+    }
+
+    public function test_render_many_para_as_novas_tentativas_quando_o_orcamento_acaba_no_meio(): void
+    {
+        $this->fakeGotenberg();
+        Carbon::setTestNow(Carbon::parse('2026-11-24 10:00:00'));
+        $um = $this->certificadoIrmao('LOT-2026-2008', 'Irma Lenta Um');
+        $dois = $this->certificadoIrmao('LOT-2026-2009', 'Irma Lenta Dois');
+        $this->pdf->failTimes('Irma Lenta', 99);
+        // Lote: 3 x 15 s = 45 s. A 1a nova tentativa começa em 45 s (dentro do
+        // orçamento) e termina em 60 s; a 2a já encontra o orçamento gasto.
+        $this->pdf->takesSeconds(15);
+
+        try {
+            app(CertificatePdfService::class)->renderMany([$this->certificate, $um, $dois]);
+            $this->fail('O lote lento tinha de falhar.');
+        } catch (PdfRenderException $e) {
+            $this->assertSame(['LOT-2026-2008', 'LOT-2026-2009'], $e->failedKeys);
+        } finally {
+            Carbon::setTestNow();
+        }
+
+        // 3 do lote + 1 nova tentativa; a segunda foi poupada.
+        $this->assertSame(4, $this->pdf->callCount());
     }
 
     /**

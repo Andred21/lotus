@@ -16,6 +16,15 @@ class CertificatePdfService
      */
     public const TEXTO_MUESTRA = 'MUESTRA — SIN VALIDEZ';
 
+    /**
+     * Orçamento de tempo do `renderMany`, em segundos, do início do lote até a
+     * última nova tentativa. O nginx devolve 504 aos 120 s, mas o PHP segue
+     * rodando e o FPM tem poucos workers: com o conversor lento, cada nova
+     * tentativa serial custaria mais um tempo-limite inteiro. Estourado o
+     * orçamento, os itens que faltam vão direto para a recusa, sem tentar.
+     */
+    private const BATCH_TIME_BUDGET_SECONDS = 60;
+
     public function __construct(
         private readonly HtmlToPdf $pdf,
         private readonly CertificateValidationUrl $validationUrl,
@@ -35,8 +44,9 @@ class CertificatePdfService
      * HTML de cada um é o do `render()` — `html()` é o único montador.
      *
      * Tudo ou nada: o item que o conversor recusou ganha UMA nova tentativa,
-     * pelo caminho unitário; falhando de novo, o lote inteiro falha nomeando os
-     * códigos. Snapshot não apresentável recusa ANTES de qualquer chamada ao
+     * pelo caminho unitário, enquanto o orçamento de tempo do lote (60 s) não
+     * estoura; falhando de novo, ou sem orçamento, o lote inteiro falha nomeando
+     * os códigos. Snapshot não apresentável recusa ANTES de qualquer chamada ao
      * conversor — não se gasta Chromium num lote que já não fecha.
      *
      * @param  iterable<Certificate>  $certificates
@@ -52,11 +62,18 @@ class CertificatePdfService
         }
 
         $options = PageOptions::fromCss();
+        $startedAt = now();
         $results = $this->pdf->renderMany($htmls, $options);
 
         $failed = [];
         foreach ($results as $codigo => $result) {
             if (! $result instanceof PdfRenderException) {
+                continue;
+            }
+
+            if ($startedAt->diffInSeconds(now(), true) >= self::BATCH_TIME_BUDGET_SECONDS) {
+                $failed[] = (string) $codigo;
+
                 continue;
             }
 

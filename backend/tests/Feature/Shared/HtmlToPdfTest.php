@@ -126,6 +126,30 @@ class HtmlToPdfTest extends TestCase
     }
 
     /**
+     * O lote tem tempo-limite menor que o unitário: o conversor travado não
+     * segura o worker do FPM por 30 s a cada item. O `render()` unitário segue
+     * no padrão do client.
+     */
+    public function test_render_many_usa_timeout_de_15s_e_o_unitario_segue_no_padrao(): void
+    {
+        Http::preventStrayRequests();
+        $timeouts = [];
+        Http::fake(function (Request $request, array $options) use (&$timeouts) {
+            $timeouts[] = $options['timeout'] ?? null;
+
+            return Http::response('%PDF-ok');
+        });
+        $adapter = app(GotenbergHtmlToPdf::class);
+
+        $adapter->renderMany(['A' => '<html>a</html>', 'B' => '<html>b</html>'], PageOptions::fromCss());
+        $this->assertSame([15, 15], $timeouts);
+
+        $timeouts = [];
+        $adapter->render('<html>a</html>', PageOptions::fromCss());
+        $this->assertSame([30], $timeouts);
+    }
+
+    /**
      * O conversor é um Chromium único de 768 MB: o teto do lote é o que o
      * protege, então "nunca mais de N em voo" é o que se prova.
      *
