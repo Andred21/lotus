@@ -53,6 +53,10 @@ services:
     # O mesmo teto de produção (docker-compose.prod.yml): a medição do lote
     # (bloco 62) só vale se o Chromium local apertar onde o de produção aperta.
     mem_limit: 768m
+    # Sem isto o Docker dá o dobro em swap (MemorySwap = 1,5 GiB) e o WSL tem
+    # swap: o container estouraria 768m sem ser morto, e a varredura de
+    # concorrência leria estável o que numa EC2 sem swap é OOM.
+    memswap_limit: 768m
 
   clamav:
     # Tag COM base de assinaturas embutida (146 MiB comprimidos): o `clamd`
