@@ -67,6 +67,13 @@ final class RateLimits
      */
     public const EXPORTACAO_CERTIFICADO = 30;
 
+    /**
+     * ZIP dos certificados de uma cotação: renderiza a turma inteira no
+     * Gotenberg (até `CertificateZip::TETO` PDFs), então balde próprio e do
+     * tamanho do `certificate-batch`, a outra rota que gasta o conversor em lote.
+     */
+    public const ZIP_CERTIFICADO = 5;
+
     /** Consulta pública de certificado por RUT e código, por IP e por minuto. */
     public const CONSULTA_CERTIFICADO = 10;
 
@@ -123,6 +130,9 @@ final class RateLimits
             ->by(self::porUsuario($request)));
 
         RateLimiter::for('certificate-export', fn (Request $request) => Limit::perMinute(self::EXPORTACAO_CERTIFICADO)
+            ->by(self::porUsuario($request)));
+
+        RateLimiter::for('certificate-zip', fn (Request $request) => Limit::perMinute(self::ZIP_CERTIFICADO)
             ->by(self::porUsuario($request)));
     }
 

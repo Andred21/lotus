@@ -73,6 +73,7 @@ class ListQueryBudgetTest extends TestCase
         'api/certificate-settings' => 'singleton de Configuración › Certificados: uma linha, uma assinatura',
         'api/certificates/export/summary' => 'contagem de um escopo (o N do aviso de exportação), um registro de duas somas — não é lista',
         'api/certificates/export/planilha' => 'download de arquivo xlsx do escopo de exportação, não é lista',
+        'api/certificates/export/zip' => 'download de arquivo zip dos PDFs do escopo de exportação, não é lista',
     ];
 
     /**

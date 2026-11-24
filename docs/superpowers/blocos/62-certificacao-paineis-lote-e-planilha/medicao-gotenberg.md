@@ -219,3 +219,35 @@ montadas num método só, usado pelo unitário e pelo lote (a guarda de pivot do
 proíbe `->attach(` em `app/`). Reconferido contra o Gotenberg real: 6 certificados em série e em lote
 a N = 2 saem com o mesmo total de bytes de antes (2.541.064), `pdftotext` igual em cada um, 3 páginas A4;
 e `CertificadoMatrizGotenbergTest` (47 casos, Gotenberg real) segue verde.
+
+### ZIP da turma pela API real (Task 6)
+
+Medido em 2026-11-24, pela API da lane (`:8081`, sessão Sanctum com CSRF, `curl`), contra o Gotenberg 8.36
+de 768m, com `GOTENBERG_CONCURRENCY` no default (2). A turma é a 3 do seed (cotação `Scap 5 - R1`,
+`quote_id=7`): 15 matrículas aprovadas, 13 delas já eram `aprobado` e as duas reprovadas viraram aprovadas
+por `PUT /api/turmas/3/alunos/{id}/resultado`; os 14 certificados que faltavam foram emitidos por
+`POST /api/certificates/batch` (o caminho normal do sistema, DB local da lane). Cada certificado tem
+2 páginas A4 (o ZIP tem 30 páginas no total e 6.330.200 bytes, ~422 KB por PDF).
+
+| Rodada | 15 downloads unitários em série (`GET /certificates/{id}/pdf`) | `GET /certificates/export/zip?quote_id=7` |
+|---|---|---|
+| 0 (primeira chamada do ZIP, a frio) | — | 6,64 s |
+| 1 | 10,60 s | 7,28 s |
+| 2 | 17,76 s | 5,83 s |
+| 3 | 10,11 s | 7,13 s |
+
+Tempo = `time_total` do curl (os 15 unitários são a soma dos 15, cada um uma requisição própria). Mediana
+das 3 rodadas intercaladas: **unitários 10,6 s (10,1 – 17,8) contra ZIP 7,1 s (5,8 – 7,3)**, ganho de ~33%,
+no que as medições do `renderMany` direto já mostravam (37% em 30 certificados). Por certificado: ~0,71 s em
+série e ~0,48 s no ZIP, e o ZIP inclui a montagem do arquivo (armazenado sem compressão, `CM_STORE`: PDF já
+vem comprimido) e a entrega. `RestartCount=0` e `OOMKilled=false` do Gotenberg ao fim.
+
+**O teto de 70 segue coerente.** Pelo ritmo típico do ZIP (0,48 s) 70 certificados levam ~34 s; pelo pior
+ritmo por certificado que a medição usou para o teto (0,81 s) levam ~57 s, metade do `fastcgi_read_timeout`
+de produção (120 s). A rodada mais lenta dos unitários (17,76 s, ~1,18 s por certificado, sem concorrência) é
+o único ponto que passa de 0,81 s, e é do braço SEM lote: 70 certificados nesse ritmo seriam 83 s, ainda
+abaixo dos 120 s. Nada aqui pede mudar o teto.
+
+**Documento igual.** Os 15 PDFs do ZIP comparados com o download unitário do mesmo certificado, no container
+`app` (`pdftoppm -png -r 144`, só em `/tmp`, apagado depois): 30 páginas, **diferença 0** em cada PNG
+(`cmp`), mesmo número de páginas por certificado e `pdftotext` idêntico nos 15.

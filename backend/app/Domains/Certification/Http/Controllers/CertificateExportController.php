@@ -6,10 +6,14 @@ use App\Domains\Certification\Data\CertificateExportQueryData;
 use App\Domains\Certification\Data\CertificateExportSummaryData;
 use App\Domains\Certification\Exceptions\CertificateExportException;
 use App\Domains\Certification\Services\CertificateExportScope;
+use App\Domains\Certification\Services\CertificatePdfService;
 use App\Domains\Certification\Services\CertificateSpreadsheet;
+use App\Domains\Certification\Services\CertificateZip;
 use App\Http\Controllers\Controller;
+use App\Shared\Pdf\PdfRenderException;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -65,6 +69,70 @@ class CertificateExportController extends Controller implements HasMiddleware
         return response()
             ->download($caminho, $escopo->nomeDoArquivo($filtros).'.xlsx', [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])
+            ->deleteFileAfterSend();
+    }
+
+    /**
+     * Os PDFs da cotação num ZIP (spec §5.5). Exige `quote_id` — a regra é do
+     * servidor, o botão desabilitado é conveniência. Conjunto vazio e acima do
+     * teto são 422 ANTES de gastar o conversor; tudo ou nada depois dele.
+     *
+     * A query é uma só (um `hoje` por pedido): a contagem do teto e os
+     * certificados renderizados saem do MESMO builder.
+     */
+    public function zip(
+        CertificateExportQueryData $filtros,
+        CertificateExportScope $escopo,
+        CertificatePdfService $pdfs,
+        CertificateZip $zip,
+    ): BinaryFileResponse {
+        if ($filtros->quote_id === null) {
+            throw ValidationException::withMessages([
+                'quote_id' => __('certification.export.zip_quote_required'),
+            ]);
+        }
+
+        $consulta = $escopo->query($filtros);
+        $total = $consulta->count();
+
+        if ($total === 0) {
+            throw CertificateExportException::vazia();
+        }
+
+        if ($total > $zip->teto) {
+            throw CertificateExportException::acimaDoTeto($total, $zip->teto);
+        }
+
+        $certificados = $consulta->get();
+
+        $invalidos = $zip->naoApresentaveis($certificados);
+        if ($invalidos !== []) {
+            throw CertificateExportException::zipComSnapshotInvalido($invalidos);
+        }
+
+        try {
+            $renderizados = $pdfs->renderMany($certificados);
+        } catch (PdfRenderException $e) {
+            // A mensagem da exceção é diagnóstico; a recusa é de `lang/`, nomeando os códigos.
+            throw $e->failedKeys === []
+                ? $e
+                : CertificateExportException::zipSemRenderizar($e->failedKeys);
+        }
+
+        $caminho = tempnam(sys_get_temp_dir(), 'lotus-zip-');
+
+        try {
+            $zip->build($renderizados, $caminho);
+        } catch (Throwable $e) {
+            @unlink($caminho);
+
+            throw $e;
+        }
+
+        return response()
+            ->download($caminho, $escopo->nomeDoArquivo($filtros).'.zip', [
+                'Content-Type' => 'application/zip',
             ])
             ->deleteFileAfterSend();
     }

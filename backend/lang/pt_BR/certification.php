@@ -20,6 +20,10 @@ return [
         'empty' => 'Não há certificados para exportar com os filtros aplicados.',
         'over_limit' => 'A exportação tem :total certificados e o máximo é :teto. Aplique um filtro mais estreito.',
         'spreadsheet_failed' => 'Não foi possível gerar a planilha.',
+        'zip_quote_required' => 'Filtre por cotação para baixar os PDFs.',
+        'zip_render_failed' => 'Não foi possível gerar o PDF de: :codigos. Nenhum arquivo foi entregue; tente novamente.',
+        'zip_snapshot_invalid' => 'Não é possível gerar o ZIP: o documento congelado de :codigos não tem todos os dados que um certificado precisa. Nenhum arquivo foi entregue.',
+        'zip_failed' => 'Não foi possível gerar o arquivo ZIP.',
     ],
     'enrollment' => [
         'not_found' => 'A matrícula não existe.',

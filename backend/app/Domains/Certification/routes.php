@@ -35,6 +35,9 @@ Route::middleware('auth.active')->group(function () {
         ->middleware('throttle:certificate-export');
     Route::get('certificates/export/planilha', [CertificateExportController::class, 'planilha'])
         ->middleware('throttle:certificate-export');
+    // O ZIP renderiza a turma inteira no Gotenberg: balde próprio, no molde do lote.
+    Route::get('certificates/export/zip', [CertificateExportController::class, 'zip'])
+        ->middleware('throttle:certificate-zip');
     Route::post('certificates/batch', [CertificateController::class, 'batch'])
         ->middleware('throttle:certificate-batch');
     // Renderiza no Gotenberg a CADA requisição — nada é cacheado nem lido do
