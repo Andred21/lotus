@@ -38,4 +38,11 @@ class RutTest extends TestCase
     {
         $this->assertSame('12.345.678-5', Rut::parse('123456785')->format());
     }
+
+    public function test_canonical_tira_formatacao_e_zeros_a_esquerda(): void
+    {
+        $this->assertSame('123456785', Rut::parse('12.345.678-5')->canonical());
+        $this->assertSame('123456785', Rut::parse(' 012345678-5 ')->canonical());
+        $this->assertSame('1000005K', Rut::parse('1.000.005-k')->canonical());
+    }
 }

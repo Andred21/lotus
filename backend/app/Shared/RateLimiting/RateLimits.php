@@ -2,6 +2,7 @@
 
 namespace App\Shared\RateLimiting;
 
+use App\Shared\Support\Rut;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -59,6 +60,21 @@ final class RateLimits
     /** Renderiza no Gotenberg a cada requisição — a rota mais cara do sistema. */
     public const PDF_CERTIFICADO = 30;
 
+    /** Consulta pública de certificado por RUT e código, por IP e por minuto. */
+    public const CONSULTA_CERTIFICADO = 10;
+
+    /** Consultas públicas que falharam, por IP, dentro de `JANELA_FALHAS_CONSULTA`. */
+    public const FALHAS_CONSULTA_POR_IP = 20;
+
+    /** Consultas públicas que falharam, por RUT, dentro de `JANELA_FALHAS_CONSULTA`. */
+    public const FALHAS_CONSULTA_POR_RUT = 10;
+
+    /** Janela, em segundos, em que as falhas da consulta pública são contadas. */
+    public const JANELA_FALHAS_CONSULTA = 3600;
+
+    /** PDF público do certificado: renderiza no Gotenberg, então balde próprio por IP e por minuto. */
+    public const PDF_CERTIFICADO_PUBLICO = 10;
+
     public static function register(): void
     {
         RateLimiter::for('api', fn (Request $request) => $request->user()
@@ -73,6 +89,12 @@ final class RateLimits
             ->by(self::chaveDeLogin($request)));
 
         RateLimiter::for('public-certificate', fn (Request $request) => Limit::perMinute(self::CERTIFICADO_PUBLICO)
+            ->by($request->ip()));
+
+        RateLimiter::for('public-certificate-lookup', fn (Request $request) => Limit::perMinute(self::CONSULTA_CERTIFICADO)
+            ->by($request->ip()));
+
+        RateLimiter::for('public-certificate-pdf', fn (Request $request) => Limit::perMinute(self::PDF_CERTIFICADO_PUBLICO)
             ->by($request->ip()));
 
         RateLimiter::for('password', fn (Request $request) => Limit::perMinute(self::SENHA)
@@ -115,6 +137,23 @@ final class RateLimits
         $email = $request->input('email');
 
         return (is_string($email) ? Str::lower(trim($email)) : '').'|'.$request->ip();
+    }
+
+    /** Chave do contador de falhas da consulta pública por IP. */
+    public static function chaveDeFalhaPorIp(string $ip): string
+    {
+        return 'public-certificate-lookup-failures:ip:'.$ip;
+    }
+
+    /**
+     * Chave do contador de falhas da consulta pública por RUT. É HMAC e não o
+     * RUT em claro porque a tabela `cache` de produção é legível por quem lê o
+     * banco, e o RUT é dado pessoal. O `canonical()` faz as grafias do mesmo
+     * RUT caírem no mesmo balde.
+     */
+    public static function chaveDeFalhaPorRut(Rut $rut): string
+    {
+        return 'public-certificate-lookup-failures:rut:'.hash_hmac('sha256', $rut->canonical(), (string) config('app.key'));
     }
 
     /**

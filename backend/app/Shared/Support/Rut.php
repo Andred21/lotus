@@ -39,6 +39,12 @@ final class Rut
         return number_format((int) $this->number, 0, '', '.').'-'.$this->dv;
     }
 
+    /** Forma comparável: dígitos sem zeros à esquerda e DV em maiúscula (`012.345.678-k` vira `12345678K`). */
+    public function canonical(): string
+    {
+        return ltrim($this->number, '0').strtoupper($this->dv);
+    }
+
     private function computeDv(string $number): string
     {
         $sum = 0;
