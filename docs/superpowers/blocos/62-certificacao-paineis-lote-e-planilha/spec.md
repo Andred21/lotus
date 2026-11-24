@@ -226,7 +226,8 @@ modo as capturaria:
 Os nomes são proposta; o executor pode juntar o resumo à própria listagem se a meta dela já trouxer N e M
 pelo mesmo escopo.
 
-**Autorização** (decisão minha): a mesma da listagem e do PDF unitário de hoje — `auth.active`, sem
+**Autorização** (decisão minha): a mesma da listagem e do PDF unitário de hoje — `auth.active` e
+`permission:certification.certificate.view` (`CertificateController`, middleware de `index`/`pdf`), sem
 permissão nova. Quem vê o Historial e baixa um PDF baixa a turma.
 
 ## 6. Critério de aceite (provado por teste)
