@@ -163,6 +163,24 @@ class HtmlToPdfTest extends TestCase
         $this->assertSame(2, $pico);
     }
 
+    /**
+     * A porta promete `PdfRenderException` quando o conversor está fora do ar.
+     * Conexão recusada e timeout chegam como `ConnectionException` do client, e
+     * quem chama o unitário não pode ter de conhecer o Laravel para tratá-las.
+     */
+    public function test_conexao_recusada_no_unitario_estoura_pdf_render_exception(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(fn () => throw new ConnectionException('cURL error 7: Connection refused'));
+
+        try {
+            app(GotenbergHtmlToPdf::class)->render('<html></html>', PageOptions::fromCss());
+            $this->fail('A queda de conexão tinha de virar PdfRenderException.');
+        } catch (PdfRenderException $e) {
+            $this->assertInstanceOf(ConnectionException::class, $e->getPrevious());
+        }
+    }
+
     public function test_conversor_fora_do_ar_estoura_pdf_render_exception(): void
     {
         Http::preventStrayRequests();

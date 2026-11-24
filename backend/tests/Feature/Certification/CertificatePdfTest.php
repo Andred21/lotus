@@ -15,6 +15,8 @@ use App\Shared\Files\Models\File;
 use App\Shared\Pdf\HtmlToPdf;
 use App\Shared\Pdf\PdfRenderException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -970,6 +972,31 @@ class CertificatePdfTest extends TestCase
         } catch (PdfRenderException $e) {
             $this->assertStringContainsString('LOT-2026-2002', $e->getMessage());
             $this->assertStringNotContainsString('LOT-2026-1000', $e->getMessage());
+        }
+    }
+
+    /**
+     * O adapter REAL, sob `Http::fake`: o conversor cai no pool e cai de novo
+     * na nova tentativa unitária. A queda de conexão tem de chegar ao lote como
+     * `PdfRenderException` com os dois códigos — antes, a `ConnectionException`
+     * crua da nova tentativa abortava o laço e o segundo item nem era tentado.
+     */
+    public function test_render_many_nomeia_os_codigos_quando_a_conexao_cai_tambem_na_nova_tentativa(): void
+    {
+        $um = $this->certificadoIrmao('LOT-2026-2004', 'Irma Fora do Ar Um');
+        $dois = $this->certificadoIrmao('LOT-2026-2005', 'Irma Fora do Ar Dois');
+        Http::preventStrayRequests();
+        Http::fake(fn (Request $request) => str_contains((string) $request->body(), 'Fora do Ar')
+            ? throw new ConnectionException('cURL error 7: Connection refused')
+            : Http::response('%PDF-ok'));
+
+        try {
+            app(CertificatePdfService::class)->renderMany([$this->certificate, $um, $dois]);
+            $this->fail('O conversor fora do ar tinha de recusar o lote.');
+        } catch (PdfRenderException $e) {
+            $this->assertSame(['LOT-2026-2004', 'LOT-2026-2005'], $e->failedKeys);
+            $this->assertStringContainsString('LOT-2026-2004', $e->getMessage());
+            $this->assertStringContainsString('LOT-2026-2005', $e->getMessage());
         }
     }
 

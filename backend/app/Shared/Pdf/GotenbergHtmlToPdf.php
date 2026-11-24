@@ -2,6 +2,7 @@
 
 namespace App\Shared\Pdf;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -16,8 +17,14 @@ class GotenbergHtmlToPdf implements HtmlToPdf
 {
     public function render(string $html, PageOptions $options): string
     {
-        $response = Http::asMultipart()
-            ->post($this->endpoint(), $this->parts($html, $options));
+        try {
+            $response = Http::asMultipart()
+                ->post($this->endpoint(), $this->parts($html, $options));
+        } catch (ConnectionException $e) {
+            // Conexão recusada ou timeout: a porta promete `PdfRenderException`
+            // para "conversor fora do ar", como o pool já entrega por item.
+            throw PdfRenderException::converterUnreachable($e);
+        }
 
         if ($response->failed()) {
             throw PdfRenderException::converterFailed($response->status());
