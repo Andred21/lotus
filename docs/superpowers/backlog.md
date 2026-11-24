@@ -147,6 +147,7 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
 | 9 | **62** `certificacao-paineis-lote-e-planilha` | Backend + Frontend | Pedido da Lotus. Depende do 60 e do 61 |
+| — | **63** `certificacao-virada-validacao-site` | Infra + Backend + Frontend | Fecha a validação no site. Só abre com a página do `lotus-site` no ar e o 61 aceito |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
 | 11 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
 
@@ -429,6 +430,45 @@ um e-mail que a Lotus envia ao cliente com os certificados de uma turma.
 **DoD:** os cards listam só turmas concluídas com pendência e abrem a tabela certa. O Historial
 filtra por cotação. O ZIP de uma turma traz um PDF por certificado emitido. A planilha abre no
 Excel com as seis colunas, e o link baixa o PDF certo, provado no navegador.
+
+---
+
+## 63. `certificacao-virada-validacao-site`
+
+**Prioridade:** P1 · **Frente:** Infra + Backend + Frontend (Certification) · **Contexto:** não · **Depende:** 61
+**Fonte:** spec do 61 (`blocos/61-certificacao-validacao-no-site/spec.md`: §1, entrega 3; §2, decisões 3 e 4; §11); `P-89`; `D-70`.
+
+**Hoje:** o QR de todo certificado leva a `config('app.certificate_validation_url')` + `/validar/{uuid}`
+(`CertificateValidationUrl.php:26`), que em produção é o próprio app (`app.lotusotec.cl/validar/<uuid>`),
+servido pela `ValidationPage` do SPA (`AppRouter.tsx:34`). O 61 entregou a API pública (consulta por
+código + RUT, PDF público, CORS do site), e a página do site é um bloco do `Andred21/lotus-site`, pelo
+harness de lá, com o §7 da spec do 61 como contrato.
+
+**Escopo:**
+- **QR novo.** `CERTIFICATE_VALIDATION_URL=https://lotusotec.cl` no `.env` de produção e no
+  `deploy/aws/env.prod.example`. O caminho `/validar/` já é fixo em `CertificateValidationUrl::para()`,
+  então a virada do QR novo é só o env.
+- **QR antigo.** `301` de `app.lotusotec.cl/validar/<uuid>` para `https://lotusotec.cl/validar/<uuid>`
+  no `prod.conf` e no `tls.conf`, versionado e testável. O `tls.conf` vai ao host por `scp`: divergente
+  do repositório, a checagem de alinhamento trava o botão de deploy (`deploy/aws/README.md:762`).
+- **Saída da `ValidationPage`.** A rota `/validar/:uuid` do SPA e a página saem do app. A
+  `GET /api/publico/certificados/{uuid}` fica, porque o site a usa.
+- **P-89** com o endereço novo no gatilho.
+- **D-70**, se a Lotus aceitar o canal de contato do site.
+
+**Fora:** conteúdo e layout do PDF (peso legal: muda só o destino do QR); a página do site.
+
+**Para o brainstorming:**
+- O bloco só abre com a página do site no ar e provada em `lotusotec.cl/validar/<uuid>`, e com o 61
+  aceito em produção. O `301` fica em cache no navegador de quem o recebeu: mesclar antes da página
+  existir quebra QR impresso sem volta fácil.
+- A ordem no deploy: o env do QR novo e o `301` no mesmo release, ou o env primeiro.
+
+**DoD:** certificado emitido depois do deploy tem QR para `https://lotusotec.cl/validar/<uuid>`, que abre
+a página do site com o estado certo. `https://app.lotusotec.cl/validar/<uuid>` responde `301` com
+`Location` no site, e um QR antigo impresso chega à validação. A `ValidationPage` saiu do app com a
+suíte verde. A P-89 confere o endereço novo. A prova final é contra produção, depois do deploy
+(aceitação, invariante 11).
 
 ---
 
