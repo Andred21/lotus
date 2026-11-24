@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (35)
+## Abertas (34)
 
 ### Agrupadas em bloco de execução
 
@@ -29,7 +29,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 |---|---|---|---|
 | P-86 | O dump pré-deploy do `deploy.sh` nunca rodou num deploy real: não havia release com migration nova quando o item 12 executou (DoD 6, metade); o `cicd-host-alinhado-ao-sha` (item 31) fechou em 2026-09-26 sem pagar o gatilho | 56 | primeiro release corporativo com migration: `inicio` com `dump` preenchido, objeto no S3, `verificar-backup.sh` aprovando; revisar 2026-10-31 |
 | P-90 | O gate `/up` do `deploy.sh` faz um `curl` só depois de o nginx ficar `healthy`; num deploy que recria o `app` e não o nginx, ele bate antes do php-fpm novo escutar e o botão sai 502 (botão 2 do item 32) | 56 | próximo commit em `deploy/bin/deploy.sh`, ou o próximo botão com `erro: /up respondeu 502`; **disparado em 2026-10-27 (item 42), não pago**; revisar 2026-10-31 |
-| P-91 | `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401: o `Authenticate` monta o redirecionamento por `route('login')`, que não existe (medido em produção pelo item 32) | 55 | bloco que tocar `backend/bootstrap/app.php` ou o middleware de autenticação; revisar 2026-10-31 |
 | P-44 | Onze usuários de sonda de gates antigos vivem no banco de dev — 2 aparecem no dashboard | `go-live-confiabilidade-e-recuperacao` | bloco que puder reseedar o dev; revisar 2026-10-31 |
 | P-95 | Doze pontas do harness que o item 35 deixou sem correção: seis Menores da revisão (Q-7, Q-8, Q-10 a Q-13) e seis do `rulings.md` (`context_required`/`closing` sem command, `lotus-ui-review` lendo o `state.md`, fluxo antigo no `backlog.md`, semente do `lane.sh` fora da invariante 6, catraca sem prompts nem `subagent_type`, `blocked` da rota codex sem artefato) | 57 | cada linha corrigida ou com veredito escrito; dispara no bloco que tocar `.claude/commands/`, `lane.sh`, `commands.tests.sh` ou `state.md` — **disparado em 2026-10-04 (item 36), não pago**; revisar 2026-10-31 |
 | P-96 | `AGENTS.md` e `INSTRUÇÕES-DO-PROJETO.md` listam quatro das seis rules (faltam `backend-lang` e `frontend-estilizacao`), e o `estrutura-monolito.md` não cita o `shared/ui/Timestamp/` | 58 | os três docs acompanharem; dispara no bloco que tocar qualquer um deles — **disparado em 2026-10-04 (item 36) e em 2026-10-21 (item 38), não pago**; revisar 2026-10-31 |
@@ -148,7 +147,7 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 
 ## Encerradas (1)
 
-**A P-09 fechou no bloco 60 (2026-11-23)**: taxonomia decidida pela Lotus em 2026-11-21 (Instructor, Cliente, Alumnos; só Manual e Instructor bloqueiam). `TurmaDocumentType` ganhou `EVALUACION_CLIENTE` e `EVALUACION_ALUNO` (a antiga `PRUEBAS`, convertida por migration), e a falta das duas opcionais vira aviso no dashboard. Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+**A P-91 fechou no bloco 61 (2026-11-24)**: o item 55 já a pagou (`0b40be13`, com `UnauthenticatedWithoutAcceptTest`) e a ficha ficou aberta; o 61 mediu 401 em `/api/*` sem sessão e sem `Accept` e a encerrou. Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
 
 **A P-51 saiu no fechamento do item 60 (2026-11-23)**, o primeiro depois do item 51, que a encerrou em 2026-11-03 pelo próprio gatilho (`InputDataDefaultsTest` virou a catraca). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md). O item 51 abriu a **P-117** (Menores da revisão e o débito de `CourseModuleData`) e disparou sem pagar os gatilhos da **P-53**, da **P-96** e da **P-97** (tocou `estrutura-monolito.md` e `backend-ddd.md` por outro motivo); as fichas registram o disparo.
 

@@ -2,10 +2,10 @@
 schema_version: 3
 id: 61
 slug: 61-certificacao-validacao-no-site
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item
-resume_state: null
+workflow_state: blocked
+next_owner: joao
+next_action: "resolve_blocker aguardando aceitação: itens 1, 2"
+resume_state: ready_for_closure
 active_spec: docs/superpowers/blocos/61-certificacao-validacao-no-site/spec.md
 active_plan: docs/superpowers/blocos/61-certificacao-validacao-no-site/plano.md
 active_review: docs/superpowers/blocos/61-certificacao-validacao-no-site/revisao.md
@@ -17,10 +17,10 @@ branch: feat/61-certificacao-validacao-no-site
 worktree: ../lotus-61-certificacao-validacao-no-site
 offset: 2
 lane_base: 7982828e
-commit: b9bc4925
-blocker: null
-updated_at: 2026-11-24T14:31:31-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+commit: 79faef92
+blocker: "aguardando aceitação depois do merge: itens 1, 2 da ## Verificação externa"
+updated_at: 2026-11-24T14:49:05-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 61 — estado
