@@ -5,7 +5,10 @@ namespace App\Domains\Certification\Services;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Exceptions\CertificadoRevogadoException;
 use App\Domains\Certification\Models\Certificate;
+use App\Shared\RateLimiting\RateLimits;
 use App\Shared\Support\Rut;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -43,27 +46,54 @@ class PublicCertificateAccess
      * O RUT só é comparado em memória, contra o snapshot congelado: nunca vai
      * ao SQL. A busca é pelo código, que sai do banco por binding.
      *
-     * `$ip` espera os limitadores de falha (bloco 61, Task 4).
+     * Antes de qualquer query, os limitadores de FALHA (por IP e por RUT, a hora)
+     * recusam com 429. Só a falha conta; o acerto nunca toca contador nem zera
+     * um que já subiu. Não há bloqueio por código: travá-lo deixaria qualquer um
+     * derrubar a consulta de um certificado alheio.
      *
      * @throws NotFoundHttpException
+     * @throws ThrottleRequestsException
      */
     public function porCodigoERut(string $codigo, Rut $rut, string $ip): Certificate
     {
+        $chaveIp = RateLimits::chaveDeFalhaPorIp($ip);
+        $chaveRut = RateLimits::chaveDeFalhaPorRut($rut);
+
+        $this->recusarSeEstourou($chaveIp, RateLimits::FALHAS_CONSULTA_POR_IP, $chaveRut, RateLimits::FALHAS_CONSULTA_POR_RUT);
+
         $certificate = Certificate::query()->where('codigo', strtoupper($codigo))->first();
 
         $rutDoSnapshot = Rut::parse($certificate?->snapshot->aluno->rut ?? '')->canonical();
 
         // `canonical()` de vazio é '': sem RUT no snapshot nada pode bater.
         if ($certificate === null || $rutDoSnapshot === '' || ! hash_equals($rutDoSnapshot, $rut->canonical())) {
-            return $this->recusar();
+            $this->recusar($chaveIp, $chaveRut);
         }
 
         return $certificate;
     }
 
-    /** Ponto único da falha da consulta: é onde os limitadores contam. */
-    private function recusar(): never
+    /** @throws ThrottleRequestsException com `Retry-After` do mais longo dos baldes estourados */
+    private function recusarSeEstourou(string $chaveIp, int $maxIp, string $chaveRut, int $maxRut): void
     {
+        $esperas = [];
+        foreach ([$chaveIp => $maxIp, $chaveRut => $maxRut] as $chave => $max) {
+            if (RateLimiter::tooManyAttempts($chave, $max)) {
+                $esperas[] = RateLimiter::availableIn($chave);
+            }
+        }
+
+        if ($esperas !== []) {
+            throw new ThrottleRequestsException(headers: ['Retry-After' => max($esperas)]);
+        }
+    }
+
+    /** Ponto único da falha da consulta: é onde os limitadores contam. */
+    private function recusar(string $chaveIp, string $chaveRut): never
+    {
+        RateLimiter::hit($chaveIp, RateLimits::JANELA_FALHAS_CONSULTA);
+        RateLimiter::hit($chaveRut, RateLimits::JANELA_FALHAS_CONSULTA);
+
         throw new NotFoundHttpException;
     }
 }
