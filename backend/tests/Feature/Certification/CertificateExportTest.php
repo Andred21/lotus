@@ -98,6 +98,51 @@ class CertificateExportTest extends TestCase
         $this->assertSame(['LOT-2026-0001', 'LOT-2026-0002'], array_column($linhas['dados'], 0));
     }
 
+    /**
+     * A composição dos filtros mora em dois lugares (a listagem e o escopo da
+     * exportação). Este teste os compara de ponta a ponta, com `q`,
+     * `display_status` e `quote_id` juntos: se um mudar sem o outro, o N do
+     * aviso deixa de ser o que a tela lista.
+     */
+    public function test_exportacao_com_os_tres_filtros_e_o_conjunto_da_listagem(): void
+    {
+        $this->actingAsAdmin();
+        $outraTurma = $this->criarTurma();
+
+        $this->emitir('LOT-2026-0301', nome: 'Juan Pérez', validoAte: '2026-01-01');
+        $this->emitir('LOT-2026-0302', nome: 'Ana Pérez', validoAte: '2026-01-01');
+        // Cada um fica fora por um filtro: estado, busca, cotação.
+        $this->emitir('LOT-2026-0303', nome: 'Juan Pérez', validoAte: '2099-01-01');
+        $this->emitir('LOT-2026-0304', nome: 'Luis García', validoAte: '2026-01-01');
+        $this->emitir('LOT-2026-0305', nome: 'Juan Pérez', validoAte: '2026-01-01', turma: $outraTurma);
+        // Revogado: nunca é "vencido" na listagem, então sai dos dois lados.
+        $this->emitir('LOT-2026-0306', nome: 'Juan Pérez', validoAte: '2026-01-01', status: CertificateStatus::Revocado);
+
+        $this->assertExportacaoIgualListagem(
+            'q=P%C3%A9rez&display_status=vencido&quote_id='.$this->turma->quote_id,
+            esperados: ['LOT-2026-0301', 'LOT-2026-0302'],
+        );
+    }
+
+    /** Sem `display_status` o revogado entra na listagem: `total + revocados` fecha com o `meta.total`. */
+    public function test_total_mais_revogados_da_exportacao_fecha_com_a_listagem(): void
+    {
+        $this->actingAsAdmin();
+        $outraTurma = $this->criarTurma();
+
+        $this->emitir('LOT-2026-0311', nome: 'Juan Pérez', validoAte: '2026-01-01');
+        $this->emitir('LOT-2026-0312', nome: 'Ana Pérez', validoAte: '2099-01-01');
+        $this->emitir('LOT-2026-0313', nome: 'Rosa Pérez', status: CertificateStatus::Revocado);
+        $this->emitir('LOT-2026-0314', nome: 'Luis García');
+        $this->emitir('LOT-2026-0315', nome: 'Juan Pérez', turma: $outraTurma);
+
+        $this->assertExportacaoIgualListagem(
+            'q=P%C3%A9rez&quote_id='.$this->turma->quote_id,
+            esperados: ['LOT-2026-0311', 'LOT-2026-0312'],
+            revogados: 1,
+        );
+    }
+
     public function test_revogado_fica_fora_e_e_contado(): void
     {
         $this->actingAsAdmin();
@@ -393,6 +438,33 @@ class CertificateExportTest extends TestCase
         array_shift($celulas);
 
         return ['cabecalho' => array_shift($linhas), 'dados' => $linhas, 'celulas' => $celulas, 'xml' => $xml];
+    }
+
+    /**
+     * Os mesmos filtros nas duas portas: `summary.total + summary.revocados` é o
+     * `meta.total` da listagem, e os códigos da planilha são os da listagem
+     * menos os revogados.
+     *
+     * @param  list<string>  $esperados  códigos da planilha, em ordem (evita um teste que passa com tudo vazio)
+     */
+    private function assertExportacaoIgualListagem(string $query, array $esperados, int $revogados = 0): void
+    {
+        $listagem = $this->getJson('/api/certificates?per_page=100&'.$query)->assertOk();
+        $resumo = $this->getJson('/api/certificates/export/summary?'.$query)->assertOk();
+        $planilha = $this->lerPlanilha($this->get('/api/certificates/export/planilha?'.$query)->assertOk());
+
+        $this->assertSame($listagem->json('meta.total'), $resumo->json('total') + $resumo->json('revocados'));
+        $this->assertSame($revogados, $resumo->json('revocados'));
+
+        $codigosDaListagem = collect($listagem->json('data'))
+            ->reject(fn (array $c) => $c['status'] === CertificateStatus::Revocado->value)
+            ->pluck('codigo')
+            ->sort()
+            ->values()
+            ->all();
+
+        $this->assertSame($esperados, $codigosDaListagem);
+        $this->assertSame($codigosDaListagem, array_column($planilha['dados'], 0));
     }
 
     private function criarTurma(): Turma
