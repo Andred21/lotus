@@ -4,6 +4,7 @@ namespace Tests\Feature\Certification;
 
 use App\Domains\Catalog\Models\Course;
 use App\Domains\Certification\Enums\CertificateStatus;
+use App\Domains\Certification\Exceptions\CorruptedSnapshotException;
 use App\Domains\Certification\Exceptions\ValidacaoDeCertificadoNaoConfigurada;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Models\CertificateSettings;
@@ -12,6 +13,7 @@ use App\Domains\Certification\Services\CertificatePreviewBuilder;
 use App\Domains\Identity\Models\User;
 use App\Shared\Files\Models\File;
 use App\Shared\Pdf\HtmlToPdf;
+use App\Shared\Pdf\PdfRenderException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
@@ -939,6 +941,66 @@ class CertificatePdfTest extends TestCase
         );
     }
 
+    public function test_render_many_tenta_de_novo_e_recupera(): void
+    {
+        $this->fakeGotenberg();
+        $outro = $this->certificadoIrmao('LOT-2026-2001', 'Irma Recuperada');
+        // Falha só na primeira vez do segundo item: a nova tentativa acerta.
+        $this->pdf->failTimes('Irma Recuperada', 1);
+
+        $pdfs = app(CertificatePdfService::class)
+            ->renderMany([$this->certificate, $outro]);
+
+        $this->assertSame(['LOT-2026-1000', 'LOT-2026-2001'], array_keys($pdfs));
+        $this->assertSame('%PDF-fake', $pdfs['LOT-2026-1000']);
+        $this->assertSame('%PDF-fake', $pdfs['LOT-2026-2001']);
+        // 2 do lote + 1 nova tentativa — só do item que falhou.
+        $this->assertSame(3, $this->pdf->callCount());
+    }
+
+    public function test_render_many_falha_persistente_nomeia_o_codigo(): void
+    {
+        $this->fakeGotenberg();
+        $ruim = $this->certificadoIrmao('LOT-2026-2002', 'Irma Persistente');
+        $this->pdf->failTimes('Irma Persistente', 99);
+
+        try {
+            app(CertificatePdfService::class)->renderMany([$this->certificate, $ruim]);
+            $this->fail('A falha persistente tinha de subir.');
+        } catch (PdfRenderException $e) {
+            $this->assertStringContainsString('LOT-2026-2002', $e->getMessage());
+            $this->assertStringNotContainsString('LOT-2026-1000', $e->getMessage());
+        }
+    }
+
+    public function test_render_many_usa_o_mesmo_html_do_unitario(): void
+    {
+        $this->fakeGotenberg();
+        $service = app(CertificatePdfService::class);
+
+        $service->render($this->certificate);
+        $unitario = $this->pdf->lastHtml();
+        $service->renderMany([$this->certificate]);
+
+        $this->assertSame($unitario, $this->pdf->lastHtml());
+        $this->assertTrue($this->pdf->lastOptions()->preferCssPageSize);
+    }
+
+    public function test_render_many_recusa_snapshot_nao_apresentavel_antes_de_chamar_o_conversor(): void
+    {
+        $this->fakeGotenberg();
+        $vazio = $this->certificadoIrmao('LOT-2026-2003', '');
+
+        try {
+            app(CertificatePdfService::class)->renderMany([$this->certificate, $vazio]);
+            $this->fail('O snapshot sem nome não pode virar PDF.');
+        } catch (CorruptedSnapshotException $e) {
+            $this->assertStringContainsString('LOT-2026-2003', $e->getMessage());
+        }
+
+        $this->assertSame(0, $this->pdf->callCount());
+    }
+
     public function test_conversor_fora_do_ar_retorna_500(): void
     {
         $this->actingAsAdmin();
@@ -1131,6 +1193,37 @@ class CertificatePdfTest extends TestCase
             (string) $this->certificate->getRawOriginal('snapshot'),
             true,
         );
+    }
+
+    /**
+     * Outro certificado, com a mesma forma do `setUp` e o próprio código e
+     * nome do aluno — o nome é a marca que o fake do conversor reconhece.
+     */
+    private function certificadoIrmao(string $codigo, string $aluno): Certificate
+    {
+        // Cadeia própria: `users.rut` é único e o builder fixa os da primeira.
+        $n = (int) substr($codigo, -4);
+        $builder = IssuableEnrollmentBuilder::make()
+            ->client([], ['rut' => "70.{$n}.000-1"])
+            ->student(['rut' => "11.{$n}.000-1"])
+            ->redatorUser(['rut' => "8.{$n}.000-1"])
+            ->create();
+        $snapshot = $this->rawSnapshot();
+        $snapshot['aluno']['name'] = $aluno;
+        $snapshot['turma']['id'] = $builder->turmaModel()->id;
+
+        return Certificate::create([
+            'uuid' => (string) Str::uuid(),
+            'enrollment_id' => $builder->enrollmentModel()->id,
+            'course_id' => $builder->courseModel()->id,
+            'redator_id' => $builder->redatorModel()->id,
+            'codigo' => $codigo,
+            'snapshot' => $snapshot,
+            'valido_ate' => null,
+            'status' => CertificateStatus::Emitido,
+            'revoked_at' => null,
+            'revocation_reason' => null,
+        ]);
     }
 
     private function assertHtml(callable $assertion): void

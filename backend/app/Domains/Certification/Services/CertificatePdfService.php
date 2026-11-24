@@ -5,6 +5,7 @@ namespace App\Domains\Certification\Services;
 use App\Domains\Certification\Models\Certificate;
 use App\Shared\Pdf\HtmlToPdf;
 use App\Shared\Pdf\PageOptions;
+use App\Shared\Pdf\PdfRenderException;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CertificatePdfService
@@ -27,6 +28,50 @@ class CertificatePdfService
         // `fromCss`: o tamanho do papel e a margem da página são declarados UMA
         // vez, no `@page` do Blade, onde o layout está calibrado.
         return $this->pdf->render($this->html($certificate, false), PageOptions::fromCss());
+    }
+
+    /**
+     * Vários certificados de uma vez, com o conversor em paralelo limitado. O
+     * HTML de cada um é o do `render()` — `html()` é o único montador.
+     *
+     * Tudo ou nada: o item que o conversor recusou ganha UMA nova tentativa,
+     * pelo caminho unitário; falhando de novo, o lote inteiro falha nomeando os
+     * códigos. Snapshot não apresentável recusa ANTES de qualquer chamada ao
+     * conversor — não se gasta Chromium num lote que já não fecha.
+     *
+     * @param  iterable<Certificate>  $certificates
+     * @return array<string, string> `codigo` → bytes do PDF, na ordem de entrada
+     *
+     * @throws PdfRenderException quando algum item falha depois da nova tentativa
+     */
+    public function renderMany(iterable $certificates): array
+    {
+        $htmls = [];
+        foreach ($certificates as $certificate) {
+            $htmls[$certificate->codigo] = $this->html($certificate, false);
+        }
+
+        $options = PageOptions::fromCss();
+        $results = $this->pdf->renderMany($htmls, $options);
+
+        $failed = [];
+        foreach ($results as $codigo => $result) {
+            if (! $result instanceof PdfRenderException) {
+                continue;
+            }
+
+            try {
+                $results[$codigo] = $this->pdf->render($htmls[$codigo], $options);
+            } catch (PdfRenderException) {
+                $failed[] = (string) $codigo;
+            }
+        }
+
+        if ($failed !== []) {
+            throw PdfRenderException::batchFailed($failed);
+        }
+
+        return $results;
     }
 
     /**

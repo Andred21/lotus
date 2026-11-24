@@ -31,6 +31,12 @@ return [
     'gotenberg' => [
         // Conversor HTML→PDF (compose service `gotenberg`). Sprint 4 (certificados) reusa.
         'url' => env('GOTENBERG_URL', 'http://gotenberg:3000'),
+        // Conversões simultâneas do LOTE (ZIP de certificados). 2 é o maior N que
+        // não gasta mais memória que o serial sob o `mem_limit: 768m` do
+        // Gotenberg (3 já tira 10% da folga; 4+ encosta no teto). Medido em
+        // docs/superpowers/blocos/62-certificacao-paineis-lote-e-planilha/medicao-gotenberg.md,
+        // seção "Lote". Mudar o `mem_limit` exige medir de novo antes de subir.
+        'concurrency' => max(1, (int) env('GOTENBERG_CONCURRENCY', 2)),
     ],
 
     'clamav' => [
