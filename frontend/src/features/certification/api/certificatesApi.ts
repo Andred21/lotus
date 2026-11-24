@@ -2,9 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import { pageEndpoint } from '@shared/api/page'
+import { problemFromBlob } from '@shared/api/problemFromBlob'
 import type {
   BatchIssueItemResultData,
   CertificateData,
+  CertificateDisplayStatus,
+  CertificateExportSummaryData,
   CertificatePageMetaData,
   CertificateQuoteOptionData,
   EmissionPanelTurmaData,
@@ -145,5 +148,77 @@ export function useRevokeCertificate() {
       qc.invalidateQueries({ queryKey: detailKey(certificate.id) })
       invalidate()
     },
+  })
+}
+
+/** Os filtros da tabela que a exportação repete (spec §5.3): o conjunto
+ * exportado é o da listagem, então o servidor recebe os MESMOS `q`,
+ * `display_status` e `quote_id`. */
+export type CertificateExportFilters = {
+  q?: string
+  display_status?: CertificateDisplayStatus | null
+  quote_id?: number | null
+}
+
+export type CertificateExportFormat = 'planilha' | 'zip'
+
+type ExportParams = Record<string, string | number>
+
+/** Vazio some da query, como no `useServerTable`: o servidor lê "ausente" como "todos". */
+function exportParams(filters: CertificateExportFilters): ExportParams {
+  const params: ExportParams = {}
+  if (filters.q) params.q = filters.q
+  if (filters.display_status) params.display_status = filters.display_status
+  if (filters.quote_id != null) params.quote_id = filters.quote_id
+  return params
+}
+
+/** O N do aviso e os revogados que ficam de fora (spec §5.3), da mesma query que
+ * exporta. `gcTime: 0` + `staleTime: 0`: o conjunto muda a cada emissão ou
+ * revogação, e reabrir o diálogo tem de contar de novo, não repintar o número
+ * da abertura anterior. */
+export function useCertificateExportSummary(filters: CertificateExportFilters, enabled: boolean) {
+  const params = exportParams(filters)
+  return useQuery<CertificateExportSummaryData, ProblemDetails>({
+    queryKey: ['certificates', 'export-summary', params],
+    queryFn: () =>
+      api.get<CertificateExportSummaryData>('/api/certificates/export/summary', { params }).then((r) => r.data),
+    enabled,
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+  })
+}
+
+/** `filename` do `Content-Disposition`. Só é legível quando o navegador o
+ * expõe: na mesma origem (produção) sim; entre origens (dev, :5173 → :8080) o
+ * `exposed_headers` do CORS da API não o lista, e cai no nome genérico. */
+function filenameOf(disposition: unknown, format: CertificateExportFormat): string {
+  const header = typeof disposition === 'string' ? disposition : ''
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header)?.[1]
+  if (encoded) return decodeURIComponent(encoded.trim())
+  const plain = /filename="?([^";]+)"?/i.exec(header)?.[1]
+  return plain?.trim() || `certificados.${format === 'zip' ? 'zip' : 'xlsx'}`
+}
+
+/** Baixa a planilha ou o ZIP. O timeout do cliente (120 s, `shared/api/axios`)
+ * cobre o ZIP no teto de 70 certificados (~57 s medidos) sem ajuste. O corpo
+ * de erro também chega como Blob: `problemFromBlob` o devolve ao envelope 7807. */
+export function useCertificateExportDownload() {
+  return useMutation<
+    { blob: Blob; filename: string },
+    ProblemDetails,
+    { format: CertificateExportFormat; filters: CertificateExportFilters }
+  >({
+    mutationFn: ({ format, filters }) =>
+      api
+        .get<Blob>(`/api/certificates/export/${format}`, { params: exportParams(filters), responseType: 'blob' })
+        .then((r) => ({
+          blob: r.data,
+          filename: filenameOf((r.headers as Record<string, unknown> | undefined)?.['content-disposition'], format),
+        }))
+        .catch(async (error: unknown) => {
+          throw await problemFromBlob(error)
+        }),
   })
 }

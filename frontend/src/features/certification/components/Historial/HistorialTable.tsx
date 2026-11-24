@@ -5,6 +5,7 @@ import { formatDate, CERTIFICATE_STATUS_SEVERITY, certificateStatusLabelKey } fr
 import { useHistorial } from '../../hooks/useHistorial'
 import { historialWidths } from './historialColumns'
 import { HistorialDialogs } from './HistorialDialogs'
+import { HistorialExportActions } from './HistorialExportActions'
 import { HistorialQuoteFilter } from './HistorialQuoteFilter'
 import { HistorialStatusFilter } from './HistorialStatusFilter'
 import { HistorialRowActions } from './HistorialRowActions'
@@ -42,6 +43,11 @@ export function HistorialTable() {
         }
         emptyState={<AppEmptyState icon="pi pi-verified" title={t('certificate.emptyHistorial')} description={t('certificate.emptyHistorialHint')} />}
         footerCount={t('certificate.statusSummary', h.statusSummary)}
+        actions={
+          <HistorialExportActions
+            filters={{ q: h.table.term, display_status: h.statusFilter, quote_id: h.quoteFilter }}
+          />
+        }
         loading={h.loading}
         error={h.loadError}
         onRetry={h.reload}
