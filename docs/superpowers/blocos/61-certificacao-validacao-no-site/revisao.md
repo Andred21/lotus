@@ -2,10 +2,17 @@
 
 ## Em aberto
 
-Decisão do João (2026-11-24, após a rodada 1): corrigir os dois Menores antes do fechamento e rodar a rodada 2.
+## Rodada 2 — `481ae702..b9bc4925` — 2026-11-24 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
 
-- Q-1 — Menor — correção aprovada, por aplicar: `Retry-After` em `cors.publico.exposed_headers`; §7 da spec com os dois 429, o 404 do PDF e o QR como saída; risco registrado no `aceitacao.md`.
-- Q-2 — Menor — correção aprovada, por aplicar: validar o RUT do snapshot (válido e número não zerado) antes do `hash_equals`.
+Classificação: alto risco. Rodada aberta depois das correções aprovadas da rodada 1 (decisão do João, 2026-11-24): Q-2 em `7b0c52f8`, Q-1 em `b9bc4925`. A lente 1 confirmou as duas correções de código fechadas, sem regressão, e revisou o bloco inteiro de novo contra o gabarito sem achado novo de código.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | A correção aprovada do Q-1 da rodada 1 dizia "risco registrado no `aceitacao.md`"; o risco da decisão 8 (bloqueio por RUT alheio por até 1 h, saída pelo QR) não entrou no `aceitacao.md`, só no §7 da spec | CONFIRMED | `aceitacao.md:10-13`, `revisao.md` (Em aberto da rodada 1), `rulings.md:17`, `spec.md:234-235` | registrado, não corrigido — Menor não bloqueia. O `aceitacao.md` é regerado inteiro pelo `aceitacao.py` a partir da spec e só leva ação com prova; o risco ficou no §7, que é o contrato que o bloco do site lê, e o dano que o `rulings.md:17` queria evitar (a página do 429 sem o QR) está coberto lá |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0 plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+Lente Codex: `codex-companion task --fresh` falhou de novo com `The 'gpt-5.5' model is not supported when using Codex with a ChatGPT account.`; sem retry com `gpt-5.4`, que já falhou igual na rodada 1. Recorte de testes rodado pela lente 1 no HEAD `b9bc4925`: `--filter='PublicCertificate|PublicCors|RateLimitTest|AuthenticatedRouteMiddlewareTest|RutTest|ListQueryBudget'`, 108 testes, 615 assertions, verde.
 
 ## Rodada 1 — `481ae702..b4ad3624` — 2026-11-24 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 

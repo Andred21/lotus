@@ -2,9 +2,9 @@
 schema_version: 3
 id: 61
 slug: 61-certificacao-validacao-no-site
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings Q-1 Q-2
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/blocos/61-certificacao-validacao-no-site/spec.md
 active_plan: docs/superpowers/blocos/61-certificacao-validacao-no-site/plano.md
@@ -17,9 +17,9 @@ branch: feat/61-certificacao-validacao-no-site
 worktree: ../lotus-61-certificacao-validacao-no-site
 offset: 2
 lane_base: 7982828e
-commit: de6ee698
+commit: b9bc4925
 blocker: null
-updated_at: 2026-11-24T14:10:49-03:00
+updated_at: 2026-11-24T14:31:31-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
