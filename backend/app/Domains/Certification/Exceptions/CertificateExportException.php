@@ -27,12 +27,6 @@ class CertificateExportException extends RecusaDeDominio
         return new self(__('certification.export.over_limit', ['total' => $total, 'teto' => $teto]));
     }
 
-    /** O conversor falhou, mesmo depois da nova tentativa, nestes códigos. Tudo ou nada: nenhum ZIP sai. */
-    public static function zipSemRenderizar(array $codigos): self
-    {
-        return new self(__('certification.export.zip_render_failed', ['codigos' => implode(', ', $codigos)]));
-    }
-
     /** O documento congelado destes códigos não se apresenta: nem se chama o conversor. */
     public static function zipComSnapshotInvalido(array $codigos): self
     {

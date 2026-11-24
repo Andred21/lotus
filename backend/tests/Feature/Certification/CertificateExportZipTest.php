@@ -18,9 +18,11 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Pdf\HtmlToPdf;
+use App\Shared\Pdf\PdfRenderException;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
@@ -201,8 +203,14 @@ class CertificateExportZipTest extends TestCase
         $this->assertSame(['certificado-LOT-2026-0061.pdf', 'certificado-LOT-2026-0062.pdf'], $nomes);
     }
 
+    /**
+     * O certificado não está errado — o conversor é que caiu —, então a recusa
+     * é 503 com `Retry-After` (molde do scanner), e a causa NÃO some: a
+     * `PdfRenderException` é reportada, com os códigos, para quem opera.
+     */
     public function test_falha_persistente_derruba_e_nomeia_o_codigo(): void
     {
+        Exceptions::fake();
         $this->actingAsAdmin();
         $this->emitir('LOT-2026-0071');
         $this->emitir('LOT-2026-0072');
@@ -211,15 +219,19 @@ class CertificateExportZipTest extends TestCase
         $antes = $this->temporarios();
 
         $resposta = $this->getJson('/api/certificates/export/zip?quote_id='.$this->turma->quote_id)
-            ->assertStatus(422)
+            ->assertStatus(503)
             ->assertHeader('Content-Type', 'application/problem+json');
 
+        $this->assertNotNull($resposta->headers->get('Retry-After'));
         $detail = (string) $resposta->json('detail');
         $this->assertStringContainsString('LOT-2026-0072', $detail);
         $this->assertStringNotContainsString('LOT-2026-0071', $detail);
         // Nada de texto do conversor: a recusa é de `lang/`, não de `getMessage()`.
         $this->assertSame('No se pudo generar el PDF de: LOT-2026-0072. No se entregó ningún archivo; inténtalo de nuevo.', $detail);
+        // Nenhum ZIP: nada sobra no diretório temporário.
         $this->assertSame($antes, $this->temporarios());
+        // A causa chega a quem opera: a falha do conversor é reportada, nomeando o código.
+        Exceptions::assertReported(fn (PdfRenderException $e) => $e->failedKeys === ['LOT-2026-0072']);
     }
 
     public function test_snapshot_nao_apresentavel_derruba_e_nomeia_o_codigo(): void
