@@ -112,6 +112,23 @@ class PublicCorsTest extends TestCase
         }
     }
 
+    /**
+     * O Historial baixa planilha e ZIP por XHR e lê o nome do arquivo em `Content-Disposition`.
+     * Entre origens (dev: SPA e API em portas diferentes) o navegador só entrega ao JS os
+     * headers listados em `Access-Control-Expose-Headers`; sem eles o arquivo sai com nome
+     * genérico. `Retry-After` do 503 do ZIP e do 429 vai junto.
+     */
+    #[Test]
+    public function origem_do_app_expoe_content_disposition_e_retry_after_na_rota_autenticada(): void
+    {
+        $response = $this->withHeader('Origin', $this->origemDoApp)->getJson('/api/certificates/export/summary');
+
+        $this->assertSame($this->origemDoApp, $response->headers->get('Access-Control-Allow-Origin'));
+        $expostos = (string) $response->headers->get('Access-Control-Expose-Headers');
+        $this->assertStringContainsString('Content-Disposition', $expostos);
+        $this->assertStringContainsString('Retry-After', $expostos);
+    }
+
     #[Test]
     public function origem_desconhecida_nao_recebe_nada(): void
     {

@@ -25,7 +25,10 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    // Entre origens (dev: SPA e API em portas diferentes) o navegador só entrega ao JS os
+    // headers listados aqui. `Content-Disposition` dá o nome da planilha/ZIP do Historial;
+    // `Retry-After` acompanha o 503 do ZIP e o 429 dos limitadores.
+    'exposed_headers' => ['Content-Disposition', 'Retry-After'],
 
     'max_age' => 0,
 
