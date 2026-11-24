@@ -2,6 +2,11 @@
 
 ## Em aberto
 
+Decisão do João (2026-11-24, após a rodada 1): corrigir os dois Menores antes do fechamento e rodar a rodada 2.
+
+- Q-1 — Menor — correção aprovada, por aplicar: `Retry-After` em `cors.publico.exposed_headers`; §7 da spec com os dois 429, o 404 do PDF e o QR como saída; risco registrado no `aceitacao.md`.
+- Q-2 — Menor — correção aprovada, por aplicar: validar o RUT do snapshot (válido e número não zerado) antes do `hash_equals`.
+
 ## Rodada 1 — `481ae702..b4ad3624` — 2026-11-24 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 
 Classificação: alto risco (documento legal em rota anônima, CORS público, `generated.ts`).
