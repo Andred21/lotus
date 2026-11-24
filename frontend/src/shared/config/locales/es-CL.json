@@ -1060,7 +1060,7 @@
     "colCodigo": "Código",
     "colCourse": "Curso",
     "colQuote": "Cotización",
-    "filterAllFeminine": "Todas",
+    "quoteFilterPlaceholder": "Todas",
     "exportPlanilla": "Planilla",
     "exportZip": "ZIP",
     "exportPlanillaTitle": "Exportar planilla",

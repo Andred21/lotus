@@ -58,7 +58,8 @@ class CertificateSpreadsheet
 
     /**
      * Grava o xlsx em `$path`. `$certificates` é percorrido uma vez (cursor ou
-     * lazy): a planilha não carrega o conjunto na memória.
+     * lazy): o `cursor()` não hidrata todos os models de uma vez, embora o
+     * MySQL bufferize o resultado do lado do cliente.
      *
      * @param  iterable<Certificate>  $certificates
      */
@@ -113,9 +114,16 @@ class CertificateSpreadsheet
                 $xml,
             );
 
-            $zip->addFromString(self::ABA, $xml);
+            if (! $zip->addFromString(self::ABA, $xml)) {
+                throw new RuntimeException(__('certification.export.spreadsheet_failed'));
+            }
         } finally {
-            $zip->close();
+            // `close()` é quem grava de fato o que o `addFromString` enfileirou.
+            $fechou = $zip->close();
+        }
+
+        if (! $fechou) {
+            throw new RuntimeException(__('certification.export.spreadsheet_failed'));
         }
     }
 

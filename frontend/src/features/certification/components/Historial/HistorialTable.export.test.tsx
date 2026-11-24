@@ -135,6 +135,8 @@ describe('Historial — o diálogo de exportação', () => {
     fireEvent.click(screen.getByRole('button', { name: 'certificate.exportPlanilla' }))
 
     expect(await screen.findByText('certificate.exportEmpty')).toBeTruthy()
+    // Só a razão: a frase "Se exportarán 0…" não aparece.
+    expect(screen.queryByText(/certificate\.exportScope/)).toBeNull()
     expect((screen.getByRole('button', { name: 'certificate.exportConfirm' }) as HTMLButtonElement).disabled).toBe(true)
   })
 })

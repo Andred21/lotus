@@ -21,10 +21,13 @@ export function ExportConfirmDialog({ exportState: e, filtered }: Props) {
   const revocados = e.summary?.revocados ?? 0
   const empty = total === 0
 
+  // N = 0: só a razão. "Se exportarán 0 certificados" seria ruído antes dela.
   const message =
     total === null
       ? t('certificate.exportCounting')
-      : t(filtered ? 'certificate.exportScopeFiltered' : 'certificate.exportScopeAll', { count: total })
+      : empty
+        ? t('certificate.exportEmpty')
+        : t(filtered ? 'certificate.exportScopeFiltered' : 'certificate.exportScopeAll', { count: total })
 
   return (
     <ConfirmDialog
@@ -43,7 +46,6 @@ export function ExportConfirmDialog({ exportState: e, filtered }: Props) {
         {revocados > 0 && (
           <p style={{ color: 'var(--text-color-secondary)' }}>{t('certificate.exportRevoked', { count: revocados })}</p>
         )}
-        {empty && <p className="font-medium">{t('certificate.exportEmpty')}</p>}
         {e.retryable && <p className="font-medium">{t('certificate.exportRetryHint')}</p>}
         {e.pending && (
           <p className="font-medium">{t(isZip ? 'certificate.exportZipWorking' : 'certificate.exportPlanillaWorking')}</p>

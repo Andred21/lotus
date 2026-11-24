@@ -7,8 +7,9 @@ use App\Shared\Exceptions\TipoDeRecusa;
 
 /**
  * A exportação do Historial recusada por regra: conjunto vazio (arquivo vazio
- * não é entregue) ou acima do teto (pede filtro mais estreito). 422 pelo
- * `ProblemDetails`, nunca `abort(422)`.
+ * não é entregue), acima do teto (pede filtro mais estreito) ou, no ZIP, um
+ * certificado cujo snapshot congelado não se apresenta (nem se chama o
+ * conversor). 422 pelo `ProblemDetails`, nunca `abort(422)`.
  */
 class CertificateExportException extends RecusaDeDominio
 {

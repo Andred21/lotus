@@ -2,6 +2,8 @@
 
 Stack local da lane 62, Gotenberg `8.36.0` com `mem_limit: 768m` (o mesmo de
 `docker-compose.prod.yml`, agora também no `docker-compose.yml`). Medido em 2026-11-24.
+Só o compose LOCAL tem `memswap_limit: 768m`; em produção o contêiner pode trocar memória por swap,
+conforme houver swap na EC2 — a folga medida aqui é a do local, não a garantia de produção.
 
 Certificado de medida: o snapshot do `CertificadoMatrizGotenbergTest` com **16 módulos** de 3
 marcadores (o caso `temario_grande`), pelo `CertificatePdfService` de produção e o
@@ -245,8 +247,14 @@ vem comprimido) e a entrega. `RestartCount=0` e `OOMKilled=false` do Gotenberg a
 **O teto de 70 segue coerente.** Pelo ritmo típico do ZIP (0,48 s) 70 certificados levam ~34 s; pelo pior
 ritmo por certificado que a medição usou para o teto (0,81 s) levam ~57 s, metade do `fastcgi_read_timeout`
 de produção (120 s). A rodada mais lenta dos unitários (17,76 s, ~1,18 s por certificado, sem concorrência) é
-o único ponto que passa de 0,81 s, e é do braço SEM lote: 70 certificados nesse ritmo seriam 83 s, ainda
-abaixo dos 120 s. Nada aqui pede mudar o teto.
+o único ponto que passa de 0,81 s, e é do braço SEM lote: 70 certificados nesse ritmo seriam 83 s, acima
+da metade do `fastcgi_read_timeout` (60 s) que a regra do teto pede, embora abaixo dos 120 s. Esse braço
+não é o do ZIP (que roda com concorrência 2 e leva ~0,48 s por certificado), então não pede mudar o teto.
+
+**Limite da regra do teto.** "Metade do timeout" pressupõe conversor saudável e um ZIP por vez. Os outros
+casos são cobertos à parte: o conversor lento ou travado, pelo orçamento de tempo do `renderMany` (60 s
+para as novas tentativas) e pelo timeout de 15 s por requisição do lote; vários ZIPs ao mesmo tempo, pelo
+lock global `certificate-zip` (um ZIP em geração, os demais recebem 503 com `Retry-After`).
 
 **Documento igual.** Os 15 PDFs do ZIP comparados com o download unitário do mesmo certificado, no container
 `app` (`pdftoppm -png -r 144`, só em `/tmp`, apagado depois): 30 páginas, **diferença 0** em cada PNG

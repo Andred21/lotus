@@ -49,7 +49,9 @@ class GotenbergHtmlToPdf implements HtmlToPdf
 
         $endpoint = $this->endpoint();
 
-        // O limite é do client (`EachPromise`): a requisição só é construída e
+        // No máximo `services.gotenberg.concurrency` conversões em voo: o
+        // Gotenberg é um Chromium único num container de 768 MB, e o teto é o
+        // que o protege. O limite é do client (`EachPromise`): a requisição só é construída e
         // enviada quando uma vaga abre, então o timeout de 15 s da requisição conta
         // da hora em que o Gotenberg a recebe, não do tempo de espera na fila
         // daqui. Sem este teto o pool mandaria o lote inteiro de uma vez.

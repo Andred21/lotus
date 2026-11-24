@@ -19,9 +19,8 @@ interface HtmlToPdf
     public function render(string $html, PageOptions $options): string;
 
     /**
-     * Converte vários HTMLs, com no máximo `services.gotenberg.concurrency`
-     * conversões em voo: o conversor é um Chromium único num container de
-     * 768 MB, e o teto é o que o protege.
+     * Converte vários HTMLs, com a concorrência limitada pelo adapter: o
+     * conversor é um recurso escasso, e o teto é o que o protege.
      *
      * A falha é do item, não do lote: o item que o conversor recusou volta como
      * `PdfRenderException` na própria chave, e os demais voltam como bytes. Quem

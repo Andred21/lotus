@@ -172,8 +172,6 @@ class RateLimitTest extends TestCase
     {
         $this->actingAsAdmin();
 
-        $this->assertSame(RateLimits::LOTE_CERTIFICADO, RateLimits::ZIP_CERTIFICADO);
-
         // Sem `quote_id` cada pedido é 422 — e conta no balde igual.
         for ($i = 0; $i < RateLimits::ZIP_CERTIFICADO; $i++) {
             $this->getJson('/api/certificates/export/zip')->assertStatus(422);

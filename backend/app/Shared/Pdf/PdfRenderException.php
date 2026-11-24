@@ -5,9 +5,9 @@ namespace App\Shared\Pdf;
 use RuntimeException;
 
 /**
- * Falha do conversor. Sobe ao handler global RFC 7807 como 500 — o documento
- * não é gerado, e nenhum caller inventa um PDF vazio no lugar (§5.4). Qual
- * documento falhou sai do stack trace; a mensagem não repete o caller.
+ * Falha do conversor; sem tratamento sobe como 500 e ninguém inventa PDF vazio (§5.4).
+ * No lote, `batchFailed` nomeia os códigos (`failedKeys`); o ZIP a converte em 503, pois o
+ * conversor é que caiu.
  */
 class PdfRenderException extends RuntimeException
 {

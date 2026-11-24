@@ -1060,7 +1060,7 @@
     "colCodigo": "Code",
     "colCourse": "Course",
     "colQuote": "Quote",
-    "filterAllFeminine": "All",
+    "quoteFilterPlaceholder": "All",
     "exportPlanilla": "Spreadsheet",
     "exportZip": "ZIP",
     "exportPlanillaTitle": "Export spreadsheet",

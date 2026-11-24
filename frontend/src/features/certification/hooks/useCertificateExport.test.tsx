@@ -207,6 +207,34 @@ describe('useCertificateExport — confirmar', () => {
     await waitFor(() => expect(result.current.errorMessage).toBeNull())
   })
 
+  it('reabrir com o N antigo em cache e a nova contagem falhando (429) não deixa confirmar sobre o N velho', async () => {
+    const { result } = await abrir('planilha')
+    act(() => result.current.close())
+    get.mockImplementation((() => Promise.reject(problema(429, 'Demasiadas solicitudes.'))) as typeof api.get)
+
+    act(() => result.current.open('planilha'))
+
+    await waitFor(() => expect(result.current.errorMessage).toBe('Demasiadas solicitudes.'))
+    expect(result.current.summary).toBeNull()
+    get.mockClear()
+
+    act(() => result.current.confirm())
+
+    expect(get).not.toHaveBeenCalled()
+    expect(salvar).not.toHaveBeenCalled()
+  })
+
+  it('reabrir não repinta o N da abertura anterior enquanto recontagem', async () => {
+    const { result } = await abrir('planilha')
+    act(() => result.current.close())
+    get.mockImplementation((() => new Promise(() => {})) as typeof api.get)
+
+    act(() => result.current.open('planilha'))
+
+    await waitFor(() => expect(result.current.summaryLoading).toBe(true))
+    expect(result.current.summary).toBeNull()
+  })
+
   it('falha do próprio resumo (429) aparece como erro e é "tente de novo"', async () => {
     get.mockRejectedValue(problema(429, 'Demasiadas solicitudes.'))
     const { result } = renderHook(() => useCertificateExport(filtros), { wrapper })

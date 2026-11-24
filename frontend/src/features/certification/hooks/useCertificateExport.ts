@@ -43,7 +43,10 @@ export function useCertificateExport(filters: CertificateExportFilters) {
     setFormat(null)
   }
 
-  const summary = summaryQuery.data ?? null
+  // Sem número enquanto recontagem ou erro: o N antigo não pisca ao reabrir, o
+  // `confirm()` não age sobre N velho e um refetch que falhou mas manteve o
+  // data antigo não deixa o confirmar habilitado.
+  const summary = summaryQuery.isFetching || summaryQuery.isError ? null : (summaryQuery.data ?? null)
 
   const confirm = () => {
     if (format === null || download.isPending || summary === null || summary.total === 0) return

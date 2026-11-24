@@ -6,7 +6,7 @@ import { problemFromBlob } from '@shared/api/problemFromBlob'
 import type {
   BatchIssueItemResultData,
   CertificateData,
-  CertificateDisplayStatus,
+  CertificateExportQueryData,
   CertificateExportSummaryData,
   CertificatePageMetaData,
   CertificateQuoteOptionData,
@@ -153,12 +153,9 @@ export function useRevokeCertificate() {
 
 /** Os filtros da tabela que a exportação repete (spec §5.3): o conjunto
  * exportado é o da listagem, então o servidor recebe os MESMOS `q`,
- * `display_status` e `quote_id`. */
-export type CertificateExportFilters = {
-  q?: string
-  display_status?: CertificateDisplayStatus | null
-  quote_id?: number | null
-}
+ * `display_status` e `quote_id`. Derivado do DTO gerado: filtro novo no
+ * backend entra aqui sem edição à mão. */
+export type CertificateExportFilters = Partial<CertificateExportQueryData>
 
 export type CertificateExportFormat = 'planilha' | 'zip'
 
@@ -190,9 +187,9 @@ export function useCertificateExportSummary(filters: CertificateExportFilters, e
   })
 }
 
-/** `filename` do `Content-Disposition`. Só é legível quando o navegador o
- * expõe: na mesma origem (produção) sim; entre origens (dev, :5173 → :8080) o
- * `exposed_headers` do CORS da API não o lista, e cai no nome genérico. */
+/** `filename` do `Content-Disposition`. A API o lista em `exposed_headers` do
+ * CORS (`config/cors.php`), então ele é legível entre origens também (dev,
+ * :5173 → :8080); o nome genérico é só o fallback para o header ausente. */
 function filenameOf(disposition: unknown, format: CertificateExportFormat): string {
   const header = typeof disposition === 'string' ? disposition : ''
   const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header)?.[1]
@@ -202,7 +199,8 @@ function filenameOf(disposition: unknown, format: CertificateExportFormat): stri
 }
 
 /** Baixa a planilha ou o ZIP. O timeout do cliente (120 s, `shared/api/axios`)
- * cobre o ZIP no teto de 70 certificados (~57 s medidos) sem ajuste. O corpo
+ * cobre o ZIP no teto de 70 certificados (~57 s é projeção: 70 × 0,81 s, o pior
+ * ritmo por certificado medido, não um ZIP de 70 medido) sem ajuste. O corpo
  * de erro também chega como Blob: `problemFromBlob` o devolve ao envelope 7807. */
 export function useCertificateExportDownload() {
   return useMutation<

@@ -37,7 +37,7 @@ export function HistorialQuoteFilter({
           options={options}
           optionLabel="code"
           optionValue="id"
-          placeholder={t('certificate.filterAllFeminine')}
+          placeholder={t('certificate.quoteFilterPlaceholder')}
           filter
           showClear
           emptyFilterMessage={t('common.noOptions')}
