@@ -6,11 +6,13 @@ import type {
   BatchIssueItemResultData,
   CertificateData,
   CertificatePageMetaData,
+  CertificateQuoteOptionData,
   EmissionPanelTurmaData,
 } from '@shared/types/generated'
 
 const panelKey = ['certificates', 'emission-panel'] as const
 export const listKey = ['certificates', 'list'] as const
+const quotesKey = ['certificates', 'quotes'] as const
 const detailKey = (id: number) => ['certificates', 'detail', id] as const
 
 /** `enabled` porque o endpoint exige `certification.certificate.issue`:
@@ -52,6 +54,17 @@ export const certificatesPage = pageEndpoint<CertificateData, CertificatePageMet
  * aba que nunca perde o foco só corrige no próximo remonte. */
 export const certificatesTableOptions = { key: listKey, refetchOnWindowFocus: true } as const
 
+/** As opções do filtro de cotação do Historial (spec §5.2): só cotações com ao
+ * menos um certificado, da mais recente para a mais antiga — a ordem e o corte
+ * são do servidor. Emitir pode abrir uma cotação nova na lista, então a key
+ * entra nas invalidações de `useInvalidate`. */
+export function useCertificateQuotes() {
+  return useQuery<CertificateQuoteOptionData[], ProblemDetails>({
+    queryKey: quotesKey,
+    queryFn: () => api.get<CertificateQuoteOptionData[]>('/api/certificates/quotes').then((r) => r.data),
+  })
+}
+
 /** Certificado pontual por id — o `Ver` de uma linha já emitida
  * (`useEmissionPanelState`) só recebe `{id, codigo, status}` do painel
  * (`EmissionPanelCertificateData`), sem `created_at`. Busca UM certificado
@@ -76,6 +89,7 @@ function useInvalidate() {
   return () => {
     qc.invalidateQueries({ queryKey: panelKey })
     qc.invalidateQueries({ queryKey: listKey })
+    qc.invalidateQueries({ queryKey: quotesKey })
   }
 }
 

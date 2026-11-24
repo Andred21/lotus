@@ -1059,6 +1059,8 @@
     "colAlumno": "Alumno",
     "colCodigo": "Código",
     "colCourse": "Curso",
+    "colQuote": "Cotización",
+    "filterAllFeminine": "Todas",
     "colIssuedAt": "Fecha emisión",
     "colValidUntil": "Vigencia hasta",
     "colStatus": "Estado",

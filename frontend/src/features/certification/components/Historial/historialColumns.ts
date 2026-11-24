@@ -19,6 +19,7 @@ export const historialWidths = () =>
     codigo: COL.code,
     alumno: COL.identity,
     curso: COL.text,
+    cotizacion: COL.code,
     emitidoEm: COL.date,
     validoAte: COL.date,
     estado: COL.tag,

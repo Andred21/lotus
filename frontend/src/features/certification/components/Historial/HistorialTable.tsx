@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { AppColumn, AppTag, AppEmptyState, IdentityCell, SearchableTableFrame, stickyActionsColumn, identifierClass, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppColumn, AppTag, AppEmptyState, IdentityCell, RecordCode, SearchableTableFrame, stickyActionsColumn, identifierClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { CertificateData } from '@shared/types/generated'
 import { formatDate, CERTIFICATE_STATUS_SEVERITY, certificateStatusLabelKey } from '@shared/lib'
 import { useHistorial } from '../../hooks/useHistorial'
 import { historialWidths } from './historialColumns'
 import { HistorialDialogs } from './HistorialDialogs'
+import { HistorialQuoteFilter } from './HistorialQuoteFilter'
 import { HistorialStatusFilter } from './HistorialStatusFilter'
 import { HistorialRowActions } from './HistorialRowActions'
 
@@ -32,8 +33,13 @@ export function HistorialTable() {
         sortOrder={h.table.sortOrder}
         onSort={h.table.onSort}
         searchPlaceholder={t('certificate.searchPlaceholder')}
-        onClearFilter={h.clearStatusFilter}
-        filterSlot={<HistorialStatusFilter value={h.statusFilter} onChange={h.setStatusFilter} />}
+        onClearFilter={h.clearFilters}
+        filterSlot={
+          <>
+            <HistorialStatusFilter value={h.statusFilter} onChange={h.setStatusFilter} />
+            <HistorialQuoteFilter value={h.quoteFilter} options={h.quoteOptions} onChange={h.setQuoteFilter} />
+          </>
+        }
         emptyState={<AppEmptyState icon="pi pi-verified" title={t('certificate.emptyHistorial')} description={t('certificate.emptyHistorialHint')} />}
         footerCount={t('certificate.statusSummary', h.statusSummary)}
         loading={h.loading}
@@ -74,6 +80,11 @@ export function HistorialTable() {
           style={largura.alumno}
         />
         <AppColumn header={t('certificate.colCourse')} body={(c: CertificateData) => c.snapshot.curso.name} style={largura.curso} />
+        <AppColumn
+          header={t('certificate.colQuote')}
+          body={(c: CertificateData) => (c.quote_code ? <RecordCode className="whitespace-nowrap">{c.quote_code}</RecordCode> : '—')}
+          style={largura.cotizacion}
+        />
         <AppColumn
           field="created_at" sortable
           header={t('certificate.colIssuedAt')}

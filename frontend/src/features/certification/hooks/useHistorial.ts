@@ -7,13 +7,19 @@ import type {
   EmissionPanelEnrollmentData,
   EmissionPanelTurmaData,
 } from '@shared/types/generated'
-import { certificatesPage, certificatesTableOptions, useCertificate, useEmissionPanel } from '../api/certificatesApi'
+import {
+  certificatesPage,
+  certificatesTableOptions,
+  useCertificate,
+  useCertificateQuotes,
+  useEmissionPanel,
+} from '../api/certificatesApi'
 
 export type ReissueTarget = { enrollment: EmissionPanelEnrollmentData; turma: EmissionPanelTurmaData }
 
 /**
  * Estado da aba Historial: a página do servidor (`useServerTable` sobre
- * `certificatesPage`, com busca, filtro `display_status` e sort no backend —
+ * `certificatesPage`, com busca, filtros `display_status` e `quote_id` e sort no backend —
  * spec D1/D4) + contagens por estado lidas de `meta.summary` (D6) + a query
  * pontual do `Ver` (`useCertificate`, mesmo padrão do `useEmissionPanelState`)
  * + a localização da matrícula/turma no painel de emissão (`useEmissionPanel`,
@@ -28,6 +34,8 @@ export function useHistorial() {
   const { can } = usePermissions()
 
   const [statusFilter, setStatusFilter] = useState<CertificateDisplayStatus | null>(null)
+  const [quoteFilter, setQuoteFilter] = useState<number | null>(null)
+  const quotes = useCertificateQuotes()
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
   const [revoking, setRevoking] = useState<CertificateData | null>(null)
   const [reissuing, setReissuing] = useState<CertificateData | null>(null)
@@ -52,7 +60,7 @@ export function useHistorial() {
   // chamar aqui, ao contrário do que `TurmasTable`/`BudgetsTable` faziam à mão.
   const table = useServerTable<CertificateData, CertificatePageMetaData>(certificatesPage, {
     ...certificatesTableOptions,
-    filters: { display_status: statusFilter },
+    filters: { display_status: statusFilter, quote_id: quoteFilter },
   })
 
   /** Reemissão concluída: fecha a confirmação e abre o diálogo do certificado
@@ -63,9 +71,12 @@ export function useHistorial() {
     setViewingCertificateId(certificate.id)
   }
 
-  // Só o filtro de estado: a composição com a busca é da moldura, que exige
-  // este callback junto do `filterSlot` (SearchableTableFrame).
-  const clearStatusFilter = () => setStatusFilter(null)
+  // Os dois filtros nomeados (estado e cotação): a composição com a busca é da
+  // moldura, que exige este callback junto do `filterSlot` (SearchableTableFrame).
+  const clearFilters = () => {
+    setStatusFilter(null)
+    setQuoteFilter(null)
+  }
 
   // Do `meta` (spec D6): contado no servidor sobre o escopo de `q`, com o
   // MESMO `CASE` do filtro. Zeros antes do primeiro GET.
@@ -91,7 +102,10 @@ export function useHistorial() {
     table,
     statusFilter,
     setStatusFilter,
-    clearStatusFilter,
+    quoteFilter,
+    setQuoteFilter,
+    quoteOptions: quotes.data ?? [],
+    clearFilters,
     statusSummary,
     loading: table.loading,
     loadError: table.error,

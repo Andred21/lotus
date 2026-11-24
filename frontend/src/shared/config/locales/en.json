@@ -1059,6 +1059,8 @@
     "colAlumno": "Student",
     "colCodigo": "Code",
     "colCourse": "Course",
+    "colQuote": "Quote",
+    "filterAllFeminine": "All",
     "colIssuedAt": "Issue date",
     "colValidUntil": "Valid until",
     "colStatus": "Status",
