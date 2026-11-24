@@ -5,6 +5,7 @@ namespace App\Domains\Certification\Http\Controllers;
 use App\Domains\Certification\Data\CertificateExportQueryData;
 use App\Domains\Certification\Data\CertificateExportSummaryData;
 use App\Domains\Certification\Exceptions\CertificateExportException;
+use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificateExportScope;
 use App\Domains\Certification\Services\CertificatePdfService;
 use App\Domains\Certification\Services\CertificateSpreadsheet;
@@ -14,7 +15,9 @@ use App\Shared\Pdf\PdfRenderException;
 use App\Shared\Pdf\PdfUnavailableException;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -25,6 +28,12 @@ use Throwable;
  */
 class CertificateExportController extends Controller implements HasMiddleware
 {
+    /** Vaga única de ZIP em geração, entre todos os usuários. */
+    private const ZIP_LOCK = 'certificate-zip';
+
+    /** Segundos até o lock soltar sozinho: os 120 s do nginx mais folga. */
+    private const ZIP_LOCK_TTL = 150;
+
     public static function middleware(): array
     {
         return [
@@ -57,7 +66,7 @@ class CertificateExportController extends Controller implements HasMiddleware
             throw CertificateExportException::acimaDoTeto($resumo->total, $planilha->teto);
         }
 
-        $caminho = tempnam(sys_get_temp_dir(), 'lotus-planilha-');
+        $caminho = $this->temporario('lotus-planilha-', __('certification.export.spreadsheet_failed'));
 
         try {
             $planilha->write($escopo->query($filtros)->cursor(), $caminho);
@@ -112,6 +121,38 @@ class CertificateExportController extends Controller implements HasMiddleware
             throw CertificateExportException::zipComSnapshotInvalido($invalidos);
         }
 
+        // O Gotenberg é um Chromium único: o limitador por usuário não impede
+        // dois usuários de gerar ZIPs ao mesmo tempo, e com vários em voo ele
+        // fica sem folga de memória. O lock é global; sem vaga, 503 com
+        // `Retry-After` — sem gastar o conversor. O TTL cobre o pior caso do
+        // orçamento do lote e solta sozinho se o processo morrer.
+        $lock = Cache::lock(self::ZIP_LOCK, self::ZIP_LOCK_TTL);
+
+        if (! $lock->get()) {
+            throw new PdfUnavailableException(__('certification.export.zip_busy'));
+        }
+
+        try {
+            $caminho = $this->gerarZip($certificados, $pdfs, $zip);
+        } finally {
+            $lock->release();
+        }
+
+        return response()
+            ->download($caminho, $escopo->nomeDoArquivo($filtros).'.zip', [
+                'Content-Type' => 'application/zip',
+            ])
+            ->deleteFileAfterSend();
+    }
+
+    /**
+     * Renderiza e monta o ZIP num temporário; devolve o caminho. Roda dentro do
+     * lock global, que quem chama solta em `finally`.
+     *
+     * @param  iterable<Certificate>  $certificados
+     */
+    private function gerarZip(iterable $certificados, CertificatePdfService $pdfs, CertificateZip $zip): string
+    {
         try {
             $renderizados = $pdfs->renderMany($certificados);
         } catch (PdfRenderException $e) {
@@ -131,7 +172,7 @@ class CertificateExportController extends Controller implements HasMiddleware
             );
         }
 
-        $caminho = tempnam(sys_get_temp_dir(), 'lotus-zip-');
+        $caminho = $this->temporario('lotus-zip-', __('certification.export.zip_failed'));
 
         try {
             $zip->build($renderizados, $caminho);
@@ -141,10 +182,18 @@ class CertificateExportController extends Controller implements HasMiddleware
             throw $e;
         }
 
-        return response()
-            ->download($caminho, $escopo->nomeDoArquivo($filtros).'.zip', [
-                'Content-Type' => 'application/zip',
-            ])
-            ->deleteFileAfterSend();
+        return $caminho;
+    }
+
+    /** `tempnam()` devolve `false` quando não consegue criar o arquivo (disco cheio, sem permissão). */
+    private function temporario(string $prefixo, string $mensagem): string
+    {
+        $caminho = tempnam(sys_get_temp_dir(), $prefixo);
+
+        if ($caminho === false) {
+            throw new RuntimeException($mensagem);
+        }
+
+        return $caminho;
     }
 }

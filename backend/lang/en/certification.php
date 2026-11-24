@@ -24,6 +24,7 @@ return [
         'zip_render_failed' => 'The PDF could not be generated for: :codigos. No file was delivered; try again.',
         'zip_snapshot_invalid' => 'The ZIP cannot be generated: the frozen document of :codigos lacks data a certificate needs. No file was delivered.',
         'zip_failed' => 'The ZIP file could not be generated.',
+        'zip_busy' => 'Another ZIP download is in progress. Try again in a few seconds.',
     ],
     'enrollment' => [
         'not_found' => 'The enrollment does not exist.',

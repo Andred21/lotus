@@ -24,6 +24,7 @@ return [
         'zip_render_failed' => 'No se pudo generar el PDF de: :codigos. No se entregó ningún archivo; inténtalo de nuevo.',
         'zip_snapshot_invalid' => 'No se puede generar el ZIP: el documento congelado de :codigos no tiene todos los datos que un certificado necesita. No se entregó ningún archivo.',
         'zip_failed' => 'No se pudo generar el archivo ZIP.',
+        'zip_busy' => 'Hay otra descarga de ZIP en curso. Inténtalo de nuevo en unos segundos.',
     ],
     'enrollment' => [
         'not_found' => 'La matrícula no existe.',

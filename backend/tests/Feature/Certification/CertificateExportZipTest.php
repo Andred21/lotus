@@ -22,6 +22,7 @@ use App\Shared\Pdf\PdfRenderException;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -234,6 +235,59 @@ class CertificateExportZipTest extends TestCase
         Exceptions::assertReported(fn (PdfRenderException $e) => $e->failedKeys === ['LOT-2026-0072']);
     }
 
+    /**
+     * O limitador por usuário não segura dois usuários ao mesmo tempo, e o
+     * Gotenberg não aguenta mais de um ZIP em voo: o lock é global, e quem não
+     * pega a vaga recebe 503 com `Retry-After` — sem gastar o conversor.
+     */
+    public function test_com_o_lock_global_ocupado_a_resposta_e_503_com_retry_after(): void
+    {
+        $this->actingAsAdmin();
+        $this->emitir('LOT-2026-0101');
+        $outroZip = Cache::lock('certificate-zip', 150);
+        $this->assertTrue($outroZip->get());
+        $antes = $this->temporarios();
+
+        $resposta = $this->getJson('/api/certificates/export/zip?quote_id='.$this->turma->quote_id)
+            ->assertStatus(503)
+            ->assertHeader('Content-Type', 'application/problem+json')
+            ->assertJsonPath('detail', 'Hay otra descarga de ZIP en curso. Inténtalo de nuevo en unos segundos.');
+
+        $this->assertNotNull($resposta->headers->get('Retry-After'));
+        $this->assertSame(0, $this->pdf->callCount());
+        $this->assertSame($antes, $this->temporarios());
+        // O lock de quem já gerava segue dele.
+        $this->assertFalse(Cache::lock('certificate-zip', 150)->get());
+        $outroZip->release();
+    }
+
+    public function test_o_lock_global_e_liberado_ao_fim_do_zip_e_na_falha(): void
+    {
+        $this->actingAsAdmin();
+        $this->emitir('LOT-2026-0111');
+        $url = '/api/certificates/export/zip?quote_id='.$this->turma->quote_id;
+
+        $this->get($url)->assertOk();
+        $this->assertTrue($this->lockLivre(), 'o lock sobrou depois de um ZIP que deu certo');
+
+        $this->pdf->failTimes('LOT-2026-0111', 99);
+        $this->getJson($url)->assertStatus(503);
+        $this->assertTrue($this->lockLivre(), 'o lock sobrou depois de uma falha do conversor');
+    }
+
+    public function test_so_revogados_no_zip_e_422_como_na_planilha(): void
+    {
+        $this->actingAsAdmin();
+        $this->emitir('LOT-2026-0121');
+        $this->emitir('LOT-2026-0122', status: CertificateStatus::Revocado);
+
+        $this->getJson('/api/certificates/export/zip?quote_id='.$this->turma->quote_id.'&display_status=revocado')
+            ->assertStatus(422)
+            ->assertJsonPath('detail', 'No hay certificados para exportar con los filtros aplicados.');
+
+        $this->assertSame(0, $this->pdf->callCount());
+    }
+
     public function test_snapshot_nao_apresentavel_derruba_e_nomeia_o_codigo(): void
     {
         $this->actingAsAdmin();
@@ -291,6 +345,17 @@ class CertificateExportZipTest extends TestCase
         $this->getJson('/api/certificates/export/zip?quote_id='.$this->turma->quote_id)->assertStatus(500);
 
         $this->assertSame($antes, $this->temporarios());
+    }
+
+    private function lockLivre(): bool
+    {
+        $lock = Cache::lock('certificate-zip', 150);
+        $livre = $lock->get();
+        if ($livre) {
+            $lock->release();
+        }
+
+        return $livre;
     }
 
     public function test_exige_permissao_de_ver(): void
