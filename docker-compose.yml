@@ -50,6 +50,9 @@ services:
   gotenberg:
     # Tag exata (D17, bloco 40): trocá-la exige rodar CertificadoMatrizGotenbergTest de novo.
     image: gotenberg/gotenberg:8.36.0
+    # O mesmo teto de produção (docker-compose.prod.yml): a medição do lote
+    # (bloco 62) só vale se o Chromium local apertar onde o de produção aperta.
+    mem_limit: 768m
 
   clamav:
     # Tag COM base de assinaturas embutida (146 MiB comprimidos): o `clamd`
