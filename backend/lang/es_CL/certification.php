@@ -19,6 +19,7 @@ return [
     'export' => [
         'empty' => 'No hay certificados para exportar con los filtros aplicados.',
         'over_limit' => 'La exportación tiene :total certificados y el máximo es :teto. Aplica un filtro más estrecho.',
+        'spreadsheet_failed' => 'No se pudo generar la planilla.',
     ],
     'enrollment' => [
         'not_found' => 'La matrícula no existe.',

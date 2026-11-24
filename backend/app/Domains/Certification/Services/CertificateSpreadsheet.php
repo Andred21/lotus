@@ -5,13 +5,17 @@ namespace App\Domains\Certification\Services;
 use App\Domains\Certification\Models\Certificate;
 use Illuminate\Support\Carbon;
 use OpenSpout\Common\Entity\Cell;
+use OpenSpout\Common\Entity\Cell\EmptyCell;
 use OpenSpout\Common\Entity\Cell\FormulaCell;
+use OpenSpout\Common\Entity\Cell\StringCell;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Color;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\XLSX\Options;
 use OpenSpout\Writer\XLSX\Writer;
+use RuntimeException;
 use Throwable;
+use ZipArchive;
 
 /**
  * A planilha do Historial (spec §5.4): uma linha por certificado exportado,
@@ -22,7 +26,14 @@ use Throwable;
  * marca a linha em vez de recusar.
  *
  * O link é a fórmula `HYPERLINK`: o openspout 5 não tem célula de hiperlink, e
- * xlsx é o formato que carrega texto clicável (CSV não carrega).
+ * xlsx é o formato que carrega texto clicável (CSV não carrega). O writer
+ * grava a fórmula sem o valor em cache, então `gravarValorDoLink()` o
+ * acrescenta depois de fechar o arquivo: leitor que não recalcula (Modo
+ * Protegido, prévia de e-mail, Quick Look) mostra `ABRIR`, não célula vazia.
+ *
+ * Texto do snapshot vai SEMPRE como `StringCell`: o `Cell::fromValue` do
+ * openspout promove a fórmula qualquer string que comece com `=`, e nome ou
+ * curso digitado ou importado não pode executar nada no Excel de quem exporta.
  */
 class CertificateSpreadsheet
 {
@@ -32,6 +43,9 @@ class CertificateSpreadsheet
     public const HEADER = ['Código', 'Fecha Curso', 'RUT', 'Nombre Completo', 'Curso', 'Link Descarga'];
 
     private const LINK_TEXTO = 'ABRIR';
+
+    /** A aba única que o writer cria. */
+    private const ABA = 'xl/worksheets/sheet1.xml';
 
     /** Verde-azulado do cabeçalho, como no modelo da Lotus. */
     private const COR_CABECALHO = '0F766E';
@@ -70,6 +84,39 @@ class CertificateSpreadsheet
         } finally {
             $writer->close();
         }
+
+        $this->gravarValorDoLink($path);
+    }
+
+    /**
+     * Reescreve `<c r="F2" s="N"><f>…</f></c>` como
+     * `<c r="F2" s="N" t="str"><f>…</f><v>ABRIR</v></c>`: `t="str"` é o que
+     * marca o resultado textual. Só toca célula com fórmula (as de dados da
+     * coluna do link); o cabeçalho e o resto seguem como o writer os gravou.
+     */
+    private function gravarValorDoLink(string $path): void
+    {
+        $zip = new ZipArchive;
+        if ($zip->open($path) !== true) {
+            throw new RuntimeException(__('certification.export.spreadsheet_failed'));
+        }
+
+        try {
+            $xml = $zip->getFromName(self::ABA);
+            if ($xml === false) {
+                throw new RuntimeException(__('certification.export.spreadsheet_failed'));
+            }
+
+            $xml = preg_replace(
+                '#<c r="(F\d+)" s="(\d+)"><f>(.*?)</f></c>#',
+                '<c r="$1" s="$2" t="str"><f>$3</f><v>'.self::LINK_TEXTO.'</v></c>',
+                $xml,
+            );
+
+            $zip->addFromString(self::ABA, $xml);
+        } finally {
+            $zip->close();
+        }
     }
 
     private function linha(Certificate $certificate): Row
@@ -79,13 +126,19 @@ class CertificateSpreadsheet
         $snapshot = $certificate->snapshot;
 
         return new Row([
-            Cell::fromValue($certificate->codigo),
-            Cell::fromValue($this->data($snapshot->turma->end_date)),
-            Cell::fromValue($snapshot->aluno->rut ?? ''),
-            Cell::fromValue($snapshot->aluno->name),
-            Cell::fromValue($snapshot->curso->name),
+            $this->texto($certificate->codigo),
+            $this->texto($this->data($snapshot->turma->end_date)),
+            $this->texto($snapshot->aluno->rut),
+            $this->texto($snapshot->aluno->name),
+            $this->texto($snapshot->curso->name),
             $this->link($certificate->uuid),
         ]);
+    }
+
+    /** Sempre texto literal; vazio ou nulo é célula vazia. */
+    private function texto(?string $valor): Cell
+    {
+        return $valor === null || $valor === '' ? new EmptyCell(null) : new StringCell($valor);
     }
 
     /** `dd/mm/yy`; sem data, vazio — a linha não sai por isso. */
@@ -109,6 +162,9 @@ class CertificateSpreadsheet
 
         // Aspas dobradas é o escape de string do Excel; o uuid e `app.url` não
         // as trazem, mas a fórmula não confia nisso.
-        return new FormulaCell('=HYPERLINK("'.str_replace('"', '""', $url).'","'.self::LINK_TEXTO.'")');
+        return new FormulaCell(
+            '=HYPERLINK("'.str_replace('"', '""', $url).'","'.self::LINK_TEXTO.'")',
+            self::LINK_TEXTO,
+        );
     }
 }

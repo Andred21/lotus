@@ -22,10 +22,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use OpenSpout\Common\Entity\Cell;
+use OpenSpout\Common\Entity\Cell\FormulaCell;
 use OpenSpout\Reader\XLSX\Reader;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
 use Tests\Support\CreatesDomainRecords;
 use Tests\TestCase;
+use ZipArchive;
 
 /**
  * Exportação do Historial (spec §5.3 e §5.4): o N do aviso e as linhas da
@@ -194,6 +197,58 @@ class CertificateExportTest extends TestCase
         $this->assertSame("=HYPERLINK(\"{$url}\",\"ABRIR\")", $linhas['dados'][0][5]);
     }
 
+    /**
+     * Nome, RUT e curso são texto digitado ou importado: o que começa com `=` é
+     * texto, não fórmula (o `Cell::fromValue` do openspout o promoveria a fórmula).
+     */
+    public function test_texto_que_comeca_com_igual_nao_vira_formula(): void
+    {
+        $this->actingAsAdmin();
+        $this->emitir(
+            'LOT-2026-0651',
+            nome: '=HYPERLINK("http://x","clique")',
+            rut: '=1+1',
+            curso: '=2+2',
+        );
+
+        $linhas = $this->lerPlanilha($this->get('/api/certificates/export/planilha')->assertOk());
+
+        $this->assertSame(
+            ['=1+1', '=HYPERLINK("http://x","clique")', '=2+2'],
+            [$linhas['dados'][0][2], $linhas['dados'][0][3], $linhas['dados'][0][4]],
+        );
+        // O que o Reader devolve também promove `=…` a fórmula na LEITURA, então a
+        // prova é o XML gravado: o texto fica como texto e nenhuma célula além
+        // do link tem `<f>`.
+        $this->assertStringContainsString('<t>=1+1</t>', $linhas['xml']);
+        $this->assertStringContainsString('<t>=2+2</t>', $linhas['xml']);
+        // A única fórmula da linha é o link: nenhuma outra célula executa nada.
+        $this->assertSame(1, substr_count($linhas['xml'], '<f>'));
+    }
+
+    /**
+     * O valor em cache: leitor que não recalcula (Modo Protegido, prévia de
+     * e-mail, Quick Look) mostra `ABRIR` em vez de uma célula vazia.
+     */
+    public function test_link_grava_o_valor_em_cache_para_quem_nao_recalcula(): void
+    {
+        $this->actingAsAdmin();
+        $primeiro = $this->emitir('LOT-2026-0661');
+        $this->emitir('LOT-2026-0662');
+
+        $linhas = $this->lerPlanilha($this->get('/api/certificates/export/planilha')->assertOk());
+
+        $url = config('app.url')."/api/publico/certificados/{$primeiro->uuid}/pdf";
+        $this->assertSame(2, preg_match_all('#<c r="F[23]" s="\d+" t="str"><f>[^<]*</f><v>ABRIR</v></c>#', $linhas['xml']));
+        $this->assertStringContainsString(htmlspecialchars("HYPERLINK(\"{$url}\",\"ABRIR\")", ENT_XML1 | ENT_COMPAT), $linhas['xml']);
+        // Só as células de dados da coluna F: o cabeçalho segue como texto.
+        $this->assertSame(2, substr_count($linhas['xml'], '<f>'));
+        $this->assertSame(2, substr_count($linhas['xml'], '<v>ABRIR</v>'));
+
+        $this->assertInstanceOf(FormulaCell::class, $linhas['celulas'][0][5]);
+        $this->assertSame('ABRIR', $linhas['celulas'][0][5]->getComputedValue());
+    }
+
     public function test_linhas_em_ordem_de_codigo(): void
     {
         $this->actingAsAdmin();
@@ -301,7 +356,10 @@ class CertificateExportTest extends TestCase
      * Lê o xlsx que a resposta aponta (o arquivo temporário só some quando a
      * resposta é ENVIADA, e o teste não a envia) e o apaga em seguida.
      *
-     * @return array{cabecalho: list<mixed>, dados: list<list<mixed>>}
+     * `celulas` são as células tipadas (o que o Reader entende por texto ou
+     * fórmula) e `xml` é o `sheet1.xml` cru, para o que o Reader não distingue.
+     *
+     * @return array{cabecalho: list<mixed>, dados: list<list<mixed>>, celulas: list<list<Cell>>, xml: string}
      */
     private function lerPlanilha(TestResponse $resposta): array
     {
@@ -316,16 +374,25 @@ class CertificateExportTest extends TestCase
         $reader->open($caminho);
 
         $linhas = [];
+        $celulas = [];
         foreach ($reader->getSheetIterator() as $planilha) {
             foreach ($planilha->getRowIterator() as $linha) {
                 $linhas[] = array_map(fn ($valor) => $valor ?? '', $linha->toArray());
+                $celulas[] = $linha->cells;
             }
             break;
         }
         $reader->close();
+
+        $zip = new ZipArchive;
+        $zip->open($caminho);
+        $xml = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
         @unlink($caminho);
 
-        return ['cabecalho' => array_shift($linhas), 'dados' => $linhas];
+        array_shift($celulas);
+
+        return ['cabecalho' => array_shift($linhas), 'dados' => $linhas, 'celulas' => $celulas, 'xml' => $xml];
     }
 
     private function criarTurma(): Turma

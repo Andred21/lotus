@@ -19,6 +19,7 @@ return [
     'export' => [
         'empty' => 'There are no certificates to export with the applied filters.',
         'over_limit' => 'The export has :total certificates and the maximum is :teto. Apply a narrower filter.',
+        'spreadsheet_failed' => 'The spreadsheet could not be generated.',
     ],
     'enrollment' => [
         'not_found' => 'The enrollment does not exist.',
