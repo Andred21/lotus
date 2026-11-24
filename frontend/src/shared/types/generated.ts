@@ -468,6 +468,7 @@ redator: {
 name: string,
 },
 display_status: CertificateDisplayStatus,
+uuid: undefined | string,
 };
 export type QuoteData = {
 id: undefined | number,

@@ -7,15 +7,35 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-09 — Figma mostra 4 tipos de documento de turma; implementados são 3
+## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
 
-**Bloco:** 6-frontend (aberta em 2026-07-21) · **ENCERRADA em 2026-11-23, no bloco 60 (`codigos-mascaras-comercial-e-avaliacoes`).**
+**Bloco:** item 55 (desde 2026-11-02) · **ENCERRADA em 2026-11-24, no bloco 61 (`certificacao-validacao-no-site`), que a achou já paga pelo item 55.** · **Gatilho que valia:** bloco que tocar `backend/bootstrap/app.php`
+(`withMiddleware` ou `withExceptions`) ou o middleware de autenticação; revisar em **2026-10-31**.
 
-Motivo: taxonomia decidida pela Lotus em 2026-11-21: Instructor, Cliente, Alumnos; só Manual e Instructor bloqueiam.
+**Medido em produção pelo item 32, em 2026-09-27 e de novo no fechamento (2026-09-28T02:35Z):**
+`GET https://app.lotusotec.cl/api/courses/archived` sem sessão devolve **401** com
+`Accept: application/json` e **500** sem ele. Anterior ao item 32 e alheio a ele.
 
-A decisão não foi a dos quatro tipos do Figma (Lista de asistencia e Acta de cierre ficaram de fora): `TurmaDocumentType` passou a `MANUAL`, `EVALUACION_REDATOR`, `EVALUACION_CLIENTE` e `EVALUACION_ALUNO`. Os dois primeiros bloqueiam conclusão e habilitação; os dois últimos são opcionais, e a falta vira aviso no dashboard (D-60). `PRUEBAS` foi convertido em `EVALUACION_ALUNO` por migration. A lista canônica tem um dono só (`TurmaDocumentType::bloqueantes()`), como a ficha antecipava em 2026-08-10. Schema e regra em `docs/der-fisico.md` (seção Feedback).
+**Causa:** o `Authenticate` do Laravel só pula o redirecionamento quando o pedido `expectsJson()`
+(`vendor/.../Auth/Middleware/Authenticate.php:104`). Sem `Accept`, ele monta o destino do
+redirecionamento pelo callback padrão que o `ApplicationBuilder` registra,
+`redirectGuestsTo(fn () => route('login'))` — rota que o Lotus não tem, porque o login é da SPA. A `RouteNotFoundException` nasce antes da `AuthenticationException`, e o
+`shouldRenderJsonWhen` de `api/*` renderiza o que chega: um 500 RFC 7807 no lugar do 401.
+
+**Por que ficou aberta:** o front sempre manda o `Accept`, então nenhum usuário vê o 500; quem o
+provoca é cliente sem o cabeçalho (curl, robô, sonda). Mas ele fere a §5.4 (401 RFC 7807 esperado
+para não autenticado) e, como 500, conta como defeito no registro de erro. O `/fechar-sprint` já
+documenta o sintoma como armadilha de curl, e não como falha do código.
+
+**Fecha quando:** `/api/*` sem sessão e sem `Accept` devolver 401 RFC 7807 — por exemplo
+`redirectGuestsTo` sem rota nomeada para `api/*` —, com teste de feature que faça o pedido sem o
+cabeçalho, visto reprovar antes da correção.
+
+Motivo: o item 55 pagou a causa em `0b40be13` (`fix(55): 401 RFC 7807 para /api/* sem sessão e sem Accept (P-91)`), com `UnauthenticatedWithoutAcceptTest`, e a ficha ficou aberta por descuido. Medido no fechamento do 61, na lane: `GET /api/courses/archived` sem sessão e sem `Accept` devolve 401.
 
 ## Rastro anterior, já removido
+
+**A P-09 saiu no fechamento do `certificacao-validacao-no-site` (item 61, 2026-11-24)**, o primeiro depois do item 60, que a encerrou em 2026-11-23 pela taxonomia que a Lotus decidiu em 2026-11-21 (`TurmaDocumentType` com `MANUAL`, `EVALUACION_REDATOR`, `EVALUACION_CLIENTE` e `EVALUACION_ALUNO`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-51 saiu no fechamento do `codigos-mascaras-comercial-e-avaliacoes` (item 60, 2026-11-23)**, o primeiro depois do item 51, que a encerrou em 2026-11-03 e passou sem removê-la. O rastro durável está nos commits (`40a4e6f7`, `a34dd253`, `498e3308`, `09c95f61`) e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

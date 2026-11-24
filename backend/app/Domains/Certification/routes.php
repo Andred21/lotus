@@ -6,10 +6,21 @@ use App\Domains\Certification\Http\Controllers\CertificateSettingsController;
 use App\Domains\Certification\Http\Controllers\PublicCertificateController;
 use Illuminate\Support\Facades\Route;
 
-// Anônima de propósito (validação do QR, peso legal), e por isso a única
-// contenção possível é por IP. Larga o bastante para conferência na mão.
+// Anônimas de propósito (validação do QR, peso legal): o QR é o papel, quem
+// tem o uuid tem o certificado. Por isso a única contenção possível é por IP.
+// `whereUuid`: o que não é uuid nem chega ao controller (nem ao banco).
+// Registrada ANTES do `{uuid}` e sem conflito: o `whereUuid` impede que
+// `consulta` caia no `show`, então o GET nela é 405 e não um 404 de controller.
+Route::post('publico/certificados/consulta', [PublicCertificateController::class, 'lookup'])
+    ->middleware('throttle:public-certificate-lookup');
 Route::get('publico/certificados/{uuid}', [PublicCertificateController::class, 'show'])
+    ->whereUuid('uuid')
     ->middleware('throttle:public-certificate');
+// Renderiza no Gotenberg a cada requisição, como o PDF do painel: o limitador
+// é mais apertado que o da validação pelo mesmo motivo (spec D6).
+Route::get('publico/certificados/{uuid}/pdf', [PublicCertificateController::class, 'pdf'])
+    ->whereUuid('uuid')
+    ->middleware('throttle:public-certificate-pdf');
 
 Route::middleware('auth.active')->group(function () {
     Route::post('enrollments/{enrollment}/certificate', [CertificateController::class, 'store']);

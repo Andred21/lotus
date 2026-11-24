@@ -44,34 +44,6 @@ no lugar que o fatal de 128M apareceu aqui.
 > fechou em 2026-09-01** (item 21) e a **`P-68` fechou em 2026-09-03** (item 25); as duas estão em
 > [`encerradas.md`](./encerradas.md).
 
-# Backend
-
-## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
-
-**Bloco:** item 55 (desde 2026-11-02) · **Quem decide:** João · **Gatilho:** bloco que tocar `backend/bootstrap/app.php`
-(`withMiddleware` ou `withExceptions`) ou o middleware de autenticação; revisar em **2026-10-31**.
-
-**Medido em produção pelo item 32, em 2026-09-27 e de novo no fechamento (2026-09-28T02:35Z):**
-`GET https://app.lotusotec.cl/api/courses/archived` sem sessão devolve **401** com
-`Accept: application/json` e **500** sem ele. Anterior ao item 32 e alheio a ele.
-
-**Causa:** o `Authenticate` do Laravel só pula o redirecionamento quando o pedido `expectsJson()`
-(`vendor/.../Auth/Middleware/Authenticate.php:104`). Sem `Accept`, ele monta o destino do
-redirecionamento pelo callback padrão que o `ApplicationBuilder` registra,
-`redirectGuestsTo(fn () => route('login'))` — rota que o Lotus não tem, porque o login é da SPA. A `RouteNotFoundException` nasce antes da `AuthenticationException`, e o
-`shouldRenderJsonWhen` de `api/*` renderiza o que chega: um 500 RFC 7807 no lugar do 401.
-
-**Por que ficou aberta:** o front sempre manda o `Accept`, então nenhum usuário vê o 500; quem o
-provoca é cliente sem o cabeçalho (curl, robô, sonda). Mas ele fere a §5.4 (401 RFC 7807 esperado
-para não autenticado) e, como 500, conta como defeito no registro de erro. O `/fechar-sprint` já
-documenta o sintoma como armadilha de curl, e não como falha do código.
-
-**Fecha quando:** `/api/*` sem sessão e sem `Accept` devolver 401 RFC 7807 — por exemplo
-`redirectGuestsTo` sem rota nomeada para `api/*` —, com teste de feature que faça o pedido sem o
-cabeçalho, visto reprovar antes da correção.
-
----
-
 # Documentação e mecanismo
 
 ## P-95 — doze pontas do harness que o item 35 deixou registradas sem correção

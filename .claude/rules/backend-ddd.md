@@ -45,7 +45,8 @@ Auditable/polimórfico precisa do seu alias.
 **Rotas** por domínio em `Domains/*/routes.php`, carregadas no `bootstrap/app.php`, sob o grupo
 `auth.active` (= `auth:sanctum` + `EnsureAccountIsActive`) — **não** `auth:sanctum` cru: quem
 autentica precisa levar junto o gate de conta ativa da RN-01. As anônimas (`login`,
-`password/forgot`, `password/reset`, `invitation/accept`, `publico/certificados/{uuid}`) ficam fora
+`password/forgot`, `password/reset`, `invitation/accept`, `publico/certificados/{uuid}`, `publico/certificados/consulta`,
+`publico/certificados/{uuid}/pdf`) ficam fora
 do grupo e são **declaradas** em `AuthenticatedRouteMiddlewareTest::ANONIMAS`; superfície anônima
 nova sem declaração reprova. Seeders: `DatabaseSeeder` (orquestrador), `RolePermissionSeeder` (ADR-07) e
 `OperationDemoSeeder` (cenário de demo montado pelas Actions reais; gate local/demo, aborta se já
@@ -135,7 +136,8 @@ Referência viva: pares `ClientController`/`RedatorController`, `ClientData`/`Re
 `AuthController` (`Domains/Identity/Http/Controllers`) regenera a sessão no login (anti
 session-fixation) e rejeita usuário inativo. Env: `SANCTUM_STATEFUL_DOMAINS`, `FRONTEND_URL`,
 `SESSION_*`. CORS (`config/cors.php`) escopado a `api/*`, `sanctum/csrf-cookie`, `login`, `logout`,
-`supports_credentials: true`. `User` gera `uuid` no create, soft-delete, `Auditable`; `type` enum
+`supports_credentials: true`. A origem do site (`CORS_PUBLIC_ORIGINS`) recebe CORS só em
+`api/publico/*`, sem credenciais, pelo `App\Shared\Http\Middleware\HandleCors`. `User` gera `uuid` no create, soft-delete, `Auditable`; `type` enum
 (`admin`/`redator`/`aluno`/`cliente`), `is_active` libera login. **Só admin e redator autenticam** (RN-01).
 
 **RBAC de cadastro = middleware `permission:`** (`HasMiddleware` no controller), não Policy. Toda

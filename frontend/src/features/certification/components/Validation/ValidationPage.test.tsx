@@ -43,6 +43,8 @@ const CERT: Extract<ValidationState, { kind: 'valid' }>['cert'] = {
   cliente: { name: 'Enel' },
   redator: { name: 'Redator' },
   display_status: 'vigente',
+  // O GET do QR não devolve o uuid (já está na URL); só a consulta por código + RUT.
+  uuid: undefined,
 }
 
 function renderPage() {

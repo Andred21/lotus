@@ -4,6 +4,7 @@ namespace Tests\Feature\Shared;
 
 use App\Domains\Identity\Models\User;
 use App\Shared\RateLimiting\RateLimits;
+use App\Shared\Support\Rut;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -51,6 +52,7 @@ class RateLimitTest extends TestCase
         foreach ([
             'api', 'login', 'public-certificate', 'password',
             'upload', 'import', 'import-preview', 'certificate-batch', 'certificate-pdf',
+            'public-certificate-lookup', 'public-certificate-pdf',
         ] as $nome) {
             $this->assertNotNull(
                 RateLimiter::limiter($nome),
@@ -152,13 +154,39 @@ class RateLimitTest extends TestCase
 
     public function test_limitadores_por_ip_usam_o_ip(): void
     {
-        foreach (['public-certificate' => RateLimits::CERTIFICADO_PUBLICO, 'password' => RateLimits::SENHA] as $nome => $esperado) {
+        foreach ([
+            'public-certificate' => RateLimits::CERTIFICADO_PUBLICO,
+            'password' => RateLimits::SENHA,
+            'public-certificate-lookup' => RateLimits::CONSULTA_CERTIFICADO,
+            'public-certificate-pdf' => RateLimits::PDF_CERTIFICADO_PUBLICO,
+        ] as $nome => $esperado) {
             $a = $this->limites($nome, $this->requisicao('10.0.0.1'))[0];
             $b = $this->limites($nome, $this->requisicao('10.0.0.2'))[0];
 
             $this->assertSame($esperado, $a->maxAttempts, "Número errado em `{$nome}`.");
             $this->assertNotSame($a->key, $b->key, "`{$nome}` não está separando por IP.");
         }
+    }
+
+    public function test_chave_de_falha_por_rut_nao_guarda_o_rut_em_claro(): void
+    {
+        $a = RateLimits::chaveDeFalhaPorRut(Rut::parse('12.345.678-5'));
+
+        $this->assertSame($a, RateLimits::chaveDeFalhaPorRut(Rut::parse('123456785')));
+        $this->assertSame($a, RateLimits::chaveDeFalhaPorRut(Rut::parse('012.345.678-5')));
+        $this->assertNotSame($a, RateLimits::chaveDeFalhaPorRut(Rut::parse('9.876.543-3')));
+        $this->assertStringNotContainsString('12345678', $a);
+        $this->assertStringNotContainsString('345.678', $a);
+    }
+
+    public function test_chave_de_falha_por_ip_separa_ips(): void
+    {
+        $a = RateLimits::chaveDeFalhaPorIp('10.0.0.1');
+        $b = RateLimits::chaveDeFalhaPorIp('10.0.0.2');
+
+        $this->assertNotSame($a, $b);
+        $this->assertNotSame($a, RateLimits::chaveDeFalhaPorRut(Rut::parse('12.345.678-5')));
+        $this->assertNotSame($b, RateLimits::chaveDeFalhaPorRut(Rut::parse('12.345.678-5')));
     }
 
     public function test_o_grupo_api_carrega_o_teto_global(): void
@@ -199,6 +227,8 @@ class RateLimitTest extends TestCase
         $esperado = [
             ['POST', 'api/login', 'throttle:login'],
             ['GET', 'api/publico/certificados/{uuid}', 'throttle:public-certificate'],
+            ['GET', 'api/publico/certificados/{uuid}/pdf', 'throttle:public-certificate-pdf'],
+            ['POST', 'api/publico/certificados/consulta', 'throttle:public-certificate-lookup'],
             ['POST', 'api/password/forgot', 'throttle:password'],
             ['POST', 'api/password/reset', 'throttle:password'],
             ['POST', 'api/invitation/accept', 'throttle:password'],

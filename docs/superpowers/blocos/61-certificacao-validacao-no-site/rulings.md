@@ -1,0 +1,17 @@
+# Bloco 61 — rulings da execução
+
+Decisões tomadas em nome do João durante o `/executar-bloco 61` (SDD, 6 tasks, 1a715ffa..db16913e).
+Cada linha: o que foi decidido — por quê — o que custa se estiver errado.
+
+- Execução sequencial, sem o pipeline de profundidade 1 do Passo 5.1 — a cadeia 2→3→4 dominava e o ganho no G1 (1, 5) era pequeno — custa só tempo de relógio; não há desvio de processo a registrar.
+- Task 3: o trait de teste `CertificadoPublico` passou a criar cliente, aluno e redator com `users.rut = null`, fora da lista Files do plano — o builder fixa um `users.rut` único e um segundo certificado no mesmo teste estourava a unique; o RUT do snapshot, que é o que a consulta lê, não mudou — se estiver errado, o trait deixa de exercitar `users.rut`, que a consulta não lê.
+- Task 3: aceito o tipo gerado `uuid: undefined | string` (o plano previa `uuid?: string`) e as três fixtures do frontend com `uuid: undefined` no mesmo commit — é como o transformer deste repo emite `Optional`, e a `generated-types.md` manda ajustar os consumidores junto — se estiver errado, as fixtures carregam um `undefined` explícito; nada em produção muda.
+- Task 5: os testes de "origem não concedida" afirmam `Access-Control-Allow-Origin` ausente **ou** diferente da origem pedida e diferente de `*`, não "ausente" como diz a letra do plano — o `CorsService` do fruitcake, com uma única origem permitida (a política atual do app, que o bloco não pode mudar), devolve essa origem a qualquer chamador; o navegador recusa a divergente — se estiver errado, a prova fica mais fraca que a letra da spec, sem efeito em produção.
+- Task 5: corrigido numa rodada extra (7065c6af) um Minor da revisão — com `CORS_PUBLIC_ORIGINS=<site>,*` o `*` chegava ao `CorsService` e o site recebia `Allow-Origin: *`; a letra do plano manda descartar toda entrada com `*` — se estiver errado, foi um commit a mais, sem mudança de comportamento para a configuração correta.
+- Revisão final (opus): "Ready to merge", sem Crítico nem Importante. Não abri onda de correção para os três Minors opcionais; ficam para o `/revisar-bloco` decidir:
+  1. o RUT `0-0` casaria com um snapshot degenerado `aluno.rut = "0-"`, que nenhum caminho grava hoje; a defesa é exigir `Rut::parse($snapshot)->isValid()`;
+  2. `Retry-After` não está em `exposed_headers`, então o site não lê o tempo de espera do 429, e o §7 da spec não lista o 404 do PDF inexistente; mudar isso foge da letra da spec, que expõe só `Content-Disposition`;
+  3. lacunas pequenas de prova (CORS real só no `GET /{uuid}`, nenhum teste conta `audits`), e `docs/estrutura-monolito.md` não lista o `HandleCors` novo.
+  — se estiver errado, custa uma rodada de correção no `/revisar-bloco`.
+- Minors das tasks mantidos sem correção, com triagem "leave" da revisão final: `strtoupper` redundante, nenhum teste de dependência do `app.key`, o teste de não-uuid passaria sem `whereUuid` (o 405 da Task 3 prova), `codigo` sem sanitização no header (o valor é gerado pelo sistema), checagem e `hit` não atômicos, helper com 4 argumentos posicionais, sem `Vary: Origin` no modo de origem única, linhas largas na rule — se algum estiver errado, é endurecimento adiado.
+- A aceitação precisa registrar o risco que a spec aceitou: um terceiro que conhece o RUT de outra pessoa trava a consulta dele por 1h com 10 falhas, e o caminho alternativo é o QR. O `aceitacao.md` ainda não menciona isso — se ficar de fora, o bloco do site não oferece a saída pelo QR no 429.

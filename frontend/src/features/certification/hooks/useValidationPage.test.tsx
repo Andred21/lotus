@@ -43,6 +43,7 @@ function certWith(overrides: Partial<PublicCertificateData>): PublicCertificateD
     cliente: { name: 'Cliente X' },
     redator: { name: 'Redator Uno' },
     display_status: 'vigente',
+    uuid: undefined,
     ...overrides,
   }
 }
