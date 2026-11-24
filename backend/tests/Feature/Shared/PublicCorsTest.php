@@ -137,6 +137,20 @@ class PublicCorsTest extends TestCase
     }
 
     #[Test]
+    public function curinga_misturado_a_origem_exata_nao_abre_a_politica_do_site(): void
+    {
+        // O site casa pela entrada exata, mas o `*` da mesma lista não pode chegar ao
+        // `CorsService`: ele ligaria `allowAllOrigins` e a resposta sairia `Allow-Origin: *`.
+        config(['cors.publico.allowed_origins' => [self::SITE, '*']]);
+
+        $response = $this->withHeader('Origin', self::SITE)
+            ->getJson('/api/publico/certificados/'.self::UUID_INEXISTENTE);
+
+        $this->assertSame(self::SITE, $response->headers->get('Access-Control-Allow-Origin'));
+        $this->assertFalse($response->headers->has('Access-Control-Allow-Credentials'));
+    }
+
+    #[Test]
     public function origem_com_curinga_embutido_nao_vira_padrao(): void
     {
         config(['cors.publico.allowed_origins' => ['https://*.cl']]);

@@ -57,32 +57,30 @@ class HandleCors extends BaseHandleCors
     private function opcoesPara(Request $request): array
     {
         $config = $this->container['config'];
+        $permitidas = $this->origensPublicas();
 
-        if ($request->is('api/publico/*') && $this->origemPublicaPermitida($request)) {
-            return $config->get('cors.publico', []);
+        if ($request->is('api/publico/*') && in_array((string) $request->headers->get('Origin'), $permitidas, true)) {
+            // A lista FILTRADA é a que chega ao `CorsService`, e não a do config: um `*` na
+            // mesma lista do site exato ligaria `allowAllOrigins` e a resposta sairia
+            // `Allow-Origin: *`.
+            return ['allowed_origins' => $permitidas] + $config->get('cors.publico', []);
         }
 
         return $config->get('cors', []);
     }
 
     /**
-     * Igualdade estrita com a lista, depois de descartar qualquer entrada com `*`: o
-     * `CorsService` transformaria `https://*.cl` em padrão, e `*` sozinho abriria a API pública a
-     * qualquer origem por causa de um env mal escrito.
+     * As origens do site SEM nenhuma entrada com `*`: o `CorsService` transformaria
+     * `https://*.cl` em padrão, e `*` abriria a API pública a qualquer origem por causa de um
+     * env mal escrito.
+     *
+     * @return list<string>
      */
-    private function origemPublicaPermitida(Request $request): bool
+    private function origensPublicas(): array
     {
-        $origem = (string) $request->headers->get('Origin');
-
-        if ($origem === '') {
-            return false;
-        }
-
-        $permitidas = array_filter(
+        return array_values(array_filter(
             (array) $this->container['config']->get('cors.publico.allowed_origins', []),
-            static fn ($entrada) => is_string($entrada) && ! str_contains($entrada, '*'),
-        );
-
-        return in_array($origem, $permitidas, true);
+            static fn ($entrada) => is_string($entrada) && $entrada !== '' && ! str_contains($entrada, '*'),
+        ));
     }
 }
