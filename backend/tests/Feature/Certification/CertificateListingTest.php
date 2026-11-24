@@ -569,6 +569,148 @@ class CertificateListingTest extends TestCase
             ->assertJsonPath('0.emission_blocked', 'sin_ciudad');
     }
 
+    // ----------------------------------------------------- cotação (bloco 62)
+
+    public function test_lista_traz_o_codigo_da_cotacao(): void
+    {
+        $this->actingAsAdmin();
+        $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8001');
+        $quote = $this->turma->quote;
+
+        $this->getJson('/api/certificates')
+            ->assertOk()
+            ->assertJsonPath('data.0.quote_id', $quote->id)
+            ->assertJsonPath('data.0.quote_code', "Scap {$this->budget->id} - R{$quote->seq_in_budget}");
+    }
+
+    /** Arquivar a cotação não apaga o rótulo do certificado já emitido. */
+    public function test_lista_traz_o_codigo_de_cotacao_arquivada(): void
+    {
+        $this->actingAsAdmin();
+        $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8002');
+        $quote = $this->turma->quote;
+        $quote->delete();
+
+        $this->getJson('/api/certificates')
+            ->assertOk()
+            ->assertJsonPath('data.0.quote_id', $quote->id)
+            ->assertJsonPath('data.0.quote_code', "Scap {$this->budget->id} - R{$quote->seq_in_budget}");
+    }
+
+    public function test_filtra_por_quote_id(): void
+    {
+        $this->actingAsAdmin();
+        $turmaB = $this->createTurma(TurmaStatus::Concluida, 2);
+        $enrollmentB = $this->createEnrollment($turmaB, EnrollmentApprovalStatus::Aprobado, 'Alumno B', '44.444.444-4');
+
+        $daA = $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8101');
+        $daA2 = $this->createCertificate(CertificateStatus::Revocado, 'LOT-2026-8102');
+        $daB = $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8103', enrollment: $enrollmentB);
+
+        $this->getJson('/api/certificates?quote_id='.$this->turma->quote_id)
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.id', $daA2->id)
+            ->assertJsonPath('data.1.id', $daA->id);
+
+        $this->getJson('/api/certificates?quote_id='.$turmaB->quote_id)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $daB->id)
+            // O resumo do rodapé acompanha a cotação escolhida.
+            ->assertJsonPath('meta.summary.vigente', 1)
+            ->assertJsonPath('meta.summary.revocado', 0);
+
+        // Combina com `q` e com `display_status`.
+        $this->getJson('/api/certificates?quote_id='.$this->turma->quote_id.'&q=LOT-2026-8101')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $daA->id);
+
+        $this->getJson('/api/certificates?quote_id='.$this->turma->quote_id.'&display_status=revocado')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $daA2->id);
+
+        $this->getJson('/api/certificates?quote_id='.$turmaB->quote_id.'&q=LOT-2026-8101')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_quote_id_inexistente_e_422(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson('/api/certificates?quote_id=999999')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('quote_id');
+    }
+
+    public function test_opcoes_de_cotacao_so_com_certificado(): void
+    {
+        $this->actingAsAdmin();
+        $semCertificado = $this->createTurma(TurmaStatus::Concluida, 2)->quote;
+        $comRevogado = $this->createTurma(TurmaStatus::Concluida, 3);
+        $matricula = $this->createEnrollment($comRevogado, EnrollmentApprovalStatus::Aprobado, 'Alumno R', '55.555.555-5');
+
+        $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8201');
+        $this->createCertificate(CertificateStatus::Revocado, 'LOT-2026-8202', enrollment: $matricula);
+        // Arquivada continua sendo opção: o certificado dela continua no Historial.
+        $comRevogado->quote->delete();
+
+        $r = $this->getJson('/api/certificates/quotes')->assertOk();
+
+        $r->assertJsonCount(2);
+        $this->assertSame(
+            [$comRevogado->quote_id, $this->turma->quote_id],
+            array_column($r->json(), 'id'),
+        );
+        $this->assertSame(
+            "Scap {$this->budget->id} - R3",
+            $r->json('0.code'),
+        );
+        $this->assertNotContains($semCertificado->id, array_column($r->json(), 'id'));
+    }
+
+    /** Turma arquivada + turma nova da mesma cotação, as duas com certificado: uma opção só. */
+    public function test_opcoes_de_cotacao_nao_repetem_a_cotacao_de_duas_turmas(): void
+    {
+        $this->actingAsAdmin();
+        $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8301');
+
+        $this->turma->update(['status' => TurmaStatus::Concluida]);
+        $this->turma->delete();
+        $segunda = Turma::create([
+            'quote_id' => $this->turma->quote_id,
+            'course_id' => $this->course->id,
+            'modalidade' => TurmaModalidade::Presencial,
+            'local_aplicacao' => 'Santiago',
+            'start_date' => '2026-07-20',
+            'end_date' => '2026-07-24',
+            'status' => TurmaStatus::Concluida,
+        ]);
+        $matricula = $this->createEnrollment($segunda, EnrollmentApprovalStatus::Aprobado, 'Alumno S', '66.666.666-6');
+        $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8302', enrollment: $matricula);
+
+        $this->getJson('/api/certificates/quotes')
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.id', $this->turma->quote_id);
+    }
+
+    public function test_opcoes_de_cotacao_exigem_a_permissao_de_ver_certificados(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $semPermissao = User::factory()->create(['type' => 'admin', 'is_active' => true]);
+        $this->actingAs($semPermissao, 'web');
+
+        $this->getJson('/api/certificates/quotes')->assertForbidden();
+
+        $semPermissao->givePermissionTo('certification.certificate.view');
+
+        $this->getJson('/api/certificates/quotes')->assertOk();
+    }
+
     private function makeRedator(array $userAttrs = []): Redator
     {
         $user = User::factory()->create(['type' => 'redator', 'is_active' => true] + $userAttrs);
@@ -643,10 +785,11 @@ class CertificateListingTest extends TestCase
             'aluno' => ['name' => 'Juan Pérez'],
             'curso' => ['name' => 'Seguridad en Alta Tensión'],
         ],
+        ?Enrollment $enrollment = null,
     ): Certificate {
         return Certificate::create([
             'uuid' => (string) Str::uuid(),
-            'enrollment_id' => $this->enrollment->id,
+            'enrollment_id' => ($enrollment ?? $this->enrollment)->id,
             'course_id' => $this->course->id,
             'redator_id' => $this->redator->id,
             'codigo' => $codigo,

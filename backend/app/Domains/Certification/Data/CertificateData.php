@@ -36,6 +36,11 @@ class CertificateData extends Data
         public CertificateSnapshotData $snapshot,
         public bool $snapshot_ok,
         public string $created_at,
+        /** A cotação da turma: certificado → matrícula → turma → cotação. NÃO é
+         * dado do snapshot (ele não a guarda) e o código de uma cotação não
+         * muda depois de emitido. Nulos só se a cadeia estiver quebrada. */
+        public ?int $quote_id,
+        public ?string $quote_code,
         /** O estado de EXIBIÇÃO, derivado no servidor (spec D4). O React
          * consumia `status` + `valido_ate` e refazia esta conta — regra de
          * domínio reconstruída no cliente, num documento de peso legal. */
@@ -65,6 +70,7 @@ class CertificateData extends Data
         // novo. A listagem pagina desde o bloco `hardening-performance-e-dados`,
         // mas cada página são até 100 decodes, e ler duas vezes aqui dobrava isso.
         $snapshot = $certificate->snapshot;
+        $quote = $certificate->enrollment?->turma?->quote;
 
         return new self(
             id: $certificate->id,
@@ -80,6 +86,8 @@ class CertificateData extends Data
             snapshot: $snapshot,
             snapshot_ok: $snapshot->isPresentable(),
             created_at: $certificate->created_at->toISOString(),
+            quote_id: $quote?->id,
+            quote_code: $quote?->code,
             display_status: CertificateDisplayStatus::for(
                 $certificate->status,
                 $certificate->valido_ate,

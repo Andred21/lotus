@@ -26,6 +26,8 @@ Route::middleware('auth.active')->group(function () {
     Route::post('enrollments/{enrollment}/certificate', [CertificateController::class, 'store']);
     Route::get('certificates', [CertificateController::class, 'index']);
     Route::get('certificates/emission-panel', [CertificateController::class, 'emissionPanel']);
+    // Antes de `certificates/{certificate}`, que a capturaria como id.
+    Route::get('certificates/quotes', [CertificateController::class, 'quotes']);
     Route::post('certificates/batch', [CertificateController::class, 'batch'])
         ->middleware('throttle:certificate-batch');
     // Renderiza no Gotenberg a CADA requisição — nada é cacheado nem lido do

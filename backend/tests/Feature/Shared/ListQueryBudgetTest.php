@@ -326,7 +326,7 @@ class ListQueryBudgetTest extends TestCase
     private const CENARIOS_URIS = [
         'api/students' => 1, 'api/students/client-options' => 1,
         'api/roles/assignable' => 1,
-        'api/certificates' => 1, 'api/certificates/emission-panel' => 1,
+        'api/certificates' => 1, 'api/certificates/emission-panel' => 1, 'api/certificates/quotes' => 1,
         'api/turmas' => 1, 'api/turmas/archived' => 1, 'api/turmas/pendientes-configuracion' => 1,
         'api/courses' => 1, 'api/courses/archived' => 1,
         'api/clients' => 1, 'api/clients/archived' => 1,
@@ -359,6 +359,11 @@ class ListQueryBudgetTest extends TestCase
             'api/certificates/emission-panel' => function (int $n): void {
                 for ($i = 0; $i < $n; $i++) {
                     $this->cadeia();
+                }
+            },
+            'api/certificates/quotes' => function (int $n): void {
+                for ($i = 0; $i < $n; $i++) {
+                    $this->certificado($this->cadeia());
                 }
             },
             'api/turmas' => function (int $n): void {

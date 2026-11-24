@@ -5,6 +5,8 @@ namespace App\Domains\Certification\QueryBuilders;
 use App\Domains\Certification\Data\CertificateSummaryData;
 use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Domains\Certification\Enums\CertificateStatus;
+use App\Domains\Operation\Models\Enrollment;
+use App\Domains\Operation\Models\Turma;
 use App\Shared\Pagination\Paginates;
 use App\Shared\Support\DataSql;
 use App\Shared\Support\JanelaDeAviso;
@@ -29,7 +31,7 @@ class CertificateQueryBuilder extends Builder
 {
     use Paginates;
 
-    public const LISTING = ['enrollment.student.user'];
+    public const LISTING = ['enrollment.student.user', 'enrollment.turma.quote'];
 
     public const SORTABLE = [
         'created_at' => 'certificates.created_at',
@@ -58,6 +60,24 @@ class CertificateQueryBuilder extends Builder
             ->where('certificates.codigo', 'like', $like)
             ->orWhere('snapshot->aluno->name', 'like', $like)
             ->orWhere('snapshot->aluno->rut', 'like', $like));
+    }
+
+    /**
+     * Certificados da cotação, pela cadeia matrícula → turma → cotação. As
+     * subconsultas são `withTrashed`: turma ou matrícula arquivada não tira o
+     * certificado (documento legal) do Historial da cotação dele.
+     */
+    public function whereQuote(?int $quoteId): static
+    {
+        if ($quoteId === null) {
+            return $this;
+        }
+
+        return $this->whereIn('certificates.enrollment_id', Enrollment::withTrashed()
+            ->select('enrollments.id')
+            ->whereIn('enrollments.turma_id', Turma::withTrashed()
+                ->select('turmas.id')
+                ->where('turmas.quote_id', $quoteId)));
     }
 
     /**

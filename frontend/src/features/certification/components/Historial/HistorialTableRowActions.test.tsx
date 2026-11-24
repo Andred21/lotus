@@ -35,6 +35,8 @@ function certificado(over: Partial<CertificateData['snapshot']['aluno']> = {}): 
     snapshot_ok: false,
     display_status: 'vigente',
     aluno_photo_url: null,
+    quote_id: 7,
+    quote_code: 'Scap 4 - R2',
     snapshot: {
       aluno: { name: '', rut: '', ...over },
       curso: { name: 'Alta tensión' },

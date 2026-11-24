@@ -6,7 +6,7 @@ use App\Domains\Certification\Enums\CertificateDisplayStatus;
 use App\Shared\Pagination\PageQueryData;
 use Illuminate\Validation\Rule;
 
-/** `PageQueryData` + o filtro nomeado do Historial. Valor fora do enum é 422. */
+/** `PageQueryData` + os filtros nomeados do Historial. Estado fora do enum e cotação inexistente são 422. */
 class CertificatePageQueryData extends PageQueryData
 {
     public function __construct(
@@ -15,6 +15,7 @@ class CertificatePageQueryData extends PageQueryData
         ?string $q = null,
         ?string $sort = null,
         public ?CertificateDisplayStatus $display_status = null,
+        public ?int $quote_id = null,
     ) {
         parent::__construct($page, $per_page, $q, $sort);
     }
@@ -25,6 +26,9 @@ class CertificatePageQueryData extends PageQueryData
         return [
             ...parent::rules(),
             'display_status' => ['sometimes', 'nullable', Rule::enum(CertificateDisplayStatus::class)],
+            // `exists` ignora o soft delete de propósito: cotação arquivada
+            // continua sendo filtro válido para os certificados dela.
+            'quote_id' => ['sometimes', 'nullable', 'integer', 'exists:quotes,id'],
         ];
     }
 }

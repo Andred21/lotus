@@ -5,7 +5,9 @@ namespace Tests\Feature\Certification;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Support\Certification\IssuableEnrollmentBuilder;
@@ -63,6 +65,43 @@ class CertificateEagerLoadTest extends TestCase
 
         $detalhe = $this->getJson("/api/certificates/{$certificate->id}")->assertOk();
         $this->assertStringStartsWith('http', $detalhe->json('aluno_photo_url'));
+    }
+
+    /**
+     * O código da cotação (bloco 62) atravessa matrícula→turma→cotação. Sem a
+     * cotação no `LISTING` cada linha pagaria uma query a mais (e a guarda
+     * global de lazy loading estoura); com ela, a contagem é a MESMA para 2 e
+     * para 4 certificados.
+     */
+    public function test_a_cotacao_da_listagem_nao_cresce_com_n(): void
+    {
+        $this->actingAsAdmin();
+        $this->createCertificate();
+        $this->createCertificate();
+
+        // Um único listener: `DB::listen` acumula, e dois somariam em dobro.
+        $consultas = 0;
+        DB::listen(function (QueryExecuted $q) use (&$consultas): void {
+            $consultas++;
+        });
+
+        $contar = function () use (&$consultas): int {
+            $consultas = 0;
+            $r = $this->getJson('/api/certificates')->assertOk();
+            $this->assertNotNull($r->json('data.0.quote_code'));
+
+            return $consultas;
+        };
+
+        // Aquecimento: a primeira requisição carrega o cache de permissões.
+        $this->getJson('/api/certificates')->assertOk();
+
+        $com2 = $contar();
+        $this->createCertificate();
+        $this->createCertificate();
+        $com4 = $contar();
+
+        $this->assertSame($com2, $com4);
     }
 
     /**

@@ -127,6 +127,8 @@ revocation_reason: string | null,
 snapshot: CertificateSnapshotData,
 snapshot_ok: boolean,
 created_at: string,
+quote_id: number | null,
+quote_code: string | null,
 display_status: CertificateDisplayStatus,
 aluno_photo_url: string | null,
 };
@@ -138,6 +140,10 @@ per_page: number,
 total: number,
 last_page: number,
 total_unfiltered: number,
+};
+export type CertificateQuoteOptionData = {
+id: number,
+code: string,
 };
 export type CertificateSettingsData = {
 manager_name: string,
