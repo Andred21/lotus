@@ -228,6 +228,7 @@ class RateLimitTest extends TestCase
             ['POST', 'api/login', 'throttle:login'],
             ['GET', 'api/publico/certificados/{uuid}', 'throttle:public-certificate'],
             ['GET', 'api/publico/certificados/{uuid}/pdf', 'throttle:public-certificate-pdf'],
+            ['POST', 'api/publico/certificados/consulta', 'throttle:public-certificate-lookup'],
             ['POST', 'api/password/forgot', 'throttle:password'],
             ['POST', 'api/password/reset', 'throttle:password'],
             ['POST', 'api/invitation/accept', 'throttle:password'],

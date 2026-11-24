@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Route;
 // Anônimas de propósito (validação do QR, peso legal): o QR é o papel, quem
 // tem o uuid tem o certificado. Por isso a única contenção possível é por IP.
 // `whereUuid`: o que não é uuid nem chega ao controller (nem ao banco).
+// Registrada ANTES do `{uuid}` e sem conflito: o `whereUuid` impede que
+// `consulta` caia no `show`, então o GET nela é 405 e não um 404 de controller.
+Route::post('publico/certificados/consulta', [PublicCertificateController::class, 'lookup'])
+    ->middleware('throttle:public-certificate-lookup');
 Route::get('publico/certificados/{uuid}', [PublicCertificateController::class, 'show'])
     ->whereUuid('uuid')
     ->middleware('throttle:public-certificate');

@@ -5,6 +5,7 @@ namespace App\Domains\Certification\Services;
 use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Exceptions\CertificadoRevogadoException;
 use App\Domains\Certification\Models\Certificate;
+use App\Shared\Support\Rut;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -32,5 +33,37 @@ class PublicCertificateAccess
         }
 
         return $certificate;
+    }
+
+    /**
+     * Quem confere o certificado no site prova que o conhece: código e RUT do
+     * aluno. Toda falha é a MESMA `NotFoundHttpException`, sem mensagem — código
+     * inexistente, snapshot sem RUT e RUT diferente não se distinguem de fora.
+     *
+     * O RUT só é comparado em memória, contra o snapshot congelado: nunca vai
+     * ao SQL. A busca é pelo código, que sai do banco por binding.
+     *
+     * `$ip` espera os limitadores de falha (bloco 61, Task 4).
+     *
+     * @throws NotFoundHttpException
+     */
+    public function porCodigoERut(string $codigo, Rut $rut, string $ip): Certificate
+    {
+        $certificate = Certificate::query()->where('codigo', strtoupper($codigo))->first();
+
+        $rutDoSnapshot = Rut::parse($certificate?->snapshot->aluno->rut ?? '')->canonical();
+
+        // `canonical()` de vazio é '': sem RUT no snapshot nada pode bater.
+        if ($certificate === null || $rutDoSnapshot === '' || ! hash_equals($rutDoSnapshot, $rut->canonical())) {
+            return $this->recusar();
+        }
+
+        return $certificate;
+    }
+
+    /** Ponto único da falha da consulta: é onde os limitadores contam. */
+    private function recusar(): never
+    {
+        throw new NotFoundHttpException;
     }
 }

@@ -24,7 +24,14 @@ trait CertificadoPublico
         ?string $rutDoAluno = '12.345.678-5',
         array $atributos = [],
     ): Certificate {
-        $builder = IssuableEnrollmentBuilder::make()->create();
+        // O RUT do snapshot é o que a consulta lê; o do `User` vivo é `unique`
+        // e o builder fixa o mesmo literal, então um segundo certificado no
+        // mesmo teste colidiria. Sem RUT vivo, a cadeia pode se repetir.
+        $builder = IssuableEnrollmentBuilder::make()
+            ->student(['rut' => null])
+            ->client([], ['rut' => null])
+            ->redatorUser(['rut' => null])
+            ->create();
 
         $aluno = ['name' => 'Juan Pérez Congelado'];
         if ($rutDoAluno !== null) {

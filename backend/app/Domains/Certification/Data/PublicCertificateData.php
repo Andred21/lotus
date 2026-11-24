@@ -7,6 +7,7 @@ use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use Spatie\LaravelData\Attributes\Computed;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 #[TypeScript]
@@ -31,7 +32,18 @@ class PublicCertificateData extends Data
          * deriva nada no navegador. */
         #[Computed]
         public CertificateDisplayStatus $display_status,
+        /** Só a consulta por código + RUT devolve: é o que abre o PDF. O GET
+         * do QR já tem o uuid na URL e não o repete. */
+        public string|Optional $uuid = new Optional,
     ) {}
+
+    public static function fromLookup(Certificate $certificate): self
+    {
+        $data = self::fromModel($certificate);
+        $data->uuid = $certificate->uuid;
+
+        return $data;
+    }
 
     public static function fromModel(Certificate $certificate): self
     {

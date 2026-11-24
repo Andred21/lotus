@@ -2,11 +2,16 @@
 
 namespace App\Domains\Certification\Http\Controllers;
 
+use App\Domains\Certification\Data\LookupPublicCertificateData;
 use App\Domains\Certification\Data\PublicCertificateData;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\Services\CertificatePdfService;
 use App\Domains\Certification\Services\PublicCertificateAccess;
 use App\Http\Controllers\Controller;
+use App\Shared\Http\RespostaDeRecurso;
+use App\Shared\Support\Rut;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class PublicCertificateController extends Controller
@@ -20,6 +25,17 @@ class PublicCertificateController extends Controller
         }
 
         return PublicCertificateData::fromModel($certificate);
+    }
+
+    /**
+     * `RespostaDeRecurso::ok`: o laravel-data responde 201 a todo POST, e esta
+     * consulta não cria nada.
+     */
+    public function lookup(LookupPublicCertificateData $data, PublicCertificateAccess $access, Request $request): JsonResponse
+    {
+        $certificate = $access->porCodigoERut($data->codigo, Rut::parse($data->rut), (string) $request->ip());
+
+        return RespostaDeRecurso::ok(PublicCertificateData::fromLookup($certificate));
     }
 
     /**
