@@ -49,7 +49,7 @@ return [
         'allowed_origins_patterns' => [],
         'allowed_methods' => ['GET', 'POST', 'OPTIONS'],
         'allowed_headers' => ['Content-Type', 'Accept', 'Accept-Language'],
-        'exposed_headers' => ['Content-Disposition'],
+        'exposed_headers' => ['Content-Disposition', 'Retry-After'],
         'max_age' => 0,
         'supports_credentials' => false,
     ],

@@ -223,7 +223,16 @@ O bloco do `lotus-site` lê esta seção.
   application/json`, `{codigo, rut}` → 200 com o payload e o `uuid`. Qualquer falha → 404 RFC 7807
   uniforme; 422 formato; 429 limite.
 - `GET https://app.lotusotec.cl/api/publico/certificados/{uuid}/pdf` → PDF (`attachment`).
-  Revogado → 410; 429 limite.
+  Inexistente → 404; revogado → 410; 429 limite.
+- O 429 traz `Retry-After` em segundos, legível pelo JS do site (está em `Access-Control-Expose-Headers`,
+  junto do `Content-Disposition`). Dois casos que a página deve separar por esse valor:
+  - até 60 s: limite por minuto do IP, em qualquer das três rotas — pedir para tentar de novo em
+    instantes;
+  - até 3600 s: limite de falhas por hora, do IP ou do RUT — a consulta por código + RUT fica
+    travada; a saída é conferir pelo QR do certificado (`/validar/<uuid>`), que não passa por esse
+    limite.
+- Risco aceito (decisão 8): quem conhece o RUT de outra pessoa trava a consulta dela por até 1 h com
+  10 falhas. O QR é o caminho alternativo, e a página do 429 precisa oferecê-lo.
 - O site vai precisar:
   - de rota `/validar/<uuid>` servida pelo CloudFront sem fallback genérico (ADR-SITE-004);
   - de `connect-src` incluindo `https://app.lotusotec.cl` nos dois lugares da CSP;

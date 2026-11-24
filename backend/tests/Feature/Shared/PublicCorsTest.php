@@ -78,6 +78,16 @@ class PublicCorsTest extends TestCase
         $this->assertStringContainsString('Content-Disposition', (string) $response->headers->get('Access-Control-Expose-Headers'));
     }
 
+    /** O site separa a espera de 1 min (IP) da de até 1 h (RUT) pelo `Retry-After` do 429. */
+    #[Test]
+    public function resposta_do_site_em_rota_publica_expoe_retry_after(): void
+    {
+        $response = $this->withHeader('Origin', self::SITE)
+            ->getJson('/api/publico/certificados/'.self::UUID_INEXISTENTE);
+
+        $this->assertStringContainsString('Retry-After', (string) $response->headers->get('Access-Control-Expose-Headers'));
+    }
+
     #[Test]
     public function origem_do_site_em_rota_autenticada_nao_recebe_allow_origin(): void
     {
