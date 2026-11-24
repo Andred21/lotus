@@ -33,7 +33,7 @@ export function useEmissionPanelState() {
   // parâmetro NÃO vai na URL: o seletor só anuncia a janela, não a calcula.
   // Limpar o seletor volta a `null` — nunca "sem janela".
   const [desde, setDesde] = useState<string | null>(null)
-  const panel = useEmissionPanel(true, desde ?? undefined)
+  const panel = useEmissionPanel(true, desde ? { period_start: desde } : undefined)
   const [turmaId, setTurmaId] = useState<number | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
   const [issuing, setIssuing] = useState<EmissionPanelEnrollmentData | null>(null)

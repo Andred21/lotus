@@ -89,7 +89,7 @@ class CertificateController extends Controller implements HasMiddleware
     /** @return array<EmissionPanelTurmaData> */
     public function emissionPanel(EmissionPanelQueryData $query, EmissionPanelQuery $panel): array
     {
-        return $panel->get($query->desde());
+        return $panel->get($query->inicio(), $query->fim());
     }
 
     public function store(

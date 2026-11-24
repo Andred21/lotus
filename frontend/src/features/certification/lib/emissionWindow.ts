@@ -1,5 +1,5 @@
 /** O MESMO 12 de `EmissionPanelQuery::JANELA_MESES` (backend). O dono do
- * default é o BACKEND — ele o aplica quando `concluidas_desde` não vem, no fuso
+ * default é o BACKEND — ele o aplica quando `period_start` não vem, no fuso
  * `America/Santiago`, que é o do negócio. Este número existe só para o seletor
  * ANUNCIAR a janela vigente ("Últimos 12 meses") enquanto o usuário não escolhe
  * data; o front não a calcula nem a manda.

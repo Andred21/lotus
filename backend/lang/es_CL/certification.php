@@ -13,6 +13,9 @@ return [
         'emission_city_missing' => 'No hay una ciudad de emisión configurada para esta clase.',
         'redator_not_designated' => 'El instructor no está designado en esta clase.',
     ],
+    'emission_panel' => [
+        'inverted_period' => 'La fecha de término no puede ser anterior a la de inicio.',
+    ],
     'enrollment' => [
         'not_found' => 'La matrícula no existe.',
     ],

@@ -260,6 +260,7 @@ has_firma: boolean,
 };
 export type EmissionPanelTurmaData = {
 turma_id: number,
+quote_code: string,
 course_name: string,
 client_name: string,
 end_date: string,

@@ -78,7 +78,7 @@ const ALUNO: EmissionPanelEnrollmentData = {
 
 function turmaCom(hasFirma: boolean): EmissionPanelTurmaData {
   return {
-    turma_id: 1, course_name: 'Alta tensión', client_name: 'Enel', end_date: '2026-07-24',
+    turma_id: 1, quote_code: 'Scap 1 - R1', course_name: 'Alta tensión', client_name: 'Enel', end_date: '2026-07-24',
     emission_blocked: null, enrollments: [ALUNO], manager_signature_missing: false,
     redatores: [{ redator_id: 7, name: 'María Relatora', has_firma: hasFirma }],
   }

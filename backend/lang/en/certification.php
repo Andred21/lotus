@@ -13,6 +13,9 @@ return [
         'emission_city_missing' => 'No issuing city is configured for this class.',
         'redator_not_designated' => 'The instructor is not designated for this class.',
     ],
+    'emission_panel' => [
+        'inverted_period' => 'The end date cannot be earlier than the start date.',
+    ],
     'enrollment' => [
         'not_found' => 'The enrollment does not exist.',
     ],

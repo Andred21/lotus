@@ -45,7 +45,7 @@ export function useHistorial() {
   // snapshot (documento antigo/corrompido), cai no default do servidor.
   const panel = useEmissionPanel(
     reissuing !== null && can('certification.certificate.issue'),
-    reissuing?.snapshot.turma.end_date ?? undefined,
+    reissuing?.snapshot.turma.end_date ? { period_start: reissuing.snapshot.turma.end_date } : undefined,
   )
 
   // Trocar o filtro volta à página 1 dentro do hook — não há `resetPage()` a

@@ -16,16 +16,19 @@ const detailKey = (id: number) => ['certificates', 'detail', id] as const
 /** `enabled` porque o endpoint exige `certification.certificate.issue`:
  * consumidor que pode montar sem essa permissão (Historial, que só a usa para
  * o Reemitir) desliga a query em vez de colher um 403 garantido.
- * `desde` é a janela (spec D7); ausente, o servidor aplica os 12 meses. A
- * data entra na chave: cada janela é uma página de cache própria, e o
+ * `period` é a janela (spec D7, `Y-m-d`, ambos inclusivos): sem `period_start`
+ * o servidor aplica os 12 meses; sem `period_end`, não há limite superior. As
+ * duas datas entram na chave: cada janela é uma página de cache própria, e o
  * `panelKey` continua prefixo de todas para as invalidações. */
-export function useEmissionPanel(enabled = true, desde?: string) {
+export type EmissionPanelPeriod = { period_start?: string; period_end?: string }
+
+export function useEmissionPanel(enabled = true, period?: EmissionPanelPeriod) {
   return useQuery<EmissionPanelTurmaData[], ProblemDetails>({
-    queryKey: [...panelKey, desde ?? 'default'],
+    queryKey: [...panelKey, period?.period_start ?? 'default', period?.period_end ?? 'open'],
     queryFn: () =>
       api
         .get<EmissionPanelTurmaData[]>('/api/certificates/emission-panel', {
-          params: desde ? { concluidas_desde: desde } : {},
+          params: period ?? {},
         })
         .then((r) => r.data),
     enabled,
