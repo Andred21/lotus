@@ -1,4 +1,4 @@
-f# Bloco 61 — `certificacao-validacao-no-site` — design
+# Bloco 61 — `certificacao-validacao-no-site` — design
 
 > Data: 2026-11-23 · Lane: `feat/61-certificacao-validacao-no-site` · Packet: [`context.md`](./context.md)
 > Ficha: `docs/superpowers/backlog.md` §61 (pedido da Lotus de 2026-11-21, D-70, P-89).
@@ -56,7 +56,7 @@ Decisões de 2026-11-23, sobre as perguntas da leitura independente da spec:
 **Objetivos (61):**
 - `POST /api/publico/certificados/consulta` — código + RUT, resposta uniforme.
 - `GET /api/publico/certificados/{uuid}/pdf` — PDF público, recusado para revogado.
-- Limitadores próprios por IP, e por código na consulta.
+- Limitadores próprios por IP, e de falha por IP e por RUT na consulta (§5.3).
 - CORS para a origem `https://lotusotec.cl` **só** nas rotas públicas, sem credenciais.
 - Contrato da API escrito para o bloco do site (§7).
 
@@ -274,8 +274,10 @@ rotas, CORS, nginx nem no template do PDF. A máscara de RUT dele (`frontend/src
 
 ## Verificação externa
 
-1. Deploy da API do bloco em produção (merge na `main`, espelho para o corporativo, botão de deploy).
-   - prova: `producao GET /api/publico/certificados/consulta -> 405`
-2. Definir `CORS_PUBLIC_ORIGINS=https://lotusotec.cl` (ou o nome final do env) no `.env` de produção
-   em `/opt/lotus`, e recriar o `app`.
+1. Definir `CORS_PUBLIC_ORIGINS=https://lotusotec.cl` no `.env` de produção em `/opt/lotus`,
+   **antes** do deploy. A chave entra no `deploy/aws/env.prod.example`, e a checagem de alinhamento
+   (`.github/scripts/conferir-alinhamento.sh`) recusa o deploy de um SHA cujo molde traz chave
+   ausente no host. O código antigo ignora a chave, então defini-la antes não muda nada no ar.
    - prova: nenhuma
+2. Deploy da API do bloco em produção (merge na `main`, espelho para o corporativo, botão de deploy).
+   - prova: `producao GET /api/publico/certificados/consulta -> 405`
