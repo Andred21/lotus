@@ -114,6 +114,28 @@ class PublicCertificateLookupTest extends TestCase
         );
     }
 
+    /** @return array<string, array{string}> */
+    public static function rutsDegeneradosNoSnapshot(): array
+    {
+        return [
+            'só o zero' => ['0'],
+            'zero com hífen' => ['0-'],
+            'zeros com dv zero' => ['00-0'],
+        ];
+    }
+
+    /**
+     * `0-0` passa no `ValidRut` e tem o mesmo `canonical()` ("0") que esses
+     * snapshots: só a validação do lado guardado impede que um abra o outro.
+     */
+    #[DataProvider('rutsDegeneradosNoSnapshot')]
+    public function test_snapshot_com_rut_degenerado_nao_abre_com_rut_zero(string $rutDoSnapshot): void
+    {
+        $this->certificadoPublico('LOT-2026-1003', $rutDoSnapshot);
+
+        $this->consultar('LOT-2026-1003', '0-0')->assertStatus(404);
+    }
+
     public function test_formato_invalido_devolve_422_sem_consultar_certificados(): void
     {
         DB::enableQueryLog();

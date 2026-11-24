@@ -63,14 +63,23 @@ class PublicCertificateAccess
 
         $certificate = Certificate::query()->where('codigo', strtoupper($codigo))->first();
 
-        $rutDoSnapshot = Rut::parse($certificate?->snapshot->aluno->rut ?? '')->canonical();
+        $rutDoSnapshot = Rut::parse($certificate?->snapshot->aluno->rut ?? '');
 
-        // `canonical()` de vazio é '': sem RUT no snapshot nada pode bater.
-        if ($certificate === null || $rutDoSnapshot === '' || ! hash_equals($rutDoSnapshot, $rut->canonical())) {
+        if ($certificate === null || ! $this->comparavel($rutDoSnapshot) || ! hash_equals($rutDoSnapshot->canonical(), $rut->canonical())) {
             $this->recusar($chaveIp, $chaveRut);
         }
 
         return $certificate;
+    }
+
+    /**
+     * O lado guardado só entra na comparação se for um RUT de verdade: sem RUT,
+     * DV errado ou número só de zeros não casa com nada. Sem isso, `"0"` no
+     * snapshot teria o mesmo `canonical()` do pedido `0-0`, que passa no `ValidRut`.
+     */
+    private function comparavel(Rut $rutDoSnapshot): bool
+    {
+        return $rutDoSnapshot->isValid() && ltrim($rutDoSnapshot->number, '0') !== '';
     }
 
     /** @throws ThrottleRequestsException com `Retry-After` do mais longo dos baldes estourados */
