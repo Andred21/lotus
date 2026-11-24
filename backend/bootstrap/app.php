@@ -3,6 +3,7 @@
 use App\Shared\Exceptions\ProblemDetails;
 use App\Shared\Exceptions\RecusaDeDominio;
 use App\Shared\Http\Middleware\EnsureAccountIsActive;
+use App\Shared\Http\Middleware\HandleCors as HandleCorsDoLotus;
 use App\Shared\Http\Middleware\SetLocale;
 use App\Shared\Logging\FalhaDeObservabilidade;
 use App\Shared\Logging\RegistraEventoDeErro;
@@ -15,6 +16,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
+use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -36,6 +38,16 @@ return Application::configure(basePath: dirname(__DIR__))
 
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+
+        // CORS com duas políticas (bloco 61). O site institucional é same-site
+        // com o app (`lotusotec.cl` e `app.lotusotec.cl`), então credencial para
+        // ele levaria o cookie de um admin logado. O `HandleCors` nosso entrega
+        // ao site uma política sem credenciais só em `api/publico/*` e deixa a
+        // do app (`FRONTEND_URL`, com credenciais) intacta no resto.
+        $middleware->replace(
+            HandleCors::class,
+            HandleCorsDoLotus::class,
+        );
 
         // P-91: sem sessão e sem `Accept: application/json`, o `Authenticate`
         // tentava `route('login')` (que não existe: o login é `POST /api/login`)
