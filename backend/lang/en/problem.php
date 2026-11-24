@@ -8,6 +8,7 @@ return [
         'unauthenticated' => 'Not authenticated',
         'forbidden' => 'Access denied',
         'not_found' => 'Resource not found',
+        'gone' => 'Resource no longer available',
         'http' => 'Request error',
         'too_many_requests' => 'Too many requests',
         'server' => 'Internal error',

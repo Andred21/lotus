@@ -39,6 +39,7 @@ class AuthenticatedRouteMiddlewareTest extends TestCase
         'api/password/reset' => 'Consome o token do e-mail de recuperação; a sessão nasce depois.',
         'api/invitation/accept' => 'Convite de redator: define a primeira senha, antes de existir login.',
         'api/publico/certificados/{uuid}' => 'Validação pública do QR (RF de certificação): é anônima de propósito.',
+        'api/publico/certificados/{uuid}/pdf' => 'PDF público pelo QR: quem tem o uuid tem o papel; revogado é recusado (bloco 61).',
     ];
 
     /** @return array<string,list<string>> uri => middleware resolvido, só rotas `api/*` */

@@ -16,6 +16,9 @@ return [
     'enrollment' => [
         'not_found' => 'The enrollment does not exist.',
     ],
+    'public' => [
+        'revoked' => 'The certificate was revoked and its PDF is no longer available.',
+    ],
     'snapshot' => [
         'not_presentable' => 'Certificate :codigo cannot be presented: its frozen document is missing the fields :campos.',
     ],

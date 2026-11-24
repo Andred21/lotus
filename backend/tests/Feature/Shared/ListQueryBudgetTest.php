@@ -100,6 +100,7 @@ class ListQueryBudgetTest extends TestCase
         'api/certificates/{certificate}/pdf' => 'gera o PDF de um certificado — resposta binária',
         'api/courses/{course}/certificate-preview' => 'gera o PDF de amostra de UM curso — resposta binária, não lista',
         'api/publico/certificados/{uuid}' => 'validação pública de UM certificado pelo uuid',
+        'api/publico/certificados/{uuid}/pdf' => 'PDF de UM certificado pelo uuid, não é lista',
         'api/turmas/{turma}' => 'detalhe de UMA turma — o que cresce ali são as listas aninhadas, cobertas em COM_PAI',
         'api/certificates/{certificate}' => 'detalhe de UM certificado, lido pelo snapshot congelado na emissão',
         'api/courses/{course}' => 'detalhe de UM curso — módulos são coleções bounded do próprio curso',

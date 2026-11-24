@@ -16,6 +16,9 @@ return [
     'enrollment' => [
         'not_found' => 'La matrícula no existe.',
     ],
+    'public' => [
+        'revoked' => 'El certificado fue revocado y su PDF ya no está disponible.',
+    ],
     'snapshot' => [
         'not_presentable' => 'El certificado :codigo no puede presentarse: su documento congelado no tiene los campos :campos.',
     ],

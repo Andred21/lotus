@@ -227,6 +227,7 @@ class RateLimitTest extends TestCase
         $esperado = [
             ['POST', 'api/login', 'throttle:login'],
             ['GET', 'api/publico/certificados/{uuid}', 'throttle:public-certificate'],
+            ['GET', 'api/publico/certificados/{uuid}/pdf', 'throttle:public-certificate-pdf'],
             ['POST', 'api/password/forgot', 'throttle:password'],
             ['POST', 'api/password/reset', 'throttle:password'],
             ['POST', 'api/invitation/accept', 'throttle:password'],

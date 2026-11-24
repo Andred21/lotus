@@ -8,6 +8,7 @@ return [
         'unauthenticated' => 'Não autenticado',
         'forbidden' => 'Acesso negado',
         'not_found' => 'Recurso não encontrado',
+        'gone' => 'Recurso não mais disponível',
         'http' => 'Erro na requisição',
         'too_many_requests' => 'Muitas solicitações',
         'server' => 'Erro interno',

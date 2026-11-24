@@ -24,11 +24,15 @@ enum TipoDeRecusa
     /** A ação é proibida para quem a pediu. */
     case AcaoProibida;
 
+    /** O recurso existiu e foi retirado de propósito (ex.: PDF de certificado revogado). */
+    case RecursoRevogado;
+
     public function status(): int
     {
         return match ($this) {
             self::RegraDeNegocio => 422,
             self::AcaoProibida => 403,
+            self::RecursoRevogado => 410,
         };
     }
 
@@ -37,6 +41,7 @@ enum TipoDeRecusa
         return match ($this) {
             self::RegraDeNegocio => 'problem.title.http',
             self::AcaoProibida => 'problem.title.forbidden',
+            self::RecursoRevogado => 'problem.title.gone',
         };
     }
 
@@ -45,6 +50,7 @@ enum TipoDeRecusa
         return match ($this) {
             self::RegraDeNegocio => 'https://lotus.cl/errors/http',
             self::AcaoProibida => 'https://lotus.cl/errors/forbidden',
+            self::RecursoRevogado => 'https://lotus.cl/errors/gone',
         };
     }
 }
