@@ -51,7 +51,7 @@ class RateLimitTest extends TestCase
     {
         foreach ([
             'api', 'login', 'public-certificate', 'password',
-            'upload', 'import', 'import-preview', 'certificate-batch', 'certificate-pdf',
+            'upload', 'import', 'import-preview', 'certificate-batch', 'certificate-pdf', 'certificate-export',
             'public-certificate-lookup', 'public-certificate-pdf',
         ] as $nome) {
             $this->assertNotNull(
@@ -143,6 +143,7 @@ class RateLimitTest extends TestCase
             'import-preview' => RateLimits::IMPORT_PREVIA,
             'certificate-batch' => RateLimits::LOTE_CERTIFICADO,
             'certificate-pdf' => RateLimits::PDF_CERTIFICADO,
+            'certificate-export' => RateLimits::EXPORTACAO_CERTIFICADO,
         ] as $nome => $esperado) {
             $daAna = $this->limites($nome, $this->requisicao('10.0.0.1', [], $ana))[0];
             $doBruno = $this->limites($nome, $this->requisicao('10.0.0.1', [], $bruno))[0];
@@ -150,6 +151,19 @@ class RateLimitTest extends TestCase
             $this->assertSame($esperado, $daAna->maxAttempts, "Número errado em `{$nome}`.");
             $this->assertNotSame($daAna->key, $doBruno->key, "`{$nome}` está juntando usuários no mesmo balde.");
         }
+    }
+
+    /** O balde é um só para o resumo e a planilha: o pedido acima do número é 429. */
+    public function test_certificate_export_recusa_acima_do_limite(): void
+    {
+        $this->actingAsAdmin();
+
+        for ($i = 0; $i < RateLimits::EXPORTACAO_CERTIFICADO; $i++) {
+            $this->getJson('/api/certificates/export/summary')->assertOk();
+        }
+
+        $this->getJson('/api/certificates/export/summary')->assertStatus(429);
+        $this->getJson('/api/certificates/export/planilha')->assertStatus(429);
     }
 
     public function test_limitadores_por_ip_usam_o_ip(): void
@@ -248,6 +262,8 @@ class RateLimitTest extends TestCase
             ['POST', 'api/turmas/{turma}/alunos/importar/previa', 'throttle:import-preview'],
             ['POST', 'api/certificates/batch', 'throttle:certificate-batch'],
             ['GET', 'api/certificates/{certificate}/pdf', 'throttle:certificate-pdf'],
+            ['GET', 'api/certificates/export/summary', 'throttle:certificate-export'],
+            ['GET', 'api/certificates/export/planilha', 'throttle:certificate-export'],
         ];
 
         foreach ($esperado as [$metodo, $uri, $limitador]) {

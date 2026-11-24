@@ -133,6 +133,15 @@ display_status: CertificateDisplayStatus,
 aluno_photo_url: string | null,
 };
 export type CertificateDisplayStatus = 'vigente' | 'por_vencer' | 'vencido' | 'revocado';
+export type CertificateExportQueryData = {
+q: string | null,
+display_status: CertificateDisplayStatus | null,
+quote_id: number | null,
+};
+export type CertificateExportSummaryData = {
+total: number,
+revocados: number,
+};
 export type CertificatePageMetaData = {
 summary: CertificateSummaryData,
 page: number,

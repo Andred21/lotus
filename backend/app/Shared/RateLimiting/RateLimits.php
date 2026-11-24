@@ -60,6 +60,13 @@ final class RateLimits
     /** Renderiza no Gotenberg a cada requisição — a rota mais cara do sistema. */
     public const PDF_CERTIFICADO = 30;
 
+    /**
+     * Exportação do Historial (resumo e planilha, o mesmo balde): lê o conjunto
+     * filtrado inteiro, até o teto da planilha. O resumo é uma contagem que o
+     * diálogo repete a cada filtro, então o número é folgado.
+     */
+    public const EXPORTACAO_CERTIFICADO = 30;
+
     /** Consulta pública de certificado por RUT e código, por IP e por minuto. */
     public const CONSULTA_CERTIFICADO = 10;
 
@@ -113,6 +120,9 @@ final class RateLimits
             ->by(self::porUsuario($request)));
 
         RateLimiter::for('certificate-pdf', fn (Request $request) => Limit::perMinute(self::PDF_CERTIFICADO)
+            ->by(self::porUsuario($request)));
+
+        RateLimiter::for('certificate-export', fn (Request $request) => Limit::perMinute(self::EXPORTACAO_CERTIFICADO)
             ->by(self::porUsuario($request)));
     }
 

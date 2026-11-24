@@ -71,6 +71,8 @@ class ListQueryBudgetTest extends TestCase
         'api/permissions' => 'catálogo estático de permissões (PermissionCatalog), não cresce com o uso',
         'api/versao' => 'versão da plataforma em execução (config), um valor escalar — não há N que cresça com o uso',
         'api/certificate-settings' => 'singleton de Configuración › Certificados: uma linha, uma assinatura',
+        'api/certificates/export/summary' => 'contagem de um escopo (o N do aviso de exportação), um registro de duas somas — não é lista',
+        'api/certificates/export/planilha' => 'download de arquivo xlsx do escopo de exportação, não é lista',
     ];
 
     /**

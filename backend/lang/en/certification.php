@@ -16,6 +16,10 @@ return [
     'emission_panel' => [
         'inverted_period' => 'The end date cannot be earlier than the start date.',
     ],
+    'export' => [
+        'empty' => 'There are no certificates to export with the applied filters.',
+        'over_limit' => 'The export has :total certificates and the maximum is :teto. Apply a narrower filter.',
+    ],
     'enrollment' => [
         'not_found' => 'The enrollment does not exist.',
     ],

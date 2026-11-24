@@ -4,6 +4,7 @@ namespace Tests\Feature\Shared;
 
 use App\Domains\Catalog\Data\CourseData;
 use App\Domains\Catalog\Data\CourseModuleData;
+use App\Domains\Certification\Data\CertificateExportQueryData;
 use App\Domains\Certification\Data\CertificatePageQueryData;
 use App\Domains\Certification\Data\CertificateSettingsData;
 use App\Domains\Certification\Data\EmissionPanelQueryData;
@@ -77,6 +78,7 @@ class InputDataDefaultsTest extends TestCase
         TurmaPageQueryData::class => 'query string de lista paginada de turmas: GET nao tem corpo a preservar, ausente vale o padrao da lista',
         CertificatePageQueryData::class => 'query string de lista paginada de certificados: GET nao tem corpo a preservar, ausente vale o padrao da lista',
         EmissionPanelQueryData::class => 'query string do painel de emissao: GET nao tem corpo a preservar, ausente vale o padrao do painel',
+        CertificateExportQueryData::class => 'query string da exportacao do Historial: GET nao tem corpo a preservar, ausente vale sem filtro',
         DashboardFilterData::class => 'query string do filtro do painel: GET nao tem corpo a preservar, ausente vale o periodo padrao',
         RedatorDocumentsData::class => 'upload que so cria ou substitui o conjunto de documentos do redator: nao ha PUT parcial que um default possa rebaixar',
         RedatorDocumentUploadData::class => 'upload de UM documento do redator: so cria ou substitui o arquivo, nao ha valor anterior a preservar por omissao',

@@ -16,6 +16,10 @@ return [
     'emission_panel' => [
         'inverted_period' => 'La fecha de término no puede ser anterior a la de inicio.',
     ],
+    'export' => [
+        'empty' => 'No hay certificados para exportar con los filtros aplicados.',
+        'over_limit' => 'La exportación tiene :total certificados y el máximo es :teto. Aplica un filtro más estrecho.',
+    ],
     'enrollment' => [
         'not_found' => 'La matrícula no existe.',
     ],

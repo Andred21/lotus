@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Certification\Http\Controllers\CertificateController;
+use App\Domains\Certification\Http\Controllers\CertificateExportController;
 use App\Domains\Certification\Http\Controllers\CertificatePreviewController;
 use App\Domains\Certification\Http\Controllers\CertificateSettingsController;
 use App\Domains\Certification\Http\Controllers\PublicCertificateController;
@@ -28,6 +29,12 @@ Route::middleware('auth.active')->group(function () {
     Route::get('certificates/emission-panel', [CertificateController::class, 'emissionPanel']);
     // Antes de `certificates/{certificate}`, que a capturaria como id.
     Route::get('certificates/quotes', [CertificateController::class, 'quotes']);
+    // Exportação do Historial: o aviso (N) e a planilha saem do mesmo escopo. A
+    // planilha lê o conjunto filtrado inteiro, então tem limitador próprio.
+    Route::get('certificates/export/summary', [CertificateExportController::class, 'summary'])
+        ->middleware('throttle:certificate-export');
+    Route::get('certificates/export/planilha', [CertificateExportController::class, 'planilha'])
+        ->middleware('throttle:certificate-export');
     Route::post('certificates/batch', [CertificateController::class, 'batch'])
         ->middleware('throttle:certificate-batch');
     // Renderiza no Gotenberg a CADA requisição — nada é cacheado nem lido do
