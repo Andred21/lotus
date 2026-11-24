@@ -1,9 +1,10 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppDatePicker, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
+import { AppCard, AppDropdown, AppErrorState, AppButton, AppTag, PeriodFilter } from '@shared/ui'
 import { formatDate, loadErrorHint, screenDetail } from '@shared/lib'
 import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
-import { EMISSION_PANEL_WINDOW_MONTHS } from '../../lib/emissionWindow'
+import { EMISSION_PANEL_WINDOW_MONTHS, EMISSION_PERIOD_KEYS } from '../../lib/emissionWindow'
+import { PendingTurmaCards } from './PendingTurmaCards'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
 import { ConfirmIssueDialog } from './ConfirmIssueDialog'
 import { IssuedDialog } from './IssuedDialog'
@@ -14,7 +15,6 @@ export function EmissionPanel() {
   const { t } = useTranslation()
   const s = useEmissionPanelState()
   const turmaInputId = useId()
-  const desdeInputId = useId()
   const blockedId = useId()
 
   const turma = s.selected
@@ -35,25 +35,25 @@ export function EmissionPanel() {
       <EmissionWarnings managerSignatureMissing={s.managerSignatureMissing} />
       <AppCard>
         <div className="space-y-3 p-4">
-          {/* O rótulo é a correção do UI-02 da run de Certificados
-            * (2026-08-25). O nome acessível vinha do PLACEHOLDER — o PrimeReact
-            * o usa como texto do botão que abre a lista — e no visual não havia
-            * rótulo: escolhida a turma, o campo mostra só o VALOR e nada diz que
-            * aquilo é a turma. `useId` + `inputId`, a forma dos três filtros de
-            * estado irmãos; a chave `certificate.turmaConcluida` já existia. */}
-          <label htmlFor={desdeInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('certificate.concludedSince')}
-          </label>
-          {/* Vazio = a janela é a do SERVIDOR, e o `placeholder` a anuncia. O
-            * campo já nasceu preenchido com uma data calculada no fuso do
-            * navegador e mandada em todo GET — o default de Santiago nunca
-            * rodava (Q-2 do review de 2026-08-29). */}
-          <AppDatePicker
-            inputId={desdeInputId}
-            value={s.desde}
-            onChange={s.setDesde}
-            placeholder={t('certificate.concludedSinceDefault', { months: EMISSION_PANEL_WINDOW_MONTHS })}
+          {/* Os presets do período; o 422 de janela invertida aparece AO LADO
+            * do filtro, com a tela mantendo o dado anterior (D6 do Dashboard). */}
+          <PeriodFilter
+            preset={s.preset}
+            presets={EMISSION_PERIOD_KEYS.map((value) => ({
+              value,
+              label: t(`certificate.period.${value}`, { months: EMISSION_PANEL_WINDOW_MONTHS }),
+            }))}
+            customKey="custom"
+            period={s.period}
+            staleError={s.staleError}
+            onPresetChange={s.setPreset}
+            onPeriodChange={s.setPeriod}
+            onRetry={s.staleRetry}
           />
+          {/* O rótulo é a correção do UI-02 da run de Certificados (2026-08-25).
+            * O nome acessível vinha do PLACEHOLDER — o PrimeReact o usa como
+            * texto do botão que abre a lista — e no visual não havia rótulo.
+            * `useId` + `inputId`, a forma dos filtros de estado irmãos. */}
           <label htmlFor={turmaInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.turmaConcluida')}
           </label>
@@ -76,11 +76,7 @@ export function EmissionPanel() {
       </AppCard>
 
       {!turma ? (
-        <AppEmptyState
-          icon="pi pi-verified"
-          title={t('certificate.emptyPanelTitle')}
-          description={t('certificate.emptyPanelHint')}
-        />
+        s.loading ? null : <PendingTurmaCards turmas={s.turmas} onSelect={s.setTurmaId} />
       ) : (
         <>
           <AppCard tone="info" className="px-4 py-3 text-sm">
