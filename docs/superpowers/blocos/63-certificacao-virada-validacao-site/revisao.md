@@ -2,6 +2,8 @@
 
 ## Em aberto
 
+- Q-1 — Menor — João decidiu em 2026-11-25 corrigir antes do fechamento; correção aprovada, falta aplicar e rodar a rodada 2. (O contrato não tem aresta `ready_for_closure → reviewing`: reabertura pelo mesmo caminho dos blocos 60–62.)
+
 ## Rodada 1 — `dc0f9496..5c23b815` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 
 Bloco classificado como **alto risco** (QR do certificado, documento com peso legal; nginx de
