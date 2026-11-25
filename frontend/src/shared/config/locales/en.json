@@ -993,7 +993,9 @@
     "tabHistorial": "History",
     "turmaConcluida": "Completed class",
     "selectTurma": "Select a completed class...",
-    "cardPending": "{{pending}} to issue · {{issued}} issued",
+    "cardToIssue": "{{count}} to issue",
+    "cardIssued": "{{count}} issued",
+    "backToTurmas": "Back to classes",
     "noPendingTurmas": "No classes with pending issuance",
     "noPendingTurmasHint": "Widen the period to see more concluded classes.",
     "period": {

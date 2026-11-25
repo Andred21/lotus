@@ -61,7 +61,10 @@ describe('PendingTurmaCards', () => {
     expect(screen.getByText('Scap 1 - R1')).toBeTruthy()
     expect(screen.getByText(/Alta tensión/)).toBeTruthy()
     expect(screen.getByText(/Enel/)).toBeTruthy()
-    expect(screen.getByText('certificate.cardPending {"pending":3,"issued":2}')).toBeTruthy()
+    // Os dois números são dado em pedaços próprios: o "por emitir" ganha tinta
+    // semântica e o "emitidos" fica secundário, o que uma frase só não permite.
+    expect(screen.getByText('certificate.cardToIssue {"count":3}')).toBeTruthy()
+    expect(screen.getByText('certificate.cardIssued {"count":2}')).toBeTruthy()
   })
 
   it('turma bloqueada entra com a tag do motivo', () => {

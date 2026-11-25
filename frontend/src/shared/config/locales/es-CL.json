@@ -993,7 +993,9 @@
     "tabHistorial": "Historial",
     "turmaConcluida": "Turma concluida",
     "selectTurma": "Selecciona una turma concluida...",
-    "cardPending": "{{pending}} por emitir · {{issued}} emitidos",
+    "cardToIssue": "{{count}} por emitir",
+    "cardIssued": "{{count}} emitidos",
+    "backToTurmas": "Volver a las turmas",
     "noPendingTurmas": "Sin turmas con emisión pendiente",
     "noPendingTurmasHint": "Amplía el período para ver más turmas concluidas.",
     "period": {
