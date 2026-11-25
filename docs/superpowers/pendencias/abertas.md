@@ -604,12 +604,12 @@ bloco de refino visual. O bloco só trocou o `text-sky-600` hardcoded por variá
 Bloco alunos (2026-07-27, spec D11): divergência aceita por decisão do João no mesmo dia — a ordem
 atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 
-## P-89 — o QR em `https://app.lotusotec.cl/validar/…` não foi decodificado de um PDF de produção
+## P-89 — o QR em `https://lotusotec.cl/validar/…` não foi decodificado de um PDF de produção
 
 **Bloco:** `infra-producao-dns-e-tls` (item 32) · **Quem decide:** João · **Gatilho:** o primeiro
-certificado real emitido em produção ter o QR decodificado (`pdftoppm` + `zbarimg`) para
-`https://app.lotusotec.cl/validar/<uuid>`, a página responder 200 e
-`/api/publico/certificados/<uuid>` devolver o `codigo` dele. Revisar em **2026-10-31**.
+certificado real emitido depois do deploy do bloco 63 ter o QR decodificado (`pdftoppm` + `zbarimg`)
+para `https://lotusotec.cl/validar/<uuid>`, e a página do site responder com o estado certo.
+Revisar em **2026-10-31**.
 
 A spec do item 32 (D4, DoD 7) mandava emitir e revogar um certificado sobre dado marcado como teste.
 Em 2026-09-28 a produção não tinha turma elegível (histórico de certificados vazio), e o João decidiu
@@ -621,6 +621,10 @@ com `APP_ENV=production` e a config em cache; o `CertificatePdfTest` prova que o
 O 200 de `/validar/<uuid>` só prova que a SPA é servida em https — o fallback do nginx responde 200 a
 qualquer caminho. Falta a igualdade num PDF de produção: a URL lida do QR de um documento que o
 Gotenberg de produção renderizou, não da configuração nem do teste.
+
+**Bloco 63:** o endereço mudou. A validação pública passou para o site e o QR agora aponta para
+`https://lotusotec.cl/validar/<uuid>`; o histórico acima é do app (`app.lotusotec.cl`) e fica como
+registro. O gatilho vale para o endereço novo e fecha na aceitação do bloco 63.
 ---
 
 # Travadas em escrita fora do repositório

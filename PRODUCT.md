@@ -15,7 +15,7 @@ web
   OTEC. São habilitados por curso, designados a turmas (N:N) e lançam nota, frequência e documentos
   das matrículas. Lançar pelo celular, em campo, não foi apontado como contexto de uso.
 - **Terceiros sem login** — quem escaneia o QR de um certificado: a empresa mandante, um fiscal ou o
-  próprio aluno. Abrem a página pública `/validar/:uuid` no celular e precisam saber, sem margem de
+  próprio aluno. Abrem a página de validação do site (`lotusotec.cl/validar/<uuid>`) no celular e precisam saber, sem margem de
   dúvida, se o certificado é válido.
 
 Clientes e alunos são entidades registradas, não usuários: não autenticam (RN-01).
