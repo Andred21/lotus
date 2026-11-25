@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.14.0](https://github.com/Andred21/lotus/compare/v1.13.0...v1.14.0) (2026-11-25)
+
+
+### Funcionalidades
+
+* **63:** 301 do QR antigo para o site ([450a69a](https://github.com/Andred21/lotus/commit/450a69ad0671283c51401672a0444132f3f34b32))
+* **63:** QR do certificado aponta para o site ([63cace6](https://github.com/Andred21/lotus/commit/63cace6289a4c99cc559b57357daa65743043cd8))
+* **63:** tela de validação sai do app ([b3c3dd5](https://github.com/Andred21/lotus/commit/b3c3dd57681720fe2b400f1025a021e15b2e49b1))
+* **63:** virada da validação de certificado para o site ([fcb1553](https://github.com/Andred21/lotus/commit/fcb155313987498305288cfcb41070a441ba3283))
+
 ## [1.13.0](https://github.com/Andred21/lotus/compare/v1.12.0...v1.13.0) (2026-11-25)
 
 
