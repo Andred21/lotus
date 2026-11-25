@@ -85,6 +85,18 @@ describe('EmissionPanel — o período (D7)', () => {
     expect(screen.getByLabelText('common.period.end')).toBeTruthy()
   })
 
+  it('trocar o período com o GET novo em voo mantém os cards do piso na tela', async () => {
+    montar()
+    await screen.findByText('Scap 190 - R1')
+
+    get.mockReturnValue(new Promise(() => {}))
+    abrir('common.period.label')
+    fireEvent.click(screen.getByText('certificate.period.week'))
+
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(2))
+    expect(screen.getByText('Scap 190 - R1')).toBeTruthy()
+  })
+
   it('o 422 de period_end aparece junto do filtro e a tela mantém o dado anterior', async () => {
     montar()
     await screen.findByText('Scap 190 - R1')

@@ -38,7 +38,13 @@ export function HistorialTable() {
         filterSlot={
           <>
             <HistorialStatusFilter value={h.statusFilter} onChange={h.setStatusFilter} />
-            <HistorialQuoteFilter value={h.quoteFilter} options={h.quoteOptions} onChange={h.setQuoteFilter} />
+            <HistorialQuoteFilter
+              value={h.quoteFilter}
+              options={h.quoteOptions}
+              onChange={h.setQuoteFilter}
+              loadFailure={h.quoteLoadFailure}
+              onRetry={h.reloadQuotes}
+            />
           </>
         }
         emptyState={<AppEmptyState icon="pi pi-verified" title={t('certificate.emptyHistorial')} description={t('certificate.emptyHistorialHint')} />}

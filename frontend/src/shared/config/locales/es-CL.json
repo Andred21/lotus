@@ -1063,6 +1063,7 @@
     "colCourse": "Curso",
     "colQuote": "Cotización",
     "quoteFilterPlaceholder": "Todas",
+    "quoteOptionsLoadError": "No se pudieron cargar las cotizaciones del filtro.",
     "exportPlanilla": "Planilla",
     "exportZip": "ZIP",
     "exportPlanillaTitle": "Exportar planilla",

@@ -139,7 +139,11 @@ export function useEmissionPanelState() {
     viewingCertificateLoading: viewingCertificate.isLoading,
     viewingCertificateError: viewingCertificate.isError ? (viewingCertificate.error ?? null) : null,
     reloadViewingCertificate: (): Promise<unknown> => viewingCertificate.refetch(),
-    loading: panel.isLoading,
+    // Só "carregando" SEM dado em mão: a troca de período cria key nova e
+    // `panel.isLoading` sobe com o piso (`data`) ainda na tela; sem isto os
+    // cards sumiam enquanto a tabela da turma aberta seguia mostrando o piso.
+    // Mesmo molde do Dashboard (`data === undefined` → `loading`).
+    loading: data === undefined && panel.isLoading,
     loadError: data === undefined && panel.isError ? (panel.error ?? null) : null,
     reload: (): Promise<unknown> => panel.refetch(),
   }

@@ -31,7 +31,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\DB;
 
 class CertificateController extends Controller implements HasMiddleware
 {
@@ -84,15 +83,8 @@ class CertificateController extends Controller implements HasMiddleware
      */
     public function quotes(): array
     {
-        return Turma::withTrashed()
-            ->whereIn('turmas.id', DB::table('certificates')
-                ->join('enrollments', 'enrollments.id', '=', 'certificates.enrollment_id')
-                ->select('enrollments.turma_id'))
-            ->with('quote')
-            ->orderByDesc('turmas.quote_id')
-            ->get()
-            // Uma cotação pode ter turmas arquivadas além da ativa: uma opção só.
-            ->unique('quote_id')
+        return Certificate::query()
+            ->turmasPorCotacao()
             ->map(fn (Turma $turma) => CertificateQuoteOptionData::fromTurma($turma))
             ->values()
             ->all();

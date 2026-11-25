@@ -1063,6 +1063,7 @@
     "colCourse": "Course",
     "colQuote": "Quote",
     "quoteFilterPlaceholder": "All",
+    "quoteOptionsLoadError": "Could not load the quotes for the filter.",
     "exportPlanilla": "Spreadsheet",
     "exportZip": "ZIP",
     "exportPlanillaTitle": "Export spreadsheet",

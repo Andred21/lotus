@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { usePermissions, useServerTable } from '@shared/hooks'
+import { useLoadState, usePermissions, useServerTable } from '@shared/hooks'
 import type {
   CertificateData,
   CertificateDisplayStatus,
@@ -35,7 +35,7 @@ export function useHistorial() {
 
   const [statusFilter, setStatusFilter] = useState<CertificateDisplayStatus | null>(null)
   const [quoteFilter, setQuoteFilter] = useState<number | null>(null)
-  const quotes = useCertificateQuotes()
+  const quotes = useLoadState(useCertificateQuotes())
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
   const [revoking, setRevoking] = useState<CertificateData | null>(null)
   const [reissuing, setReissuing] = useState<CertificateData | null>(null)
@@ -104,7 +104,13 @@ export function useHistorial() {
     setStatusFilter,
     quoteFilter,
     setQuoteFilter,
-    quoteOptions: quotes.data ?? [],
+    quoteOptions: quotes.data,
+    // Só a falha SEM opções em mão custa algo (filtro vazio e ZIP travado, que
+    // exige cotação): com cache, o refetch falho mantém a lista utilizável.
+    quoteLoadFailure: quotes.failedWithoutData
+      ? { errorDetail: quotes.errorDetail, errorHint: quotes.errorHint }
+      : null,
+    reloadQuotes: quotes.refetch,
     clearFilters,
     statusSummary,
     loading: table.loading,

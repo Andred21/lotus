@@ -63,6 +63,8 @@ const montar = (c: CertificateData, extra: Partial<Historial> = {}) => {
     quoteFilter: null,
     setQuoteFilter: () => {},
     quoteOptions: opcoes,
+    quoteLoadFailure: null,
+    reloadQuotes: () => Promise.resolve(),
     statusSummary: { vigente: 1 },
     loading: false,
     loadError: null,
@@ -112,5 +114,28 @@ describe('HistorialTable — o filtro de cotação', () => {
     fireEvent.click(await screen.findByText('Scap 5 - R1', { selector: '.p-dropdown-item *' }))
 
     expect(setQuoteFilter).toHaveBeenCalledWith(9)
+  })
+})
+
+describe('HistorialTable — a falha das opções de cotação', () => {
+  const falha: NonNullable<Historial['quoteLoadFailure']> = { errorDetail: undefined, errorHint: 'common.loadErrorHint' }
+
+  it('anuncia a falha ao lado do filtro, com Reintentar, sem derrubar a tabela', () => {
+    const reloadQuotes = vi.fn(() => Promise.resolve())
+    montar(certificado(), { quoteOptions: [], quoteLoadFailure: falha, reloadQuotes })
+
+    const aviso = screen.getByRole('alert')
+    expect(aviso.textContent).toContain('certificate.quoteOptionsLoadError')
+    expect(aviso.textContent).toContain('common.loadErrorHint')
+    expect(screen.getByText('Ana Torres')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'common.retry' }))
+    expect(reloadQuotes).toHaveBeenCalledTimes(1)
+  })
+
+  it('sem falha, nenhum aviso de cotação', () => {
+    montar(certificado())
+
+    expect(screen.queryByText('certificate.quoteOptionsLoadError', { exact: false })).toBeNull()
   })
 })

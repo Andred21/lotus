@@ -13,6 +13,7 @@ use App\Shared\Support\JanelaDeAviso;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Projeção do certificado: `CertificateData::fromModel` lê a foto VIVA do
@@ -78,6 +79,29 @@ class CertificateQueryBuilder extends Builder
             ->whereIn('enrollments.turma_id', Turma::withTrashed()
                 ->select('turmas.id')
                 ->where('turmas.quote_id', $quoteId)));
+    }
+
+    /**
+     * Uma turma por cotação, só das cotações com ao menos um certificado (em
+     * qualquer status), da cotação mais recente para a mais antiga, com a
+     * cotação carregada. `withTrashed` em turma, matrícula e cotação: o
+     * arquivamento não tira o certificado (documento legal) da cotação dele.
+     * Uma cotação pode ter turmas arquivadas além da ativa: uma opção só.
+     * Parte do escopo atual, então um filtro anterior continua valendo.
+     *
+     * @return Collection<int, Turma>
+     */
+    public function turmasPorCotacao(): Collection
+    {
+        return Turma::withTrashed()
+            ->whereIn('turmas.id', Enrollment::withTrashed()
+                ->select('enrollments.turma_id')
+                ->whereIn('enrollments.id', (clone $this)->select('certificates.enrollment_id')))
+            ->with('quote')
+            ->orderByDesc('turmas.quote_id')
+            ->get()
+            ->unique('quote_id')
+            ->values();
     }
 
     /**

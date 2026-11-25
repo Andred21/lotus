@@ -698,6 +698,39 @@ class CertificateListingTest extends TestCase
             ->assertJsonPath('0.id', $this->turma->quote_id);
     }
 
+    /** A regra da seleção, sem HTTP: só cotação com certificado, uma turma por cotação, a mais recente primeiro. */
+    public function test_turmas_por_cotacao_aplica_a_regra_sem_http(): void
+    {
+        $semCertificado = $this->createTurma(TurmaStatus::Concluida, 2);
+        $comRevogado = $this->createTurma(TurmaStatus::Concluida, 3);
+        $matricula = $this->createEnrollment($comRevogado, EnrollmentApprovalStatus::Aprobado, 'Alumno R', '55.555.555-5');
+        $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8401');
+        $this->createCertificate(CertificateStatus::Revocado, 'LOT-2026-8402', enrollment: $matricula);
+
+        // Mesma cotação, turma arquivada + turma nova, as duas com certificado.
+        $this->turma->update(['status' => TurmaStatus::Concluida]);
+        $this->turma->delete();
+        $segunda = Turma::create([
+            'quote_id' => $this->turma->quote_id,
+            'course_id' => $this->course->id,
+            'modalidade' => TurmaModalidade::Presencial,
+            'local_aplicacao' => 'Santiago',
+            'start_date' => '2026-07-20',
+            'end_date' => '2026-07-24',
+            'status' => TurmaStatus::Concluida,
+        ]);
+        $outra = $this->createEnrollment($segunda, EnrollmentApprovalStatus::Aprobado, 'Alumno S', '66.666.666-6');
+        $this->createCertificate(CertificateStatus::Emitido, 'LOT-2026-8403', enrollment: $outra);
+
+        $turmas = Certificate::query()->turmasPorCotacao();
+
+        $this->assertSame(
+            [$comRevogado->quote_id, $this->turma->quote_id],
+            $turmas->pluck('quote_id')->all(),
+        );
+        $this->assertNotContains($semCertificado->quote_id, $turmas->pluck('quote_id')->all());
+    }
+
     public function test_opcoes_de_cotacao_exigem_a_permissao_de_ver_certificados(): void
     {
         $this->seed(RolePermissionSeeder::class);

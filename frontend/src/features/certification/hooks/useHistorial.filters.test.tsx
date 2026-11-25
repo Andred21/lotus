@@ -77,4 +77,27 @@ describe('useHistorial — filtro de cotação', () => {
       expect(ultima).not.toHaveProperty('quote_id')
     })
   })
+
+  it('GET de cotações falho sem cache: expõe a falha e o retry, e a lista segue carregando', async () => {
+    get.mockImplementation((url) =>
+      url === '/api/certificates/quotes'
+        ? Promise.reject({ status: 500, title: 'x', detail: 'x', type: 'x', instance: 'x' })
+        : Promise.resolve({ data: pagina }),
+    )
+    const { wrapper } = createWrapper()
+    const { result } = renderHook(() => useHistorial(), { wrapper })
+
+    await waitFor(() => expect(result.current.quoteLoadFailure).toBeTruthy())
+    expect(result.current.quoteOptions).toEqual([])
+    expect(result.current.loadError).toBeNull()
+    expect(typeof result.current.reloadQuotes).toBe('function')
+  })
+
+  it('cotações carregadas: não há falha a anunciar', async () => {
+    const { wrapper } = createWrapper()
+    const { result } = renderHook(() => useHistorial(), { wrapper })
+
+    await waitFor(() => expect(result.current.quoteOptions).toHaveLength(1))
+    expect(result.current.quoteLoadFailure).toBeNull()
+  })
 })
