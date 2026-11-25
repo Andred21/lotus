@@ -1,5 +1,75 @@
 # Changelog
 
+## [1.13.0](https://github.com/Andred21/lotus/compare/v1.12.0...v1.13.0) (2026-11-25)
+
+
+### Funcionalidades
+
+* **59:** e-mail de credenciais e teste do redator ([fbf2993](https://github.com/Andred21/lotus/commit/fbf29936a7f8834c10d5abbde74838344367cc18))
+* **60:** aviso de evaluaciones nos dashboards ([550c04f](https://github.com/Andred21/lotus/commit/550c04fc1085dd929ff1c7ff398d0a8b29dd92f3))
+* **60:** aviso de evaluaciones nos dashboards, sem contar como pendência ([eb7c6fd](https://github.com/Andred21/lotus/commit/eb7c6fdd89666536676565c16f7c8cbe533afd28))
+* **60:** C-&lt;n&gt; e SENCE nas telas de curso ([dc49191](https://github.com/Andred21/lotus/commit/dc49191f518194a0d8c16a19c0bafa5a8464f2e2))
+* **60:** cartão de evaluaciones e aviso na turma ([537c265](https://github.com/Andred21/lotus/commit/537c26591c286669b995475ede55bbb1c28f23c0))
+* **60:** code C-&lt;n&gt; e sence_code no curso ([36afadb](https://github.com/Andred21/lotus/commit/36afadb67d64a8db3848f56919045f1ce3b488a3))
+* **60:** código da cotação Scap x - R y ([0e1877a](https://github.com/Andred21/lotus/commit/0e1877a4ee8d3b02f1a7458d65f540810f5fc6f8))
+* **60:** código de registro destacado em RecordCode ([7e5eab6](https://github.com/Andred21/lotus/commit/7e5eab64b6980e10468b92ac8d5c33ce74b31ba0))
+* **60:** códigos, máscaras, Comercial e evaluaciones ([481ae70](https://github.com/Andred21/lotus/commit/481ae7024d8a232d987dfff7d4b86ab60cb283ed))
+* **60:** es-CL chama o redator de Instructor ([b25ed6e](https://github.com/Andred21/lotus/commit/b25ed6e3d7adab5cd6b7e527803fd04e4e330f3c))
+* **60:** evaluaciones Instructor/Cliente/Alumnos, só Manual e Instructor bloqueiam ([5597fdf](https://github.com/Andred21/lotus/commit/5597fdf93ea862f7b5187fbd35c95f7dc1fb7b00))
+* **60:** máscara de RUT e busca de aluno sem pontuação ([ea56463](https://github.com/Andred21/lotus/commit/ea56463a8bfa4cd3703c7ff06c9b9ed87b89b65d))
+* **60:** matriz de upload das evaluaciones por papel e status ([a970047](https://github.com/Andred21/lotus/commit/a970047a405e8645d27fc5e62fff223b702f035e))
+* **60:** orçamentos do cliente no diálogo, com filtros ([33d2ded](https://github.com/Andred21/lotus/commit/33d2ded727dfc1be514d59ef1de4acd74a6528a6))
+* **60:** PhoneInput com país e formato internacional ([ffe1825](https://github.com/Andred21/lotus/commit/ffe18257ba654a138d725f5c79b18a40d0931b62))
+* **60:** Presupuestos como primeira aba do Comercial ([b09851e](https://github.com/Andred21/lotus/commit/b09851ed7eeb240ccc39d0c1b90de4be4e531404))
+* **60:** Scap x - R y nas telas ([15531e5](https://github.com/Andred21/lotus/commit/15531e57aeecd89c9acc263ffa16389fe6d16b39))
+* **60:** telefone E.164 e e-mail normalizado na API, conversão auditada ([9b5c2cc](https://github.com/Andred21/lotus/commit/9b5c2cc873d26f2c3c7dc24c79296cc91246d0ff))
+* **61:** consulta pública de certificado por código + RUT ([ef2d8c1](https://github.com/Andred21/lotus/commit/ef2d8c10b46a842e259434248849c8b284096e5e))
+* **61:** CORS do site só nas rotas públicas, sem credenciais ([20dd96e](https://github.com/Andred21/lotus/commit/20dd96e34040c4e3bdb6ea2d7f78ec1d45f4335c))
+* **61:** limitadores de falha por IP e por RUT na consulta pública ([96fd881](https://github.com/Andred21/lotus/commit/96fd8815818625a736326c91b85efaaf8752a2b5))
+* **61:** limitadores públicos e chaves de falha da consulta ([1a715ff](https://github.com/Andred21/lotus/commit/1a715ffad8fcce2c80d85bec9998bed65a2edb4e))
+* **61:** PDF público do certificado pelo uuid, 410 para revogado ([e75ae38](https://github.com/Andred21/lotus/commit/e75ae388829defb05782fc82740ef04520887a7f))
+* **61:** validação pública de certificado pelo site ([6632dd9](https://github.com/Andred21/lotus/commit/6632dd93b8aed6c58141fd06784b114093e1c1b3))
+* **62:** cotação no Historial ([98573fa](https://github.com/Andred21/lotus/commit/98573fa121ff99d0cbcfca365c1c9e9ae34753bb))
+* **62:** cotação no Historial, com filtro e opções ([5f9026e](https://github.com/Andred21/lotus/commit/5f9026e1f8859102f8cca34b0d0fdd3303da02b9))
+* **62:** Emisión com período, combo da cotação e cards de pendência ([d3a1d9e](https://github.com/Andred21/lotus/commit/d3a1d9ead03c813b8456437152356792cafd1441))
+* **62:** Emisión no tema do sistema e botão de voltar aos cards ([eb6e624](https://github.com/Andred21/lotus/commit/eb6e6248b1f54c965327ea095b25d558ba4eb2a5))
+* **62:** exportar planilha e ZIP pelo Historial ([8c5b8f9](https://github.com/Andred21/lotus/commit/8c5b8f90ac401867fcb72c84ab495615f11f485d))
+* **62:** painéis de certificação, lote ZIP e planilha ([9408ab6](https://github.com/Andred21/lotus/commit/9408ab6b78d378b7afee051385222d028a8bfdaf))
+* **62:** painel de emissão por período e com código da cotação ([cf88e16](https://github.com/Andred21/lotus/commit/cf88e1666f7294851315bfbcd69ed04131b2b928))
+* **62:** renderização em lote com concorrência limitada ([c59a91c](https://github.com/Andred21/lotus/commit/c59a91c6a879707f373708133e54a0f4810cbf04))
+* **62:** resumo e planilha da exportação de certificados ([8080b91](https://github.com/Andred21/lotus/commit/8080b911c93f19153c4192fd5da1597339b0a50b))
+* **62:** ZIP dos certificados da turma ([1f65640](https://github.com/Andred21/lotus/commit/1f6564032255588fc8d118c462108fd29120be13))
+
+
+### Correções
+
+* **60:** backfill de courses.code pagina por id (review Q-1) ([abea660](https://github.com/Andred21/lotus/commit/abea6604e9b973e2f88b8d2615f54a9c9dc73c00))
+* **60:** conversão de PRUEBAS pagina por id, sem pular linhas ([6213dae](https://github.com/Andred21/lotus/commit/6213dae2038887b76c5ebe97ca0496a19c554329))
+* **60:** importação compara telefone normalizado, sem divergência espúria ([73844d4](https://github.com/Andred21/lotus/commit/73844d48d8be5f5d8aaf2e16e11c465f87832c70))
+* **60:** orçamentos do cliente só montam com commercial.budget.view (review Q-2) ([83b837a](https://github.com/Andred21/lotus/commit/83b837a09010d820df49cc7bb0d522c07cedd8ab))
+* **60:** telefone aceita NBSP e travessão Unicode ([7df0762](https://github.com/Andred21/lotus/commit/7df0762985fd912a849ad7fcd06597c2e1d80838))
+* **60:** telefone formatado na triagem da importação ([8da1241](https://github.com/Andred21/lotus/commit/8da1241362a7c4f381bfa01ca77876bfc4c0c197))
+* **60:** telefone ganha linha inteira nos formulários estreitos ([50145e0](https://github.com/Andred21/lotus/commit/50145e07e8ae3f4016e7545f110a62849811ae35))
+* **60:** turma concluída no cumplimiento, textos e ordem dos orçamentos ([0b3de69](https://github.com/Andred21/lotus/commit/0b3de693e346b871fdb848a8146761f5c07460c9))
+* **61:** CORS público entrega ao CorsService só as origens sem curinga ([7065c6a](https://github.com/Andred21/lotus/commit/7065c6af633bed6f7d39de46dd8563dc5a601654))
+* **61:** RUT do snapshot só compara se válido e não zerado ([7b0c52f](https://github.com/Andred21/lotus/commit/7b0c52f80daf4226ff5c7e6169c55d318b752ef8))
+* **61:** site lê Retry-After do 429; §7 com saída pelo QR ([b9bc492](https://github.com/Andred21/lotus/commit/b9bc49257315dea4a88f5ef84475222ed58d528c))
+* **62:** expor Content-Disposition e Retry-After no CORS ([2b37163](https://github.com/Andred21/lotus/commit/2b37163de46512aac92df4d5be2d5ee18ea3454e))
+* **62:** exportação no CertificateExport e lote sem releitura (Q-1, Q-3, Q-4, Q-5) ([491b1be](https://github.com/Andred21/lotus/commit/491b1be27e971a71de9dd875715426f31d304edb))
+* **62:** falha do conversor no ZIP vira 503 com Retry-After e causa reportada ([0feb9bd](https://github.com/Andred21/lotus/commit/0feb9bdc6c462849529bc71a3b34e8b06760e9fb))
+* **62:** lock global do ZIP ([e4ae1e1](https://github.com/Andred21/lotus/commit/e4ae1e110a844a23159741d2f45c28c8ea05b4f6))
+* **62:** opções de cotação no builder e avisos de carga (R2 Q-2, Q-3, Q-4) ([a699fc2](https://github.com/Andred21/lotus/commit/a699fc2263c04b59c1af0303150a3055dbbd1d51))
+* **62:** orçamento de tempo e timeout do lote no conversor ([7b8c707](https://github.com/Andred21/lotus/commit/7b8c7070d0f516e8019bf963cc6ae8025f73ba43))
+* **62:** planilha sem injeção de fórmula e com o valor do link em cache ([f9b50d4](https://github.com/Andred21/lotus/commit/f9b50d4bec02fb04ce30c416d64102ea277280bd))
+* **62:** queda de conexão no PDF unitário vira PdfRenderException ([b75d39d](https://github.com/Andred21/lotus/commit/b75d39deff60d95a92c1ec1606f0b489df49b017))
+* **deps:** laravel 13.42 e symfony 7.4.23 para o composer audit ([ee8820e](https://github.com/Andred21/lotus/commit/ee8820e052095f9b739b15d4be2ba4c68195b80f))
+* **identity:** rodape do e-mail em es-CL trata por tu ([3c89177](https://github.com/Andred21/lotus/commit/3c891771676073a7ed586157a45f3fa19b4116f5))
+
+
+### Desempenho
+
+* **62:** renderização unitária do certificado medida e ajustada ([5a46c41](https://github.com/Andred21/lotus/commit/5a46c41fce990f1272ea8e2da0bd9c1c44ce4c28))
+
 ## [1.12.0](https://github.com/Andred21/lotus/compare/v1.11.0...v1.12.0) (2026-11-03)
 
 
