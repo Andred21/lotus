@@ -169,6 +169,10 @@ exceção. Na dúvida, siga o vizinho da mesma
   cache resolvia todos os nomes. Estado de carga de lista **não se deriva à mão na feature**: vem do
   `useLoadState`, que é onde a política "falhou" vs. "veio vazia" mora — seis hooks a repetiam e ela
   já tinha divergido (Q-1, Q-1b e Q-2 do review de 2026-08-14).
+  Query por janela com piso (o `PeriodFilter` que mantém o último payload enquanto o novo período
+  carrega) também não se deriva à mão: o piso, a falha antiga (`staleError`/`staleHint`) e o
+  `podeRepetir` moram em `useWindowedQuery` (`shared/hooks`). O Dashboard e a Emisión os copiaram
+  e as cópias divergiram na forma da mensagem e na assinatura do `podeRepetir` (Q-2 do bloco 62).
   A forma normalizada de lista é `ListSource<T>` e nasce num lugar só
   (`shared/hooks/listSource.ts`). Hook que monta `isError ? (error ?? {}) : null` à mão está
   recriando a política — o alias espalha, não deriva. **Uma exceção deliberada:**

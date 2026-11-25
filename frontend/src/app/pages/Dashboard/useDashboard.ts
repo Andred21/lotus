@@ -1,10 +1,8 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/generated'
-import { loadFailure } from '@shared/hooks'
-import { loadErrorHint, screenDetail } from '@shared/lib'
+import { loadFailure, useWindowedQuery } from '@shared/hooks'
 import type { LoadErrorHintKey, Period } from '@shared/lib'
 
 /** Janela histórica. Só séries e rankings a respeitam (D3 do bloco A). A UI do
@@ -77,23 +75,6 @@ export type DashboardState =
     }
 
 /**
- * Repetir só recupera falha de TRANSPORTE. Um 4xx é a recusa desta requisição:
- * reemitir a mesma URL devolve a mesma recusa, sem informação nova. O caso
- * medido é a janela invertida do filtro — o backend sobe 422 com
- * "La fecha de término no puede ser anterior a la de inicio.", e o "Reintentar"
- * ao lado da mensagem tomava o mesmo 422 (UI-05 da revisão de 2026-08-17). Ali a
- * recuperação é corrigir a data, e é o que a própria mensagem já diz.
- *
- * Sem `status` (o `{}` do interceptor que não populou o corpo), a falha é
- * tratada como de transporte: oferecer o botão a mais é mais barato que negá-lo
- * a quem só perdeu a rede.
- */
-function podeRepetir(erro: ProblemDetails | null): boolean {
-  const status = erro?.status
-  return status === undefined || status < 400 || status >= 500
-}
-
-/**
  * Nenhum módulo visível: o papel autentica como admin mas não lê módulo
  * nenhum. A decisão é da visibilidade explícita que o backend manda (D-34) —
  * nunca do que sobrou nos campos nulos ou nas listas, que não distinguem "sem
@@ -130,38 +111,12 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
         .then((r) => r.data),
   })
 
-  /**
-   * Piso da tela: o último payload que chegou bom, de QUALQUER janela (D6).
-   *
-   * A query key varia pelo período (`:17-18`), então trocar a janela cria key
-   * nova e `query.data` volta `undefined` — a tela inteira viraria
-   * `AppErrorState` por um erro de digitação no filtro, e `staleError` não
-   * alcança porque o cache é da key antiga.
-   *
-   * `placeholderData: keepPreviousData` NÃO resolve isso, medido: o observador
-   * da 5.101.1 só aplica o placeholder com `status === 'pending'`
-   * (`query-core/src/queryObserver.ts:486-491`), e o fetch que falha vira
-   * `'error'`. Ele cobre a troca normal e não cobre a falhada, que é
-   * justamente a metade que a D6 existe para cobrir. Um piso só cobre as duas,
-   * e dois mecanismos para a mesma verdade é o defeito que este repositório já
-   * pagou três vezes (Emenda 2 da spec).
-   *
-   * O piso é ESTADO ajustado durante o render, não `useRef`: a régua
-   * `react-hooks/refs` reprova escrever `.current` no corpo do render, e este
-   * repositório já tem o molde certo para "ajustar estado quando a entrada
-   * muda" — `useEntityForm.ts:29-35`. A guarda de igualdade é o que impede o
-   * laço, e ela é confiável porque o TanStack Query faz structural sharing: o
-   * payload que não mudou volta como o MESMO objeto.
-   *
-   * No render em que o piso sobe, `query.data` já está definido — então a tela
-   * lê o dado novo nesse mesmo render, não o piso velho.
-   */
-  const [ultimoPayload, setUltimoPayload] = useState<DashboardPayload | undefined>(undefined)
-  if (query.data !== undefined && query.data !== ultimoPayload) setUltimoPayload(query.data)
+  // Piso da tela (D6), falha antiga e `podeRepetir`: a política de query por
+  // janela mora em `useWindowedQuery` — a Emisión a consome igual, e as duas
+  // cópias à mão já tinham divergido (Q-2 da revisão do bloco 62).
+  const { data, staleFailed, staleError, staleHint, staleRetry } = useWindowedQuery(query)
 
   const retry = () => query.refetch()
-
-  const data = query.data ?? ultimoPayload
 
   // Nada em mão, nem desta janela nem de nenhuma anterior. É AQUI que a falha
   // pode substituir a tela.
@@ -178,12 +133,7 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
 
   // Com dado em mão, a falha do refetch é aviso AO LADO — a tela continua
   // utilizável (lição do BD-6).
-  // `?? null` e não `?? undefined`: o tipo declarado em `:51,58` é
-  // `string | null`, e a linha só existe quando `isError`.
-  const staleErrored = query.isError
-  const staleError = staleErrored ? (screenDetail(query.error) ?? null) : null
-  const staleHint = loadErrorHint(query.error)
-  const staleRetry = query.isError && podeRepetir(query.error) ? retry : undefined
+  const staleErrored = staleFailed
 
   if (data.view === 'redator') return { kind: 'ready-redator', data, staleErrored, staleError, staleHint, staleRetry }
   if (nenhumModuloVisivel(data)) return { kind: 'unauthorized' }

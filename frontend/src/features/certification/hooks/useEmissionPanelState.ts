@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { currentCalendarPeriod, loadErrorHint, screenDetail, type Period } from '@shared/lib'
+import { useWindowedQuery } from '@shared/hooks'
+import { currentCalendarPeriod, type Period } from '@shared/lib'
 import type { CertificateData, EmissionPanelEnrollmentData, EmissionPanelTurmaData } from '@shared/types/generated'
 import { useCertificate, useEmissionPanel, type EmissionPanelPeriod } from '../api/certificatesApi'
 import { rowCertKind } from '../lib/certStatus'
@@ -48,12 +49,6 @@ function presetParams(preset: EmissionPeriodKey, shown: Period): EmissionPanelPe
   return { period_start: shown.start, period_end: shown.end }
 }
 
-/** Repetir só recupera falha de transporte: um 4xx é a recusa desta janela, e
- * reemitir o mesmo GET devolve a mesma recusa (a política do Dashboard). */
-function podeRepetir(status: number | undefined): boolean {
-  return status === undefined || status < 400 || status >= 500
-}
-
 /**
  * Estado da aba Emisión: a query do painel + a turma selecionada (local, sem
  * refletir na rota) + as derivações que `EmissionPanel`/`EmissionStudentsTable`
@@ -79,15 +74,10 @@ export function useEmissionPanelState() {
   const params = presetParams(preset, period)
   const panel = useEmissionPanel(true, params)
 
-  // O piso da tela: o último payload bom, de QUALQUER janela. A chave varia
-  // pela janela, então trocar de preset cria chave nova e `panel.data` volta
-  // `undefined` — e `keepPreviousData` não cobre a troca que FALHA (o
-  // observador só o aplica em `pending`). Sem piso, a recusa 422 de uma janela
-  // invertida derrubaria a tela inteira. Mesmo molde e mesma medição de
-  // `useDashboard`; estado ajustado no render, não `useRef`.
-  const [ultimo, setUltimo] = useState<EmissionPanelTurmaData[] | undefined>(undefined)
-  if (panel.data !== undefined && panel.data !== ultimo) setUltimo(panel.data)
-  const data = panel.data ?? ultimo
+  // O piso (de QUALQUER janela), a falha antiga e o `podeRepetir` são a
+  // política de query por janela de `useWindowedQuery`, a mesma do Dashboard:
+  // sem piso, a recusa 422 de uma janela invertida derrubaria a tela inteira.
+  const { data, staleFailed, staleError: staleDetail, staleHint, staleRetry } = useWindowedQuery(panel)
 
   const [turmaId, setTurmaId] = useState<number | null>(null)
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
@@ -116,11 +106,9 @@ export function useEmissionPanelState() {
   const counts = useMemo<EmissionCounts>(() => (selected ? countsFor(selected) : SEM_CONTAGEM), [selected])
 
   // Falha COM dado em mão é aviso ao lado do filtro; só a falha SEM nada em
-  // mão substitui a tela. `screenDetail` cala o 422, e a dica por status é o
-  // texto que sobra.
-  const staleFailed = data !== undefined && panel.isError
-  const staleError = staleFailed ? (screenDetail(panel.error) ?? t(loadErrorHint(panel.error))) : null
-  const staleRetry = staleFailed && podeRepetir(panel.error?.status) ? (): Promise<unknown> => panel.refetch() : undefined
+  // mão substitui a tela. A Emisión imprime UMA string: o detail que sobreviveu
+  // ao `screenDetail` (cala o 422) e, na falta dele, a dica por status.
+  const staleError = staleFailed ? (staleDetail ?? t(staleHint)) : null
 
   return {
     preset,
