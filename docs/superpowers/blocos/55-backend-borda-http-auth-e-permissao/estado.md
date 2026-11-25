@@ -2,9 +2,9 @@
 schema_version: 3
 id: 55
 slug: 55-backend-borda-http-auth-e-permissao
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item aceitacao externa
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/55-backend-borda-http-auth-e-permissao/spec.md
 active_plan: docs/superpowers/blocos/55-backend-borda-http-auth-e-permissao/plano.md
@@ -17,9 +17,9 @@ branch: docs/55-backend-borda-http-auth-e-permissao
 worktree: ../lotus-55-backend-borda-http-auth-e-permissao
 offset: 1
 lane_base: 09c3d42f
-commit: 09c3d42f
+commit: f25fad13
 blocker: null
-updated_at: 2026-11-25T12:04:03-03:00
+updated_at: 2026-11-25T12:09:25-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
