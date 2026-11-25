@@ -9,4 +9,4 @@ sobrescreve o que estiver escrito nela. O item manual é do João: feita a açã
 
 | # | Item | Prova | Resultado | Data |
 |---|---|---|---|---|
-| 1 | Depois do deploy, o João baixa em produção o ZIP de uma turma real e a planilha da mesma turma, anota o tempo do ZIP, e confere que o container do Gotenberg não reiniciou nem foi morto por memória (`docker inspect` com `RestartCount` e `OOMKilled`), com a saída colada e conferida. | manual |  |  |
+| 1 | Depois do deploy, o João baixa em produção o ZIP de uma turma real e a planilha da mesma turma, anota o tempo do ZIP, e confere que o container do Gotenberg não reiniciou nem foi morto por memória (`docker inspect` com `RestartCount` e `OOMKilled`), com a saída colada e conferida. | manual | SCAP-185-R1 (quote 46), prod c98240be: ZIP 29/29 PDFs em ~29 s (log do Gotenberg 07:27:24–07:27:53 UTC, 29 conversões 200); planilha 29 linhas, ABRIR ok. Gotenberg antes/depois: RestartCount 0→0, OOMKilled=false, StartedAt 2026-11-24T08:30:23Z inalterado, healthy. | 2026-11-25 |

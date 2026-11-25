@@ -2,9 +2,9 @@
 schema_version: 3
 id: 62
 slug: 62-certificacao-paineis-lote-e-planilha
-workflow_state: ready_for_closure
-next_owner: claude
-next_action: close_active_work_item aceitacao externa
+workflow_state: closed
+next_owner: joao
+next_action: none
 resume_state: null
 active_spec: docs/superpowers/blocos/62-certificacao-paineis-lote-e-planilha/spec.md
 active_plan: docs/superpowers/blocos/62-certificacao-paineis-lote-e-planilha/plano.md
@@ -17,10 +17,10 @@ branch: docs/62-certificacao-paineis-lote-e-planilha
 worktree: ../lotus-62-certificacao-paineis-lote-e-planilha
 offset: 1
 lane_base: 15718a77
-commit: 15718a77
+commit: a281e588
 blocker: null
-updated_at: 2026-11-25T04:21:50-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-11-25T04:33:53-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 62 — estado

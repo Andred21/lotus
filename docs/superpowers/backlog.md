@@ -175,7 +175,6 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **55** `backend-borda-http-auth-e-permissao` | 1 | 2026-11-03 |
 | **60** `codigos-mascaras-comercial-e-avaliacoes` | 1, 2 | 2026-11-23 |
-| **62** `certificacao-paineis-lote-e-planilha` | 1 | 2026-11-25 |
 
 ---
 
@@ -357,38 +356,6 @@ aparece no curso. Nenhuma tela mostra mais `Cot`. Presupuestos abre primeiro. O 
 lista e filtra os orçamentos dele. Um teste prova que a turma conclui sem as evaluaciones de
 Cliente e Alumnos, com aviso, e é recusada sem o Manual ou sem a do Instructor. RUT e telefone
 aparecem formatados e ficam crus no banco, provado por teste e no navegador.
-
----
-
-## 62. `certificacao-paineis-lote-e-planilha`
-
-**Prioridade:** P1 · **Frente:** Backend + Frontend (Certification) · **Contexto:** não · **Depende:** 60 61
-**Fonte:** pedidos da Lotus de 2026-11-21 (Certificación 1 a 3). O modelo da planilha é a tabela de
-um e-mail que a Lotus envia ao cliente com os certificados de uma turma.
-
-**Escopo:**
-- **Emisión.** Ficam o filtro de período (semana, mes, año, personalizado), com o `PeriodFilter`
-  que o 60 sobe para `shared/`, e o de turma. O combo de turma mostra `Scap x - R y`, o nome do
-  curso e a data. Onde hoje fica o vazio "Selecciona una turma para ver los alumnos certificables"
-  entram cards das turmas concluídas com emissão pendente. Clicar num card abre a tabela de
-  alunos, a mesma que o combo abre hoje (`EmissionPanel`, `EmissionStudentsTable`).
-- **Historial.** Coluna e filtro de orçamento e cotação (`Scap x - R y`), em `historialColumns.ts`.
-- **Download em lote.** Os certificados de uma turma, ou de uma seleção do Historial, saem num
-  arquivo só (ZIP). Cada PDF é uma renderização do Gotenberg (`routes.php:21-24`).
-- **Planilha.** A mesma seleção sai em planilha com as colunas do e-mail modelo: Código, Fecha
-  curso, RUT, Nombre completo, Curso e Link de descarga. O link é o download público do 61, e daí
-  vem a dependência.
-
-**Para o brainstorming:**
-- O teto de certificados por pedido de ZIP, e se o lote roda na fila. O molde do limitador é o
-  `throttle:certificate-batch`.
-- xlsx ou CSV. O modelo é uma tabela colada num e-mail.
-- "Fecha curso" é o fim da turma ou a data de emissão? No modelo, todas as linhas têm 12/10/26.
-- O RUT sai formatado na planilha, no formato de exibição que o 60 definir?
-
-**DoD:** os cards listam só turmas concluídas com pendência e abrem a tabela certa. O Historial
-filtra por cotação. O ZIP de uma turma traz um PDF por certificado emitido. A planilha abre no
-Excel com as seis colunas, e o link baixa o PDF certo, provado no navegador.
 
 ---
 
