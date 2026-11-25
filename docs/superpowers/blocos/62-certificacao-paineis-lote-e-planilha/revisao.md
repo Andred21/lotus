@@ -2,11 +2,25 @@
 
 ## Em aberto
 
-- **Q-1 · Crítico** — regras da exportação no `CertificateExportController`. Aguarda decisão do
-  João: corrigir agora (extrair para Domain Service) ou adiar como ficha proposta.
-- **Q-2 · Importante** — política de piso e falha antiga copiada de `useDashboard` para
-  `useEmissionPanelState`. Aguarda decisão do João: corrigir agora (hook em `shared/hooks`) ou
-  adiar como ficha proposta.
+## Rodada 2 — `aba2b75e..491b1be2` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
+
+Os cinco achados da rodada 1 foram corrigidos com aprovação do João: Q-2 em `2c710242`
+(`useWindowedQuery` em `shared/hooks` e a regra em `.claude/rules/frontend-fsliced.md`); Q-1, Q-3, Q-4
+e Q-5 em `491b1be2` (`CertificateExport`, `AssinaturasDoLote`, teste do ZIP com bytes por código, nome
+via `Quote::code`). A lente 1 confirmou cada correção e não achou regressão. A suíte do backend deu
+2102 passed e 7 skipped; o frontend deu 2176 testes passando, com lint e build limpos.
+
+Codex: uma tentativa só, `model_not_found` para `gpt-5.5`, sem nova tentativa.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | `preg_replace` da fórmula `HYPERLINK` não checa `null`. Com falha do PCRE, `addFromString` recebe `''` (o arquivo não declara `strict_types`) e o xlsx sai com a aba vazia, entregue com 200. | PLAUSIBLE | `backend/app/Domains/Certification/Services/CertificateSpreadsheet.php:111-117` | observação. Depende de o PCRE falhar com a entrada real |
+| Q-2 | Menor | A query de opções de cotação (`quotes()`) é montada no controller, com subquery `DB::table('certificates')` por fora do model. | CONFIRMED | `backend/app/Domains/Certification/Http/Controllers/CertificateController.php:87-95` | correção aprovada pelo João, a aplicar |
+| Q-3 | Menor | `useHistorial` repassa só `quotes.data ?? []`. Com falha do GET `/api/certificates/quotes`, o filtro mostra "sin opciones" como se não houvesse cotação certificada. | CONFIRMED | `frontend/src/features/certification/hooks/useHistorial.ts:38,107`; `frontend/src/features/certification/components/Historial/HistorialQuoteFilter.tsx:37,43` | correção aprovada pelo João, a aplicar |
+| Q-4 | Menor | Os cards da Emisión somem na troca de período: o ramo `s.loading ? null` usa o `isLoading` cru da query, não o piso do `useWindowedQuery`. | CONFIRMED | `frontend/src/features/certification/components/Emission/EmissionPanel.tsx:38`; `frontend/src/features/certification/hooks/useEmissionPanelState.ts:142` | correção aprovada pelo João, a aplicar |
+| Q-5 | Menor | Com `quote_id`, o nome do arquivo é sempre o da cotação inteira, mesmo quando `q` ou `display_status` recortam o conjunto. A spec §5.3 a §5.5 manda assim, mas isso encosta no anti-objetivo da §3. | PLAUSIBLE | `backend/app/Domains/Certification/Services/CertificateExportScope.php:54-64`; `docs/superpowers/blocos/62-certificacao-paineis-lote-e-planilha/spec.md:64,172-173,190` | observação. Mudar o nome é decisão de spec |
+
+Placar: Crítico: 0 · Importante: 0 · Menor: 3 confirmados, 2 plausíveis, 0 refutados
 
 ## Rodada 1 — `aba2b75e..3186e0d8` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 
