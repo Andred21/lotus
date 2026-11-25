@@ -86,7 +86,6 @@ export function IssuedDialog({
               <CertificateFolio
                 label={t('certificate.fieldCodigo')}
                 folio={certificate.codigo}
-                size="dialog"
               />
             </div>
             <p className="mt-2 text-center text-xs" style={{ color: 'var(--text-color-secondary)' }}>

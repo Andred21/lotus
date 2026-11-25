@@ -212,7 +212,7 @@ Todas self-hosted via `@fontsource`, só os pesos listados.
   hairline à direita. **Rótulo de campo** (Inter 400, 12px, caixa alta, tracking 0.025em): o `dt`
   e o cabeçalho de tabela — não encabeça grupo, não carrega peso.
 - **Mono** (Plex Mono 400, `tabular-nums`, `whitespace-nowrap` quando é identificador): folio
-  (30px, tracking 0.15em na página; 20px, 0.1em no diálogo), RUT, código, data, versão.
+  (20px, tracking 0.1em), RUT, código, data, versão.
 
 ### Named Rules
 **The Tabular Rule.** Todo dígito que alinha em coluna — célula de tabela, KPI, folio, data — leva
