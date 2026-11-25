@@ -86,6 +86,12 @@ class FakeHtmlToPdf implements HtmlToPdf
         return count($this->calls);
     }
 
+    /** @return list<string> o HTML de cada conversão, na ordem das chamadas */
+    public function htmls(): array
+    {
+        return array_column($this->calls, 'html');
+    }
+
     public function lastHtml(): string
     {
         return $this->lastCall()['html'];

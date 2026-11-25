@@ -56,9 +56,13 @@ class CertificatePdfService
      */
     public function renderMany(iterable $certificates): array
     {
+        // As assinaturas iguais para o lote inteiro (a gerente) e as de cada
+        // relator distinto saem uma vez; o lote seguinte começa de novo.
+        $assinaturas = new AssinaturasDoLote;
+
         $htmls = [];
         foreach ($certificates as $certificate) {
-            $htmls[$certificate->codigo] = $this->html($certificate, false);
+            $htmls[$certificate->codigo] = $this->html($certificate, false, $assinaturas);
         }
 
         $options = PageOptions::fromCss();
@@ -100,7 +104,7 @@ class CertificatePdfService
         return $this->pdf->render($this->html($certificate, true), PageOptions::fromCss());
     }
 
-    private function html(Certificate $certificate, bool $muestra): string
+    private function html(Certificate $certificate, bool $muestra, ?AssinaturasDoLote $assinaturas = null): string
     {
         // Um certificado com o nome do aluno em branco não é um certificado
         // incompleto — é um documento que atesta o que ninguém sabe.
@@ -125,7 +129,7 @@ class CertificatePdfService
             'muestra' => $muestra ? self::TEXTO_MUESTRA : null,
             // Vivas, lidas na hora de imprimir: a assinatura de quem assina
             // hoje (D5) e a cidade do emissor (D13). O snapshot não muda.
-            'assinaturas' => $this->signatures->para($certificate),
+            'assinaturas' => $this->signatures->para($certificate, $assinaturas),
             'cidade' => $this->city->issuerCity(),
             // Os métodos são estáticos: o Blade recebe o nome da classe.
             'texto' => TextoDoCertificado::class,

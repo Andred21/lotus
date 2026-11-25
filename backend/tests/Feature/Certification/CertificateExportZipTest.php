@@ -18,6 +18,7 @@ use App\Domains\Operation\Enums\TurmaStatus;
 use App\Domains\Operation\Models\Enrollment;
 use App\Domains\Operation\Models\Turma;
 use App\Shared\Pdf\HtmlToPdf;
+use App\Shared\Pdf\PageOptions;
 use App\Shared\Pdf\PdfRenderException;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -115,14 +116,33 @@ class CertificateExportZipTest extends TestCase
         $this->assertSame(3, $this->pdf->callCount());
     }
 
+    /**
+     * O conversor devolve bytes DERIVADOS do HTML que recebeu (o código do
+     * certificado), não uma constante: com a constante, trocar as chaves do
+     * lote passaria despercebido. Três certificados, cada entrada com o seu.
+     */
     public function test_cada_entrada_leva_o_pdf_do_proprio_certificado(): void
     {
+        $this->app->instance(HtmlToPdf::class, new class extends FakeHtmlToPdf
+        {
+            public function render(string $html, PageOptions $options): string
+            {
+                parent::render($html, $options);
+                preg_match('/LOT-\d{4}-\d{4}/', $html, $m);
+
+                return '%PDF-de:'.$m[0];
+            }
+        });
         $this->actingAsAdmin();
         $this->emitir('LOT-2026-0011');
+        $this->emitir('LOT-2026-0012');
+        $this->emitir('LOT-2026-0013');
 
         $resposta = $this->get('/api/certificates/export/zip?quote_id='.$this->turma->quote_id)->assertOk();
 
-        $this->assertSame('%PDF-fake', $this->conteudoDoZip($resposta, 'certificado-LOT-2026-0011.pdf'));
+        foreach (['LOT-2026-0011', 'LOT-2026-0012', 'LOT-2026-0013'] as $codigo) {
+            $this->assertSame("%PDF-de:{$codigo}", $this->conteudoDoZip($resposta, "certificado-{$codigo}.pdf"));
+        }
     }
 
     public function test_cabecalhos_e_nome_do_arquivo(): void

@@ -196,6 +196,14 @@ certificado, 60 s (metade do timeout) comportam 74 certificados, ou **70**. Com 
 certificados a N = 2 levaram no máximo 35,3 s, e 70 em série de 3 páginas levariam ~57 s. O teto se
 refaz se o `mem_limit` do Gotenberg ou o tamanho do host mudarem.
 
+**O que a medição não pegou: as assinaturas.** Os certificados de `medir-lote.php` (linha 35) saem sem
+`redator_id` e rodam com MinIO local, então o caminho da firma do relator e a latência do S3 de produção
+ficaram fora do 0,81 s por certificado que fixou o teto. Cada certificado lia a configuração, a firma da
+gerente (um GET) e o relator com a firma (outro GET). Desde a correção da revisão (Q-3) o lote resolve a
+gerente uma vez e a firma uma vez por relator distinto (`AssinaturasDoLote`, descartado ao fim do
+`renderMany`; o documento não muda): o custo de leitura deixa de crescer com N. O item 1 do
+[`aceitacao.md`](./aceitacao.md) mede o ZIP em produção, com S3 e relatores reais.
+
 ### Timeout do client
 
 Fica o default do `Http` (30 s por requisição), sem ajuste. O teto de concorrência é do client: a

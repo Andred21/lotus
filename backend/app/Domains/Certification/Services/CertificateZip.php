@@ -13,7 +13,7 @@ use ZipArchive;
  *
  * Monta em ARQUIVO (`ZipArchive`), nunca num ZIP em memória: o lote já guarda
  * HTMLs e PDFs de todos os certificados (~1,4 MiB cada) e o limite do FPM é
- * 256 MiB. O arquivo é do controller, que o apaga depois do envio.
+ * 256 MiB. O arquivo é de quem pede o ZIP (o `CertificateExport` o entrega ao controller, que o apaga depois do envio).
  */
 class CertificateZip
 {

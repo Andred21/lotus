@@ -361,6 +361,21 @@ class CertificateExportTest extends TestCase
             ->assertDownload('certificados-2026-08-05.xlsx');
     }
 
+    /**
+     * O código da cotação tem dono (`Quote::code`, ADR-17): o nome do arquivo o
+     * deriva, não o remonta. Se o formato do código mudar, o nome acompanha.
+     */
+    public function test_nome_do_arquivo_deriva_do_codigo_da_cotacao(): void
+    {
+        $this->actingAsAdmin();
+        $this->emitir('LOT-2026-1002');
+        $quote = $this->turma->quote;
+
+        $this->get('/api/certificates/export/planilha?quote_id='.$quote->id)
+            ->assertOk()
+            ->assertDownload('certificados-'.Str::slug($quote->code).'.xlsx');
+    }
+
     public function test_quote_id_inexistente_e_422(): void
     {
         $this->actingAsAdmin();

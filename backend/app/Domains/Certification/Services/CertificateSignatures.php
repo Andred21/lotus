@@ -21,21 +21,43 @@ use Throwable;
  */
 class CertificateSignatures
 {
-    public function para(Certificate $certificate): AssinaturasDoCertificado
+    /**
+     * `$lote` é a resolução compartilhada de um lote (`renderMany`): a gerente e
+     * a firma de cada relator saem uma vez só. Sem ele (documento unitário), tudo
+     * se lê na hora — o resultado é o mesmo.
+     */
+    public function para(Certificate $certificate, ?AssinaturasDoLote $lote = null): AssinaturasDoCertificado
     {
-        $settings = CertificateSettings::atual();
+        $lote ??= new AssinaturasDoLote;
 
         return new AssinaturasDoCertificado(
-            gerente: new AssinaturaImpressa(
-                nome: $settings->manager_name,
-                cargo: $settings->manager_title,
-                pngBase64: $this->base64DoArquivo($settings->signature),
-            ),
+            gerente: $lote->gerente(function (): AssinaturaImpressa {
+                $settings = CertificateSettings::atual();
+
+                return new AssinaturaImpressa(
+                    nome: $settings->manager_name,
+                    cargo: $settings->manager_title,
+                    pngBase64: $this->base64DoArquivo($settings->signature),
+                );
+            }),
             instrutor: new AssinaturaImpressa(
                 nome: $certificate->snapshot->redator->name,
                 cargo: 'Instructor',
-                pngBase64: $this->base64DoArquivo($this->firmaDoInstrutor($certificate)),
+                pngBase64: $this->firmaImpressaDoInstrutor($certificate, $lote),
             ),
+        );
+    }
+
+    /** `redator_id` nulo (amostra do preview) → sem firma e sem o que lembrar. */
+    private function firmaImpressaDoInstrutor(Certificate $certificate, AssinaturasDoLote $lote): ?string
+    {
+        if ($certificate->redator_id === null) {
+            return null;
+        }
+
+        return $lote->firmaDoRelator(
+            $certificate->redator_id,
+            fn (): ?string => $this->base64DoArquivo($this->firmaDoInstrutor($certificate)),
         );
     }
 

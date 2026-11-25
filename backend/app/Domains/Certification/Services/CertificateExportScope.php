@@ -9,6 +9,7 @@ use App\Domains\Certification\Enums\CertificateStatus;
 use App\Domains\Certification\Models\Certificate;
 use App\Domains\Certification\QueryBuilders\CertificateQueryBuilder;
 use App\Domains\Operation\Models\Turma;
+use Illuminate\Support\Str;
 
 /**
  * O conjunto que a exportação leva (spec §5.3): o da listagem com os mesmos
@@ -46,7 +47,7 @@ class CertificateExportScope
 
     /**
      * O nome do arquivo sem extensão: com a cotação do filtro,
-     * `certificados-scap-<budget>-r<seq>`; sem ela, `certificados-<Y-m-d>`
+     * `certificados-<código da cotação, em slug>` (`Quote::code`, ex.: `certificados-scap-190-r1`); sem ela, `certificados-<Y-m-d>`
      * (dia de Santiago). O código da cotação vem pela TURMA, que é aresta
      * declarada de Certification — `Commercial\Quote` não é.
      */
@@ -60,7 +61,7 @@ class CertificateExportScope
                 ?->quote;
 
             if ($quote !== null) {
-                return "certificados-scap-{$quote->budget_id}-r{$quote->seq_in_budget}";
+                return 'certificados-'.Str::slug($quote->code);
             }
         }
 
