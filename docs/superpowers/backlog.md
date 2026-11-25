@@ -172,7 +172,6 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | Bloco | Itens pendentes | Desde |
 |---|---|---|
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
-| **63** `certificacao-virada-validacao-site` | 1, 2, 3, 4 | 2026-11-25 |
 
 ---
 
@@ -281,45 +280,6 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 
 ---
 
-## 63. `certificacao-virada-validacao-site`
-
-**Prioridade:** P1 · **Frente:** Infra + Backend + Frontend (Certification) · **Contexto:** não · **Depende:** 61
-**Fonte:** spec do 61 (`blocos/61-certificacao-validacao-no-site/spec.md`: §1, entrega 3; §2, decisões 3 e 4; §11); `P-89`; `D-70`.
-
-**Hoje:** o QR de todo certificado leva a `config('app.certificate_validation_url')` + `/validar/{uuid}`
-(`CertificateValidationUrl.php:26`), que em produção é o próprio app (`app.lotusotec.cl/validar/<uuid>`),
-servido pela `ValidationPage` do SPA (`AppRouter.tsx:34`). O 61 entregou a API pública (consulta por
-código + RUT, PDF público, CORS do site), e a página do site é um bloco do `Andred21/lotus-site`, pelo
-harness de lá, com o §7 da spec do 61 como contrato.
-
-**Escopo:**
-- **QR novo.** `CERTIFICATE_VALIDATION_URL=https://lotusotec.cl` no `.env` de produção e no
-  `deploy/aws/env.prod.example`. O caminho `/validar/` já é fixo em `CertificateValidationUrl::para()`,
-  então a virada do QR novo é só o env.
-- **QR antigo.** `301` de `app.lotusotec.cl/validar/<uuid>` para `https://lotusotec.cl/validar/<uuid>`
-  no `prod.conf` e no `tls.conf`, versionado e testável. O `tls.conf` vai ao host por `scp`: divergente
-  do repositório, a checagem de alinhamento trava o botão de deploy (`deploy/aws/README.md:762`).
-- **Saída da `ValidationPage`.** A rota `/validar/:uuid` do SPA e a página saem do app. A
-  `GET /api/publico/certificados/{uuid}` fica, porque o site a usa.
-- **P-89** com o endereço novo no gatilho.
-- **D-70**, se a Lotus aceitar o canal de contato do site.
-
-**Fora:** conteúdo e layout do PDF (peso legal: muda só o destino do QR); a página do site.
-
-**Para o brainstorming:**
-- O bloco só abre com a página do site no ar e provada em `lotusotec.cl/validar/<uuid>`, e com o 61
-  aceito em produção. O `301` fica em cache no navegador de quem o recebeu: mesclar antes da página
-  existir quebra QR impresso sem volta fácil.
-- A ordem no deploy: o env do QR novo e o `301` no mesmo release, ou o env primeiro.
-
-**DoD:** certificado emitido depois do deploy tem QR para `https://lotusotec.cl/validar/<uuid>`, que abre
-a página do site com o estado certo. `https://app.lotusotec.cl/validar/<uuid>` responde `301` com
-`Location` no site, e um QR antigo impresso chega à validação. A `ValidationPage` saiu do app com a
-suíte verde. A P-89 confere o endereço novo. A prova final é contra produção, depois do deploy
-(aceitação, invariante 11).
-
----
-
 ## 58. `docs-sincronizacao-de-mapa`
 
 **Prioridade:** P3 · **Frente:** Docs · **Contexto:** não · **Depende:** 50 51 52 53 54 55
@@ -345,7 +305,6 @@ ficam só como ponteiro, e a ficha delas é lá.
 
 | ID | Quem decide | Decisão / gatilho |
 |---|---|---|
-| `D-70` | Lotus | `/validar` diz "contacta a Lotus" sem canal — publicar endereço ou telefone é decisão da Lotus |
 | `DS-05` | João | Avatar do Perfil só vira task após medição justificar |
 | `DS-07` | João | Mural de credenciais é redesign próprio, com brainstorming |
 | `P-57` | João | `artisan test` fatala por memória em worktree com imagem `app` velha |
@@ -354,11 +313,6 @@ ficam só como ponteiro, e a ficha delas é lá.
 | `P-10` | Lotus | Tabela de alunos exibe Cliente ou não |
 | `P-13` | Lotus | Turma terá código próprio ou não |
 | `P-16` | Lotus | Aba inicial de Turma |
-
-- **D-70** · **`/validar` diz "contacta a Lotus" sem canal** — o item 21 (`D-67`) pôs a linha de
-  orientação no ramo `notFound` dos três locales, **sem canal**: publicar endereço ou telefone numa
-  página aberta é decisão da Lotus, não do João sozinho. Enquanto não houver canal, a orientação
-  termina num beco. Precisa da Lotus antes de virar código. **Gatilho: decisão da Lotus.**
 
 - **DS-05** · O avatar de `/perfil` é `scale-200` sobre imagem pequena. Deixado fora do BD-16 por
   decisão explícita; a Task 15 mediu que não recorta. Estética — só vira task após medição
@@ -419,6 +373,7 @@ ficam só como ponteiro, e a ficha delas é lá.
 > | 2026-11-03 | `D-73` | paga — `scrollWidth == clientWidth` nos dois painéis em 1024x768 e, pela leitura emendada, nada passa da tabela em 390x844, medido no navegador (`blocos/54-dashboard-agenda-e-pendencias/medicoes-d73.md` §3, `d78915a7`, `196489c6`) | item 54 |
 > | 2026-11-03 | `D-34` | paga — a visibilidade RBAC vira o campo `visibility` do payload (`DashboardVisibilityData`), e `AdminView`, `kpiCards`, `SeriesPanel` e `RankingsPanel` decidem por ele (`7977f4aa`) | item 54 |
 > | 2026-11-25 | `D-17` | paga — a metade que faltava: `PermissionCatalogOrphanTest` reprova permissão do `PermissionCatalog` sem rota e rota com permissão fora do catálogo, vista reprovar por sonda (`b36ffdd6`, `blocos/55-backend-borda-http-auth-e-permissao/prova.md`) | item 55 |
+> | 2026-11-25 | `D-70` | paga — a linha "contacta a Lotus" saiu dos três locales do app junto com a tela `/validar` (grep em `frontend/src/shared/config/locales/` sem ocorrência); o canal de contato do site, se a Lotus ainda depender dele, é pendência do `lotus-site` (`b2b9cce2`) | item 63 |
 >
 > **O que aqueles fechamentos deixaram aberto, e que não é débito:** cinco recusas literais fora de
 > `lang/` viraram a **P-71** e o 419 virou a **P-72** — as duas fechadas depois pelo item 26; a

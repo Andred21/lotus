@@ -7,7 +7,14 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-Nenhuma ficha em rastro.
+### P-89 — o QR em `https://lotusotec.cl/validar/…` não foi decodificado de um PDF de produção
+
+**Encerrada em 2026-11-25**, na aceitação do bloco 63 (`certificacao-virada-validacao-site`), pelo
+próprio gatilho: o QR do certificado LOT-2026-125 (PDF `4ce4def5-4955-453e-a88e-f411aafa9663.pdf`,
+renderizado pelo Gotenberg de produção), decodificado com `pdftoppm` + `zbarimg`, leva a
+`https://lotusotec.cl/validar/b7904ed9-9dcd-4873-94c7-d833f46119e0`, e a página do site abre com
+VIGENTE e os dados do registro. Item 4 do `aceitacao.md` do bloco, resultado do João. A ficha
+original (item 32, `app.lotusotec.cl`) está no histórico do git de `abertas.md`.
 
 ## Rastro anterior, já removido
 
@@ -49,7 +56,7 @@ depois do item 35 que as encerrou em 2026-10-03: a P-84 pela seção HARNESS do
 item 32, em 2026-09-27, pelo gatilho pago: `app.lotusotec.cl` resolve exatamente o EIP
 `18.230.53.197`, sem AAAA, e o §11 do runbook rodou de ponta a ponta. O fechamento do item 23
 (2026-09-28) a deixou em rastro, e o João decidiu tirá-la neste. A prova do QR num PDF de produção,
-que o gatilho não pedia, segue na [P-89](./abertas.md). O rastro durável está nos commits e na
+que o gatilho não pedia, ficou na [P-89](#p-89--o-qr-em-httpslotusotecclvalidar-não-foi-decodificado-de-um-pdf-de-produção), encerrada em 2026-11-25. O rastro durável está nos commits e na
 linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-55, a P-87 e a P-88 saíram no fechamento do `infra-producao-dns-e-tls` (item 32,
