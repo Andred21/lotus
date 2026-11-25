@@ -9,5 +9,5 @@ sobrescreve o que estiver escrito nela. O item manual é do João: feita a açã
 
 | # | Item | Prova | Resultado | Data |
 |---|---|---|---|---|
-| 1 | Definir `CORS_PUBLIC_ORIGINS=https://lotusotec.cl` no `.env` de produção em `/opt/lotus`, **antes** do deploy. A chave entra no `deploy/aws/env.prod.example`, e a checagem de alinhamento (`.github/scripts/conferir-alinhamento.sh`) recusa o deploy de um SHA cujo molde traz chave ausente no host. O código antigo ignora a chave, então defini-la antes não muda nada no ar. | manual |  |  |
-| 2 | Deploy da API do bloco em produção (merge na `main`, espelho para o corporativo, botão de deploy). | `producao GET /api/publico/certificados/consulta -> 405` | `404`, esperado `405`: FALHOU | 2026-11-24 |
+| 1 | Definir `CORS_PUBLIC_ORIGINS=https://lotusotec.cl` no `.env` de produção em `/opt/lotus`, **antes** do deploy. A chave entra no `deploy/aws/env.prod.example`, e a checagem de alinhamento (`.github/scripts/conferir-alinhamento.sh`) recusa o deploy de um SHA cujo molde traz chave ausente no host. O código antigo ignora a chave, então defini-la antes não muda nada no ar. | manual | chave definida no .env de produção | 2026-11-25 |
+| 2 | Deploy da API do bloco em produção (merge na `main`, espelho para o corporativo, botão de deploy). | `producao GET /api/publico/certificados/consulta -> 405` | `405`, esperado `405`: OK | 2026-11-25 |
