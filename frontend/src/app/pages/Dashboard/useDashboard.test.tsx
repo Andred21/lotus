@@ -178,7 +178,7 @@ describe('useDashboard', () => {
     get.mockResolvedValue({ data: admin() })
     // Contagem RELATIVA, não toHaveBeenCalledTimes absoluto: `get` é o mesmo
     // mock dos testes anteriores deste arquivo (mesmo padrão de
-    // useValidationPage.test.tsx) — o total já vem com chamadas prévias.
+    // um teste da tela de validação, que saiu do app no bloco 63) — o total já vem com chamadas prévias.
     const antes = get.mock.calls.length
 
     const { rerender } = renderHook(({ p }: { p?: { start: string; end: string } }) => useDashboard(p), {

@@ -67,8 +67,8 @@ function comDefault(over?: QueryClientConfig): QueryClientConfig {
  * módulo entrega um client COMPARTILHADO por todos os `it()` daquele
  * arquivo — sobrevive entre eles, não só entre re-renders de um mount. Isso
  * é inofensivo quando o hook sob teste não usa `useQuery`/`useMutation` de
- * verdade, mas quebrou 5 de 7 casos em `useValidationPage.test.tsx` (item
- * 27, Task 3): testes diferentes reusavam a mesma query key e herdavam
+ * verdade, mas quebrou 5 de 7 casos num teste da tela de validação, que saiu do app
+ * no bloco 63 (item 27, Task 3): testes diferentes reusavam a mesma query key e herdavam
  * cache um do outro. Onde houver query real, chame `createWrapper()` dentro
  * de um `beforeEach` (ou dentro de cada `it()`), não uma vez no topo do
  * arquivo.

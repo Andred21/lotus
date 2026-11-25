@@ -1099,21 +1099,6 @@
     "revokeConfirm": "Revocar",
     "statusSummary": "{{vigentes}} vigentes · {{porVencer}} por vencer · {{vencidos}} vencidos · {{revocados}} revocados",
     "popupBlocked": "El navegador bloqueó la pestaña del PDF",
-    "validation": {
-      "valid": "Certificado válido",
-      "revoked": "Certificado revocado",
-      "expired": "Certificado vencido",
-      "notFound": "Certificado no encontrado",
-      "searchedCode": "Código consultado",
-      "notFoundHint": "Verifica el código impreso en el documento o contacta a Lotus.",
-      "issuedTo": "Emitido a",
-      "course": "Curso",
-      "hours_one": "{{count}} hora",
-      "hours_other": "{{count}} horas",
-      "completedAt": "Turma concluida el {{date}}",
-      "validUntil": "Válido hasta {{date}}",
-      "revokedAt": "Revocado el {{date}}"
-    },
     "result": {
       "action": "Registrar resultado",
       "title": "Resultado académico",

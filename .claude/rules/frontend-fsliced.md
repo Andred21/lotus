@@ -34,9 +34,9 @@ preenchido. Ref.: `app/pages/Administracion/AdministracionRoute.tsx` monta
 (`components/Settings/`). Nenhuma das duas features importa a outra; submódulo novo de Configuración
 entra no `ConfiguracionTab`, com a navegação lateral `AppSubNav` (`shared/ui`).
 
-**Validação QR pública** é a rota
-`/validar/:uuid` desta SPA, fora do ramo protegido e do `SessionBootstrap` (spec D14/D19 da
-certificação); a API pública `/api/publico/certificados/{uuid}` responde sem cookie.
+**Validação QR pública** mora no site (`lotusotec.cl/validar`) desde o bloco 63; esta SPA não tem
+mais a rota nem a `ValidationPage`. O `/validar/*` do app responde `301` no nginx para o site, e a
+API pública `/api/publico/certificados/{uuid}` segue no app, sem cookie, para o site consumir.
 
 **server vs client state (ADR-05):** dado de servidor → TanStack Query; UI/sessão → Zustand.
 Não misturar. **Onde mora o dado de servidor (ADR-18):** o cliente REST (`createCrudResource`)
@@ -321,7 +321,8 @@ Teste de componente **está** no corte, PrimeReact incluído. Medido com o runne
 citado de memória: dos **13** arquivos que renderizam componente, **9 montam wrapper PrimeReact** no
 jsdom (`ValidationPage`, `BudgetDetailPage`, `CourseStep`, `QuotesList`, `TurmaDetailPage`,
 `ProfileDocumentSlot`, `DetailHeader`, `IdentityCell`, `InlineLoadState`) e os outros 4 são DOM puro
-(`AppFileRow`, `PageHeader`, `FormField`, `Clock`). Sem `globals`: cada teste importa
+(`AppFileRow`, `PageHeader`, `FormField`, `Clock`). Nota do bloco 63: a `ValidationPage` dessa lista
+saiu do app; a medição acima é datada e não foi refeita. Sem `globals`: cada teste importa
 `describe`/`it`/`expect` de `vitest`, para os arquivos de teste seguirem type-checados pelo `tsc -b`.
 Este parágrafo dizia "sem test runner ainda" por um bloco inteiro depois de o runner existir (review
 de 2026-08-04, Q-3); depois afirmou por mais quatro dias que o corte era só `shared/` quando já havia

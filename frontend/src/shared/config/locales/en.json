@@ -1099,21 +1099,6 @@
     "revokeConfirm": "Revoke",
     "statusSummary": "{{vigentes}} valid · {{porVencer}} expiring · {{vencidos}} expired · {{revocados}} revoked",
     "popupBlocked": "The browser blocked the PDF tab",
-    "validation": {
-      "valid": "Valid certificate",
-      "revoked": "Revoked certificate",
-      "expired": "Expired certificate",
-      "notFound": "Certificate not found",
-      "searchedCode": "Code checked",
-      "notFoundHint": "Check the code printed on the document or contact Lotus.",
-      "issuedTo": "Issued to",
-      "course": "Course",
-      "hours_one": "{{count}} hour",
-      "hours_other": "{{count}} hours",
-      "completedAt": "Class concluded on {{date}}",
-      "validUntil": "Valid until {{date}}",
-      "revokedAt": "Revoked on {{date}}"
-    },
     "result": {
       "action": "Record result",
       "title": "Academic result",

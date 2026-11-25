@@ -146,7 +146,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
-| — | **63** `certificacao-virada-validacao-site` | Infra + Backend + Frontend | Fecha a validação no site. Só abre com a página do `lotus-site` no ar e o 61 aceito |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
 | 11 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
 
@@ -173,6 +172,7 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | Bloco | Itens pendentes | Desde |
 |---|---|---|
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
+| **63** `certificacao-virada-validacao-site` | 1, 2, 3, 4 | 2026-11-25 |
 
 ---
 

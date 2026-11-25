@@ -15,7 +15,7 @@ web
   OTEC. São habilitados por curso, designados a turmas (N:N) e lançam nota, frequência e documentos
   das matrículas. Lançar pelo celular, em campo, não foi apontado como contexto de uso.
 - **Terceiros sem login** — quem escaneia o QR de um certificado: a empresa mandante, um fiscal ou o
-  próprio aluno. Abrem a página pública `/validar/:uuid` no celular e precisam saber, sem margem de
+  próprio aluno. Abrem a página de validação do site (`lotusotec.cl/validar/<uuid>`) no celular e precisam saber, sem margem de
   dúvida, se o certificado é válido.
 
 Clientes e alunos são entidades registradas, não usuários: não autenticam (RN-01).
@@ -77,7 +77,7 @@ sem login.
   tema é o Lara gerado do ADR-16; todo texto de tela passa pelo i18n, com as três línguas; os tipos
   TS são gerados do backend; os erros da API chegam em RFC 7807.
 - **Em aberto:** o uso autenticado no celular não foi confirmado como contexto real. O único uso
-  móvel confirmado é a página pública de validação.
+  móvel confirmado era a página pública de validação, que saiu do app no bloco 63.
 
 ## Brand Commitments
 

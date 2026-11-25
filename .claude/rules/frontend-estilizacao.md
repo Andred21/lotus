@@ -37,7 +37,7 @@ sustenta, porque regra sem catraca é recomendação solta.
 | Faixa que encabeça grupo | `<SectionLabel>` | `h2` na página, `h3` em card/diálogo |
 | Rótulo de campo (`dt`) | `fieldLabelClass` | listas de definição |
 | Número de estatística | `<StatValue>` | KPI (`size="page"`), cartão (`size="card"`) |
-| Folio de certificado | `<CertificateFolio>` | validação pública, diálogo de emissão |
+| Folio de certificado | `<CertificateFolio>` | diálogo de emissão |
 | Rótulo de campo de formulário | `<FormField>` | todo formulário, inclusive login, recuperação e senha |
 | Código de registro — `Scap 100`, `Scap 2 - R1`, `C-7` | `<RecordCode>` | coluna Código das tabelas, fila de cotizações da Operação, passo de curso da cotización |
 
@@ -124,7 +124,6 @@ sítios que esta decisão migrou. A lista chegou a zero e o bloco saiu; não pro
 | Faixa de card (cabeçalho, rodapé) | `px-4 py-3` |
 | Corpo de card | `p-4` |
 | Página autenticada | `p-4 sm:p-6` |
-| Hero público (validação por QR) | `p-6` |
 
 ## Cor
 

@@ -34,7 +34,6 @@ const CHAVES = [
   'operation.enrollment.import.counts.already_enrolled',
   'operation.enrollment.import.counts.error',
   'operation.enrollment.import.confirm',
-  'certificate.validation.hours',
 ] as const
 
 const IDIOMAS = ['es-CL', 'pt-BR', 'en'] as const

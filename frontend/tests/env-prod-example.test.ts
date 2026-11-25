@@ -25,12 +25,13 @@ function valorDe(chave: string): string {
 }
 
 const DOMINIO = 'app.lotusotec.cl'
+const SITE = 'lotusotec.cl'
 
 describe('deploy/aws/env.prod.example — os seis campos do runbook §11', () => {
   it.each([
     ['APP_URL', `https://${DOMINIO}`],
     ['FRONTEND_URL', `https://${DOMINIO}`],
-    ['CERTIFICATE_VALIDATION_URL', `https://${DOMINIO}`],
+    ['CERTIFICATE_VALIDATION_URL', `https://${SITE}`],
     ['SANCTUM_STATEFUL_DOMAINS', DOMINIO],
     ['SESSION_DOMAIN', DOMINIO],
     ['SESSION_SECURE_COOKIE', 'true'],

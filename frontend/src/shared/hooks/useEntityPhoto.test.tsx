@@ -14,7 +14,7 @@ vi.mock('@shared/api/photoResource', () => ({
 
 /** Client POR TESTE, não por arquivo: o hook tem duas `useQuery`, e um client de
  * módulo faria os 6 casos herdarem cache um do outro — foi o que quebrou 5 de 7
- * em `useValidationPage.test.tsx` (Q-1 do review de 2026-09-04). */
+ * num teste da tela de validação, que saiu do app no bloco 63 (Q-1 do review de 2026-09-04). */
 let wrapper: ReturnType<typeof createWrapper>['wrapper']
 
 const arquivo = () => new File(['x'], 'foto.png', { type: 'image/png' })
