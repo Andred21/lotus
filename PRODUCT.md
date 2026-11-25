@@ -77,7 +77,7 @@ sem login.
   tema é o Lara gerado do ADR-16; todo texto de tela passa pelo i18n, com as três línguas; os tipos
   TS são gerados do backend; os erros da API chegam em RFC 7807.
 - **Em aberto:** o uso autenticado no celular não foi confirmado como contexto real. O único uso
-  móvel confirmado é a página pública de validação.
+  móvel confirmado era a página pública de validação, que saiu do app no bloco 63.
 
 ## Brand Commitments
 

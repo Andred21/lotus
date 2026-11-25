@@ -609,7 +609,7 @@ atual fica, a aba `Alumnos` só trocou o empty state fixo pelo conteúdo real.
 **Bloco:** `infra-producao-dns-e-tls` (item 32) · **Quem decide:** João · **Gatilho:** o primeiro
 certificado real emitido depois do deploy do bloco 63 ter o QR decodificado (`pdftoppm` + `zbarimg`)
 para `https://lotusotec.cl/validar/<uuid>`, e a página do site responder com o estado certo.
-Revisar em **2026-10-31**.
+Revisar **na aceitação do 63**.
 
 A spec do item 32 (D4, DoD 7) mandava emitir e revogar um certificado sobre dado marcado como teste.
 Em 2026-09-28 a produção não tinha turma elegível (histórico de certificados vazio), e o João decidiu
@@ -625,6 +625,7 @@ Gotenberg de produção renderizou, não da configuração nem do teste.
 **Bloco 63:** o endereço mudou. A validação pública passou para o site e o QR agora aponta para
 `https://lotusotec.cl/validar/<uuid>`; o histórico acima é do app (`app.lotusotec.cl`) e fica como
 registro. O gatilho vale para o endereço novo e fecha na aceitação do bloco 63.
+
 ---
 
 # Travadas em escrita fora do repositório

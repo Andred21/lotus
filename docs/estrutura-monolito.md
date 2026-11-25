@@ -181,7 +181,7 @@ frontend/src/
 │   ├── catalog/                # cursos + habilitação de redatores (código real)
 │   ├── operation/              # turmas, matrícula, documentos, conclusão — código real
 │   │   ├── api/ components/{Document,Enrollment,Turma}/ hooks/ lib/ stores/
-│   ├── certification/          # emissão, historial, validação pública e Configuración › Certificados
+│   ├── certification/          # emissão, historial e Configuración › Certificados (a validação pública mora no site desde o bloco 63)
 │   │   └── components/Settings/ # `CertificateSettingsPanel` + `ManagerSignatureField`: nome, cargo e assinatura da gerente (só superadmin, bloco 40)
 │   │   (feedback/ NÃO entra — decisão de 2026-08-22)
 │   (sessão foi extraída para shared/stores por ser infra transversal, não domínio de identity)
@@ -295,7 +295,7 @@ Pequenos pontos onde o repo real difere do planejamento original — ambos aceit
 2. **`App.tsx`:** resolvido — o shell (task 2.4.1) foi entregue; o entrypoint e os providers vivem em `app/`. `main.tsx` na raiz de `src/` segue como ponto de montagem.
 3. **Features com código real:** `identity`, `commercial`, `catalog`, `operation` e `certification`
    têm código real nos dois lados (em `certification`: Actions, Enums, Services, Data, Models e
-   Controllers sob `Domains/Certification/`; emissão, histórico, validação pública e configuração
+   Controllers sob `Domains/Certification/`; emissão, histórico e configuração (a validação pública mora no site desde o bloco 63)
    sob `features/certification/`). Resto de scaffold: `features/certification/stores/` guarda só um
    `.gitkeep`, e nenhum domínio criou classe Policy (ver a nota sob `Providers/`).
    **`feedback` não existe e não vai existir** em nenhum dos dois: a decisão

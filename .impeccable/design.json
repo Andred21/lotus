@@ -30,7 +30,7 @@
       "perigo-escuro": { "role": "tertiary", "displayName": "Perigo (escuro, 400)", "canonical": "#ff6259", "tonalRamp": ["#7f1d1d", "#b32b23", "#d9342b", "#e24c4c", "#ef4444", "#ff6259", "#ff8780", "#ffb3ae"] }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display (Archivo 30px)", "purpose": "KPI que é o assunto da dobra e o veredito da validação pública." },
+      "display": { "displayName": "Display (Archivo 30px)", "purpose": "KPI que é o assunto da dobra." },
       "headline": { "displayName": "Headline (Archivo 24px)", "purpose": "O h1 de página, dono único: PageHeader e DetailHeader." },
       "title": { "displayName": "Título de cartão (Inter 16px/600)", "purpose": "cardTitleClass; caixa mista, registro diferente da faixa de seção." },
       "body": { "displayName": "Corpo (Inter 16px)", "purpose": "Controles Prime a 16px; tabela, descrição e rótulo de formulário a 14px." },
@@ -115,7 +115,7 @@
       "refersTo": "mono",
       "description": "A assinatura do sistema: legenda em rótulo de campo e o número LOT-ano-seq em Plex Mono tabular com tracking aberto.",
       "html": "<dl class=\"ds-folio\"><dt class=\"ds-folio-label\">Folio</dt><dd class=\"ds-folio-value\">LOT-2026-0142</dd></dl>",
-      "css": ".ds-folio { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 0; text-align: center; font-family: Inter, system-ui, sans-serif; } .ds-folio-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.025em; color: #475569; } .ds-folio-value { margin: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 1.875rem; letter-spacing: 0.15em; white-space: nowrap; color: #334155; }"
+      "css": ".ds-folio { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; margin: 0; text-align: center; font-family: Inter, system-ui, sans-serif; } .ds-folio-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.025em; color: #475569; } .ds-folio-value { margin: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 1.25rem; letter-spacing: 0.1em; white-space: nowrap; color: #334155; }"
     }
   ],
   "narrative": {
