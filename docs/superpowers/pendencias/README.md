@@ -21,7 +21,7 @@ ganharam bloco quando o novo backlog resolve essa decisão no brainstorming do p
 coluna Gatilho preserva a condição. `—` significa que ela segue **fora** de bloco: depende de
 decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do backlog).
 
-## Abertas (34)
+## Abertas (33)
 
 ### Agrupadas em bloco de execução
 
@@ -136,7 +136,6 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-10 | Coluna CLIENTE da tabela de alunos foi omitida | Lotus | Lotus pedir alunos de múltiplos clientes na mesma turma |
 | P-13 | Figma mostra código próprio de turma; implementado renderiza `quote_code` | Lotus | Lotus pedir identificador próprio de turma |
 | P-16 | Figma põe `Alumnos` como primeira aba; implementado mantém `Redactores` | Lotus | Lotus pedir `Alumnos` como aba padrão |
-| P-89 | O QR em `https://lotusotec.cl/validar/…` não foi decodificado de um PDF de produção — a produção não tinha turma elegível, e o João não quis cadeia de teste no banco | João | o primeiro certificado real emitido depois do deploy do bloco 63 ter o QR decodificado para `https://lotusotec.cl/validar/<uuid>` e a página do site responder com o estado certo; revisar na aceitação do 63 |
 | P-80 | A previsão de custo do mês é **35,74 USD** contra o teto de **30** da decisão D8, e o critério de resize da EC2 (`t4g.medium`, +9 USD/mês) está satisfeito — as duas decisões são a mesma conversa | João | decidir teto **e** resize juntos, com a decisão escrita na spec/ADR que a carrega; revisar 2026-10-31 |
 | P-81 | A access key `AKIA3B7BDINPPYESZA6T` do usuário `lotus-infra`, que provisionou toda a Fase B, continua ativa — a produção não a usa (instance profile), mas é credencial de longa duração sem uso corrente | João | `aws iam list-access-keys --user-name lotus-infra` não devolver mais a chave; revisar 2026-10-31 |
 | P-98 | Em produção o único admin ativo recebe o alerta D7 e o reset pelo Gmail pessoal do João (nenhuma caixa `@lotusotec.cl` com leitor), e `lotus@lotusotec.cl`, remetente e destino do feedback do SES, não existe no Workspace; a metade do redator saiu com o fim do sandbox (item 59) | João | a Lotus criar `lotus@` e entregar uma caixa `@lotusotec.cl` com leitor para o admin; antes do go-live (item 13); revisar 2026-12-07 |
@@ -145,7 +144,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (0)
+## Encerradas (1)
+
+**A P-89 encerrou em 2026-11-25**, na aceitação do item 63: o QR do certificado LOT-2026-125, decodificado de um PDF de produção, leva a `https://lotusotec.cl/validar/<uuid>` e a página do site abre com o estado certo. A ficha está em [`encerradas.md`](./encerradas.md) e sai no fechamento seguinte.
 
 **A P-91 saiu no fechamento do item 62 (2026-11-25)**, o primeiro depois do item 61, que a encerrou em 2026-11-24: o item 55 já a tinha pago (`0b40be13`, com `UnauthenticatedWithoutAcceptTest`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
