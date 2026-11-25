@@ -2,7 +2,11 @@
 
 ## Em aberto
 
-- Q-1 (rodada 2) — Menor — João decidiu em 2026-11-25 corrigir antes do fechamento; correção aprovada, falta aplicar e rodar a rodada 3.
+## Rodada 3 — `dc0f9496..1d547657` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
+
+O Q-1 da rodada 2 fechou em `1d547657`: `docs/estrutura-monolito.md:203` agora bate com as linhas 184 e 298 do mesmo arquivo e com `.claude/rules/frontend-fsliced.md`; a lente 1 conferiu a API anônima em `backend/app/Domains/Certification/routes.php:15-24` e o `301` idêntico em `prod.conf` e no 443 do `tls.conf`. Lente Codex: uma tentativa, `model_not_found` para `gpt-5.5`, sem retry.
+
+Lente 2: não despachada — nenhum achado nesta rodada.
 
 ## Rodada 2 — `dc0f9496..58377586` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
 

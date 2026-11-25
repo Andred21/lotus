@@ -2,9 +2,9 @@
 schema_version: 3
 id: 63
 slug: 63-certificacao-virada-validacao-site
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings Q-1
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/blocos/63-certificacao-virada-validacao-site/spec.md
 active_plan: docs/superpowers/blocos/63-certificacao-virada-validacao-site/plano.md
@@ -17,9 +17,9 @@ branch: feat/63-certificacao-virada-validacao-site
 worktree: ../lotus-63-certificacao-virada-validacao-site
 offset: 1
 lane_base: dc0f9496
-commit: 58377586
+commit: 1d547657
 blocker: null
-updated_at: 2026-11-25T14:49:21-03:00
+updated_at: 2026-11-25T14:50:30-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
