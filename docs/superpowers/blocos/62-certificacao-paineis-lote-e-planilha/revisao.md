@@ -2,6 +2,25 @@
 
 ## Em aberto
 
+## Rodada 3 — `aba2b75e..a699fc22` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5)
+
+Os três Menores confirmados da rodada 2 foram corrigidos em `a699fc22`, com aprovação do João:
+
+- Q-2: `CertificateQueryBuilder::turmasPorCotacao()`, com teste direto do scope.
+- Q-3: aviso `InlineLoadState` com "Reintentar" ao lado do filtro de cotação, só quando a falha chega sem opções em cache.
+- Q-4: na Emisión, `loading` só fica verdadeiro quando não há piso em mão.
+
+A lente 1 conferiu que as três correções fecham os achados sem regressão e releu o diff inteiro contra o gabarito. R2 Q-1 e R2 Q-5 seguem como observação, sem fato novo.
+
+Verificação da sessão:
+
+- backend: 2103 passed, 7 skipped; `pint --test` passou;
+- frontend: 2181 testes passando; lint e build limpos.
+
+Codex: uma tentativa só, `model_not_found` para `gpt-5.5`, sem nova tentativa.
+
+Lente 2: não despachada — nenhum achado nesta rodada.
+
 ## Rodada 2 — `aba2b75e..491b1be2` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
 
 Os cinco achados da rodada 1 foram corrigidos com aprovação do João: Q-2 em `2c710242`
