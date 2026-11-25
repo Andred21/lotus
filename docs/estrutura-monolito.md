@@ -200,7 +200,7 @@ frontend/tsconfig.app.json       # paths: @shared, @features, @app (tsconfig.jso
 - **PrimeReact SÓ em `shared/ui` (CRÍTICO):** features importam `AppButton`, nunca `Button` do pacote. Centraliza tema/defaults; troca de lib um dia = mexer só em shared/ui.
 - **`shared/types` é gerado, não escrito à mão.** Editar quebra o sync. Tipo local de UI fica no `types.ts` da feature. Tipo à mão temporário = dívida marcada (ver ADR-04).
 - **server state vs client state:** dado do servidor → `features/<x>/api` (TanStack Query). Estado de UI (tema, wizard, modais, sessão) → Zustand. Não misturar.
-- **Validação QR pública** é rota Laravel pública (domínio Certification), **fora** desta SPA autenticada. Não criar `public/validate/` na SPA.
+- **Validação QR pública** mora no site (`lotusotec.cl/validar`) desde o bloco 63; esta SPA não tem rota de validação. O `/validar/*` do app responde `301` no nginx para o site, e a API pública `/api/publico/certificados/{uuid}` segue no domínio Certification, sem cookie, para o site consumir.
 - **`style.ts` no wrapper quando houver variante nomeada ou customização de tema.** Não é cerimônia: wrapper sem customização não ganha `style.ts`.
 - **Cor que acompanha o tema usa CSS var do Lara** (`--surface-section`, `--surface-card`, `--surface-border`), não par `bg-white dark:bg-slate-800` (ADR-16).
 - **Um `export * from './X'` por pasta** no barrel `shared/ui/index.ts`. Nunca caminho fundo.
