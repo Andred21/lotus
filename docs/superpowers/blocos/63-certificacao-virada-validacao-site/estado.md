@@ -17,9 +17,9 @@ branch: feat/63-certificacao-virada-validacao-site
 worktree: ../lotus-63-certificacao-virada-validacao-site
 offset: 1
 lane_base: dc0f9496
-commit: b93c6cee
+commit: 58377586
 blocker: null
-updated_at: 2026-11-25T14:23:40-03:00
+updated_at: 2026-11-25T14:49:21-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 

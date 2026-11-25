@@ -2,7 +2,19 @@
 
 ## Em aberto
 
-- Q-1 — Menor — João decidiu em 2026-11-25 corrigir antes do fechamento; correção aprovada, falta aplicar e rodar a rodada 2. (O contrato não tem aresta `ready_for_closure → reviewing`: reabertura pelo mesmo caminho dos blocos 60–62.)
+- Q-1 (rodada 2) — Menor — João decidiu em 2026-11-25 corrigir antes do fechamento; correção aprovada, falta aplicar e rodar a rodada 3.
+
+## Rodada 2 — `dc0f9496..58377586` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
+
+O Q-1 da rodada 1 fechou em `58377586`: os comentários de `IssuedDialog.tsx`, `CertificateFolio.test.tsx` e `typography.test.ts` (terceira cópia da mesma frase, achada pelo grep da correção) descrevem o estado atual. A lente 1 mediu de novo: `vitest` em 75 arquivos e 541 testes verdes, `eslint` limpo nos três arquivos. Lente Codex: uma tentativa, `model_not_found` para `gpt-5.5`, sem retry.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-1 | Menor | `estrutura-monolito.md` ainda diz que a validação QR pública é "rota Laravel pública", contradizendo a linha da árvore que o próprio bloco reescreveu no mesmo arquivo | CONFIRMED | `docs/estrutura-monolito.md:203` | João aprovou corrigir antes do fechamento |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0 plausíveis, 0 refutados · Menor: 1 confirmado, 0 plausíveis, 0 refutados
+
+Ressalva da lente 2: a spec §5.3 nomeia só `frontend-fsliced.md` e `PRODUCT.md`; ler nela o `estrutura-monolito.md` é leitura ampla. O defeito se sustenta pela contradição interna do arquivo.
 
 ## Rodada 1 — `dc0f9496..5c23b815` — 2026-11-25 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 
