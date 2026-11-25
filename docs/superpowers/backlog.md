@@ -173,7 +173,6 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | Bloco | Itens pendentes | Desde |
 |---|---|---|
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
-| **55** `backend-borda-http-auth-e-permissao` | 1 | 2026-11-03 |
 | **60** `codigos-mascaras-comercial-e-avaliacoes` | 1, 2 | 2026-11-23 |
 
 ---
@@ -245,29 +244,6 @@ está formalmente resolvida.
 > reemissível é pendência no Dashboard (48); a `D-34` e a `D-71` saem do item 9 para o 54 e o 49; a
 > P-51 vai inteira para o 51, e a marca de coleção só de entrada vai para o 53. **Não decidido:**
 > registrar "não adotar FormRequest nem Policy" em ADR — o João vai estudar o caso (55).
-
----
-
-## 55. `backend-borda-http-auth-e-permissao`
-
-**Prioridade:** P3 · **Frente:** Backend (Identity, rotas) · **Contexto:** não · **Depende:** —
-**Fonte:** card 10 e a seção "Policy" do review de 2026-11-02; `D-17`, `P-91`, `P-54` (condicional).
-
-**Escopo:**
-- **Card 10.** O escopo "só admin" de `UserController`/`UserPhotoController` (6 × `abort_unless`,
-  2 × `where('type','admin')`) vira binding, no molde da `{turma}`.
-- **`permission:` declarada num lugar só** (controller ou `routes.php`, escolha no brainstorming),
-  com catraca no molde do `AuthenticatedRouteMiddlewareTest`, que reprova rota autenticada sem
-  `permission:`.
-- **D-17.** Catraca de permissão órfã sobre o `PermissionCatalog`.
-- **P-91.** `/api/*` autenticada sem `Accept: application/json` responde 401, não 500.
-- **P-54**, só se o bloco escrever migration de permissão: entram as duas assertivas que faltam.
-
-**Fora, até o João decidir:** registrar "não adotar FormRequest nem Policy" em ADR e apagar
-`Policies/` e `Http/Requests/` do `estrutura-monolito.md`. O João vai estudar o caso antes.
-
-**DoD:** rota nova de `{user}` nasce com o escopo. As duas catracas foram vistas reprovar por sonda. O
-401 está provado por teste e no curl contra o dev.
 
 ---
 
@@ -496,24 +472,12 @@ ficam só como ponteiro, e a ficha delas é lá.
 > | 2026-11-03 | `D-72` | paga — o KPI "Próximas clases" e a agenda contam o mesmo balde do `AgendaClassifier`; turma que começa em 10 dias saiu em `proximas_turmas` e em `starting_soon` no redator e no admin, contra a API da lane (`a2ebea59`, `b2700c72`) | item 54 |
 > | 2026-11-03 | `D-73` | paga — `scrollWidth == clientWidth` nos dois painéis em 1024x768 e, pela leitura emendada, nada passa da tabela em 390x844, medido no navegador (`blocos/54-dashboard-agenda-e-pendencias/medicoes-d73.md` §3, `d78915a7`, `196489c6`) | item 54 |
 > | 2026-11-03 | `D-34` | paga — a visibilidade RBAC vira o campo `visibility` do payload (`DashboardVisibilityData`), e `AdminView`, `kpiCards`, `SeriesPanel` e `RankingsPanel` decidem por ele (`7977f4aa`) | item 54 |
+> | 2026-11-25 | `D-17` | paga — a metade que faltava: `PermissionCatalogOrphanTest` reprova permissão do `PermissionCatalog` sem rota e rota com permissão fora do catálogo, vista reprovar por sonda (`b36ffdd6`, `blocos/55-backend-borda-http-auth-e-permissao/prova.md`) | item 55 |
 >
 > **O que aqueles fechamentos deixaram aberto, e que não é débito:** cinco recusas literais fora de
 > `lang/` viraram a **P-71** e o 419 virou a **P-72** — as duas fechadas depois pelo item 26; a
 > legenda do `AppLineChart` fechou como **P-63** em 2026-09-01; e o item 25 abriu a **P-74**. Todas
 > em `pendencias/`.
-
-- **D-17 · `DomainDependencyTest` detecta aresta usada-e-não-declarada, não a contrária** →
-  **entregue PELA METADE em 2026-08-22; a metade que falta está no item 55
-  (`backend-borda-http-auth-e-permissao`) desde 2026-11-02.**
-  **Feito** (`BD-15-docs-guardrails-e-sincronizacao`,
-  `plans/archive/2026-08-22-bd15-docs-guardrails-e-sincronizacao.md`): a Regra C do
-  `DomainDependencyTest` reprova aresta declarada sem consumidor, lendo a **mesma** varredura da
-  Regra B, e foi vista reprovar por sonda. **Fora, por decisão (D4 da spec):** a catraca cobre só
-  aresta de **domínio**, nunca permissão. As permissões `feedback.*` órfãs
-  (`PermissionCatalog.php:87-89`) eram a instância viva da mesma classe e o
-  `feedbacks-resolver-escopo` as removeu **à mão** em 2026-08-22 (`f6b04b45`..`629fcfe6`) — o caso
-  vivo virou caso de regressão, e **nada mede permissão órfã hoje**. A próxima nasce igual e ninguém
-  vê. Quem absorver isto precisa de uma catraca sobre o catálogo de permissões, não sobre `use`.
 
 - **D-37 · `archived_with_parent` nasceu sem backfill, e não há como recuperá-lo** →
   `go-live-confiabilidade-e-recuperacao` (item 13). A migration `2026_08_18_000001` entra com
