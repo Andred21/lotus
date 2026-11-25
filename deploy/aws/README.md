@@ -741,7 +741,7 @@ sudo -e /opt/lotus/.env
 |---|---|---|
 | `APP_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
 | `FRONTEND_URL` | `http://<EIP>` | `https://app.lotusotec.cl` |
-| `CERTIFICATE_VALIDATION_URL` | vazia | `https://app.lotusotec.cl` |
+| `CERTIFICATE_VALIDATION_URL` | vazia | `https://lotusotec.cl` |
 | `SANCTUM_STATEFUL_DOMAINS` | `<EIP>` | `app.lotusotec.cl` |
 | `SESSION_DOMAIN` | `null` (literal) | `app.lotusotec.cl` |
 | `SESSION_SECURE_COOKIE` | `false` | `true` |
@@ -753,7 +753,8 @@ São os valores do molde `deploy/aws/env.prod.example`, guardados pela catraca
 passa a viajar em claro sob TLS sem aparecer em diff nenhum (lei §5.4). E o
 `CERTIFICATE_VALIDATION_URL` não é infra: é a base do QR do certificado, que a cópia distribuída do
 PDF carrega para sempre — **só com ele preenchido em https o backend volta a emitir e a entregar
-PDF**. Não herda o `FRONTEND_URL`, de propósito (P-79).
+PDF**. Não herda o `FRONTEND_URL`, de propósito (P-79). Desde o bloco 63 a base é o site
+institucional, e o `/validar/*` do app responde `301` para ele.
 
 ### 11.4 Subir com o overlay — pelo botão
 
