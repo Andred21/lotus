@@ -173,7 +173,6 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | Bloco | Itens pendentes | Desde |
 |---|---|---|
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
-| **60** `codigos-mascaras-comercial-e-avaliacoes` | 1, 2 | 2026-11-23 |
 
 ---
 
@@ -279,59 +278,6 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 > `main@c6b06e2f`. O João pediu o menor número de blocos. Ficaram três porque duas divisões são
 > reais: a validação tem metade no repositório `Andred21/lotus-site`, e a Certificação precisa do
 > código de cotação novo (60) e do download público (61).
-
----
-
-## 60. `codigos-mascaras-comercial-e-avaliacoes`
-
-**Prioridade:** P1 · **Frente:** Backend + Frontend (Catalog, Commercial, Operation, Identity) · **Contexto:** não · **Depende:** —
-**Fonte:** pedidos da Lotus de 2026-11-21 (Cursos 1 e 2, Comercial 1 e 2, Operación 1 e 2,
-Interface 1); `P-09`.
-
-**Escopo:**
-- **Código do curso.** Todo curso ganha um código `C-<n>` (`C-1`), persistido e imutável, e a tela
-  o mostra onde o curso aparece. O molde é o `budgets.code`: `'Scap '.id`, derivado na Action e
-  na mesma transação (ADR-17). Os cursos que já existem recebem o código por backfill na
-  migration.
-- **Código SENCE.** O identificador numérico que o SENCE atribui a um curso registrado vira campo
-  do curso, no cadastro e no `der-fisico.md`.
-- **`Scap x - R y`.** No código composto da cotação, `Cot y` vira `R y` (`Scap 190 - R1`). O texto
-  nasce em `Quote::code()` (`Quote.php:94`) e não é persistido. Os pontos que repetem o formato à
-  parte vão junto (`TurmaQueryBuilder.php:110`, os comentários e os testes que o fixam). Toda tela
-  que cita uma cotação mostra o código completo: Turmas, **Turmas a configurar**
-  (`PendingQuotesPanel`), Certificación e Dashboard. Certificado já emitido não muda, porque o
-  `snapshot` é retrato com peso legal.
-- **Abas do Comercial.** `Presupuestos` passa a ser a primeira aba (`CommercialPage.tsx:36-71`).
-- **Orçamentos no diálogo do cliente.** Uma seção nova lista em tabela os orçamentos do cliente,
-  no molde da seção de certificados do diálogo do alumno (`StudentDetailSections`). Ela tem busca
-  e dois filtros: estado (aprobado, rechazado, pendiente) e período (semana, mes, año,
-  personalizado). O `PeriodFilter` mora em `app/pages/Dashboard/admin/`, e feature não importa de
-  `app/`. Por isso ele sobe para `shared/` neste bloco, e o 62 o reusa.
-- **Documentos da turma.** O Manual de clase fica como está. `PRUEBAS` e `EVALUACION_REDATOR` dão
-  lugar a um quadro de evaluaciones com três slots fixos com tag: Instructor, Cliente (o dono do
-  orçamento) e Alumnos. O molde é o `BudgetDocumentsCard`. Só a falta do Manual ou da evaluación
-  do Instructor bloqueia a conclusão pelo superadmin (`ConcludeTurmaAction`,
-  `TurmaHabilitacaoService`, `TurmaDocumentType::values()`). As de Cliente e Alumnos avisam e não
-  bloqueiam. A turma habilitada do status de exibição e o `OperationMetricsQuery` seguem a mesma
-  regra. Paga a **P-09**: a Lotus decidiu a taxonomia, e ela não é a dos quatro tipos do Figma.
-- **Máscaras.** RUT, telefone e os outros campos com formato ganham máscara na digitação e na
-  exibição. O banco guarda o valor cru, sem `.`, `-` nem espaço. Os componentes moram em
-  `shared/ui` (lei 6). Antes de trocar, medir como produção grava esses campos hoje, porque a
-  carga inicial trouxe RUT da v1.
-
-**Para o brainstorming:**
-- De onde sai o número do `C-<n>`: do `id`, como o `Scap`, ou de uma sequência própria.
-- Se o código SENCE é único, se é obrigatório e se vai impresso no certificado.
-- O que acontece com os arquivos que produção já tem: `EVALUACION_REDATOR` vira Instructor, e
-  `PRUEBAS` vira Alumnos?
-- E-mail não tem máscara. O pedido quer validação na digitação, normalização (minúsculas, sem
-  espaço) ou as duas?
-
-**DoD:** curso novo nasce com `C-<n>`, e cada curso antigo tem o seu. O código SENCE persiste e
-aparece no curso. Nenhuma tela mostra mais `Cot`. Presupuestos abre primeiro. O diálogo do cliente
-lista e filtra os orçamentos dele. Um teste prova que a turma conclui sem as evaluaciones de
-Cliente e Alumnos, com aviso, e é recusada sem o Manual ou sem a do Instructor. RUT e telefone
-aparecem formatados e ficam crus no banco, provado por teste e no navegador.
 
 ---
 
