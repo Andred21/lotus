@@ -200,3 +200,31 @@ describe('deploy/nginx/tls.conf — HSTS (item 32, D3 da spec)', () => {
     expect(PROD).not.toContain('Strict-Transport-Security')
   })
 })
+
+describe('o QR antigo vai ao site (bloco 63)', () => {
+  const VALIDAR = 'location ~ ^/validar(/|$)'
+
+  it('o redirect é IDÊNTICO nos dois arquivos', () => {
+    expect(corpo(TLS_443, VALIDAR)).toBe(corpo(PROD_80, VALIDAR))
+  })
+
+  it('leva ao site com caminho e query preservados', () => {
+    expect(corpo(PROD_80, VALIDAR)).toBe('return 301 https://lotusotec.cl$request_uri;')
+  })
+
+  it('casa /validar e /validar/<uuid>, e não o vizinho nem a API', () => {
+    const padrao = new RegExp(VALIDAR.replace(/^location ~ /, ''))
+    for (const sim of ['/validar', '/validar/', '/validar/00000000-0000-0000-0000-000000000000'])
+      expect(padrao.test(sim), sim).toBe(true)
+    for (const nao of ['/validarx', '/validacion', '/', '/api/publico/certificados/x'])
+      expect(padrao.test(nao), nao).toBe(false)
+  })
+
+  it('não tem add_header — é assim que o 301 do 443 herda o HSTS do server', () => {
+    expect(corpo(TLS_443, VALIDAR)).not.toMatch(/^add_header /m)
+  })
+
+  it('o servidor 80 do tls.conf não ganha o redirect — ele manda tudo a https primeiro', () => {
+    expect(TLS_80).not.toContain(VALIDAR)
+  })
+})
