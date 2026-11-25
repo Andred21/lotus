@@ -127,10 +127,21 @@ revocation_reason: string | null,
 snapshot: CertificateSnapshotData,
 snapshot_ok: boolean,
 created_at: string,
+quote_id: number | null,
+quote_code: string | null,
 display_status: CertificateDisplayStatus,
 aluno_photo_url: string | null,
 };
 export type CertificateDisplayStatus = 'vigente' | 'por_vencer' | 'vencido' | 'revocado';
+export type CertificateExportQueryData = {
+q: string | null,
+display_status: CertificateDisplayStatus | null,
+quote_id: number | null,
+};
+export type CertificateExportSummaryData = {
+total: number,
+revocados: number,
+};
 export type CertificatePageMetaData = {
 summary: CertificateSummaryData,
 page: number,
@@ -138,6 +149,10 @@ per_page: number,
 total: number,
 last_page: number,
 total_unfiltered: number,
+};
+export type CertificateQuoteOptionData = {
+id: number,
+code: string,
 };
 export type CertificateSettingsData = {
 manager_name: string,
@@ -260,6 +275,7 @@ has_firma: boolean,
 };
 export type EmissionPanelTurmaData = {
 turma_id: number,
+quote_code: string,
 course_name: string,
 client_name: string,
 end_date: string,

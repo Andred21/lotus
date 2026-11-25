@@ -20,7 +20,10 @@ vi.mock('react-i18next', async (importOriginal) => {
 type PanelState = ReturnType<typeof useEmissionPanelState>
 
 const estado = vi.hoisted<{ current: Partial<PanelState> }>(() => ({ current: {} }))
-vi.mock('../../hooks/useEmissionPanelState', () => ({
+// O resto do módulo fica de pé (`countsFor`, que os cards importam): só o hook
+// é trocado pelo estado montado à mão.
+vi.mock('../../hooks/useEmissionPanelState', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../hooks/useEmissionPanelState')>()),
   useEmissionPanelState: () => estado.current as PanelState,
 }))
 
@@ -32,8 +35,12 @@ function montar(over: Partial<PanelState> = {}) {
     selected: null,
     options: [{ label: 'Alta tensión · Enel', value: 1 }],
     setTurmaId: () => {},
-    desde: '2025-08-28',
-    setDesde: () => {},
+    preset: 'last12',
+    setPreset: () => {},
+    period: { start: '2026-11-01', end: '2026-11-24' },
+    setPeriod: () => {},
+    staleError: null,
+    turmas: [],
     loadError: null,
     loading: false,
     managerSignatureMissing: false,
@@ -60,15 +67,6 @@ describe('EmissionPanel — o seletor de turma', () => {
 
     expect(screen.getByLabelText('certificate.turmaConcluida')).toBeTruthy()
   })
-
-  it('mostra o seletor da janela com rótulo associado e o default preenchido', () => {
-    montar()
-
-    const seletor = screen.getByLabelText('certificate.concludedSince') as HTMLInputElement
-    expect(seletor).toBeTruthy()
-    // `dd-mm-yy` é a gramática de `es-CL` do AppDatePicker.
-    expect(seletor.value).toBe('28-08-2025')
-  })
 })
 
 const ALUNO: EmissionPanelEnrollmentData = {
@@ -78,7 +76,7 @@ const ALUNO: EmissionPanelEnrollmentData = {
 
 function turmaCom(hasFirma: boolean): EmissionPanelTurmaData {
   return {
-    turma_id: 1, course_name: 'Alta tensión', client_name: 'Enel', end_date: '2026-07-24',
+    turma_id: 1, quote_code: 'Scap 1 - R1', course_name: 'Alta tensión', client_name: 'Enel', end_date: '2026-07-24',
     emission_blocked: null, enrollments: [ALUNO], manager_signature_missing: false,
     redatores: [{ redator_id: 7, name: 'María Relatora', has_firma: hasFirma }],
   }

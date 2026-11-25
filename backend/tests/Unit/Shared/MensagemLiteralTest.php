@@ -324,6 +324,10 @@ class MensagemLiteralTest extends TestCase
         'FileStorage.php:76' => 'RuntimeException interna; 500 mascarado.',
         'DashboardController.php:48' => 'RuntimeException interna; 500 mascarado.',
         'PdfRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',
+        'PdfRenderException.php:22' => 'RuntimeException interna; 500 mascarado.',
+        // O lote nomeia os códigos só no diagnóstico: a recusa que o usuário lê
+        // é montada pelo caller a partir de `failedKeys`, na língua dele.
+        'PdfRenderException.php:36' => 'RuntimeException interna; 500 mascarado — o texto de tela vem de `failedKeys`.',
         'OfficeRenderException.php:16' => 'RuntimeException interna; 500 mascarado.',
         'OfficeRenderException.php:26' => 'RuntimeException interna; 500 mascarado.',
         'ArchivedListing.php:68' => 'InvalidArgumentException: chamador esqueceu `onlyTrashed()`; 500 mascarado.',

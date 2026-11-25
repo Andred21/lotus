@@ -26,6 +26,8 @@ class EmissionPanelTurmaData extends Data
 {
     public function __construct(
         public int $turma_id,
+        /** `Scap {budget_id} - R{seq}` — o código da cotação (`Quote::code`), por onde o operador acha a turma. */
+        public string $quote_code,
         public string $course_name,
         public string $client_name,
         public string $end_date,
@@ -52,6 +54,7 @@ class EmissionPanelTurmaData extends Data
     ): self {
         return new self(
             turma_id: $turma->id,
+            quote_code: $turma->quote->code,
             course_name: $turma->course->name,
             // Razão social (`clients.legal_name`), não o nome do User: é o
             // `{{EMPRESA}}` do documento oficial — o seam `Turma::contratante()`.

@@ -71,6 +71,9 @@ class ListQueryBudgetTest extends TestCase
         'api/permissions' => 'catálogo estático de permissões (PermissionCatalog), não cresce com o uso',
         'api/versao' => 'versão da plataforma em execução (config), um valor escalar — não há N que cresça com o uso',
         'api/certificate-settings' => 'singleton de Configuración › Certificados: uma linha, uma assinatura',
+        'api/certificates/export/summary' => 'contagem de um escopo (o N do aviso de exportação), um registro de duas somas — não é lista',
+        'api/certificates/export/planilha' => 'download de arquivo xlsx do escopo de exportação, não é lista',
+        'api/certificates/export/zip' => 'download de arquivo zip dos PDFs do escopo de exportação, não é lista',
     ];
 
     /**
@@ -326,7 +329,7 @@ class ListQueryBudgetTest extends TestCase
     private const CENARIOS_URIS = [
         'api/students' => 1, 'api/students/client-options' => 1,
         'api/roles/assignable' => 1,
-        'api/certificates' => 1, 'api/certificates/emission-panel' => 1,
+        'api/certificates' => 1, 'api/certificates/emission-panel' => 1, 'api/certificates/quotes' => 1,
         'api/turmas' => 1, 'api/turmas/archived' => 1, 'api/turmas/pendientes-configuracion' => 1,
         'api/courses' => 1, 'api/courses/archived' => 1,
         'api/clients' => 1, 'api/clients/archived' => 1,
@@ -359,6 +362,11 @@ class ListQueryBudgetTest extends TestCase
             'api/certificates/emission-panel' => function (int $n): void {
                 for ($i = 0; $i < $n; $i++) {
                     $this->cadeia();
+                }
+            },
+            'api/certificates/quotes' => function (int $n): void {
+                for ($i = 0; $i < $n; $i++) {
+                    $this->certificado($this->cadeia());
                 }
             },
             'api/turmas' => function (int $n): void {

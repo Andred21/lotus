@@ -1,9 +1,10 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppCard, AppDatePicker, AppDropdown, AppEmptyState, AppErrorState, AppButton, AppTag } from '@shared/ui'
-import { formatDate, loadErrorHint, screenDetail } from '@shared/lib'
+import { AppCard, AppErrorState, AppButton, AppTag } from '@shared/ui'
+import { loadErrorHint, screenDetail } from '@shared/lib'
 import { useEmissionPanelState } from '../../hooks/useEmissionPanelState'
-import { EMISSION_PANEL_WINDOW_MONTHS } from '../../lib/emissionWindow'
+import { EmissionFilters } from './EmissionFilters'
+import { PendingTurmaCards } from './PendingTurmaCards'
 import { EmissionStudentsTable } from './EmissionStudentsTable'
 import { ConfirmIssueDialog } from './ConfirmIssueDialog'
 import { IssuedDialog } from './IssuedDialog'
@@ -13,8 +14,6 @@ import { EmissionWarnings } from './EmissionWarnings'
 export function EmissionPanel() {
   const { t } = useTranslation()
   const s = useEmissionPanelState()
-  const turmaInputId = useId()
-  const desdeInputId = useId()
   const blockedId = useId()
 
   const turma = s.selected
@@ -33,54 +32,10 @@ export function EmissionPanel() {
   return (
     <div className="space-y-4 p-4">
       <EmissionWarnings managerSignatureMissing={s.managerSignatureMissing} />
-      <AppCard>
-        <div className="space-y-3 p-4">
-          {/* O rótulo é a correção do UI-02 da run de Certificados
-            * (2026-08-25). O nome acessível vinha do PLACEHOLDER — o PrimeReact
-            * o usa como texto do botão que abre a lista — e no visual não havia
-            * rótulo: escolhida a turma, o campo mostra só o VALOR e nada diz que
-            * aquilo é a turma. `useId` + `inputId`, a forma dos três filtros de
-            * estado irmãos; a chave `certificate.turmaConcluida` já existia. */}
-          <label htmlFor={desdeInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('certificate.concludedSince')}
-          </label>
-          {/* Vazio = a janela é a do SERVIDOR, e o `placeholder` a anuncia. O
-            * campo já nasceu preenchido com uma data calculada no fuso do
-            * navegador e mandada em todo GET — o default de Santiago nunca
-            * rodava (Q-2 do review de 2026-08-29). */}
-          <AppDatePicker
-            inputId={desdeInputId}
-            value={s.desde}
-            onChange={s.setDesde}
-            placeholder={t('certificate.concludedSinceDefault', { months: EMISSION_PANEL_WINDOW_MONTHS })}
-          />
-          <label htmlFor={turmaInputId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('certificate.turmaConcluida')}
-          </label>
-          <AppDropdown
-            inputId={turmaInputId}
-            value={s.turmaId}
-            options={s.options}
-            optionLabel="label"
-            optionValue="value"
-            placeholder={t('certificate.selectTurma')}
-            onChange={(e) => s.setTurmaId(e.value)}
-          />
-          {turma && (
-            <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-              {turma.course_name} · {turma.client_name} ·{' '}
-              {t('certificate.concludedAt', { date: formatDate(new Date(`${turma.end_date}T00:00:00`)) })}
-            </p>
-          )}
-        </div>
-      </AppCard>
+      <EmissionFilters s={s} turma={turma} />
 
       {!turma ? (
-        <AppEmptyState
-          icon="pi pi-verified"
-          title={t('certificate.emptyPanelTitle')}
-          description={t('certificate.emptyPanelHint')}
-        />
+        s.loading ? null : <PendingTurmaCards turmas={s.turmas} onSelect={s.setTurmaId} />
       ) : (
         <>
           <AppCard tone="info" className="px-4 py-3 text-sm">
@@ -92,18 +47,31 @@ export function EmissionPanel() {
 
           {/* Motivo do bloqueio na MESMA linha do CTA que explica (era irmã
             * solta a 536px, f3 UI-03); `aria-describedby` liga os controles. */}
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            {turma.emission_blocked !== null && (
-              <AppTag id={blockedId} severity="warning" value={t(`certificate.blocked.${turma.emission_blocked}`)} />
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Voltar é terciário e ANTECEDE a ação primária (rule de
+              * estilização): `text`, com a tinta secundária subindo no hover,
+              * como o do `DetailHeader`. Limpa a MESMA `turmaId` do combo, então
+              * o período escolhido não é tocado. */}
             <AppButton
-              variant="primary"
-              icon="pi pi-verified"
-              label={t('certificate.emitAllPending', { count: s.counts.pendientes })}
-              disabled={s.counts.pendientes === 0 || turma.emission_blocked !== null}
-              aria-describedby={turma.emission_blocked !== null ? blockedId : undefined}
-              onClick={() => s.setBatchIssuing(true)}
+              className="text-[var(--text-color-secondary)] hover:text-[var(--text-color)]"
+              text
+              icon="pi pi-arrow-left"
+              label={t('certificate.backToTurmas')}
+              onClick={() => s.setTurmaId(null)}
             />
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {turma.emission_blocked !== null && (
+                <AppTag id={blockedId} severity="warning" value={t(`certificate.blocked.${turma.emission_blocked}`)} />
+              )}
+              <AppButton
+                variant="primary"
+                icon="pi pi-verified"
+                label={t('certificate.emitAllPending', { count: s.counts.pendientes })}
+                disabled={s.counts.pendientes === 0 || turma.emission_blocked !== null}
+                aria-describedby={turma.emission_blocked !== null ? blockedId : undefined}
+                onClick={() => s.setBatchIssuing(true)}
+              />
+            </div>
           </div>
 
           <AppCard>

@@ -7,33 +7,11 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-## P-91 — `/api/*` autenticada sem `Accept: application/json` devolve 500, não 401
-
-**Bloco:** item 55 (desde 2026-11-02) · **ENCERRADA em 2026-11-24, no bloco 61 (`certificacao-validacao-no-site`), que a achou já paga pelo item 55.** · **Gatilho que valia:** bloco que tocar `backend/bootstrap/app.php`
-(`withMiddleware` ou `withExceptions`) ou o middleware de autenticação; revisar em **2026-10-31**.
-
-**Medido em produção pelo item 32, em 2026-09-27 e de novo no fechamento (2026-09-28T02:35Z):**
-`GET https://app.lotusotec.cl/api/courses/archived` sem sessão devolve **401** com
-`Accept: application/json` e **500** sem ele. Anterior ao item 32 e alheio a ele.
-
-**Causa:** o `Authenticate` do Laravel só pula o redirecionamento quando o pedido `expectsJson()`
-(`vendor/.../Auth/Middleware/Authenticate.php:104`). Sem `Accept`, ele monta o destino do
-redirecionamento pelo callback padrão que o `ApplicationBuilder` registra,
-`redirectGuestsTo(fn () => route('login'))` — rota que o Lotus não tem, porque o login é da SPA. A `RouteNotFoundException` nasce antes da `AuthenticationException`, e o
-`shouldRenderJsonWhen` de `api/*` renderiza o que chega: um 500 RFC 7807 no lugar do 401.
-
-**Por que ficou aberta:** o front sempre manda o `Accept`, então nenhum usuário vê o 500; quem o
-provoca é cliente sem o cabeçalho (curl, robô, sonda). Mas ele fere a §5.4 (401 RFC 7807 esperado
-para não autenticado) e, como 500, conta como defeito no registro de erro. O `/fechar-sprint` já
-documenta o sintoma como armadilha de curl, e não como falha do código.
-
-**Fecha quando:** `/api/*` sem sessão e sem `Accept` devolver 401 RFC 7807 — por exemplo
-`redirectGuestsTo` sem rota nomeada para `api/*` —, com teste de feature que faça o pedido sem o
-cabeçalho, visto reprovar antes da correção.
-
-Motivo: o item 55 pagou a causa em `0b40be13` (`fix(55): 401 RFC 7807 para /api/* sem sessão e sem Accept (P-91)`), com `UnauthenticatedWithoutAcceptTest`, e a ficha ficou aberta por descuido. Medido no fechamento do 61, na lane: `GET /api/courses/archived` sem sessão e sem `Accept` devolve 401.
+Nenhuma ficha em rastro.
 
 ## Rastro anterior, já removido
+
+**A P-91 saiu no fechamento do `certificacao-paineis-lote-e-planilha` (item 62, 2026-11-25)**, o primeiro depois do item 61, que a encerrou em 2026-11-24 ao achá-la já paga pelo item 55 (`0b40be13`, com `UnauthenticatedWithoutAcceptTest`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-09 saiu no fechamento do `certificacao-validacao-no-site` (item 61, 2026-11-24)**, o primeiro depois do item 60, que a encerrou em 2026-11-23 pela taxonomia que a Lotus decidiu em 2026-11-21 (`TurmaDocumentType` com `MANUAL`, `EVALUACION_REDATOR`, `EVALUACION_CLIENTE` e `EVALUACION_ALUNO`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

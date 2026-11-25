@@ -10,6 +10,7 @@ use App\Domains\Certification\Data\BatchIssueItemResultData;
 use App\Domains\Certification\Data\CertificateData;
 use App\Domains\Certification\Data\CertificatePageMetaData;
 use App\Domains\Certification\Data\CertificatePageQueryData;
+use App\Domains\Certification\Data\CertificateQuoteOptionData;
 use App\Domains\Certification\Data\EmissionPanelQueryData;
 use App\Domains\Certification\Data\EmissionPanelTurmaData;
 use App\Domains\Certification\Data\IssueCertificateData;
@@ -21,6 +22,7 @@ use App\Domains\Certification\Services\CertificatePdfService;
 use App\Domains\Certification\Services\EmissionPanelQuery;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Operation\Models\Enrollment;
+use App\Domains\Operation\Models\Turma;
 use App\Http\Controllers\Controller;
 use App\Shared\Http\RespostaDeRecurso;
 use App\Shared\Pagination\PageData;
@@ -35,7 +37,7 @@ class CertificateController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:certification.certificate.view', only: ['index', 'show', 'pdf']),
+            new Middleware('permission:certification.certificate.view', only: ['index', 'quotes', 'show', 'pdf']),
             new Middleware('permission:certification.certificate.issue', only: ['store', 'emissionPanel', 'batch']),
             new Middleware('permission:certification.certificate.revoke', only: ['revoke']),
         ];
@@ -52,6 +54,9 @@ class CertificateController extends Controller implements HasMiddleware
      * meia-noite de Santiago entre essas chamadas produzia página e resumo
      * que não fechavam entre si).
      *
+     * A cotação é filtro como o estado (`total_unfiltered` não a inclui), mas o
+     * resumo a respeita: os contadores do rodapé são os da cotação escolhida.
+     *
      * @return PageData<CertificateData>
      */
     public function index(CertificatePageQueryData $query): PageData
@@ -63,9 +68,26 @@ class CertificateController extends Controller implements HasMiddleware
             ->page(
                 $query,
                 fn (Certificate $certificate) => CertificateData::fromModel($certificate, $hoje),
-                filter: fn (CertificateQueryBuilder $q) => $q->whereDisplayStatus($query->display_status, $hoje),
-                meta: fn (PageMetaData $meta, CertificateQueryBuilder $escopo) => CertificatePageMetaData::withSummary($meta, $escopo->summaryByDisplayStatus($hoje)),
+                filter: fn (CertificateQueryBuilder $q) => $q->whereQuote($query->quote_id)->whereDisplayStatus($query->display_status, $hoje),
+                meta: fn (PageMetaData $meta, CertificateQueryBuilder $escopo) => CertificatePageMetaData::withSummary($meta, $escopo->whereQuote($query->quote_id)->summaryByDisplayStatus($hoje)),
             );
+    }
+
+    /**
+     * Opções do filtro de cotação: só cotações com ao menos um certificado, em
+     * qualquer status, da mais recente para a mais antiga. `withTrashed`: a
+     * cotação arquivada continua dona dos certificados dela. Sem paginação —
+     * é um dropdown e o conjunto é limitado pelas cotações que emitiram.
+     *
+     * @return array<CertificateQuoteOptionData>
+     */
+    public function quotes(): array
+    {
+        return Certificate::query()
+            ->turmasPorCotacao()
+            ->map(fn (Turma $turma) => CertificateQuoteOptionData::fromTurma($turma))
+            ->values()
+            ->all();
     }
 
     public function show(Certificate $certificate): CertificateData
@@ -89,7 +111,7 @@ class CertificateController extends Controller implements HasMiddleware
     /** @return array<EmissionPanelTurmaData> */
     public function emissionPanel(EmissionPanelQueryData $query, EmissionPanelQuery $panel): array
     {
-        return $panel->get($query->desde());
+        return $panel->get($query->inicio(), $query->fim());
     }
 
     public function store(

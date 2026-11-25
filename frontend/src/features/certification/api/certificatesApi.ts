@@ -2,30 +2,38 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import { pageEndpoint } from '@shared/api/page'
+import { problemFromBlob } from '@shared/api/problemFromBlob'
 import type {
   BatchIssueItemResultData,
   CertificateData,
+  CertificateExportQueryData,
+  CertificateExportSummaryData,
   CertificatePageMetaData,
+  CertificateQuoteOptionData,
   EmissionPanelTurmaData,
 } from '@shared/types/generated'
 
 const panelKey = ['certificates', 'emission-panel'] as const
 export const listKey = ['certificates', 'list'] as const
+const quotesKey = ['certificates', 'quotes'] as const
 const detailKey = (id: number) => ['certificates', 'detail', id] as const
 
 /** `enabled` porque o endpoint exige `certification.certificate.issue`:
  * consumidor que pode montar sem essa permissão (Historial, que só a usa para
  * o Reemitir) desliga a query em vez de colher um 403 garantido.
- * `desde` é a janela (spec D7); ausente, o servidor aplica os 12 meses. A
- * data entra na chave: cada janela é uma página de cache própria, e o
+ * `period` é a janela (spec D7, `Y-m-d`, ambos inclusivos): sem `period_start`
+ * o servidor aplica os 12 meses; sem `period_end`, não há limite superior. As
+ * duas datas entram na chave: cada janela é uma página de cache própria, e o
  * `panelKey` continua prefixo de todas para as invalidações. */
-export function useEmissionPanel(enabled = true, desde?: string) {
+export type EmissionPanelPeriod = { period_start?: string; period_end?: string }
+
+export function useEmissionPanel(enabled = true, period?: EmissionPanelPeriod) {
   return useQuery<EmissionPanelTurmaData[], ProblemDetails>({
-    queryKey: [...panelKey, desde ?? 'default'],
+    queryKey: [...panelKey, period?.period_start ?? 'default', period?.period_end ?? 'open'],
     queryFn: () =>
       api
         .get<EmissionPanelTurmaData[]>('/api/certificates/emission-panel', {
-          params: desde ? { concluidas_desde: desde } : {},
+          params: period ?? {},
         })
         .then((r) => r.data),
     enabled,
@@ -48,6 +56,17 @@ export const certificatesPage = pageEndpoint<CertificateData, CertificatePageMet
  * de 2026-08-24). Catraca em `certificatesApi.test.tsx`. Limite conhecido: a
  * aba que nunca perde o foco só corrige no próximo remonte. */
 export const certificatesTableOptions = { key: listKey, refetchOnWindowFocus: true } as const
+
+/** As opções do filtro de cotação do Historial (spec §5.2): só cotações com ao
+ * menos um certificado, da mais recente para a mais antiga — a ordem e o corte
+ * são do servidor. Emitir pode abrir uma cotação nova na lista, então a key
+ * entra nas invalidações de `useInvalidate`. */
+export function useCertificateQuotes() {
+  return useQuery<CertificateQuoteOptionData[], ProblemDetails>({
+    queryKey: quotesKey,
+    queryFn: () => api.get<CertificateQuoteOptionData[]>('/api/certificates/quotes').then((r) => r.data),
+  })
+}
 
 /** Certificado pontual por id — o `Ver` de uma linha já emitida
  * (`useEmissionPanelState`) só recebe `{id, codigo, status}` do painel
@@ -73,6 +92,7 @@ function useInvalidate() {
   return () => {
     qc.invalidateQueries({ queryKey: panelKey })
     qc.invalidateQueries({ queryKey: listKey })
+    qc.invalidateQueries({ queryKey: quotesKey })
   }
 }
 
@@ -128,5 +148,75 @@ export function useRevokeCertificate() {
       qc.invalidateQueries({ queryKey: detailKey(certificate.id) })
       invalidate()
     },
+  })
+}
+
+/** Os filtros da tabela que a exportação repete (spec §5.3): o conjunto
+ * exportado é o da listagem, então o servidor recebe os MESMOS `q`,
+ * `display_status` e `quote_id`. Derivado do DTO gerado: filtro novo no
+ * backend entra aqui sem edição à mão. */
+export type CertificateExportFilters = Partial<CertificateExportQueryData>
+
+export type CertificateExportFormat = 'planilha' | 'zip'
+
+type ExportParams = Record<string, string | number>
+
+/** Vazio some da query, como no `useServerTable`: o servidor lê "ausente" como "todos". */
+function exportParams(filters: CertificateExportFilters): ExportParams {
+  const params: ExportParams = {}
+  if (filters.q) params.q = filters.q
+  if (filters.display_status) params.display_status = filters.display_status
+  if (filters.quote_id != null) params.quote_id = filters.quote_id
+  return params
+}
+
+/** O N do aviso e os revogados que ficam de fora (spec §5.3), da mesma query que
+ * exporta. `gcTime: 0` + `staleTime: 0`: o conjunto muda a cada emissão ou
+ * revogação, e reabrir o diálogo tem de contar de novo, não repintar o número
+ * da abertura anterior. */
+export function useCertificateExportSummary(filters: CertificateExportFilters, enabled: boolean) {
+  const params = exportParams(filters)
+  return useQuery<CertificateExportSummaryData, ProblemDetails>({
+    queryKey: ['certificates', 'export-summary', params],
+    queryFn: () =>
+      api.get<CertificateExportSummaryData>('/api/certificates/export/summary', { params }).then((r) => r.data),
+    enabled,
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+  })
+}
+
+/** `filename` do `Content-Disposition`. A API o lista em `exposed_headers` do
+ * CORS (`config/cors.php`), então ele é legível entre origens também (dev,
+ * :5173 → :8080); o nome genérico é só o fallback para o header ausente. */
+function filenameOf(disposition: unknown, format: CertificateExportFormat): string {
+  const header = typeof disposition === 'string' ? disposition : ''
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header)?.[1]
+  if (encoded) return decodeURIComponent(encoded.trim())
+  const plain = /filename="?([^";]+)"?/i.exec(header)?.[1]
+  return plain?.trim() || `certificados.${format === 'zip' ? 'zip' : 'xlsx'}`
+}
+
+/** Baixa a planilha ou o ZIP. O timeout do cliente (120 s, `shared/api/axios`)
+ * cobre o ZIP no teto de 70 certificados (~57 s é projeção: 70 × 0,81 s, o pior
+ * ritmo por certificado medido, não um ZIP de 70 medido) sem ajuste. O corpo
+ * de erro também chega como Blob: `problemFromBlob` o devolve ao envelope 7807. */
+export function useCertificateExportDownload() {
+  return useMutation<
+    { blob: Blob; filename: string },
+    ProblemDetails,
+    { format: CertificateExportFormat; filters: CertificateExportFilters }
+  >({
+    mutationFn: ({ format, filters }) =>
+      api
+        .get<Blob>(`/api/certificates/export/${format}`, { params: exportParams(filters), responseType: 'blob' })
+        .then((r) => ({
+          blob: r.data,
+          filename: filenameOf((r.headers as Record<string, unknown> | undefined)?.['content-disposition'], format),
+        }))
+        .catch(async (error: unknown) => {
+          throw await problemFromBlob(error)
+        }),
   })
 }

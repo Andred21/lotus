@@ -5,6 +5,7 @@ namespace App\Domains\Certification\Services;
 use App\Domains\Certification\Models\Certificate;
 use App\Shared\Pdf\HtmlToPdf;
 use App\Shared\Pdf\PageOptions;
+use App\Shared\Pdf\PdfRenderException;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CertificatePdfService
@@ -14,6 +15,15 @@ class CertificatePdfService
      * lugar da URL de validação, para a amostra nunca ser lida como real.
      */
     public const TEXTO_MUESTRA = 'MUESTRA — SIN VALIDEZ';
+
+    /**
+     * Orçamento de tempo do `renderMany`, em segundos, do início do lote até a
+     * última nova tentativa. O nginx devolve 504 aos 120 s, mas o PHP segue
+     * rodando e o FPM tem poucos workers: com o conversor lento, cada nova
+     * tentativa serial custaria mais um tempo-limite inteiro. Estourado o
+     * orçamento, os itens que faltam vão direto para a recusa, sem tentar.
+     */
+    private const BATCH_TIME_BUDGET_SECONDS = 60;
 
     public function __construct(
         private readonly HtmlToPdf $pdf,
@@ -30,6 +40,62 @@ class CertificatePdfService
     }
 
     /**
+     * Vários certificados de uma vez, com o conversor em paralelo limitado. O
+     * HTML de cada um é o do `render()` — `html()` é o único montador.
+     *
+     * Tudo ou nada: o item que o conversor recusou ganha UMA nova tentativa,
+     * pelo caminho unitário, enquanto o orçamento de tempo do lote (60 s) não
+     * estoura; falhando de novo, ou sem orçamento, o lote inteiro falha nomeando
+     * os códigos. Snapshot não apresentável recusa ANTES de qualquer chamada ao
+     * conversor — não se gasta Chromium num lote que já não fecha.
+     *
+     * @param  iterable<Certificate>  $certificates
+     * @return array<string, string> `codigo` → bytes do PDF, na ordem de entrada
+     *
+     * @throws PdfRenderException quando algum item falha depois da nova tentativa
+     */
+    public function renderMany(iterable $certificates): array
+    {
+        // As assinaturas iguais para o lote inteiro (a gerente) e as de cada
+        // relator distinto saem uma vez; o lote seguinte começa de novo.
+        $assinaturas = new AssinaturasDoLote;
+
+        $htmls = [];
+        foreach ($certificates as $certificate) {
+            $htmls[$certificate->codigo] = $this->html($certificate, false, $assinaturas);
+        }
+
+        $options = PageOptions::fromCss();
+        $startedAt = now();
+        $results = $this->pdf->renderMany($htmls, $options);
+
+        $failed = [];
+        foreach ($results as $codigo => $result) {
+            if (! $result instanceof PdfRenderException) {
+                continue;
+            }
+
+            if ($startedAt->diffInSeconds(now(), true) >= self::BATCH_TIME_BUDGET_SECONDS) {
+                $failed[] = (string) $codigo;
+
+                continue;
+            }
+
+            try {
+                $results[$codigo] = $this->pdf->render($htmls[$codigo], $options);
+            } catch (PdfRenderException) {
+                $failed[] = (string) $codigo;
+            }
+        }
+
+        if ($failed !== []) {
+            throw PdfRenderException::batchFailed($failed);
+        }
+
+        return $results;
+    }
+
+    /**
      * Amostra do documento de um curso: o mesmo caminho do `render()`, com a
      * marca d'água e um QR que não aponta para validação nenhuma.
      */
@@ -38,7 +104,7 @@ class CertificatePdfService
         return $this->pdf->render($this->html($certificate, true), PageOptions::fromCss());
     }
 
-    private function html(Certificate $certificate, bool $muestra): string
+    private function html(Certificate $certificate, bool $muestra, ?AssinaturasDoLote $assinaturas = null): string
     {
         // Um certificado com o nome do aluno em branco não é um certificado
         // incompleto — é um documento que atesta o que ninguém sabe.
@@ -63,7 +129,7 @@ class CertificatePdfService
             'muestra' => $muestra ? self::TEXTO_MUESTRA : null,
             // Vivas, lidas na hora de imprimir: a assinatura de quem assina
             // hoje (D5) e a cidade do emissor (D13). O snapshot não muda.
-            'assinaturas' => $this->signatures->para($certificate),
+            'assinaturas' => $this->signatures->para($certificate, $assinaturas),
             'cidade' => $this->city->issuerCity(),
             // Os métodos são estáticos: o Blade recebe o nome da classe.
             'texto' => TextoDoCertificado::class,

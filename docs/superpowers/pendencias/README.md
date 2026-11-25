@@ -145,9 +145,9 @@ decisão isolada do João ou da Lotus (tabela "Decisões não promovíveis" do b
 | P-64 | A revisão do `RNF-SEC-05` está no ADR-21 mas ainda não foi replicada no Drive (fonte canônica) | João | Drive continuar dizendo "Micro-serviço em nuvem" enquanto o ADR-21 já revisou o requisito; revisar 2026-10-31 |
 | P-65 | `RNF-SEC-03`/`RNF-SEC-07` ganharam decisão (D6/D7/D8) sem ganhar ADR, ao contrário do `RNF-SEC-05` (ADR-21) — mais três lacunas medidas no escopo da D6 | João | João decidir se D6/D7/D8 merecem ADR próprio e se as três lacunas da D6 mudam as famílias; revisar 2026-10-31 |
 
-## Encerradas (1)
+## Encerradas (0)
 
-**A P-91 fechou no bloco 61 (2026-11-24)**: o item 55 já a pagou (`0b40be13`, com `UnauthenticatedWithoutAcceptTest`) e a ficha ficou aberta; o 61 mediu 401 em `/api/*` sem sessão e sem `Accept` e a encerrou. Fica em rastro em [`encerradas.md`](./encerradas.md) até o próximo `/finalizar-bloco`.
+**A P-91 saiu no fechamento do item 62 (2026-11-25)**, o primeiro depois do item 61, que a encerrou em 2026-11-24: o item 55 já a tinha pago (`0b40be13`, com `UnauthenticatedWithoutAcceptTest`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-51 saiu no fechamento do item 60 (2026-11-23)**, o primeiro depois do item 51, que a encerrou em 2026-11-03 pelo próprio gatilho (`InputDataDefaultsTest` virou a catraca). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md). O item 51 abriu a **P-117** (Menores da revisão e o débito de `CourseModuleData`) e disparou sem pagar os gatilhos da **P-53**, da **P-96** e da **P-97** (tocou `estrutura-monolito.md` e `backend-ddd.md` por outro motivo); as fichas registram o disparo.
 

@@ -42,6 +42,7 @@ const enrollment2: EmissionPanelEnrollmentData = {
 function turmaWith(enrollments: EmissionPanelEnrollmentData[]): EmissionPanelTurmaData {
   return {
     turma_id: 1,
+    quote_code: 'Scap 1 - R1',
     course_name: 'Alta Tensión',
     client_name: 'Cliente X',
     end_date: '2026-01-01',
