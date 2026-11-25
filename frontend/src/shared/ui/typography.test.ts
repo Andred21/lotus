@@ -16,9 +16,9 @@ describe('grafias tipográficas por papel', () => {
     expect(sectionLabelClass).toBe('text-xs font-semibold tracking-wider uppercase')
   })
 
-  /** Rótulo de CAMPO é peça diferente da faixa de seção (spec D5): os `<dt>` da
-   * validação e do diálogo de emissão não encabeçam grupo nenhum, e promovê-los
-   * a heading inventaria hierarquia numa página pública de peso legal. */
+  /** Rótulo de CAMPO é peça diferente da faixa de seção (spec D5): os `<dt>` do
+   * diálogo de emissão não encabeçam grupo nenhum, e promovê-los a heading
+   * inventaria hierarquia. */
   it('o rótulo de campo não é heading — não carrega o peso da faixa', () => {
     expect(fieldLabelClass).toBe('text-xs uppercase tracking-wide')
     expect(fieldLabelClass).not.toContain('font-semibold')

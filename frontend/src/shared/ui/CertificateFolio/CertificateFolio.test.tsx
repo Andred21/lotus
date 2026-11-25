@@ -28,8 +28,7 @@ describe('CertificateFolio', () => {
   })
 
   /** A legenda é rótulo de CAMPO, não heading: o bloco não encabeça grupo
-   * nenhum, e promovê-lo inventaria hierarquia numa página pública de peso
-   * legal (spec D5). */
+   * nenhum, e promovê-lo inventaria hierarquia no diálogo de emissão (spec D5). */
   it('a legenda usa a grafia de rótulo de campo e não é heading', () => {
     const { container } = render(
       <CertificateFolio label="FOLIO" folio="CERT-2026-000123" />,
