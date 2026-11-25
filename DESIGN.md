@@ -202,7 +202,7 @@ Todas self-hosted via `@fontsource`, só os pesos listados.
 
 ### Hierarchy
 - **Display** (Archivo 600, 30px, line-height 1, `tabular-nums`): o KPI que é o assunto da dobra
-  (`StatValue size="page"`) e o veredito da validação pública (`validationVerdictClass`).
+  (`StatValue size="page"`).
 - **Headline** (Archivo 600, 24px, tracking −0.025em): o `h1` de página — dono único, no
   `PageHeader` e no `DetailHeader`. O header do shell não tem título.
 - **Stat em cartão** (Archivo 600, 24px, `tabular-nums`): número dentro de um cartão que já tem assunto.
@@ -327,9 +327,9 @@ em razão com `table-fixed`.
 
 ### Signature: o Folio
 `CertificateFolio` trata o número `LOT-ano-seq` como artefato: legenda em rótulo de campo (`dt`),
-código em Plex Mono tabular, 30px com tracking 0.15em na validação pública (20px/0.1em no diálogo
-de emissão), centrado, em `--text-color`. É a única assinatura do sistema; QR e selo são o motivo
-visual do domínio.
+código em Plex Mono tabular, 20px com tracking 0.1em no diálogo de emissão, centrado, em
+`--text-color`. A validação pública mora no site desde o bloco 63. É a única assinatura do sistema;
+QR e selo são o motivo visual do domínio.
 
 ## Do's and Don'ts
 
