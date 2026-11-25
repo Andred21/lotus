@@ -175,7 +175,6 @@ listada aqui não se planeja de novo: o caminho é `/finalizar-bloco <NN>` no ma
 | **13** `go-live-confiabilidade-e-recuperacao` | 2, 5, 6 | 2026-10-06 |
 | **55** `backend-borda-http-auth-e-permissao` | 1 | 2026-11-03 |
 | **60** `codigos-mascaras-comercial-e-avaliacoes` | 1, 2 | 2026-11-23 |
-| **61** `certificacao-validacao-no-site` | 1, 2 | 2026-11-24 |
 | **62** `certificacao-paineis-lote-e-planilha` | 1 | 2026-11-25 |
 
 ---
@@ -358,46 +357,6 @@ aparece no curso. Nenhuma tela mostra mais `Cot`. Presupuestos abre primeiro. O 
 lista e filtra os orçamentos dele. Um teste prova que a turma conclui sem as evaluaciones de
 Cliente e Alumnos, com aviso, e é recusada sem o Manual ou sem a do Instructor. RUT e telefone
 aparecem formatados e ficam crus no banco, provado por teste e no navegador.
-
----
-
-## 61. `certificacao-validacao-no-site`
-
-**Prioridade:** P1 · **Frente:** Backend + Site (`Andred21/lotus-site`) + Infra · **Contexto:** sim · **Depende:** —
-**Fonte:** pedido da Lotus de 2026-11-21 (validação de certificado); `D-70`; `P-89`.
-
-**Hoje:** a validação é a página `/validar/<uuid>` do próprio app (`ValidationPage`). Ela lê
-`GET /api/publico/certificados/{uuid}` (`Certification/routes.php:11`). O QR leva a
-`config('app.certificate_validation_url')` + `/validar/{uuid}` (`CertificateValidationUrl.php:41`).
-
-**Escopo:**
-- **Página no site.** A validação vira uma página do site da Lotus, no layout dele. Ela confere o
-  certificado no endpoint público do Lotus, como hoje. Chega-se a ela pelo QR ou pelo código
-  digitado (`LOT-2026-XXX`).
-- **Download pelo site.** Certificado válido baixa por lá, e revogado não baixa. O PDF é renderizado
-  no Gotenberg a cada pedido (`routes.php:21-24`, a rota mais cara do sistema). Por isso a rota
-  pública nasce com limitador próprio por IP, no molde do `throttle:public-certificate`.
-- **API pública.** Busca pelo `codigo`, além do `uuid`. PDF público. CORS para a origem do site.
-- **QR.** Certificado emitido depois do bloco aponta para o site. O QR já impresso, que leva a
-  `app.lotusotec.cl/validar/<uuid>`, continua chegando a uma validação. Certificado tem peso legal,
-  e nenhum QR emitido pode quebrar.
-- **Duas PRs.** A página mora no `Andred21/lotus-site` (Vite + React, CloudFront), com PR própria.
-  A lane do Lotus leva o endpoint, o CORS e o QR. O QR só passa a apontar para o site depois que a
-  página estiver no ar.
-
-**Para o brainstorming:**
-- O código é sequencial (`LOT-2026-144`, `-145`…), e a busca pública por ele permite percorrer
-  todos os certificados. Decidir o que a resposta por código expõe (nome, RUT) ou se a busca pede
-  um segundo dado. O `uuid` do QR não tem esse problema.
-- O QR antigo redireciona para o site, ou a página atual do app fica no ar?
-- **D-70**: a página do site tem o canal de contato do próprio site. Se a Lotus aceitar, isso paga
-  a D-70.
-- **P-89**: o endereço que o gatilho dela confere muda quando o QR passa a apontar para o site.
-
-**DoD:** o QR de um certificado novo abre a página do site com o estado certo, e o código digitado
-chega ao mesmo resultado. O PDF baixa pelo site e é recusado para revogado. Um QR antigo continua
-chegando a uma validação. O limitador da rota pública foi visto recusar. A prova final é contra
-produção, depois do deploy (aceitação, invariante 11).
 
 ---
 
