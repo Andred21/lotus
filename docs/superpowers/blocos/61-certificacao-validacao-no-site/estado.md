@@ -2,10 +2,10 @@
 schema_version: 3
 id: 61
 slug: 61-certificacao-validacao-no-site
-workflow_state: blocked
-next_owner: joao
-next_action: "resolve_blocker aguardando aceitação: itens 1, 2"
-resume_state: ready_for_closure
+workflow_state: ready_for_closure
+next_owner: claude
+next_action: close_active_work_item aceitacao externa
+resume_state: null
 active_spec: docs/superpowers/blocos/61-certificacao-validacao-no-site/spec.md
 active_plan: docs/superpowers/blocos/61-certificacao-validacao-no-site/plano.md
 active_review: docs/superpowers/blocos/61-certificacao-validacao-no-site/revisao.md
@@ -13,16 +13,18 @@ active_acceptance: docs/superpowers/blocos/61-certificacao-validacao-no-site/ace
 context_packet: docs/superpowers/blocos/61-certificacao-validacao-no-site/context.md
 efeito_externo: sim
 executor: claude
-branch: feat/61-certificacao-validacao-no-site
+branch: docs/61-certificacao-validacao-no-site
 worktree: ../lotus-61-certificacao-validacao-no-site
-offset: 2
-lane_base: 7982828e
-commit: 79faef92
-blocker: "aguardando aceitação depois do merge: itens 1, 2 da ## Verificação externa"
-updated_at: 2026-11-24T14:49:05-03:00
+offset: 1
+lane_base: 407e942f
+commit: 407e942f
+blocker: null
+updated_at: 2026-11-25T04:14:07-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 61 — estado
 
 Aberto por lane.sh abrir. O contrato dos campos esta em docs/superpowers/state.md.
+
+Reaberto em 2026-11-25 pelo lane.sh aceitar, na branch docs/61-certificacao-validacao-no-site; a branch do bloco era feat/61-certificacao-validacao-no-site.
