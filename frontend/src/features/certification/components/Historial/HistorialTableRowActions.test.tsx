@@ -9,7 +9,7 @@ import { HistorialTable } from './HistorialTable'
 /** Harness redeclarado (não reusado do `HistorialTable.test.tsx` vizinho): a
  * régua `max-lines` sobre componentes de feature mede teste de componente
  * junto com o componente, sem isenção — precedente `e76747a6`
- * (ValidationPageFolio.test.tsx) quebrou o arquivo pelo mesmo motivo, em vez
+ * (um teste da tela de validação, que saiu do app no bloco 63) quebrou o arquivo pelo mesmo motivo, em vez
  * de isentar. */
 vi.mock('react-i18next', async (importOriginal) => {
   const { mockUseTranslation } = await import('@shared/testing/i18n')

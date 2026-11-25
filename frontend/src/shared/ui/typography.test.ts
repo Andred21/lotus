@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cardTitleClass, fieldLabelClass, identifierClass, pageTitleClass, sectionLabelClass, statValueClass, technicalDataClass, validationVerdictClass } from './typography'
+import { cardTitleClass, fieldLabelClass, identifierClass, pageTitleClass, sectionLabelClass, statValueClass, technicalDataClass } from './typography'
 
 /**
  * Os dois `h1` do produto tinham vozes diferentes — `font-display … tracking-tight`
@@ -58,11 +58,4 @@ describe('grafias tipográficas por papel', () => {
     expect(sectionLabelClass).toContain('uppercase')
   })
 
-  /** O veredito de `/validar` precisa ficar no mesmo degrau do folio (D-63):
-   * `pageTitleClass` é 24px com `tracking-tight` e ainda perderia dos 30px do
-   * folio — por isso é constante própria, não reuso. */
-  it('o veredito da validação pública sobe ao degrau do folio, não ao de pageTitleClass', () => {
-    expect(validationVerdictClass).toBe('font-display text-3xl font-semibold')
-    expect(validationVerdictClass).not.toBe(pageTitleClass)
-  })
 })

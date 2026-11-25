@@ -15,7 +15,6 @@ import { OperationPage } from '@features/operation/components/OperationPage'
 import { TurmaDetailPage } from '@features/operation/components/Turma/TurmaDetailPage'
 import { TurmaCreatePage } from '@features/operation/components/Turma/TurmaCreatePage'
 import { CertificatesPage } from '@features/certification/components/CertificatesPage'
-import { ValidationPage } from '@features/certification/components/Validation/ValidationPage'
 import { SetPasswordPage } from '@features/identity/components/Password/SetPasswordPage'
 
 function LoginRoute() {
@@ -28,11 +27,6 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Validação pública por QR (spec D14/D19): sem conta, sem cookie. Fora do
-            SessionBootstrap de propósito — quem escaneia o QR nunca deve disparar
-            `GET /api/me`. */}
-        <Route path="/validar/:uuid" element={<ValidationPage />} />
-
         {/* Primeiro acesso: pública, sem cookie de sessão. O `flow` da query
             decide o endpoint (convite × recuperação). Fora do SessionBootstrap —
             quem define a senha ainda não tem sessão e não deve disparar

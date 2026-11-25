@@ -8,8 +8,8 @@ import { CertificateViewDialog } from './CertificateViewDialog'
  * O outro lado da D-05: esta é a UNICA tela que imprime o `detail` cru do
  * servidor. Sem este caso, trocar a linha por `screenDetail` passaria verde e a
  * D8 morreria em silêncio — o suporte perderia o único lugar onde descobre QUAL
- * campo do snapshot está vazio. O par deste caso vive em
- * `ValidationPage.test.tsx`, que prova que a rota pública NÃO imprime.
+ * campo do snapshot está vazio. O par deste caso era da tela de
+ * validação pública, que saiu do app no bloco 63.
  *
  * `t` devolve a própria chave; o texto traduzido é assunto do `parity.test.ts`.
  */
