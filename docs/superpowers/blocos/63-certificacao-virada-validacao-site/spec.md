@@ -110,8 +110,9 @@ as usa); mover o `SessionBootstrap` de volta para cima do `AppRouter`.
   por busca que nenhuma chave dele é lida fora dos arquivos removidos. A catraca de plural
   `shared/config/locales/plural.test.ts:37` lista `certificate.validation.hours` e perde a entrada
   junto.
-- O `SessionBootstrap` fica onde está. A frase do `App.tsx` sobre a rota pública passa a dizer que
-  não há rota pública hoje. Mover o bootstrap é refactor fora do escopo.
+- O `SessionBootstrap` fica onde está: `/definir-clave/:token` continua pública e fora dele. A
+  frase do `App.tsx` passa a citar essa rota no lugar da `/validar/:uuid`. Mover o bootstrap é
+  refactor fora do escopo.
 - Os comentários de §3 que citam a tela são atualizados ou removidos.
 - `.claude/rules/frontend-fsliced.md` e `PRODUCT.md` passam a dizer que a validação pública é do
   site.

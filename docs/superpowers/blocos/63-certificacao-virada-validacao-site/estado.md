@@ -2,24 +2,24 @@
 schema_version: 3
 id: 63
 slug: 63-certificacao-virada-validacao-site
-workflow_state: planning
+workflow_state: ready_for_execution
 next_owner: claude
-next_action: continue_active_planning
+next_action: execute_active_plan
 resume_state: null
-active_spec: null
-active_plan: null
+active_spec: docs/superpowers/blocos/63-certificacao-virada-validacao-site/spec.md
+active_plan: docs/superpowers/blocos/63-certificacao-virada-validacao-site/plano.md
 active_review: null
-active_acceptance: null
+active_acceptance: docs/superpowers/blocos/63-certificacao-virada-validacao-site/aceitacao.md
 context_packet: null
-efeito_externo: null
-executor: null
+efeito_externo: sim
+executor: claude
 branch: feat/63-certificacao-virada-validacao-site
 worktree: ../lotus-63-certificacao-virada-validacao-site
 offset: 1
 lane_base: dc0f9496
-commit: dc0f9496
+commit: de69ffb0
 blocker: null
-updated_at: 2026-11-25T12:44:08-03:00
+updated_at: 2026-11-25T13:15:43-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
