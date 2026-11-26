@@ -25,7 +25,9 @@ function page(path: string, load: () => Promise<ComponentType>, handle?: RouteHa
  * Agrupa as páginas de um módulo do `NAV_MODULES` sob um guard de permissão. O
  * título e a permissão vêm do próprio módulo, então o Sidebar e a rota nunca
  * divergem; o detalhe (`/operacion/turmas/:id`) herda ambos do grupo. A rota-guard
- * é sem `path`, e as páginas filhas só carregam o chunk se o guard deixar passar.
+ * é sem `path`. O guard decide o que RENDERIZA, não o que baixa: no data router o
+ * `lazy` das rotas casadas resolve na navegação, antes do guard montar, então o chunk de
+ * um módulo proibido é baixado mesmo assim (e descartado sem renderizar).
  */
 function guarded(key: string, children: RouteObject[]): RouteObject {
   const mod = NAV_MODULES.find((m) => m.key === key)

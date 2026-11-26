@@ -103,6 +103,6 @@ describe('useTurmasPage', () => {
     const { result } = renderHook(() => useTurmasPage('active', null), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    await expect(result.current.refetch()).resolves.toBeDefined()
+    await expect(result.current.refetch?.()).resolves.toBeDefined()
   })
 })

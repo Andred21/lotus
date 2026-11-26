@@ -16,7 +16,7 @@ type Props = {
   certificate: CertificateData | null
   loading: boolean
   error: ProblemDetails | null
-  onRetry: () => void
+  onRetry?: () => void
   onHide: () => void
 }
 

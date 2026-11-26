@@ -146,6 +146,26 @@ describe('useDashboard', () => {
     expect(result.current.error.detail).toBe('sin conexión')
   })
 
+  it('403 sem cache: kind error SEM retry — repetir devolve a mesma recusa', async () => {
+    get.mockRejectedValue(problem('Sin permiso', 403))
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('error'))
+    if (result.current.kind !== 'error') throw new Error('esperava kind error')
+    expect(result.current.retry).toBeUndefined()
+  })
+
+  it('500 sem cache: kind error COM retry', async () => {
+    get.mockRejectedValue(problem('caiu', 500))
+
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+
+    await waitFor(() => expect(result.current.kind).toBe('error'))
+    if (result.current.kind !== 'error') throw new Error('esperava kind error')
+    expect(result.current.retry).toBeTypeOf('function')
+  })
+
   // Lição do BD-6 aplicada a objeto único: um refetch falho mantém `data`
   // populado enquanto `status` vira `error`. Substituir a tela aí apaga
   // informação utilizável — a falha vira aviso AO LADO do que já veio.

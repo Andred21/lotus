@@ -187,6 +187,6 @@ describe("useArchivedPage", () => {
       useArchivedPage(fakeResource({ data: [] }), (r) => r.client),
     );
 
-    expect(result.current.refetch()).toBeInstanceOf(Promise);
+    expect(result.current.refetch?.()).toBeInstanceOf(Promise);
   });
 });

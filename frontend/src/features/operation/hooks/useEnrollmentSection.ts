@@ -1,5 +1,6 @@
 import type { TurmaData } from '@shared/types/generated'
 import { loadFailure, useMutationErrors } from '@shared/hooks'
+import { retryFor } from '@shared/lib'
 import { useEnrollments, useRemoveEnrollment } from '../api/useEnrollments'
 
 /** Orquestra a lista/remoção da aba Alumnos. O componente só consome.
@@ -23,7 +24,7 @@ export function useEnrollmentSection(turma: TurmaData) {
     // vira AppErrorState com Reintentar, e a toolbar deixa de oferecer
     // matricular sobre uma lista que não carregou.
     loadError: loadFailure(list),
-    reload: (): Promise<unknown> => list.refetch(),
+    reload: retryFor(list.error, (): Promise<unknown> => list.refetch()),
     remove,
     removing: removeMutation.isPending,
     error,

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useWindowedQuery } from '@shared/hooks'
-import { currentCalendarPeriod, type Period } from '@shared/lib'
+import { currentCalendarPeriod, retryFor, type Period } from '@shared/lib'
 import type { CertificateData, EmissionPanelEnrollmentData, EmissionPanelTurmaData } from '@shared/types/generated'
 import { useCertificate, useEmissionPanel, type EmissionPanelPeriod } from '../api/certificatesApi'
 import { rowCertKind } from '../lib/certStatus'
@@ -138,13 +138,13 @@ export function useEmissionPanelState() {
     viewingCertificate: viewingCertificate.data ?? null,
     viewingCertificateLoading: viewingCertificate.isLoading,
     viewingCertificateError: viewingCertificate.isError ? (viewingCertificate.error ?? null) : null,
-    reloadViewingCertificate: (): Promise<unknown> => viewingCertificate.refetch(),
+    reloadViewingCertificate: retryFor(viewingCertificate.error, (): Promise<unknown> => viewingCertificate.refetch()),
     // Só "carregando" SEM dado em mão: a troca de período cria key nova e
     // `panel.isLoading` sobe com o piso (`data`) ainda na tela; sem isto os
     // cards sumiam enquanto a tabela da turma aberta seguia mostrando o piso.
     // Mesmo molde do Dashboard (`data === undefined` → `loading`).
     loading: data === undefined && panel.isLoading,
     loadError: data === undefined && panel.isError ? (panel.error ?? null) : null,
-    reload: (): Promise<unknown> => panel.refetch(),
+    reload: retryFor(panel.error, (): Promise<unknown> => panel.refetch()),
   }
 }

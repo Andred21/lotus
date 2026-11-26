@@ -10,7 +10,7 @@ import type { ArchiveMode } from '@shared/hooks'
 import { budgetWidths } from './budgetColumns'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
 import { budgetSortProps, newestFirst } from '../../lib/budgetOrder'
-import { formatUf, type ArchivableRow } from '@shared/lib'
+import { formatUf, retryFor, type ArchivableRow } from '@shared/lib'
 import { useCommercialClients } from '../../hooks/useCommercialClients'
 import { BudgetRowActions } from './BudgetRowActions'
 import { BudgetStatusCell } from './BudgetStatusCell'
@@ -32,7 +32,7 @@ export function BudgetsTable({
   /** Restore em voo — trava os botões da linha (Q-2). */
   busy: boolean
   actions?: ReactNode
-  error?: { detail?: string | null } | null
+  error?: { detail?: string | null; status?: number } | null
   /** Devolver a promise do refetch faz o Reintentar do AppErrorState esperar
    * por ela (Q-14). Tipar `() => void` aqui compilaria — TS aceita descartar o
    * retorno — e faria o tipo mentir sobre o contrato. */
@@ -56,7 +56,7 @@ export function BudgetsTable({
   /** `useCommercialClients.refetch` descarta a própria promise com `void`, então
    * o `Promise.all` só serve para o `AppErrorState` aguardar o `onRetry` do pai
    * (Q-14) — a recarga de clientes acontece junto, mas sem promise para esperar. */
-  const retry = () => Promise.all([onRetry?.(), clients.refetch()])
+  const retry = retryFor(loadError, () => Promise.all([onRetry?.(), clients.refetch?.()]))
   /** Carregando é qualquer uma das duas queries: a tabela só está "vazia"
    * depois que as duas responderam. */
   const carregando = loading || clients.isLoading

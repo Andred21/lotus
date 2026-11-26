@@ -29,7 +29,9 @@ export interface ListSource<T> {
   items: T[]
   loading: boolean
   error: ScreenDetailSource | null
-  refetch: () => Promise<unknown>
+  /** `undefined` quando repetir não recupera (403, `retryFor`): sem handler a
+   * tela não desenha o botão. */
+  refetch: (() => Promise<unknown>) | undefined
 }
 
 /** A fonte arquivada é uma `ListSource` que sabe o próprio modo.

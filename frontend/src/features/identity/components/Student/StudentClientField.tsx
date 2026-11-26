@@ -45,7 +45,7 @@ export function StudentClientField({
   unusable: boolean;
   /** Aceita a promise do `useLoadState`: é ela que mantém o botão em carga
    * (Q-14). Molde: `QuotesList.tsx:26`. */
-  refetch: () => void | Promise<unknown>;
+  refetch: (() => void | Promise<unknown>) | undefined;
 }) {
   const { t } = useTranslation();
 

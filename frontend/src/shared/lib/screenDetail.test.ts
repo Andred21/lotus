@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { loadErrorHint, loadMessage, screenDetail } from './screenDetail'
+import { loadErrorHint, loadMessage, retryFor, screenDetail } from './screenDetail'
 
 describe('screenDetail', () => {
   it('403, 404 e 429: o `detail` do servidor VAI à tela', () => {
@@ -86,5 +86,20 @@ describe('loadMessage — a mensagem que a tela imprime', () => {
     // `string | null` (`StudentClientField:33`), e `??` cobre os dois.
     expect(loadMessage({ errorDetail: null, errorHint: 'common.loadErrorHint' }, (k) => k))
       .toBe('common.loadErrorHint')
+  })
+})
+
+describe('retryFor — repetir só quando pode recuperar', () => {
+  const refetch = () => Promise.resolve('x')
+
+  it('403 não devolve handler: a recusa de permissão não se desfaz repetindo', () => {
+    expect(retryFor({ status: 403 }, refetch)).toBeUndefined()
+  })
+
+  it('o resto devolve o MESMO handler (a promise é o que mantém o botão em loading)', () => {
+    expect(retryFor({ status: 500 }, refetch)).toBe(refetch)
+    expect(retryFor({ status: 404 }, refetch)).toBe(refetch)
+    expect(retryFor({}, refetch)).toBe(refetch)
+    expect(retryFor(null, refetch)).toBe(refetch)
   })
 })

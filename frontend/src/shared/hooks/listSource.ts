@@ -1,5 +1,5 @@
 import type { ProblemDetails } from '@shared/api/axios'
-import type { ListSource } from '@shared/lib'
+import { retryFor, type ListSource } from '@shared/lib'
 
 /**
  * A política "falhou" vs. "veio vazia", num lugar só.
@@ -51,6 +51,6 @@ export function listSource<T>(query: {
     items: query.data ?? [],
     loading: query.isLoading,
     error: loadFailure(query),
-    refetch: () => query.refetch(),
+    refetch: retryFor(query.error, () => query.refetch()),
   }
 }

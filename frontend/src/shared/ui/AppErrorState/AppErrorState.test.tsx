@@ -23,18 +23,6 @@ describe('AppErrorState', () => {
     expect(screen.getByText('Sin conexión')).toBeTruthy()
   })
 
-  it('403 não oferece Reintentar, mesmo com `onRetry`: repetir devolve a mesma recusa', () => {
-    render(<AppErrorState title="Sin acceso" status={403} retryLabel="Reintentar" onRetry={() => {}} />)
-
-    expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull()
-  })
-
-  it('outro status mantém o Reintentar', () => {
-    render(<AppErrorState title="Falla" status={500} retryLabel="Reintentar" onRetry={() => {}} />)
-
-    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeTruthy()
-  })
-
   it('sem `onRetry` não há botão: quem não recarrega não promete que recarrega', () => {
     render(<AppErrorState title="No se pudo cargar" retryLabel="Reintentar" />)
 

@@ -137,8 +137,25 @@ export function loadMessage(
  * de permissão: reemitir a requisição devolve a mesma recusa, e o botão
  * prometeria uma recuperação que não existe. Mesmo raciocínio do `podeRepetir`
  * do `useWindowedQuery`, que cobre todo o 4xx de uma query por janela; aqui só
- * o 403, que é o que o guard de módulo e as telas de carga têm em comum.
+ * o 403, que é o que as telas de carga e o guard de módulo têm em comum.
  */
-export function canRetryLoad(problem: ScreenDetailSource | null | undefined): boolean {
+function canRetryLoad(problem: ScreenDetailSource | null | undefined): boolean {
   return problem?.status !== 403
+}
+
+/**
+ * O handler de "Reintentar" que um hook de carga entrega à tela: o próprio
+ * `refetch` quando repetir pode recuperar, `undefined` no 403.
+ *
+ * É AQUI, onde o `refetch` nasce, que a política é aplicada — e não em cada tela
+ * que o recebe: `AppErrorState`/`InlineLoadState` só desenham o botão quando há
+ * `onRetry`, então sem handler não há botão, em nenhuma das ~30 telas, e uma
+ * tela nova herda a regra sem saber dela. Devolve a MESMA função (a promise dela
+ * é o que mantém o botão em `loading`, Q-14).
+ */
+export function retryFor<R extends () => Promise<unknown>>(
+  problem: ScreenDetailSource | null | undefined,
+  refetch: R,
+): R | undefined {
+  return canRetryLoad(problem) ? refetch : undefined
 }

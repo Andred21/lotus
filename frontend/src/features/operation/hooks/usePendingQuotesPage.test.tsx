@@ -46,6 +46,6 @@ describe('usePendingQuotesPage', () => {
     const { result } = renderHook(() => usePendingQuotesPage(), { wrapper })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    await expect(result.current.refetch()).resolves.toBeDefined()
+    await expect(result.current.refetch?.()).resolves.toBeDefined()
   })
 })

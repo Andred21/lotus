@@ -52,7 +52,7 @@ describe('archivableSource', () => {
     // A guarda do D4: e a promise que mantem o Reintentar do AppErrorState em
     // `loading` enquanto o GET esta em voo (Q-14). Uma versao que chamasse
     // `void refetch()` compilaria e passaria por todos os testes acima.
-    await expect(archivableSource(ativa, arquivada('active')).refetch()).resolves.toBe('ativa')
-    await expect(archivableSource(ativa, arquivada('archived')).refetch()).resolves.toBe('arquivada')
+    await expect(archivableSource(ativa, arquivada('active')).refetch?.()).resolves.toBe('ativa')
+    await expect(archivableSource(ativa, arquivada('archived')).refetch?.()).resolves.toBe('arquivada')
   })
 })

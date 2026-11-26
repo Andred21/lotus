@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { redatoresApi } from '@shared/api/redatoresApi'
 import type { MotivoInidoneidade, RedatorData, TurmaData } from '@shared/types/generated'
 import { loadFailure, useMutationErrors } from '@shared/hooks'
+import { retryFor } from '@shared/lib'
 import { motivosInidoneidade } from '../lib/eligibility'
 import { useDesignateRedator, useRemoveRedator } from '../api/useTurmas'
 
@@ -59,7 +60,7 @@ export function useRedatorPicker(turma: TurmaData) {
      * diálogo afirmava "nenhum redator disponível" sobre uma falha de rede — o
      * mesmo defeito que a spec D16 matou nas listagens. */
     loadError: loadFailure(redatores),
-    reloadList: (): Promise<unknown> => redatores.refetch(),
+    reloadList: retryFor(redatores.error, (): Promise<unknown> => redatores.refetch()),
     remove: (redatorId: number) => remove.mutate({ turmaId: turma.id!, redatorId }),
     pending: designate.isPending || remove.isPending,
     error,

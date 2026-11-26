@@ -54,6 +54,20 @@ describe('listSource — a forma normalizada de lista', () => {
   it('DEVOLVE a promise do refetch (contrato Q-14)', async () => {
     const source = listSource(query({ isSuccess: true, data: [{ id: 1 }] }))
 
-    await expect(source.refetch()).resolves.toBe(RESULTADO)
+    await expect(source.refetch?.()).resolves.toBe(RESULTADO)
+  })
+})
+
+describe('listSource — repetir só quando recupera', () => {
+  it('403: sem `refetch`', () => {
+    const source = listSource(query({ isError: true, error: { status: 403 } as ProblemDetails }))
+
+    expect(source.refetch).toBeUndefined()
+  })
+
+  it('500: mantém o `refetch`', () => {
+    const source = listSource(query({ isError: true, error: { status: 500 } as ProblemDetails }))
+
+    expect(source.refetch).toBeTypeOf('function')
   })
 })

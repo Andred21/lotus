@@ -115,6 +115,24 @@ describe('useResourceState — o contrato Q-14', () => {
       useResourceState(query({ isSuccess: true, data: { id: 1 } })),
     )
 
-    await expect(result.current.refetch()).resolves.toBe(RESULTADO)
+    await expect(result.current.refetch?.()).resolves.toBe(RESULTADO)
+  })
+})
+
+describe('useResourceState — repetir só quando recupera', () => {
+  it('403: sem `refetch`, para a tela não prometer o que não existe', () => {
+    const { result } = renderHook(() =>
+      useResourceState(query({ isError: true, error: { status: 403 } as ProblemDetails })),
+    )
+
+    expect(result.current.refetch).toBeUndefined()
+  })
+
+  it('500: mantém o `refetch`', () => {
+    const { result } = renderHook(() =>
+      useResourceState(query({ isError: true, error: { status: 500 } as ProblemDetails })),
+    )
+
+    expect(result.current.refetch).toBeTypeOf('function')
   })
 })

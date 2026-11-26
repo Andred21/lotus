@@ -28,7 +28,8 @@ export function HistorialQuoteFilter({
    * ela, o vazio do dropdown mentiria "não há cotação certificada" e o ZIP,
    * que exige cotação, ficaria travado sem explicação. */
   loadFailure: { errorDetail?: string | null; errorHint: string } | null
-  onRetry: () => Promise<unknown>
+  /** Ausente no 403 (`retryFor`): a linha explica e não oferece botão. */
+  onRetry?: () => Promise<unknown>
 }) {
   const { t } = useTranslation()
   const inputId = useId()
