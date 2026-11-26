@@ -65,4 +65,33 @@ describe('AppTabView', () => {
     expect(container.querySelector('.marca-do-chamador')).not.toBeNull()
     expect(container.querySelector('.p-tabview-panels')?.className).toContain('p-0')
   })
+
+  /**
+   * jsdom não mede layout, então o Prime esconde prev/next. O teste dá largura
+   * à barra (conteúdo maior que o visível) pelo protótipo e desfaz no `finally`,
+   * para o botão da direita existir e o ícone interno dele poder ser lido.
+   */
+  it('usa ícone Phosphor no botão de rolar para a direita', () => {
+    const scrollWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollWidth')
+    const clientWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth')
+    Object.defineProperty(HTMLElement.prototype, 'scrollWidth', { configurable: true, get: () => 500 })
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 100 })
+    try {
+      const { container } = render(
+        <AppTabView scrollable>
+          <AppTabPanel header="Um">a</AppTabPanel>
+          <AppTabPanel header="Dois">b</AppTabPanel>
+        </AppTabView>,
+      )
+
+      const proximo = container.querySelector('.p-tabview-nav-next')
+      expect(proximo).not.toBeNull()
+      const svg = proximo?.querySelector('svg')
+      expect(svg).not.toBeNull()
+      expect(svg?.classList.contains('p-icon')).toBe(false)
+    } finally {
+      if (scrollWidth) Object.defineProperty(HTMLElement.prototype, 'scrollWidth', scrollWidth)
+      if (clientWidth) Object.defineProperty(HTMLElement.prototype, 'clientWidth', clientWidth)
+    }
+  })
 })

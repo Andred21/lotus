@@ -8,7 +8,14 @@ import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { mergePt } from '../mergePt'
 import { useFieldBind, useFieldProps } from '../FormField/fieldContext'
-import { renderIcon, type IconProp } from '../AppIcon'
+import { primeSlotIcon, renderIcon, type IconProp } from '../AppIcon'
+
+// O olho. Função, e não nó: o `iconProps` que o Prime entrega carrega o `role`,
+// o `aria-label`, o `tabIndex` e os handlers do toggle (`togglePt` abaixo), e
+// `primeSlotIcon` os espalha no `svg` que substitui o do Prime. 16px = 1rem do
+// `.p-icon`; a folga de 6px do alvo continua sendo `style` do `pt`.
+const SHOW_ICON = primeSlotIcon('view')
+const HIDE_ICON = primeSlotIcon('viewOff')
 
 export interface AppPasswordProps extends PasswordProps {
   /** Ícone à esquerda: `IconName` do registro, ex.: "lock". */
@@ -183,6 +190,8 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
         <Password
           inputRef={ref}
           toggleMask
+          showIcon={SHOW_ICON}
+          hideIcon={HIDE_ICON}
           feedback={false}
           {...fieldProps}
           {...props}
@@ -204,6 +213,8 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
         <Password
           inputRef={ref}
           toggleMask
+          showIcon={SHOW_ICON}
+          hideIcon={HIDE_ICON}
           feedback={false}
           {...fieldProps}
           {...props}

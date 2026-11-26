@@ -198,3 +198,19 @@ describe('AppPassword devolve o foco ao olho', () => {
     })
   })
 })
+
+describe('AppPassword — ícones internos', () => {
+  const phosphor = (el: Element | null) => {
+    expect(el?.tagName).toBe('svg')
+    expect(el?.classList.contains('p-icon')).toBe(false)
+  }
+
+  it('usa ícone Phosphor no olho, nos dois estados, e o olho continua botão que alterna', () => {
+    render(<AppPassword aria-label="senha" />)
+
+    phosphor(screen.getByRole('button', { name: 'common.showPassword' }))
+    fireEvent.click(screen.getByRole('button', { name: 'common.showPassword' }))
+    expect(input().getAttribute('type')).toBe('text')
+    phosphor(screen.getByRole('button', { name: 'common.hidePassword' }))
+  })
+})

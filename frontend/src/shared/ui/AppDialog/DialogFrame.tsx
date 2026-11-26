@@ -2,7 +2,14 @@ import { useEffect, useRef } from 'react'
 import { Dialog } from 'primereact/dialog'
 import type { DialogProps } from 'primereact/dialog'
 import { useTranslation } from 'react-i18next'
+import { primeSlotIcon } from '../AppIcon'
 import { mergePt } from '../mergePt'
+
+// Ícones do cabeçalho: o Prime os desenha em SVG próprio (1rem, `.p-icon`).
+// Module-level: função estável entre renders.
+const CLOSE_ICON = primeSlotIcon('close')
+const MAXIMIZE_ICON = primeSlotIcon('maximize')
+const MINIMIZE_ICON = primeSlotIcon('minimize')
 
 /** O que TODO diálogo do produto faz, qualquer que seja a casca: devolve o foco
  * ao disparador, nomeia o fechar e o maximizar no idioma da interface e não
@@ -57,6 +64,9 @@ export function DialogFrame({ pt, visible, ...props }: DialogProps) {
   return (
     <Dialog
       draggable={false}
+      closeIcon={CLOSE_ICON}
+      maximizeIcon={MAXIMIZE_ICON}
+      minimizeIcon={MINIMIZE_ICON}
       visible={visible}
       pt={mergePt<DialogProps['pt']>(pt, {
         // Pinado DEPOIS do `pt` recebido: o nome do controle é acessibilidade,

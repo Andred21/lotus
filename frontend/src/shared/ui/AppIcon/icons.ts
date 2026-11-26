@@ -7,6 +7,7 @@ import {
   ArrowUp,
   ArrowUUpLeft,
   ArrowsClockwise,
+  ArrowsDownUp,
   Briefcase,
   BookOpen,
   Buildings,
@@ -14,16 +15,20 @@ import {
   CaretDown,
   CaretLeft,
   CaretRight,
+  CaretUp,
   Certificate,
   ChartBar,
   ChartLine,
   Check,
   CheckCircle,
   Clock,
+  CornersIn,
+  CornersOut,
   DotsThreeVertical,
   DownloadSimple,
   Envelope,
   Eye,
+  EyeSlash,
   File,
   FileDoc,
   FilePdf,
@@ -44,6 +49,8 @@ import {
   Shield,
   ShoppingCart,
   SignOut,
+  SortAscending,
+  SortDescending,
   SpinnerGap,
   SquaresFour,
   Sun,
@@ -123,6 +130,17 @@ import {
  *   pi-users              users         Users
  *   pi-verified           certificate   Certificate
  *
+ * Nomes que nascem de ícone INTERNO do PrimeReact (SVG que o Prime desenha
+ * sozinho, sem `pi-*` no código do Lotus; bloco 64, Task 5):
+ *
+ *   ChevronUpIcon (dropdown aberto)         chevronUp     CaretUp
+ *   WindowMaximizeIcon (dialog)             maximize      CornersOut
+ *   WindowMinimizeIcon (dialog maximizado)  minimize      CornersIn
+ *   EyeSlashIcon (olho do AppPassword)      viewOff       EyeSlash
+ *   SortAltIcon (coluna sem ordem)          sortNeutral   ArrowsDownUp
+ *   SortAmountUpAltIcon (coluna crescente)  sortAsc       SortAscending
+ *   SortAmountDownIcon (coluna decrescente) sortDesc      SortDescending
+ *
  * Nenhum par de `pi-*` colapsou: os 56 têm sentidos distintos no código
  * (`refresh` repete a carga, `replay` reemite o certificado, `restore` tira
  * do arquivo).
@@ -148,6 +166,7 @@ export const ICONS = {
   chevronDown: CaretDown,
   chevronLeft: CaretLeft,
   chevronRight: CaretRight,
+  chevronUp: CaretUp,
   clock: Clock,
   close: X,
   dashboard: SquaresFour,
@@ -163,6 +182,8 @@ export const ICONS = {
   image: Image,
   lock: Lock,
   mail: Envelope,
+  maximize: CornersOut,
+  minimize: CornersIn,
   money: Money,
   moon: Moon,
   more: DotsThreeVertical,
@@ -175,6 +196,9 @@ export const ICONS = {
   settings: Gear,
   shield: Shield,
   signOut: SignOut,
+  sortAsc: SortAscending,
+  sortDesc: SortDescending,
+  sortNeutral: ArrowsDownUp,
   spinner: SpinnerGap,
   sun: Sun,
   upload: UploadSimple,
@@ -182,6 +206,7 @@ export const ICONS = {
   userAdd: UserPlus,
   users: Users,
   view: Eye,
+  viewOff: EyeSlash,
   warning: Warning,
   warningCircle: WarningCircle,
 } as const satisfies Record<string, PhosphorIcon>

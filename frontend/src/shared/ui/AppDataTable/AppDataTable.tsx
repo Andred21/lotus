@@ -1,4 +1,4 @@
-import { cloneElement, type ReactNode } from 'react'
+import { cloneElement, type ReactElement, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DataTable } from 'primereact/datatable'
 import type { DataTableProps, DataTableValueArray, DataTablePassThroughOptions } from 'primereact/datatable'
@@ -9,9 +9,38 @@ import type {
   PaginatorPrevPageLinkOptions,
 } from 'primereact/paginator'
 import { loadErrorHint, screenDetail, type ScreenDetailSource } from '@shared/lib'
+import { Ripple } from 'primereact/ripple'
 import { AppErrorState } from '../AppErrorState'
+import { AppIcon, primeSlotIcon } from '../AppIcon'
 import { mergePt } from '../mergePt'
 import { appDataTablePt, appPaginatorPt } from './style'
+
+// Ordenação do cabeçalho: o Prime escolhe o SVG pelo par `sorted`/`sortOrder`
+// (`sortOrder < 0` é decrescente). Mesmo critério, glifos do registro, 1rem.
+const SORT_NEUTRAL = primeSlotIcon('sortNeutral')
+const SORT_ASC = primeSlotIcon('sortAsc')
+const SORT_DESC = primeSlotIcon('sortDesc')
+const sortIcon = (options: { iconProps?: object; sorted?: boolean; sortOrder?: number | null }) => {
+  if (!options.sorted) return SORT_NEUTRAL(options)
+  return (options.sortOrder ?? 0) < 0 ? SORT_DESC(options) : SORT_ASC(options)
+}
+
+/** Seta do paginador no lugar do SVG do Prime. O `template` do Prime não passa
+ * `iconProps`, só `iconClassName`; o botão (`options.element`) fica, com o nome
+ * traduzido, e só o miolo muda — o Ripple volta junto, que `cloneElement` com
+ * filhos novos descartaria. */
+function pageArrow(
+  icon: 'chevronLeft' | 'chevronRight',
+  label: string,
+  options: { element: ReactElement; iconClassName: string },
+) {
+  return cloneElement(
+    options.element,
+    { 'aria-label': label } as Record<string, unknown>,
+    <AppIcon name={icon} className={options.iconClassName} />,
+    <Ripple />,
+  )
+}
 
 export type AppDataTableProps<T extends DataTableValueArray> = DataTableProps<T> & {
   /** Contagem em prosa do rodapé. Passá-la liga a faixa: o paginador do
@@ -96,11 +125,11 @@ export function AppDataTable<T extends DataTableValueArray>({
   const paginatorTemplate = {
     layout: 'PrevPageLink PageLinks NextPageLink',
     PrevPageLink: (options: PaginatorPrevPageLinkOptions) =>
-      cloneElement(options.element, { 'aria-label': t('common.paginatorPrev') }),
+      pageArrow('chevronLeft', t('common.paginatorPrev'), options),
     PageLinks: (options: PaginatorPageLinksOptions) =>
       cloneElement(options.element, { 'aria-label': t('common.paginatorPage', { page: options.page + 1 }) }),
     NextPageLink: (options: PaginatorNextPageLinkOptions) =>
-      cloneElement(options.element, { 'aria-label': t('common.paginatorNext') }),
+      pageArrow('chevronRight', t('common.paginatorNext'), options),
   }
 
   const body = errored ? (
@@ -164,6 +193,7 @@ export function AppDataTable<T extends DataTableValueArray>({
       // ponto de senti-lo religa o memo passando `cellMemo` como qualquer outra
       // prop do DataTable.
       cellMemo={false}
+      sortIcon={sortIcon}
       loading={loading && !errored}
       emptyMessage={body}
       {...props}

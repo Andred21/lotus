@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { AppDropdown } from './AppDropdown'
@@ -55,5 +55,40 @@ describe('AppDropdown', () => {
     const rotulo = comPlaceholder.container.querySelector('.p-dropdown-label')
     expect(rotulo?.textContent).toBe('Seleccione')
     expect(rotulo?.className).not.toContain('p-dropdown-label-empty')
+  })
+})
+
+/** Bloco 64: os SVGs internos (seta, limpar, filtro) são do registro Phosphor. */
+describe('AppDropdown — ícones internos', () => {
+  const OPTIONS = [{ label: 'Um', value: 1 }]
+  const phosphor = (el: Element | null) => {
+    const svg = el?.tagName === 'svg' ? el : el?.querySelector('svg')
+    expect(svg).not.toBeNull()
+    expect(svg?.classList.contains('p-icon')).toBe(false)
+  }
+
+  it('usa ícone Phosphor na seta do controle, fechado e aberto', () => {
+    const { container } = render(<AppDropdown options={OPTIONS} onChange={() => {}} />)
+
+    phosphor(container.querySelector('.p-dropdown-trigger'))
+    fireEvent.click(container.querySelector('.p-dropdown') as HTMLElement)
+    phosphor(container.querySelector('.p-dropdown-trigger'))
+  })
+
+  it('usa ícone Phosphor no limpar, que continua limpando', () => {
+    const onChange = vi.fn()
+    const { container } = render(<AppDropdown options={OPTIONS} value={1} showClear onChange={onChange} />)
+
+    const limpar = container.querySelector('.p-dropdown-clear-icon')
+    phosphor(limpar)
+    fireEvent.pointerUp(limpar as Element)
+    expect(onChange).toHaveBeenCalled()
+  })
+
+  it('usa ícone Phosphor no filtro do painel', () => {
+    const { container } = render(<AppDropdown options={OPTIONS} filter onChange={() => {}} />)
+
+    fireEvent.click(container.querySelector('.p-dropdown') as HTMLElement)
+    phosphor(document.querySelector('.p-dropdown-filter-container'))
   })
 })

@@ -2,6 +2,14 @@ import { Dropdown } from 'primereact/dropdown'
 import type { DropdownChangeEvent, DropdownProps } from 'primereact/dropdown'
 import { useTranslation } from 'react-i18next'
 import { useFieldBind, useFieldProps } from '../FormField/fieldContext'
+import { primeSlotIcon } from '../AppIcon'
+
+// Ícones internos do Prime (seta, seta com painel aberto, limpar, filtro): SVG
+// próprio de 1rem no default; aqui vêm do registro, no mesmo tamanho.
+const DROPDOWN_ICON = primeSlotIcon('chevronDown')
+const COLLAPSE_ICON = primeSlotIcon('chevronUp')
+const CLEAR_ICON = primeSlotIcon('close')
+const FILTER_ICON = primeSlotIcon('search')
 
 export type { DropdownProps as AppDropdownProps } from 'primereact/dropdown'
 
@@ -47,6 +55,11 @@ export function AppDropdown(props: DropdownProps) {
       key={i18n.language}
       className="w-full"
       emptyMessage={t('common.noOptions')}
+      dropdownIcon={DROPDOWN_ICON}
+      collapseIcon={COLLAPSE_ICON}
+      clearIcon={CLEAR_ICON}
+      filterIcon={FILTER_ICON}
+      filterClearIcon={CLEAR_ICON}
       {...fieldProps}
       {...props}
       value={value}
