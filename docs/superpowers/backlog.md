@@ -280,6 +280,57 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 
 ---
 
+## 64. `frontend-revisao-ui-ux-e-icones`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
+**Fonte:** `audits/2026-11-26-ui-ux-pro-max.md` — análise com a skill ui-ux-pro-max v2.15.0 contra
+`main@c576bc35`, 46 achados em 9 temas, cada um com `arquivo:linha` — e o pedido do João de
+2026-11-26 de trocar os ícones por uma biblioteca mais moderna e condizente com o tema.
+
+**Objetivo:** fechar os 46 achados da análise e trocar a família PrimeIcons (fonte) por uma
+biblioteca de ícones SVG coerente com "O Voltímetro" (DESIGN.md).
+
+**Escopo** (IDs da auditoria):
+- **T1 Sessão e dado fresco:** C-1 (401/419 sem volta ao login, `?tab=` perdido), D-1 (painel não
+  refaz ao voltar à aba), D-9.
+- **T2 Formulários protegidos:** C-2 (rascunho descartado sem aviso), C-7, C-8, A-10, C-9.
+- **T3 Feedback e confirmações:** C-5 (sucesso silencioso, inclusive ao revogar), C-4, C-6, A-2.
+- **T4 Contraste e identificadores:** A-1 (controles do tema escuro a 1,41:1), B-1 (folio transborda
+  a coluna do Historial), B-11, B-7, B-8.
+- **T5 Navegação e deep link:** C-3 (Volver zera a lista), C-11, C-12, C-10.
+- **T6 Gráficos do painel:** D-2 (meses zerados somem do eixo; backend `AnalyticsQuery`), D-3, D-4,
+  D-5, D-7, D-8.
+- **T7 Teclado e leitor de tela:** A-3, A-4, A-5, A-6, A-7, A-8, A-9, A-12.
+- **T8 Identidade:** B-2 (celeste deixou de ser raro), B-5 (shell troca de pele com o tema), B-3/A-11
+  (`prefers-reduced-motion`), B-4 (rail a 10px). Trabalho novo: a branch `docs/impeccable-product`,
+  que já os corrigia, foi abandonada pelo João em 2026-11-26.
+- **T9 Carga e polimento:** D-6 (code splitting por rota, bandeiras inline no CSS), D-10, B-6, B-9,
+  B-10, B-12.
+- **T10 Ícones — Phosphor** (`@phosphor-icons/react`, decidido pelo João em 2026-11-26, a escolha
+  da própria skill): atrás de um wrapper em `shared/ui`, que nenhuma feature contorna; peso
+  `regular` no repouso e `fill` no item ativo da navegação; os 57 ícones em 95 arquivos migrados;
+  os ícones internos do Prime (chevron, fechar, paginador, check) trocados pelos props dos
+  wrappers; `primeicons` fora do `package.json` e do `main.tsx`; DESIGN.md §Navigation e
+  §Components atualizados.
+
+**Entrada na fila:** pela PR da própria lane, com o mesmo desvio da invariante 10 e a mesma cópia
+provisória do `42`, por decisão do João em 2026-11-26.
+
+**Decisões do João no brainstorming:** as divergências que a auditoria achou com o DESIGN.md — A-1
+(3:1 também no tema escuro), C-9 (marca de obrigatório), B-4 (rail de 10 para 12px), B-5 e B-8
+(contradições internas do próprio DESIGN.md), D-2 (meses zerados contra a decisão D7 registrada no
+código).
+
+**Fora:** redesenho de tela (Administración é do 9); tom de voz; uso autenticado no celular como
+contexto novo (B-6 e B-9 só deixam de quebrar); resgate dos commits da branch Impeccable.
+
+**DoD:** cada achado fechado com teste, ou com captura no navegador nas viewports de referência
+(1440×900, 1024×768 e 390×844, claro e escuro), ou com veredito escrito do João; nenhum `pi pi-` nem
+`primeicons` em `frontend/`; gate verde (lint, vitest, build e PHP); DESIGN.md atualizado nas seções
+que as decisões mudarem.
+
+---
+
 ## 58. `docs-sincronizacao-de-mapa`
 
 **Prioridade:** P3 · **Frente:** Docs · **Contexto:** não · **Depende:** 50 51 52 53 54 55
