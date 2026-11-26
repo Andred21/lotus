@@ -95,6 +95,7 @@ em blocos foi descartado por ele.
 | D9 | **Roteador:** abordagem 4.1(a). | João |
 | D10 | **Ícones:** abordagem 4.2(a). Peso `regular` no repouso e `fill` no item ativo da navegação. | João |
 | D11 | **Ordem de execução:** fases 1–9 da §6, nessa ordem. | João |
+| D12 | **Três blocos, um plano de até 10 tasks cada**, em série, cada um com lane, revisão, PR e passada visual próprias. Esta spec é a dos três. **64** `frontend-revisao-ui-ux-e-icones`: fase 1 e a parte da fase 2 que é roteador (data router + `lazy` + bandeiras, título, foco, 404/403, hook da guarda) — fecha T10, D-6, C-12, C-10. **65** `frontend-navegacao-sessao-e-formularios`: C-3, C-11, fases 3 e 4 e o gerador de tema — fecha C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8. **66** `frontend-identidade-graficos-e-acessibilidade`: o resto das fases 5–8 e o quadro final dos 46 IDs. Os planos de 65 e 66 nascem como rascunho na pasta do 64 e são validados no `/planejar-bloco` de cada um. | João (2026-11-26) |
 
 ## 6. Design por fase
 
@@ -251,6 +252,10 @@ só, no fim desta fase, numa tabela por ID. Exceção: uma fase que esbarre em d
 pergunta na hora.
 
 ## 7. Critério de aceite
+
+Cada bloco (D12) prova os itens que lhe cabem: o 64, os itens 2, 3 e 4 (seção de ícones e diálogos);
+o 65, os itens 3, 5 e 6; o 66, os itens 1, 3 e 4. O quadro do item 1 é montado pelo 66 a partir dos
+`fechamento.md` dos três.
 
 1. Cada um dos 46 IDs tem, no relatório de fechamento, uma linha: teste (arquivo e nome),
    captura (caminho) ou veredito escrito do João.

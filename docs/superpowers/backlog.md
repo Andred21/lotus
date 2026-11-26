@@ -146,6 +146,9 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
+| 7 | **64** `frontend-revisao-ui-ux-e-icones` | Frontend | Ícones e roteador: base que o 65 e o 66 consomem |
+| 8 | **65** `frontend-navegacao-sessao-e-formularios` | Frontend | Depende do 64 (data router, `IconName`, hook da guarda) |
+| 9 | **66** `frontend-identidade-graficos-e-acessibilidade` | Frontend | Depende do 65 (tokens de tema); monta o quadro dos 46 |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
 | 11 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
 
@@ -156,6 +159,10 @@ própria, sem disputar árvore.
 **Emendada em 2026-11-21, na PR das fichas 60 a 62:** os três entram na frente do 58 e do 9. O 58
 vai por último de propósito, e os três também deslocam linhas que a P-97 coordena. É uma
 proposta: a ordem continua sendo do João.
+
+**Emendada em 2026-11-26, na PR da lane 64:** a revisão ui-ux-pro-max virou três blocos em série,
+por decisão do João, com um plano de até 10 tasks cada. 64, 65 e 66 entram na frente do 58 pela
+mesma razão das fichas 60 a 62: deslocam linhas que a P-97 coordena. A posição é uma proposta.
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
 Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
@@ -287,47 +294,86 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 `main@c576bc35`, 46 achados em 9 temas, cada um com `arquivo:linha` — e o pedido do João de
 2026-11-26 de trocar os ícones por uma biblioteca mais moderna e condizente com o tema.
 
-**Objetivo:** fechar os 46 achados da análise e trocar a família PrimeIcons (fonte) por uma
-biblioteca de ícones SVG coerente com "O Voltímetro" (DESIGN.md).
+**Objetivo:** primeiro de três blocos (64 → 65 → 66) que fecham os 46 achados da análise. A divisão
+é do João, em 2026-11-26: um plano de até 10 tasks por bloco. A spec dos três é
+`blocos/64-frontend-revisao-ui-ux-e-icones/spec.md` (D12). Este bloco troca a família PrimeIcons
+(fonte) por Phosphor e migra o roteador para data router.
 
-**Escopo** (IDs da auditoria):
-- **T1 Sessão e dado fresco:** C-1 (401/419 sem volta ao login, `?tab=` perdido), D-1 (painel não
-  refaz ao voltar à aba), D-9.
-- **T2 Formulários protegidos:** C-2 (rascunho descartado sem aviso), C-7, C-8, A-10, C-9.
-- **T3 Feedback e confirmações:** C-5 (sucesso silencioso, inclusive ao revogar), C-4, C-6, A-2.
-- **T4 Contraste e identificadores:** A-1 (controles do tema escuro a 1,41:1), B-1 (folio transborda
-  a coluna do Historial), B-11, B-7, B-8.
-- **T5 Navegação e deep link:** C-3 (Volver zera a lista), C-11, C-12, C-10.
-- **T6 Gráficos do painel:** D-2 (meses zerados somem do eixo; backend `AnalyticsQuery`), D-3, D-4,
-  D-5, D-7, D-8.
-- **T7 Teclado e leitor de tela:** A-3, A-4, A-5, A-6, A-7, A-8, A-9, A-12.
-- **T8 Identidade:** B-2 (celeste deixou de ser raro), B-5 (shell troca de pele com o tema), B-3/A-11
-  (`prefers-reduced-motion`), B-4 (rail a 10px). Trabalho novo: a branch `docs/impeccable-product`,
-  que já os corrigia, foi abandonada pelo João em 2026-11-26.
-- **T9 Carga e polimento:** D-6 (code splitting por rota, bandeiras inline no CSS), D-10, B-6, B-9,
-  B-10, B-12.
-- **T10 Ícones — Phosphor** (`@phosphor-icons/react`, decidido pelo João em 2026-11-26, a escolha
-  da própria skill): atrás de um wrapper em `shared/ui`, que nenhuma feature contorna; peso
-  `regular` no repouso e `fill` no item ativo da navegação; os 57 ícones em 95 arquivos migrados;
-  os ícones internos do Prime (chevron, fechar, paginador, check) trocados pelos props dos
-  wrappers; `primeicons` fora do `package.json` e do `main.tsx`; DESIGN.md §Navigation e
-  §Components atualizados.
+**Escopo:**
+- **T10 Ícones — Phosphor** (`@phosphor-icons/react`, decidido pelo João em 2026-11-26):
+  - fica atrás de um registro `IconName` em `shared/ui`, que nenhuma feature contorna;
+  - peso `regular` no repouso e `fill` no item ativo da navegação;
+  - os 57 ícones dos 95 arquivos migrados;
+  - os ícones internos do Prime trocados pelos props dos wrappers;
+  - `primeicons` fora do `package.json` e do `main.tsx`, com catraca.
+- **Roteador:**
+  - data router com rotas `lazy` e bandeiras fora do CSS global (D-6);
+  - título por rota e foco no `<main>` (C-12);
+  - 404 e 403 por módulo (C-10);
+  - o hook `useUnsavedChangesGuard`, que os formulários ligam no 65.
 
 **Entrada na fila:** pela PR da própria lane, com o mesmo desvio da invariante 10 e a mesma cópia
-provisória do `42`, por decisão do João em 2026-11-26.
+provisória do `42`, por decisão do João em 2026-11-26. As fichas 65 e 66 entram pela mesma PR.
 
-**Decisões do João no brainstorming:** as divergências que a auditoria achou com o DESIGN.md — A-1
-(3:1 também no tema escuro), C-9 (marca de obrigatório), B-4 (rail de 10 para 12px), B-5 e B-8
-(contradições internas do próprio DESIGN.md), D-2 (meses zerados contra a decisão D7 registrada no
-código).
+**Fora:** tudo o que é do 65 e do 66. Também redesenho de tela (Administración é do 9), tom de voz e
+resgate dos commits da branch Impeccable.
 
-**Fora:** redesenho de tela (Administración é do 9); tom de voz; uso autenticado no celular como
-contexto novo (B-6 e B-9 só deixam de quebrar); resgate dos commits da branch Impeccable.
+**DoD:** os critérios 2, 3 e 4 da spec §7 provados: nenhum `pi pi-` nem `primeicons` em `frontend/`,
+gate verde, e DESIGN.md com a seção de ícones. `fechamento.md` do bloco com T10, D-6, C-12 e C-10,
+cada um com teste ou captura.
 
-**DoD:** cada achado fechado com teste, ou com captura no navegador nas viewports de referência
-(1440×900, 1024×768 e 390×844, claro e escuro), ou com veredito escrito do João; nenhum `pi pi-` nem
-`primeicons` em `frontend/`; gate verde (lint, vitest, build e PHP); DESIGN.md atualizado nas seções
-que as decisões mudarem.
+---
+
+## 65. `frontend-navegacao-sessao-e-formularios`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** 64
+**Fonte:** `audits/2026-11-26-ui-ux-pro-max.md` e a spec do 64 (D12). Plano em rascunho:
+`blocos/64-frontend-revisao-ui-ux-e-icones/rascunho-plano-65.md`.
+
+**Objetivo:** segundo dos três blocos da revisão ui-ux-pro-max. Cobre navegação, sessão,
+formulários e o gerador de tema.
+
+**Escopo** (IDs da auditoria):
+- C-3 e C-11: lista e abas na URL, voltar pelo histórico.
+- C-1, D-1 e D-9: sessão e dado fresco.
+- C-2, C-7, C-8, A-10 e C-9: formulários protegidos.
+- C-5, C-4, C-6 e A-2: feedback e confirmações.
+- A-1 e B-8: gerador de tema, com borda no escuro, info em índigo e peso 600.
+
+**Planejar:** a spec já está aprovada (spec do 64, D1–D12). O `/planejar-bloco 65` faz o
+brainstorming curto, só para conferir o rascunho contra a `main` que o 64 deixou. Depois grava
+`spec.md` apontando para a spec compartilhada, com a própria `## Verificação externa`, e move o
+rascunho para `plano.md`.
+
+**Fora:** o que é do 64 e do 66.
+
+**DoD:** os critérios 3, 5 e 6 da spec §7 provados. `fechamento.md` do bloco com os 16 IDs.
+
+---
+
+## 66. `frontend-identidade-graficos-e-acessibilidade`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** 65
+**Fonte:** `audits/2026-11-26-ui-ux-pro-max.md` e a spec do 64 (D12). Plano em rascunho:
+`blocos/64-frontend-revisao-ui-ux-e-icones/rascunho-plano-66.md`.
+
+**Objetivo:** terceiro e último bloco da revisão ui-ux-pro-max. Cobre identidade, gráficos,
+teclado e leitor de tela, e polimento, e monta o quadro final dos 46 IDs.
+
+**Escopo** (IDs da auditoria):
+- B-2, B-5, B-3/A-11 e B-4: identidade (celeste raro, header fixo, movimento reduzido, rail a 12px).
+- B-1, B-7 e B-11: identificadores.
+- D-2 (backend `AnalyticsQuery`), D-3, D-4, D-5, D-7 e D-8: gráficos do painel.
+- A-3, A-4, A-5, A-6, A-7, A-8, A-9 e A-12: teclado e leitor de tela.
+- D-10, B-6, B-9, B-10 e B-12: carga e polimento.
+
+**Planejar:** igual ao 65, a partir do rascunho.
+
+**Fora:** o que é do 64 e do 65. Também o uso autenticado no celular como contexto novo: B-6 e B-9
+só deixam de quebrar.
+
+**DoD:** os critérios 1, 3 e 4 da spec §7 provados. `fechamento.md` com os 27 IDs do bloco e o
+"Quadro dos 46" apontando para o fechamento de cada bloco.
 
 ---
 
