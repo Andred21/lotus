@@ -35,12 +35,12 @@ export function EnrollmentSection({ turma }: { turma: TurmaData }) {
               <AppButton
                 variant="primary"
                 label={t('operation.enrollment.importSheet')}
-                icon="pi pi-upload"
+                icon="upload"
                 onClick={() => setImportOpen(true)}
               />
               <AppButton
                 label={t('operation.enrollment.addStudent')}
-                icon="pi pi-user-plus"
+                icon="userAdd"
                 outlined
                 onClick={() => setAddOpen(true)}
               />

@@ -77,7 +77,7 @@ export function SeriesPanel({ series, visibility }: { series: SeriesData; visibi
         <AppCard>
           <AppCardHeader title={t('dashboard.series.countsTitle')} />
           {contagens.every((s) => s.points.length === 0) ? (
-            <AppEmptyState icon="pi pi-chart-line" title={t('dashboard.series.empty')} />
+            <AppEmptyState icon="chartLine" title={t('dashboard.series.empty')} />
           ) : (
             <div className="px-2 pb-2">
               <AppLineChart series={contagens} ariaLabel={t('dashboard.series.countsTitle')} formatX={mes} />
@@ -90,7 +90,7 @@ export function SeriesPanel({ series, visibility }: { series: SeriesData; visibi
         <AppCard>
           <AppCardHeader title={t('dashboard.series.ufTitle')} />
           {uf[0].points.length === 0 ? (
-            <AppEmptyState icon="pi pi-chart-line" title={t('dashboard.series.empty')} />
+            <AppEmptyState icon="chartLine" title={t('dashboard.series.empty')} />
           ) : (
             <div className="px-2 pb-2">
               <AppLineChart

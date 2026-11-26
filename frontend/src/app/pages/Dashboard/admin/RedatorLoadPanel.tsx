@@ -49,7 +49,7 @@ export function RedatorLoadPanel({ redatores }: { redatores: RedatorLoadData[] }
         // Os quatro contadores são ordenáveis e moram sob cabeçalhos de duas
         // palavras: o ícone desce para baixo do título em vez de sair da coluna.
         pt={wrappingHeaderTablePt}
-        emptyMessage={<AppEmptyState icon="pi pi-users" title={t('dashboard.redatorLoad.empty')} />}
+        emptyMessage={<AppEmptyState icon="users" title={t('dashboard.redatorLoad.empty')} />}
         footerCount={t('dashboard.redatorLoad.count', { count: redatores.length })}
       >
         <AppColumn

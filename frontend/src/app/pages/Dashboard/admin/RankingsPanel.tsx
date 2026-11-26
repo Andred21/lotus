@@ -64,7 +64,7 @@ function Ranking({
     <AppCard>
       <AppCardHeader title={titulo} count={dados.length} subtitle={rotuloMetrica} />
       {dados.length === 0 ? (
-        <AppEmptyState icon="pi pi-chart-bar" title={t('dashboard.rankings.empty')} />
+        <AppEmptyState icon="chartBar" title={t('dashboard.rankings.empty')} />
       ) : (
         <div className="px-2 pb-2">
           <AppBarChart

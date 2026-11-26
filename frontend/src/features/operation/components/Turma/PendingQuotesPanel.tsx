@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { AppButton, AppCard, AppCardHeader, AppErrorState, RecordCode } from '@shared/ui'
+import { AppButton, AppCard, AppCardHeader, AppErrorState, AppIcon, RecordCode } from '@shared/ui'
 import type { PendingQuoteData } from '@shared/types/generated'
 import { loadErrorHint, screenDetail } from '@shared/lib'
 
@@ -45,7 +45,7 @@ export function PendingQuotesPanel({
             style={{ borderColor: 'var(--surface-border)' }}
           >
             <span className="text-sm" style={{ color: 'var(--text-color)' }}>
-              <i className="pi pi-file mr-2" style={{ color: 'var(--text-color-secondary)' }} aria-hidden="true" />
+              <AppIcon name="file" className="mr-2 text-(--text-color-secondary)" />
               {(q.quote_code ?? q.budget_code) && (
                 <><RecordCode className="whitespace-nowrap">{q.quote_code ?? q.budget_code}</RecordCode> · </>
               )}
@@ -57,7 +57,7 @@ export function PendingQuotesPanel({
             <AppButton
               variant="primary"
               label={t('operation.pending.configure')}
-              icon="pi pi-cog"
+              icon="settings"
               onClick={() => navigate(`/operacion/turmas/nueva/${q.quote_id}`)}
             />
           </li>

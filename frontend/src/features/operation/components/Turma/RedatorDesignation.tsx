@@ -63,7 +63,7 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
             {podeDesignar && (
               <AppButton
                 label={t('operation.redator.remove')}
-                icon="pi pi-times"
+                icon="close"
                 outlined
                 severity="danger"
                 disabled={picker.pending}
@@ -77,7 +77,7 @@ export function RedatorDesignation({ turma }: { turma: TurmaData }) {
       {podeDesignar && (
         <AppButton
           label={turma.redatores.length > 0 ? t('operation.redator.change') : t('operation.redator.designate')}
-          icon="pi pi-user-plus"
+          icon="userAdd"
           outlined
           onClick={() => setOpen(true)}
         />

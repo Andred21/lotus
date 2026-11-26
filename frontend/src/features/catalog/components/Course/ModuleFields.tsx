@@ -51,7 +51,7 @@ export function ModuleFields({
       ))}
 
       {!readOnly && (
-        <AppButton label={t('courseModule.add')} icon="pi pi-plus" text onClick={onAdd} />
+        <AppButton label={t('courseModule.add')} icon="add" text onClick={onAdd} />
       )}
 
       {modules.length > 0 && (

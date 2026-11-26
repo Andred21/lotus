@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePermissions, useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
-import { AppColumn, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, RecordCode, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppColumn, AppIcon, ArchiveSwitch, AppEmptyState, SearchableTableFrame, archivedColumns, narrowFloorTablePt, RecordCode, stickyActionsColumn, technicalDataClass, useCollapsibleActionsColumn } from '@shared/ui'
 import type { ArchivableRow } from '@shared/lib'
 import type { CourseData } from '@shared/types/generated'
 import { CourseRowActions } from './CourseRowActions'
@@ -48,7 +48,7 @@ export function CoursesTable({
       searchPlaceholder={t('course.searchPlaceholder')}
       emptyState={
         <AppEmptyState
-          icon={archived ? 'pi pi-inbox' : 'pi pi-book'}
+          icon={archived ? 'archive' : 'book'}
           title={archived ? t('archive.empty') : t('course.empty')}
           description={archived ? t('archive.emptyHint') : t('course.emptyHint')}
           action={archived ? undefined : actions}
@@ -78,10 +78,7 @@ export function CoursesTable({
         style={largura.name}
         body={(c: CourseData) => (
           <div className="flex items-center gap-3">
-            <i
-              className="pi pi-book"
-              style={{ color: 'var(--text-color-secondary)', fontSize: '1.25rem' }}
-            />
+            <AppIcon name="book" size="lg" className="text-(--text-color-secondary)" />
             <span className="font-medium">{c.name}</span>
           </div>
         )}

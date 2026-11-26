@@ -68,7 +68,7 @@ export function EnrollmentTable({
         emptyMessage={
           // Sem ação: matricular é o botão da toolbar, logo acima.
           <AppEmptyState
-            icon="pi pi-users"
+            icon="users"
             title={t('operation.enrollment.empty')}
             description={t('operation.enrollment.emptyHint')}
           />

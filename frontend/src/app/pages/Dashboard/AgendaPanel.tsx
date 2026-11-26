@@ -85,7 +85,7 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
     <AppCard>
       <AppCardHeader title={t('dashboard.agenda.title')} count={total} />
       {total === 0 ? (
-        <AppEmptyState icon="pi pi-calendar" title={t('dashboard.agenda.empty')} />
+        <AppEmptyState icon="calendar" title={t('dashboard.agenda.empty')} />
       ) : (
         // A contagem de colunas segue as janelas PREENCHIDAS, não as quatro
         // possíveis. Com só uma janela com turma, a grade fixa de duas colunas

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { AppTag, technicalDataClass } from '@shared/ui'
+import { AppIcon, AppTag, technicalDataClass } from '@shared/ui'
 import { formatIsoDate } from '@shared/lib'
 import type { DashboardSeverity } from '@shared/types/generated'
 
@@ -99,7 +99,7 @@ export function DashboardItemRow({
           style={{ color: 'var(--text-color)' }}
         >
           {corpo}
-          <i className="pi pi-angle-right order-2 shrink-0 sm:order-0" aria-hidden="true" />
+          <AppIcon name="chevronRight" className="order-2 shrink-0 sm:order-0" />
         </Link>
       )}
     </li>

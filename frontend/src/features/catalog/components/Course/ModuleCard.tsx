@@ -39,9 +39,9 @@ export function ModuleCard({
         </NestedField>
         {!readOnly && (
           <div className="flex gap-1">
-            <AppButton icon="pi pi-arrow-up" text aria-label={t('courseModule.moveUp')} tooltip={t('courseModule.moveUp')} disabled={isFirst} onClick={onMoveUp} />
-            <AppButton icon="pi pi-arrow-down" text aria-label={t('courseModule.moveDown')} tooltip={t('courseModule.moveDown')} disabled={isLast} onClick={onMoveDown} />
-            <AppButton icon="pi pi-trash" text aria-label={t('courseModule.remove')} tooltip={t('courseModule.remove')} onClick={onRemove} />
+            <AppButton icon="arrowUp" text aria-label={t('courseModule.moveUp')} tooltip={t('courseModule.moveUp')} disabled={isFirst} onClick={onMoveUp} />
+            <AppButton icon="arrowDown" text aria-label={t('courseModule.moveDown')} tooltip={t('courseModule.moveDown')} disabled={isLast} onClick={onMoveDown} />
+            <AppButton icon="delete" text aria-label={t('courseModule.remove')} tooltip={t('courseModule.remove')} onClick={onRemove} />
           </div>
         )}
       </div>

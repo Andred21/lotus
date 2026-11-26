@@ -77,7 +77,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
         // Piso de 45rem abaixo de `sm`: 390x844 repete a geometria de 1024 (tabela de
         // 718px), onde a soma dos mínimos medidos cabe (`panelColumns.ts`).
         pt={{ ...narrowFloorTablePt('45rem'), ...wrappingHeaderTablePt }}
-        emptyMessage={<AppEmptyState icon="pi pi-verified" title={t('dashboard.compliance.empty')} />}
+        emptyMessage={<AppEmptyState icon="certificate" title={t('dashboard.compliance.empty')} />}
         footerCount={t('dashboard.compliance.count', { count: turmas.length })}
       >
         <AppColumn

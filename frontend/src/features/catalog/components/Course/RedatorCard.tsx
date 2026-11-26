@@ -26,7 +26,7 @@ export function RedatorCard({
       action={
         onView ? (
           <AppButton
-            icon="pi pi-eye"
+            icon="view"
             text
             rounded
             aria-label={t('common.view')}

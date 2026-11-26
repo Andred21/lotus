@@ -57,7 +57,7 @@ describe('ImportDialog', () => {
     // O modelo sai no corpo, ao lado de Elegir archivo, com o ícone do tipo de arquivo.
     const template = screen.getByRole('button', { name: 'operation.enrollment.import.template' })
     expect(template.closest('.p-dialog-header')).toBeNull()
-    expect(template.querySelector('.pi-file-excel')).toBeTruthy()
+    expect(template.querySelector('svg')).toBeTruthy()
     fireEvent.click(template)
     expect(fns.downloadTemplate).toHaveBeenCalled()
   })

@@ -35,7 +35,7 @@ export function CourseRowActions({
   const extra: RowAction[] = can('certification.certificate.view')
     ? [{
         label: t('course.certificatePreview'),
-        icon: 'pi pi-file-pdf',
+        icon: 'filePdf',
         onClick: () => preview.open(course.id!),
         disabled: preview.pending,
       }]
