@@ -2,9 +2,9 @@
 schema_version: 3
 id: 64
 slug: 64-frontend-revisao-ui-ux-e-icones
-workflow_state: ready_for_execution
+workflow_state: executing
 next_owner: claude
-next_action: execute_active_plan
+next_action: continue_active_plan
 resume_state: null
 active_spec: docs/superpowers/blocos/64-frontend-revisao-ui-ux-e-icones/spec.md
 active_plan: docs/superpowers/blocos/64-frontend-revisao-ui-ux-e-icones/plano.md
@@ -17,10 +17,10 @@ branch: feat/64-frontend-revisao-ui-ux-e-icones
 worktree: ../lotus-64-frontend-revisao-ui-ux-e-icones
 offset: 1
 lane_base: c576bc35
-commit: 19d02a76
+commit: 66380f33
 blocker: null
-updated_at: 2026-11-26T18:35:56-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / opus
+updated_at: 2026-11-26T18:47:00-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
 ---
 
 # Bloco 64 — estado
