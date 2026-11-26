@@ -13,7 +13,7 @@ export function SessionBootstrap({ children }: { children: ReactNode }) {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <AppIcon name="spinner" className="animate-spin text-3xl" />
+        <AppIcon name="spinner" className="animate-spin size-[1.875rem]" />
       </div>
     )
   }
