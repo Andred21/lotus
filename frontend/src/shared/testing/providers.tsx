@@ -1,6 +1,6 @@
-import type { ReactElement, ReactNode } from 'react'
+import { createContext, useState, type ReactElement, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider, type QueryClientConfig } from '@tanstack/react-query'
-import { MemoryRouter } from 'react-router-dom'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { render } from '@testing-library/react'
 
 /**
@@ -21,7 +21,11 @@ import { render } from '@testing-library/react'
  */
 
 export type ProviderOptions = {
-  /** Quando presente, monta `MemoryRouter` com esta entrada inicial. */
+  /**
+   * Quando presente, monta um router DE DADOS (`createMemoryRouter`) com esta
+   * entrada inicial e uma única rota `path: '*'` que renderiza o filho — é o
+   * que o `useBlocker` exige, e o app real também roda em data router.
+   */
   route?: string
   /**
    * MERGE sobre o default, eixo a eixo: o que você declara vence, o resto do
@@ -43,6 +47,13 @@ const PADRAO: QueryClientConfig = {
     mutations: { retry: false },
   },
 }
+
+/**
+ * O filho do wrapper chega à rota `*` por contexto: o `element` da rota é fixado
+ * na criação do router, e o `children` do `renderHook`/`render` muda a cada
+ * re-render. Sem a ponte, o re-render não chegaria ao hook sob teste.
+ */
+const FilhoDoTeste = createContext<ReactNode>(null)
 
 /** Funde o override sobre o `PADRAO`, eixo a eixo. */
 function comDefault(over?: QueryClientConfig): QueryClientConfig {
@@ -86,9 +97,26 @@ export function createWrapper(opts: ProviderOptions = {}): {
   const client = new QueryClient(comDefault(opts.queryClientOptions))
   const { route } = opts
 
+  function Roteado({ route: entrada, children }: { route: string; children: ReactNode }) {
+    // Um router por montagem (não por `createWrapper`): dois `render` com o
+    // mesmo wrapper não herdam a localização um do outro.
+    const [router] = useState(() => createMemoryRouter(
+      [{ path: '*', element: <FilhoDoTeste.Consumer>{(filho) => filho}</FilhoDoTeste.Consumer> }],
+      { initialEntries: [entrada] },
+    ))
+    return (
+      <FilhoDoTeste value={children}>
+        <RouterProvider router={router} />
+      </FilhoDoTeste>
+    )
+  }
+
   function wrapper({ children }: { children: ReactNode }) {
-    const comQuery = <QueryClientProvider client={client}>{children}</QueryClientProvider>
-    return route === undefined ? comQuery : <MemoryRouter initialEntries={[route]}>{comQuery}</MemoryRouter>
+    return (
+      <QueryClientProvider client={client}>
+        {route === undefined ? children : <Roteado route={route}>{children}</Roteado>}
+      </QueryClientProvider>
+    )
   }
 
   return { wrapper, client }

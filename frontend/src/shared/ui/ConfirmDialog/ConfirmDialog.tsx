@@ -17,7 +17,7 @@ export type { ConfirmDialogSeverity } from './style'
  * primeira vista (spec J3/J4). Apresentacional puro: não conhece feature nem
  * mutação. */
 export function ConfirmDialog({
-  visible, title, message, children, confirmLabel, confirmIcon = 'check', confirmDisabled,
+  visible, title, message, children, confirmLabel, cancelLabel, confirmIcon = 'check', confirmDisabled,
   severity = 'confirm', pending, error, onConfirm, onCancel,
 }: {
   visible: boolean
@@ -26,6 +26,8 @@ export function ConfirmDialog({
   /** Conteúdo extra do corpo, depois da mensagem (ex.: lista de detalhes). */
   children?: ReactNode
   confirmLabel?: string
+  /** Texto do Cancelar quando "cancelar" não descreve a saída (ex.: "Seguir editando"). */
+  cancelLabel?: string
   confirmIcon?: IconProp
   /** Desliga só o confirmar (ex.: motivo obrigatório ainda vazio). */
   confirmDisabled?: boolean
@@ -54,7 +56,7 @@ export function ConfirmDialog({
 
   const footer = (
     <div className="flex justify-end gap-2">
-      <AppButton label={t('common.cancel')} text disabled={pending} onClick={onCancel} />
+      <AppButton label={cancelLabel ?? t('common.cancel')} text disabled={pending} onClick={onCancel} />
       {/* `confirm` veste a marca — a mesma grafia do `CrudDialog` (achado B3).
         * `warning` e `danger` vestem o preenchido de severidade, que é o sinal;
         * a marca sairia por cima dele. */}

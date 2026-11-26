@@ -56,6 +56,12 @@ describe('ConfirmDialog — botão de confirmar', () => {
     expect((document.querySelector('.p-dialog-footer .p-button-text') as HTMLButtonElement).disabled).toBe(false)
   })
 
+  it('cancelLabel troca o texto do Cancelar', () => {
+    render(<ConfirmDialog {...base} cancelLabel="Seguir editando" />)
+
+    expect(screen.getByRole('button', { name: /Seguir editando/ })).toBeTruthy()
+  })
+
   it('confirmIcon troca o ícone do botão', () => {
     render(<ConfirmDialog {...base} confirmLabel="Revocar" confirmIcon="block" severity="danger" />)
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { renderHook, screen } from '@testing-library/react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useLocation } from 'react-router-dom'
+import { useBlocker, useLocation } from 'react-router-dom'
 import { createWrapper, renderWithProviders } from './providers'
 
 describe('providers de teste', () => {
@@ -64,6 +64,23 @@ describe('providers de teste', () => {
     }
     renderWithProviders(<Rota />, { route: '/validar/abc' })
     expect(screen.getByTestId('rota').textContent).toBe('/validar/abc')
+  })
+
+  it('com `route`, o router é de dados: `useBlocker` monta sem lançar', () => {
+    function Guarda() {
+      useBlocker(false)
+      return <span data-testid="guarda">ok</span>
+    }
+    renderWithProviders(<Guarda />, { route: '/' })
+    expect(screen.getByTestId('guarda').textContent).toBe('ok')
+  })
+
+  it('com `route`, qualquer caminho renderiza o mesmo filho', () => {
+    function Rota() {
+      return <span data-testid="rota">{useLocation().pathname}</span>
+    }
+    renderWithProviders(<Rota />, { route: '/a/b/c' })
+    expect(screen.getByTestId('rota').textContent).toBe('/a/b/c')
   })
 
   it('devolve o client também no render', () => {
