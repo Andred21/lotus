@@ -152,6 +152,13 @@
     "personas": "People",
     "administracion": "Administration"
   },
+  "errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The address you opened does not exist or has moved.",
+    "forbiddenTitle": "No access to this section",
+    "forbiddenBody": "Your profile does not have permission to view this module. If you think this is a mistake, ask an administrator.",
+    "backHome": "Back to home"
+  },
   "roleSection": {
     "admin": "ADMINISTRATOR",
     "redator": "EDITOR"

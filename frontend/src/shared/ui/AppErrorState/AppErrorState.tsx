@@ -1,5 +1,6 @@
 import { AppButton } from '../AppButton'
 import { AppIcon } from '../AppIcon'
+import { canRetryLoad } from '@shared/lib'
 import { dangerText } from '../../styles/tokens'
 import { useRetryPending } from './useRetryPending'
 
@@ -11,6 +12,9 @@ export interface AppErrorStateProps {
   /** Ausente => sem botão. Uma lista que não recarrega sozinha não deve
    * prometer que recarrega. */
   retryLabel?: string
+  /** Status HTTP da falha, quando se sabe. 403 nunca oferece o botão: repetir
+   * devolve a mesma recusa de permissão. */
+  status?: number
   /** Devolver a promise do refetch faz o botão esperar por ela. Handler que
    * devolve `void` continua funcionando — só fica sem feedback, e isso está
    * declarado na spec §7.1 como limitação, não como bug. */
@@ -27,7 +31,7 @@ export interface AppErrorStateProps {
  * O tom vem da mesma fórmula do `AppCard` (`color-mix` com `--text-color`), que
  * é o que mantém contraste nos dois temas — os palette vars do Lara não invertem.
  */
-export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorStateProps) {
+export function AppErrorState({ title, detail, retryLabel, status, onRetry }: AppErrorStateProps) {
   const retry = useRetryPending(onRetry)
 
   return (
@@ -40,7 +44,7 @@ export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorSt
       {detail && (
         <p className="max-w-md text-sm" style={{ color: 'var(--text-color-secondary)' }}>{detail}</p>
       )}
-      {retryLabel && onRetry && (
+      {retryLabel && onRetry && canRetryLoad({ status }) && (
         <div className="mt-1">
           <AppButton
             label={retryLabel}

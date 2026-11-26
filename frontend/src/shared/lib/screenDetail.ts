@@ -131,3 +131,14 @@ export function loadMessage(
 ): string {
   return state.errorDetail ?? t(state.errorHint)
 }
+
+/**
+ * Repetir a carga adianta quando a falha pode ser passageira. Um 403 é a recusa
+ * de permissão: reemitir a requisição devolve a mesma recusa, e o botão
+ * prometeria uma recuperação que não existe. Mesmo raciocínio do `podeRepetir`
+ * do `useWindowedQuery`, que cobre todo o 4xx de uma query por janela; aqui só
+ * o 403, que é o que o guard de módulo e as telas de carga têm em comum.
+ */
+export function canRetryLoad(problem: ScreenDetailSource | null | undefined): boolean {
+  return problem?.status !== 403
+}

@@ -152,6 +152,13 @@
     "personas": "Personas",
     "administracion": "Administración"
   },
+  "errors": {
+    "notFoundTitle": "Página no encontrada",
+    "notFoundBody": "La dirección que abriste no existe o fue movida.",
+    "forbiddenTitle": "Sin acceso a esta sección",
+    "forbiddenBody": "Tu perfil no tiene permiso para ver este módulo. Si crees que es un error, consulta con un administrador.",
+    "backHome": "Volver al inicio"
+  },
   "roleSection": {
     "admin": "ADMINISTRADOR",
     "redator": "INSTRUCTOR"

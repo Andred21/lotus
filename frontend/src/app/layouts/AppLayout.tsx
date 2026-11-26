@@ -1,10 +1,16 @@
+import { useRef } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useDocumentTitle } from '@app/router/useDocumentTitle'
+import { useRouteFocus } from '@app/router/useRouteFocus'
 import { Sidebar } from './Sidebar/Sidebar'
 import { Header } from './Header/Header'
 
 export function AppLayout() {
   const { t } = useTranslation()
+  const mainRef = useRef<HTMLElement>(null)
+  useDocumentTitle()
+  useRouteFocus(mainRef)
 
   // O tema é aplicado globalmente nos providers (useApplyTheme).
   return (
@@ -33,7 +39,12 @@ export function AppLayout() {
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
-        <main id="contenido" tabIndex={-1} className="flex-1 overflow-auto p-4 sm:p-6">
+        <main
+          ref={mainRef}
+          id="contenido"
+          tabIndex={-1}
+          className="flex-1 overflow-auto p-4 sm:p-6"
+        >
           <Outlet />
         </main>
       </div>
