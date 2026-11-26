@@ -10,6 +10,8 @@ const DROPDOWN_ICON = primeSlotIcon('chevronDown')
 const COLLAPSE_ICON = primeSlotIcon('chevronUp')
 const CLEAR_ICON = primeSlotIcon('close')
 const FILTER_ICON = primeSlotIcon('search')
+// `loading` troca a seta pelo spinner; o do Prime (`SpinnerIcon spin`) gira sozinho.
+const LOADING_ICON = primeSlotIcon('spinner', 16, 'animate-spin')
 
 export type { DropdownProps as AppDropdownProps } from 'primereact/dropdown'
 
@@ -60,6 +62,7 @@ export function AppDropdown(props: DropdownProps) {
       clearIcon={CLEAR_ICON}
       filterIcon={FILTER_ICON}
       filterClearIcon={CLEAR_ICON}
+      loadingIcon={LOADING_ICON}
       {...fieldProps}
       {...props}
       value={value}

@@ -61,10 +61,10 @@ export function primeIcon(icon: IconProp | undefined, className?: string) {
  * e o teclado. Daí o spread: `primeIcon` só repassa a classe, o que basta para
  * slot de `Button`, mas não para estes.
  *
- * `px` é o tamanho que o Prime dava ao slot (1rem no `.p-icon` do tema, 14px no
+ * `className` soma à classe do slot (o `animate-spin` do spinner). `px` é o tamanho que o Prime dava ao slot (1rem no `.p-icon` do tema, 14px no
  * check): o Phosphor não responde a `font-size`.
  */
-export function primeSlotIcon(name: IconName, px = 16) {
+export function primeSlotIcon(name: IconName, px = 16, className?: string) {
   const Glyph = ICONS[name]
   return (options: { iconProps?: object }) => {
     const props = (options.iconProps ?? {}) as IconProps
@@ -72,6 +72,7 @@ export function primeSlotIcon(name: IconName, px = 16) {
     // chega com `role` (o olho) ou `aria-label` (o limpar do dropdown):
     // `aria-hidden` num `role="button"` o tira da árvore de acessibilidade.
     const decorative = props.role === undefined && props['aria-label'] === undefined
-    return <Glyph weight="regular" size={px} aria-hidden={decorative || undefined} {...props} />
+    const merged = [props.className, className].filter(Boolean).join(' ') || undefined
+    return <Glyph weight="regular" size={px} aria-hidden={decorative || undefined} {...props} className={merged} />
   }
 }

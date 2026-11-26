@@ -91,4 +91,13 @@ describe('AppDropdown — ícones internos', () => {
     fireEvent.click(container.querySelector('.p-dropdown') as HTMLElement)
     phosphor(document.querySelector('.p-dropdown-filter-container'))
   })
+
+  it('loading mostra o spinner Phosphor, girando, sem o SVG do Prime', () => {
+    const { container } = render(<AppDropdown options={OPTIONS} loading onChange={() => {}} />)
+
+    const svg = container.querySelector('.p-dropdown-trigger svg')
+    expect(svg).not.toBeNull()
+    expect(svg?.classList.contains('p-icon')).toBe(false)
+    expect(svg?.classList.contains('animate-spin')).toBe(true)
+  })
 })
