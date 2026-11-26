@@ -98,6 +98,25 @@ describe('routes', () => {
     expect(reload).not.toHaveBeenCalled()
   })
 
+  it.each(['getItem', 'setItem'] as const)(
+    'storage lançando em %s + chunk quebrado: não recarrega (sem laço) e mostra o erro',
+    async (metodo) => {
+      logado()
+      vi.spyOn(Storage.prototype, metodo).mockImplementation(() => {
+        throw new DOMException('bloqueado', 'SecurityError')
+      })
+      const tree = comChunkQuebrado('/operacion', 'Failed to fetch dynamically imported module: /assets/Op-x.js')
+
+      montar(tree, '/operacion')
+
+      // Sem como lembrar que já recarregou, recarregar de novo seria laço infinito
+      // num chunk que continua falhando: o erro vai direto para a tela.
+      expect(await screen.findByRole('alert')).toBeTruthy()
+      expect(screen.getByText('common.loadError')).toBeTruthy()
+      expect(reload).not.toHaveBeenCalled()
+    },
+  )
+
   it('erro que não é de chunk não recarrega a página', async () => {
     logado()
     const tree = comChunkQuebrado('/operacion', 'boom')

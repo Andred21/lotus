@@ -2,23 +2,23 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouteError } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppErrorState, AppIcon } from '@shared/ui'
-import { isChunkLoadError, readChunkMark, writeChunkMark } from './chunkReload'
+import { claimChunkReload } from './chunkReload'
 
 /**
  * Falha de chunk quase sempre é deploy novo: o `index.html` aberto na aba aponta
  * para arquivos com hash que o servidor já não tem. Recarregar pega o `index.html`
- * novo. A recarga é UMA: com a marca já gravada o erro vira tela, em vez de laço.
+ * novo. A recarga é UMA, e só se a marca puder ser gravada: com a marca já lá, ou sem
+ * storage para guardá-la, o erro vira tela, em vez de laço.
  */
 export function RouteError() {
   const error = useRouteError()
   const { t } = useTranslation()
-  const [reloading] = useState(() => isChunkLoadError(error) && !readChunkMark())
+  const [reloading] = useState(() => claimChunkReload(error))
   const done = useRef(false)
 
   useEffect(() => {
     if (!reloading || done.current) return
     done.current = true
-    writeChunkMark()
     window.location.reload()
   }, [reloading])
 
