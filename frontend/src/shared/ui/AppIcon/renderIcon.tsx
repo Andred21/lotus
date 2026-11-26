@@ -8,20 +8,10 @@ import type { IconName } from './icons'
 /** O que um wrapper de `shared/ui` aceita como ícone. */
 export type IconProp = IconName
 
-/** Classe de bandeira do `flag-icons` (`fi fi-cl`). Não é ícone do registro: é a
- * bandeira do item do `LanguageMenu`, que o `AppMenu` entrega ao Prime como
- * string. Fica à parte do `IconProp` de propósito — só o menu a aceita, e a
- * Task 7 do bloco 64 troca as bandeiras por `<img>` e leva este tipo junto. */
-export type FlagClass = `fi fi-${string}`
-
 interface RenderIconOptions {
   weight?: AppIconProps['weight']
   size?: AppIconProps['size']
   className?: string
-}
-
-function isFlag(icon: IconProp | FlagClass): icon is FlagClass {
-  return icon.startsWith('fi fi-')
 }
 
 /** `IconName` vira `AppIcon`; `undefined` não renderiza nada. */
@@ -37,12 +27,12 @@ interface PrimeSlotOptions {
 
 /**
  * O mesmo ícone, na forma que os slots `icon` do PrimeReact (`Button`, `Tag`,
- * `Menu`, `FileUpload`) aceitam. Classe de bandeira passa como veio (string, que o
- * Prime já entende). `IconName` vira função: nó solto perderia a classe do slot (`p-button-icon-left`, que dá o
- * espaço entre ícone e rótulo), e a função recebe `iconProps` para devolvê-la.
+ * `Menu`, `FileUpload`) aceitam.
+ * `IconName` vira função: nó solto perderia a classe do slot (`p-button-icon-left`,
+ * que dá o espaço entre ícone e rótulo), e a função recebe `iconProps` para devolvê-la.
  */
-export function primeIcon(icon: IconProp | FlagClass | undefined, className?: string) {
-  if (icon === undefined || isFlag(icon)) return icon
+export function primeIcon(icon: IconProp | undefined, className?: string) {
+  if (icon === undefined) return icon
   return (options: PrimeSlotOptions) =>
     renderIcon(icon, { className: [options.iconProps?.className, className].filter(Boolean).join(' ') || undefined })
 }

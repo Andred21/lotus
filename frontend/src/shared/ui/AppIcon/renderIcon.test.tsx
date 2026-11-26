@@ -56,12 +56,6 @@ describe('primeIcon', () => {
   })
 })
 
-describe('bandeira do LanguageMenu', () => {
-  it('passa como string, sem estourar', () => {
-    expect(primeIcon('fi fi-gb')).toBe('fi fi-gb')
-  })
-})
-
 /** Os slots do Prime recebem o ícone pela mão do `primeIcon`: o que se prova é
  * o resultado no DOM, com a classe do slot que dá o espaço ao lado do rótulo. */
 describe('IconName nos wrappers do Prime', () => {

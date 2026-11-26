@@ -63,4 +63,22 @@ describe('LanguageMenu', () => {
     expect(es?.className).not.toContain('p-highlight')
     expect(pt?.className).not.toContain('p-highlight')
   })
+
+  it('bandeira é imagem local, não classe fi', () => {
+    const { container } = render(<LanguageMenu />)
+
+    // Gatilho: a bandeira do idioma atual (EN) é um <img> decorativo.
+    const gatilho = screen.getByLabelText('common.language')
+    expect(gatilho.querySelector('img')).toBeTruthy()
+    expect(gatilho.querySelector('img')?.getAttribute('alt')).toBe('')
+
+    // Itens do popup: uma imagem por idioma, e nada de `.fi` em lugar nenhum
+    // (a classe vinha do CSS inteiro do flag-icons, que o app deixou de carregar).
+    abrirMenu()
+    const itens = document.querySelectorAll('li[role="menuitem"]')
+    expect(itens).toHaveLength(3)
+    itens.forEach((li) => expect(li.querySelector('img')).toBeTruthy())
+    expect(container.querySelector('.fi')).toBeNull()
+    expect(document.querySelector('.fi')).toBeNull()
+  })
 })
