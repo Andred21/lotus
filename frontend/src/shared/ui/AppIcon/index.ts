@@ -1,3 +1,5 @@
 export { AppIcon } from './AppIcon'
 export type { AppIconProps } from './AppIcon'
 export type { IconName } from './icons'
+export { primeIcon, renderIcon } from './renderIcon'
+export type { IconProp, LegacyPrimeIcon } from './renderIcon'

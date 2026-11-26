@@ -1,6 +1,7 @@
 import { Tag } from 'primereact/tag'
 import type { TagProps } from 'primereact/tag'
 import { accentText } from '../../styles/tokens'
+import { primeIcon, type IconProp } from '../AppIcon'
 import { severityTone, type SeverityToneName } from './tones'
 
 /** Tom sem equivalente em `severity` do PrimeReact. Hoje só o roxo de
@@ -8,8 +9,9 @@ import { severityTone, type SeverityToneName } from './tones'
  * success/info/warning/danger. */
 export type AppTagTone = 'accent'
 
-export interface AppTagProps extends TagProps {
+export interface AppTagProps extends Omit<TagProps, 'icon'> {
   tone?: AppTagTone
+  icon?: IconProp
 }
 
 /** Fundo e texto do `secondary`, que o Lara não pinta — ver o docblock abaixo.
@@ -48,7 +50,7 @@ const ACCENT = {
  * texto em contraste cheio. `secondary` fica de fora porque mede 8,4:1 e já
  * passava.
  */
-export function AppTag({ tone, style, ...props }: AppTagProps) {
+export function AppTag({ tone, style, icon, ...props }: AppTagProps) {
   const toneStyle =
     tone === 'accent'
       ? ACCENT
@@ -58,5 +60,5 @@ export function AppTag({ tone, style, ...props }: AppTagProps) {
           ? severityTone[props.severity as SeverityToneName]
           : undefined
 
-  return <Tag {...props} style={{ ...toneStyle, ...style }} />
+  return <Tag {...props} icon={primeIcon(icon)} style={{ ...toneStyle, ...style }} />
 }

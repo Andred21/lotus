@@ -7,18 +7,23 @@ import { useTranslation } from 'react-i18next'
 import { MAX_UPLOAD_BYTES, formatFileSize } from '@shared/lib/upload'
 import { DICA_ESQUERDA } from '../dicaEsquerda'
 import { mergePt } from '../mergePt'
+import { primeIcon, type IconProp } from '../AppIcon'
 
 /** Disparador só-ícone: enviar e substituir são o mesmo ícone. O default mora
  * aqui para que AppFileSlot, AppPhotoField e o cartão da turma não repitam. */
 const UPLOAD_ICON_OPTIONS = {
-  icon: 'pi pi-upload',
+  icon: 'upload' as IconProp,
   className: 'p-button-text p-button-rounded',
 }
 
 export type { FileUploadHandlerEvent } from 'primereact/fileupload'
 export type { FileUploadProps as AppFileUploadProps } from 'primereact/fileupload'
 
-export type AppFileUploadOwnProps = FileUploadProps & {
+type ChooseOptions = NonNullable<FileUploadProps['chooseOptions']>
+
+export type AppFileUploadOwnProps = Omit<FileUploadProps, 'chooseOptions'> & {
+  /** Como o do Prime, mas o `icon` é `IconName` do registro (ou a classe `pi pi-*`). */
+  chooseOptions?: Omit<ChooseOptions, 'icon'> & { icon?: IconProp }
   /** Recebe a mensagem já traduzida quando o arquivo excede o teto. O chamador
    * decide onde exibi-la (banner do diálogo, erro da seção). */
   onSizeReject?: (message: string) => void
@@ -138,17 +143,25 @@ export function AppFileUpload({
     : {
         chooseOptions: {
           ...props.chooseOptions,
-          icon: props.chooseOptions?.icon ?? UPLOAD_ICON_OPTIONS.icon,
+          icon: primeIcon(props.chooseOptions?.icon ?? UPLOAD_ICON_OPTIONS.icon),
           className: props.chooseOptions?.className ?? UPLOAD_ICON_OPTIONS.className,
           iconOnly: true,
         },
       }
+
+  // Sem rótulo o `soIcone` já entrega `chooseOptions` convertido; com rótulo o
+  // que o chamador passou segue, e só o `icon` precisa virar a forma do Prime.
+  const comRotulo =
+    soIcone || !props.chooseOptions
+      ? null
+      : { chooseOptions: { ...props.chooseOptions, icon: primeIcon(props.chooseOptions.icon) } }
 
   const upload = (
     <FileUpload
       mode="basic"
       auto
       {...props}
+      {...comRotulo}
       {...soIcone}
       pt={uploadPt}
       uploadHandler={guarded}

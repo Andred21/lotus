@@ -23,12 +23,30 @@ const itemDoMenu = (label: string) => itensDoMenu().find((item) => item.getAttri
 
 const acao = (label: string, over: Partial<RowAction> = {}): RowAction => ({
   label,
-  icon: 'pi pi-eye',
+  icon: 'view',
   onClick: vi.fn(),
   ...over,
 })
 
 describe('RowActions', () => {
+  it('botão só-ícone mantém o nome acessível após a troca', () => {
+    render(<RowActions collapsed={false} actions={[acao('Reenviar', { icon: 'mail' })]} />)
+
+    const botao = screen.getByRole('button', { name: 'Reenviar' })
+    // Nome vem do `aria-label` do botão; o svg é decorativo e não pode roubá-lo
+    // nem anunciar nada por conta própria.
+    expect(botao.getAttribute('aria-label')).toBe('Reenviar')
+    expect(botao.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+    expect(botao.querySelector('svg')?.hasAttribute('aria-label')).toBe(false)
+  })
+
+  it('o gatilho do menu colapsado segue nomeado e com o svg decorativo', () => {
+    render(<RowActions collapsed actions={[acao('Reenviar'), acao('Ver')]} />)
+
+    const gatilho = screen.getByRole('button', { name: 'common.moreActions' })
+    expect(gatilho.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+  })
+
   it('fora do colapso, cada ação é um botão de ícone nomeado pelo rótulo', () => {
     render(<RowActions collapsed={false} actions={[acao('Reenviar'), acao('Archivar'), acao('Ver')]} />)
 
@@ -167,7 +185,7 @@ describe('ArchiveRowActions colapsada', () => {
         onRestore={() => {}}
         onArchive={() => {}}
         onView={() => {}}
-        extra={[acao('redator.resendInvitation', { icon: 'pi pi-envelope' })]}
+        extra={[acao('redator.resendInvitation', { icon: 'mail' })]}
       />,
     )
 
@@ -186,7 +204,7 @@ describe('ArchiveRowActions colapsada', () => {
         onRestore={() => {}}
         onArchive={() => {}}
         onView={() => {}}
-        extra={[acao('redator.resendInvitation', { icon: 'pi pi-envelope' })]}
+        extra={[acao('redator.resendInvitation', { icon: 'mail' })]}
       />,
     )
 

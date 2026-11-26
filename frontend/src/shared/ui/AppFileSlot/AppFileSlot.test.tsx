@@ -149,7 +149,7 @@ describe('AppFileSlot — arquivo em stage', () => {
 
     expect(screen.getByText('novo.pdf')).toBeTruthy()
     expect(nomesDosBotoes()).toEqual(['common.delete'])
-    expect(document.querySelector('.pi-times')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'common.delete' }).querySelector('svg')).not.toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'common.delete' }))
 

@@ -8,10 +8,11 @@ import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { mergePt } from '../mergePt'
 import { useFieldBind, useFieldProps } from '../FormField/fieldContext'
+import { renderIcon, type IconProp } from '../AppIcon'
 
 export interface AppPasswordProps extends PasswordProps {
-  /** Classe de ícone primeicons à esquerda, ex.: "pi pi-lock". */
-  leftIcon?: string
+  /** Ícone à esquerda: `IconName` do registro, ex.: "lock". */
+  leftIcon?: IconProp
 }
 
 /**
@@ -195,7 +196,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     }
     return (
       <IconField iconPosition="left">
-        <InputIcon className={`${leftIcon} z-10`} />
+        <InputIcon className="z-10 flex items-center">{renderIcon(leftIcon)}</InputIcon>
         {/* Mesclado DEPOIS do spread, igual ao ramo sem ícone. Antes dele, um
             `inputClassName` do chamador apagava `w-full pl-10` inteiro — e o
             `pl-10` é o offset que impede o texto de correr por baixo do ícone,

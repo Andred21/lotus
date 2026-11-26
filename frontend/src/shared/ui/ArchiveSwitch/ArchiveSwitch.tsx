@@ -30,7 +30,7 @@ export function ArchiveSwitch({ value, onChange }: { value: Mode; onChange: (mod
       />
       <AppButton
         label={t('archive.archived')}
-        icon="pi pi-inbox"
+        icon="archive"
         size="small"
         outlined={value === 'archived'}
         text={value !== 'archived'}

@@ -1,7 +1,7 @@
 import type { BudgetDocumentType } from '@shared/types/generated'
 import type { AppTagProps } from '@shared/ui'
 
-type TagStyle = Pick<AppTagProps, 'severity' | 'tone'> & { icon: string }
+type TagStyle = Pick<AppTagProps, 'severity' | 'tone' | 'icon'>
 type DocumentTag = TagStyle & { labelKey: string }
 
 /** Três hues distintos, todos medidos em AA no `AppTag`; o rótulo é texto, e a

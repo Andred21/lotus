@@ -1,3 +1,4 @@
+import type { IconName } from '../AppIcon'
 import { severityTone } from '../AppTag/tones'
 
 export type ConfirmDialogSeverity = 'confirm' | 'warning' | 'danger'
@@ -10,9 +11,9 @@ export type ConfirmDialogSeverity = 'confirm' | 'warning' | 'danger'
  * azul ao lado do celeste leria como outro tom da mesma cor. */
 export const confirmSeverityStyle: Record<
   ConfirmDialogSeverity,
-  { stripe: string; icon: string; background: string; color: string }
+  { stripe: string; icon: IconName; background: string; color: string }
 > = {
-  confirm: { stripe: 'var(--green-500)', icon: 'pi pi-check-circle', ...severityTone.success },
-  warning: { stripe: 'var(--yellow-500)', icon: 'pi pi-exclamation-triangle', ...severityTone.warning },
-  danger: { stripe: 'var(--red-500)', icon: 'pi pi-exclamation-circle', ...severityTone.danger },
+  confirm: { stripe: 'var(--green-500)', icon: 'checkCircle', ...severityTone.success },
+  warning: { stripe: 'var(--yellow-500)', icon: 'warning', ...severityTone.warning },
+  danger: { stripe: 'var(--red-500)', icon: 'warningCircle', ...severityTone.danger },
 }

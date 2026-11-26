@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useUiStore } from '@shared/stores/uiStore'
 import { AppButton } from '../AppButton'
+import { AppIcon } from '../AppIcon'
 import { LanguageMenu } from '../LanguageMenu'
 
 /** Seletor de idioma + toggle de tema — o par tem UM dono. Consomem-no o
@@ -24,7 +25,7 @@ export function AppearanceControls({ className }: { className?: string }) {
     <div className={`flex items-center gap-4 ${className ?? ''}`}>
       <LanguageMenu />
       <AppButton variant="iconToggle" onClick={toggleTheme} aria-label={t('common.toggleTheme')}>
-        <i className={`pi ${theme === 'dark' ? 'pi-sun' : 'pi-moon'}`} />
+        <AppIcon name={theme === 'dark' ? 'sun' : 'moon'} />
       </AppButton>
     </div>
   )

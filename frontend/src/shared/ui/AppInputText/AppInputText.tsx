@@ -4,10 +4,11 @@ import type { InputTextProps } from 'primereact/inputtext'
 import { IconField } from 'primereact/iconfield'
 import { InputIcon } from 'primereact/inputicon'
 import { useFieldBind, useFieldProps } from '../FormField/fieldContext'
+import { renderIcon, type IconProp } from '../AppIcon'
 
 export interface AppInputTextProps extends InputTextProps {
-  /** Classe de ícone primeicons à esquerda, ex.: "pi pi-envelope". */
-  leftIcon?: string
+  /** Ícone à esquerda: `IconName` do registro, ex.: "mail". */
+  leftIcon?: IconProp
 }
 
 /** Wrapper do InputText. Cores vêm da folha de tema do Prime (ADR-16) — não
@@ -37,7 +38,7 @@ export const AppInputText = forwardRef<HTMLInputElement, AppInputTextProps>(
     }
     return (
       <IconField iconPosition="left">
-        <InputIcon className={leftIcon} />
+        <InputIcon className="flex items-center">{renderIcon(leftIcon)}</InputIcon>
         <InputText
           ref={ref}
           {...fieldProps}

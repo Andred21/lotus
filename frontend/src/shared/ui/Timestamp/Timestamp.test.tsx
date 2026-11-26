@@ -1,7 +1,13 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { act, render, screen } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
+import { AppIcon, type IconName } from '../AppIcon'
 import { Timestamp } from './Timestamp'
+
+/** O desenho de um ícone do registro, para comparar com o que o wrapper montou. */
+function desenho(name: IconName) {
+  return render(<AppIcon name={name} />).container.querySelector('svg')?.innerHTML
+}
 
 /**
  * O i18n é o REAL, e não o mock de `@shared/testing/i18n`: o que se prova é a
@@ -37,21 +43,21 @@ describe('Timestamp', () => {
     const { container } = render(<Timestamp value={QUANDO} />)
     const filhos = Array.from(container.querySelector('time')!.children)
 
-    expect(filhos.map((n) => n.tagName)).toEqual(['I', 'SPAN', 'I', 'SPAN'])
-    expect(filhos[0].className).toContain('pi-clock')
+    expect(filhos.map((n) => n.tagName)).toEqual(['svg', 'SPAN', 'svg', 'SPAN'])
+    expect(filhos[0].innerHTML).toBe(desenho('clock'))
     expect(filhos[1].textContent).toBe('14:05')
-    expect(filhos[2].className).toContain('pi-calendar')
+    expect(filhos[2].innerHTML).toBe(desenho('calendar'))
     expect(filhos[3].textContent).toBe('11-08-2026')
   })
 
   it('os ícones são decorativos e pintados pela primária do tema', () => {
     const { container } = render(<Timestamp value={QUANDO} />)
-    const icones = Array.from(container.querySelectorAll('i'))
+    const icones = Array.from(container.querySelectorAll('svg'))
 
     expect(icones).toHaveLength(2)
     for (const icone of icones) {
       expect(icone.getAttribute('aria-hidden')).toBe('true')
-      expect(icone.className).toContain('text-(--primary-color)')
+      expect(icone.getAttribute('class')).toContain('text-(--primary-color)')
     }
   })
 

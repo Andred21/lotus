@@ -91,9 +91,9 @@ export function ImportTriageTable({ rows, canUpdateRegistration, clientName, onE
 
   const actions = (r: TriageRow): RowAction[] => [
     ...(r.status !== 'already_enrolled' && (!isRegistered(r) || canUpdateRegistration)
-      ? [{ label: t('operation.enrollment.import.editRow'), icon: 'pi pi-pencil', onClick: () => setEditing(r.row) }]
+      ? [{ label: t('operation.enrollment.import.editRow'), icon: 'pi pi-pencil' as const, onClick: () => setEditing(r.row) }]
       : []),
-    { label: t('operation.enrollment.import.removeRow'), icon: 'pi pi-times', severity: 'danger' as const, onClick: () => onRemove(r.row) },
+    { label: t('operation.enrollment.import.removeRow'), icon: 'pi pi-times' as const, severity: 'danger' as const, onClick: () => onRemove(r.row) },
   ]
   const col = (key: string) => t(`operation.enrollment.import.col.${key}`)
 

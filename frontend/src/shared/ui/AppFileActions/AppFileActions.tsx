@@ -108,7 +108,7 @@ export function AppFileActions<T extends PreviewableFile>({
   return (
     <>
       <AppButton
-        icon="pi pi-eye"
+        icon="view"
         text
         rounded
         aria-label={t('common.preview')}
@@ -121,7 +121,7 @@ export function AppFileActions<T extends PreviewableFile>({
       {onRemove && (
         <>
           <AppButton
-            icon="pi pi-trash"
+            icon="delete"
             text
             rounded
             severity="danger"
@@ -137,7 +137,7 @@ export function AppFileActions<T extends PreviewableFile>({
             title={confirmTitle ?? t('common.deleteFileTitle')}
             message={confirmMessage ?? t('common.deleteFileMessage', { name: file.original_name })}
             confirmLabel={confirmLabel ?? t('common.delete')}
-            confirmIcon="pi pi-trash"
+            confirmIcon="delete"
             pending={removing || busy}
             error={failed ? removeError : null}
             onConfirm={confirm}

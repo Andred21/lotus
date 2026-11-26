@@ -27,7 +27,7 @@ describe('AppPassword mantém a largura sob className do chamador', () => {
   })
 
   it('ramo COM ícone: `w-full` e `pl-10` sobrevivem a um inputClassName do chamador', () => {
-    render(<AppPassword aria-label="senha" leftIcon="pi pi-lock" inputClassName="uppercase" />)
+    render(<AppPassword aria-label="senha" leftIcon="lock" inputClassName="uppercase" />)
 
     // `pl-10` é o offset que impede o texto de correr por baixo do ícone — some
     // ele e o defeito é visual, não de layout, que é o que fez passar batido

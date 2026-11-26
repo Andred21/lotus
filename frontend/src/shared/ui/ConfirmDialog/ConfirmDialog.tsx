@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DialogFrame } from '../AppDialog/DialogFrame'
 import { AppButton } from '../AppButton'
+import { AppIcon, type IconProp } from '../AppIcon'
 import { FormErrorBanner } from '../FormField'
 import { confirmSeverityStyle, type ConfirmDialogSeverity } from './style'
 
@@ -16,7 +17,7 @@ export type { ConfirmDialogSeverity } from './style'
  * primeira vista (spec J3/J4). Apresentacional puro: não conhece feature nem
  * mutação. */
 export function ConfirmDialog({
-  visible, title, message, children, confirmLabel, confirmIcon = 'pi pi-check', confirmDisabled,
+  visible, title, message, children, confirmLabel, confirmIcon = 'check', confirmDisabled,
   severity = 'confirm', pending, error, onConfirm, onCancel,
 }: {
   visible: boolean
@@ -25,7 +26,7 @@ export function ConfirmDialog({
   /** Conteúdo extra do corpo, depois da mensagem (ex.: lista de detalhes). */
   children?: ReactNode
   confirmLabel?: string
-  confirmIcon?: string
+  confirmIcon?: IconProp
   /** Desliga só o confirmar (ex.: motivo obrigatório ainda vazio). */
   confirmDisabled?: boolean
   severity?: ConfirmDialogSeverity
@@ -37,18 +38,16 @@ export function ConfirmDialog({
   const { t } = useTranslation()
   const s = confirmSeverityStyle[severity]
 
-  // `grid!`: o `.pi` do primeicons é CSS sem camada e crava `display:
-  // inline-block`, que vence qualquer utilitário do Tailwind (camada
-  // `utilities`); sem o `!`, o círculo vira bloco e o glifo cai no canto
-  // superior esquerdo (visto no smoke do bloco 43).
   const header = (
     <div data-severity={severity} className="flex items-center gap-3 pr-6">
       <span
         aria-hidden
         data-severity-icon
-        className={`${s.icon} grid! size-10 shrink-0 place-items-center rounded-full text-xl`}
+        className="grid size-10 shrink-0 place-items-center rounded-full"
         style={{ background: s.background, color: s.color }}
-      />
+      >
+        <AppIcon name={s.icon} size="lg" />
+      </span>
       <span>{title}</span>
     </div>
   )

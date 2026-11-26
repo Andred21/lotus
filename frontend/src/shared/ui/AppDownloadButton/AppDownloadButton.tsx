@@ -37,7 +37,7 @@ export function AppDownloadButton({ href, label, className }: AppDownloadButtonP
 
   return (
     <AppButton
-      icon="pi pi-download"
+      icon="download"
       label={label}
       text={!label}
       rounded={!label}

@@ -100,7 +100,7 @@ export function CrudDialog({
     mode === 'view' ? (
       <div ref={rodape} className="flex justify-end gap-2">
         <AppButton label={t('common.close')} text disabled={closeBlocked} onClick={onHide} />
-        {onEdit && <AppButton variant="primary" label={t('common.edit')} icon="pi pi-pencil" onClick={onEdit} />}
+        {onEdit && <AppButton variant="primary" label={t('common.edit')} icon="edit" onClick={onEdit} />}
       </div>
     ) : (
       <div ref={rodape} className="flex justify-end gap-2">
@@ -108,7 +108,7 @@ export function CrudDialog({
         <AppButton
           variant="primary"
           label={submitLabel ?? t('common.save')}
-          icon="pi pi-check"
+          icon="check"
           loading={pending}
           disabled={disabled}
           onClick={onSubmit}

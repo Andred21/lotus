@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { NavModule } from '@/shared/config/navigation'
+import { AppIcon } from '@shared/ui'
 
 interface Props {
   module: NavModule
@@ -46,10 +47,16 @@ export function SidebarItem({ module, collapsed }: Props) {
         ].join(' ')
       }
     >
-      <i className={module.icon} />
-      {/* Sempre no DOM. Colapsado ele encolhe e trunca dentro dos 80px do rail;
-        * expandido é o rótulo de sempre, sem classe extra. */}
-      <span className={collapsed ? 'w-full truncate text-[10px] leading-tight' : ''}>{label}</span>
+      {/* `children` como função é a forma do `NavLink` para o estado ativo: o
+        * módulo atual ganha o peso `fill`, e os demais ficam em `regular`. */}
+      {({ isActive }) => (
+        <>
+          <AppIcon name={module.icon} weight={isActive ? 'fill' : 'regular'} />
+          {/* Sempre no DOM. Colapsado ele encolhe e trunca dentro dos 80px do rail;
+            * expandido é o rótulo de sempre, sem classe extra. */}
+          <span className={collapsed ? 'w-full truncate text-[10px] leading-tight' : ''}>{label}</span>
+        </>
+      )}
     </NavLink>
   )
 }
