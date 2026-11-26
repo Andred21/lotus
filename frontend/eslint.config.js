@@ -14,6 +14,16 @@ import path from 'node:path'
 // `DomainDependencyTest`, que também enumerava os domínios à mão.
 // `certification` entra por já existir como scaffold — e é quem mais ganha em
 // nascer sob a regra, porque será escrito na Sprint 4.
+// Fronteira do bloco 64: só `shared/ui` importa Phosphor (o registro `AppIcon`).
+// O padrão é um objeto só e entra em CADA bloco `no-restricted-imports` abaixo —
+// o merge raso do flat config faz o último bloco apagar o anterior, então a
+// restrição não pode viver num bloco genérico à parte.
+const PHOSPHOR_PATTERN = {
+  group: ['@phosphor-icons/react', '@phosphor-icons/react/*'],
+  message:
+    'Só shared/ui importa Phosphor: use <AppIcon name="..."> e registre o nome novo em shared/ui/AppIcon/icons.ts (bloco 64).',
+}
+
 const FEATURES = fs
   .readdirSync(path.resolve(import.meta.dirname, 'src/features'), { withFileTypes: true })
   .filter((entrada) => entrada.isDirectory())
@@ -779,6 +789,7 @@ export default defineConfig([
               message:
                 'Feature não importa PrimeReact direto: use o wrapper de @shared/ui (CLAUDE.md §5.6, ADR-05).',
             },
+            PHOSPHOR_PATTERN,
             {
               group: FEATURES.filter((outra) => outra !== feature).flatMap((outra) => [
                 `@features/${outra}`,
@@ -797,8 +808,12 @@ export default defineConfig([
   // Dependência aponta só para baixo: shared é base, não conhece domínio.
   // `app/` fica de fora desta e da regra acima de propósito — AppRouter importa
   // 5 features, e compor rotas é o trabalho dele.
+  //
+  // Dois blocos, e não um com `ignores`: o Phosphor é proibido em `shared/**`
+  // MENOS `shared/ui/**`, e dois blocos que casam o mesmo arquivo com a mesma
+  // regra se apagam (merge raso). Cada arquivo de `shared/` cai em exatamente um.
   {
-    files: ['src/shared/**/*.{ts,tsx}'],
+    files: ['src/shared/ui/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -809,6 +824,25 @@ export default defineConfig([
               message:
                 'shared/ não importa de feature: a dependência aponta só para baixo (CLAUDE.md §5.6, ADR-05).',
             },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/shared/**/*.{ts,tsx}'],
+    ignores: ['src/shared/ui/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@features/*', '**/features/**'],
+              message:
+                'shared/ não importa de feature: a dependência aponta só para baixo (CLAUDE.md §5.6, ADR-05).',
+            },
+            PHOSPHOR_PATTERN,
           ],
         },
       ],
@@ -839,6 +873,7 @@ export default defineConfig([
               message:
                 'app/ não importa PrimeReact direto: use o wrapper de @shared/ui (CLAUDE.md §5.6, ADR-05).',
             },
+            PHOSPHOR_PATTERN,
           ],
         },
       ],

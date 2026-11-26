@@ -70,7 +70,7 @@ import {
  * tela), não o do desenho. Só `shared/ui` importa Phosphor (CLAUDE.md §5.6).
  *
  * Tabela `pi-<nome>` (PrimeIcons) -> IconName -> componente Phosphor.
- * Inventário medido em src/: 57 tokens `pi-*`; 56 são ícones e `pi-spin` é a
+ * Inventário medido em src/: 57 tokens `pi-*`; 56 são ícones e pi-spin é a
  * classe de animação do PrimeIcons (vira `className` do `spinner`, não ícone).
  *
  *   pi-angle-down         chevronDown   CaretDown

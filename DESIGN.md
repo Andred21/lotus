@@ -312,12 +312,20 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
 
 ### Navigation
 - **Sidebar:** azul-poste fixo, borda direita branca a 10%, wordmark claro (glifo no rail), rótulo
-  do papel em caixa alta apagada, versão em mono no rodapé. Item: ícone PrimeIcons + rótulo 500,
+  do papel em caixa alta apagada, versão em mono no rodapé. Item: ícone Phosphor, `regular`; ativo `fill` + rótulo 500,
   `10px × 12px`, 4px, borda esquerda 2px; repouso em `tinta-painel`, hover branco a 10%, ativo
   celeste sobre branco a 5% com a borda acesa. Colapsado, o item EMPILHA ícone e rótulo de 10px —
   o rail é o único menu do celular.
 - **Header:** barra utilitária sem título — controles de idioma e tema (botões de marca), divisor
   branco a 20%, relógio mono, avatar + nome (branco, 14px/600) + papel (branco a 75%) num gatilho só.
+
+### Ícones
+Phosphor, atrás de um registro: só `shared/ui/AppIcon` importa `@phosphor-icons/react` (o lint
+reprova em qualquer outro lugar), e a tela chama `<AppIcon name="..." />` ou passa o nome ao wrapper
+(`icon="check"`). O nome é semântico — o que o ícone significa, não o desenho. Nome novo entra em
+`shared/ui/AppIcon/icons.ts`. Três tamanhos: `sm` 14, `md` 16 (padrão), `lg` 24. `regular` por padrão;
+`fill` só para estado ativo. O SVG não responde a `font-size`: dimensione por `size` ou por
+`size-*` no `className`, nunca por `text-*`.
 
 ### Tables
 `text-sm`, sem zebra. Cabeçalho em `fieldLabelClass` sobre `--surface-section`, `16px × 10px`,

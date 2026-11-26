@@ -2,7 +2,6 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./app/App.tsx";
 import "primereact/resources/primereact.min.css"; // core dos componentes
-import "primeicons/primeicons.css"; // ícones
 import "flag-icons/css/flag-icons.min.css"; // bandeiras do seletor de idioma
 // Fontes self-hosted (spec §5, D2): só os pesos que os papéis usam — sem CDN em
 // app corporativo e sem carregar família inteira.

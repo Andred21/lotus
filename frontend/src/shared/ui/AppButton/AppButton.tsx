@@ -6,7 +6,7 @@ import { appButtonStyles, type AppButtonVariant } from './style'
 export interface AppButtonProps extends Omit<ButtonProps, 'icon' | 'loadingIcon'> {
   /** Estilo nomeado (ver AppButton/style.ts). Combinável com `className`. */
   variant?: AppButtonVariant
-  /** `IconName` do registro; a classe `pi pi-*` segue aceita até a Task 6 do bloco 64. */
+  /** `IconName` do registro. */
   icon?: IconProp
   /** Default: o `spinner` do registro, girando. */
   loadingIcon?: IconProp

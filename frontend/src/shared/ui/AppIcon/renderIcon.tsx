@@ -5,12 +5,14 @@ import type { IconProps } from '@phosphor-icons/react'
 import { ICONS } from './icons'
 import type { IconName } from './icons'
 
-/** Grafia antiga do PrimeIcons. Ponte até a Task 6 do bloco 64: as features
- * ainda passam `'pi pi-x'` aos wrappers, e eles seguem compilando por aqui. */
-export type LegacyPrimeIcon = `pi pi-${string}`
-
 /** O que um wrapper de `shared/ui` aceita como ícone. */
-export type IconProp = IconName | LegacyPrimeIcon
+export type IconProp = IconName
+
+/** Classe de bandeira do `flag-icons` (`fi fi-cl`). Não é ícone do registro: é a
+ * bandeira do item do `LanguageMenu`, que o `AppMenu` entrega ao Prime como
+ * string. Fica à parte do `IconProp` de propósito — só o menu a aceita, e a
+ * Task 7 do bloco 64 troca as bandeiras por `<img>` e leva este tipo junto. */
+export type FlagClass = `fi fi-${string}`
 
 interface RenderIconOptions {
   weight?: AppIconProps['weight']
@@ -18,20 +20,13 @@ interface RenderIconOptions {
   className?: string
 }
 
-/** Tudo que não é nome do registro segue como classe CSS. Mais largo que
- * `pi pi-*` de propósito: o `LanguageMenu` entrega `fi fi-<flag>` (bandeiras) ao
- * `AppMenu`, e isso nunca foi ícone do PrimeIcons nem pode estourar aqui. */
-function isLegacy(icon: IconProp): icon is LegacyPrimeIcon {
-  return !(icon in ICONS)
+function isFlag(icon: IconProp | FlagClass): icon is FlagClass {
+  return icon.startsWith('fi fi-')
 }
 
-/** `IconName` vira `AppIcon`; a classe legada vira `<i>`; `undefined` não
- * renderiza nada. `className` chega ao `svg` e ao `<i>`. */
+/** `IconName` vira `AppIcon`; `undefined` não renderiza nada. */
 export function renderIcon(icon: IconProp | undefined, opts: RenderIconOptions = {}): ReactNode {
   if (icon === undefined) return null
-  if (isLegacy(icon)) {
-    return <i className={[icon, opts.className].filter(Boolean).join(' ')} aria-hidden />
-  }
   return <AppIcon name={icon} weight={opts.weight} size={opts.size} className={opts.className} />
 }
 
@@ -42,12 +37,12 @@ interface PrimeSlotOptions {
 
 /**
  * O mesmo ícone, na forma que os slots `icon` do PrimeReact (`Button`, `Tag`,
- * `Menu`, `FileUpload`) aceitam. String legada passa como veio. `IconName` vira
- * função: nó solto perderia a classe do slot (`p-button-icon-left`, que dá o
+ * `Menu`, `FileUpload`) aceitam. Classe de bandeira passa como veio (string, que o
+ * Prime já entende). `IconName` vira função: nó solto perderia a classe do slot (`p-button-icon-left`, que dá o
  * espaço entre ícone e rótulo), e a função recebe `iconProps` para devolvê-la.
  */
-export function primeIcon(icon: IconProp | undefined, className?: string) {
-  if (icon === undefined || isLegacy(icon)) return icon
+export function primeIcon(icon: IconProp | FlagClass | undefined, className?: string) {
+  if (icon === undefined || isFlag(icon)) return icon
   return (options: PrimeSlotOptions) =>
     renderIcon(icon, { className: [options.iconProps?.className, className].filter(Boolean).join(' ') || undefined })
 }

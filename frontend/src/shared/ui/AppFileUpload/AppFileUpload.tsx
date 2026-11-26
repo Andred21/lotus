@@ -22,7 +22,7 @@ export type { FileUploadProps as AppFileUploadProps } from 'primereact/fileuploa
 type ChooseOptions = NonNullable<FileUploadProps['chooseOptions']>
 
 export type AppFileUploadOwnProps = Omit<FileUploadProps, 'chooseOptions'> & {
-  /** Como o do Prime, mas o `icon` é `IconName` do registro (ou a classe `pi pi-*`). */
+  /** Como o do Prime, mas o `icon` é `IconName` do registro. */
   chooseOptions?: Omit<ChooseOptions, 'icon'> & { icon?: IconProp }
   /** Recebe a mensagem já traduzida quando o arquivo excede o teto. O chamador
    * decide onde exibi-la (banner do diálogo, erro da seção). */
