@@ -47,7 +47,7 @@ export function HistorialTable() {
             />
           </>
         }
-        emptyState={<AppEmptyState icon="pi pi-verified" title={t('certificate.emptyHistorial')} description={t('certificate.emptyHistorialHint')} />}
+        emptyState={<AppEmptyState icon='certificate' title={t('certificate.emptyHistorial')} description={t('certificate.emptyHistorialHint')} />}
         footerCount={t('certificate.statusSummary', h.statusSummary)}
         actions={
           <HistorialExportActions

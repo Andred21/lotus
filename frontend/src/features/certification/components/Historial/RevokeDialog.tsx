@@ -35,7 +35,7 @@ export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
       title={t('certificate.revokeTitle')}
       message={t('certificate.revokeBody')}
       confirmLabel={t('certificate.revokeConfirm')}
-      confirmIcon="pi pi-ban"
+      confirmIcon='block'
       confirmDisabled={reason.trim() === ''}
       pending={revoke.isPending}
       error={message}

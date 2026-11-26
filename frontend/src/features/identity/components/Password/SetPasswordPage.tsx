@@ -59,7 +59,7 @@ export function SetPasswordPage() {
 
         <FormField label={t('password.newPassword')} error={fieldErrors?.password?.[0]}>
           <AppPassword
-            leftIcon="pi pi-lock"
+            leftIcon="lock"
             value={password}
             autoComplete="new-password"
             onChange={(e) => setPassword(e.target.value)}
@@ -68,7 +68,7 @@ export function SetPasswordPage() {
 
         <FormField label={t('password.confirmation')}>
           <AppPassword
-            leftIcon="pi pi-lock"
+            leftIcon="lock"
             value={confirmation}
             autoComplete="new-password"
             onChange={(e) => setConfirmation(e.target.value)}

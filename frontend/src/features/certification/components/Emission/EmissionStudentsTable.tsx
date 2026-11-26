@@ -50,7 +50,7 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, b
       // Piso de 390 medido (item 23, audit §5): 196px de 1ª coluna contra 170px livres.
       pt={narrowFloorTablePt('39.75rem')}
       footerCount={t('certificate.studentsCount', { total: counts.total, approved: counts.aprobados })}
-      emptyMessage={<AppEmptyState icon="pi pi-users" title={t('certificate.emptyStudents')} />}
+      emptyMessage={<AppEmptyState icon='users' title={t('certificate.emptyStudents')} />}
     >
       <AppColumn
         header={t('certificate.colName')}

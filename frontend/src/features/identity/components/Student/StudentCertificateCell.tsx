@@ -58,7 +58,7 @@ export function StudentCertificateCell({ turma }: { turma: StudentTurmaData }) {
           <AppTag severity="danger" value={t('certificate.snapshotCorrupted')} />
         )}
         <AppButton
-          icon="pi pi-file-pdf"
+          icon="filePdf"
           text
           aria-label={t('certificate.downloadPdf')}
           loading={pdf.pending}

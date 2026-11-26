@@ -71,7 +71,7 @@ export function CourseStep({
     <section className="space-y-3">
       <FormSection title={t('quote.stepCourse')} />
       <AppInputText
-        leftIcon="pi pi-search"
+        leftIcon="search"
         placeholder={t('quote.courseSearchPlaceholder')}
         value={courses.search}
         onChange={(e) => courses.setSearch(e.target.value)}

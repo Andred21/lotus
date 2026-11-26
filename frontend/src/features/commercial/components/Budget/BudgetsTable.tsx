@@ -86,7 +86,7 @@ export function BudgetsTable({
       }
       emptyState={
         <AppEmptyState
-          icon={archived ? 'pi pi-inbox' : 'pi pi-file'}
+          icon={archived ? 'archive' : 'file'}
           title={archived ? t('archive.empty') : t('budget.empty')}
           description={archived ? t('archive.emptyHint') : t('budget.emptyHint')}
           action={archived ? undefined : actions}

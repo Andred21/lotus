@@ -55,7 +55,7 @@ export function EmissionPanel() {
             <AppButton
               className="text-[var(--text-color-secondary)] hover:text-[var(--text-color)]"
               text
-              icon="pi pi-arrow-left"
+              icon="arrowLeft"
               label={t('certificate.backToTurmas')}
               onClick={() => s.setTurmaId(null)}
             />
@@ -65,7 +65,7 @@ export function EmissionPanel() {
               )}
               <AppButton
                 variant="primary"
-                icon="pi pi-verified"
+                icon='certificate'
                 label={t('certificate.emitAllPending', { count: s.counts.pendientes })}
                 disabled={s.counts.pendientes === 0 || turma.emission_blocked !== null}
                 aria-describedby={turma.emission_blocked !== null ? blockedId : undefined}

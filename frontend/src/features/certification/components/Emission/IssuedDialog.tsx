@@ -47,7 +47,7 @@ export function IssuedDialog({
         <AppButton
           variant="primary"
           label={t('certificate.downloadPdf')}
-          icon="pi pi-download"
+          icon="download"
           loading={pdf.pending}
           onClick={pdf.open}
         />

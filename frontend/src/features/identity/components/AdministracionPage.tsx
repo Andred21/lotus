@@ -44,7 +44,7 @@ export function AdministracionPage({ configuracion }: { configuracion?: ReactNod
               onView={page.openView}
               actions={
                 canManage
-                  ? <AppButton variant="primary" label={t('admin.new')} icon="pi pi-user-plus" onClick={page.openCreate} />
+                  ? <AppButton variant="primary" label={t('admin.new')} icon="userAdd" onClick={page.openCreate} />
                   : undefined
               }
             />

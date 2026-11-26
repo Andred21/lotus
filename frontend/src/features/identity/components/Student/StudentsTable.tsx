@@ -30,7 +30,7 @@ export function StudentsTable({
       onSort={table.onSort}
       searchPlaceholder={t('student.searchPlaceholder')}
       emptyState={
-        <AppEmptyState icon="pi pi-user" title={t('student.empty')} description={t('student.emptyHint')} action={actions} />
+        <AppEmptyState icon="user" title={t('student.empty')} description={t('student.emptyHint')} action={actions} />
       }
       footerCount={t('student.count', { count: table.totalRecords })}
       actions={actions}
@@ -74,7 +74,7 @@ export function StudentsTable({
         body={(s: StudentData) => (
           <RowActions
             collapsed={colunaDeAcoes.collapsed}
-            actions={[{ label: t('common.view'), icon: 'pi pi-eye', onClick: () => onView(s) }]}
+            actions={[{ label: t('common.view'), icon: 'view', onClick: () => onView(s) }]}
           />
         )}
         style={stickyActionsColumn(colunaDeAcoes.width)}

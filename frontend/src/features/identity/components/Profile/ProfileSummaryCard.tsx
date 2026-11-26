@@ -52,7 +52,7 @@ export function ProfileSummaryCard({ redator }: { redator: RedatorProfileData })
       <div className="mt-4">
         <AppButton
           label={t('profile.summary.goToDashboard')}
-          icon="pi pi-arrow-right"
+          icon="arrowRight"
           iconPos="right"
           outlined
           className="w-full"

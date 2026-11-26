@@ -87,7 +87,7 @@ export function ArchivedQuotesList({
           {can('commercial.quote.restore') && (
             <AppButton
               label={t('archive.restoreAction')}
-              icon="pi pi-undo"
+              icon="restore"
               text
               size="small"
               disabled={restoring}

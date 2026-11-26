@@ -59,7 +59,7 @@ export function ForgotForm({ email, onEmailChange, autoFocusTitle }: Props) {
           <FormField label={t('login.email')} error={fieldErrors?.email?.[0]}>
             <AppInputText
               type="email"
-              leftIcon="pi pi-envelope"
+              leftIcon='mail'
               autoComplete="username"
               value={email}
               onChange={(e) => onEmailChange(e.target.value)}

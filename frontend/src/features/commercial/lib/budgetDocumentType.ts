@@ -1,7 +1,7 @@
 import type { BudgetDocumentType } from '@shared/types/generated'
-import type { AppTagProps } from '@shared/ui'
+import type { AppTagProps, IconName } from '@shared/ui'
 
-type TagStyle = Pick<AppTagProps, 'severity' | 'tone' | 'icon'>
+type TagStyle = Pick<AppTagProps, 'severity' | 'tone'> & { icon: IconName }
 type DocumentTag = TagStyle & { labelKey: string }
 
 /** Três hues distintos, todos medidos em AA no `AppTag`; o rótulo é texto, e a
@@ -10,9 +10,9 @@ type DocumentTag = TagStyle & { labelKey: string }
  * o ciclo do orçamento: a orden de compra chega, a factura sai e o comprobante
  * fecha. */
 const TAG: Record<BudgetDocumentType, TagStyle> = {
-  purchase_order: { severity: 'info', icon: 'pi pi-shopping-cart' },
-  invoice: { tone: 'accent', icon: 'pi pi-receipt' },
-  receipt: { severity: 'success', icon: 'pi pi-money-bill' },
+  purchase_order: { severity: 'info', icon: 'cart' },
+  invoice: { tone: 'accent', icon: 'receipt' },
+  receipt: { severity: 'success', icon: 'money' },
 }
 
 /** Os tipos de documento do orçamento, na ordem dos slots do cartão (bloco 47),

@@ -66,7 +66,7 @@ export function ClientsTable({
       searchPlaceholder={t("client.searchPlaceholder")}
       emptyState={
         <AppEmptyState
-          icon={archived ? "pi pi-inbox" : "pi pi-building"}
+          icon={archived ? 'archive' : 'building'}
           title={archived ? t("archive.empty") : t("client.empty")}
           description={archived ? t("archive.emptyHint") : t("client.emptyHint")}
           action={archived ? undefined : actions}

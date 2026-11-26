@@ -57,7 +57,7 @@ export function RedatoresTable({
       searchPlaceholder={t('redator.searchPlaceholder')}
       emptyState={
         <AppEmptyState
-          icon={archived ? 'pi pi-inbox' : 'pi pi-users'}
+          icon={archived ? 'archive' : 'users'}
           title={archived ? t('archive.empty') : t('redator.empty')}
           description={archived ? t('archive.emptyHint') : t('redator.emptyHint')}
           action={archived ? undefined : actions}
@@ -123,7 +123,7 @@ export function RedatoresTable({
             extra={[
               {
                 label: t('redator.resendInvitation'),
-                icon: 'pi pi-envelope',
+                icon: 'mail',
                 disabled: invitation.isPending,
                 onClick: () => reenviar(r.id!),
               },

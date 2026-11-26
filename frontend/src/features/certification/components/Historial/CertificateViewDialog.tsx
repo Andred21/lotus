@@ -39,7 +39,7 @@ export function CertificateViewDialog({ certificateId, certificate, loading, err
         <AppButton
           variant="primary"
           label={t('certificate.downloadPdf')}
-          icon="pi pi-download"
+          icon="download"
           loading={pdf.pending}
           onClick={pdf.open}
         />

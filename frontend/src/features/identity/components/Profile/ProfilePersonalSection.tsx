@@ -68,7 +68,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
             variant="primary"
             type="submit"
             label={t('profile.personal.save')}
-            icon="pi pi-check"
+            icon="check"
             loading={pending}
           />
         </div>

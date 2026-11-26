@@ -31,12 +31,12 @@ export function EmissionRowActions({
 
   const actions: RowAction[] = []
   if (kind === 'emitido') {
-    actions.push({ label: t('certificate.view'), icon: 'pi pi-eye', onClick: () => onView(enrollment) })
+    actions.push({ label: t('certificate.view'), icon: 'view', onClick: () => onView(enrollment) })
   }
   if (kind === 'sin_emitir') {
     actions.push({
       label: t('certificate.emit'),
-      icon: 'pi pi-verified',
+      icon: 'certificate',
       disabled: blocked,
       describedBy: blocked ? blockedReasonId : undefined,
       onClick: () => onEmit(enrollment),
