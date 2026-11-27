@@ -1,5 +1,59 @@
 # Changelog
 
+## [1.15.0](https://github.com/Andred21/lotus/compare/v1.14.0...v1.15.0) (2026-11-27)
+
+
+### Funcionalidades
+
+* **64:** AppIcon e registro de ícones Phosphor ([842d991](https://github.com/Andred21/lotus/commit/842d991bdc3ac81d8133410dbe220660f4ea298d))
+* **64:** guarda de rascunho por useBlocker ([d57c6e8](https://github.com/Andred21/lotus/commit/d57c6e82433d73bebd64b498a7afd4e6f3a02641))
+* **64:** primeicons removido; catraca de ícones ([3c8b226](https://github.com/Andred21/lotus/commit/3c8b2268c3f5ccad40892c54a6f0db55b3a08a42))
+* **64:** revisão UI/UX — ícones Phosphor, data router e 404/403 ([7381665](https://github.com/Andred21/lotus/commit/7381665f8cdf7e6390cfdc4fa1c6c8ca0c088d76))
+* **64:** título por rota, foco no main, 404 e 403 por módulo ([928cd1b](https://github.com/Andred21/lotus/commit/928cd1bb679efdfc4343763a4e3c3a6c42bbb7f5))
+* **65:** aviso antes de descartar rascunho ([2a519d9](https://github.com/Andred21/lotus/commit/2a519d9fb01d2539d6419a6ba7dd16dffa1ba728))
+* **65:** busca, filtro, página e sort na URL ([3f17930](https://github.com/Andred21/lotus/commit/3f17930183420cf15529c4d673ebea2ce75d54f1))
+* **65:** navegação, sessão expirada e formulários protegidos ([9447d78](https://github.com/Andred21/lotus/commit/9447d7851e00c5a9d03a7bbe3f1b8ce48d9fff04))
+* **65:** obrigatório marcado e motivo de botão desabilitado ([df80958](https://github.com/Andred21/lotus/commit/df80958a2008ff747d10ca7d883e616323b1771b))
+* **65:** voltar pelo histórico e abas na URL ([bed65ac](https://github.com/Andred21/lotus/commit/bed65ac57fc01938af3bdbbcd358a6912529d2a4))
+
+
+### Correções
+
+* **64:** 403 sem Reintentar no caminho de carga ([0e0869c](https://github.com/Andred21/lotus/commit/0e0869c3b12aecae0aa93abd5b79640fedf0dac9))
+* **64:** achados da revisão final da branch ([4222a38](https://github.com/Andred21/lotus/commit/4222a38976b4f6abea7460e242579b6fa0068822))
+* **64:** ícones maiores no geral ([696d316](https://github.com/Andred21/lotus/commit/696d3167aa84de48fc4eae298ba04bded1d3f091))
+* **64:** recarga de chunk sem laço quando o storage falha ([e01663e](https://github.com/Andred21/lotus/commit/e01663efbd21b95ff33bc8c2c37d380064482cff))
+* **64:** spinner do AppDropdown em Phosphor ([43af532](https://github.com/Andred21/lotus/commit/43af532b44127dee983f4a43798e40addfd358f3))
+* **64:** spinner do bootstrap mantém 30px ([740e955](https://github.com/Andred21/lotus/commit/740e95563e73664f3e926490dcccb2af188c9d6e))
+* **64:** symfony 7.4.24 para os avisos do composer audit ([13cdd2f](https://github.com/Andred21/lotus/commit/13cdd2ffd0dea8a4d0ac43084c70347abcdf411b))
+* **65:** a dica do IdentityCell fecha com Esc (WCAG 1.4.13) ([0d64903](https://github.com/Andred21/lotus/commit/0d64903b971cdfdabfa474717161ce45eebfd5fa))
+* **65:** a escrita da tabela na URL preserva o state da entrada ([e14f39c](https://github.com/Andred21/lotus/commit/e14f39cc2a058597067badc72cc9d65c846c67e2))
+* **65:** a tabela acompanha a URL quando ela muda por fora ([6d1f789](https://github.com/Andred21/lotus/commit/6d1f789a118255318fbb728eb134e8ebda866e70))
+* **65:** borda escura só nos controles ([0499054](https://github.com/Andred21/lotus/commit/04990542c1737febe3390cd7502e599a62f30356))
+* **65:** célula de identidade fora de botão, gatilho de arquivar orçamento ([39695d9](https://github.com/Andred21/lotus/commit/39695d9f4f3af652f0136be1c37b6de395a02e27))
+* **65:** contraste do tema escuro, info em índigo, tag 600 ([f97bc75](https://github.com/Andred21/lotus/commit/f97bc753c29ac182f4ac68b5344cfdfccb434069))
+* **65:** Enter envia, erro aninhado acessível, erro some ao corrigir ([550a416](https://github.com/Andred21/lotus/commit/550a41607f18e48cc4bdd0d384db22af30118014))
+* **65:** erro 422 some ao corrigir em todo formulário ([459f1d9](https://github.com/Andred21/lotus/commit/459f1d95f2d78bbd94ee3a3997098287c9808ce6))
+* **65:** liberação da guarda não sobra quando o pós-salvar falha ([522e748](https://github.com/Andred21/lotus/commit/522e7488f433a4fb462977764ec896fbaa77dfe5))
+* **65:** minors da revisão final (M-11, M-3, M-8) ([e4d98b0](https://github.com/Andred21/lotus/commit/e4d98b05fe9ec2d603659218a3eb57cc12e3e053))
+* **65:** o contexto do toast sai de shared/ui para shared/hooks ([bf241c9](https://github.com/Andred21/lotus/commit/bf241c9ed5f989ba20c4f5f268d647949cd1bcff))
+* **65:** o motivo do confirmar desabilitado vira descrição do botão ([2194903](https://github.com/Andred21/lotus/commit/2194903c98e4e5929454f2661beaf0c36509fad6))
+* **65:** painel refaz no foco e sinaliza troca de período ([32dc527](https://github.com/Andred21/lotus/commit/32dc5277d0e5fc81cf814c95e40ab94b2bc75aaf))
+* **65:** redator, cotação e configuração da turma dizem o sucesso ([0df8980](https://github.com/Andred21/lotus/commit/0df8980a260ed81e642029bc0ecbe74c2e96fef6))
+* **65:** seção de orçamentos do cliente fora do form do diálogo ([34750f5](https://github.com/Andred21/lotus/commit/34750f5e9c8f10399d85ad27023719f30db48860))
+* **65:** sessão expirada limpa o cache do usuário anterior ([85552ba](https://github.com/Andred21/lotus/commit/85552ba49226c6455632409306657f02e5c0c7d1))
+* **65:** sessão expirada volta ao login com a URL inteira ([feff7c9](https://github.com/Andred21/lotus/commit/feff7c9e1c3f4b5b75421649a14bf509886e23f5))
+* **65:** sucesso dito, confirmação nomeada, erro do gate no diálogo ([2446411](https://github.com/Andred21/lotus/commit/2446411079e7d36b4bf45c477cbf392dfe916222))
+* **65:** teste da guarda sem erro não tratado ([3ee7f42](https://github.com/Andred21/lotus/commit/3ee7f4260ac2a31fe90258099266e62231ec3599))
+* **65:** trocar de aba da turma com a configuração suja pergunta ([f331ba9](https://github.com/Andred21/lotus/commit/f331ba9925ca4af7e05bb46827267d520acd6ead))
+* **67:** divisão do chunk ui com sideEffects no frontend ([1269d5d](https://github.com/Andred21/lotus/commit/1269d5d37900b2be7f2fa529ac841c6eb2c5f548))
+* **67:** sideEffects no package.json do frontend divide o chunk ui ([ae4594b](https://github.com/Andred21/lotus/commit/ae4594b190cc9f317493fc66555c40d8b187bd29))
+
+
+### Desempenho
+
+* **64:** bandeiras do idioma em SVG; CSS do flag-icons só no PhoneInput ([36c432e](https://github.com/Andred21/lotus/commit/36c432edb508d66e08c52b541b301e634a03fe2b))
+
 ## [1.14.0](https://github.com/Andred21/lotus/compare/v1.13.0...v1.14.0) (2026-11-25)
 
 
