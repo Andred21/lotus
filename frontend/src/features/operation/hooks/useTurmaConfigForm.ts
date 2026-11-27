@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
+import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard, useToast } from '@shared/hooks'
 import type { DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
-import { useToast } from '@shared/ui'
 import { coursesApi } from '@shared/api/coursesApi'
 import { useCreateTurma, useUpdateTurma, type TurmaConfigPayload } from '../api/useTurmas'
 

@@ -1,16 +1,7 @@
+import { createRef } from 'react'
 import { describe, expect, it } from 'vitest'
-import { act, fireEvent, render, screen } from '@testing-library/react'
-import { ToastProvider, useToast } from './AppToast'
-
-function Disparador() {
-  const toast = useToast()
-  return (
-    <>
-      <button onClick={() => toast.success('Guardado')}>ok</button>
-      <button onClick={() => toast.error('Falhou')}>erro</button>
-    </>
-  )
-}
+import { act, render } from '@testing-library/react'
+import { AppToast, type AppToastHandle } from './AppToast'
 
 describe('AppToast — ícones internos', () => {
   const phosphor = (el: Element | null) => {
@@ -19,18 +10,12 @@ describe('AppToast — ícones internos', () => {
     expect(svg?.classList.contains('p-icon')).toBe(false)
   }
 
-  it.each([
-    ['ok', 'success'],
-    ['erro', 'error'],
-  ])('usa ícone Phosphor na mensagem de %s e no fechar', async (botao, severidade) => {
-    render(
-      <ToastProvider>
-        <Disparador />
-      </ToastProvider>,
-    )
+  it.each(['success', 'error'] as const)('usa ícone Phosphor na mensagem de %s e no fechar', async (severidade) => {
+    const ref = createRef<AppToastHandle>()
+    render(<AppToast ref={ref} />)
 
     await act(async () => {
-      fireEvent.click(screen.getByText(botao))
+      ref.current?.[severidade]('Detalhe')
     })
 
     const mensagem = document.querySelector(`.p-toast-message-${severidade}`)

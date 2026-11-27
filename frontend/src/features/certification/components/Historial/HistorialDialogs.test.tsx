@@ -14,8 +14,8 @@ vi.mock('react-i18next', async (importOriginal) => {
 })
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
-vi.mock('@shared/ui', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@shared/ui')>()),
+vi.mock('@shared/hooks', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@shared/hooks')>()),
   useToast: () => toast,
 }))
 

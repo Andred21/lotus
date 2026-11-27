@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
+import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard, useToast } from '@shared/hooks'
 import type { RedatorData } from '@shared/types/generated'
 import type { DialogMode, DocType } from '@shared/lib'
-import { useToast } from '@shared/ui'
 import { redatoresApi } from '@shared/api/redatoresApi'
 
 export type RedatorDialogMode = DialogMode

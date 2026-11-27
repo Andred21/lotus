@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useToast } from '@shared/hooks'
 import {
   AppButton,
   AppCard,
@@ -9,7 +10,6 @@ import {
   PhoneInput,
   technicalDataClass,
   useFormField,
-  useToast,
 } from '@shared/ui'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { ProfileData } from '@shared/types/generated'

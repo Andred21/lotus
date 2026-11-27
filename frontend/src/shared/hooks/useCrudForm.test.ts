@@ -9,7 +9,7 @@ import {
 } from './useCrudForm'
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
-vi.mock('@shared/ui/AppToast', () => ({ useToast: () => toast }))
+vi.mock('./useToast', () => ({ useToast: () => toast }))
 
 type Fields = { id?: number; name: string; secret: string }
 

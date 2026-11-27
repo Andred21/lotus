@@ -4,9 +4,7 @@ import { useEntityForm, useFormMutationErrors } from './useEntityForm'
 import { useUnsavedChangesGuard } from './useUnsavedChangesGuard'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
-// Caminho FUNDO, como no `useArchiveToasts`: o barrel `@shared/ui` fecharia um
-// ciclo de módulos com `FormPhotoRow`, que importa o barrel `@shared/hooks`.
-import { useToast } from '@shared/ui/AppToast'
+import { useToast } from './useToast'
 
 /** Recurso mutável, estrutural — mesmo padrão do `ListableResource` do
  * `useCrudPage`: o teste passa um literal e não precisa de TanStack. */

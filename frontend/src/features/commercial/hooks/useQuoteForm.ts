@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
+import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard, useToast } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useCreateQuote, useUpdateQuote, type QuotePayload } from '../api/useQuotes'
-import { useToast } from '@shared/ui'
 import { formatUf, parseUfInput } from '@shared/lib'
 
 /** Campos que o wizard edita. `value_uf` fica STRING o caminho todo: converter

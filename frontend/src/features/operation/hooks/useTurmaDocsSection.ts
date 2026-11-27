@@ -1,8 +1,7 @@
 import type { TurmaData, TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 import { problemMessage } from '@shared/api/problemMessage'
-import { loadFailure, useMutationErrors, usePermissions } from '@shared/hooks'
+import { loadFailure, useMutationErrors, usePermissions, useToast } from '@shared/hooks'
 import { retryFor } from '@shared/lib'
-import { useToast } from '@shared/ui'
 import { useTranslation } from 'react-i18next'
 import {
   useRemoveTurmaDocument,

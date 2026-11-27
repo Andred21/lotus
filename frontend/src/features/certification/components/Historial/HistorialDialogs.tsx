@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { useToast } from '@shared/ui'
+import { useToast } from '@shared/hooks'
 import type { useHistorial } from '../../hooks/useHistorial'
 import { CertificateViewDialog } from './CertificateViewDialog'
 import { RevokeDialog } from './RevokeDialog'

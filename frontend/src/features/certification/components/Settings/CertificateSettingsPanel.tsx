@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useToast } from '@shared/hooks'
 import {
   AppButton,
   AppDetailSkeleton,
@@ -8,7 +9,6 @@ import {
   FormErrorSummary,
   InlineLoadState,
   useFormField,
-  useToast,
 } from '@shared/ui'
 import { loadMessage } from '@shared/lib'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'

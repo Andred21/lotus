@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useToast } from '@shared/hooks'
 import {
   AppButton,
   AppCard,
@@ -7,7 +8,6 @@ import {
   FormErrorSummary,
   FormSection,
   useFormField,
-  useToast,
 } from '@shared/ui'
 import { useProfilePassword } from '../../hooks/useProfilePassword'
 

@@ -848,9 +848,39 @@ export default defineConfig([
       ],
     },
   },
+  // `shared/hooks` não importa `shared/ui`: a seta aponta de `ui` para `hooks`
+  // (frontend-fsliced.md, "Hook genérico não importa tipo de shared/ui"). O
+  // `useToast` quebrava isso por caminho fundo (`@shared/ui/AppToast`) para
+  // fugir de um ciclo de barrels — o contexto foi para `shared/hooks` e a
+  // fronteira nasceu SEM catraca (bloco 65, Q-4). Bloco próprio porque o merge
+  // raso de `no-restricted-imports` apagaria a lista do bloco de baixo; por
+  // isso ele repete o ban de feature e de Phosphor.
+  {
+    files: ['src/shared/hooks/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@features/*', '**/features/**'],
+              message:
+                'shared/ não importa de feature: a dependência aponta só para baixo (CLAUDE.md §5.6, ADR-05).',
+            },
+            PHOSPHOR_PATTERN,
+            {
+              group: ['@shared/ui', '@shared/ui/*', '../ui', '../ui/*', '../../ui', '../../ui/*'],
+              message:
+                'shared/hooks não importa shared/ui: a seta aponta de ui para hooks. Contexto consumido por hook mora fora de ui (frontend-fsliced.md).',
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     files: ['src/shared/**/*.{ts,tsx}'],
-    ignores: ['src/shared/ui/**'],
+    ignores: ['src/shared/ui/**', 'src/shared/hooks/**'],
     rules: {
       'no-restricted-imports': [
         'error',
