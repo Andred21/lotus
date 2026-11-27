@@ -34,3 +34,12 @@ O aumento teve um efeito colateral que o João precisa ver. Na tabela de instrut
 
 - **Em `d57c6e82`, antes do aumento dos ícones:** `pnpm lint` exit 0, `pnpm test` com 268 arquivos e 2254 testes, `pnpm build` ok, `php artisan test` com 2103 passando e 7 pulados.
 - **Em `696d3167`, depois do aumento:** `pnpm lint` exit 0, `pnpm test` com 268 arquivos e 2258 testes, `pnpm build` ok. O backend não mudou.
+
+## Pendências registradas
+
+Achados da revisão final da branch que não se corrigem no 64. Ficam aqui, e não no quadro de IDs.
+
+- **M-2 — seção de diálogos (D8) do DESIGN.md.** A spec (`spec.md`, critério 4) diz que o 64 prova a "seção de ícones e diálogos". O plano mandou o D8, a parte de diálogos, para o bloco 66 (`rascunho-plano-66.md`). O 64 entrega só a seção de ícones; a de diálogos é do 66.
+- **M-9 — sem `errorElement` nas rotas-layout.** `SessionBootstrap`, `AppLayout` e `ModuleGuard` não têm `errorElement`: um erro de render neles cai no `DefaultErrorComponent` do react-router, que mostra mensagem e stack. Não é regressão (antes era tela branca). Fica como pendência.
+- **T8 — `useHistorial.ts:132,136` usa o `refetch` cru.** Nesses diálogos o 403 ainda mostra Reintentar, porque o `retryFor` não passa por ali. Os diálogos estão fora do caminho do C-10. Vai para o 65 ou o 66, para a regra valer em todo lugar.
+- **Catraca de ícones apertada depois do quadro (M-6, M-7).** O quadro do T10 cita o teste "Phosphor só em shared/ui". A rodada final o apertou para `shared/ui/AppIcon` (o lint e a catraca), e a catraca ganhou "primeicons fora de src". Os nomes atuais estão em `frontend/tests/icons-ratchet.test.ts`.

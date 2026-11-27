@@ -12,7 +12,7 @@
 
 Caminhos abaixo: `src/` = `frontend/src/`; `FE` = `frontend/`.
 
-**IDs da auditoria que este bloco fecha:** C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8 (o índigo de info é parte do B-2, que fecha no 66).
+**IDs da auditoria que este bloco fecha:** C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8 (o índigo de info é parte do B-2, que fecha no 66) e **D-6**, aberto no 64 (ver "D-6 levado do 64" abaixo).
 
 **Depende:** bloco 64 mesclado na `main`.
 
@@ -37,6 +37,16 @@ Caminhos abaixo: `src/` = `frontend/src/`; `FE` = `frontend/`.
 5. Sessão que expira com um formulário sujo aberto: vai ao login sem o diálogo de descarte (salvar falharia de qualquer jeito). Teste na Task 3.
 
 ---
+
+## D-6 levado do 64 (decisão do João, 2026-11-26, opção b)
+
+O 64 deixou o D-6 aberto: o chunk `ui` (barrel `@shared/ui`, com PrimeReact, Phosphor e libphonenumber) tem **465,48 kB gz** e entra no `modulepreload` do `index.html`, então o ganho de JS na carga inicial foi de 590 para uns 558 kB. O D-6 só fecha com esse chunk dividido. Duas saídas, a escolher no planejamento:
+- dividir o barrel `@shared/ui` (por peça ou por família) para que cada rota baixe só o que usa; ou
+- tirar o chunk `ui` do `modulepreload`, de modo que ele deixe de ser pedido já na entrada.
+
+Prova: o gzip do JS de entrada e dos chunks pré-carregados, medido antes e depois no `pnpm build`, no `fechamento.md`. Números de partida em `fechamento.md` do 64 (seção "D-6: números").
+
+**O rascunho já está no teto de 10 tasks.** O D-6 não tem task própria aqui: encaixar (task nova com o corte de outra, ou bloco à parte) é decisão do João, no `/planejar-bloco 65`. Os IDs do bloco passam de 16 para 17 se ele entrar.
 
 ## Fase 1 — Navegação (T5)
 
@@ -96,7 +106,7 @@ Caminhos abaixo: `src/` = `frontend/src/`; `FE` = `frontend/`.
 ### Task 3: Sessão expirada volta ao login com a URL inteira (C-1)
 
 **Files:**
-- Modify: `src/shared/api/axios.ts`, `src/shared/stores/sessionStore.ts`, `src/app/router/ProtectedRoute.tsx`, `src/features/identity/hooks/useLoginForm.ts`, `src/features/identity/components/Login/LoginForm.tsx` (aviso), `src/shared/lib/screenDetail.ts` (docblocks de ~25-45 e de `loadErrorHint`), `src/shared/hooks/useUnsavedChangesGuard.ts` (não bloqueia com `expired`), `src/shared/hooks/useUnsavedChangesGuard.test.tsx`, locales ×3 (`auth.sessionExpired`)
+- Modify: `src/shared/api/axios.ts`, `src/shared/stores/sessionStore.ts`, `src/app/router/ProtectedRoute.tsx`, `src/features/identity/hooks/useLoginForm.ts`, `src/features/identity/components/Login/LoginForm.tsx` (aviso), `src/shared/lib/screenDetail.ts` (docblocks de ~25-45 e de `loadErrorHint`), `src/shared/hooks/useUnsavedChangesGuard.ts` e `src/shared/hooks/UnsavedChangesBlocker.tsx` (não bloqueia com `expired`; o filtro do router mora no segundo), `src/shared/hooks/useUnsavedChangesGuard.test.tsx`, locales ×3 (`auth.sessionExpired`)
 - Create: `src/shared/api/authErrors.test.ts`
 
 **Interfaces:**
@@ -148,6 +158,8 @@ Caminhos abaixo: `src/` = `frontend/src/`; `FE` = `frontend/`.
 
 **Interfaces:**
 - Consumes: `useUnsavedChangesGuard`, `DiscardChangesDialog` (bloco 64, Task 9).
+  - **Quem consome monta `<DiscardChangesDialog {...guard.dialogProps} />`.** É o `DiscardChangesDialog` que renderiza `dialogProps.blocker`, o blocker do router, que só existe enquanto `dirty` (rodada final do 64, I-1: o router consulta só o último blocker registrado e `useBlocker` registra mesmo com `dirty=false`, então uma guarda limpa sempre montada anularia a suja). Sem montar o diálogo, a navegação do router não é guardada; só o `beforeunload` e o `confirmDiscard` valem. Toda tela e todo `CrudDialog` que ligar a guarda precisa renderizá-lo. Duas guardas sujas ao mesmo tempo não são suportadas (vale a última montada).
+  - **`allowNavigation()` se chama no `onSuccess`, imediatamente antes do `navigate`.** A liberação é consumida pela primeira navegação avaliada (de `pathname` ou só de query) e é descartada se o rascunho já estiver limpo ao fim do render.
 - Produces: `useEntityForm(...)` passa a devolver `dirty: boolean`. É uma comparação profunda de `form` contra o valor inicial do último reset, e volta a `false` no reset.
 
 - [ ] **Step 1: Testes que falham:**
@@ -247,7 +259,7 @@ Caminhos abaixo: `src/` = `frontend/src/`; `FE` = `frontend/`.
 ### Task 10: Passada visual e quadro de fechamento do bloco 65
 
 **Files:**
-- Create: `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/visual/<ID>.png` (uma por achado visual), `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/fechamento.md` (uma linha por ID deste bloco: C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8 — com a prova: teste (arquivo e nome), captura (caminho) ou "veredito do João")
+- Create: `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/visual/<ID>.png` (uma por achado visual), `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/fechamento.md` (uma linha por ID deste bloco: C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8 e D-6, se o João o encaixar — com a prova: teste (arquivo e nome), captura (caminho) ou "veredito do João")
 
 **Interfaces:**
 - Consumes: Tasks 1–9.

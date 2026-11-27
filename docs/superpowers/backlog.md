@@ -319,8 +319,8 @@ provisória do `42`, por decisão do João em 2026-11-26. As fichas 65 e 66 entr
 resgate dos commits da branch Impeccable.
 
 **DoD:** os critérios 2, 3 e 4 da spec §7 provados: nenhum `pi pi-` nem `primeicons` em `frontend/`,
-gate verde, e DESIGN.md com a seção de ícones. `fechamento.md` do bloco com T10, D-6, C-12 e C-10,
-cada um com teste ou captura.
+gate verde, e DESIGN.md com a seção de ícones. `fechamento.md` do bloco com T10, C-12 e C-10,
+cada um com teste ou captura; D-6 aberto, levado ao 65.
 
 ---
 
@@ -339,6 +339,9 @@ formulários e o gerador de tema.
 - C-2, C-7, C-8, A-10 e C-9: formulários protegidos.
 - C-5, C-4, C-6 e A-2: feedback e confirmações.
 - A-1 e B-8: gerador de tema, com borda no escuro, info em índigo e peso 600.
+- D-6 (aberto no 64, por decisão do João em 2026-11-26): dividir o barrel `@shared/ui` ou tirar o
+  chunk `ui` (465,48 kB gz) do `modulepreload`. O rascunho já está no teto de 10 tasks; o encaixe é
+  decisão do João no `/planejar-bloco 65`.
 
 **Planejar:** a spec já está aprovada (spec do 64, D1–D12). O `/planejar-bloco 65` faz o
 brainstorming curto, só para conferir o rascunho contra a `main` que o 64 deixou. Depois grava
@@ -347,7 +350,8 @@ rascunho para `plano.md`.
 
 **Fora:** o que é do 64 e do 66.
 
-**DoD:** os critérios 3, 5 e 6 da spec §7 provados. `fechamento.md` do bloco com os 16 IDs.
+**DoD:** os critérios 3, 5 e 6 da spec §7 provados. `fechamento.md` do bloco com os 17 IDs (os 16
+do escopo e o D-6, se o João o encaixar).
 
 ---
 
