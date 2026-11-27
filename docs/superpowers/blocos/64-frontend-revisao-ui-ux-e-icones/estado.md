@@ -2,9 +2,9 @@
 schema_version: 3
 id: 64
 slug: 64-frontend-revisao-ui-ux-e-icones
-workflow_state: closed
-next_owner: joao
-next_action: none
+workflow_state: reviewing
+next_owner: claude
+next_action: "approve_review_findings correcao pos-PR: composer update symfony (audit do CI) — repetir o review"
 resume_state: null
 active_spec: docs/superpowers/blocos/64-frontend-revisao-ui-ux-e-icones/spec.md
 active_plan: docs/superpowers/blocos/64-frontend-revisao-ui-ux-e-icones/plano.md
@@ -17,10 +17,10 @@ branch: feat/64-frontend-revisao-ui-ux-e-icones
 worktree: ../lotus-64-frontend-revisao-ui-ux-e-icones
 offset: 1
 lane_base: c576bc35
-commit: 0d64503f
+commit: 58fd695f
 blocker: null
-updated_at: 2026-11-26T22:39:13-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-11-26T22:49:50-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 64 — estado
