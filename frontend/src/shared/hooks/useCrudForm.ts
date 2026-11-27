@@ -99,7 +99,7 @@ export function useCrudForm<F extends { id?: number }, T>(
   const excludePrefixes = opts.excludePrefixes ?? []
   const extraMutations = extra ?? []
 
-  const { form, setForm, set, readOnly, didReset, dirty } = useEntityForm<F>(entity, mode, empty, toFields)
+  const { form, setForm, set: setField, readOnly, didReset, dirty } = useEntityForm<F>(entity, mode, empty, toFields)
   // A guarda mora aqui, e não no `CrudDialog`, porque o salvar precisa liberá-la
   // (`allowNavigation`, abaixo) e é este hook que sabe quando o salvar deu certo.
   const guard = useUnsavedChangesGuard(dirty)
@@ -202,11 +202,18 @@ export function useCrudForm<F extends { id?: number }, T>(
     update.mutate({ id: entity.id, payload: toPayload(form, 'edit') }, { onSuccess: onDone })
   }
 
-  const { fieldErrors, generalError } = useMutationErrors([
+  const { fieldErrors, generalError, clearField } = useMutationErrors([
     create.error,
     update.error,
     ...extraMutations.map((m) => m.error),
   ])
+
+  // Editar o campo tira o 422 dele da tela (e só o dele): o erro apontava o
+  // valor antigo, e deixá-lo ali depois da correção diz que o conserto não pegou.
+  const set: typeof setField = (k, v) => {
+    setField(k, v)
+    clearField(String(k))
+  }
 
   return {
     // Tudo que o diálogo pode consumir vive AQUI dentro, porque os hooks de

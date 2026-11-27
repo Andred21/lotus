@@ -85,12 +85,29 @@ export function useEntityForm<T extends { id?: number }>(
  */
 export function useMutationErrors(errors: Array<ProblemDetails | null | undefined>) {
   const first = errors.find(Boolean) ?? null
+  // Campos já corrigidos desde que ESTE erro chegou. O erro mora na mutação
+  // (TanStack), não aqui; o que sobra do lado de cá é só a lista do que sumir.
+  // Ajuste de estado durante o render, como no `useEntityForm`: o erro novo
+  // (outro envio) é outro objeto e zera a lista — o 422 do reenvio é de verdade.
+  const [cleared, setCleared] = useState<{ source: ProblemDetails | null; names: string[] }>({
+    source: first,
+    names: [],
+  })
+  if (cleared.source !== first) setCleared({ source: first, names: [] })
+  const names = cleared.source === first ? cleared.names : []
+
+  const clearField = (name: string) =>
+    setCleared((c) => (c.source === first && !c.names.includes(name) ? { source: first, names: [...c.names, name] } : c))
+
   const fieldErrors = first?.errors
+    ? Object.fromEntries(Object.entries(first.errors).filter(([key]) => !names.includes(key)))
+    : first?.errors
   const generalError = first && !first.errors ? first.detail : null
 
   return {
     fieldErrors,
     generalError,
     message: generalError ?? Object.values(fieldErrors ?? {})[0]?.[0] ?? null,
+    clearField,
   }
 }

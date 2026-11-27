@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDialog, type AppDialogSize } from '../AppDialog'
 import { AppButton } from '../AppButton'
@@ -34,6 +34,15 @@ import type { DialogMode } from '@shared/lib'
  * Prime roda DEPOIS, num efeito de transição, e venceria. Por isso o foco entra
  * pelo `onShow` do próprio Dialog, e não por um efeito nosso: no commit em que
  * o efeito rodaria o conteúdo do portal ainda não está no documento.
+ *
+ * **Enter envia (A-10).** O corpo é um `<form>`; o Salvar mora no footer, que o
+ * Prime renderiza como irmão do corpo, e por isso é o botão `submit` do form
+ * pelo atributo `form`. Clique e Enter caem no mesmo `onSubmit` do form, que
+ * chama o `onSubmit` do chamador — a guarda de rascunho e o `allowNavigation`
+ * do salvar ficam nele, não aqui. O envio implícito é do navegador: com o Salvar
+ * desabilitado (`pending`/`disabled`) ele não acontece, e `textarea` segue
+ * quebrando linha. O `stopPropagation` existe porque o submit de um form dentro
+ * de um portal sobe pela árvore do React a um form ancestral.
  */
 export function CrudDialog({
   size, visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, guard, submitLabel, headerExtra, children,
@@ -81,6 +90,7 @@ export function CrudDialog({
   const corpo = useRef<HTMLDivElement>(null)
   const rodape = useRef<HTMLDivElement>(null)
   const estavaPendente = useRef(false)
+  const formId = useId()
 
   useEffect(() => {
     const caiu = estavaPendente.current && !pending
@@ -89,6 +99,12 @@ export function CrudDialog({
     const invalido = corpo.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
     if (invalido) {
       invalido.focus()
+      return
+    }
+    // 422 sem campo na tela: o resumo de erros é o alvo (`FormErrorSummary`).
+    const resumo = corpo.current?.querySelector<HTMLElement>('[role="alert"][tabindex="-1"]')
+    if (resumo) {
+      resumo.focus()
       return
     }
     if (document.activeElement === document.body) {
@@ -105,6 +121,13 @@ export function CrudDialog({
 
   // Saída que descarta: com guarda e rascunho, pergunta antes de fechar.
   const sair = () => (guard ? guard.confirmDiscard(onHide) : onHide())
+
+  const enviar = (e: FormEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (mode === 'view' || pending || disabled) return
+    onSubmit?.()
+  }
 
   const header = (
     <div className="flex items-center gap-4 pr-6">
@@ -126,9 +149,10 @@ export function CrudDialog({
           variant="primary"
           label={submitLabel ?? t('common.save')}
           icon="check"
+          type="submit"
+          form={formId}
           loading={pending}
           disabled={disabled}
-          onClick={onSubmit}
         />
       </div>
     )
@@ -146,7 +170,9 @@ export function CrudDialog({
         onShow={focarCorpo}
         footer={footer}
       >
-        <div ref={corpo} tabIndex={-1} className="outline-none">{children}</div>
+        <div ref={corpo} tabIndex={-1} className="outline-none">
+          <form id={formId} onSubmit={enviar}>{children}</form>
+        </div>
       </AppDialog>
       {guard && <DiscardChangesDialog {...guard.dialogProps} />}
     </>

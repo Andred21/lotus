@@ -105,7 +105,39 @@ describe('NestedField em modo leitura', () => {
   })
 })
 
+describe('NestedField com erro', () => {
+  function Entrada() {
+    return <input aria-label="Módulo" {...useFieldProps('id')} />
+  }
+
+  it('marca o controle aria-invalid e o liga à mensagem por aria-describedby', () => {
+    render(
+      <NestedField error="Nombre requerido"><Entrada /></NestedField>,
+    )
+
+    const controle = screen.getByLabelText('Módulo')
+    expect(controle.getAttribute('aria-invalid')).toBe('true')
+    const mensagem = screen.getByText('Nombre requerido')
+    expect(controle.getAttribute('aria-describedby')).toBe(mensagem.id)
+    expect(mensagem.id).not.toBe('')
+  })
+
+  it('sem erro o controle não é marcado', () => {
+    render(<NestedField><Entrada /></NestedField>)
+
+    expect(screen.getByLabelText('Módulo').hasAttribute('aria-invalid')).toBe(false)
+  })
+})
+
 describe('FormErrorSummary', () => {
+  it('é um alert focável por programa', () => {
+    render(<FormErrorSummary errors={{ phone: ['Teléfono inválido'] }} mapped={[]} />)
+
+    const resumo = screen.getByRole('alert')
+    expect(resumo.getAttribute('tabindex')).toBe('-1')
+    expect(resumo.textContent).toContain('Teléfono inválido')
+  })
+
   it('mostra a chave que NAO esta em mapped', () => {
     // É o item (c) do BD-4: `phone` não tem `error=` em campo nenhum, então
     // sem o resumo um 422 nele não aparece em lugar algum da tela.

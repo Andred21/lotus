@@ -381,3 +381,53 @@ describe('useCrudForm — rascunho', () => {
     expect(seguir).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('useCrudForm — erro some ao corrigir', () => {
+  const problema = (errors: Record<string, string[]>) => ({
+    type: 'about:blank', title: 'Unprocessable', status: 422, detail: '',
+    instance: '/api/x', errors,
+  })
+  const comErro = (error: ReturnType<typeof problema>): MutableResource<{ id?: number }> => ({
+    useCreate: () => ({ mutate: () => undefined, isPending: false, error }),
+    useUpdate: () => ({ mutate: () => undefined, isPending: false, error: null }),
+  })
+  const opts = {
+    ...base,
+    entity: null,
+    mode: 'create' as const,
+    mapped: ['name', 'secret'],
+    summaryOnly: [],
+  }
+
+  it('editar o campo limpa o erro 422 dele e só dele', () => {
+    const erro = problema({ name: ['obrigatório'], secret: ['curto'] })
+    const { result } = renderHook(() => useCrudForm(comErro(erro), opts))
+    expect(result.current.crud.fieldErrors?.name).toEqual(['obrigatório'])
+
+    act(() => result.current.crud.set('name', 'Lotus'))
+
+    expect(result.current.crud.fieldErrors?.name).toBeUndefined()
+    expect(result.current.crud.fieldErrors?.secret).toEqual(['curto'])
+  })
+
+  it('um 422 novo (outro envio) volta a mostrar o erro do campo já editado', () => {
+    let erro = problema({ name: ['obrigatório'] })
+    const { result, rerender } = renderHook(() => useCrudForm(comErro(erro), opts))
+    act(() => result.current.crud.set('name', 'Lotus'))
+    expect(result.current.crud.fieldErrors?.name).toBeUndefined()
+
+    erro = problema({ name: ['já existe'] })
+    rerender()
+
+    expect(result.current.crud.fieldErrors?.name).toEqual(['já existe'])
+  })
+
+  it('o erro geral (sem mapa por campo) não some ao editar', () => {
+    const erro = { type: 'about:blank', title: 'x', status: 500, detail: 'Falha', instance: '/api/x' }
+    const { result } = renderHook(() => useCrudForm(comErro(erro as never), opts))
+
+    act(() => result.current.crud.set('name', 'Lotus'))
+
+    expect(result.current.crud.generalError).toBe('Falha')
+  })
+})

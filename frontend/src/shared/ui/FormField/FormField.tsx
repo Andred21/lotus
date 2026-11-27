@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react'
+import { useContext, useId, type ReactNode } from 'react'
 import { dangerSurface, dangerText } from '../../styles/tokens'
 import { FieldContext, type FieldBind, type FieldContextValue } from './fieldContext'
 
@@ -103,13 +103,32 @@ export type NestedFieldProps = {
 
 /** Campo aninhado (linhas de contato/endereço/módulo): sem label própria, mas
  * com o erro do backend visível. Sem isso, um 422 em `contacts.0.name` deixa o
- * botão de salvar aparentemente inerte. */
+ * botão de salvar aparentemente inerte.
+ *
+ * Com erro, publica o mesmo `FieldContext` do `FormField`: o controle filho sai
+ * `aria-invalid` e `aria-describedby` apontando para a mensagem — o que também
+ * o faz alvo do foco do `CrudDialog` após um envio reprovado. Sem erro
+ * republica o contexto de fora (o do `FormField` que o envolve, ou nenhum): a
+ * árvore tem a mesma forma com e sem erro — o input não remonta nem perde o
+ * foco quando o erro some ao editar. */
 export function NestedField({ error, readOnly, value, children }: NestedFieldProps) {
+  const id = useId()
+  const errorId = `${id}-error`
+  const outer = useContext(FieldContext)
+  const field: FieldContextValue | null = error
+    ? { id, invalid: true, describedBy: errorId }
+    : outer
+
   return (
     <div>
-      {readOnly ? <ReadOnlyValue value={value} /> : children}
+      {readOnly ? (
+        <ReadOnlyValue value={value} />
+      ) : (
+        <FieldContext.Provider value={field}>{children}</FieldContext.Provider>
+      )}
       {error && (
         <span
+          id={errorId}
           className="mt-1 block text-sm"
           style={{ color: dangerText }}
         >
@@ -139,12 +158,18 @@ export function FormErrorSummary({ errors, mapped, excludePrefixes = [] }: FormE
   if (leftover.length === 0) return null
   return (
     <ul
-      role="list"
-      /* `list-disc` explícito: o mini-reset da P-46 zera o marcador de todo
+      /* `role="alert"` e `tabIndex={-1}`: o resumo é a única indicação de um 422
+       * cujo campo não tem input — sem anúncio ele passa calado ao leitor de
+       * tela, e sem `tabIndex` o `CrudDialog` não tem como levar o foco até ele
+       * quando não há campo inválido. O `alert` troca o papel `list`: a leitura
+       * do conjunto como alerta é a que importa aqui.
+       * `list-disc` explícito: o mini-reset da P-46 zera o marcador de todo
        * `ul`, e aqui os itens são FRASE — cada linha é uma mensagem de erro
        * independente, e sem marcador três erros leem como um parágrafo
        * quebrado. `list-inside` põe o glifo dentro da caixa, para não brigar
        * com o `px-3` da faixa (Q-7 do review de 2026-08-27). */
+      role="alert"
+      tabIndex={-1}
       className="mb-4 list-inside list-disc rounded-control px-3 py-2 text-sm"
       style={{
         background: dangerSurface,

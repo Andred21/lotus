@@ -6,6 +6,8 @@ import { useCrudForm, type MutableResource } from '@shared/hooks/useCrudForm'
 import { renderWithProviders } from '@shared/testing/providers'
 import type { DialogMode } from '@shared/lib'
 import { CrudDialog } from './CrudDialog'
+import { NestedField, FormErrorSummary } from '../FormField'
+import { useFieldProps } from '../FormField/fieldContext'
 
 beforeAll(async () => {
   await i18n.changeLanguage('es-CL')
@@ -69,7 +71,7 @@ describe('CrudDialog — foco na abertura', () => {
       </CrudDialog>,
     )
 
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByText('Sin controles').parentElement))
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByText('Sin controles').closest('[tabindex="-1"]')))
   })
 })
 
@@ -266,5 +268,147 @@ describe('CrudDialog — guarda de rascunho', () => {
     await waitFor(() => expect(perguntou()).toBe(true))
     expect(screen.getByTestId('onde').textContent).toBe('/lista')
     erro.mockRestore()
+  })
+})
+
+/**
+ * Enter (A-10): o corpo é um `<form>` e o Salvar do footer, que mora fora dele
+ * (o Prime renderiza header/corpo/footer irmãos), é o botão `submit` dele pelo
+ * atributo `form`. O jsdom não faz envio implícito no Enter, então `enter()`
+ * aplica a regra da especificação HTML: no `input`, aciona o botão de envio
+ * PADRÃO do form (o primeiro `submit` de `form.elements`) se ele não estiver
+ * desabilitado; no `textarea`, Enter é quebra de linha e nada envia.
+ */
+describe('CrudDialog — Enter envia', () => {
+  const enter = (el: HTMLElement) => {
+    const solto = fireEvent.keyDown(el, { key: 'Enter', code: 'Enter' })
+    if (!solto || !(el instanceof HTMLInputElement) || !el.form) return
+    const padrao = [...el.form.elements].find(
+      (e): e is HTMLButtonElement => e instanceof HTMLButtonElement && e.type === 'submit',
+    )
+    if (padrao && !padrao.disabled) padrao.click()
+  }
+
+  function Envio({ onSubmit, pending = false }: { onSubmit: () => void; pending?: boolean }) {
+    return (
+      <CrudDialog size="md" visible mode="create" title="Curso" onHide={() => {}} onSubmit={onSubmit} pending={pending}>
+        <input aria-label="Nombre" />
+        <textarea aria-label="Notas" />
+      </CrudDialog>
+    )
+  }
+
+  it('Enter num input envia, uma vez', () => {
+    const onSubmit = vi.fn()
+    render(<Envio onSubmit={onSubmit} />)
+
+    enter(screen.getByLabelText('Nombre'))
+
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
+
+  it('o clique em Salvar também envia uma vez só, pelo mesmo caminho', () => {
+    const onSubmit = vi.fn()
+    render(<Envio onSubmit={onSubmit} />)
+
+    fireEvent.click(screen.getByRole('button', { name: i18n.t('common.save') }))
+
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
+
+  it('Enter em textarea não envia e não perde a quebra de linha', () => {
+    const onSubmit = vi.fn()
+    render(<Envio onSubmit={onSubmit} />)
+    const notas = screen.getByLabelText('Notas')
+
+    expect(fireEvent.keyDown(notas, { key: 'Enter', code: 'Enter' })).toBe(true)
+    enter(notas)
+
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('Enter com o salvar em voo não reenvia', () => {
+    const onSubmit = vi.fn()
+    render(<Envio onSubmit={onSubmit} pending />)
+
+    enter(screen.getByLabelText('Nombre'))
+
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('enviar o form com `disabled` não chama o onSubmit', () => {
+    const onSubmit = vi.fn()
+    render(
+      <CrudDialog size="md" visible mode="create" title="Curso" onHide={() => {}} onSubmit={onSubmit} disabled>
+        <input aria-label="Nombre" />
+      </CrudDialog>,
+    )
+
+    fireEvent.submit(screen.getByLabelText('Nombre').closest('form')!)
+
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('o submit de um form do diálogo não sobe a um form ancestral na árvore React', () => {
+    const externo = vi.fn((e: { preventDefault: () => void }) => e.preventDefault())
+    render(
+      <form onSubmit={externo}>
+        <Envio onSubmit={() => {}} />
+      </form>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: i18n.t('common.save') }))
+
+    expect(externo).not.toHaveBeenCalled()
+  })
+
+  it('o modo leitura não tem botão de envio', () => {
+    render(
+      <CrudDialog size="md" visible mode="view" title="Curso" onHide={() => {}} onSubmit={() => {}}>
+        <p>Sin controles</p>
+      </CrudDialog>,
+    )
+
+    expect(document.querySelector('button[type="submit"]')).toBeNull()
+  })
+})
+
+/**
+ * Erro de campo aninhado e resumo (C-7): ao reprovar, o foco vai ao primeiro
+ * `aria-invalid` — que o `NestedField` passa a marcar — e, sem campo inválido,
+ * ao resumo de erros, que é `alert` e focável.
+ */
+describe('CrudDialog — foco no erro após envio reprovado', () => {
+  function Entrada() {
+    return <input aria-label="Modulo" {...useFieldProps('id')} />
+  }
+
+  it('leva o foco ao campo aninhado inválido quando `pending` cai', () => {
+    const arvore = (pending: boolean) => (
+      <CrudDialog size="md" visible mode="create" title="Curso" onHide={() => {}} onSubmit={() => {}} pending={pending}>
+        <NestedField error="Nombre requerido"><Entrada /></NestedField>
+      </CrudDialog>
+    )
+    const { rerender } = render(arvore(true))
+    ;(document.activeElement as HTMLElement | null)?.blur()
+
+    rerender(arvore(false))
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Modulo'))
+  })
+
+  it('sem campo inválido, leva o foco ao resumo de erros', () => {
+    const arvore = (pending: boolean) => (
+      <CrudDialog size="md" visible mode="create" title="Curso" onHide={() => {}} onSubmit={() => {}} pending={pending}>
+        <FormErrorSummary errors={{ phone: ['Teléfono inválido'] }} mapped={[]} />
+        <input aria-label="Nombre" />
+      </CrudDialog>
+    )
+    const { rerender } = render(arvore(true))
+    ;(document.activeElement as HTMLElement | null)?.blur()
+
+    rerender(arvore(false))
+
+    expect(document.activeElement).toBe(screen.getByRole('alert'))
   })
 })
