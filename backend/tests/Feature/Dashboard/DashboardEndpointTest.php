@@ -8,6 +8,7 @@ use App\Domains\Certification\Models\Certificate;
 use App\Domains\Commercial\Models\Budget;
 use App\Domains\Commercial\Models\Client;
 use App\Domains\Commercial\Models\Quote;
+use App\Domains\Dashboard\Data\DashboardFilterData;
 use App\Domains\Identity\Enums\RedatorDocumentType;
 use App\Domains\Identity\Models\Redator;
 use App\Domains\Identity\Models\Student;
@@ -526,6 +527,33 @@ class DashboardEndpointTest extends TestCase
         $this->getJson(self::ENDPOINT.'?period_start=2030-01-01')
             ->assertStatus(422)
             ->assertJsonPath('errors.period_end', [__('dashboard.filter.inverted_period')]);
+    }
+
+    /**
+     * Desde o D-2 cada mês da janela vira uma linha em cada série, então a janela
+     * tem teto: acima de `MAX_MONTHS` é 422 pelo handler (ADR-03), nunca uma
+     * resposta gigante ou um 500 (Q-1 da revisão do bloco 66). O teto conta meses
+     * de calendário, os mesmos que a série devolve.
+     */
+    public function test_janela_acima_do_teto_de_meses_e_422(): void
+    {
+        $this->actingAsAdmin();
+        $mensagem = __('dashboard.filter.window_too_long', ['max' => DashboardFilterData::MAX_MONTHS]);
+
+        // fev/2016 a jan/2026 = 120 meses: no teto, passa.
+        $this->getJson(self::ENDPOINT.'?period_start=2016-02-15&period_end=2026-01-31')
+            ->assertOk();
+
+        // jan/2016 a jan/2026 = 121 meses: um acima.
+        $this->getJson(self::ENDPOINT.'?period_start=2016-01-31&period_end=2026-01-01')
+            ->assertStatus(422)
+            ->assertHeader('content-type', 'application/problem+json')
+            ->assertJsonPath('errors.period_end', [$mensagem]);
+
+        // A entrada que derrubava o worker: a regra `date` aceita os dois extremos.
+        $this->getJson(self::ENDPOINT.'?period_start=0001-01-01&period_end=9999-12-31')
+            ->assertStatus(422)
+            ->assertJsonPath('errors.period_end', [$mensagem]);
     }
 
     /**

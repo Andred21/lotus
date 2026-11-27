@@ -268,9 +268,12 @@ class AnalyticsQuery
     {
         $months = [];
         $cursor = $start->startOfMonth();
-        $last = $end->format('Y-m');
+        // Data contra data, nunca `format('Y-m')` contra texto: depois de
+        // `9999-12` vem `10000-01`, que na ordem de string é "menor" e não
+        // deixava o laço acabar (Q-1 da revisão do bloco 66).
+        $last = $end->startOfMonth();
 
-        while ($cursor->format('Y-m') <= $last) {
+        while ($cursor->lessThanOrEqualTo($last)) {
             $months[] = $cursor->format('Y-m');
             $cursor = $cursor->addMonthNoOverflow();
         }

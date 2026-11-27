@@ -501,6 +501,24 @@ class AnalyticsQueryTest extends TestCase
         );
     }
 
+    /**
+     * O laço de meses compara datas, não texto: depois de `9999-12` o cursor vira
+     * `10000-01`, que como string é "menor" que `9999-12`, e o laço não acabava
+     * (Q-1 da revisão do bloco 66). O teto da janela mora no `DashboardFilterData`;
+     * esta prova é da própria query, que não pode depender dele para terminar.
+     */
+    public function test_janela_que_termina_em_9999_para_no_ultimo_mes(): void
+    {
+        $series = $this->series(
+            app(AnalyticsQuery::class),
+            CarbonImmutable::parse('9999-11-01')->startOfDay(),
+            CarbonImmutable::parse('9999-12-31')->endOfDay(),
+        );
+
+        $this->assertSame(['9999-11', '9999-12'], array_column($series['turmas_iniciadas'], 'month'));
+        $this->assertSame(['9999-11', '9999-12'], array_column($series['uf_aprovada'], 'month'));
+    }
+
     public function test_uf_vazia_vem_0_0000(): void
     {
         $series = $this->series(

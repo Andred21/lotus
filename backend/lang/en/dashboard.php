@@ -23,5 +23,6 @@ return [
     ],
     'filter' => [
         'inverted_period' => 'The end date cannot be earlier than the start date.',
+        'window_too_long' => 'The period cannot span more than :max months.',
     ],
 ];
