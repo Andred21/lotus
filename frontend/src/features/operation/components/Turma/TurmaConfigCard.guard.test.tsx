@@ -96,9 +96,19 @@ describe('TurmaConfigCard — Cancelar passa pela guarda', () => {
     const onCancel = vi.fn(() => { throw new Error('onCancel reprovou') })
     render(<TurmaConfigCard mode="create" quoteId={7} onSaved={() => {}} onCancel={onCancel} />)
 
-    // O erro sobe pelo handler do React; o que se prova é a guarda ter sido desarmada.
-    try { cancelar() } catch { /* esperado */ }
+    // O cartão relança de propósito (falha inesperada tem de aparecer, como antes
+    // da guarda) e o React a reporta no `window` por não ter quem a pegue no handler
+    // de clique. O teste é esse "alguém": capta o evento, e prova a guarda desarmada.
+    const reportado = vi.fn((evento: ErrorEvent) => evento.preventDefault())
+    window.addEventListener('error', reportado)
+    try {
+      cancelar()
+    } finally {
+      window.removeEventListener('error', reportado)
+    }
 
+    expect(reportado).toHaveBeenCalledTimes(1)
+    expect(reportado.mock.calls[0][0].error).toEqual(new Error('onCancel reprovou'))
     expect(guard.revoke).toHaveBeenCalledTimes(1)
   })
 })
