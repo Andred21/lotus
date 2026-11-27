@@ -163,6 +163,11 @@ proposta: a ordem continua sendo do João.
 por decisão do João, com um plano de até 10 tasks cada. 64, 65 e 66 entram na frente do 58 pela
 mesma razão das fichas 60 a 62: deslocam linhas que a P-97 coordena. A posição é uma proposta.
 
+**Emendada em 2026-11-27, na PR da lane 67:** o D-6 saiu do 65 e virou a ficha 67 (D13 da spec do
+65). Ele divide o 8 com o 65 e corre em paralelo, porque a medição do planejamento mostrou que a
+correção cabe na configuração do build. A ficha entrou pela PR da própria lane, desvio da
+invariante 10 decidido pelo João, no molde do item 42.
+
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
 Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
 `audits/2026-09-04-lotus-ui-review-administracion.md` mede a tela **atual**. Se o 9 redesenhar, a
