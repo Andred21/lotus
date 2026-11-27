@@ -136,6 +136,21 @@ describe('rótulos curtos do rail', () => {
   const locales = { 'es-CL': esCL, 'pt-BR': ptBR, en } as const
   const MAX = 9
 
+  /** Largura em px de cada rótulo a 12px, Inter 500 (`font-medium`, o peso do
+   * item), medida em Chromium headless sobre `@fontsource/inter` 500 latin
+   * (`inter-latin-500-normal.woff2`), em 2026-11-27. Texto novo exige medir de
+   * novo: a checagem abaixo falha se o rótulo não estiver na tabela. */
+  const LARGURA_MEDIDA: Record<string, number> = {
+    Dashboard: 62, Comercial: 59, 'Operación': 59, Cursos: 40, 'Certific.': 47, Personas: 53, Admin: 37,
+    Painel: 35, 'Operação': 56, Pessoas: 47,
+    Sales: 31, Operation: 56, Courses: 47, Certs: 31, People: 39,
+  }
+
+  /** Conteúdo útil do rail colapsado: `w-20` (80) − `border-r` (1) − `nav px-1`
+   * (4+4) − `border-l-2` do item (2) − `px-0` do item (0). Espelha `Sidebar.tsx`
+   * e `SidebarItem.tsx`; o teste de classes abaixo prende o lado do item. */
+  const CONTEUDO_DO_RAIL = 80 - 1 - 2 * 4 - 2
+
   it.each(Object.entries(locales))('rótulos curtos cabem (%s)', (_nome, locale) => {
     const curtos = (locale as { nav: { short: Record<string, string> } }).nav.short
     for (const m of NAV_MODULES) {
@@ -143,6 +158,24 @@ describe('rótulos curtos do rail', () => {
       const texto = curtos[m.key]
       expect(texto, `nav.short.${m.key}`).toBeTruthy()
       expect(texto.length, `${m.key}: "${texto}"`).toBeLessThanOrEqual(MAX)
+      const largura = LARGURA_MEDIDA[texto]
+      expect(largura, `"${texto}" sem largura medida`).toBeDefined()
+      expect(largura, `"${texto}" (${largura}px) > ${CONTEUDO_DO_RAIL}px do rail`).toBeLessThanOrEqual(
+        CONTEUDO_DO_RAIL,
+      )
     }
+  })
+
+  it('colapsado, o item abre espaço sem padding lateral', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <SidebarItem module={NAV_MODULES[1]} collapsed />
+      </MemoryRouter>,
+    )
+    const classes = container.querySelector('a')?.className ?? ''
+
+    expect(classes).toContain('px-0')
+    expect(classes).not.toMatch(/(^|\s)px-[1-9]/)
+    expect(classes).toContain('border-l-2')
   })
 })

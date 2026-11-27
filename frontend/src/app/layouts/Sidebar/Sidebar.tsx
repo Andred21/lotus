@@ -62,7 +62,7 @@ export function Sidebar() {
         </p>
       )}
 
-      <nav className="flex flex-1 flex-col gap-4 px-3">
+      <nav className={`flex flex-1 flex-col gap-4 ${collapsed ? 'px-1' : 'px-3'}`}>
         {modules.map((m) => (
           <SidebarItem key={m.key} module={m} collapsed={collapsed} />
         ))}

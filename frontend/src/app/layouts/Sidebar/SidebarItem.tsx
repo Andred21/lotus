@@ -39,11 +39,16 @@ export function SidebarItem({ module, collapsed }: Props) {
            * rótulo fora do DOM, o nome do módulo dependia de hover, que no toque
            * não existe (D-03).
            *
+           * O rail tem 79px úteis (`w-20` − `border-r`). O `nav` colapsado fica em
+           * `px-1` e o item em `px-0`, o que deixa 69px de conteúdo depois do
+           * `border-l-2`: o rótulo mais largo (Dashboard, 62px a 12px) cabe com
+           * folga, sem `truncate`. Com `nav px-3` + `px-1` eram ~45px e vazava.
+           *
            * O `gap` mora nos DOIS ramos e não na base: `gap-4` e `gap-1` na
            * mesma string não se resolvem pela ordem em que foram escritas — a
            * ordem é a do CSS gerado, e o resultado seria sorteio. */
           collapsed
-            ? 'flex-col justify-center gap-1 px-1 py-2 text-center'
+            ? 'flex-col justify-center gap-1 px-0 py-2 text-center'
             : 'gap-4 px-3 py-2.5',
         ].join(' ')
       }

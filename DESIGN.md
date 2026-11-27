@@ -337,7 +337,9 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
   `10px × 12px`, 4px, borda esquerda 2px; repouso em `tinta-painel`, hover branco a 10%, ativo
   celeste sobre branco a 5% com a borda acesa. Colapsado, o item EMPILHA ícone e rótulo CURTO de
   12px (`nav.short.*`, até 9 caracteres, sem `truncate`; o nome integral fica no `title`) — o rail
-  é o único menu do celular.
+  é o único menu do celular. Para o rótulo caber nos 80px, o `nav` colapsado perde o padding
+  lateral (4px) e o item colapsado não tem padding horizontal: sobram 69px de conteúdo para um
+  rótulo que mede no máximo 62px (Dashboard, Inter 500 a 12px).
 - **Header:** barra utilitária sem título — controles de idioma e tema (variante `shell`), divisor
   branco a 20%, relógio mono, avatar + nome (branco, 14px/600) + papel (branco a 75%) num gatilho só.
 
