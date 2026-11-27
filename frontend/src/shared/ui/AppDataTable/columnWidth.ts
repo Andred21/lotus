@@ -41,6 +41,11 @@ export type ColClass = { readonly weight: number; readonly cap?: true }
 export const COL = {
   /** Identificador atômico, mono, que não quebra: `Scap 1 - R2`, código de certificado. */
   code: { weight: 8 },
+  /** Folio de certificado, `LOT-AAAA-NNNNN`: 14 caracteres de mono a 14px, ~118px
+   * de texto mais o `px-4` da célula, que não encolhem (nowrap). O `code` de 8
+   * foi medido em `Scap 1 - R2` (11 caracteres proporcionais) e entrega ~54px a
+   * 1024: o folio vazava para a coluna do aluno (B-1). */
+  folio: { weight: 24 },
   /** `IdentityCell`: avatar + duas linhas. Único com teto — é contra ele que o `truncate` mede. */
   identity: { weight: 18, cap: true },
   /** O texto livre e mais longo da tabela: nome de curso, nome de papel. */

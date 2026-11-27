@@ -39,4 +39,9 @@ describe('tableWidths', () => {
     expect(l.nome.maxWidth).toBe(l.nome.width)
     expect(l.rut.maxWidth).toBeUndefined()
   })
+
+  it('COL.folio pesa mais que COL.code: o folio de 14 caracteres mono não cabe no peso do código curto', () => {
+    // `LOT-AAAA-NNNNN` mede ~118px em mono 14px (+32 de padding); `Scap 1 - R2`, ~85px.
+    expect(COL.folio.weight).toBeGreaterThan(COL.code.weight)
+  })
 })

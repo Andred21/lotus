@@ -86,3 +86,18 @@ describe('EmissionStudentsTable — ação da linha', () => {
     expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('39.75rem')
   })
 })
+
+/** B-7: o `✓` era um glifo de texto colado ao folio (e quebrava no hífen). Agora
+ * o ícone é do registro, decorativo, e o folio é um token só. */
+describe('EmissionStudentsTable — o certificado emitido', () => {
+  it('check é ícone, não glifo, e o folio não quebra', () => {
+    montar()
+
+    const folio = screen.getByText('LOT-2026-1001')
+    const celula = folio.closest('td') as HTMLTableCellElement
+
+    expect(celula.textContent).not.toContain('✓')
+    expect(celula.querySelector('svg[aria-hidden="true"]')).toBeTruthy()
+    expect(folio.className).toContain('whitespace-nowrap')
+  })
+})

@@ -37,16 +37,27 @@ export function TurmaDocuments({ turma }: { turma: TurmaData }) {
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('operation.documents.progress', { done: s.deliveredCount, total: s.totalTypes })}
           </p>
-          {/* Trilho em `--surface-300`, não em `--surface-section`: este último
-            * resolve para o MESMO branco de `--surface-card` no tema claro, e a
-            * barra deixava de ser proporção para virar faixa verde de comprimento
-            * arbitrário (UI-03 do relatório de 2026-08-23: 1,00:1 contra o cartão).
-            * Token escolhido pela FUNÇÃO — superfície que precisa contrastar com o
-            * cartão —, não pelo nome, e medido nos dois temas. */}
-          <div className="mt-2 h-2 w-64 rounded-full" style={{ background: 'var(--surface-300)' }}>
+          {/* B-11 (bloco 66). O trilho em `--surface-300` (UI-03 de 2026-08-23) saiu do
+            * branco do cartão, mas medido a 1,48:1 no claro: continuava invisível, e
+            * a barra `--green-500` fazia 2,3:1 sobre ele. O traço de um gráfico pede
+            * 3:1 (WCAG 1.4.11) contra o que o cerca, e a PROPORÇÃO pede o mesmo da
+            * barra contra o trilho. Trilho = fundo `--surface-200` + borda de controle
+            * (`--surface-500` no claro, `--surface-300` no escuro: o `#64748b` do
+            * gerador); barra = `--green-700` / `--green-400`. Razões: trilho/cartão
+            * 4,76 e 3,07; barra/cartão 4,42 e 7,40; barra/trilho 3,58 e 5,24 (claro e
+            * escuro). Os tokens de paleta não invertem com o tema, então o degrau é por
+            * variante `dark:`, como o `severityTone`. */}
+          <div
+            role="progressbar"
+            aria-label={t('operation.documents.title')}
+            aria-valuemin={0}
+            aria-valuemax={s.totalTypes}
+            aria-valuenow={s.deliveredCount}
+            className="mt-2 h-2.5 w-64 overflow-hidden rounded-full border border-(--surface-500) bg-(--surface-200) dark:border-(--surface-300)"
+          >
             <div
-              className="h-2 rounded-full transition-[width]"
-              style={{ width: `${(s.deliveredCount / s.totalTypes) * 100}%`, background: 'var(--green-500)' }}
+              className="h-full rounded-full bg-(--green-700) transition-[width] dark:bg-(--green-400)"
+              style={{ width: `${(s.deliveredCount / s.totalTypes) * 100}%` }}
             />
           </div>
         </div>

@@ -3,7 +3,7 @@ import { COL, tableWidths } from '@shared/ui'
 /**
  * Classificação das colunas da `EmissionStudentsTable`.
  *
- * `certificate` é `short` e não `tag`: a célula imprime texto cru — `✓ <código>`
+ * `certificate` é `short` e não `tag`: a célula imprime texto cru — o ícone check e o código
  * quando emitido, e uma frase curta traduzida quando não —, sem `AppTag`.
  * Classificar pela forma que a tela desenha.
  *

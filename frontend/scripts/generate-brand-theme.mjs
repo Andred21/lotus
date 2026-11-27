@@ -385,6 +385,45 @@ function infoIndigo(css, tinta) {
   })
 }
 
+// ── D15 (bloco 66): as irmãs da tinta suave ─────────────────────────────────
+// O `info` foi à tinta suave no 65 (D7). Success, warning e danger de TAG e BADGE
+// seguem a mesma composição, para a classe crua e o `AppTag` (`severityTone`)
+// pintarem igual: fundo = `-500` do matiz a 15% sobre `--surface-card`, tinta = o
+// degrau do `--tone-<sev>-ink` de cada tema (`brand-theme.css`), que já passou na
+// régua UI-04 (`tests/tone-ink.test.ts`). Os palette vars do Lara não invertem entre
+// temas, então o degrau é escolhido aqui, por tema.
+//
+// `message` e `toast` ficam FORA: a decisão do João nomeou tag e badge. Hoje nenhuma
+// tela renderiza a classe crua (o `AppTag` compõe por `style` inline e não há
+// `Badge` em `src`); quem a protege é o teste do gerador.
+//
+// Regra de FORMA, a mesma do `infoIndigo`: o gate é o SELETOR, e lista mista lança.
+const TINTA_SUAVE = {
+  matiz: { success: 'green', warning: 'yellow', danger: 'red' },
+  claro: { success: 'var(--green-800)', warning: 'var(--yellow-800)', danger: 'var(--red-700)' },
+  escuro: { success: 'var(--green-400)', warning: 'var(--yellow-400)', danger: 'var(--red-300)' },
+}
+const SELETOR_TINTA_SUAVE = /\.p-(?:tag|badge)-(success|warning|danger)\b/
+
+function tintaSuave(css, tinta) {
+  const ink = tinta ? TINTA_SUAVE.claro : TINTA_SUAVE.escuro
+  return css.replace(/([^{}]+)\{([^{}]*)\}/g, (bloco, seletor, corpo) => {
+    const seletores = seletor.split(',').map((s) => s.trim())
+    const severidades = seletores.map((s) => s.match(SELETOR_TINTA_SUAVE)?.[1])
+    if (!severidades.some(Boolean)) return bloco
+    if (!severidades.every(Boolean) || new Set(severidades).size > 1) {
+      const intruso = seletores.find((s, i) => !severidades[i] || severidades[i] !== severidades[0])
+      throw new Error(`tintaSuave: lista mista — há seletor que não é da mesma severidade de tag/badge em: ${intruso}`)
+    }
+    const sev = severidades[0]
+    const fundo = `color-mix(in srgb, var(--${TINTA_SUAVE.matiz[sev]}-500) 15%, var(--surface-card))`
+    const novo = corpo
+      .replace(/(?<![-\w])color:(\s*)[^;]+/g, `color:$1${ink[sev]}`)
+      .replace(/(?<![-\w])background(-color)?:(\s*)[^;]+/g, `background$1:$2${fundo}`)
+    return `${seletor}{${novo}}`
+  })
+}
+
 // ── B-8 (bloco 65): a tag pesa 600 ──────────────────────────────────────────
 // O Lara pesa a `.p-tag` em 700; a grafia do produto para chip e tag é 12px/600
 // (DESIGN.md), a mesma do `RecordCode`. O gate é o seletor ser exatamente
@@ -606,7 +645,7 @@ export function transform(css, map, tinta) {
   const comTinta = tinta
     ? bordaDeControle(out.replace(CELESTE_PRIMEIRO_PLANO, `color:$1${tinta}`), BORDA_DE_ORIGEM.claro)
     : bordaDeControle(out, BORDA_DE_ORIGEM.escuro)
-  return CABECALHO + tagSemibold(infoIndigo(comTinta, tinta))
+  return CABECALHO + tagSemibold(tintaSuave(infoIndigo(comTinta, tinta), tinta))
 }
 
 function gerar(nomeStock, map, nomeSaida, tinta) {
