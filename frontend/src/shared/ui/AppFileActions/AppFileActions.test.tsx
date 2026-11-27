@@ -160,3 +160,17 @@ describe('AppFileActions — todo botão mostra dica à esquerda com o texto do 
     expect(dica.className).toContain('p-tooltip-left')
   })
 })
+
+/**
+ * B-10 do audit de 2026-11-26: os botões só-ícone saíam em pílula
+ * (`p-button-rounded`, raio de 2rem) contra o raio de 4px do tema. Só-ícone
+ * continua só-ícone; o formato é o do controle.
+ */
+describe('botão só-ícone não é pílula', () => {
+  it('visualizar, baixar e excluir saem com o raio do tema', () => {
+    const { container } = render(<AppFileActions file={arquivo} onPreview={() => {}} onRemove={() => {}} />)
+
+    expect(container.querySelectorAll('button')).toHaveLength(3)
+    expect(container.querySelectorAll('.p-button-rounded')).toHaveLength(0)
+  })
+})

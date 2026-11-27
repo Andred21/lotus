@@ -228,8 +228,8 @@ caixa mista) são registros diferentes, não degraus da mesma escala. Não os un
 
 ## Layout
 
-Shell de duas colunas em `h-screen`: sidebar fixa à esquerda (256px expandida, rail de 80px
-colapsada; colapso imposto abaixo de 1024px sem tocar a preferência salva), header de 80px fixo
+Shell de duas colunas em `h-dvh` (altura dinâmica da viewport: a barra do navegador móvel não
+esconde o paginador): sidebar fixa à esquerda (256px expandida, rail de 80px colapsada; colapso imposto abaixo de 1024px sem tocar a preferência salva), header de 80px fixo
 no topo, `<main>` com rolagem própria e padding de 16px (24px a partir de `sm`). Skip-link
 "ir ao conteúdo" é o primeiro focável.
 
@@ -242,7 +242,10 @@ desenhada por gradientes presos à moldura, e a coluna de ações presa à direi
 (`stickyActionsColumn`). Abaixo de `sm` cada tabela declara o próprio piso. Colapsar coluna é
 proibido em tela com peso de auditoria.
 
-Diálogos: 95vw → 85vw (`sm`) → 70vw (`lg`), maximizáveis, não arrastáveis. Espaçamento interno
+Diálogos: todos abrem a 95vw em tela estreita e ganham teto por tamanho: `sm` 32rem (512px),
+`md` 48rem (768px) e `lg` 85vw a partir de `sm` e 70vw a partir de `lg`, com teto de 84rem (para não
+virar faixa em ultrawide). Só o `lg` é maximizável (solta o teto), e nenhum é arrastável. A
+confirmação (`ConfirmDialog`) é a exceção: teto próprio de 28rem. Espaçamento interno
 padrão: cabeçalho e toolbar de cartão `16px × 12px`, célula `16px × 12px`, cabeçalho de célula
 `16px × 10px`, cartão `stat` `16px × 14px`.
 

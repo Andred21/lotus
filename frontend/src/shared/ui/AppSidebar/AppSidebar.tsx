@@ -13,6 +13,6 @@ export function AppSidebar({
   className?: string
 }) {
   return (
-    <aside className={`flex h-screen flex-col border-r ${className}`}>{children}</aside>
+    <aside className={`flex h-dvh flex-col border-r ${className}`}>{children}</aside>
   )
 }

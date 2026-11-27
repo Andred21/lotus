@@ -45,7 +45,6 @@ function RowActionButton({ acao }: { acao: RowAction }) {
           icon={acao.icon}
           text
           plain={!acao.severity}
-          rounded
           severity={acao.severity}
           aria-label={acao.label}
           aria-describedby={acao.describedBy}
@@ -113,7 +112,6 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
         icon="more"
         text
         plain
-        rounded
         aria-label={t('common.moreActions')}
         aria-haspopup
         aria-expanded={open}

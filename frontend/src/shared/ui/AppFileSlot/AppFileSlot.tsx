@@ -93,7 +93,6 @@ export function AppFileSlot<T extends SlotFile>({
           <AppButton
             icon="close"
             text
-            rounded
             severity="danger"
             aria-label={removal.removeLabel ?? t('common.delete')}
             tooltip={removal.removeLabel ?? t('common.delete')}

@@ -13,7 +13,7 @@ import { primeIcon, type IconProp } from '../AppIcon'
  * aqui para que AppFileSlot, AppPhotoField e o cartão da turma não repitam. */
 const UPLOAD_ICON_OPTIONS = {
   icon: 'upload' as IconProp,
-  className: 'p-button-text p-button-rounded',
+  className: 'p-button-text',
 }
 
 export type { FileUploadHandlerEvent } from 'primereact/fileupload'

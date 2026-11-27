@@ -28,7 +28,6 @@ export function RedatorCard({
           <AppButton
             icon="view"
             text
-            rounded
             aria-label={t('common.view')}
             tooltip={t('common.view')}
             onClick={onView}

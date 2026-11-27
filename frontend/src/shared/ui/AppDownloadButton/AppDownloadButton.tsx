@@ -40,7 +40,6 @@ export function AppDownloadButton({ href, label, className }: AppDownloadButtonP
       icon="download"
       label={label}
       text={!label}
-      rounded={!label}
       className={className}
       aria-label={label ? undefined : nome}
       tooltip={label ? undefined : nome}

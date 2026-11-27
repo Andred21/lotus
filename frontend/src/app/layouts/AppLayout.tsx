@@ -14,7 +14,7 @@ export function AppLayout() {
 
   // O tema é aplicado globalmente nos providers (useApplyTheme).
   return (
-    <div className="relative flex h-screen overflow-hidden bg-(--surface-ground)">
+    <div className="relative flex h-dvh overflow-hidden bg-(--surface-ground)">
       {/* Primeiro focável da aplicação, visível só no foco. Antes dele havia 11
         * paradas de teclado — botão de menu, 7 links da barra, idioma, tema,
         * usuário — antes do primeiro elemento acionável do conteúdo, e o

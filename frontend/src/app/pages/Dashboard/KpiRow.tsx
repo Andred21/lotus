@@ -62,19 +62,19 @@ export function KpiRow({ items }: { items: Kpi[] }) {
         // altura ao conteúdo sem depender de porcentagem resolvida contra um
         // `height: auto`.
         <AppCard key={kpi.key} variant="stat" tone={kpi.tone} className="flex flex-col">
-          {/* Duas arrumações, um markup só. Abaixo de `sm` o card ocupa a
-            * largura inteira e vira LINHA — rótulo à esquerda, número à
-            * direita, na mesma base —, que é o que traz as duas listas de volta
-            * para perto do topo em 390px. De `sm` para cima a coluna é estreita,
-            * o card empilha e ocupa a ALTURA INTEIRA da fileira, que é o que
-            * ancora o número na base. */}
-          <div className="flex items-baseline justify-between gap-4 sm:flex-1 sm:flex-col sm:items-stretch sm:gap-0">
-            {/* `min-w-0` para o rótulo longo quebrar DENTRO da própria caixa em
-              * vez de empurrar o número para a linha de baixo: envolvido, o
-              * número perdia o `justify-between` e voltava para a esquerda, e a
-              * fileira do mobile ficava com quatro números à direita e dois à
-              * esquerda. */}
-            <p className={`min-w-0 ${sectionLabelClass}`} style={{ color: 'var(--text-color-secondary)' }}>
+          {/* Uma arrumação só: o corpo empilha, rótulo em cima e número na
+            * linha de baixo. Até 2026-11-27 abaixo de `sm` o card virava LINHA
+            * (rótulo à esquerda, número à direita), e o rótulo longo quebrava
+            * em palavras soltas numa caixa estreita (B-12 do audit de
+            * 2026-11-26): dar ao rótulo a largura inteira vale mais que as
+            * ~40px que a linha poupava. De `sm` para cima o card ocupa a
+            * ALTURA INTEIRA da fileira, que é o que ancora o número na base. */}
+          <div className="flex flex-col gap-1 sm:flex-1 sm:justify-between sm:gap-0">
+            {/* `min-w-0` para o rótulo longo quebrar DENTRO da própria caixa.
+              * `text-balance` reparte as linhas por igual (sem a palavra
+              * órfã) e `hyphens-auto` deixa o navegador hifenizar pelo `lang`
+              * do documento, que o i18n mantém no idioma da tela. */}
+            <p className={`min-w-0 text-balance hyphens-auto ${sectionLabelClass}`} style={{ color: 'var(--text-color-secondary)' }}>
               {t(kpi.key)}
             </p>
             {/* O `justify-between` do corpo é o que põe todos os números na

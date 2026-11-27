@@ -119,14 +119,14 @@ describe('AppFileUpload', () => {
 })
 
 describe('AppFileUpload — convenção do só-ícone', () => {
-  it('sem rótulo, o disparador nasce com o ícone de enviar e a classe de texto arredondado', () => {
+  it('sem rótulo, o disparador nasce com o ícone de enviar e a classe de texto, sem pílula', () => {
     // O default mora aqui, uma vez: AppFileSlot, AppPhotoField e o cartão da
     // turma pediam o mesmo `chooseOptions` cada um por conta própria.
     render(<AppFileUpload accessibleName="Subir currículum" />)
 
     const botao = screen.getByRole('button', { name: 'Subir currículum' })
     expect(botao.className).toContain('p-button-text')
-    expect(botao.className).toContain('p-button-rounded')
+    expect(botao.className).not.toContain('p-button-rounded')
     expect(botao.querySelector('svg')?.innerHTML).toBe(desenho('upload'))
   })
 

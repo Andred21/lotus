@@ -172,8 +172,8 @@ export function SearchableTableFrame<T>({
     <>
       <AppCardToolbar
         start={
-          <div className="flex min-w-64 flex-1 flex-wrap items-center gap-3">
-            <div className="min-w-64 flex-1">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3 sm:min-w-64">
+            <div className="min-w-0 flex-1 sm:min-w-64">
               <AppInputText
                 leftIcon="search"
                 placeholder={searchPlaceholder}
