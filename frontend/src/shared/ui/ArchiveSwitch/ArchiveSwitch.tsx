@@ -5,6 +5,12 @@ import { AppButton } from '../AppButton'
  * direção. O mesmo motivo do `SearchableTableState`. */
 type Mode = 'active' | 'archived'
 
+/** O `plain` do tema pinta o rótulo em `--text-color-secondary`, que reprova
+ * 4,5:1 sobre o hover/active do próprio botão (claro: 4,34:1 e 3,86:1; escuro,
+ * active: 4,36:1). `--text-color` fica ≥ 6:1 nos dois temas em repouso, hover e
+ * active. A utility vence a regra do tema porque o Prime vive em `@layer`. */
+const NAO_SELECIONADO = 'text-[var(--text-color)]'
+
 /**
  * Alterna a FONTE DE DADOS da tabela entre ativos e arquivados.
  *
@@ -27,6 +33,7 @@ export function ArchiveSwitch({ value, onChange }: { value: Mode; onChange: (mod
         outlined={value === 'active'}
         text={value !== 'active'}
         plain={value !== 'active'}
+        className={value !== 'active' ? NAO_SELECIONADO : undefined}
         severity={value === 'active' ? 'secondary' : undefined}
         onClick={() => value !== 'active' && onChange('active')}
       />
@@ -37,6 +44,7 @@ export function ArchiveSwitch({ value, onChange }: { value: Mode; onChange: (mod
         outlined={value === 'archived'}
         text={value !== 'archived'}
         plain={value !== 'archived'}
+        className={value !== 'archived' ? NAO_SELECIONADO : undefined}
         severity={value === 'archived' ? 'secondary' : undefined}
         onClick={() => value !== 'archived' && onChange('archived')}
       />

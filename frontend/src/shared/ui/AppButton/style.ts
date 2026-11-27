@@ -47,14 +47,15 @@ export const appButtonStyles = {
    * temas e SEM `dark:`: o shell é azul-poste nos dois (Fixed Dial Rule), então
    * a marca de cartão branco do `primary` pousaria como um retângulo claro sobre
    * o navy no claro e como celeste cheio no escuro. Aqui o traço e o rótulo são
-   * `--shell-ink` (a borda a 40%, para não disputar com o item ativo da sidebar)
-   * e o hover é branco a 10%, o mesmo da sidebar.
+   * `--shell-ink` (a borda a 50%: a 40% media 2,80:1 sobre o navy e o piso de
+   * traço de controle é 3:1; a 50% mede 3,58:1 em repouso e 3,06:1 sobre o
+   * hover) e o hover é branco a 10%, o mesmo da sidebar.
    *
    * Não declara geometria: herda a do `.p-button` do tema; o seletor de idioma,
    * que precisa de menos, aperta por `className`.
    */
   shell:
-    'flex items-center justify-center gap-1 bg-transparent text-[var(--shell-ink)] border-2 border-[var(--shell-ink)]/40 hover:bg-white/10',
+    'flex items-center justify-center gap-1 bg-transparent text-[var(--shell-ink)] border-2 border-[var(--shell-ink)]/50 hover:bg-white/10',
   /**
    * Sem superfície: fundo, padding e hover do `.p-button` zerados. É o gatilho
    * que embrulha avatar e identidade no header — ali quem pinta são os filhos,

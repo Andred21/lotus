@@ -186,7 +186,7 @@ Uma paleta de instrumento: um celeste vivo como acento único, navy como carcaç
 ### Named Rules
 **The Fixed Dial Rule.** Sidebar e header são azul-poste nos dois temas. Nenhum `dark:` ali; quem
 pousa sobre o navy redeclara `--focus-stroke`, `--divider-stroke` e usa `--shell-ink`. Os controles
-do header (idioma e tema) são a variante `shell` do `AppButton`: contorno `--shell-ink` a 40%,
+do header (idioma e tema) são a variante `shell` do `AppButton`: contorno `--shell-ink` a 50% (a 40% media 2,80:1),
 rótulo `--shell-ink`, hover branco a 10%, idêntica nos dois temas e sem `dark:`.
 
 **The Ink, Not Fill Rule.** Cor de severidade entra como trilho de 3px ou como tinta de texto. Texto
@@ -289,11 +289,11 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
   2px e rótulo em `celeste-tinta`, hover leva o rótulo a `--text-color`; no escuro, preenchido
   celeste com borda branca e rótulo azul-poste. É o botão que abre módulo, salva e confirma emissão.
 - **`shell`:** o controle do header sobre o navy fixo (seletor de idioma, toggle de tema): transparente,
-  contorno 2px `--shell-ink` a 40%, rótulo `--shell-ink`, hover branco a 10%. Igual nos dois temas —
+  contorno 2px `--shell-ink` a 50% (3,58:1 sobre o navy; a 40% media 2,80:1), rótulo `--shell-ink`, hover branco a 10%. Igual nos dois temas —
   a marca de cartão branco/celeste cheio não pousa sobre o shell.
 - **Ação de linha e filtro (celeste raro):** a ação comum de uma linha de tabela é `text plain`
   (neutra); a destrutiva segue `danger`. O `ArchiveSwitch` usa `secondary outlined` no lado
-  selecionado e `text plain` no outro. O celeste fica com a CTA, o foco e o item ativo.
+  selecionado e `text plain` no outro, com o rótulo em `--text-color` (o cinza do `plain` reprova 4,5:1 no hover e no active). O celeste fica com a CTA, o foco e o item ativo.
 - **Focus:** anel do tema (`0 0 0 0.2rem #b2dff5` / celeste a 20%) SOMADO a `outline: 2px solid
   var(--focus-stroke)` com offset 2px, só em `:focus-visible`. Nunca zerar o anel.
 - **`noSurface`:** sem fundo nem padding; só área de clique e anel. O gatilho do menu do usuário.

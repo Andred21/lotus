@@ -20,7 +20,9 @@ describe('vocabulário de botão', () => {
    * controle com `dark:` troca de cara sobre uma superfície que não troca. */
   it('variante shell não tem classe dark:', () => {
     expect(appButtonStyles.shell).not.toContain('dark:')
-    expect(appButtonStyles.shell).toContain('border-[var(--shell-ink)]/40')
+    // 50%, não 40%: a 40% a borda mede 2,80:1 sobre o navy (piso de controle 3:1);
+    // 50% mede 3,58:1 em repouso e 3,06:1 sobre o hover (branco a 10%).
+    expect(appButtonStyles.shell).toContain('border-[var(--shell-ink)]/50')
     expect(appButtonStyles.shell).toContain('text-[var(--shell-ink)]')
     expect(appButtonStyles.shell).toContain('hover:bg-white/10')
   })

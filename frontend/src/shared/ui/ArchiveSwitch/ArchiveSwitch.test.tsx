@@ -49,6 +49,17 @@ describe('ArchiveSwitch', () => {
     expect(ativos.className).not.toContain('p-button-secondary')
   })
 
+  /** O `plain` do tema pinta o rótulo em `--text-color-secondary`: no claro
+   * #64748b mede 4,34:1 no hover (#f1f5f9) e 3,86:1 no active (#e2e8f0); no
+   * escuro, branco a 60% mede 4,36:1 no active. O lado não selecionado crava
+   * `--text-color` (≥ 6:1 nos dois temas, nos três estados). */
+  it('o lado não selecionado crava --text-color: o plain do tema não chega a 4,5:1 no hover/active', () => {
+    render(<ArchiveSwitch value="active" onChange={() => {}} />)
+
+    const arquivados = screen.getByRole('button', { name: /^(archive\.archived|Archivados|Arquivados|Archived)$/i })
+    expect(arquivados.className).toContain('text-[var(--text-color)]')
+  })
+
   it('o modo corrente é contornado e o outro é texto — nenhum preenchido', () => {
     render(<ArchiveSwitch value="active" onChange={() => {}} />)
 
