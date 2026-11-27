@@ -30,6 +30,10 @@ Fonte do "depois": entrada, chunk comum e total vêm do build do Step 6 da Task 
 - **Em `ae4594b1`:** `pnpm lint` exit 0, `pnpm test` com 269 arquivos e 2266 testes, `pnpm build` ok. O backend não mudou.
 - A Task 2 só acrescenta este arquivo e as capturas.
 
+## Nota sobre o `i18n.ts` na lista
+
+A entrada `./src/shared/config/i18n.ts` é defensiva. A revisão da branch achou que o módulo também é importado com nome (`src/shared/api/axios.ts:2`, `src/shared/lib/datetime.ts:1`, entre outros), e por isso entraria no build mesmo fora da lista. Os rótulos em es-CL da passada provam que o i18n funciona, não que o padrão `./src/...` é honrado. Quem provou o padrão foi uma sonda da revisão: um módulo com efeito no topo, importado nu pelo `main.tsx`, some do bundle fora da lista e fica nele com `./src/sonda.ts` listado.
+
 ## Pendências registradas
 
 - **Regex do detector exige espaço depois de `import`.** A revisão da Task 1 notou que `import"./x"` (sem espaço) escaparia da catraca (`frontend/tests/side-effects-ratchet.test.ts`, `importsNus`). É a regex que o plano manda, e nenhum import de `src/` hoje omite o espaço. O projeto não tem Prettier que o garanta. Fica registrado, sem correção: fechar é trocar `import\s+` por `import\s*` na regex.
