@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useCreateQuote, useUpdateQuote, type QuotePayload } from '../api/useQuotes'
+import { useToast } from '@shared/ui'
 import { formatUf, parseUfInput } from '@shared/lib'
 
 /** Campos que o wizard edita. `value_uf` fica STRING o caminho todo: converter
@@ -41,6 +43,8 @@ const toFields = (q: QuoteFormFields): QuoteFormFields =>
   })
 
 export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: () => void) {
+  const { t } = useTranslation()
+  const toast = useToast()
   const mode = quote ? 'edit' : 'create'
   const { form, set: setField, didReset, dirty } = useEntityForm<QuoteFormFields>(quote, mode, EMPTY, toFields)
   const guard = useUnsavedChangesGuard(dirty)
@@ -67,10 +71,20 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
 
   function submit() {
     if (quote) {
-      update.mutate({ quoteId: quote.id!, payload: payload() }, { onSuccess: onDone })
+      update.mutate({ quoteId: quote.id!, payload: payload() }, {
+        onSuccess: () => {
+          toast.success(t('common.updatedToast'))
+          onDone()
+        },
+      })
       return
     }
-    create.mutate({ budgetId, payload: payload() }, { onSuccess: onDone })
+    create.mutate({ budgetId, payload: payload() }, {
+      onSuccess: () => {
+        toast.success(t('common.createdToast'))
+        onDone()
+      },
+    })
   }
 
   const { fieldErrors, generalError, set } = useFormMutationErrors<QuoteFormFields>(setField, [create.error, update.error])

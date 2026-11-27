@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
 import type { DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
+import { useToast } from '@shared/ui'
 import { coursesApi } from '@shared/api/coursesApi'
 import { useCreateTurma, useUpdateTurma, type TurmaConfigPayload } from '../api/useTurmas'
 
@@ -30,6 +32,8 @@ export function useTurmaConfigForm(params: {
   onSaved: (turmaId: number) => void
 }) {
   const { mode, turma, quoteId, onSaved } = params
+  const { t } = useTranslation()
+  const toast = useToast()
   const entity = turma ? ({ id: turma.id, ...toFields(turma) } as TurmaConfigPayload & { id?: number }) : null
   const { form, set: setField, readOnly, dirty } = useEntityForm<TurmaConfigPayload & { id?: number }>(
     entity,
@@ -77,9 +81,16 @@ export function useTurmaConfigForm(params: {
   const submit = () => {
     if (mode === 'create') {
       if (quoteId == null) return
-      create.mutate({ quoteId, payload: payload() }, { onSuccess: (t) => saved(t.id) })
+      create.mutate({ quoteId, payload: payload() }, { onSuccess: (created) => saved(created.id) })
     } else if (turma?.id != null) {
-      update.mutate({ turmaId: turma.id, payload: payload() }, { onSuccess: (t) => saved(t.id) })
+      update.mutate({ turmaId: turma.id, payload: payload() }, {
+        onSuccess: (updated) => {
+          saved(updated.id)
+          // Só a edição diz: a criação navega ao detalhe e a tela nova é a prova.
+          // Depois do `saved`: se o `onSaved` lança, o sucesso não se diz.
+          toast.success(t('common.updatedToast'))
+        },
+      })
     }
   }
 
