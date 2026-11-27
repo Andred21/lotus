@@ -26,6 +26,7 @@ vi.mock('../../hooks/useTurmaConfigForm', () => ({
 const guard = {
   confirmDiscard: vi.fn((proceed: () => void) => proceed()),
   allowNavigation: vi.fn(),
+  revoke: vi.fn(),
   dialogProps: { visible: false, onConfirm: () => {}, onCancel: () => {}, blocker: null },
 }
 
@@ -41,6 +42,7 @@ beforeAll(registerPrimeLocales)
 beforeEach(() => {
   guard.confirmDiscard.mockClear()
   guard.allowNavigation.mockClear()
+  guard.revoke.mockClear()
   form.current = {
     form: { modalidade: 'presencial', local_aplicacao: '', start_date: '', end_date: '' },
     set: () => {}, readOnly: false, submit: () => {}, pending: false,
@@ -87,5 +89,16 @@ describe('TurmaConfigCard — Cancelar passa pela guarda', () => {
 
     expect(onCancel).not.toHaveBeenCalled()
     expect(guard.allowNavigation).not.toHaveBeenCalled()
+  })
+
+  it('onCancel que lança revoga a liberação que acabou de conceder', () => {
+    form.current = { ...form.current, dirty: true }
+    const onCancel = vi.fn(() => { throw new Error('onCancel reprovou') })
+    render(<TurmaConfigCard mode="create" quoteId={7} onSaved={() => {}} onCancel={onCancel} />)
+
+    // O erro sobe pelo handler do React; o que se prova é a guarda ter sido desarmada.
+    try { cancelar() } catch { /* esperado */ }
+
+    expect(guard.revoke).toHaveBeenCalledTimes(1)
   })
 })

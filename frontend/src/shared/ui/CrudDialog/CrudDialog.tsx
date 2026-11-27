@@ -61,7 +61,17 @@ export function CrudDialog({
    * `closeBlocked` precisa gatear `disabled` pela mesma condição, senão a
    * perda silenciosa volta pela porta do Salvar. */
   closeBlocked?: boolean
-  /** A guarda de rascunho do formulário. Ver o docblock do componente. */
+  /** A guarda de rascunho do formulário: o `crud.guard` que o `useCrudForm` (ou
+   * `useRedatorForm`) devolve. O dialog monta o `DiscardChangesDialog` com o
+   * `guard.dialogProps` e roteia Cancelar/Fechar, X e Esc por
+   * `guard.confirmDiscard`.
+   *
+   * É o objeto da guarda, e não um `dirty` booleano, porque a guarda nasce no
+   * hook do form: só ele sabe quando o salvar deu certo e libera a navegação
+   * (`allowNavigation`) antes de o `afterCreate` navegar — o `onCreated` do
+   * orçamento leva ao detalhe com o form ainda sujo. Um `dirty` aqui criaria a
+   * guarda dentro do dialog, longe do salvar, e essa navegação de sucesso abriria
+   * "descartar?". Sem `guard`, o dialog fecha direto. */
   guard?: UnsavedChangesGuard
   submitLabel?: string
   headerExtra?: ReactNode

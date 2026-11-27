@@ -99,10 +99,12 @@ function Onde() {
   return <p data-testid="onde">{useLocation().pathname}</p>
 }
 
-function Rascunho({ onHide, mode = 'create', irParaAoSalvar }: {
+function Rascunho({ onHide, mode = 'create', irParaAoSalvar, falhaAoSalvar }: {
   onHide: () => void
   mode?: DialogMode
   irParaAoSalvar?: string
+  /** O pós-salvar reprova (como o sync de redatores do curso). */
+  falhaAoSalvar?: boolean
 }) {
   const navigate = useNavigate()
   const { crud } = useCrudForm<Fields, Salvo>(RECURSO, {
@@ -113,7 +115,9 @@ function Rascunho({ onHide, mode = 'create', irParaAoSalvar }: {
     mapped: ['name'],
     summaryOnly: [],
     onDone: onHide,
-    afterCreate: irParaAoSalvar ? () => { void navigate(irParaAoSalvar) } : undefined,
+    afterCreate: falhaAoSalvar
+      ? () => { throw new Error('segunda etapa reprovou') }
+      : irParaAoSalvar ? () => { void navigate(irParaAoSalvar) } : undefined,
   })
   return (
     <>
@@ -245,5 +249,22 @@ describe('CrudDialog — guarda de rascunho', () => {
 
     await waitFor(() => expect(screen.getByTestId('onde').textContent).toBe('/detalle/5'))
     expect(perguntou()).toBe(false)
+  })
+
+  it('pós-salvar que falha: o diálogo fica aberto e a próxima navegação suja ainda pergunta', async () => {
+    const erro = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const onHide = vi.fn()
+    montar({ onHide, falhaAoSalvar: true })
+    digitar('Lotus')
+
+    fireEvent.click(screen.getByRole('button', { name: i18n.t('common.save') }))
+    await waitFor(() => expect(erro).toHaveBeenCalled())
+    expect(onHide).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByText('ir'))
+
+    await waitFor(() => expect(perguntou()).toBe(true))
+    expect(screen.getByTestId('onde').textContent).toBe('/lista')
+    erro.mockRestore()
   })
 })

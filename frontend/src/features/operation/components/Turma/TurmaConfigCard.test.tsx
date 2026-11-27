@@ -56,6 +56,7 @@ function comPermissoes(permissions: string[]) {
 const guard = {
   confirmDiscard: (proceed: () => void) => proceed(),
   allowNavigation: () => {},
+  revoke: () => {},
   dialogProps: { visible: false, onConfirm: () => {}, onCancel: () => {}, blocker: null },
 }
 

@@ -10,6 +10,13 @@ export type UnsavedChangesGuard = {
    * Chame no `onSuccess`, imediatamente antes do `navigate`.
    */
   allowNavigation: () => void
+  /**
+   * Desfaz uma liberação de `allowNavigation` ainda não consumida. Chame se o que vinha
+   * depois do `allowNavigation` falhou e a tela continua aberta com rascunho: a
+   * liberação só some sozinha quando o rascunho limpa, e sem isto a próxima
+   * navegação sairia sem aviso.
+   */
+  revoke: () => void
   dialogProps: {
     visible: boolean
     onConfirm: () => void
@@ -78,6 +85,7 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
   }, [dirty])
 
   const allowNavigation = useCallback(() => { allowance.grant() }, [allowance])
+  const revoke = useCallback(() => { allowance.revoke() }, [allowance])
 
   const onConfirm = () => {
     if (blocked) blocked.proceed()
@@ -96,6 +104,7 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
   return {
     confirmDiscard,
     allowNavigation,
+    revoke,
     dialogProps: {
       visible: blocked !== null || pending !== null,
       onConfirm,

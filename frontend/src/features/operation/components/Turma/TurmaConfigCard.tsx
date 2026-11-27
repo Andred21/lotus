@@ -46,7 +46,12 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
   // o próximo rascunho.
   const cancelar = () => f.guard.confirmDiscard(() => {
     if (f.dirty) f.guard.allowNavigation()
-    onCancel?.()
+    try {
+      onCancel?.()
+    } catch (error) {
+      f.guard.revoke()
+      throw error
+    }
   })
 
   const modalityOptions = [

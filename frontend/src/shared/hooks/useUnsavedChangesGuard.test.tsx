@@ -114,6 +114,19 @@ describe('useUnsavedChangesGuard', () => {
     expect(result.current.guard.dialogProps.visible).toBe(true)
   })
 
+  it('revoke desfaz a liberação: o pós-salvar que falha não deixa a próxima navegação passar', () => {
+    const { result } = montar(true)
+
+    act(() => {
+      result.current.guard.allowNavigation()
+      result.current.guard.revoke()
+      void result.current.navigate('/b')
+    })
+
+    expect(result.current.location.pathname).toBe('/a')
+    expect(result.current.guard.dialogProps.visible).toBe(true)
+  })
+
   it('allowNavigation também é consumido por uma navegação só de query', () => {
     const { result } = montar(true)
 

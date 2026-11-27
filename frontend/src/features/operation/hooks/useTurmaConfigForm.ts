@@ -65,7 +65,13 @@ export function useTurmaConfigForm(params: {
   const saved = (id: number | undefined) => {
     if (id == null) return
     if (dirty) guard.allowNavigation()
-    onSaved(id)
+    try {
+      onSaved(id)
+    } catch (error) {
+      // A tela segue aberta e suja: a liberação não consumida não pode sobrar.
+      guard.revoke()
+      throw error
+    }
   }
 
   const submit = () => {

@@ -171,6 +171,9 @@ export function useCrudForm<F extends { id?: number }, T>(
     try {
       await afterCreate?.(created)
     } catch (error) {
+      // O diálogo segue aberto e sujo: a liberação concedida acima não foi usada
+      // e não pode sobrar para a próxima navegação.
+      guard.revoke()
       console.error('useCrudForm: afterCreate falhou, diálogo permanece aberto', error)
       return
     }
