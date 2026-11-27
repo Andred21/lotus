@@ -59,7 +59,16 @@ export function UserMenu() {
         {/* Decorativo para o leitor de tela: as iniciais (ou o alt da foto)
           * repetiriam o nome que vem logo abaixo, agora que o nome acessível do
           * gatilho é o conteúdo e não mais um rótulo à parte. */}
-        <AppAvatar name={user.name} image={user.photo_url} size="large" aria-hidden className="shrink-0!" />
+        <AppAvatar
+          name={user.name}
+          image={user.photo_url}
+          size="large"
+          aria-hidden
+          className="shrink-0!"
+          // Sobre o shell as iniciais seguem na marca: o neutro de `AppAvatar` é
+          // cinza de superfície do tema, e aqui o fundo é o navy fixo.
+          style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-navy)' }}
+        />
 
       {/* Texto branco cravado, não token de tema: a navy do header é fixa nos
         * dois temas e `--text-color` é cinza de superfície clara — media 1,42:1

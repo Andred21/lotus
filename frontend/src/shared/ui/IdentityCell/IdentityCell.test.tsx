@@ -11,6 +11,16 @@ import { IdentityCell } from './IdentityCell'
  */
 
 describe('IdentityCell', () => {
+  /** B-2 (D7): 40px é o diâmetro da célula de tabela; o `large` do Prime (48px)
+   * deixava o avatar maior que as duas linhas de texto ao lado. */
+  it('o avatar da célula tem 40px', () => {
+    const { container } = render(<IdentityCell title="Juan Soto" description="juan@lotus.cl" />)
+
+    const avatar = container.querySelector<HTMLElement>('.p-avatar')!
+    expect(avatar.style.width).toBe('40px')
+    expect(avatar.style.height).toBe('40px')
+  })
+
   it('na forma padrão empilha título e descrição em duas linhas truncadas', () => {
     const { container } = render(<IdentityCell title="Juan Soto" description="juan@lotus.cl" />)
 

@@ -185,7 +185,9 @@ Uma paleta de instrumento: um celeste vivo como acento único, navy como carcaç
 
 ### Named Rules
 **The Fixed Dial Rule.** Sidebar e header são azul-poste nos dois temas. Nenhum `dark:` ali; quem
-pousa sobre o navy redeclara `--focus-stroke`, `--divider-stroke` e usa `--shell-ink`.
+pousa sobre o navy redeclara `--focus-stroke`, `--divider-stroke` e usa `--shell-ink`. Os controles
+do header (idioma e tema) são a variante `shell` do `AppButton`: contorno `--shell-ink` a 40%,
+rótulo `--shell-ink`, hover branco a 10%, idêntica nos dois temas e sem `dark:`.
 
 **The Ink, Not Fill Rule.** Cor de severidade entra como trilho de 3px ou como tinta de texto. Texto
 branco sobre hue saturado está banido: a tag `Vigente` media 2,28:1 assim.
@@ -286,6 +288,12 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
 - **Marca (`variant="primary"`, `iconToggle`, `compact`):** no claro, cartão branco com contorno
   2px e rótulo em `celeste-tinta`, hover leva o rótulo a `--text-color`; no escuro, preenchido
   celeste com borda branca e rótulo azul-poste. É o botão que abre módulo, salva e confirma emissão.
+- **`shell`:** o controle do header sobre o navy fixo (seletor de idioma, toggle de tema): transparente,
+  contorno 2px `--shell-ink` a 40%, rótulo `--shell-ink`, hover branco a 10%. Igual nos dois temas —
+  a marca de cartão branco/celeste cheio não pousa sobre o shell.
+- **Ação de linha e filtro (celeste raro):** a ação comum de uma linha de tabela é `text plain`
+  (neutra); a destrutiva segue `danger`. O `ArchiveSwitch` usa `secondary outlined` no lado
+  selecionado e `text plain` no outro. O celeste fica com a CTA, o foco e o item ativo.
 - **Focus:** anel do tema (`0 0 0 0.2rem #b2dff5` / celeste a 20%) SOMADO a `outline: 2px solid
   var(--focus-stroke)` com offset 2px, só em `:focus-visible`. Nunca zerar o anel.
 - **`noSurface`:** sem fundo nem padding; só área de clique e anel. O gatilho do menu do usuário.
@@ -329,7 +337,7 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
   `10px × 12px`, 4px, borda esquerda 2px; repouso em `tinta-painel`, hover branco a 10%, ativo
   celeste sobre branco a 5% com a borda acesa. Colapsado, o item EMPILHA ícone e rótulo de 10px —
   o rail é o único menu do celular.
-- **Header:** barra utilitária sem título — controles de idioma e tema (botões de marca), divisor
+- **Header:** barra utilitária sem título — controles de idioma e tema (variante `shell`), divisor
   branco a 20%, relógio mono, avatar + nome (branco, 14px/600) + papel (branco a 75%) num gatilho só.
 
 ### Ícones
@@ -344,7 +352,9 @@ do Prime seguem o `md` (o check do checkbox, 16). `regular` por padrão; `fill` 
 `text-sm`, sem zebra. Cabeçalho em `fieldLabelClass` sobre `--surface-section`, `16px × 10px`,
 tinta secundária. Linha transparente (a sombra de rolagem precisa aparecer), hover em `--surface-hover`.
 Paginador É o rodapé: contagem à esquerda, controles à direita, hairline acima. Larguras declaradas
-em razão com `table-fixed`.
+em razão com `table-fixed`. Identidade da linha: avatar de iniciais NEUTRO de 40px
+(`--surface-200`, rótulo `--text-color` a 600), nunca celeste — só o gatilho do usuário no header
+mantém as iniciais na marca, porque pousa sobre o navy.
 
 ### Signature: o Folio
 `CertificateFolio` trata o número `LOT-ano-seq` como artefato: legenda em rótulo de campo (`dt`),

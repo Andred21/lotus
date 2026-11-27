@@ -54,3 +54,16 @@ describe('UserMenu — rótulo do role', () => {
     expect(screen.queryByText(/^roleName\./)).toBeNull()
   })
 })
+
+/** B-2: o avatar de iniciais virou neutro em `shared/ui`, mas o header é navy
+ * fixo nos dois temas — o cinza de superfície do tema não pousa ali. */
+describe('UserMenu — avatar sobre o shell', () => {
+  it('as iniciais seguem na marca, não no neutro', () => {
+    logadoCom(['superadmin'])
+    const { container } = renderWithProviders(<UserMenu />, { route: '/' })
+
+    const avatar = container.querySelector<HTMLElement>('.p-avatar')!
+    expect(avatar.style.backgroundColor).toContain('--brand')
+    expect(avatar.style.backgroundColor).not.toContain('--surface-200')
+  })
+})

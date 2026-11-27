@@ -37,6 +37,18 @@ describe('ArchiveSwitch', () => {
    * selecionado é contorno, não selecionado é texto, e o único de marca na
    * barra segue sendo a CTA.
    */
+  it('switch selecionado é secondary outlined, e o outro é text plain', () => {
+    render(<ArchiveSwitch value="archived" onChange={() => {}} />)
+
+    const ativos = screen.getByRole('button', { name: /^(archive\.active|Activos|Ativos|Active)$/i })
+    const arquivados = screen.getByRole('button', { name: /^(archive\.archived|Archivados|Arquivados|Archived)$/i })
+    expect(arquivados.className).toContain('p-button-outlined')
+    expect(arquivados.className).toContain('p-button-secondary')
+    expect(ativos.className).toContain('p-button-text')
+    expect(ativos.className).toContain('p-button-plain')
+    expect(ativos.className).not.toContain('p-button-secondary')
+  })
+
   it('o modo corrente é contornado e o outro é texto — nenhum preenchido', () => {
     render(<ArchiveSwitch value="active" onChange={() => {}} />)
 

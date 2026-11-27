@@ -21,6 +21,14 @@ const abrirMenu = () => {
 }
 
 describe('LanguageMenu', () => {
+  it('controles do header usam shell: o botão do idioma não traz a marca dos dois temas', () => {
+    render(<LanguageMenu />)
+
+    const gatilho = screen.getByLabelText('common.language')
+    expect(gatilho.className).toContain('text-[var(--shell-ink)]')
+    expect(gatilho.className).not.toContain('dark:')
+  })
+
   it('UI-05: marca o idioma ATIVO (EN) com aria-current e classe visual — e só ele', () => {
     render(<LanguageMenu />)
     abrirMenu()

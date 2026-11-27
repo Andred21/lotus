@@ -16,6 +16,7 @@ sustenta, porque regra sem catraca é recomendação solta.
 | `primary` | ação primária: abre módulo, salva diálogo, confirma emissão | herda o `.p-button` do tema |
 | `compact` | marca apertada, onde a do tema não cabe (seletor de idioma, ação dentro de linha) | `px-3 py-2.5 text-sm` |
 | `iconToggle` | só-ícone: toggle de tema, colapso da sidebar | herda o `.p-button` do tema |
+| `shell` | controle do header sobre o shell fixo (idioma, tema): idêntico nos dois temas, sem `dark:` | herda o `.p-button` do tema (idioma aperta por `className`) |
 | `noSurface` | gatilho que embrulha um bloco (avatar + identidade no header) | fundo, padding e hover zerados |
 
 - **Ação destrutiva não veste marca:** passa `severity`, e o preenchido de severidade é o sinal.

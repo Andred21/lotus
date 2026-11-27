@@ -44,6 +44,7 @@ function RowActionButton({ acao }: { acao: RowAction }) {
         <AppButton
           icon={acao.icon}
           text
+          plain={!acao.severity}
           rounded
           severity={acao.severity}
           aria-label={acao.label}
@@ -107,6 +108,7 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
       <AppButton
         icon="more"
         text
+        plain
         rounded
         aria-label={t('common.moreActions')}
         aria-haspopup

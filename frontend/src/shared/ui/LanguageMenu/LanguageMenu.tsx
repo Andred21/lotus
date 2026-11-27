@@ -54,7 +54,8 @@ export function LanguageMenu() {
   return (
     <>
       <AppButton
-        variant="compact"
+        variant="shell"
+        className="px-3 py-2.5 text-sm"
         aria-label={t('common.language')}
         onClick={(e) => menuRef.current?.toggle(e)}
       >

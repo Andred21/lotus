@@ -29,6 +29,29 @@ const acao = (label: string, over: Partial<RowAction> = {}): RowAction => ({
 })
 
 describe('RowActions', () => {
+  /** B-2 (D7): a ação comum da linha é `text plain` (neutra). O `.p-button-text`
+   * sem papel pintava de celeste uma coluna inteira de ícones. A destrutiva
+   * segue `danger`, que é o sinal. */
+  it('ação comum de linha não usa celeste: é `text plain`, sem severity', () => {
+    render(<RowActions collapsed={false} actions={[acao('Ver'), acao('Quitar', { severity: 'danger' })]} />)
+
+    const ver = screen.getByRole('button', { name: 'Ver' })
+    expect(ver.className).toContain('p-button-text')
+    expect(ver.className).toContain('p-button-plain')
+    expect(ver.className).not.toMatch(/p-button-(danger|secondary|info|success|warning|help|contrast)/)
+
+    const quitar = screen.getByRole('button', { name: 'Quitar' })
+    expect(quitar.className).toContain('p-button-danger')
+    expect(quitar.className).not.toContain('p-button-plain')
+  })
+
+  it('o gatilho do menu colapsado também é `text plain`', () => {
+    render(<RowActions collapsed actions={[acao('Reenviar'), acao('Ver')]} />)
+
+    const gatilho = screen.getByRole('button', { name: 'common.moreActions' })
+    expect(gatilho.className).toContain('p-button-plain')
+  })
+
   it('botão só-ícone mantém o nome acessível após a troca', () => {
     render(<RowActions collapsed={false} actions={[acao('Reenviar', { icon: 'mail' })]} />)
 
