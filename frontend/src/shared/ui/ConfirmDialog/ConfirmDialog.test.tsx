@@ -126,3 +126,38 @@ describe('ConfirmDialog — children', () => {
     expect(screen.getByText('Detalhe extra')).toBeTruthy()
   })
 })
+
+/** Descrição acessível de um nó: o texto dos elementos que o `aria-describedby`
+ * aponta (o que o leitor de tela anuncia depois do nome). */
+function descricao(el: Element): string {
+  return (el.getAttribute('aria-describedby') ?? '')
+    .split(' ')
+    .map((id) => document.getElementById(id)?.textContent ?? '')
+    .join(' ')
+    .trim()
+}
+
+describe('ConfirmDialog — motivo do confirmar desabilitado', () => {
+  it('com confirmDisabled e motivo, o motivo aparece e é a descrição do botão', () => {
+    render(<ConfirmDialog {...base} confirmLabel="Revocar" confirmDisabled confirmDisabledReason="Escribe el motivo" />)
+
+    const botao = screen.getByRole('button', { name: /Revocar/ }) as HTMLButtonElement
+    expect(botao.disabled).toBe(true)
+    expect(screen.getByText('Escribe el motivo').className).not.toContain('sr-only')
+    expect(descricao(botao)).toBe('Escribe el motivo')
+  })
+
+  it('habilitado, o motivo some e o botão não aponta para descrição', () => {
+    render(<ConfirmDialog {...base} confirmLabel="Revocar" confirmDisabledReason="Escribe el motivo" />)
+
+    const botao = screen.getByRole('button', { name: /Revocar/ })
+    expect(screen.queryByText('Escribe el motivo')).toBeNull()
+    expect(botao.getAttribute('aria-describedby')).toBeNull()
+  })
+
+  it('sem motivo, o botão desabilitado não aponta para descrição', () => {
+    render(<ConfirmDialog {...base} confirmLabel="Revocar" confirmDisabled />)
+
+    expect(screen.getByRole('button', { name: /Revocar/ }).getAttribute('aria-describedby')).toBeNull()
+  })
+})

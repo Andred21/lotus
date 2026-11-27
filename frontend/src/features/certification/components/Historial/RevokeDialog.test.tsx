@@ -25,6 +25,10 @@ const CERTIFICADO = {
 const montar = () =>
   renderWithProviders(<RevokeDialog certificate={CERTIFICADO} onHide={() => {}} onRevoked={() => {}} />)
 
+/** Texto dos elementos que o `aria-describedby` do nó aponta. */
+const descricao = (el: Element) =>
+  (el.getAttribute('aria-describedby') ?? '').split(' ').map((id) => document.getElementById(id)?.textContent ?? '').join(' ').trim()
+
 describe('RevokeDialog — motivo do botão desabilitado', () => {
   it('Revocar desabilitado mostra o motivo visível', () => {
     montar()
@@ -34,6 +38,13 @@ describe('RevokeDialog — motivo do botão desabilitado', () => {
     const motivo = screen.getByText('certificate.revokeNeedsReason')
     // Texto na tela, não só dica de mouse: nada de sr-only nem de title.
     expect(motivo.className).not.toContain('sr-only')
+  })
+
+  it('o motivo é a descrição acessível do Revocar desabilitado', () => {
+    montar()
+
+    const revocar = screen.getByRole('button', { name: 'certificate.revokeConfirm' })
+    expect(descricao(revocar)).toBe('certificate.revokeNeedsReason')
   })
 
   it('o campo do motivo sai marcado como obrigatório', () => {

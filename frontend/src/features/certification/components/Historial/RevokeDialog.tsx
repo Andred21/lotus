@@ -37,6 +37,7 @@ export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
       confirmLabel={t('certificate.revokeConfirm')}
       confirmIcon='block'
       confirmDisabled={reason.trim() === ''}
+      confirmDisabledReason={t('certificate.revokeNeedsReason')}
       pending={revoke.isPending}
       error={message}
       onConfirm={submit}
@@ -48,12 +49,6 @@ export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
         <FormField label={t('certificate.revokeReason')} required error={fieldErrors?.reason?.[0]}>
           <AppTextarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} autoResize className="w-full" />
         </FormField>
-        {/* O porquê do Revocar apagado, em texto: some quando o motivo existe. */}
-        {reason.trim() === '' && (
-          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('certificate.revokeNeedsReason')}
-          </p>
-        )}
       </div>
     </ConfirmDialog>
   )

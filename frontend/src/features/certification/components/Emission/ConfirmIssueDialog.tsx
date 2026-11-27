@@ -44,6 +44,7 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
       message={t('certificate.confirmBody')}
       confirmLabel={t('certificate.confirmEmit')}
       confirmDisabled={redatorId == null}
+      confirmDisabledReason={t('certificate.issueNeedsRedator')}
       pending={issue.isPending}
       error={message}
       onConfirm={submit}
@@ -68,11 +69,6 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
             onChange={(e) => setRedatorId(e.value)}
           />
         </FormField>
-        {redatorId == null && (
-          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
-            {t('certificate.issueNeedsRedator')}
-          </p>
-        )}
         <RedatorFirmaWarning turma={turma} redatorId={redatorId} />
       </div>
     </ConfirmDialog>

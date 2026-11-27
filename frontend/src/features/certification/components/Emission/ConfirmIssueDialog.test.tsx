@@ -30,6 +30,10 @@ const turma = (n: number): EmissionPanelTurmaData => ({
 const montar = (n: number) =>
   renderWithProviders(<ConfirmIssueDialog enrollment={ALUNO} turma={turma(n)} onHide={() => {}} onIssued={() => {}} />)
 
+/** Texto dos elementos que o `aria-describedby` do nó aponta. */
+const descricao = (el: Element) =>
+  (el.getAttribute('aria-describedby') ?? '').split(' ').map((id) => document.getElementById(id)?.textContent ?? '').join(' ').trim()
+
 describe('ConfirmIssueDialog — motivo do botão desabilitado', () => {
   it('Emitir sem redator mostra o motivo visível', () => {
     montar(2)
@@ -38,6 +42,13 @@ describe('ConfirmIssueDialog — motivo do botão desabilitado', () => {
     expect(emitir.disabled).toBe(true)
     const motivo = screen.getByText('certificate.issueNeedsRedator')
     expect(motivo.className).not.toContain('sr-only')
+  })
+
+  it('o motivo é a descrição acessível do Emitir desabilitado', () => {
+    montar(2)
+
+    const emitir = screen.getByRole('button', { name: 'certificate.confirmEmit' })
+    expect(descricao(emitir)).toBe('certificate.issueNeedsRedator')
   })
 
   it('o campo do redator sai marcado como obrigatório', () => {
