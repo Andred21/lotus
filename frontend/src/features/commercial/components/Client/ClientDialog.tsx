@@ -63,6 +63,7 @@ export function ClientDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
+      guard={f.guard}
       closeBlocked={busy}
       disabled={busy}
       submitLabel={mode === "create" ? t("client.create") : undefined}

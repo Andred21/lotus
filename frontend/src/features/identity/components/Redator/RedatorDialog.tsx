@@ -51,6 +51,7 @@ export function RedatorDialog({
     readOnly,
     submit,
     pending,
+    guard,
     stagedDocs,
     stageDoc,
     unstageDoc,
@@ -70,6 +71,7 @@ export function RedatorDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
+      guard={guard}
       closeBlocked={pending || photo.pending}
       disabled={photo.pending}
       submitLabel={mode === "create" ? t("redator.create") : undefined}

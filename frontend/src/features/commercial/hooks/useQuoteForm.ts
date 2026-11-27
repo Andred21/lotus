@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useEntityForm, useMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useCreateQuote, useUpdateQuote, type QuotePayload } from '../api/useQuotes'
 import { formatUf, parseUfInput } from '@shared/lib'
@@ -29,8 +29,12 @@ const toFields = (q: QuoteFormFields): QuoteFormFields =>
     // Pré-preenche no MESMO formato que a lista mostra (vírgula, es-CL) — o
     // valor cru do backend ("450.5000") ao lado da linha da lista mostrando
     // "450,5" induzia o usuário a "corrigir" para vírgula e gravar 10x o
-    // valor. `parseUfInput` no submit devolve o ponto antes de enviar.
-    value_uf: formatUf(q.value_uf),
+    // valor. A EXIBIÇÃO é a vírgula (o `DataStep` troca o ponto ao mostrar); o
+    // estado fica canônico (ponto), como o que a digitação grava via
+    // `parseUfInput`. Sem isso, digitar de volta o valor original deixaria o
+    // form "sujo" ("450,5" no baseline, "450.5" no estado) e a guarda de
+    // rascunho perguntaria sem mudança nenhuma.
+    value_uf: parseUfInput(formatUf(q.value_uf)),
     purchase_order: q.purchase_order,
     planned_start_date: q.planned_start_date,
     planned_end_date: q.planned_end_date,
@@ -38,7 +42,8 @@ const toFields = (q: QuoteFormFields): QuoteFormFields =>
 
 export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: () => void) {
   const mode = quote ? 'edit' : 'create'
-  const { form, set, didReset } = useEntityForm<QuoteFormFields>(quote, mode, EMPTY, toFields)
+  const { form, set, didReset, dirty } = useEntityForm<QuoteFormFields>(quote, mode, EMPTY, toFields)
+  const guard = useUnsavedChangesGuard(dirty)
   const create = useCreateQuote()
   const update = useUpdateQuote()
 
@@ -78,6 +83,8 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
     back: () => setStep(1),
     canAdvance: form.course_id > 0,
     submit,
+    dirty,
+    guard,
     pending: create.isPending || update.isPending,
     fieldErrors,
     generalError,

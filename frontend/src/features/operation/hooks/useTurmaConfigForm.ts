@@ -1,4 +1,4 @@
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useEntityForm, useMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
 import type { DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
@@ -31,12 +31,14 @@ export function useTurmaConfigForm(params: {
 }) {
   const { mode, turma, quoteId, onSaved } = params
   const entity = turma ? ({ id: turma.id, ...toFields(turma) } as TurmaConfigPayload & { id?: number }) : null
-  const { form, set, readOnly } = useEntityForm<TurmaConfigPayload & { id?: number }>(
+  const { form, set, readOnly, dirty } = useEntityForm<TurmaConfigPayload & { id?: number }>(
     entity,
     mode,
     { ...EMPTY },
     (e) => structuredClone(e),
   )
+
+  const guard = useUnsavedChangesGuard(dirty)
 
   const create = useCreateTurma()
   const update = useUpdateTurma()
@@ -54,12 +56,24 @@ export function useTurmaConfigForm(params: {
     end_date: form.end_date,
   })
 
+  // Salvar com sucesso entrega o id a `onSaved`, que NAVEGA na criação (para o
+  // detalhe). A liberação sai aqui, imediatamente antes: o form segue sujo até a
+  // tela trocar, e sem ela o próprio salvar abriria o aviso de descartar. Só com
+  // rascunho: com o form limpo não há blocker para consumi-la nem mudança de
+  // `dirty` que a revogue, e ela sobraria para o próximo rascunho (editar sem
+  // mudar nada e salvar deixa o cartão montado na página de detalhe).
+  const saved = (id: number | undefined) => {
+    if (id == null) return
+    if (dirty) guard.allowNavigation()
+    onSaved(id)
+  }
+
   const submit = () => {
     if (mode === 'create') {
       if (quoteId == null) return
-      create.mutate({ quoteId, payload: payload() }, { onSuccess: (t) => t.id != null && onSaved(t.id) })
+      create.mutate({ quoteId, payload: payload() }, { onSuccess: (t) => saved(t.id) })
     } else if (turma?.id != null) {
-      update.mutate({ turmaId: turma.id, payload: payload() }, { onSuccess: (t) => t.id != null && onSaved(t.id) })
+      update.mutate({ turmaId: turma.id, payload: payload() }, { onSuccess: (t) => saved(t.id) })
     }
   }
 
@@ -67,6 +81,8 @@ export function useTurmaConfigForm(params: {
     form,
     set,
     readOnly,
+    dirty,
+    guard,
     submit,
     pending: create.isPending || update.isPending,
     fieldErrors,

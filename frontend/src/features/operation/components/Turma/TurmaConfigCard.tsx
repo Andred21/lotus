@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary, SectionLabel, useFormField } from '@shared/ui'
+import { AppButton, AppDropdown, DiscardChangesDialog, AppInputText, AppDatePicker, FormField, FormErrorSummary, SectionLabel, useFormField } from '@shared/ui'
 import { formatDate, type DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { usePermissions } from '@shared/hooks'
@@ -38,6 +38,17 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
   // (Q-2 do review de 2026-08-24).
   const podeEditar = !bloqueado && can('operation.turma.update')
 
+  // Cancelar descarta o rascunho. Na criação o `onCancel` é o "volver" (navega),
+  // e o blocker o seguraria de novo logo depois do Descartar: o aviso já foi
+  // respondido, então a liberação vai junto. Em edição o `onCancel` só troca para
+  // leitura, o form reseta e a liberação não usada cai sozinha (rascunho limpo).
+  // Só libera com rascunho: com o form limpo ninguém a revoga, e ela sobraria para
+  // o próximo rascunho.
+  const cancelar = () => f.guard.confirmDiscard(() => {
+    if (f.dirty) f.guard.allowNavigation()
+    onCancel?.()
+  })
+
   const modalityOptions = [
     { label: t('operation.modality.presencial'), value: 'presencial' },
     { label: t('operation.modality.online'), value: 'online' },
@@ -52,6 +63,7 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
 
   return (
     <div className="space-y-5 p-4">
+      <DiscardChangesDialog {...f.guard.dialogProps} />
       <div className="flex items-center justify-between">
         <SectionLabel as="h3" rule={false}>{t('operation.config.title')}</SectionLabel>
         {/* Escondido, não desabilitado: botão cinza ainda promete "isto seria
@@ -109,7 +121,7 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
 
       {mode !== 'view' && (
         <div className="flex justify-end gap-2">
-          {onCancel && <AppButton label={t('operation.config.cancel')} outlined onClick={onCancel} disabled={f.pending} />}
+          {onCancel && <AppButton label={t('operation.config.cancel')} outlined onClick={cancelar} disabled={f.pending} />}
           <AppButton variant="primary" label={t('operation.config.save')} icon="check" onClick={f.submit} disabled={f.pending} />
         </div>
       )}

@@ -52,9 +52,18 @@ function comPermissoes(permissions: string[]) {
   })
 }
 
+/** A guarda é do hook (aqui mockado); o cartão só a consome. */
+const guard = {
+  confirmDiscard: (proceed: () => void) => proceed(),
+  allowNavigation: () => {},
+  dialogProps: { visible: false, onConfirm: () => {}, onCancel: () => {}, blocker: null },
+}
+
 beforeEach(() => {
   comPermissoes(['operation.turma.update'])
   form.current = {
+    dirty: false,
+    guard,
     form: {
       modalidade: 'presencial', local_aplicacao: 'Santiago',
       start_date: '2026-01-05', end_date: '2026-02-05',

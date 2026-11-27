@@ -2,6 +2,8 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDialog, type AppDialogSize } from '../AppDialog'
 import { AppButton } from '../AppButton'
+import { DiscardChangesDialog } from '../DiscardChangesDialog'
+import type { UnsavedChangesGuard } from '@shared/hooks/useUnsavedChangesGuard'
 import type { DialogMode } from '@shared/lib'
 
 /**
@@ -34,7 +36,7 @@ import type { DialogMode } from '@shared/lib'
  * o efeito rodaria o conteúdo do portal ainda não está no documento.
  */
 export function CrudDialog({
-  size, visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, submitLabel, headerExtra, children,
+  size, visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, guard, submitLabel, headerExtra, children,
 }: {
   /** Teto de largura e maximizar (bloco 43) — repassado ao `AppDialog`. */
   size: AppDialogSize
@@ -59,6 +61,8 @@ export function CrudDialog({
    * `closeBlocked` precisa gatear `disabled` pela mesma condição, senão a
    * perda silenciosa volta pela porta do Salvar. */
   closeBlocked?: boolean
+  /** A guarda de rascunho do formulário. Ver o docblock do componente. */
+  guard?: UnsavedChangesGuard
   submitLabel?: string
   headerExtra?: ReactNode
   children: ReactNode
@@ -89,6 +93,9 @@ export function CrudDialog({
     ;(primeiro ?? corpo.current)?.focus()
   }
 
+  // Saída que descarta: com guarda e rascunho, pergunta antes de fechar.
+  const sair = () => (guard ? guard.confirmDiscard(onHide) : onHide())
+
   const header = (
     <div className="flex items-center gap-4 pr-6">
       <span>{title}</span>
@@ -99,12 +106,12 @@ export function CrudDialog({
   const footer =
     mode === 'view' ? (
       <div ref={rodape} className="flex justify-end gap-2">
-        <AppButton label={t('common.close')} text disabled={closeBlocked} onClick={onHide} />
+        <AppButton label={t('common.close')} text disabled={closeBlocked} onClick={sair} />
         {onEdit && <AppButton variant="primary" label={t('common.edit')} icon="edit" onClick={onEdit} />}
       </div>
     ) : (
       <div ref={rodape} className="flex justify-end gap-2">
-        <AppButton label={t('common.cancel')} text disabled={closeBlocked} onClick={onHide} />
+        <AppButton label={t('common.cancel')} text disabled={closeBlocked} onClick={sair} />
         <AppButton
           variant="primary"
           label={submitLabel ?? t('common.save')}
@@ -117,18 +124,21 @@ export function CrudDialog({
     )
 
   return (
-    <AppDialog
-      size={size}
-      header={header}
-      visible={visible}
-      onHide={onHide}
-      closable={!closeBlocked}
-      closeOnEscape={!closeBlocked}
-      focusOnShow={false}
-      onShow={focarCorpo}
-      footer={footer}
-    >
-      <div ref={corpo} tabIndex={-1} className="outline-none">{children}</div>
-    </AppDialog>
+    <>
+      <AppDialog
+        size={size}
+        header={header}
+        visible={visible}
+        onHide={sair}
+        closable={!closeBlocked}
+        closeOnEscape={!closeBlocked}
+        focusOnShow={false}
+        onShow={focarCorpo}
+        footer={footer}
+      >
+        <div ref={corpo} tabIndex={-1} className="outline-none">{children}</div>
+      </AppDialog>
+      {guard && <DiscardChangesDialog {...guard.dialogProps} />}
+    </>
   )
 }

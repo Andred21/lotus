@@ -62,6 +62,7 @@ export function StaffUserDialog({
       onEdit={canManage ? onEdit : undefined}
       onSubmit={submit}
       pending={pending}
+      guard={f.guard}
       closeBlocked={busy}
       disabled={busy}
       submitLabel={mode === "create" ? t("admin.create") : undefined}

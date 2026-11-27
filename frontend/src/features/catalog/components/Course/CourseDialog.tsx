@@ -37,6 +37,7 @@ export function CourseDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
+      guard={f.guard}
       submitLabel={isCreate ? t('course.create') : undefined}
     >
       

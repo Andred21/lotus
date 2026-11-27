@@ -23,8 +23,9 @@ export function TurmaCreatePage() {
           mode="create"
           quoteId={quote}
           onSaved={(id) => {
-            // Task 5 (guarda de saída): `allowNavigation()` entra AQUI, antes
-            // do `navigate`, para que salvar não dispare o aviso de "sair".
+            // O aviso de "sair" não dispara aqui: `useTurmaConfigForm` libera a
+            // guarda (`allowNavigation()`) imediatamente antes de chamar este
+            // `onSaved`. O Volver e o Cancelar, esses sim, passam por ela.
             // `replace`: a entrada do formulário de criação sai do histórico —
             // voltar do detalhe não reabre um formulário de algo já criado. O
             // `state` segue junto, para o detalhe voltar à lista de origem.

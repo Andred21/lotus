@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import {
   useCrudForm,
@@ -308,5 +308,76 @@ describe('useCrudForm — afterCreate retentável', () => {
     await act(async () => { result.current.crud.submit() })
 
     expect(done).toEqual(['done'])
+  })
+})
+
+describe('useCrudForm — rascunho', () => {
+  const create = () =>
+    renderHook(() => useCrudForm(fakeResource(), { ...base, entity: null, mode: 'create' as const }).crud)
+
+  it('nasce limpo e suja quando um campo muda', () => {
+    const { result } = create()
+    expect(result.current.dirty).toBe(false)
+
+    act(() => result.current.set('name', 'Lotus'))
+
+    expect(result.current.dirty).toBe(true)
+  })
+
+  it('desfazer a mudança à mão volta a limpo', () => {
+    const { result } = create()
+
+    act(() => result.current.set('name', 'Lotus'))
+    act(() => result.current.set('name', ''))
+
+    expect(result.current.dirty).toBe(false)
+  })
+
+  it('em edit, o limpo é a entidade, não o vazio', () => {
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), {
+        ...base, entity: { id: 7, name: 'a', secret: '' }, mode: 'edit' as const,
+      }).crud,
+    )
+    expect(result.current.dirty).toBe(false)
+
+    act(() => result.current.set('name', 'b'))
+    expect(result.current.dirty).toBe(true)
+
+    act(() => result.current.set('name', 'a'))
+    expect(result.current.dirty).toBe(false)
+  })
+
+  it('o reset (outra entidade) volta a limpo', () => {
+    const { result, rerender } = renderHook(
+      ({ id }: { id: number }) =>
+        useCrudForm(fakeResource(), {
+          ...base, entity: { id, name: 'a', secret: '' }, mode: 'edit' as const,
+        }).crud,
+      { initialProps: { id: 1 } },
+    )
+    act(() => result.current.set('name', 'sujo'))
+    expect(result.current.dirty).toBe(true)
+
+    rerender({ id: 2 })
+
+    expect(result.current.dirty).toBe(false)
+  })
+
+  it('a guarda só pergunta com rascunho: limpo segue direto, sujo abre o aviso', () => {
+    const { result } = create()
+    const seguir = vi.fn()
+
+    act(() => result.current.guard.confirmDiscard(seguir))
+    expect(seguir).toHaveBeenCalledTimes(1)
+    expect(result.current.guard.dialogProps.visible).toBe(false)
+
+    act(() => result.current.set('name', 'Lotus'))
+    act(() => result.current.guard.confirmDiscard(seguir))
+    expect(seguir).toHaveBeenCalledTimes(1)
+    expect(result.current.guard.dialogProps.visible).toBe(true)
+
+    act(() => result.current.guard.dialogProps.onConfirm())
+    expect(seguir).toHaveBeenCalledTimes(2)
   })
 })

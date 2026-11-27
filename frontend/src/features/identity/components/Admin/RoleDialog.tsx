@@ -50,6 +50,7 @@ export function RoleDialog({
       onEdit={canManage && !isSystem ? onEdit : undefined}
       onSubmit={submit}
       pending={pending}
+      guard={f.guard}
       submitLabel={mode === 'create' ? t('admin.create') : undefined}
     >
       <FormErrorBanner message={generalError} />

@@ -1,5 +1,6 @@
 import { useRef, type Dispatch, type SetStateAction } from 'react'
 import { useEntityForm, useMutationErrors } from './useEntityForm'
+import { useUnsavedChangesGuard } from './useUnsavedChangesGuard'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
 
@@ -98,7 +99,10 @@ export function useCrudForm<F extends { id?: number }, T>(
   const excludePrefixes = opts.excludePrefixes ?? []
   const extraMutations = extra ?? []
 
-  const { form, setForm, set, readOnly, didReset } = useEntityForm<F>(entity, mode, empty, toFields)
+  const { form, setForm, set, readOnly, didReset, dirty } = useEntityForm<F>(entity, mode, empty, toFields)
+  // A guarda mora aqui, e não no `CrudDialog`, porque o salvar precisa liberá-la
+  // (`allowNavigation`, abaixo) e é este hook que sabe quando o salvar deu certo.
+  const guard = useUnsavedChangesGuard(dirty)
 
   const create = resource.useCreate()
   const update = resource.useUpdate()
@@ -158,6 +162,12 @@ export function useCrudForm<F extends { id?: number }, T>(
    * `useCourseForm`, cuja segunda etapa é o `sync` de redatores.
    */
   async function runAfterCreate(created: T) {
+    // O `afterCreate` pode navegar (o `onCreated` do orçamento leva ao detalhe), e
+    // o form segue sujo até o diálogo desmontar: sem a liberação, o salvar que
+    // acabou de dar certo abriria "descartar?". Só quando há `afterCreate` — é o
+    // único caminho que navega; `onDone` só fecha, e fechar não passa pela guarda.
+    // E só com rascunho: limpo, não há blocker para consumi-la.
+    if (afterCreate && dirty) guard.allowNavigation()
     try {
       await afterCreate?.(created)
     } catch (error) {
@@ -203,6 +213,8 @@ export function useCrudForm<F extends { id?: number }, T>(
       set,
       readOnly,
       didReset,
+      dirty,
+      guard,
       submit,
       pending: create.isPending || update.isPending || extraMutations.some((m) => m.isPending),
       fieldErrors,

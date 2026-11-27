@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useEntityForm, useMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
 import type { RedatorData } from '@shared/types/generated'
 import type { DialogMode, DocType } from '@shared/lib'
 import { redatoresApi } from '@shared/api/redatoresApi'
@@ -34,7 +34,7 @@ export function useRedatorForm(
   onDone: () => void,
   afterCreate?: (created: RedatorData) => Promise<void>,
 ) {
-  const { form, set, setForm, readOnly, didReset } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
+  const { form, set, setForm, readOnly, didReset, dirty: formDirty } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
 
   // Documentos escolhidos no `create`: ficam no estado local até o submit (não
   // há `redator.id` ainda para subir pelo endpoint aninhado). Limpo junto com
@@ -42,6 +42,11 @@ export function useRedatorForm(
   // guarda de tamanho para não regerar o objeto e disparar um loop de renders.
   const [stagedDocs, setStagedDocs] = useState<Partial<Record<DocType, File>>>({})
   if (didReset && Object.keys(stagedDocs).length > 0) setStagedDocs({})
+
+  // O redator não passa pelo `useCrudForm`, então a guarda de rascunho é montada
+  // aqui. Documento escolhido no create é rascunho, embora não seja campo do form.
+  const dirty = formDirty || Object.keys(stagedDocs).length > 0
+  const guard = useUnsavedChangesGuard(dirty)
 
   const create = redatoresApi.useCreate()
   const update = redatoresApi.useUpdate()
@@ -95,7 +100,7 @@ export function useRedatorForm(
   const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
 
   return {
-    form, set, toggleCourse, readOnly, submit,
+    form, set, toggleCourse, readOnly, submit, dirty, guard,
     pending: create.isPending || update.isPending,
     stagedDocs, stageDoc, unstageDoc,
     fieldErrors, generalError,
