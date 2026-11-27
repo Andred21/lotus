@@ -40,7 +40,11 @@ libphonenumber já declaram `sideEffects` nos pacotes deles; quem falta é o nos
 
 Entrada mais pré-carga: cerca de 270 kB gz, contra cerca de 558 kB antes (−52%).
 
-`src/` não tem hoje nenhum import nu (`import './x'`) de módulo que não seja CSS.
+`src/` tem hoje **um** import nu (`import './x'`) de módulo que não é CSS:
+`src/main.tsx:15`, `import "./shared/config/i18n"; // inicializa i18next (side-effect)`. O
+experimento não o listava em `sideEffects`, e o build de produção descartaria a inicialização do
+i18next. A primeira leitura do planejamento disse "nenhum" porque o grep exigia fim de linha logo
+depois do `;` e o comentário escondeu a linha; corrigido no plano, antes de qualquer código.
 
 ## 3. Objetivos, não-objetivos, anti-objetivos
 
@@ -67,14 +71,16 @@ Entrada mais pré-carga: cerca de 270 kB gz, contra cerca de 558 kB antes (−52
 ## 5. Desenho
 
 1. **Configuração.** `frontend/package.json` ganha
-   `"sideEffects": ["**/*.css", "./src/main.tsx"]`. O `main.tsx` fica na lista porque é a raiz que
-   monta a aplicação e importa o CSS global.
+   `"sideEffects": ["**/*.css", "./src/main.tsx", "./src/shared/config/i18n.ts"]`. O `main.tsx`
+   fica na lista porque é a raiz que monta a aplicação e importa o CSS global; o `i18n.ts` porque
+   o `main.tsx` o importa nu para inicializar o i18next (§2).
 2. **Catraca.** Um teste em `frontend/tests/` (projeto `repo` do vitest, que só lê o repositório)
    reprova as duas regressões que nada mais veria:
    - a remoção do campo `sideEffects`, ou a troca dele por um valor que não seja a lista declarada;
-   - um import nu de módulo que não seja CSS em `frontend/src/` (fora de teste), porque com a
-     declaração ele some do build. Quem precisar de um módulo com efeito colateral real acrescenta
-     o caminho dele à lista `sideEffects` e à lista do teste, no mesmo commit.
+   - um import nu em `frontend/src/` (fora de teste) que não seja CSS nem aponte para um caminho da
+     lista, porque com a declaração ele some do build. Quem precisar de um módulo com efeito
+     colateral real acrescenta o caminho dele à lista `sideEffects` e à lista do teste, no mesmo
+     commit.
 3. **Prova de carga.** Antes e depois, em gzip, no `fechamento.md` do bloco: entrada, chunk comum
    pré-carregado e os `modulepreload` do `index.html`.
 4. **Prova de que nada sumiu.** Passada visual curta na stack da lane (offset +2), com o build de
@@ -82,6 +88,7 @@ Entrada mais pré-carga: cerca de 270 kB gz, contra cerca de 558 kB antes (−52
    - login, Dashboard com gráficos, um formulário com PhoneInput e DatePicker, um diálogo e uma
      tabela;
    - tema claro e escuro;
+   - rótulos traduzidos em es-CL, e não chaves cruas: prova de que o i18next inicializou;
    - console sem erro em todas.
 
 ## 6. Critério de aceite
