@@ -63,7 +63,7 @@ arquivos que usam `@shared/ui`.
 
 | # | Decisão | Quem |
 |---|---|---|
-| D13 | O **D-6** sai do 65 e vira a ficha **67** do backlog, bloco próprio, com a medição da §3 como ponto de partida. A ficha entra na `main` pela via normal (PR de docs, invariante 10), fora desta lane. O `fechamento.md` do 65 registra o D-6 como "levado ao 67", não como ID do bloco. | João |
+| D13 | O **D-6** sai do 65 e vira a ficha **67** do backlog, bloco próprio, com a medição da §3 como ponto de partida. A ficha entra na `main` pela PR da própria lane do 67, junto com a execução (desvio da invariante 10 decidido pelo João em 2026-11-27, no molde do item 42: stub no `backlog.md` do main tree só para o portão do `lane.sh abrir`, ficha completa commitada na lane), fora desta lane. O `fechamento.md` do 65 registra o D-6 como "levado ao 67", não como ID do bloco. | João |
 
 ## 5. Deixado ao executor
 
