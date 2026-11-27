@@ -1,19 +1,30 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { usePermissions, useMutationErrors, loadFailure, useBackNavigation } from '@shared/hooks'
 import { retryFor } from '@shared/lib'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
+import { useToast } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { useApproveQuote, useRejectQuote, useRemoveQuote } from '../api/useQuotes'
 import { useRemoveBudgetFile } from '../api/useCommercialFiles'
 
 type ConfirmAction = 'approve' | 'reject' | 'remove'
 
+/** O toast de sucesso de cada ação confirmada (C-5). */
+const DONE_TOAST = {
+  approve: 'quote.approvedToast',
+  reject: 'quote.rejectedToast',
+  remove: 'quote.deletedToast',
+} as const
+
 /** Toda a orquestração da página de detalhe do orçamento. O componente só
  * consome e renderiza (rule: componente de feature = declarativo). */
 export function useBudgetDetail(budgetId: number) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
+  const toast = useToast()
   const goBack = useBackNavigation('/comercial')
   const query = budgetsApi.useOne(budgetId)
   const clients = clientsApi.useList()
@@ -54,7 +65,13 @@ export function useBudgetDetail(budgetId: number) {
   const runConfirm = () => {
     if (!confirm) return
     const mutation = confirm.action === 'approve' ? approve : confirm.action === 'reject' ? reject : removeQuote
-    mutation.mutate(confirm.quote.id!, { onSuccess: () => setConfirm(null) })
+    const { action } = confirm
+    mutation.mutate(confirm.quote.id!, {
+      onSuccess: () => {
+        toast.success(t(DONE_TOAST[action]))
+        setConfirm(null)
+      },
+    })
   }
 
   const closeDeleteBudget = () => {
@@ -62,8 +79,15 @@ export function useBudgetDetail(budgetId: number) {
     setConfirmDeleteBudget(false)
   }
 
-  // Sucesso navega para fora da página do orçamento excluído.
-  const deleteBudget = () => removeBudget.mutate(budgetId, { onSuccess: () => navigate('/comercial') })
+  // O "excluir" do orçamento ARQUIVA (as cotações vão junto, e Restaurar desfaz):
+  // por isso o toast é o do arquivamento. Sucesso navega para fora da página.
+  const deleteBudget = () =>
+    removeBudget.mutate(budgetId, {
+      onSuccess: () => {
+        toast.success(t('archive.archivedToast'))
+        navigate('/comercial')
+      },
+    })
 
   return {
     // As duas queries entram: o subtítulo da página é o cliente, e sem agregar

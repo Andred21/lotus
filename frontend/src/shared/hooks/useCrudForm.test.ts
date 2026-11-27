@@ -8,6 +8,9 @@ import {
   type MutableResource,
 } from './useCrudForm'
 
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
+vi.mock('@shared/ui/AppToast', () => ({ useToast: () => toast }))
+
 type Fields = { id?: number; name: string; secret: string }
 
 const EMPTY: Fields = { id: undefined, name: '', secret: '' }
@@ -450,5 +453,54 @@ describe('useCrudForm — clearField exposto', () => {
 
     expect(result.current.crud.fieldErrors?.['modules.0.name']).toBeUndefined()
     expect(result.current.crud.fieldErrors?.['modules.1.name']).toEqual(['obrigatório'])
+  })
+})
+
+describe('useCrudForm — sucesso dito (C-5)', () => {
+  it('criar e editar mostram toast de sucesso', async () => {
+    toast.success.mockClear()
+    const criar = renderHook(() =>
+      useCrudForm(fakeResource(), { ...base, entity: null, mode: 'create' }).crud,
+    )
+    await act(async () => {
+      criar.result.current.submit()
+    })
+    expect(toast.success).toHaveBeenCalledTimes(1)
+    expect(toast.success).toHaveBeenLastCalledWith('common.createdToast')
+
+    const editar = renderHook(() =>
+      useCrudForm(fakeResource(), { ...base, entity: { id: 7, name: 'a', secret: '' }, mode: 'edit' }).crud,
+    )
+    await act(async () => {
+      editar.result.current.submit()
+    })
+    expect(toast.success).toHaveBeenCalledTimes(2)
+    expect(toast.success).toHaveBeenLastCalledWith('common.updatedToast')
+  })
+
+  it('criar que falha no afterCreate não diz sucesso; o resubmit que fecha diz uma vez', async () => {
+    toast.success.mockClear()
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    let falhar = true
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), {
+        ...base,
+        entity: null,
+        mode: 'create',
+        afterCreate: async () => {
+          if (falhar) throw new Error('sync falhou')
+        },
+      }).crud,
+    )
+    await act(async () => {
+      result.current.submit()
+    })
+    expect(toast.success).not.toHaveBeenCalled()
+
+    falhar = false
+    await act(async () => {
+      result.current.submit()
+    })
+    expect(toast.success).toHaveBeenCalledTimes(1)
   })
 })

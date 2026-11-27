@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+import { useToast } from '@shared/ui'
 import type { useHistorial } from '../../hooks/useHistorial'
 import { CertificateViewDialog } from './CertificateViewDialog'
 import { RevokeDialog } from './RevokeDialog'
@@ -12,6 +14,9 @@ import { ReissueDialog } from './ReissueDialog'
  * dezesseis props de repasse — nenhum estado novo nasce aqui.
  */
 export function HistorialDialogs({ h }: { h: ReturnType<typeof useHistorial> }) {
+  const { t } = useTranslation()
+  const toast = useToast()
+
   return (
     <>
       {h.viewingCertificateId !== null && (
@@ -29,7 +34,12 @@ export function HistorialDialogs({ h }: { h: ReturnType<typeof useHistorial> }) 
         <RevokeDialog
           certificate={h.revoking}
           onHide={() => h.setRevoking(null)}
-          onRevoked={() => h.setRevoking(null)}
+          // Revogar é irreversível e de peso legal: o sucesso é dito (C-5), e não
+          // só deduzido do diálogo que fecha.
+          onRevoked={() => {
+            toast.success(t('certificate.revokedToast'))
+            h.setRevoking(null)
+          }}
         />
       )}
 

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ConfirmDialog } from '@shared/ui'
+import { ArchiveConfirmDialog, ConfirmDialog } from '@shared/ui'
 import type { BudgetData } from '@shared/types/generated'
 import type { useBudgetDetail } from '../../hooks/useBudgetDetail'
 import { BudgetDialog } from './BudgetDialog'
@@ -28,8 +28,8 @@ export function BudgetOverlays({ d, budgetId, budget }: { d: ReturnType<typeof u
       {d.confirm && (
         <ConfirmDialog
           visible
-          title={t(CONFIRM_COPY[d.confirm.action].title)}
-          message={t(CONFIRM_COPY[d.confirm.action].body)}
+          title={t(CONFIRM_COPY[d.confirm.action].title, { code: d.confirm.quote.code })}
+          message={t(CONFIRM_COPY[d.confirm.action].body, { code: d.confirm.quote.code })}
           confirmLabel={t(CONFIRM_COPY[d.confirm.action].label)}
           severity={d.confirm.action === 'approve' ? undefined : 'danger'}
           pending={d.confirmPending}
@@ -39,17 +39,18 @@ export function BudgetOverlays({ d, budgetId, budget }: { d: ReturnType<typeof u
         />
       )}
 
+      {/* O "excluir" do orçamento arquiva (as cotações vão junto, e Restaurar
+        * desfaz): é a confirmação do arquivamento, com o texto e a severidade
+        * dele, e não um `danger` que promete uma eliminação que não acontece.
+        * O sucesso navega para fora, então o `onSuccess` do diálogo não importa. */}
       {d.confirmDeleteBudget && (
-        <ConfirmDialog
-          visible
-          title={t('budget.confirmDeleteTitle')}
-          message={t('budget.confirmDeleteBody')}
-          confirmLabel={t('common.delete')}
-          severity="danger"
+        <ArchiveConfirmDialog
+          target={budget}
+          name={budget.code ?? '—'}
           pending={d.removeBudgetPending}
           error={d.removeBudgetError}
+          onArchive={() => d.deleteBudget()}
           onCancel={d.closeDeleteBudget}
-          onConfirm={d.deleteBudget}
         />
       )}
     </>

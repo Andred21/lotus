@@ -88,9 +88,14 @@ export function CommercialPage() {
       {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
       <ArchiveConfirmDialog
         target={toArchive}
+        name={toArchive ? toArchive.legal_name : ''}
         pending={clientsArchived.archiving}
+        error={clientsArchived.archiveError}
         onArchive={clientsArchived.archive}
-        onCancel={() => setToArchive(null)}
+        onCancel={() => {
+          clientsArchived.resetArchiveError()
+          setToArchive(null)
+        }}
       />
 
       {budgets.dialog && (

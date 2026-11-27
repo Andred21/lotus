@@ -1,8 +1,12 @@
 import { useRef, type Dispatch, type SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useEntityForm, useFormMutationErrors } from './useEntityForm'
 import { useUnsavedChangesGuard } from './useUnsavedChangesGuard'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
+// Caminho FUNDO, como no `useArchiveToasts`: o barrel `@shared/ui` fecharia um
+// ciclo de módulos com `FormPhotoRow`, que importa o barrel `@shared/hooks`.
+import { useToast } from '@shared/ui/AppToast'
 
 /** Recurso mutável, estrutural — mesmo padrão do `ListableResource` do
  * `useCrudPage`: o teste passa um literal e não precisa de TanStack. */
@@ -103,6 +107,8 @@ export function useCrudForm<F extends { id?: number }, T>(
   // A guarda mora aqui, e não no `CrudDialog`, porque o salvar precisa liberá-la
   // (`allowNavigation`, abaixo) e é este hook que sabe quando o salvar deu certo.
   const guard = useUnsavedChangesGuard(dirty)
+  const { t } = useTranslation()
+  const toast = useToast()
 
   const create = resource.useCreate()
   const update = resource.useUpdate()
@@ -177,6 +183,11 @@ export function useCrudForm<F extends { id?: number }, T>(
       console.error('useCrudForm: afterCreate falhou, diálogo permanece aberto', error)
       return
     }
+    // O sucesso só se diz aqui, com a segunda etapa concluída: se o `afterCreate`
+    // reprovou o diálogo segue aberto com o erro, e "criado" seria meia verdade.
+    // Vem depois da guarda e da navegação (que mora no `afterCreate`) e antes do
+    // `onDone`, que fecha.
+    toast.success(t('common.createdToast'))
     onDone()
   }
 
@@ -199,7 +210,15 @@ export function useCrudForm<F extends { id?: number }, T>(
     // O id do PUT vem da ENTIDADE, nunca do form: o form é editável e o alvo
     // do update não pode depender do que o usuário digitou.
     if (entity?.id == null) return
-    update.mutate({ id: entity.id, payload: toPayload(form, 'edit') }, { onSuccess: onDone })
+    update.mutate(
+      { id: entity.id, payload: toPayload(form, 'edit') },
+      {
+        onSuccess: () => {
+          toast.success(t('common.updatedToast'))
+          onDone()
+        },
+      },
+    )
   }
 
   const { fieldErrors, generalError, clearField, set } = useFormMutationErrors(setField, [

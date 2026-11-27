@@ -78,9 +78,14 @@ export function AdministracionPage({ configuracion }: { configuracion?: ReactNod
       {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
       <ArchiveConfirmDialog
         target={toArchive}
+        name={toArchive ? toArchive.name : ''}
         pending={usersArchived.archiving}
+        error={usersArchived.archiveError}
         onArchive={usersArchived.archive}
-        onCancel={() => setToArchive(null)}
+        onCancel={() => {
+          usersArchived.resetArchiveError()
+          setToArchive(null)
+        }}
       />
     </ModulePage>
   )

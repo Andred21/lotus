@@ -56,9 +56,14 @@ export function OperationPage() {
       {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
       <ArchiveConfirmDialog
         target={toArchive}
+        name={toArchive ? toArchive.quote_code ?? toArchive.course_name ?? '—' : ''}
         pending={turmasArchived.archiving}
+        error={turmasArchived.archiveError}
         onArchive={turmasArchived.archive}
-        onCancel={() => setToArchive(null)}
+        onCancel={() => {
+          turmasArchived.resetArchiveError()
+          setToArchive(null)
+        }}
       />
     </ModulePage>
   )

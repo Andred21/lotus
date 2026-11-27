@@ -11,6 +11,8 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
   const { t } = useTranslation()
   const s = useConclusionSection(turma)
   const [confirming, setConfirming] = useState(false)
+  // Como a tabela identifica a turma: o código da cotação, ou o curso quando falta.
+  const name = turma.quote_code ?? turma.course_name ?? '—'
 
   return (
     <div className="space-y-4 p-4">
@@ -71,8 +73,8 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
 
       <ConfirmDialog
         visible={confirming}
-        title={t('operation.conclusion.confirmTitle')}
-        message={t('operation.conclusion.confirmBody')}
+        title={t('operation.conclusion.confirmTitle', { name })}
+        message={t('operation.conclusion.confirmBody', { name })}
         confirmLabel={t('operation.conclusion.confirm')}
         severity="danger"
         pending={s.concluding}
