@@ -54,7 +54,7 @@ export function TurmasTable({
         // Sem ação em nenhuma das duas visões: turma não se cria por botão,
         // nasce de cotação aprovada.
         <AppEmptyState
-          icon={archived ? 'pi pi-inbox' : 'pi pi-calendar'}
+          icon={archived ? 'archive' : 'calendar'}
           title={archived ? t('archive.empty') : t('operation.table.empty')}
           description={archived ? t('archive.emptyHint') : t('operation.table.emptyHint')}
         />

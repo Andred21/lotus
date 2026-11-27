@@ -24,14 +24,14 @@ export function HistorialExportActions({ filters }: { filters: CertificateExport
       <div className="flex flex-wrap items-center gap-2">
         <AppButton
           outlined
-          icon="pi pi-file-excel"
+          icon="fileSheet"
           label={t('certificate.exportPlanilla')}
           onClick={() => exportState.open('planilha')}
         />
         <span className="inline-flex" title={zipReason ?? undefined}>
           <AppButton
             outlined
-            icon="pi pi-box"
+            icon="package"
             label={t('certificate.exportZip')}
             disabled={zipReason !== null}
             aria-describedby={zipReason ? reasonId : undefined}

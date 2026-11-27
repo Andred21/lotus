@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { Tooltip } from 'primereact/tooltip'
 import { AppButton } from '../AppButton'
 import { AppMenu, type AppMenuRef } from '../AppMenu'
+import type { IconProp } from '../AppIcon'
 import { DICA_ESQUERDA } from '../dicaEsquerda'
 
 export type RowAction = {
   /** Já traduzido: nome acessível do botão, dica no hover do botão solto e
    * rótulo do item de menu. */
   label: string
-  icon: string
+  icon: IconProp
   onClick: () => void
   disabled?: boolean
   /** Ação destrutiva (remover matrícula): tinge o botão solto de perigo. No
@@ -104,7 +105,7 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
   return (
     <div className="flex justify-center">
       <AppButton
-        icon="pi pi-ellipsis-v"
+        icon="more"
         text
         rounded
         aria-label={t('common.moreActions')}

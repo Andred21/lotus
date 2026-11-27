@@ -1,6 +1,6 @@
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
-import { loadErrorHint, screenDetail } from '@shared/lib'
+import { loadErrorHint, retryFor, screenDetail } from '@shared/lib'
 import { loadFailure } from './listSource'
 
 /**
@@ -58,7 +58,10 @@ export function useLoadState<T>(query: UseQueryResult<T[], ProblemDetails>) {
      * `Promise<QueryObserverResult<…>>`, que vaza o TanStack para cima por
      * `ReturnType<>` e obriga todo stub de teste a montar o resultado inteiro.
      * Quem chama aguarda a promise, não lê o valor — é a mesma assinatura que
-     * `ListSource<T>` já declara. */
-    refetch: (): Promise<unknown> => query.refetch(),
+     * `ListSource<T>` já declara.
+     *
+     * `undefined` no 403: repetir devolve a mesma recusa, e sem handler a tela
+     * não desenha o botão (`retryFor`). */
+    refetch: retryFor(query.error, (): Promise<unknown> => query.refetch()),
   }
 }

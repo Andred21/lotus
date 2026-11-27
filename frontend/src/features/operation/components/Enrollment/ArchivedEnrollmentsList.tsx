@@ -39,7 +39,7 @@ export function ArchivedEnrollmentsList({
   enrollments: ArchivedEnrollmentRow[]
   loading: boolean
   error?: { detail?: string | null } | null
-  onRetry: () => void | Promise<unknown>
+  onRetry?: () => void | Promise<unknown>
   onRestore: (id: number) => void
   /** Restore em voo — trava os botões (Q-2). */
   restoring: boolean
@@ -67,7 +67,7 @@ export function ArchivedEnrollmentsList({
       pt={narrowFloorTablePt('31.5rem')}
       footerCount={t('operation.enrollment.footerCount', { count: table.rows.length })}
       emptyMessage={
-        <AppEmptyState icon="pi pi-inbox" title={t('archive.empty')} description={t('archive.emptyHint')} />
+        <AppEmptyState icon="archive" title={t('archive.empty')} description={t('archive.emptyHint')} />
       }
     >
       <AppColumn

@@ -1,7 +1,17 @@
 import { TabView, TabPanel } from 'primereact/tabview'
 import type { TabViewProps } from 'primereact/tabview'
 import { useTranslation } from 'react-i18next'
+import { primeSlotIcon } from '../AppIcon'
 import { mergePt } from '../mergePt'
+
+// Setas de rolagem da régua de abas: o Prime desenha o SVG; o botão é dele.
+// `prevButton`/`nextButton` existem em runtime (`tabview.cjs.js:772,794`) e faltam
+// no `TabViewProps` do pacote; por isso vão num objeto à parte, espalhado, e não
+// como atributo JSX (que o tsc recusaria).
+const SCROLL_ICONS = {
+  prevButton: primeSlotIcon('chevronLeft'),
+  nextButton: primeSlotIcon('chevronRight'),
+}
 
 export type { TabViewProps as AppTabViewProps } from 'primereact/tabview'
 
@@ -40,6 +50,7 @@ export function AppTabView({ pt, ...props }: TabViewProps) {
   // default inteiro e o `p-0` do `panelContainer` sumia em silêncio (achado C3).
   return (
     <TabView
+      {...SCROLL_ICONS}
       pt={mergePt(mergePt(appTabViewPt, pt), {
         prevButton: { 'aria-label': t('common.tabsScrollPrev') },
         nextButton: { 'aria-label': t('common.tabsScrollNext') },

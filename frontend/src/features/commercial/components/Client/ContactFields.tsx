@@ -39,7 +39,7 @@ export function ContactFields({
       {!readOnly && (
         <AppButton
           label={t('client.addContact')}
-          icon="pi pi-user-plus"
+          icon="userAdd"
           text
           onClick={onAdd}
         />

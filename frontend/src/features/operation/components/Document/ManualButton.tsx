@@ -12,14 +12,14 @@ export function ManualButton({ turmaId }: { turmaId: number }) {
       <div className="flex flex-wrap gap-2">
         <AppButton
           label={t('operation.documents.manualPdf')}
-          icon="pi pi-file-pdf"
+          icon="filePdf"
           outlined
           loading={manual.pdfPending}
           onClick={manual.openPdf}
         />
         <AppButton
           label={t('operation.documents.manualDocx')}
-          icon="pi pi-file-word"
+          icon="fileDoc"
           outlined
           loading={manual.docxPending}
           onClick={manual.downloadDocx}

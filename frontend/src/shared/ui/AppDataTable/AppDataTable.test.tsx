@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { useTranslation } from 'react-i18next'
 import i18n from '@shared/config/i18n'
 import { formatDate } from '@shared/lib'
@@ -388,5 +388,50 @@ describe('wrappingHeaderTablePt — cabeçalho que quebra o ícone de ordenaçã
     const tabela = document.querySelector('table') as HTMLTableElement
     expect(tabela.style.getPropertyValue('--table-narrow-floor')).toBe('45rem')
     expect(conteudoDoCabecalho().classList).toContain('flex-wrap')
+  })
+})
+
+describe('AppDataTable — ícones internos (bloco 64)', () => {
+  const phosphor = (el: Element | null) => {
+    const svg = el?.querySelector('svg')
+    expect(svg).not.toBeNull()
+    expect(svg?.classList.contains('p-icon')).toBe(false)
+  }
+  const TRES = [{ id: 1 }, { id: 2 }, { id: 3 }]
+
+  it('usa ícone Phosphor nas setas do paginador', () => {
+    const { container } = render(
+      <AppDataTable value={TRES} rows={1} footerCount="3">
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    phosphor(container.querySelector('.p-paginator-prev'))
+    phosphor(container.querySelector('.p-paginator-next'))
+  })
+
+  it('o glifo de ordenação não empurra a altura do cabeçalho', () => {
+    const { container } = render(
+      <AppDataTable value={TRES}>
+        <AppColumn field="id" header="id" sortable />
+      </AppDataTable>,
+    )
+
+    expect(container.querySelector('.p-sortable-column svg')?.getAttribute('class')).toContain('-my-0.5')
+  })
+
+  it('usa ícone Phosphor na ordenação, nos três estados', () => {
+    const { container } = render(
+      <AppDataTable value={TRES}>
+        <AppColumn field="id" header="id" sortable />
+      </AppDataTable>,
+    )
+
+    const cabecalho = () => container.querySelector('.p-sortable-column') as HTMLElement
+    phosphor(cabecalho())
+    fireEvent.click(cabecalho())
+    phosphor(cabecalho())
+    fireEvent.click(cabecalho())
+    phosphor(cabecalho())
   })
 })

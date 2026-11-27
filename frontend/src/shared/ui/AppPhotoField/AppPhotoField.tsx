@@ -115,7 +115,7 @@ export function AppPhotoField({
           <div className="flex flex-wrap items-center justify-center gap-1 pt-4">
             {url && staged && !readOnly ? (
               <AppButton
-                icon="pi pi-times"
+                icon="close"
                 text
                 rounded
                 severity="danger"

@@ -86,14 +86,14 @@ export function BudgetDetailPage() {
             <AppButton
               variant="primary"
               label={t('budget.addQuote')}
-              icon="pi pi-file"
+              icon='file'
               onClick={() => d.openWizard(null)}
             />
             {/* Único caminho de edição: o backend só deixa payment_terms mudar. */}
-            <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={d.openEdit} />
+            <AppButton label={t('common.edit')} icon="edit" outlined onClick={d.openEdit} />
             <AppButton
               label={t('common.delete')}
-              icon="pi pi-trash"
+              icon="delete"
               outlined
               severity="danger"
               onClick={d.askDeleteBudget}

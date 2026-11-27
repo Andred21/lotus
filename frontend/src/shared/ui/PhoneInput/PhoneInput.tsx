@@ -1,4 +1,4 @@
-import { useMemo, useState, type ClipboardEvent } from 'react'
+import { useEffect, useMemo, useState, type ClipboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   phoneCountryOptions,
@@ -27,6 +27,17 @@ export interface PhoneInputProps {
   inputClassName?: string
 }
 
+// Todas as bandeiras do mundo: só este campo as usa. Um `import` estático do CSS não
+// adiantaria: o `shared/ui` é um chunk só, que a entrada carrega no primeiro paint, e
+// o CSS iria junto (medido: o CSS total não caiu um byte). Importado sob demanda, ele
+// vira um chunk próprio, baixado na primeira vez que um telefone é montado.
+let flagsCss: Promise<unknown> | undefined
+function loadFlagsCss() {
+  flagsCss ??= import('flag-icons/css/flag-icons.min.css').catch(() => {
+    flagsCss = undefined // falha de rede: a próxima montagem tenta de novo
+  })
+}
+
 const flag = (code: string) => <span className={`fi fi-${code.toLowerCase()}`} aria-hidden="true" />
 
 /** Telefone com seletor de país e máscara internacional. O formulário guarda
@@ -38,6 +49,7 @@ export function PhoneInput({
   value: valueProp, onChange: onChangeProp, inputId, disabled, invalid, className, inputClassName, 'aria-label': ariaLabel,
 }: PhoneInputProps) {
   const { t, i18n } = useTranslation()
+  useEffect(loadFlagsCss, [])
   const bind = useFieldBind((v: string | null) => v)
   const value = (valueProp !== undefined ? valueProp : (typeof bind.value === 'string' ? bind.value : null)) || null
   const onChange = onChangeProp ?? bind.onChange

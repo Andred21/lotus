@@ -39,7 +39,7 @@ export function SignaturePreview({ cleaner, onConfirm, busy = false, disabled = 
           <div className="flex flex-wrap gap-2">
             <AppButton
               label={t('signature.confirm')}
-              icon="pi pi-check"
+              icon="check"
               loading={busy}
               disabled={disabled}
               onClick={() => onConfirm(preview.file)}

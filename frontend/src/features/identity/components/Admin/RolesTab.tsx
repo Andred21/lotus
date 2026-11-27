@@ -26,7 +26,7 @@ export function RolesTab() {
         error={rolesPage.error}
         onRetry={rolesPage.refetch}
         onView={rolesPage.openView}
-        actions={<AppButton variant="primary" label={t('role.new')} icon="pi pi-plus" onClick={rolesPage.openCreate} />}
+        actions={<AppButton variant="primary" label={t('role.new')} icon="add" onClick={rolesPage.openCreate} />}
       />
 
       {rolesPage.dialog && (

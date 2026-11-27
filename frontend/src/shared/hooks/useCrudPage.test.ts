@@ -134,7 +134,7 @@ describe('useCrudPage', () => {
     // sem feedback nenhum, que é o Q-14.
     const { result } = renderHook(() => useCrudPage(fakeResource({ data: [] })))
 
-    const returned = result.current.refetch()
+    const returned = result.current.refetch?.()
 
     expect(returned).toBeInstanceOf(Promise)
     await returned

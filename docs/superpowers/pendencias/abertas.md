@@ -969,3 +969,22 @@ ficaram verdes.
   de hora em `app/` e `tests/` só achou `CargaInicial/Instante.php`, sem relação.
 - **Como pegar da próxima vez:** rodar a suíte salvando a saída inteira num arquivo
   (`php artisan test > "$f" 2>&1`) e ler o resumo e as linhas `FAIL` dele, nunca por `tail` direto.
+
+## P-120 — duas sobras do bloco 64 que nenhuma ficha carrega: `refetch` cru no `useHistorial` e rotas-layout sem `errorElement`
+
+**Bloco:** — (aberta em 2026-11-26, pelo fechamento do 64) · **Gatilho:** o `/planejar-bloco` do 65
+decide, na hora de montar o plano, se leva o item 1 (ele toca o mesmo `retryFor`); o item 2 vai para o 66 ou
+vira ficha. A pendência fecha quando os dois tiverem destino escrito (task ou ficha) ou veredito do João.
+Revisar em **2026-12-10**.
+
+Medido em 2026-11-26, no `/finalizar-bloco 64`, HEAD `0d64503f`; origem em `fechamento.md` do bloco
+(seção "Pendências registradas"), que são os achados M-9 e T8 da revisão final da branch.
+
+- **`useHistorial.ts:132,136` usa o `refetch` cru.** O `retryFor` (bloco 64) decide onde nasce o
+  `onRetry` para o 403 não oferecer "Reintentar", mas esses dois diálogos não passam por ele; num 403
+  eles ainda mostram o botão. Estão fora do caminho do C-10.
+- **`SessionBootstrap`, `AppLayout` e `ModuleGuard` não têm `errorElement`.** Um erro de render neles
+  cai no `DefaultErrorComponent` do react-router, que mostra mensagem e stack. Não é regressão: antes do
+  64 era tela branca.
+- **Por que nenhuma ficha carrega:** `rascunho-plano-65.md` e `rascunho-plano-66.md` não citam nenhum
+  dos dois (grep em 2026-11-26), e o 65 já está no teto de 10 tasks.

@@ -47,7 +47,7 @@ export function DetailHeader({ back, title, titleHidden, subtitle, tags, actions
         <AppButton
           className="w-fit text-[var(--text-color-secondary)] hover:text-[var(--text-color)]"
           text
-          icon="pi pi-arrow-left"
+          icon="arrowLeft"
           label={back.label}
           onClick={back.onClick}
         />

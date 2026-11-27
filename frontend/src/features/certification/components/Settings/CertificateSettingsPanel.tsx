@@ -80,7 +80,7 @@ export function CertificateSettingsPanel() {
           variant="primary"
           type="submit"
           label={t('certificateSettings.save')}
-          icon="pi pi-check"
+          icon="check"
           loading={saving}
         />
       </div>

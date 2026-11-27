@@ -36,7 +36,7 @@ export function CatalogPage() {
           onView={page.openView}
           actions={
             can('catalog.course.create')
-              ? <AppButton variant="primary" label={t('course.new')} icon="pi pi-plus" onClick={page.openCreate} />
+              ? <AppButton variant="primary" label={t('course.new')} icon="add" onClick={page.openCreate} />
               : undefined
           }
         />

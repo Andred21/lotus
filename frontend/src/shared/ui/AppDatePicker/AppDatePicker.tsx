@@ -1,6 +1,7 @@
 import { Calendar } from 'primereact/calendar'
 import type { CalendarProps } from 'primereact/calendar'
 import { useTranslation } from 'react-i18next'
+import { primeSlotIcon } from '../AppIcon'
 import { mergePt } from '../mergePt'
 import { useFieldBind, useSplitFieldProps } from '../FormField/fieldContext'
 
@@ -55,6 +56,11 @@ const GRAMATICA: Record<string, { locale: string; dateFormat: string }> = {
 
 const PADRAO = GRAMATICA['es-CL']
 
+// Ícones internos do Calendar (botão do campo e setas de mês): 1rem no Prime.
+const CALENDAR_ICON = primeSlotIcon('calendar')
+const PREV_ICON = primeSlotIcon('chevronLeft')
+const NEXT_ICON = primeSlotIcon('chevronRight')
+
 /** Wrapper do Calendar. String ISO in/out para não passar dinheiro-de-tempo por
  * conversão de fuso perigosa. Cores vêm do tema (ADR-16). Sem forwardRef: o
  * Calendar do Prime é class component (categoria AppDropdown). */
@@ -100,6 +106,9 @@ export function AppDatePicker(props: AppDatePickerProps) {
       dateFormat={gramatica.dateFormat}
       locale={gramatica.locale}
       showIcon
+      icon={CALENDAR_ICON}
+      prevIcon={PREV_ICON}
+      nextIcon={NEXT_ICON}
       className="w-full"
       {...field.control}
       {...rest}

@@ -58,7 +58,7 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
             possível", e `UpdateTurmaAction` recusa a gravação com 422. Os campos
             continuam à vista — o que sai é a escrita, não a leitura. */}
         {mode === 'view' && onEdit && podeEditar && (
-          <AppButton label={t('common.edit')} icon="pi pi-pencil" outlined onClick={onEdit} />
+          <AppButton label={t('common.edit')} icon="edit" outlined onClick={onEdit} />
         )}
       </div>
 
@@ -110,7 +110,7 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
       {mode !== 'view' && (
         <div className="flex justify-end gap-2">
           {onCancel && <AppButton label={t('operation.config.cancel')} outlined onClick={onCancel} disabled={f.pending} />}
-          <AppButton variant="primary" label={t('operation.config.save')} icon="pi pi-check" onClick={f.submit} disabled={f.pending} />
+          <AppButton variant="primary" label={t('operation.config.save')} icon="check" onClick={f.submit} disabled={f.pending} />
         </div>
       )}
     </div>

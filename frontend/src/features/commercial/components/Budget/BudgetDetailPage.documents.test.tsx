@@ -70,10 +70,9 @@ describe('BudgetDocumentsCard — um slot fixo por tipo', () => {
   it('cada tag leva o ícone do tipo', () => {
     montar()
 
-    const icones = tags().map((tag) => tag.querySelector('.p-tag-icon')?.className ?? '')
-    expect(icones[0]).toContain('pi-shopping-cart')
-    expect(icones[1]).toContain('pi-receipt')
-    expect(icones[2]).toContain('pi-money-bill')
+    const icones = tags().map((tag) => tag.querySelector('svg')?.innerHTML ?? '')
+    expect(icones.every((svg) => svg !== '')).toBe(true)
+    expect(new Set(icones).size).toBe(3)
   })
 
   it('enviar no slot Fatura manda type=invoice', () => {

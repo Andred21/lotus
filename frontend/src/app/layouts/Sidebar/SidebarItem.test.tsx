@@ -14,21 +14,27 @@ vi.mock('react-i18next', async (importOriginal) => {
   }
 })
 
+import { AppIcon } from '@shared/ui'
 import { SidebarItem } from './SidebarItem'
 
 const modulo: NavModule = {
   key: 'comercial',
   labelKey: 'nav.comercial',
-  icon: 'pi pi-file',
+  icon: 'file',
   path: '/comercial',
 }
 
-function montar(collapsed: boolean) {
+function montar(collapsed: boolean, rota = '/') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[rota]}>
       <SidebarItem module={modulo} collapsed={collapsed} />
     </MemoryRouter>,
   )
+}
+
+/** O desenho de um ícone do registro no peso pedido, para comparar com o item. */
+function desenho(weight: 'regular' | 'fill') {
+  return render(<AppIcon name="file" weight={weight} />).container.querySelector('svg')?.innerHTML
 }
 
 describe('SidebarItem', () => {
@@ -82,5 +88,21 @@ describe('SidebarItem', () => {
 
     expect(screen.getByText('nav.comercial')).toBeTruthy()
     expect(container.querySelector('a')?.className).not.toContain('flex-col')
+  })
+
+  /** O módulo atual se destaca pelo peso do glifo: `fill` ativo, `regular` em
+   * repouso. A cor sozinha não carrega o estado. */
+  it('item ativo usa peso fill', () => {
+    const { container } = montar(false, '/comercial')
+
+    expect(container.querySelector('a')?.getAttribute('aria-current')).toBe('page')
+    expect(container.querySelector('a svg')?.innerHTML).toBe(desenho('fill'))
+  })
+
+  it('item em repouso usa peso regular', () => {
+    const { container } = montar(false, '/outra-rota')
+
+    expect(container.querySelector('a')?.getAttribute('aria-current')).toBeNull()
+    expect(container.querySelector('a svg')?.innerHTML).toBe(desenho('regular'))
   })
 })

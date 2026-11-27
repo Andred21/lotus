@@ -84,7 +84,7 @@ export function ImportDialog({ turmaId, visible, onHide, turmaLabel, clientName 
               {/* Mesmo papel dos botões de arquivo do manual: contornado, com o ícone do tipo. */}
               <AppButton
                 label={k('template')}
-                icon="pi pi-file-excel"
+                icon="fileSheet"
                 outlined
                 loading={f.templatePending}
                 disabled={f.pending}

@@ -91,7 +91,7 @@ export function AppFileSlot<T extends SlotFile>({
         size={staged.size}
         actions={
           <AppButton
-            icon="pi pi-times"
+            icon="close"
             text
             rounded
             severity="danger"

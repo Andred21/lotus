@@ -31,7 +31,7 @@ export function BatchIssueDialog({ turma, onHide }: Props) {
       <AppButton
         variant="primary"
         label={t('certificate.confirmEmit')}
-        icon="pi pi-check"
+        icon="check"
         disabled={batch.redatorId == null}
         loading={batch.pending}
         onClick={batch.submit}

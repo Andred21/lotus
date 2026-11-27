@@ -29,7 +29,7 @@ export function RolesTable({
 
   // Sem busca nesta aba: só um vazio possível, o de "sem dado".
   const empty = (
-    <AppEmptyState icon="pi pi-shield" title={t('role.empty')} description={t('role.emptyHint')} action={actions} />
+    <AppEmptyState icon="shield" title={t('role.empty')} description={t('role.emptyHint')} action={actions} />
   )
 
   return (
@@ -69,7 +69,7 @@ export function RolesTable({
           body={(r: RoleData) => (
             <RowActions
               collapsed={colunaDeAcoes.collapsed}
-              actions={[{ label: t('common.view'), icon: 'pi pi-eye', onClick: () => onView(r) }]}
+              actions={[{ label: t('common.view'), icon: 'view', onClick: () => onView(r) }]}
             />
           )}
           style={stickyActionsColumn(colunaDeAcoes.width)}

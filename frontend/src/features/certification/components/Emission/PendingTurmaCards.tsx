@@ -30,7 +30,7 @@ export function PendingTurmaCards({
   if (pendentes.length === 0) {
     return (
       <AppEmptyState
-        icon="pi pi-verified"
+        icon='certificate'
         title={t('certificate.noPendingTurmas')}
         description={t('certificate.noPendingTurmasHint')}
       />

@@ -15,7 +15,7 @@ export function PendingList({ items }: { items: PendingItemData[] }) {
       <AppCardHeader title={t('dashboard.pending.title')} count={items.length} />
       {items.length === 0 ? (
         <AppEmptyState
-          icon="pi pi-check-circle"
+          icon="checkCircle"
           title={t('dashboard.pending.empty')}
           description={t('dashboard.pending.emptyHint')}
         />

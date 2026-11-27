@@ -51,7 +51,8 @@ export const complianceWidths = () =>
 /**
  * Cinco frações iguais. O contador sob "Documentos vencidos"/"Documentos por
  * vencer" precisa de 123px (palavra + padding, es-CL e pt-BR), e o nome do
- * relator de 114px ("Instructor" com o ícone ao lado, en): soma 561px. A 20% cada
+ * relator de 114px ("Instructor" com o ícone ao lado, en; medido antes do glifo
+ * de 20px do bloco 64): soma 561px. A 20% cada
  * coluna tem 134px no piso de 42rem (672px), e o nome — curto, e o único texto
  * livre — não precisa de mais que os contadores.
  */

@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AppAvatar, AppButton, AppMenu } from '@shared/ui'
-import type { AppMenuRef, MenuItem } from '@shared/ui'
+import { AppAvatar, AppButton, AppIcon, AppMenu } from '@shared/ui'
+import type { AppMenuItem, AppMenuRef } from '@shared/ui'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import { useLogout } from '@features/identity/api/authApi'
 import { roleLabel } from '@shared/lib'
@@ -18,12 +18,12 @@ export function UserMenu() {
 
   const role = user.roles[0]
 
-  const items: MenuItem[] = [
-    { label: t('userMenu.profile'), icon: 'pi pi-user', command: () => navigate('/perfil') },
+  const items: AppMenuItem[] = [
+    { label: t('userMenu.profile'), icon: 'user', command: () => navigate('/perfil') },
     { separator: true },
     {
       label: t('userMenu.logout'),
-      icon: 'pi pi-sign-out',
+      icon: 'signOut',
       command: () =>
         logout.mutate(undefined, {
           onSuccess: () => navigate('/login', { replace: true }),
@@ -90,7 +90,7 @@ export function UserMenu() {
           <span className="block truncate text-sm text-white/75">{role && roleLabel(role, t)}</span>
         </span>
 
-        <i className="pi pi-angle-down" aria-hidden="true" />
+        <AppIcon name="chevronDown" />
 
       </AppButton>
 

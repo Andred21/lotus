@@ -50,7 +50,7 @@ export function ContactCard({
           {!readOnly && (
             <span title={isLast ? t('client.lastContactHint') : t('client.removeContact')}>
               <AppButton
-                icon="pi pi-trash"
+                icon="delete"
                 text
                 rounded
                 severity="danger"

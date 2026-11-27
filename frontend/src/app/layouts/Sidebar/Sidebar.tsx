@@ -3,7 +3,7 @@ import { useUiStore } from '@shared/stores/uiStore'
 import { usePermissions, useIsCompactViewport } from '@shared/hooks'
 import { NAV_MODULES } from '@shared/config/navigation'
 import { APP_VERSION } from '@shared/config/brand'
-import { AppButton, AppSidebar, AppLogo, sectionLabelClass, technicalDataClass } from '@shared/ui'
+import { AppButton, AppIcon, AppSidebar, AppLogo, sectionLabelClass, technicalDataClass } from '@shared/ui'
 import { roleSectionLabel } from '@shared/lib'
 import { SidebarItem } from './SidebarItem'
 
@@ -51,7 +51,7 @@ export function Sidebar() {
           * de girar em falso) é o que preserva a pref persistida (UI-02). */}
         {!compact && (
           <AppButton variant="iconToggle" onClick={toggle} aria-label={t('common.toggleMenu')}>
-            <i className={`pi ${collapsed ? 'pi-angle-right' : 'pi-angle-left'}`} />
+            <AppIcon name={collapsed ? 'chevronRight' : 'chevronLeft'} className="-my-0.5" />
           </AppButton>
         )}
       </div>

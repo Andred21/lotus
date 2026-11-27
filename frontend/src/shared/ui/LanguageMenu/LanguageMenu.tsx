@@ -1,15 +1,27 @@
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { MenuItem } from 'primereact/menuitem'
 import type { MenuPassThroughMethodOptions } from 'primereact/menu'
 import { AppButton } from '../AppButton/AppButton'
 import { AppMenu } from '../AppMenu/AppMenu'
-import type { AppMenuRef } from '../AppMenu/AppMenu'
+import type { AppMenuItem, AppMenuRef } from '../AppMenu/AppMenu'
 import { SUPPORTED_LANGUAGES } from '@shared/config/i18n'
+import cl from 'flag-icons/flags/4x3/cl.svg'
+import br from 'flag-icons/flags/4x3/br.svg'
+import us from 'flag-icons/flags/4x3/us.svg'
+
+// Só as três bandeiras do seletor, cada uma como arquivo próprio. O CSS global do
+// `flag-icons` trazia as ~270 de uma vez; quem precisa de todas (o `PhoneInput`)
+// importa o CSS no próprio módulo. A chave tipada faz um idioma novo sem
+// bandeira falhar no `tsc`.
+const FLAGS: Record<(typeof SUPPORTED_LANGUAGES)[number]['flag'], string> = { cl, br, us }
+
+const Flag = ({ code, className }: { code: keyof typeof FLAGS; className?: string }) => (
+  <img src={FLAGS[code]} alt="" className={['h-3 w-4 shrink-0', className].filter(Boolean).join(' ')} />
+)
 
 /**
  * Seletor de idioma. O AppButton mostra a bandeira + código atual; ao clicar
- * abre o AppMenu com as 3 línguas — cada item com sua bandeira (flag-icons no
+ * abre o AppMenu com as 3 línguas — cada item com sua bandeira (SVG local no
  * ícone do item) chamando i18n.changeLanguage.
  */
 export function LanguageMenu() {
@@ -21,9 +33,9 @@ export function LanguageMenu() {
     SUPPORTED_LANGUAGES.find((l) => i18n.language?.startsWith(l.code.slice(0, 2))) ??
     SUPPORTED_LANGUAGES[0]
 
-  const items: MenuItem[] = SUPPORTED_LANGUAGES.map((l) => ({
+  const items: AppMenuItem[] = SUPPORTED_LANGUAGES.map((l) => ({
     label: l.label,
-    icon: `fi fi-${l.flag}`,
+    icon: <Flag code={l.flag} className="p-menuitem-icon" />,
     command: () => void i18n.changeLanguage(l.code),
     // `data` carrega o código do item — é o que o `pt.menuitem` abaixo lê para
     // reconhecer o ativo sem depender de índice/ordem (UI-05).
@@ -46,7 +58,7 @@ export function LanguageMenu() {
         aria-label={t('common.language')}
         onClick={(e) => menuRef.current?.toggle(e)}
       >
-        <span className={`fi fi-${current.flag}`} /> {current.label}
+        <Flag code={current.flag} /> {current.label}
       </AppButton>
       <AppMenu
         ref={menuRef}

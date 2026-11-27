@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import i18n from '@shared/config/i18n'
 import { AppDialog } from './AppDialog'
 
@@ -37,6 +37,29 @@ describe('AppDialog', () => {
 
     const fechar = screen.getByRole('button', { name: 'Cerrar' })
     expect(fechar.className).toContain('marcador-do-chamador')
+  })
+})
+
+/** Bloco 64: o SVG interno que o Prime desenha sozinho (fechar, maximizar) é do registro Phosphor. */
+describe('AppDialog — ícones internos', () => {
+  const phosphor = (el: Element | null) => {
+    const svg = el?.querySelector('svg')
+    expect(svg).not.toBeNull()
+    expect(svg?.classList.contains('p-icon')).toBe(false)
+  }
+
+  it('usa ícone Phosphor no botão de fechar', () => {
+    render(<AppDialog size="lg" visible header="Diálogo" onHide={() => {}} />)
+
+    phosphor(screen.getByRole('button', { name: 'Cerrar' }))
+  })
+
+  it('usa ícone Phosphor no botão de maximizar, e no de restaurar depois do clique', () => {
+    render(<AppDialog size="lg" visible header="Diálogo" onHide={() => {}} />)
+
+    phosphor(screen.getByRole('button', { name: 'Maximizar diálogo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Maximizar diálogo' }))
+    phosphor(screen.getByRole('button', { name: 'Restaurar diálogo' }))
   })
 })
 

@@ -35,7 +35,7 @@ export function ExportConfirmDialog({ exportState: e, filtered }: Props) {
       title={t(isZip ? 'certificate.exportZipTitle' : 'certificate.exportPlanillaTitle')}
       message={message}
       confirmLabel={t('certificate.exportConfirm')}
-      confirmIcon="pi pi-download"
+      confirmIcon="download"
       confirmDisabled={total === null || empty || e.summaryLoading}
       pending={e.pending}
       error={e.errorMessage}

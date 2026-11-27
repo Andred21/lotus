@@ -65,13 +65,13 @@ export function ArchiveRowActions({
     return collapsed ? (
       <RowActions
         collapsed
-        actions={[{ label: t('archive.restoreAction'), icon: 'pi pi-undo', onClick: onRestore, disabled: busy }]}
+        actions={[{ label: t('archive.restoreAction'), icon: 'restore', onClick: onRestore, disabled: busy }]}
       />
     ) : (
       <div className="flex justify-center">
         <AppButton
           label={t('archive.restoreAction')}
-          icon="pi pi-undo"
+          icon="restore"
           text
           size="small"
           disabled={busy}
@@ -84,11 +84,11 @@ export function ArchiveRowActions({
   // Ver → próprias da feature → arquivar: a destrutiva por último.
   const actions: RowAction[] = []
   if (onView) {
-    actions.push({ label: t('common.view'), icon: 'pi pi-eye', onClick: onView })
+    actions.push({ label: t('common.view'), icon: 'view', onClick: onView })
   }
   actions.push(...extra)
   if (canArchive && onArchive) {
-    actions.push({ label: t('archive.archiveAction'), icon: 'pi pi-inbox', onClick: onArchive, disabled: busy })
+    actions.push({ label: t('archive.archiveAction'), icon: 'archive', onClick: onArchive, disabled: busy })
   }
 
   return <RowActions actions={actions} collapsed={collapsed} />

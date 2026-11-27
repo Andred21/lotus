@@ -2,28 +2,29 @@ import type { ReactNode } from 'react'
 import { formatFileSize } from '@shared/lib/upload'
 import { formatDate } from '@shared/lib'
 import { technicalDataClass } from '../typography'
+import { AppIcon, type IconName } from '../AppIcon'
 
 /** Ícone e cor por tipo. Decide por mime (spec D7); extensão é fallback quando
  * o mime é null. Cor por palette var do Lara, composta com --surface-card no
  * fundo para funcionar nos dois temas (os palette vars não invertem). */
-function fileIcon(mime: string | null | undefined, name: string): { icon: string; hue: string } {
+function fileIcon(mime: string | null | undefined, name: string): { icon: IconName; hue: string } {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
   const is = (m: string, ...exts: string[]) => mime === m || (!mime && exts.includes(ext))
 
   if (mime?.startsWith('image/') || (!mime && ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext))) {
-    return { icon: 'pi pi-image', hue: 'var(--blue-500)' }
+    return { icon: 'image', hue: 'var(--blue-500)' }
   }
-  if (is('application/pdf', 'pdf')) return { icon: 'pi pi-file-pdf', hue: 'var(--red-500)' }
+  if (is('application/pdf', 'pdf')) return { icon: 'filePdf', hue: 'var(--red-500)' }
   if (
     mime?.includes('spreadsheet') || mime === 'text/csv' ||
     (!mime && ['xlsx', 'xls', 'csv'].includes(ext))
   ) {
-    return { icon: 'pi pi-file-excel', hue: 'var(--green-500)' }
+    return { icon: 'fileSheet', hue: 'var(--green-500)' }
   }
   if (mime?.includes('word') || (!mime && ['doc', 'docx'].includes(ext))) {
-    return { icon: 'pi pi-file-word', hue: 'var(--indigo-500)' }
+    return { icon: 'fileDoc', hue: 'var(--indigo-500)' }
   }
-  return { icon: 'pi pi-file', hue: 'var(--text-color-secondary)' }
+  return { icon: 'file', hue: 'var(--text-color-secondary)' }
 }
 
 export type AppFileRowProps = {
@@ -74,7 +75,7 @@ export function AppFileRow({ name, mime, size, createdAt, actions }: AppFileRowP
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control"
         style={{ background: `color-mix(in srgb, ${hue} 12%, var(--surface-card))`, color: hue }}
       >
-        <i className={icon} aria-hidden="true" />
+        <AppIcon name={icon} />
       </span>
       {/* `min-w-0 flex-1` é o que mantém o truncamento funcionando ANTES da
           quebra — sem ele o nome volta a empurrar a linha inteira, e o `title`

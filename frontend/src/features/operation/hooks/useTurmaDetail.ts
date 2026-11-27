@@ -1,5 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { loadFailure } from '@shared/hooks'
+import { retryFor } from '@shared/lib'
 import { useTurma } from '../api/useTurmas'
 import { turmaTabIndex, turmaTabName } from '../lib/turmaTabs'
 
@@ -23,7 +24,8 @@ export function useTurmaDetail() {
     /** Falha do GET da turma — a tela precisa distinguir "não carregou" de
      * "não existe" (spec D16). */
     loadError: loadFailure(query),
-    reload: (): Promise<unknown> => query.refetch(),
+    /** `undefined` no 403 (`retryFor`): a página não desenha o Reintentar. */
+    reload: retryFor(query.error, (): Promise<unknown> => query.refetch()),
     turma: query.data,
     /** Índice do painel ativo, derivado do nome que está na URL. */
     tab: turmaTabIndex(params.get('tab')),

@@ -30,7 +30,7 @@ export function ArchivedQuotesList({
   courseName: (id: number) => string
   loading: boolean
   error?: { detail?: string | null } | null
-  onRetry: () => void | Promise<unknown>
+  onRetry?: () => void | Promise<unknown>
   onRestore: (id: number) => void
   /** Restore em voo — trava os botões (Q-2). */
   restoring: boolean
@@ -87,7 +87,7 @@ export function ArchivedQuotesList({
           {can('commercial.quote.restore') && (
             <AppButton
               label={t('archive.restoreAction')}
-              icon="pi pi-undo"
+              icon="restore"
               text
               size="small"
               disabled={restoring}

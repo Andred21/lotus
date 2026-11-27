@@ -140,7 +140,7 @@ export function SearchableTableFrame<T>({
   }
   const empty = table.filtering ? (
     <AppEmptyState
-      icon="pi pi-search"
+      icon="search"
       title={filteredBySearch ? t('common.noResults', { term: table.filter.trim() }) : t('common.noResultsFiltered')}
       description={
         ambos
@@ -158,7 +158,7 @@ export function SearchableTableFrame<T>({
                 ? t('common.clearSearch')
                 : t('common.clearFilters')
           }
-          icon="pi pi-times"
+          icon="close"
           text
           onClick={clearAll}
         />
@@ -175,7 +175,7 @@ export function SearchableTableFrame<T>({
           <div className="flex min-w-64 flex-1 flex-wrap items-center gap-3">
             <div className="min-w-64 flex-1">
               <AppInputText
-                leftIcon="pi pi-search"
+                leftIcon="search"
                 placeholder={searchPlaceholder}
                 value={table.filter}
                 onChange={(e) => table.onFilterChange(e.target.value)}

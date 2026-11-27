@@ -1,6 +1,7 @@
 import type { TurmaData, TurmaDocumentData, TurmaDocumentType } from '@shared/types/generated'
 import { problemMessage } from '@shared/api/problemMessage'
 import { loadFailure, useMutationErrors, usePermissions } from '@shared/hooks'
+import { retryFor } from '@shared/lib'
 import { useToast } from '@shared/ui'
 import { useTranslation } from 'react-i18next'
 import {
@@ -67,7 +68,7 @@ export function useTurmaDocsSection(turma: TurmaData) {
     turmaId,
     loading: list.isLoading,
     loadError: loadFailure(list),
-    reload: (): Promise<unknown> => list.refetch(),
+    reload: retryFor(list.error, (): Promise<unknown> => list.refetch()),
     error,
     byType,
     deliveredCount: TIPOS_BLOQUEANTES.length - faltamBloqueantes.length,

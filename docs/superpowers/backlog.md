@@ -146,6 +146,8 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
+| 8 | **65** `frontend-navegacao-sessao-e-formularios` | Frontend | Depende do 64 (data router, `IconName`, hook da guarda) |
+| 9 | **66** `frontend-identidade-graficos-e-acessibilidade` | Frontend | Depende do 65 (tokens de tema); monta o quadro dos 46 |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
 | 11 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
 
@@ -156,6 +158,10 @@ própria, sem disputar árvore.
 **Emendada em 2026-11-21, na PR das fichas 60 a 62:** os três entram na frente do 58 e do 9. O 58
 vai por último de propósito, e os três também deslocam linhas que a P-97 coordena. É uma
 proposta: a ordem continua sendo do João.
+
+**Emendada em 2026-11-26, na PR da lane 64:** a revisão ui-ux-pro-max virou três blocos em série,
+por decisão do João, com um plano de até 10 tasks cada. 64, 65 e 66 entram na frente do 58 pela
+mesma razão das fichas 60 a 62: deslocam linhas que a P-97 coordena. A posição é uma proposta.
 
 **A colisão 16 × 9 saiu com o 16, em 2026-09-27.** O João levou a fatia 3 **inteira**, com a run de
 Administración dentro, aceitando que o 9 possa redesenhar a tela depois: o relatório
@@ -277,6 +283,63 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 > `main@c6b06e2f`. O João pediu o menor número de blocos. Ficaram três porque duas divisões são
 > reais: a validação tem metade no repositório `Andred21/lotus-site`, e a Certificação precisa do
 > código de cotação novo (60) e do download público (61).
+
+---
+
+## 65. `frontend-navegacao-sessao-e-formularios`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** 64
+**Fonte:** `audits/2026-11-26-ui-ux-pro-max.md` e a spec do 64 (D12). Plano em rascunho:
+`blocos/64-frontend-revisao-ui-ux-e-icones/rascunho-plano-65.md`.
+
+**Objetivo:** segundo dos três blocos da revisão ui-ux-pro-max. Cobre navegação, sessão,
+formulários e o gerador de tema.
+
+**Escopo** (IDs da auditoria):
+- C-3 e C-11: lista e abas na URL, voltar pelo histórico.
+- C-1, D-1 e D-9: sessão e dado fresco.
+- C-2, C-7, C-8, A-10 e C-9: formulários protegidos.
+- C-5, C-4, C-6 e A-2: feedback e confirmações.
+- A-1 e B-8: gerador de tema, com borda no escuro, info em índigo e peso 600.
+- D-6 (aberto no 64, por decisão do João em 2026-11-26): dividir o barrel `@shared/ui` ou tirar o
+  chunk `ui` (465,48 kB gz) do `modulepreload`. O rascunho já está no teto de 10 tasks; o encaixe é
+  decisão do João no `/planejar-bloco 65`.
+
+**Planejar:** a spec já está aprovada (spec do 64, D1–D12). O `/planejar-bloco 65` faz o
+brainstorming curto, só para conferir o rascunho contra a `main` que o 64 deixou. Depois grava
+`spec.md` apontando para a spec compartilhada, com a própria `## Verificação externa`, e move o
+rascunho para `plano.md`.
+
+**Fora:** o que é do 64 e do 66.
+
+**DoD:** os critérios 3, 5 e 6 da spec §7 provados. `fechamento.md` do bloco com os 17 IDs (os 16
+do escopo e o D-6, se o João o encaixar).
+
+---
+
+## 66. `frontend-identidade-graficos-e-acessibilidade`
+
+**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** 65
+**Fonte:** `audits/2026-11-26-ui-ux-pro-max.md` e a spec do 64 (D12). Plano em rascunho:
+`blocos/64-frontend-revisao-ui-ux-e-icones/rascunho-plano-66.md`.
+
+**Objetivo:** terceiro e último bloco da revisão ui-ux-pro-max. Cobre identidade, gráficos,
+teclado e leitor de tela, e polimento, e monta o quadro final dos 46 IDs.
+
+**Escopo** (IDs da auditoria):
+- B-2, B-5, B-3/A-11 e B-4: identidade (celeste raro, header fixo, movimento reduzido, rail a 12px).
+- B-1, B-7 e B-11: identificadores.
+- D-2 (backend `AnalyticsQuery`), D-3, D-4, D-5, D-7 e D-8: gráficos do painel.
+- A-3, A-4, A-5, A-6, A-7, A-8, A-9 e A-12: teclado e leitor de tela.
+- D-10, B-6, B-9, B-10 e B-12: carga e polimento.
+
+**Planejar:** igual ao 65, a partir do rascunho.
+
+**Fora:** o que é do 64 e do 65. Também o uso autenticado no celular como contexto novo: B-6 e B-9
+só deixam de quebrar.
+
+**DoD:** os critérios 1, 3 e 4 da spec §7 provados. `fechamento.md` com os 27 IDs do bloco e o
+"Quadro dos 46" apontando para o fechamento de cada bloco.
 
 ---
 

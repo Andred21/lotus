@@ -86,14 +86,14 @@ export function ImportTriageTable({ rows, canUpdateRegistration, clientName, onE
   const actionsColumn = useCollapsibleActionsColumn('7rem')
 
   if (rows.length === 0) {
-    return <AppEmptyState icon="pi pi-inbox" title={t('operation.enrollment.import.empty')} />
+    return <AppEmptyState icon="archive" title={t('operation.enrollment.import.empty')} />
   }
 
   const actions = (r: TriageRow): RowAction[] => [
     ...(r.status !== 'already_enrolled' && (!isRegistered(r) || canUpdateRegistration)
-      ? [{ label: t('operation.enrollment.import.editRow'), icon: 'pi pi-pencil', onClick: () => setEditing(r.row) }]
+      ? [{ label: t('operation.enrollment.import.editRow'), icon: 'edit' as const, onClick: () => setEditing(r.row) }]
       : []),
-    { label: t('operation.enrollment.import.removeRow'), icon: 'pi pi-times', severity: 'danger' as const, onClick: () => onRemove(r.row) },
+    { label: t('operation.enrollment.import.removeRow'), icon: 'close' as const, severity: 'danger' as const, onClick: () => onRemove(r.row) },
   ]
   const col = (key: string) => t(`operation.enrollment.import.col.${key}`)
 

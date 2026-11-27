@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePermissions, useMutationErrors, loadFailure } from '@shared/hooks'
+import { retryFor } from '@shared/lib'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
 import type { QuoteData } from '@shared/types/generated'
@@ -74,7 +75,10 @@ export function useBudgetDetail(budgetId: number) {
     /** `Promise.all` e não duas chamadas soltas: o botão do `AppErrorState`
      * espera a promise devolvida, e devolver só a primeira o liberaria com a
      * segunda ainda em voo (Q-14). */
-    reload: (): Promise<unknown> => Promise.all([query.refetch(), clients.refetch()]),
+    reload: retryFor(
+      loadFailure(query) ?? loadFailure(clients),
+      (): Promise<unknown> => Promise.all([query.refetch(), clients.refetch()]),
+    ),
     budget,
     client,
     canApprove,

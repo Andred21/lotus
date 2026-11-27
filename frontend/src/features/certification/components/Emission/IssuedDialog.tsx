@@ -16,7 +16,7 @@ type Props = {
   certificate: CertificateData | null
   loading: boolean
   error: ProblemDetails | null
-  onRetry: () => void
+  onRetry?: () => void
   onHide: () => void
 }
 
@@ -47,7 +47,7 @@ export function IssuedDialog({
         <AppButton
           variant="primary"
           label={t('certificate.downloadPdf')}
-          icon="pi pi-download"
+          icon="download"
           loading={pdf.pending}
           onClick={pdf.open}
         />

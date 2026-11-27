@@ -3,6 +3,12 @@ import { render, screen } from '@testing-library/react'
 import { ConfirmDialog } from './ConfirmDialog'
 import { confirmSeverityStyle } from './style'
 import { severityTone } from '../AppTag/tones'
+import { AppIcon, type IconName } from '../AppIcon'
+
+/** O desenho de um ícone do registro, para comparar com o que o wrapper montou. */
+function desenho(name: IconName) {
+  return render(<AppIcon name={name} />).container.querySelector('svg')?.innerHTML
+}
 
 const base = {
   visible: true,
@@ -50,10 +56,16 @@ describe('ConfirmDialog — botão de confirmar', () => {
     expect((document.querySelector('.p-dialog-footer .p-button-text') as HTMLButtonElement).disabled).toBe(false)
   })
 
-  it('confirmIcon troca o ícone do botão', () => {
-    render(<ConfirmDialog {...base} confirmLabel="Revocar" confirmIcon="pi pi-ban" severity="danger" />)
+  it('cancelLabel troca o texto do Cancelar', () => {
+    render(<ConfirmDialog {...base} cancelLabel="Seguir editando" />)
 
-    expect(screen.getByRole('button', { name: /Revocar/ }).querySelector('.pi-ban')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Seguir editando/ })).toBeTruthy()
+  })
+
+  it('confirmIcon troca o ícone do botão', () => {
+    render(<ConfirmDialog {...base} confirmLabel="Revocar" confirmIcon="block" severity="danger" />)
+
+    expect(screen.getByRole('button', { name: /Revocar/ }).querySelector('svg')?.innerHTML).toBe(desenho('block'))
   })
 })
 
@@ -65,16 +77,18 @@ describe('ConfirmDialog — confirmação compacta', () => {
     render(<ConfirmDialog {...base} severity={severity} />)
 
     expect(document.querySelector('[data-severity]')?.getAttribute('data-severity')).toBe(severity)
-    const classeDoIcone = confirmSeverityStyle[severity].icon.split(' ')[1]
-    expect(document.querySelector('[data-severity-icon]')?.className).toContain(classeDoIcone)
+    const icone = document.querySelector('[data-severity-icon] svg')
+    expect(icone?.innerHTML).toBe(desenho(confirmSeverityStyle[severity].icon))
   })
 
-  /** O `.pi` do primeicons é CSS sem camada e vence o `grid` do Tailwind; sem o
-   * `!` o círculo vira bloco e o glifo cai no canto superior esquerdo. */
-  it('o ícone força `grid!` para o glifo ficar centrado no círculo', () => {
+  /** Com o SVG no lugar do `.pi` (CSS sem camada que vencia o Tailwind), o
+   * `grid` comum já centra o glifo no círculo: o `!` saiu. */
+  it('o círculo centra o glifo com `grid`, sem `!`', () => {
     render(<ConfirmDialog {...base} severity="danger" />)
 
-    expect(document.querySelector('[data-severity-icon]')?.classList.contains('grid!')).toBe(true)
+    const circulo = document.querySelector('[data-severity-icon]')
+    expect(circulo?.classList.contains('grid')).toBe(true)
+    expect(circulo?.classList.contains('grid!')).toBe(false)
   })
 
   it('não maximiza nem herda a moldura navy', () => {

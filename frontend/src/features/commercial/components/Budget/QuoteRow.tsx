@@ -99,10 +99,10 @@ export function QuoteRow({
 
       <div className="flex items-center gap-1">
         {(quote.status !== 'approved' || canManageApproved) && onEdit && (
-          <AppButton icon="pi pi-pencil" text rounded aria-label={t('common.edit')} onClick={onEdit} />
+          <AppButton icon="edit" text rounded aria-label={t('common.edit')} onClick={onEdit} />
         )}
         {quote.status !== 'approved' && onRemove && (
-          <AppButton icon="pi pi-trash" text rounded severity="danger" aria-label={t('common.delete')} onClick={onRemove} />
+          <AppButton icon="delete" text rounded severity="danger" aria-label={t('common.delete')} onClick={onRemove} />
         )}
       </div>
 

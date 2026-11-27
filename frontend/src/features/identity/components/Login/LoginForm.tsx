@@ -57,7 +57,7 @@ export function LoginForm({ email, onEmailChange, autoFocusTitle }: Props) {
           o custo de não consumi-lo (f4 UI-06, run de 2026-08-28). */}
       <FormField label={t("login.email")} error={fieldErrors?.email?.[0]}>
         <AppInputText
-          leftIcon="pi pi-envelope"
+          leftIcon='mail'
           type="email"
           autoComplete="username"
           value={email}
@@ -68,7 +68,7 @@ export function LoginForm({ email, onEmailChange, autoFocusTitle }: Props) {
 
       <FormField label={t("login.password")} error={fieldErrors?.password?.[0]}>
         <AppPassword
-          leftIcon="pi pi-lock"
+          leftIcon="lock"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

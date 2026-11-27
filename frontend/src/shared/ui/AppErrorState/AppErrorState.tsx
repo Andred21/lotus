@@ -1,4 +1,5 @@
 import { AppButton } from '../AppButton'
+import { AppIcon } from '../AppIcon'
 import { dangerText } from '../../styles/tokens'
 import { useRetryPending } from './useRetryPending'
 
@@ -31,7 +32,10 @@ export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorSt
 
   return (
     <div role="alert" className="flex flex-col items-center gap-3 px-4 py-10 text-center">
-      <i className="pi pi-exclamation-triangle text-3xl" style={{ color: dangerText }} aria-hidden="true" />
+      {/* `size-[1.875rem]` mantém os 30px do `text-3xl` de antes (o `lg` do AppIcon pára em 28). */}
+      <span className="inline-flex" style={{ color: dangerText }}>
+        <AppIcon name="warning" className="size-[1.875rem]" />
+      </span>
       <p className="text-base font-semibold" style={{ color: dangerText }}>{title}</p>
       {detail && (
         <p className="max-w-md text-sm" style={{ color: 'var(--text-color-secondary)' }}>{detail}</p>
@@ -40,7 +44,7 @@ export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorSt
         <div className="mt-1">
           <AppButton
             label={retryLabel}
-            icon="pi pi-refresh"
+            icon="refresh"
             outlined
             loading={retry.pending}
             disabled={retry.pending}

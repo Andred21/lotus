@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { Page, PageMeta, PageQuery } from '@shared/api/page'
-import type { ScreenDetailSource } from '@shared/lib'
+import { retryFor, type ScreenDetailSource } from '@shared/lib'
 import { loadFailure } from './listSource'
 
 /** Janela entre a última tecla e o GET. Abaixo disso a API recebe um request
@@ -56,7 +56,8 @@ export interface ServerTable<T, M extends PageMeta = PageMeta> {
    * válido é o comportamento desejado (spec §8). */
   loading: boolean
   error: ScreenDetailSource | null
-  refetch: () => Promise<unknown>
+  /** `undefined` no 403 (`retryFor`): sem handler a tela não desenha o botão. */
+  refetch: (() => Promise<unknown>) | undefined
 }
 
 /**
@@ -165,6 +166,6 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
     },
     loading: result.isFetching,
     error: loadFailure(result),
-    refetch: () => result.refetch(),
+    refetch: retryFor(result.error, () => result.refetch()),
   }
 }

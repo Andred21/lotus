@@ -23,7 +23,7 @@ export function AlertList({ items, emptyHint }: { items: AlertData[]; emptyHint:
     <AppCard>
       <AppCardHeader title={t('dashboard.alerts.title')} count={items.length} />
       {items.length === 0 ? (
-        <AppEmptyState icon="pi pi-shield" title={t('dashboard.alerts.empty')} description={emptyHint} />
+        <AppEmptyState icon="shield" title={t('dashboard.alerts.empty')} description={emptyHint} />
       ) : (
         <ul role="list">
           {items.map((item) => (

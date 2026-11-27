@@ -27,7 +27,7 @@ export function ClientBudgetsSection({ clientId }: { clientId: number }) {
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-56 flex-1">
             <AppInputText
-              leftIcon="pi pi-search"
+              leftIcon="search"
               placeholder={t('client.budgets.searchPlaceholder')}
               aria-label={t('client.budgets.searchPlaceholder')}
               value={b.search}
@@ -46,7 +46,7 @@ export function ClientBudgetsSection({ clientId }: { clientId: number }) {
             onPeriodChange={b.setPeriod}
           />
           {filtering && (
-            <AppButton label={t('common.clearFilters')} icon="pi pi-times" text onClick={b.clear} />
+            <AppButton label={t('common.clearFilters')} icon="close" text onClick={b.clear} />
           )}
         </div>
         <AppDataTable

@@ -68,6 +68,24 @@ describe('useLoadState — o contrato Q-14', () => {
   it('DEVOLVE a promise do refetch, com o resultado da query', async () => {
     const { result } = renderHook(() => useLoadState(query({ isSuccess: true, data: [] })))
 
-    await expect(result.current.refetch()).resolves.toBe(RESULTADO)
+    await expect(result.current.refetch?.()).resolves.toBe(RESULTADO)
+  })
+})
+
+describe('useLoadState — repetir só quando recupera', () => {
+  it('403: sem `refetch`, para a tela não prometer o que não existe', () => {
+    const { result } = renderHook(() =>
+      useLoadState(query({ isError: true, error: { status: 403 } as ProblemDetails })),
+    )
+
+    expect(result.current.refetch).toBeUndefined()
+  })
+
+  it('500: mantém o `refetch`', () => {
+    const { result } = renderHook(() =>
+      useLoadState(query({ isError: true, error: { status: 500 } as ProblemDetails })),
+    )
+
+    expect(result.current.refetch).toBeTypeOf('function')
   })
 })

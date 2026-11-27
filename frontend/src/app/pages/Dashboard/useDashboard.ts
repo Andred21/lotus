@@ -3,7 +3,7 @@ import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/generated'
 import { loadFailure, useWindowedQuery } from '@shared/hooks'
-import type { LoadErrorHintKey, Period } from '@shared/lib'
+import { retryFor, type LoadErrorHintKey, type Period } from '@shared/lib'
 
 /** Janela histórica. Só séries e rankings a respeitam (D3 do bloco A). A UI do
  * seletor é o `PeriodFilter` de `shared/ui` (D5 do B2). */
@@ -44,7 +44,7 @@ type DashboardPayload = AdminDashboardData | RedatorDashboardData
  */
 export type DashboardState =
   | { kind: 'loading' }
-  | { kind: 'error'; error: ProblemDetails; retry: () => Promise<unknown> }
+  | { kind: 'error'; error: ProblemDetails; retry: (() => Promise<unknown>) | undefined }
   | { kind: 'unauthorized' }
   | {
       kind: 'ready-admin'
@@ -116,7 +116,7 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   // cópias à mão já tinham divergido (Q-2 da revisão do bloco 62).
   const { data, staleFailed, staleError, staleHint, staleRetry } = useWindowedQuery(query)
 
-  const retry = () => query.refetch()
+  const retry = retryFor(query.error, () => query.refetch())
 
   // Nada em mão, nem desta janela nem de nenhuma anterior. É AQUI que a falha
   // pode substituir a tela.

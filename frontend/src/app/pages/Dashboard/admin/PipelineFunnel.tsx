@@ -12,7 +12,7 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
       {maior === 0 ? (
         // Todas as etapas em zero é funil VAZIO, não funil quebrado: sete barras
         // de largura nula seriam indistinguíveis de um erro de render.
-        <AppEmptyState icon="pi pi-filter" title={t('dashboard.pipeline.empty')} />
+        <AppEmptyState icon="filter" title={t('dashboard.pipeline.empty')} />
       ) : (
         <ul role="list" className="flex flex-col gap-3 p-4">
           {stages.map((etapa) => (

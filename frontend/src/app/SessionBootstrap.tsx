@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useSessionBootstrap } from '@features/identity/hooks/useSessionBootstrap'
+import { AppIcon } from '@shared/ui'
 
 /**
  * Casca de boot: delega a resolução da sessão ao hook da feature identity e
@@ -12,7 +13,7 @@ export function SessionBootstrap({ children }: { children: ReactNode }) {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <i className="pi pi-spin pi-spinner text-3xl" />
+        <AppIcon name="spinner" className="animate-spin size-[1.875rem]" />
       </div>
     )
   }

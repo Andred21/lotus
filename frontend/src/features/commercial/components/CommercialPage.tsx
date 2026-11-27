@@ -45,7 +45,7 @@ export function CommercialPage() {
               busy={budgetsArchived.restoring}
               actions={
                 can('commercial.budget.create')
-                  ? <AppButton variant="primary" label={t('budget.new')} icon="pi pi-file" onClick={budgets.openCreate} />
+                  ? <AppButton variant="primary" label={t('budget.new')} icon='file' onClick={budgets.openCreate} />
                   : undefined
               }
             />
@@ -64,7 +64,7 @@ export function CommercialPage() {
               onView={clients.openView}
               actions={
                 can('commercial.client.create')
-                  ? <AppButton variant="primary" label={t('client.new')} icon="pi pi-user-plus" onClick={clients.openCreate} />
+                  ? <AppButton variant="primary" label={t('client.new')} icon="userAdd" onClick={clients.openCreate} />
                   : undefined
               }
             />

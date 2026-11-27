@@ -57,7 +57,7 @@ export function ConcludePanel({ turma }: { turma: TurmaData }) {
           {s.canComplete ? (
             <AppButton
               label={t('operation.conclusion.confirm')}
-              icon="pi pi-check-circle"
+              icon="checkCircle"
               severity="danger"
               disabled={!s.habilitada || s.concluding}
               loading={s.concluding}

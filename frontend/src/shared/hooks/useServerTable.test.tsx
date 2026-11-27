@@ -233,6 +233,6 @@ describe('useServerTable — filtering mede EFEITO, não presença', () => {
     await waitFor(() => expect(result.current.error).not.toBeNull())
     expect(result.current.error).toEqual({})
     expect(result.current.rows).toEqual([])
-    expect(result.current.refetch()).toBeInstanceOf(Promise)
+    expect(result.current.refetch?.()).toBeInstanceOf(Promise)
   })
 })

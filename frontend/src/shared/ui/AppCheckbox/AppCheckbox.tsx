@@ -1,5 +1,10 @@
 import { Checkbox } from 'primereact/checkbox'
 import type { CheckboxProps } from 'primereact/checkbox'
+import { primeSlotIcon } from '../AppIcon'
+
+// 16px: dentro da caixa de 22px (borda de 2px) sobram 18px. O Phosphor não leva `.p-icon`,
+// então o 14px do tema não o alcança.
+const CHECK_ICON = primeSlotIcon('check', 16)
 
 export type { CheckboxProps as AppCheckboxProps } from 'primereact/checkbox'
 
@@ -7,5 +12,5 @@ export type { CheckboxProps as AppCheckboxProps } from 'primereact/checkbox'
  * empilhe `dark:` aqui. Sem forwardRef: Checkbox do Prime é class component e
  * nenhum consumidor precisa da ref. */
 export function AppCheckbox(props: CheckboxProps) {
-  return <Checkbox {...props} />
+  return <Checkbox icon={CHECK_ICON} {...props} />
 }

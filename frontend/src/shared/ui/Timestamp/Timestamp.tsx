@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { formatDate, formatTime } from '@shared/lib'
+import { AppIcon } from '../AppIcon'
 
 /**
  * Um instante — data E hora juntas — em duas linhas: relógio com a hora, e
@@ -35,9 +36,9 @@ export function Timestamp({ value }: { value: Date }) {
       lang={i18n.language}
       className="inline-grid grid-cols-[auto_auto] items-center gap-x-1.5 text-sm leading-tight tabular-nums"
     >
-      <i className="pi pi-clock text-xs text-(--primary-color)" aria-hidden="true" />
+      <AppIcon name="clock" size="sm" className="text-(--primary-color)" />
       <span className="font-semibold">{formatTime(value)}</span>{' '}
-      <i className="pi pi-calendar text-xs text-(--primary-color)" aria-hidden="true" />
+      <AppIcon name="calendar" size="sm" className="text-(--primary-color)" />
       <span className="opacity-75">{formatDate(value)}</span>
     </time>
   )

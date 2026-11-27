@@ -27,7 +27,7 @@ describe('AppPassword mantém a largura sob className do chamador', () => {
   })
 
   it('ramo COM ícone: `w-full` e `pl-10` sobrevivem a um inputClassName do chamador', () => {
-    render(<AppPassword aria-label="senha" leftIcon="pi pi-lock" inputClassName="uppercase" />)
+    render(<AppPassword aria-label="senha" leftIcon="lock" inputClassName="uppercase" />)
 
     // `pl-10` é o offset que impede o texto de correr por baixo do ícone — some
     // ele e o defeito é visual, não de layout, que é o que fez passar batido
@@ -196,5 +196,21 @@ describe('AppPassword devolve o foco ao olho', () => {
       expect(document.activeElement).toBe(olho(container))
       expect(document.activeElement?.tagName).not.toBe('BODY')
     })
+  })
+})
+
+describe('AppPassword — ícones internos', () => {
+  const phosphor = (el: Element | null) => {
+    expect(el?.tagName).toBe('svg')
+    expect(el?.classList.contains('p-icon')).toBe(false)
+  }
+
+  it('usa ícone Phosphor no olho, nos dois estados, e o olho continua botão que alterna', () => {
+    render(<AppPassword aria-label="senha" />)
+
+    phosphor(screen.getByRole('button', { name: 'common.showPassword' }))
+    fireEvent.click(screen.getByRole('button', { name: 'common.showPassword' }))
+    expect(input().getAttribute('type')).toBe('text')
+    phosphor(screen.getByRole('button', { name: 'common.hidePassword' }))
   })
 })

@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { AppIcon, type IconName } from '../AppIcon'
 import { AppFileUpload } from './AppFileUpload'
+
+/** O desenho de um ícone do registro, para comparar com o que o wrapper montou. */
+function desenho(name: IconName) {
+  return render(<AppIcon name={name} />).container.querySelector('svg')?.innerHTML
+}
 
 /** Conta ativacoes no `<input type="file">`, que e onde TODO caminho de
  * ativacao do modo basico desemboca -- o `choose()` do Prime e o `onClick` do
@@ -121,17 +127,17 @@ describe('AppFileUpload — convenção do só-ícone', () => {
     const botao = screen.getByRole('button', { name: 'Subir currículum' })
     expect(botao.className).toContain('p-button-text')
     expect(botao.className).toContain('p-button-rounded')
-    expect(botao.querySelector('.pi-upload')).not.toBeNull()
+    expect(botao.querySelector('svg')?.innerHTML).toBe(desenho('upload'))
   })
 
   it('o chooseOptions do chamador vence o default, campo a campo', () => {
-    render(<AppFileUpload accessibleName="Subir" chooseOptions={{ icon: 'pi pi-file', className: 'marcador' }} />)
+    render(<AppFileUpload accessibleName="Subir" chooseOptions={{ icon: 'file', className: 'marcador' }} />)
 
     const botao = screen.getByRole('button', { name: 'Subir' })
     expect(botao.className).toContain('marcador')
     expect(botao.className).not.toContain('p-button-rounded')
-    expect(botao.querySelector('.pi-file')).not.toBeNull()
-    expect(botao.querySelector('.pi-upload')).toBeNull()
+    expect(botao.querySelector('svg')?.innerHTML).toBe(desenho('file'))
+    expect(botao.querySelector('svg')?.innerHTML).not.toBe(desenho('upload'))
   })
 
   it('com rótulo visível o default não entra', () => {
@@ -139,7 +145,7 @@ describe('AppFileUpload — convenção do só-ícone', () => {
 
     const botao = screen.getByRole('button')
     expect(botao.className).not.toContain('p-button-rounded')
-    expect(botao.querySelector('.pi-upload')).toBeNull()
+    expect(botao.querySelector('svg')?.innerHTML).not.toBe(desenho('upload'))
   })
 })
 

@@ -24,7 +24,7 @@ export function QuotesList({
     items: ArchivedRow[]
     loading: boolean
     error: { detail?: string | null } | null
-    refetch: () => void | Promise<unknown>
+    refetch: (() => void | Promise<unknown>) | undefined
     restoring: boolean
   }
   onRestore: (id: number) => void

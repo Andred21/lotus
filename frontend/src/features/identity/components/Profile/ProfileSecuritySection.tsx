@@ -91,7 +91,7 @@ export function ProfileSecuritySection({ email }: { email: string }) {
             variant="primary"
             type="submit"
             label={t('profile.security.save')}
-            icon="pi pi-lock"
+            icon="lock"
             loading={pending}
           />
         </div>

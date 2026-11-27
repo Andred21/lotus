@@ -85,7 +85,7 @@ export function DashboardPage() {
       <div>
         {header}
         <AppEmptyState
-          icon="pi pi-lock"
+          icon="lock"
           title={t('dashboard.noAccess.title')}
           description={t('dashboard.noAccess.description')}
         />

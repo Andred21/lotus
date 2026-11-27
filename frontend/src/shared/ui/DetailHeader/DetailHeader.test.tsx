@@ -168,14 +168,14 @@ describe('alinhamento do bloco da direita', () => {
  * Navegação de volta é ação terciária.
  */
 it('o "Voltar" não veste a marca — é ação terciária', () => {
-  const { container } = render(
+  render(
     <DetailHeader title="Presupuesto 12" back={{ label: 'Volver', onClick: () => {} }} />,
   )
 
   const voltar = screen.getByRole('button', { name: /Volver/ })
   expect(voltar.className).not.toContain('border-[var(--brand-ink)]')
   expect(voltar.className).toContain('p-button-text')
-  expect(container.querySelector('.pi-arrow-left')).not.toBeNull()
+  expect(voltar.querySelector('svg')).not.toBeNull()
   // A tinta secundária sobe para a do corpo no hover. Por `className` com
   // variável, e não por `style` inline: `style` não expressa `:hover`, e um
   // comentário prometendo o que a grafia não faz é a próxima leitura errada.

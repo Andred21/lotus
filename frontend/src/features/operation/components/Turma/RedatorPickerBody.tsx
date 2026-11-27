@@ -42,7 +42,7 @@ export function RedatorPickerBody({ picker, onPick }: { picker: Picker; onPick: 
           <AppButton
             variant="primary"
             label={t('operation.redator.pick')}
-            icon="pi pi-check"
+            icon="check"
             disabled={picker.pending}
             onClick={() => onPick(r.id!)}
           />

@@ -42,6 +42,10 @@
     "hidePassword": "Ocultar contraseña",
     "save": "Guardar",
     "cancel": "Cancelar",
+    "discardTitle": "¿Descartar los cambios?",
+    "discardBody": "Tienes cambios sin guardar. Si sales ahora, se perderán.",
+    "discardConfirm": "Descartar",
+    "keepEditing": "Seguir editando",
     "yes": "Sí",
     "no": "No",
     "close": "Cerrar",
@@ -151,6 +155,13 @@
     "certificados": "Certificados",
     "personas": "Personas",
     "administracion": "Administración"
+  },
+  "errors": {
+    "notFoundTitle": "Página no encontrada",
+    "notFoundBody": "La dirección que abriste no existe o fue movida.",
+    "forbiddenTitle": "Sin acceso a esta sección",
+    "forbiddenBody": "Tu perfil no tiene permiso para ver este módulo. Si crees que es un error, consulta con un administrador.",
+    "backHome": "Volver al inicio"
   },
   "roleSection": {
     "admin": "ADMINISTRADOR",

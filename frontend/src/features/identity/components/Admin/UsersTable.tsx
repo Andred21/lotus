@@ -46,7 +46,7 @@ export function UsersTable({
       searchPlaceholder={t('admin.searchPlaceholder')}
       emptyState={
         <AppEmptyState
-          icon={archived ? 'pi pi-inbox' : 'pi pi-users'}
+          icon={archived ? 'archive' : 'users'}
           title={archived ? t('archive.empty') : t('admin.empty')}
           description={archived ? t('archive.emptyHint') : t('admin.emptyHint')}
           action={archived ? undefined : actions}

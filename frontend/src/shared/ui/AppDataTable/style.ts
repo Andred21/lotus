@@ -128,7 +128,7 @@ export function narrowFloorTablePt(floor: `${number}rem`): DataTablePassThroughO
  * bloco 54).
  *
  * O título do cabeçalho é item de flex com `min-width: auto`: não encolhe abaixo
- * da palavra mais longa, e o ícone de ordenação (24px com a margem) ao lado dele
+ * da palavra mais longa, e o ícone de ordenação (28px com a margem: 20 do glifo e 8 de margem; eram 24 antes do bloco 64) ao lado dele
  * sai da coluna quando a fração da tabela é menor que palavra + ícone. Medido nos
  * dois painéis de tabela do Dashboard: o ícone do último cabeçalho passava 28–29px
  * da borda do invólucro e criava a rolagem, e os do meio cobriam o cabeçalho
