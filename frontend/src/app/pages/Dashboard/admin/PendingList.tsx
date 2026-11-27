@@ -12,7 +12,7 @@ export function PendingList({ items }: { items: PendingItemData[] }) {
 
   return (
     <AppCard>
-      <AppCardHeader title={t('dashboard.pending.title')} count={items.length} />
+      <AppCardHeader title={t('dashboard.pending.title')} count={items.length} level={3} />
       {items.length === 0 ? (
         <AppEmptyState
           icon="checkCircle"

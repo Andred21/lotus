@@ -74,7 +74,7 @@ function Ranking({
 
   return (
     <AppCard>
-      <AppCardHeader title={titulo} count={dados.length} subtitle={rotuloMetrica} />
+      <AppCardHeader title={titulo} count={dados.length} subtitle={rotuloMetrica} level={3} />
       {dados.length === 0 ? (
         <AppEmptyState icon="chartBar" title={t('dashboard.rankings.empty')} />
       ) : (

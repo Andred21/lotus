@@ -115,6 +115,10 @@ export interface AppCardHeaderProps {
   subtitle?: ReactNode
   /** Ação secundária, alinhada à direita. */
   actions?: ReactNode
+  /** Nível do título (A-7). `2` é o default: card sob o `h1` da página, sem faixa
+   * `h2` entre os dois. `3` é de quem mora sob uma `SectionLabel` `h2` (o
+   * Dashboard) — nível fixo em `3` pulava o degrau nas telas sem seção. */
+  level?: 2 | 3
 }
 
 /** Cabeçalho de card: título (+ badge de contagem) à esquerda, ação à direita.
@@ -131,7 +135,9 @@ export interface AppCardHeaderProps {
  * não tinha rolagem horizontal que alcançasse o pedaço cortado (UI-02 da revisão
  * de 2026-08-17). Quebrar preserva o rótulo inteiro; truncar o título, não —
  * título de card é o que identifica o bloco. */
-export function AppCardHeader({ title, count, subtitle, actions }: AppCardHeaderProps) {
+export function AppCardHeader({ title, count, subtitle, actions, level = 2 }: AppCardHeaderProps) {
+  const Heading = level === 2 ? 'h2' : 'h3'
+
   return (
     <div
       className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b px-4 py-3"
@@ -144,12 +150,12 @@ export function AppCardHeader({ title, count, subtitle, actions }: AppCardHeader
         * reticências: num card de 300px o título de duas linhas já come a
         * largura toda, e "Cla…" no lugar de "Clases" não qualifica nada. */}
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-        <h3
+        <Heading
           className={cardTitleClass}
           style={{ color: 'var(--app-card-tone-text, var(--text-color))' }}
         >
           {title}
-        </h3>
+        </Heading>
         {count !== undefined && (
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-semibold ${technicalDataClass}`}

@@ -8,7 +8,7 @@ export function PipelineFunnel({ stages }: { stages: PipelineStageCountData[] })
 
   return (
     <AppCard>
-      <AppCardHeader title={t('dashboard.pipeline.title')} />
+      <AppCardHeader title={t('dashboard.pipeline.title')} level={3} />
       {maior === 0 ? (
         // Todas as etapas em zero é funil VAZIO, não funil quebrado: sete barras
         // de largura nula seriam indistinguíveis de um erro de render.

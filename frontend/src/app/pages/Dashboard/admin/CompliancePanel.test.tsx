@@ -179,3 +179,15 @@ describe('CompliancePanel — intervalo de datas (D-73)', () => {
     ])
   })
 })
+
+describe('CompliancePanel — link da turma (A-8)', () => {
+  it('link do painel tem aparência de link', () => {
+    renderWithProviders(<CompliancePanel turmas={[linha()]} />, { route: '/' })
+
+    const link = screen.getByRole('link', { name: 'Operación de Subestaciones' })
+    expect(link.getAttribute('href')).toBe('/operacion/turmas/1')
+    expect(link.getAttribute('style')).toContain('color: var(--brand-ink)')
+    expect(link.className).toContain('hover:underline')
+    expect(link.className).toContain('focus-visible:underline')
+  })
+})

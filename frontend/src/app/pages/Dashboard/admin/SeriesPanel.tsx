@@ -99,7 +99,7 @@ export function SeriesPanel({ series, visibility }: { series: SeriesData; visibi
     <div className="grid gap-4 xl:grid-cols-3">
       {cards.map((c) => (
         <AppCard key={c.titulo}>
-          <AppCardHeader title={t(c.titulo)} />
+          <AppCardHeader title={t(c.titulo)} level={3} />
           {semMovimento(c.series) ? (
             <AppEmptyState icon="chartLine" title={t('dashboard.series.empty')} />
           ) : (
@@ -118,7 +118,7 @@ export function SeriesPanel({ series, visibility }: { series: SeriesData; visibi
 
       {uf.length > 0 && (
         <AppCard>
-          <AppCardHeader title={t('dashboard.series.ufTitle')} />
+          <AppCardHeader title={t('dashboard.series.ufTitle')} level={3} />
           {semMovimento(uf) ? (
             <AppEmptyState icon="chartLine" title={t('dashboard.series.empty')} />
           ) : (
