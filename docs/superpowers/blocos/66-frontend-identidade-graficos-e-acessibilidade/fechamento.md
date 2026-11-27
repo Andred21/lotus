@@ -36,7 +36,7 @@ Administración › Configuración e o shell com sidebar expandida e colapsada. 
 | A-12 | Item ativo do subnav além do tinte | `src/shared/ui/AppSubNav/AppSubNav.test.tsx` › "subnav ativo tem indicador além do tinte"; captura `visual/A-12-subnav-ativo-1440-escuro.png` (contraste do `--brand-ink`: 5,88:1 claro, 5,28:1 escuro) |
 | A-8 | Links do painel com cara de link | `src/app/pages/Dashboard/admin/CompliancePanel.test.tsx` e `src/app/pages/Dashboard/admin/RedatorLoadPanel.test.tsx` › "link do painel tem aparência de link". O relator segue para `/personas` sem `?q=`: a spec do 64 (§6, fase 7) condiciona o `?q=` a a listagem aceitar busca na URL, e ela filtra em memória |
 | B-2 | Celeste raro (D7) | `src/shared/ui/AppAvatar/AppAvatar.test.tsx` › "avatar de iniciais é neutro: fundo --surface-200, tinta --text-color, peso 600"; `src/shared/ui/IdentityCell/IdentityCell.test.tsx` › "o avatar da célula tem 40px"; `src/shared/ui/RowActions/RowActions.test.tsx` › "ação comum de linha não usa celeste: é `text plain`, sem severity", "o gatilho do menu colapsado também é `text plain`"; `src/shared/ui/ArchiveSwitch/ArchiveSwitch.test.tsx` › "switch selecionado é secondary outlined, e o outro é text plain"; captura `visual/B-2-B-7-emision-avatar-neutro-e-folio-1440-claro.png`. **Veredito do João (2026-11-27):** quer os ícones de ação de linha de volta ao celeste; adiado para bloco futuro ou revisão (achado 5) |
-| B-5 | Controles do header fixos nos dois temas (D4) | `src/shared/ui/AppButton/AppButton.test.tsx` › "variante shell não tem classe dark:"; `src/shared/ui/AppearanceControls/AppearanceControls.test.tsx` › "controles do header usam shell: toggle de tema sem classe dark:"; `src/shared/ui/LanguageMenu/LanguageMenu.test.tsx` › "controles do header usam shell: …"; capturas `visual/B-5-D-7-B-12-dashboard-1440-claro.png` e `visual/B-5-header-shell-1440-escuro.png`. **Pendente de veredito do João** (achado 1): no login claro o mesmo par fica quase invisível |
+| B-5 | Controles do header fixos nos dois temas (D4) | `src/shared/ui/AppButton/AppButton.test.tsx` › "variante shell não tem classe dark:"; `src/shared/ui/AppearanceControls/AppearanceControls.test.tsx` › "controles do header usam shell: toggle de tema sem classe dark:"; `src/shared/ui/LanguageMenu/LanguageMenu.test.tsx` › "controles do header usam shell: …"; capturas `visual/B-5-D-7-B-12-dashboard-1440-claro.png` e `visual/B-5-header-shell-1440-escuro.png`. No login o par sai com `surface="page"` e volta à aparência da `main` (achado 1, corrigido em `b6ee8dc0`): `src/features/identity/components/Login/LoginPage.test.tsx` e `src/shared/ui/AppearanceControls/AppearanceControls.test.tsx`; medido no Chromium, `#186b94` sobre branco, 5,88:1 |
 | B-3 / A-11 | Movimento reduzido | `tests/reduced-motion.test.ts` › "index.css desliga animação sob movimento reduzido"; a sidebar anima só `width` e desliga com `motion-reduce:transition-none` (`src/app/layouts/Sidebar/Sidebar.tsx:34`) |
 | B-4 | Rail com rótulo curto a 12px (D3) | `src/app/layouts/Sidebar/SidebarItem.test.tsx` › "colapsado usa rótulo curto a 12px sem truncate", "rótulos curtos cabem (%s)" (Review Focus 5), "expandido mostra o rótulo integral, não o curto"; captura `visual/B-4-rail-rotulos-curtos-1440-es.png` (es-CL: os 7 itens medem 69/69 px, sem estouro; "Certificados" vira "Certific."). **Pendente de veredito do João** sobre os textos curtos (achado 6) |
 | D-10 | Logo com dimensões; assets sem uso | `src/shared/ui/AppLogo/AppLogo.test.tsx` › "a variante %s declara %sx%s"; `tests/logo-dimensoes.test.ts` › LogoLight, LogoDark, LogoGlyph (cabeçalho do PNG); `tests/jsx-ratchets.test.ts` › "cada call site tem uma classe h-* no className"; `tests/unused-assets.test.ts` › "cada arquivo de src/assets é referenciado em src", "cada arquivo de public é referenciado no index.html ou em src". Medido no Chromium: logo do login 208×289 a 1440 e 150×209 a 390, razão igual à do arquivo |
@@ -72,8 +72,8 @@ Os 45 itens da auditoria contam 46 IDs (B-3 e A-11 dividem a linha). Cada ID apo
 
 ## Critério de aceite (itens 1, 3 e 4 da §7 da spec do 64)
 
-- **1 — uma linha por ID:** o quadro acima e os dos blocos 64, 65 e 67. Cinco linhas deste bloco
-  esperam veredito do João (B-1, A-7, B-5, B-4 e o adiamento do B-2), listados abaixo.
+- **1 — uma linha por ID:** o quadro acima e os dos blocos 64, 65 e 67. Quatro linhas deste bloco
+  esperam veredito do João (B-1, A-7, B-4 e o adiamento do B-2), listadas abaixo.
 - **3 — gate verde:** ver a seção "Gate final".
 - **4 — DESIGN.md com D1–D5, D7, D8 e ícones:** D1 `DESIGN.md:169` (`cinza-traco`, borda de controle
   3:1 nos dois temas); D2 `:324` (asterisco do obrigatório); D3 `:338-342` (rail com rótulo curto
@@ -88,6 +88,10 @@ Contra o HEAD `11bfe3ed` mais este `fechamento.md` e as capturas, 2026-11-27, na
 de chunk acima de 500 kB, anterior ao bloco); `docker compose exec -T app php artisan test` exit 0
 (2110 passados, 7 pulados).
 
+Depois da leva da revisão final da branch (`b6ee8dc0`, só frontend e docs): `pnpm lint` exit 0;
+`pnpm test` exit 0 (316 arquivos, 2589 testes); `pnpm build` exit 0. O backend não mudou desde a
+rodada acima.
+
 ## Carga (Task 9)
 
 `gzip -c` dos `.js` que o `dist/index.html` carrega (entrada mais `modulepreload`), no método do
@@ -96,11 +100,12 @@ abaixo do teto de 300 kB.
 
 ## Achados da passada e da execução, para o João (uma rodada)
 
-1. **Login no tema claro: idioma e tema quase invisíveis.** O par usa a variante `shell` (tinta
-   `--shell-ink` para o navy do header) sobre o `--surface-card` branco do login. Captura
-   `visual/achado-login-controles-1440-claro.png`. Origem: Task 1 (B-5). A correção
-   (`surface="page"` no login) está no patch que o João adiou junto com as outras mudanças visuais
-   do header; não foi aplicada aqui.
+1. **Login no tema claro: idioma e tema quase invisíveis — corrigido.** O par usava a variante
+   `shell` (tinta `--shell-ink` para o navy do header) sobre o `--surface-card` branco do login,
+   ~1,5:1. Captura do defeito: `visual/achado-login-controles-1440-claro.png`. Origem: Task 1 (B-5).
+   A revisão final o classificou como regressão da branch, e a leva `b6ee8dc0` devolveu ao login a
+   aparência da `main` (`surface="page"`: `iconToggle` no tema, `compact` no idioma). Não é o visual
+   novo adiado pelo João (achado 5). Ruling no `rulings.md`.
 2. **Historial a 1024 com a sidebar aberta.** O folio cabe (B-1), mas a moldura tem 718px para 8
    colunas em `table-fixed`: o aluno cai a 89px e mostra uma letra, e "Scap 5 - R1" (51px) encosta
    na data. Cotización e datas têm a mesma largura da `main`; o aluno estreitou nesta lane para o
@@ -121,3 +126,15 @@ abaixo do teto de 300 kB.
    em inglês.
 8. **Reintentar em 403 nas listas do Historial:** `reload`/`reloadQuotes` (`useHistorial.ts:126,131`)
    seguem sem `retryFor`. Mesma classe do T8, fora do escopo do brief.
+9. **Digitar "1.500" no campo de UF grava 1,5 UF** (revisão final, M-11). O `parseUfInput` lê o
+   último separador como decimal; o parser já era assim, mas agora a tela EXIBE "1.500 UF" em es-CL,
+   e quem copia a grafia exibida grava mil vezes menos. Dinheiro com peso legal: pede ficha ou
+   decisão (prévia formatada sob o campo, ou recusar `\d{1,3}\.\d{3}` sem vírgula).
+10. **Janela do painel sem teto** (revisão final, M-6). Depois do D-2, `period_start=0001-01-01` com
+    `period_end=9999-12-31` gera ~120 mil meses por série. Só alcança usuário interno autenticado.
+    Sugestão: 422 acima de 120 meses, numa ficha.
+11. **Contador do ranking mostra o número depois do corte** (revisão final, M-9): diz "10" quando há
+    30 linhas. Decidir se o badge conta o total ou o exibido.
+12. **Menores de acessibilidade em toda tabela** (revisão final, M-7 e M-8): a moldura rolável é
+    focável mesmo sem rolagem horizontal, a região viva anuncia "Cargando…" a cada busca, e a barra
+    de documentos escolhe degrau de verde por `dark:` em vez de `--tone-success-ink`. Ficha.
