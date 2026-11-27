@@ -2,15 +2,24 @@
 
 ## Em aberto
 
-Correções aprovadas pelo João em 2026-11-27, ainda por aplicar (Menores que ele decidiu corrigir
-antes do fechamento; a rodada 2 revisa o delta):
+## Rodada 2 — `7381665f..2194903c` — 2026-11-27 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5) · Lente 2: sonnet
 
-- **Q-1** — Menor — `useServerTable` passa a ter uma fonte só para `q`, `page` e `sort` (URL).
-- **Q-2** — Menor — `useTableUrlState.write` preserva `location.state`, como o `useUrlTab`.
-- **Q-4** — Menor — o contexto do toast (`useToast` e o provider) sai de `shared/ui`; a regra de
-  `frontend-fsliced.md` fica sem exceção. Cobre também o precedente `useArchiveToasts.ts:8`.
-- **Q-5** — Menor — `ConfirmDialog` liga o motivo do botão desabilitado por `aria-describedby`;
-  `RevokeDialog` e `ConfirmIssueDialog` usam o mesmo molde de `QuoteWizard`.
+Delta das correções da rodada 1: `7c844dd4..2194903c`. Lente Codex em uma tentativa só, sem retry:
+`The 'gpt-5.5' model is not supported when using Codex with a ChatGPT account.`
+
+As correções da rodada 1 conferem sem regressão: Q-1 em `6d1f789a` (resolve o clique na sidebar;
+o caso residual é o Q-6 abaixo), Q-2 em `e14f39cc`, Q-4 em `bf241c9e` e Q-5 em `2194903c`. O núcleo
+de alto risco (interceptor 401/419, `expire()`, `from`, limpeza do QueryClient) não foi tocado pelo
+delta. O revisor rodou `eslint .`, `tsc -b` e o vitest dos arquivos do delta (20 arquivos, 148
+testes) verdes; a sessão rodou `pnpm lint`, `pnpm build` e `pnpm test` (297 arquivos, 2463 testes)
+verdes antes da rodada.
+
+| # | Severidade | Achado | Veredito | Evidência | Situação |
+|---|---|---|---|---|---|
+| Q-6 | Menor | No render do reseed da URL, a checagem de escopo roda com o `lastScope` antigo; se um filtro derivado da URL (`status`) ou a `key` (modo arquivado) muda no mesmo passo que `page`, o `setFirst(0)` dela vence o `page` da URL e o espelho reescreve a URL sem ele. Ex.: Voltar para `/operacion?status=X&page=3` cai na página 1. Provado por sonda do revisor | CONFIRMED | `frontend/src/shared/hooks/useServerTable.ts:153-176` | registrado, não corrigido (decisão do João, 2026-11-27) |
+| Q-7 | Menor | A catraca nova `shared/hooks` → `shared/ui` enumera caminhos e deixa passar `@/shared/ui` (alias de `tsconfig.app.json:10`) e `../../shared/ui/...`; o ban de feature vizinho usa `**/features/**`. Sem violação hoje | CONFIRMED | `frontend/eslint.config.js:872` | registrado, não corrigido (decisão do João, 2026-11-27) |
+
+Placar: Crítico: 0 confirmados, 0 plausíveis, 0 refutados · Importante: 0 confirmados, 0 plausíveis, 0 refutados · Menor: 2 confirmados, 0 plausíveis, 0 refutados
 
 ## Rodada 1 — `7381665f..e8816568` — 2026-11-27 · Lente 1: opus (codex indisponível — model_not_found gpt-5.5/gpt-5.4) · Lente 2: sonnet
 

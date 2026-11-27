@@ -2,9 +2,9 @@
 schema_version: 3
 id: 65
 slug: 65-frontend-navegacao-sessao-e-formularios
-workflow_state: reviewing
+workflow_state: ready_for_closure
 next_owner: claude
-next_action: approve_review_findings Q-1 Q-2 Q-4 Q-5
+next_action: close_active_work_item
 resume_state: null
 active_spec: docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/spec.md
 active_plan: docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/plano.md
@@ -17,9 +17,9 @@ branch: feat/65-frontend-navegacao-sessao-e-formularios
 worktree: ../lotus-65-frontend-navegacao-sessao-e-formularios
 offset: 1
 lane_base: 7381665f
-commit: e8816568
+commit: 2194903c
 blocker: null
-updated_at: 2026-11-27T10:21:50-03:00
+updated_at: 2026-11-27T10:50:48-03:00
 updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
