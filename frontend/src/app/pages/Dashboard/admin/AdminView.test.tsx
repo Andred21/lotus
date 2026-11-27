@@ -54,13 +54,14 @@ const TURMA: TurmaComplianceData = {
   concluded: false,
 }
 
-function montar(data: AdminDashboardData) {
+function montar(data: AdminDashboardData, refreshing = false) {
   return renderWithProviders(
     <AdminView
       data={data}
       preset="last12"
       period={{ start: data.period_start, end: data.period_end }}
       staleError={null}
+      refreshing={refreshing}
       onPresetChange={() => {}}
       onPeriodChange={() => {}}
     />,
@@ -93,5 +94,21 @@ describe('AdminView — seção de compliance', () => {
 
     expect(screen.queryByText('dashboard.compliance.title')).toBeNull()
     expect(screen.queryByText('Operación de Subestaciones')).toBeNull()
+  })
+})
+
+describe('AdminView — troca de período', () => {
+  it('refreshing marca séries e rankings como ocupados e esmaecidos', () => {
+    const { container } = montar(admin(), true)
+
+    const ocupado = container.querySelector('[aria-busy="true"]')
+    expect(ocupado).not.toBeNull()
+    expect(ocupado?.className).toContain('opacity-60')
+  })
+
+  it('sem refreshing, a seção não fica ocupada', () => {
+    const { container } = montar(admin(), false)
+
+    expect(container.querySelector('[aria-busy="true"]')).toBeNull()
   })
 })
