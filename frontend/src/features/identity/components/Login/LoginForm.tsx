@@ -20,6 +20,7 @@ export function LoginForm({ email, onEmailChange, autoFocusTitle }: Props) {
     isSubmitting,
     fieldErrors,
     generalError,
+    sessionExpired,
   } = useLoginForm(email);
   const titulo = useRef<HTMLHeadingElement>(null);
 
@@ -48,6 +49,18 @@ export function LoginForm({ email, onEmailChange, autoFocusTitle }: Props) {
         </h1>
         <p style={{ color: 'var(--text-color-secondary)' }}>{t("login.subtitle")}</p>
       </div>
+
+      {/* Aviso, não erro: o usuário não fez nada errado. `role="status"` o anuncia
+          sem tirar o foco do campo. */}
+      {sessionExpired && (
+        <p
+          role="status"
+          className="my-0 rounded-control px-3 py-2 text-sm"
+          style={{ background: 'var(--surface-ground)', color: 'var(--text-color)' }}
+        >
+          {t("auth.sessionExpired")}
+        </p>
+      )}
 
       <FormErrorBanner message={generalError} variant="inline" />
 

@@ -1,4 +1,7 @@
 {
+  "auth": {
+    "sessionExpired": "Your session expired. Sign in again to continue."
+  },
   "login": {
     "title": "Sign in",
     "subtitle": "Access for administrators and writers",

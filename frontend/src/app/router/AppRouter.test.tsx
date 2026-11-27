@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter, type RouteObject } from 'react-router-dom'
 import { createWrapper } from '@shared/testing/providers'
 import { api } from '@shared/api/axios'
@@ -134,5 +134,30 @@ describe('routes', () => {
 
     await screen.findByRole('heading', { name: 'module.operacion.title' }, { timeout: 5000 })
     expect(window.sessionStorage.getItem(CHUNK_KEY)).toBeNull()
+  })
+
+  it('login devolve à URL com search', async () => {
+    logado()
+    const router = montar(routes, '/operacion?tab=historial')
+    await screen.findByRole('heading', { name: 'module.operacion.title' }, { timeout: 5000 })
+
+    // O servidor passa a recusar a sessão: o `/api/me` também, como em produção.
+    get.mockImplementation(((url: string) =>
+      url === '/api/me' ? Promise.reject({ status: 401, detail: 'x' }) : Promise.resolve({ data: [] })) as never)
+    act(() => useSessionStore.getState().expire())
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
+    expect((router.state.location.state as { from?: string }).from).toBe('/operacion?tab=historial')
+    expect(await screen.findByText('auth.sessionExpired')).toBeTruthy()
+
+    // O usuário entra de novo: volta à tela em que estava, com a aba.
+    vi.spyOn(api, 'post').mockResolvedValue({ data: usuario } as never)
+    fireEvent.change(screen.getByLabelText('login.email'), { target: { value: 'q@lotus.cl' } })
+    fireEvent.change(screen.getByLabelText('login.password'), { target: { value: 'segredo' } })
+    fireEvent.click(screen.getByRole('button', { name: 'login.submit' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/operacion'))
+    expect(router.state.location.search).toBe('?tab=historial')
+    expect(useSessionStore.getState().expired).toBe(false)
   })
 })

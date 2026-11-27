@@ -1,4 +1,7 @@
 {
+  "auth": {
+    "sessionExpired": "Tu sesión expiró. Inicia sesión de nuevo para continuar."
+  },
   "login": {
     "title": "Iniciar sesión",
     "subtitle": "Acceso para administradores y instructores",

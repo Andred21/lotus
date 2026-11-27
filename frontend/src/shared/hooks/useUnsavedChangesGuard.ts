@@ -40,6 +40,10 @@ export type UnsavedChangesGuard = {
  * O blocker exige data router — o app o monta em `app/router`, e o helper de
  * teste (`shared/testing/providers`) também.
  *
+ * Com a sessão expirada (`sessionStore.expired`) o blocker deixa passar: o
+ * único destino é o login, e o rascunho já não tem como ser salvo. O
+ * `beforeunload` segue valendo — recarregar a aba é escolha do usuário.
+ *
  * `allowNavigation()` existe para o salvar: ele limpa o rascunho e navega no
  * mesmo gesto, e sem a liberação a própria navegação de sucesso abriria o
  * diálogo. Chame-o no `onSuccess`, imediatamente antes do `navigate`: a

@@ -1,5 +1,6 @@
-import axios, {AxiosError} from "axios";
+import axios, {AxiosError, type InternalAxiosRequestConfig} from "axios";
 import i18n from "@shared/config/i18n";
+import {useSessionStore} from "@shared/stores/sessionStore";
 
 // Envolope RFC 7807 que o backend retorna quando ocorre um erro
 export interface ProblemDetails {
@@ -51,10 +52,44 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+/**
+ * Rotas em que 401/419 NÃO significam "a sessão que eu tinha caiu": ou o usuário
+ * ainda não tem sessão (login, convite, recuperação), ou a pergunta É se há
+ * sessão (`/api/me` no boot), ou ele está saindo (`logout`). Expirar aqui
+ * redirecionaria para o login quem já está nele. Caminho exato, sem query.
+ *
+ * As três rotas de senha são cópia dos paths de `features/identity/api/
+ * passwordApi.ts` (`ROTA` e `/api/password/forgot`): `shared` não importa de
+ * feature, então a lista mora aqui — quem mudar um path lá muda aqui.
+ */
+const ROTAS_SEM_SESSAO = new Set([
+    "/api/me",
+    "/api/login",
+    "/api/logout",
+    "/api/invitation/accept",
+    "/api/password/reset",
+    "/api/password/forgot",
+]);
+
+// Mesma chamada de `initCsrf()` (./csrf), refeita aqui de propósito: `csrf.ts`
+// importa `api` deste arquivo, e importá-lo de volta fecha um ciclo que trava os
+// testes que trocam `@shared/api/axios` por um mock (a factory carrega o módulo
+// real, que pede o `csrf`, que pede o mock em construção).
+const CSRF_COOKIE = "/sanctum/csrf-cookie";
+
+/** O `config` repetido pelo interceptor do 419 carrega a marca de que já foi. */
+type ConfigRepetivel = InternalAxiosRequestConfig & { _retried419?: boolean };
+
+function expirarSeAutenticada(config?: InternalAxiosRequestConfig): void {
+    const caminho = (config?.url ?? "").split("?")[0];
+    if (ROTAS_SEM_SESSAO.has(caminho)) return;
+    // Idempotente no store: um painel com três queries recusadas ao mesmo tempo
+    // vira UMA transição — um redirecionamento, um aviso, um `from`.
+    useSessionStore.getState().expire();
+}
+
 // Interceptor de resposta, normalizando o erro RFC 7807 para o formato ProblemDetails
-api.interceptors.response.use(
-    (response) => response,
-    (error: AxiosError<ProblemDetails>) => {
+function normalizar(error: AxiosError<ProblemDetails>): ProblemDetails {
         const problem = error.response?.data;
         
         // Erro de rede / sem resposta do servidor.
@@ -62,14 +97,14 @@ api.interceptors.response.use(
         // visível do AppErrorState, e queda de rede é o gatilho mais comum dele.
         // Texto fixo aqui vazava português para a UI es-CL do cliente chileno.
         if(!error.response) {
-            return Promise.reject({
+            return {
                 type: "https://lotus.cl/errors/network",
                 title: i18n.t('common.networkError'),
                 status: 0,
                 detail: i18n.t('common.networkErrorHint'),
                 instance: '',
                 localDetail: true,
-            } satisfies ProblemDetails);
+            } satisfies ProblemDetails;
         }
 
         // Se o backend mandou o envelope RFC 7807, retorna normalizado (já vem
@@ -103,6 +138,34 @@ api.interceptors.response.use(
             localDetail: true,
         };
 
-        return Promise.reject(normalized);
+        return normalized;
+}
+
+// Interceptor de resposta: sessão (419/401) e normalização do erro RFC 7807.
+api.interceptors.response.use(
+    (response) => response,
+    async (error: AxiosError<ProblemDetails>) => {
+        const status = error.response?.status;
+        const config = error.config as ConfigRepetivel | undefined;
+
+        // 419 = token CSRF vencido (não a sessão). Renova e repete UMA vez; o
+        // `csrf-cookie` fica de fora para a renovação não entrar em laço consigo.
+        if (status === 419 && config && config.url !== CSRF_COOKIE) {
+            if (!config._retried419) {
+                config._retried419 = true;
+                try {
+                    await api.get(CSRF_COOKIE);
+                } catch {
+                    return Promise.reject(normalizar(error));
+                }
+                return api.request(config);
+            }
+            // Renovou e o servidor recusou de novo: não é token, é sessão.
+            expirarSeAutenticada(config);
+        } else if (status === 401) {
+            expirarSeAutenticada(config);
+        }
+
+        return Promise.reject(normalizar(error));
     }
 );

@@ -30,9 +30,14 @@
  * sozinho, atravessando sem ninguém decidir.
  *
  * **Quem fica de fora, e por quê:** 401 não vira estado de carga — o
- * interceptor do `shared/api/axios.ts` redireciona para o login antes. 422 não
- * entra porque o `FormErrorSummary` já imprime campo a campo, e a frase geral
- * ali seria eco.
+ * interceptor do `shared/api/axios.ts` marca a sessão como expirada
+ * (`sessionStore.expire()`), o `ProtectedRoute` devolve ao login com a URL
+ * inteira em `from` e a tela de login explica o motivo. A requisição ainda
+ * rejeita com o envelope, mas a tela que o receberia já saiu da árvore. O 419
+ * (CSRF vencido) é repetido uma vez depois de renovar o token e só expira se a
+ * repetição for recusada. As rotas sem sessão (login, `/api/me`, logout, senha)
+ * rejeitam normal. 422 não entra porque o `FormErrorSummary` já imprime campo a
+ * campo, e a frase geral ali seria eco.
  *
  * Os envelopes que o PRÓPRIO front sintetiza (rede caída, corpo não-parseável)
  * seguem indo à tela: eles já são i18n e dizem coisa distinta da dica genérica
@@ -94,7 +99,10 @@ export type LoadErrorHintKey =
  * para rede caída, 500 e para tudo que não se sabe nomear.
  *
  * 401 não entra: sessão expirada não chega a virar estado de carga — o
- * interceptor do `shared/api/axios.ts` redireciona para o login.
+ * interceptor do `shared/api/axios.ts` expira a sessão no store e o
+ * `ProtectedRoute` leva ao login (com `from` = `pathname + search`) antes de a
+ * tela imprimir a falha. Quem sobra é a rota sem sessão (`/api/me`, login), que
+ * rejeita normal e não passa por aqui.
  */
 export function loadErrorHint(problem: ScreenDetailSource | null | undefined): LoadErrorHintKey {
   switch (problem?.status) {
