@@ -1,6 +1,7 @@
-import { useInRouterContext, useSearchParams } from 'react-router-dom'
+import { useInRouterContext, useLocation, useSearchParams } from 'react-router-dom'
 
 const SEM_ROUTER: ReturnType<typeof useSearchParams> = [new URLSearchParams(), () => undefined]
+const SEM_STATE: unknown = null
 
 export interface TableUrlState {
   /** O valor CRU da chave (já com o prefixo aplicado); `null` quando ausente
@@ -24,6 +25,9 @@ export interface TableUrlState {
  * É o que mantém `useServerTable` (default `url: false`) montável em teste de
  * hook e em qualquer árvore sem router; no app há router sempre.
  *
+ * A escrita preserva o `state` da entrada (onde viaja o `backTo`), como o
+ * `useUrlTab`: sem isso, buscar na lista apagaria o destino do "voltar".
+ *
  * Duas escritas no MESMO tick não se compõem — o `setSearchParams` parte da
  * query do último render. Quem muda duas chaves de uma vez usa um `write` só.
  */
@@ -33,6 +37,8 @@ export function useTableUrlState({ prefix, enabled }: { prefix?: string; enabled
   const inRouter = useInRouterContext()
   // eslint-disable-next-line react-hooks/rules-of-hooks -- condição estável por montagem (ver acima)
   const [params, setParams] = inRouter ? useSearchParams() : SEM_ROUTER
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- mesma condição estável
+  const state: unknown = inRouter ? useLocation().state : SEM_STATE
   const name = (key: string) => (prefix ? `${prefix}_${key}` : key)
 
   return {
@@ -48,7 +54,7 @@ export function useTableUrlState({ prefix, enabled }: { prefix?: string; enabled
           }
           return next
         },
-        { replace: true },
+        { replace: true, state },
       )
     },
   }

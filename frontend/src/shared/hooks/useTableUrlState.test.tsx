@@ -1,8 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { useLocation, useNavigationType } from 'react-router-dom'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { useState, type ReactNode } from 'react'
 import { createWrapper } from '@shared/testing/providers'
 import { useTableUrlState } from './useTableUrlState'
+
+/** Router de dados com uma entrada que já nasce com `state` (o `createWrapper`
+ * só aceita a rota). Um router por montagem, como no `providers.tsx`. */
+function ComState({ state, children }: { state: unknown; children: ReactNode }) {
+  const [router] = useState(() => createMemoryRouter(
+    [{ path: '*', element: <>{children}</> }],
+    { initialEntries: [{ pathname: '/lista', search: '?q=ana', state }] },
+  ))
+  return <RouterProvider router={router} />
+}
 
 /** O hook sob teste e a localização que ele produz, lado a lado: o teste lê a
  * URL de verdade, não um mock do `useSearchParams`. */
@@ -79,5 +91,18 @@ describe('useTableUrlState', () => {
     act(() => result.current.url.write({ q: 'bia', page: '2' }))
 
     expect(result.current.location.search).toBe('?q=ana')
+  })
+
+  it('escreve preservando o state da entrada, onde viaja o backTo', () => {
+    const state = { backTo: '/personas?tab=alumnos' }
+    const { result } = renderHook(observar({ enabled: true }), {
+      wrapper: ({ children }) => <ComState state={state}>{children}</ComState>,
+    })
+    expect(result.current.location.state).toEqual(state)
+
+    act(() => result.current.url.write({ page: '2' }))
+
+    expect(result.current.location.search).toBe('?q=ana&page=2')
+    expect(result.current.location.state).toEqual(state)
   })
 })
