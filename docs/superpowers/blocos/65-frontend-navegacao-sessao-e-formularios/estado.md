@@ -2,9 +2,9 @@
 schema_version: 3
 id: 65
 slug: 65-frontend-navegacao-sessao-e-formularios
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/spec.md
 active_plan: docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/plano.md
@@ -17,10 +17,10 @@ branch: feat/65-frontend-navegacao-sessao-e-formularios
 worktree: ../lotus-65-frontend-navegacao-sessao-e-formularios
 offset: 1
 lane_base: 7381665f
-commit: 19e2d95e
+commit: e4d98b05
 blocker: null
-updated_at: 2026-11-27T00:12:47-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-11-27T03:51:05-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 65 — estado
