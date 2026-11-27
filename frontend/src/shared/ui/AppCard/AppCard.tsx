@@ -18,7 +18,7 @@ export interface AppCardProps {
  * tingido é composto com --surface-card (que inverte) via color-mix. */
 const TONE_HUE: Record<AppCardTone, string | null> = {
   neutral: null,
-  info: 'var(--blue-500)',
+  info: 'var(--indigo-500)',
   success: 'var(--green-500)',
   warning: 'var(--yellow-500)',
   danger: 'var(--red-500)',

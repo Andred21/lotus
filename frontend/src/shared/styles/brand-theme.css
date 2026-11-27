@@ -89,7 +89,10 @@
    * Serve a texto E a traço: o mesmo token pinta o rótulo de erro do
    * `FormField` e o trilho de severidade do `AppCard variant="stat"`. Guarda de
    * drift: `frontend/tests/tone-ink.test.ts`. */
-  --tone-info-ink: var(--blue-400);
+  /* `info` é índigo desde o bloco 65 (D7): o celeste é a marca, e info dele
+   * colidia com a primária. O degrau 300 mede 6,14:1 sobre o card e 5,24:1 sobre
+   * o fundo de 15% de `--indigo-500`. */
+  --tone-info-ink: var(--indigo-300);
   --tone-success-ink: var(--green-400);
   --tone-warning-ink: var(--yellow-400);
   --tone-danger-ink: var(--red-300);
@@ -196,11 +199,13 @@ html:not(.dark) {
 
   /* Degraus do claro. NÃO são o mesmo número em todo tom: o que iguala os
    * quatro é a razão medida sobre `--surface-card`, não o índice da rampa —
-   * 5,88 (info-700) / 6,52 (success-800) / 5,70 (warning-800) / 6,39
+   * 7,70 (info-indigo-700) / 6,52 (success-800) / 5,70 (warning-800) / 6,39
    * (danger-700), e sobre o card tingido a 8% nenhum cai abaixo de 5,4:1. O
    * amarelo precisa descer dois degraus a mais porque é o hue mais luminoso da
    * paleta: `--yellow-700` ainda mede 3,81:1, reprova em texto normal. */
-  --tone-info-ink: var(--blue-700);
+  /* `info` em índigo-700 (D7, bloco 65): 7,70:1 sobre o card, 6,38:1 sobre o
+   * fundo de 15%. */
+  --tone-info-ink: var(--indigo-700);
   --tone-success-ink: var(--green-800);
   --tone-warning-ink: var(--yellow-800);
   --tone-danger-ink: var(--red-700);

@@ -48,6 +48,14 @@ describe('AppCard', () => {
     expect(style).toContain('--app-card-tone-text')
   })
 
+  it('info compoe o fundo de --indigo-500, nao do celeste da marca (D7)', () => {
+    render(<AppCard tone="info"><span data-testid="conteudo">x</span></AppCard>)
+
+    const style = card().getAttribute('style') ?? ''
+    expect(style).toContain('var(--indigo-500)')
+    expect(style).not.toContain('var(--blue-500)')
+  })
+
   it('stat continua com trilho e padding proprios', () => {
     render(<AppCard variant="stat" tone="info"><span data-testid="conteudo">x</span></AppCard>)
 

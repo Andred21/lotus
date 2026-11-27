@@ -42,7 +42,7 @@ const tingido = (hue: string, card: string, parte: number) =>
  * quando o BD-16 mediu que era o último sítio da fórmula que os outros quatro
  * já tinham abandonado. */
 const TONS = {
-  info: { hue: 'blue', parte: 0.08 },
+  info: { hue: 'indigo', parte: 0.08 },
   success: { hue: 'green', parte: 0.08 },
   warning: { hue: 'yellow', parte: 0.08 },
   danger: { hue: 'red', parte: 0.08 },
@@ -118,7 +118,7 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
     it.each(tintasDe(bloco, folha))(
       'o tom $tom aponta para um degrau da rampa e passa AA em texto normal (4,5:1)',
       ({ degrau, tinta }) => {
-        expect(degrau).toMatch(/^--(blue|green|yellow|red|purple)-\d00$/)
+        expect(degrau).toMatch(/^--(indigo|green|yellow|red|purple)-\d00$/)
         expect(contraste(tinta, card)).toBeGreaterThanOrEqual(4.5)
       },
     )
@@ -141,6 +141,26 @@ describe('tinta de severidade sobre superfície de card (UI-04)', () => {
       },
     )
   })
+
+  /** D7 (bloco 65): o celeste é a marca, e info dele colidia com a primária
+   * (B-2). O degrau muda por tema — 700 no claro, 300 no escuro — e o fundo é o
+   * mesmo `--indigo-500` que `AppTag` e `AppCard` compõem. */
+  it.each([
+    { tema: 'claro', bloco: blocoClaro, folha: temaClaro, degrau: '--indigo-700' },
+    { tema: 'escuro', bloco: blocoRaiz, folha: temaEscuro, degrau: '--indigo-300' },
+  ])(
+    'tone-info-ink é índigo e mede ≥ 4,5:1 sobre o card tingido, claro e escuro ($tema)',
+    ({ bloco, folha, degrau }) => {
+      const info = tintasDe(bloco, folha).find(({ tom }) => tom === 'info')!
+      expect(info.degrau).toBe(degrau)
+
+      const card = hex(folha, '--surface-card')
+      const indigo = hex(folha, '--indigo-500')
+      for (const parte of [0, 0.08, 0.15]) {
+        expect(contraste(info.tinta, tingido(indigo, card, parte))).toBeGreaterThanOrEqual(4.5)
+      }
+    },
+  )
 
   /** O controle que faz o teste discriminar: a fórmula antiga é justamente
    * quem reprovava no claro, então uma "correção" que voltasse a ela cairia

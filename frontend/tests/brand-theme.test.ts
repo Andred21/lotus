@@ -502,8 +502,97 @@ describe('D-68 — borda de controle do tema claro', () => {
     expect(sobrou.filter((d) => /^background/.test(d)).length).toBe(4)
   })
 
-  it('o escuro não recebe a passada — lá o traço não é o único indicador', () => {
-    expect(DECLARACOES_COM(dark(), CINZA_BORDA).filter((d) => /^border/.test(d)).length).toBe(0)
+  // A-1 (bloco 65): o escuro também. O `#334155` de borda mede 1,5:1 sobre o card
+  // e 2,18:1 sobre o proprio preenchimento — o input do escuro NÃO tem poço que
+  // carregue o limite do controle, então o traço volta a ser o único indicador.
+  it('borda de controle do escuro é #64748b', () => {
+    const css = dark()
+    expect(DECLARACOES_COM(css, '#334155').filter((d) => /^border/.test(d))).toEqual([])
+    expect(DECLARACOES_COM(css, CINZA_BORDA).filter((d) => /^border/.test(d)).length).toBeGreaterThan(0)
+    // Os preenchimentos e a rampa de neutros do escuro seguem em slate-700.
+    expect(DECLARACOES_COM(css, '#334155').filter((d) => /^background/.test(d)).length).toBeGreaterThan(0)
+    expect(DECLARACOES_COM(css, '#334155').filter((d) => /^--/.test(d)).length).toBeGreaterThan(0)
+  })
+
+  it('o slate-500 mede 3:1 (WCAG 1.4.11) sobre o card e sobre o fundo do escuro', () => {
+    const css = dark()
+    const token = (nome: string) => css.match(new RegExp(`${nome}:\\s*(#[0-9a-f]{6})`, 'i'))![1]
+    expect(razao(CINZA_BORDA, token('--surface-card'))).toBeGreaterThanOrEqual(3)
+    expect(razao(CINZA_BORDA, token('--surface-ground'))).toBeGreaterThanOrEqual(3)
+  })
+})
+
+const luminanciaDe = (hex: string) =>
+  [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((s) => (s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4))
+    .reduce((soma, canal, i) => soma + [0.2126, 0.7152, 0.0722][i] * canal, 0)
+const razao = (a: string, b: string) => {
+  const [x, y] = [luminanciaDe(a), luminanciaDe(b)].sort((m, n) => n - m)
+  return (x + 0.05) / (y + 0.05)
+}
+
+// ── D7 (bloco 65): info em índigo ───────────────────────────────────────────
+// O celeste é a MARCA; info dele colidia com a primária (B-2). Message, toast,
+// tag e badge de info vão ao índigo: degrau 700 no claro e 300 no escuro, para
+// tinta E borda, com o fundo composto de `--indigo-500` sobre o card. Os palette
+// vars do Lara não invertem entre temas, então o degrau é por tema, na geração.
+const BLOCOS_INFO = (css: string) =>
+  [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter((m) => /p-(?:message-info|toast-message-info|tag-info|badge-info)\b/.test(m[1]))
+    .map((m) => ({ seletor: m[1].trim().replace(/\s+/g, ' '), corpo: m[2] }))
+
+describe('D7 — info de message/toast/tag/badge em índigo', () => {
+  it.each([
+    { tema: 'claro', css: light, ink: 'var(--indigo-700)' },
+    { tema: 'escuro', css: dark, ink: 'var(--indigo-300)' },
+  ])('info de message/toast/tag/badge é índigo nos dois temas ($tema)', ({ css, ink }) => {
+    const blocos = BLOCOS_INFO(css())
+    // message (3) + toast (2) + tag (1 ou 2) + badge (1)
+    expect(blocos.length).toBeGreaterThanOrEqual(7)
+    for (const { seletor, corpo } of blocos) {
+      expect(corpo, seletor).not.toMatch(/#(?:25a5e4|0ea5e9|38bdf8|186b94|80caef|082f49|ffffff)\b/i)
+      expect(corpo, seletor).not.toMatch(/rgba\(\s*(?:211|37)\s*,/)
+      for (const cor of corpo.matchAll(/(?<![-\w])color:\s*([^;]+)/g)) expect(cor[1].trim(), seletor).toBe(ink)
+      for (const borda of corpo.matchAll(/(?<![-\w])border:\s*solid\s+([^;]+)/g)) expect(borda[1].trim(), seletor).toBe(ink)
+      for (const fundo of corpo.matchAll(/(?<![-\w])background(?:-color)?:\s*([^;]+)/g))
+        expect(fundo[1].trim(), seletor).toBe('color-mix(in srgb, var(--indigo-500) 15%, var(--surface-card))')
+    }
+    // Os que pintam (message, toast, tag, badge) trazem as TRÊS camadas ou as duas que têm.
+    const raiz = blocos.filter(({ seletor }) => /(?:message-info|tag-info|badge-info)$/.test(seletor))
+    expect(raiz.every(({ corpo }) => /background/.test(corpo) && /(?<![-\w])color:/.test(corpo))).toBe(true)
+  })
+
+  it('a tinta e a borda do índigo medem AA sobre o fundo composto, nos dois temas', () => {
+    for (const { css, degrau, card } of [
+      { css: light(), degrau: '--indigo-700', card: '#ffffff' },
+      { css: dark(), degrau: '--indigo-300', card: '#1e293b' },
+    ]) {
+      const token = (n: string) => css.match(new RegExp(`${n}:\\s*(#[0-9a-f]{6})`, 'i'))![1]
+      const cardReal = token('--surface-card')
+      expect(cardReal).toBe(card)
+      const base = token('--indigo-500')
+      const fundo =
+        '#' +
+        [1, 3, 5]
+          .map((i) => Math.round(parseInt(base.slice(i, i + 2), 16) * 0.15 + parseInt(cardReal.slice(i, i + 2), 16) * 0.85))
+          .map((v) => v.toString(16).padStart(2, '0'))
+          .join('')
+      expect(razao(token(degrau), fundo)).toBeGreaterThanOrEqual(4.5)
+      expect(razao(token(degrau), cardReal)).toBeGreaterThanOrEqual(3)
+    }
+  })
+})
+
+// ── B-8 (bloco 65): a tag pesa 600 ──────────────────────────────────────────
+describe('B-8 — peso da tag', () => {
+  it.each([
+    ['claro', light],
+    ['escuro', dark],
+  ])('p-tag pesa 600 (%s)', (_tema, css) => {
+    const blocos = [...css().matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => m[1].trim() === '.p-tag')
+    expect(blocos.length).toBeGreaterThan(0)
+    for (const m of blocos) expect(m[2]).toMatch(/font-weight:\s*600\b/)
   })
 })
 

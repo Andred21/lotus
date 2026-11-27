@@ -18,8 +18,8 @@ colors:
   linha-noche: "rgba(255, 255, 255, 0.1)"
   tinta-painel: "oklch(86.9% 0.022 252.894)"
   tinta-painel-apagada: "oklch(70.4% 0.04 256.788)"
-  info-claro: "#186b94"
-  info-escuro: "#62beec"
+  info-claro: "#4547a9"
+  info-escuro: "#9ea0f6"
   exito-claro: "#136c34"
   exito-escuro: "#4cd07d"
   aviso-claro: "#816204"
@@ -166,7 +166,7 @@ Uma paleta de instrumento: um celeste vivo como acento único, navy como carcaç
   e overlay; a hairline que separa.
 - **Grafite** (`grafite`): texto de corpo no claro. **Cinza de apoio** (`cinza-apoio`, slate-600):
   texto secundário, rótulo de campo, descrição — 6,92:1 sobre humo. **Cinza de traço**
-  (`cinza-traco`, slate-500): a borda do input no claro, onde o traço é o único indicador (3:1).
+  (`cinza-traco`, slate-500): a borda do input nos dois temas, onde o traço é o único indicador (3:1).
 - **Noche** (`noche`): fundo da aplicação no escuro. **Cartão noche** (`cartao-noche`): cartão,
   diálogo e overlay. **Tinta noche** / **Apoio noche** / **Linha noche**: branco a 87%, 60% e 10%.
 - **Tinta do painel** (`tinta-painel`) / **apagada** (`tinta-painel-apagada`): o texto sobre o
@@ -176,6 +176,9 @@ Uma paleta de instrumento: um celeste vivo como acento único, navy como carcaç
 - **Info / Êxito / Aviso / Perigo**: cada tom tem dois degraus, um por tema (`*-claro` 700–800,
   `*-escuro` 400). Pintam texto, trilho do cartão `stat`, tinta da tag e botão `text` de perigo.
   O fundo pareado é sempre `color-mix(hue 8–15%, surface-card)`, nunca o hue puro.
+  **Info é índigo, não celeste** (o celeste é a marca e colidia com a primária): `--indigo-700` no
+  claro e `--indigo-300` no escuro, sobre `color-mix(--indigo-500 15%, surface-card)`. Vale para
+  tag, badge, message, toast, trilho e tinta (`--tone-info-ink`).
 - **Acento sem severidade** (roxo, `--tone-accent-ink`): só a modalidade "Online" da tag.
 - **Série de gráfico** (`--chart-1..5`: teal, laranja, roxo, rosa, índigo): categórica, nunca os
   hues de severidade, piso 3:1.
@@ -288,7 +291,7 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
 - **`noSurface`:** sem fundo nem padding; só área de clique e anel. O gatilho do menu do usuário.
 
 ### Chips / Tags
-- **Style:** 12px/700, padding `4px 6.4px`, 4px. Fundo `color-mix(hue 15%, --surface-card)`,
+- **Style:** 12px/600, padding `4px 6.4px`, 4px. Fundo `color-mix(hue 15%, --surface-card)`,
   tinta `--tone-*-ink`. `secondary` é neutro: `--surface-200` com `--text-color`. `tone="accent"`
   é o roxo da modalidade Online.
 - **State:** não há tag interativa. Uma tag diz estado (Vigente, Revocado, Pendiente) ou módulo.
@@ -303,7 +306,7 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
   Cabeçalho: título 16px/600, badge de contagem em pílula mono, qualificador em apoio, ações à direita.
 
 ### Inputs / Fields
-- **Style:** 1px `cinza-traco` no claro (3:1, único indicador), fundo do cartão, 4px, padding 12px,
+- **Style:** 1px `cinza-traco` nos dois temas (3:1, único indicador), fundo do cartão, 4px, padding 12px,
   16px. Rótulo acima em 14px e `--text-color-secondary`, irmão do controle (`htmlFor`), nunca mãe.
 - **Focus:** borda celeste + anel do tema + outline de `--focus-stroke`. Hover: borda celeste.
 - **Obrigatório:** o campo cuja regra `required` do backend (o `rules()` do DTO) exige vem com

@@ -80,7 +80,7 @@ describe('HistorialTable — a coluna de cotação', () => {
     montar(certificado())
 
     const codigo = screen.getByText('Scap 4 - R2', { selector: 'td span' })
-    expect(codigo.className).toContain('font-bold')
+    expect(codigo.className).toContain('font-semibold')
     expect(screen.getByText('certificate.colQuote', { selector: 'th *' })).toBeTruthy()
   })
 

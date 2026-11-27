@@ -283,7 +283,7 @@ const escapar = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 // (preenchimento e traço, que não são texto e têm régua própria).
 const CELESTE_PRIMEIRO_PLANO = new RegExp(`(?<![-\\w])color:(\\s*)${CELESTE}\\b`, 'gi')
 
-// ── D-68: a borda de controle do claro mede 3:1 ─────────────────────────────
+// ── D-68 e A-1: a borda de controle mede 3:1, nos dois temas ────────────────
 // `#cbd5e1` (o slate-300 que sai do gray-300 nos neutros) sobre branco mede
 // 1,48:1 — reprova a WCAG 1.4.11, que pede 3:1 no limite do controle quando ele
 // é o ÚNICO indicador, e no claro é: o input não tem poço de fundo. `#64748b`
@@ -298,11 +298,69 @@ const CELESTE_PRIMEIRO_PLANO = new RegExp(`(?<![-\\w])color:(\\s*)${CELESTE}\\b`
 // `background`/`background-color` decorativos. Trocar a entrada do MAPA
 // alcançaria as 27; por isso a passada vem depois dele, sobre a saída.
 //
-// Só o claro: no escuro o controle pousa em poço de fundo e o traço não carrega
-// o contraste sozinho. Mesma condição da tinta.
+// Nos DOIS temas (A-1, bloco 65). A versão anterior só tratava o claro, com o
+// argumento de que o controle do escuro pousa em poço de fundo — e o escuro não
+// tem poço: o `#334155` do traço mede 1,41:1 sobre o card (`#1e293b`) e 1,81:1
+// sobre o fundo (`#0b1220`), e o slate-500 mede 3,07:1 e 3,93:1. A origem é o que
+// muda por tema: `#cbd5e1` no claro, `#334155` no escuro (o slate-700 que sai do
+// gray-600/700 nos neutros). No escuro as 144 declarações `border*` com `#334155`
+// são todas traço; os preenchimentos e a rampa seguem em slate-700.
 export const CINZA_BORDA = '#64748b'
-const BORDA_DE_CONTROLE =
-  /(?<![-\w])(border(?:-(?:top|right|bottom|left|color|block|inline)[-\w]*)?)(\s*:\s*[^;{}]*?)#cbd5e1/gi
+const bordaDeControle = (origem) =>
+  new RegExp(
+    `(?<![-\\w])(border(?:-(?:top|right|bottom|left|color|block|inline)[-\\w]*)?)(\\s*:\\s*[^;{}]*?)${origem}`,
+    'gi',
+  )
+const BORDA_DE_CONTROLE_CLARO = bordaDeControle('#cbd5e1')
+const BORDA_DE_CONTROLE_ESCURO = bordaDeControle('#334155')
+
+// ── D7 (bloco 65): info em índigo ───────────────────────────────────────────
+// O celeste é a marca, e o info de message, toast, tag e badge no celeste
+// colidia com a primária (B-2). Índigo: 700 no claro (tinta e borda medem 6,38:1
+// sobre o fundo composto) e 300 no escuro (5,24:1). Os palette vars do Lara não
+// invertem entre temas, então o degrau é escolhido aqui, por tema. O fundo é o
+// `--indigo-500` a 15% sobre `--surface-card` — a mesma composição do `AppTag` e
+// do ícone da confirmação (`severityTone`), que inverte com o tema.
+//
+// Regra de FORMA: o gate é o SELETOR conter o info de um dos quatro componentes,
+// pelo mesmo argumento da P-30. Roda por último, sobre a saída do mapa: o que ele
+// reescreve é o celeste e o azul-céu que o mapa acabou de produzir.
+export const INFO_INDIGO = {
+  claro: 'var(--indigo-700)',
+  escuro: 'var(--indigo-300)',
+  fundo: 'color-mix(in srgb, var(--indigo-500) 15%, var(--surface-card))',
+}
+const SELETOR_INFO = /\.p-(?:message-info|toast-message-info|tag-info|badge-info)\b/
+
+function infoIndigo(css, tinta) {
+  const ink = tinta ? INFO_INDIGO.claro : INFO_INDIGO.escuro
+  return css.replace(/([^{}]+)\{([^{}]*)\}/g, (bloco, seletor, corpo) => {
+    const seletores = seletor.split(',').map((s) => s.trim())
+    if (!seletores.some((s) => SELETOR_INFO.test(s))) return bloco
+    if (!seletores.every((s) => SELETOR_INFO.test(s))) {
+      throw new Error(`infoIndigo: lista mista — há seletor que não é info em: ${seletor.trim()}`)
+    }
+    // O lookbehind separa PINTAR de DECLARAR: `border-color` e
+    // `background-color` não são o `color:` de texto.
+    const novo = corpo
+      .replace(/(?<![-\w])color:(\s*)[^;]+/g, `color:$1${ink}`)
+      .replace(/(?<![-\w])background(-color)?:(\s*)[^;]+/g, `background$1:$2${INFO_INDIGO.fundo}`)
+      .replace(/(?<![-\w])border:(\s*solid\s+)[^;]+/g, `border:$1${ink}`)
+    return `${seletor}{${novo}}`
+  })
+}
+
+// ── B-8 (bloco 65): a tag pesa 600 ──────────────────────────────────────────
+// O Lara pesa a `.p-tag` em 700; a grafia do produto para chip e tag é 12px/600
+// (DESIGN.md), a mesma do `RecordCode`. O gate é o seletor ser exatamente
+// `.p-tag`: as variantes de severidade não declaram peso e herdam dele.
+function tagSemibold(css) {
+  return css.replace(/([^{}]+)\{([^{}]*)\}/g, (bloco, seletor, corpo) =>
+    seletor.trim() === '.p-tag'
+      ? `${seletor}{${corpo.replace(/(?<![-\w])font-weight:(\s*)700\b/, 'font-weight:$1600')}}`
+      : bloco,
+  )
+}
 
 // ── P-30: o warning volta para a família amarela ────────────────────────────
 // O `AppTag` warning já pintava com `--yellow-500`/`--yellow-400` e
@@ -509,15 +567,13 @@ export function transform(css, map, tinta) {
   // Depois do mapa, não antes: é o mapa que transforma o azul do Lara em
   // celeste, e é o celeste que esta passada procura. Só o claro recebe tinta —
   // no escuro o celeste pousa em superfície escura e mede 6,76:1. A borda de
-  // controle (D-68) tem a MESMA condição e pelo mesmo motivo: é o claro que não
-  // tem poço de fundo, e é lá que o traço é o único indicador.
-  if (!tinta) return CABECALHO + out
-  return (
-    CABECALHO +
-    out
-      .replace(CELESTE_PRIMEIRO_PLANO, `color:$1${tinta}`)
-      .replace(BORDA_DE_CONTROLE, `$1$2${CINZA_BORDA}`)
-  )
+  // controle vale nos dois temas (D-68, A-1), cada um com a sua origem.
+  const comTinta = tinta
+    ? out
+        .replace(CELESTE_PRIMEIRO_PLANO, `color:$1${tinta}`)
+        .replace(BORDA_DE_CONTROLE_CLARO, `$1$2${CINZA_BORDA}`)
+    : out.replace(BORDA_DE_CONTROLE_ESCURO, `$1$2${CINZA_BORDA}`)
+  return CABECALHO + tagSemibold(infoIndigo(comTinta, tinta))
 }
 
 function gerar(nomeStock, map, nomeSaida, tinta) {
