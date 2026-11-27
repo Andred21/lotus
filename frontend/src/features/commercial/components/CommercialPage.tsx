@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
-import { usePermissions } from '@shared/hooks'
+import { backState, usePermissions, useUrlTab } from '@shared/hooks'
 import type { ClientData } from '@shared/types/generated'
 import { archivableSource } from '@shared/lib'
 import { useClientsPage } from '../hooks/useClientsPage'
@@ -14,15 +14,18 @@ import { ClientDialog } from './Client/ClientDialog'
 import { BudgetsTable } from './Budget/BudgetsTable'
 import { BudgetDialog } from './Budget/BudgetDialog'
 
+const TABS = ['budgets', 'clients'] as const
+
 export function CommercialPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const { can } = usePermissions()
   const clients = useClientsPage()
   const clientsArchived = useClientsArchived()
   const budgets = useBudgetsPage()
   const budgetsArchived = useBudgetsArchived()
-  const [tab, setTab] = useState(0)
+  const { index, setTab } = useUrlTab(TABS)
   const [toArchive, setToArchive] = useState<ClientData | null>(null)
   // Duas abas, duas fontes: as condições são DIFERENTES (clientes e orçamentos têm
   // interruptores próprios), então são duas chamadas, não uma (D-52).
@@ -32,7 +35,7 @@ export function CommercialPage() {
   return (
     <ModulePage title={t('module.comercial.title')} description={t('module.comercial.description')}>
       <AppCard>
-        <ModuleTabs activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
+        <ModuleTabs activeIndex={index} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('budget.tab')}>
             <BudgetsTable
               budgets={fonteOrcamentos.items}
@@ -96,7 +99,8 @@ export function CommercialPage() {
           mode={budgets.dialog.mode}
           budget={budgets.dialog.entity}
           onHide={budgets.close}
-          onCreated={(created) => navigate(`/comercial/presupuestos/${created.id}`)}
+          onCreated={(created) =>
+            navigate(`/comercial/presupuestos/${created.id}`, { state: backState(location) })}
         />
       )}
     </ModulePage>

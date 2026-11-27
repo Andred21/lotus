@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ModulePage, ModuleTabs, ModuleTab, AppButton, AppCard, ArchiveConfirmDialog } from '@shared/ui'
-import { usePermissions } from '@shared/hooks'
+import { usePermissions, useUrlTab } from '@shared/hooks'
 import type { UserData } from '@shared/types/generated'
 import { archivableSource } from '@shared/lib'
 import { useUsersPage } from '../hooks/useUsersPage'
@@ -9,6 +9,8 @@ import { useUsersArchived } from '../hooks/useUsersArchived'
 import { UsersTable } from './Admin/UsersTable'
 import { StaffUserDialog } from './Admin/StaffUserDialog'
 import { RolesTab } from './Admin/RolesTab'
+
+const TABS = ['users', 'roles', 'configuracion'] as const
 
 /**
  * `configuracion` é um slot: a aba Configuración hospeda submódulos de OUTRAS
@@ -24,12 +26,16 @@ export function AdministracionPage({ configuracion }: { configuracion?: ReactNod
   const [toArchive, setToArchive] = useState<UserData | null>(null)
   // A fonte da tela é uma escolha só, não quatro (D-52).
   const fonte = archivableSource(page, usersArchived)
-  const [tab, setTab] = useState(0)
+  // As abas visíveis dependem de permissão e do slot; a ordem do JSX segue `TABS`.
+  const { index, setTab } = useUrlTab(
+    TABS,
+    TABS.filter((name) => (name === 'roles' ? canManage : name === 'configuracion' ? Boolean(configuracion) : true)),
+  )
 
   return (
     <ModulePage title={t('module.administracion.title')} description={t('module.administracion.description')}>
       <AppCard>
-        <ModuleTabs scrollable activeIndex={tab} onTabChange={(e) => setTab(e.index)}>
+        <ModuleTabs scrollable activeIndex={index} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('admin.tabUsers')}>
             <UsersTable
               users={fonte.items}

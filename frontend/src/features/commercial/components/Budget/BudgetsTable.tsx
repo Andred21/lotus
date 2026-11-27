@@ -1,11 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AppColumn, IdentityCell, stickyActionsColumn,
   AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt, useCollapsibleActionsColumn, RecordCode
 } from '@shared/ui'
-import { useTableFilter } from '@shared/hooks'
+import { backState, useTableFilter } from '@shared/hooks'
 import type { ArchiveMode } from '@shared/hooks'
 import { budgetWidths } from './budgetColumns'
 import type { BudgetData, QuoteStatus } from '@shared/types/generated'
@@ -40,6 +40,7 @@ export function BudgetsTable({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const [status, setStatus] = useState<QuoteStatus | null>(null)
   const clients = useCommercialClients()
   const archived = mode === 'archived'
@@ -135,7 +136,7 @@ export function BudgetsTable({
             budget={b}
             archived={archived}
             busy={busy}
-            onView={(x) => navigate(`/comercial/presupuestos/${x.id}`)}
+            onView={(x) => navigate(`/comercial/presupuestos/${x.id}`, { state: backState(location) })}
             onRestore={onRestore}
             collapsed={colunaDeAcoes.collapsed}
           />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usePermissions, useMutationErrors, loadFailure } from '@shared/hooks'
+import { usePermissions, useMutationErrors, loadFailure, useBackNavigation } from '@shared/hooks'
 import { retryFor } from '@shared/lib'
 import { budgetsApi } from '@shared/api/budgetsApi'
 import { clientsApi } from '@shared/api/clientsApi'
@@ -14,6 +14,7 @@ type ConfirmAction = 'approve' | 'reject' | 'remove'
  * consome e renderiza (rule: componente de feature = declarativo). */
 export function useBudgetDetail(budgetId: number) {
   const navigate = useNavigate()
+  const goBack = useBackNavigation('/comercial')
   const query = budgetsApi.useOne(budgetId)
   const clients = clientsApi.useList()
   const budget = query.data
@@ -103,6 +104,6 @@ export function useBudgetDetail(budgetId: number) {
     removeFile: (fileId: number) => removeFile.mutate({ budgetId, fileId }),
     /** Erro de REMOÇÃO de anexo; o de envio mora no `BudgetDocumentsCard`. */
     fileError,
-    goBack: () => navigate('/comercial'),
+    goBack,
   }
 }
