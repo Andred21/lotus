@@ -4,7 +4,7 @@ import { resolve, join, relative } from 'node:path'
 
 const root = resolve(__dirname, '..')
 
-/** Catraca do bloco 64: o PrimeIcons saiu e o Phosphor tem UMA porta. */
+/** Catraca do bloco 64: o PrimeIcons saiu e o Phosphor tem UMA porta (`shared/ui/AppIcon`). */
 function arquivos(dir: string, extensoes: RegExp): string[] {
   return readdirSync(dir).flatMap((nome) => {
     const caminho = join(dir, nome)
@@ -32,10 +32,20 @@ describe('catraca de ícones (bloco 64)', () => {
     expect(readFileSync(resolve(root, 'package.json'), 'utf8')).not.toContain('"primeicons"')
   })
 
-  it('Phosphor só em shared/ui', () => {
+  it('primeicons fora de src (import, @import de CSS, url)', () => {
+    // `src/shared/styles/themes/` (tema gerado) fica de fora, como na catraca de classes.
+    const infratores = arquivos(resolve(root, 'src'), /\.(ts|tsx|css)$/)
+      .map(relativo)
+      .filter((caminho) => !caminho.startsWith('src/shared/styles/themes/'))
+      .filter((caminho) => readFileSync(resolve(root, caminho), 'utf8').includes('primeicons'))
+
+    expect(infratores).toEqual([])
+  })
+
+  it('Phosphor só em shared/ui/AppIcon', () => {
     const infratores = arquivos(resolve(root, 'src'), /\.(ts|tsx)$/)
       .map(relativo)
-      .filter((caminho) => !caminho.startsWith('src/shared/ui/'))
+      .filter((caminho) => !caminho.startsWith('src/shared/ui/AppIcon/'))
       .filter((caminho) => readFileSync(resolve(root, caminho), 'utf8').includes("from '@phosphor-icons/react'"))
 
     expect(infratores).toEqual([])

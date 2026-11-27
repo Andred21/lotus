@@ -12,8 +12,8 @@ import { primeSlotIcon, renderIcon, type IconProp } from '../AppIcon'
 
 // O olho. Função, e não nó: o `iconProps` que o Prime entrega carrega o `role`,
 // o `aria-label`, o `tabIndex` e os handlers do toggle (`togglePt` abaixo), e
-// `primeSlotIcon` os espalha no `svg` que substitui o do Prime. 16px = 1rem do
-// `.p-icon`; a folga de 6px do alvo continua sendo `style` do `pt`.
+// `primeSlotIcon` os espalha no `svg` que substitui o do Prime. O glifo mede 20px
+// (o default do `primeSlotIcon`); a folga de 6px do alvo é `style` do `pt`.
 const SHOW_ICON = primeSlotIcon('view')
 const HIDE_ICON = primeSlotIcon('viewOff')
 
@@ -88,14 +88,15 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     // varia. Trocar o papel preserva os dois rótulos medidos na API instalada
     // (`passwordShow`/`passwordHide`) e apaga o estado que mentia.
     //
-    // O ALVO é do wrapper pela mesma régua do nome: o olho mede 16x16px em toda
-    // tela com senha — 4 campos só entre `/perfil` e o cadastro de staff — e o
-    // mínimo de AA é 24x24 (WCAG 2.5.8, UI-04 do review de 2026-08-18). A folga
+    // O ALVO é do wrapper pela mesma régua do nome: o olho do Prime media 16x16px
+    // em toda tela com senha — 4 campos só entre `/perfil` e o cadastro de staff —
+    // e o mínimo de AA é 24x24 (WCAG 2.5.8, UI-04 do review de 2026-08-18). A folga
     // vai na PRÓPRIA `<svg>` porque é ela que carrega o `onClick` do Prime:
     // padding na `<span>` de fora cresceria a área sem tornar nada clicável.
-    // `content-box` é o que faz o padding SOMAR — o `.p-icon` do tema crava
-    // `width/height: 1rem`, então sem ele os 6px comeriam o glifo em vez de
-    // cercá-lo. 16 + 6 + 6 = 28. Vai em `style`, e não pela utilitária
+    // `content-box` é o que faz o padding SOMAR — o `*` do projeto crava
+    // `border-box`, e o glifo do registro tem `width/height` de 20 (atributos do
+    // svg), então sem ele os 6px comeriam o glifo em vez de cercá-lo.
+    // 20 + 6 + 6 = 32. Vai em `style`, e não pela utilitária
     // `box-content`: o `*` de `src/index.css` está FORA de `@layer` e as
     // utilitárias do Tailwind estão DENTRO de `@layer utilities`, então o
     // seletor universal do projeto vence a classe — medido no navegador, com a
@@ -153,7 +154,8 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
       hideIcon: { ...togglePt, 'aria-label': t('common.hidePassword') },
       // A `<span.p-input-icon>` que o Prime posiciona centra o ícone com
       // `top: 50%; margin-top: -0.5rem` — um número que assume 1rem de altura e
-      // que a folga acima invalida (o glifo desceria 6px). `translateY(-50%)`
+      // que o glifo de 20px mais a folga acima (32px) invalida (o glifo desceria
+      // 8px). `translateY(-50%)`
       // centra em qualquer altura, então a correção não volta a quebrar se o
       // alvo mudar de tamanho; o eixo X compensa os 6px que o padding empurrou
       // para dentro, e o glifo fica onde sempre esteve. Vai em `style` e não em

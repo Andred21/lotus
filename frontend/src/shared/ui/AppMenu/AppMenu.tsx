@@ -7,7 +7,19 @@ import { primeIcon, type IconProp } from '../AppIcon'
 /** Item do menu com `icon` do registro (`IconName`) ou, para o que o registro não
  * cobre (a bandeira do `LanguageMenu`), um elemento pronto; o resto de `MenuItem`
  * segue como no Prime. */
-export type AppMenuItem = Omit<PrimeMenuItem, 'icon'> & { icon?: IconProp | ReactElement }
+export type AppMenuItem = Omit<PrimeMenuItem, 'icon' | 'items'> & {
+  icon?: IconProp | ReactElement
+  items?: AppMenuItem[]
+}
+
+/** Traduz o `icon` do registro em cada nível, para o item aninhado passar pelo mesmo caminho. */
+function toPrimeItem({ icon, items, ...item }: AppMenuItem): PrimeMenuItem {
+  return {
+    ...item,
+    icon: isValidElement(icon) ? icon : primeIcon(icon),
+    items: items?.map(toPrimeItem),
+  }
+}
 
 export type AppMenuProps = Omit<MenuProps, 'model'> & { model?: AppMenuItem[] }
 
@@ -16,14 +28,12 @@ export const AppMenu = forwardRef<Menu, AppMenuProps>(({ model, ...props }, ref)
   <Menu
     ref={ref}
     {...props}
-    model={model?.map((item) => ({
-      ...item,
-      icon: isValidElement(item.icon) ? item.icon : primeIcon(item.icon),
-    }))}
+    model={model?.map(toPrimeItem)}
     popup
   />
 ))
 AppMenu.displayName = 'AppMenu'
 
-export type { PrimeMenuItem as MenuItem }
+/** Alias de `AppMenuItem`: o `MenuItem` do Prime tem `icon?: any` e deixaria passar nome errado. */
+export type { AppMenuItem as MenuItem }
 export type AppMenuRef = Menu

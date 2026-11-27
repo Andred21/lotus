@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppAvatar, AppButton, AppIcon, AppMenu } from '@shared/ui'
-import type { AppMenuRef, MenuItem } from '@shared/ui'
+import type { AppMenuItem, AppMenuRef } from '@shared/ui'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import { useLogout } from '@features/identity/api/authApi'
 import { roleLabel } from '@shared/lib'
@@ -18,7 +18,7 @@ export function UserMenu() {
 
   const role = user.roles[0]
 
-  const items: MenuItem[] = [
+  const items: AppMenuItem[] = [
     { label: t('userMenu.profile'), icon: 'user', command: () => navigate('/perfil') },
     { separator: true },
     {

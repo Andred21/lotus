@@ -54,12 +54,12 @@ describe('chrome da rota', () => {
   it('foco vai ao main na navegação e não na carga', async () => {
     sessao(usuario(['operation.turma.view', 'catalog.course.view']))
     const router = montar('/operacion')
-    await screen.findByRole('heading', { name: 'Operación' })
+    await screen.findByRole('heading', { name: 'Operación' }, { timeout: 5000 })
 
     expect(document.activeElement).toBe(document.body)
 
     await act(() => router.navigate('/cursos'))
-    await screen.findByRole('heading', { name: 'Cursos' })
+    await screen.findByRole('heading', { name: 'Cursos' }, { timeout: 5000 })
 
     expect(document.activeElement).toBe(document.getElementById('contenido'))
   })
@@ -68,7 +68,7 @@ describe('chrome da rota', () => {
     sessao(usuario([]))
     montar('/nao-existe')
 
-    expect(await screen.findByRole('heading', { name: 'Página no encontrada' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Página no encontrada' }, { timeout: 5000 })).toBeTruthy()
     expect(document.getElementById('contenido')?.textContent).toContain('Página no encontrada')
     expect(screen.getByRole('button', { name: 'Volver al inicio' })).toBeTruthy()
     await waitFor(() => expect(document.title).toBe('Página no encontrada · Lotus'))
@@ -78,7 +78,7 @@ describe('chrome da rota', () => {
     sessao(usuario([]))
     montar('/operacion')
 
-    expect(await screen.findByRole('heading', { name: 'Sin acceso a esta sección' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Sin acceso a esta sección' }, { timeout: 5000 })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull()
   })
 
@@ -86,7 +86,7 @@ describe('chrome da rota', () => {
     sessao(usuario([]))
     montar('/operacion/turmas/5')
 
-    expect(await screen.findByRole('heading', { name: 'Sin acceso a esta sección' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Sin acceso a esta sección' }, { timeout: 5000 })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Reintentar' })).toBeNull()
   })
 

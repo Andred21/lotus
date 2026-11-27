@@ -5,13 +5,14 @@ import { useFieldBind, useFieldProps } from '../FormField/fieldContext'
 import { primeSlotIcon } from '../AppIcon'
 
 // Ícones internos do Prime (seta, seta com painel aberto, limpar, filtro): SVG
-// próprio de 1rem no default; aqui vêm do registro, no mesmo tamanho.
+// próprio de 1rem no default; aqui vêm do registro, no tamanho default do
+// `primeSlotIcon` (20px).
 const DROPDOWN_ICON = primeSlotIcon('chevronDown')
 const COLLAPSE_ICON = primeSlotIcon('chevronUp')
 const CLEAR_ICON = primeSlotIcon('close')
 const FILTER_ICON = primeSlotIcon('search')
 // `loading` troca a seta pelo spinner; o do Prime (`SpinnerIcon spin`) gira sozinho.
-const LOADING_ICON = primeSlotIcon('spinner', 20, 'animate-spin')
+const LOADING_ICON = primeSlotIcon('spinner', undefined, 'animate-spin')
 
 export type { DropdownProps as AppDropdownProps } from 'primereact/dropdown'
 

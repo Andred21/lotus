@@ -37,4 +37,10 @@ describe('DiscardChangesDialog', () => {
 
     expect(document.querySelector('.p-dialog')).toBeNull()
   })
+
+  it('monta o blocker recebido, mesmo invisível', () => {
+    render(<DiscardChangesDialog visible={false} onConfirm={() => {}} onCancel={() => {}} blocker={<i data-testid="blocker" />} />)
+
+    expect(screen.getByTestId('blocker')).toBeTruthy()
+  })
 })

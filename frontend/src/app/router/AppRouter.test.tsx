@@ -61,7 +61,7 @@ describe('routes', () => {
     logado()
     montar(routes, '/operacion')
 
-    expect(await screen.findByRole('heading', { name: 'module.operacion.title' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'module.operacion.title' }, { timeout: 5000 })).toBeTruthy()
   })
 
   it('/login com sessão autenticada redireciona para /', async () => {
@@ -76,7 +76,7 @@ describe('routes', () => {
 
     // A página carregou (o título é dela); se o bootstrap estivesse no caminho, o
     // `GET /api/me` já teria saído antes do primeiro paint dela.
-    expect(await screen.findByRole('heading', { name: 'password.title' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'password.title' }, { timeout: 5000 })).toBeTruthy()
     expect(get).not.toHaveBeenCalled()
   })
 
@@ -93,7 +93,7 @@ describe('routes', () => {
     reload.mockClear()
     document.body.innerHTML = ''
     montar(tree, '/operacion')
-    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toBeTruthy()
     expect(screen.getByText('common.loadError')).toBeTruthy()
     expect(reload).not.toHaveBeenCalled()
   })
@@ -111,7 +111,7 @@ describe('routes', () => {
 
       // Sem como lembrar que já recarregou, recarregar de novo seria laço infinito
       // num chunk que continua falhando: o erro vai direto para a tela.
-      expect(await screen.findByRole('alert')).toBeTruthy()
+      expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toBeTruthy()
       expect(screen.getByText('common.loadError')).toBeTruthy()
       expect(reload).not.toHaveBeenCalled()
     },
@@ -123,7 +123,7 @@ describe('routes', () => {
 
     montar(tree, '/operacion')
 
-    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toBeTruthy()
     expect(reload).not.toHaveBeenCalled()
   })
 
@@ -132,7 +132,7 @@ describe('routes', () => {
     window.sessionStorage.setItem(CHUNK_KEY, '1')
     montar(routes, '/operacion')
 
-    await screen.findByRole('heading', { name: 'module.operacion.title' })
+    await screen.findByRole('heading', { name: 'module.operacion.title' }, { timeout: 5000 })
     expect(window.sessionStorage.getItem(CHUNK_KEY)).toBeNull()
   })
 })

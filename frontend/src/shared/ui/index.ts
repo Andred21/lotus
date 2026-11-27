@@ -19,7 +19,11 @@ export * from './AppFileRow'
 export * from './AppFileSlot'
 export * from './AppFileUpload'
 export * from './AppHeader'
-export * from './AppIcon'
+// Só a superfície pública do ícone. `primeIcon`, `primeSlotIcon` e `renderIcon` são a
+// mecânica dos wrappers (slot de ícone do Prime) e saem por caminho relativo
+// (`../AppIcon`): barrel é fronteira pública.
+export { AppIcon } from './AppIcon'
+export type { AppIconProps, IconName, IconProp } from './AppIcon'
 export * from './AppInputText'
 export * from './AppLineChart'
 export * from './AppMenu'

@@ -12,10 +12,11 @@ import { NotFoundPage } from '@app/pages/Errors/NotFoundPage'
 
 /**
  * O que cada rota declara em `handle`: `titleKey` é lido por `useDocumentTitle`
- * (o match mais profundo que o declara vence) e `permission` é a do módulo,
- * a mesma do `NAV_MODULES` que o `Sidebar` filtra — aplicada por `ModuleGuard`.
+ * (o match mais profundo que o declara vence). A permissão do módulo não viaja
+ * aqui: `guarded()` a entrega ao `ModuleGuard` por prop, a partir do mesmo
+ * `NAV_MODULES` que o `Sidebar` filtra.
  */
-export type RouteHandle = { titleKey?: string; permission?: string }
+export type RouteHandle = { titleKey?: string }
 
 function page(path: string, load: () => Promise<ComponentType>, handle?: RouteHandle): RouteObject {
   return { path, lazy: lazyPage(load), errorElement: <RouteError />, HydrateFallback: PageFallback, handle }
@@ -32,7 +33,7 @@ function page(path: string, load: () => Promise<ComponentType>, handle?: RouteHa
 function guarded(key: string, children: RouteObject[]): RouteObject {
   const mod = NAV_MODULES.find((m) => m.key === key)
   if (!mod) throw new Error(`Módulo desconhecido em NAV_MODULES: ${key}`)
-  const handle: RouteHandle = { titleKey: mod.labelKey, permission: mod.permission }
+  const handle: RouteHandle = { titleKey: mod.labelKey }
   return {
     element: (
       <ModuleGuard permission={mod.permission}>

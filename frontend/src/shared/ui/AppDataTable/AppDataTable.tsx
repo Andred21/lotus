@@ -16,11 +16,12 @@ import { mergePt } from '../mergePt'
 import { appDataTablePt, appPaginatorPt } from './style'
 
 // Ordenação do cabeçalho: o Prime escolhe o SVG pelo par `sorted`/`sortOrder`
-// (`sortOrder < 0` é decrescente). Mesmo critério, glifos do registro, 20px. `-my-0.5` tira 4px da altura que o glifo
+// (`sortOrder < 0` é decrescente). Mesmo critério, glifos do registro, no tamanho
+// default do `primeSlotIcon` (20px). `-my-0.5` tira 4px da altura que o glifo
 // ocupa na linha do cabeçalho: o texto de 14px é mais baixo que 20px e o `th` cresceria 3px.
-const SORT_NEUTRAL = primeSlotIcon('sortNeutral', 20, '-my-0.5')
-const SORT_ASC = primeSlotIcon('sortAsc', 20, '-my-0.5')
-const SORT_DESC = primeSlotIcon('sortDesc', 20, '-my-0.5')
+const SORT_NEUTRAL = primeSlotIcon('sortNeutral', undefined, '-my-0.5')
+const SORT_ASC = primeSlotIcon('sortAsc', undefined, '-my-0.5')
+const SORT_DESC = primeSlotIcon('sortDesc', undefined, '-my-0.5')
 const sortIcon = (options: { iconProps?: object; sorted?: boolean; sortOrder?: number | null }) => {
   if (!options.sorted) return SORT_NEUTRAL(options)
   return (options.sortOrder ?? 0) < 0 ? SORT_DESC(options) : SORT_ASC(options)
