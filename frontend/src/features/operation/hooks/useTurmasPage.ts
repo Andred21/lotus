@@ -21,7 +21,8 @@ const arquivadas = (query: PageQuery) =>
  * A página de turmas, ativa OU arquivada, por `useServerTable` (spec D1: a
  * lista do admin cresce sem teto, e `archivableSource` funde as duas numa
  * fonte só — então uma raiz pagina as duas). Um hook, uma moldura: trocar o
- * modo troca o endpoint e a chave; busca, filtro de estado e sort vão na URL.
+ * modo troca o endpoint e a chave; busca e página vão na URL (C-3), e o
+ * modo e o filtro de estado também, escritos por quem os possui.
  *
  * Alias de página no molde dos `useXPage`: é o que mantém a query fora do
  * componente (`no-restricted-syntax`).
@@ -32,5 +33,7 @@ export function useTurmasPage(mode: ArchiveMode, status: TurmaDisplayStatus | nu
   return useServerTable<TurmaRow>(archived ? arquivadas : turmasPage, {
     key: archived ? turmaKeys.archived() : turmaKeys.list(),
     filters: { status },
+    // Sem `sortable`: nenhuma coluna de Turmas ordena (ver `TurmasTable`).
+    url: {},
   })
 }

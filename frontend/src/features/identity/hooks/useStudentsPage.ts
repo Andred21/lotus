@@ -9,7 +9,12 @@ import { studentsApi } from '@shared/api/studentsApi'
  * motivo da `useRedatoresPage` (D-04): a aba desmonta na troca, e sem ele a
  * volta paga GET — catraca em `PeoplePage.test.tsx`. */
 export function useStudentsPage() {
-  const table = useServerTable(studentsApi.page, { key: studentsApi.keys.lists(), staleTime: 30_000 })
+  const table = useServerTable(studentsApi.page, {
+    key: studentsApi.keys.lists(),
+    staleTime: 30_000,
+    // As colunas `sortable` de `StudentsTable`: só elas valem como `sort` da URL.
+    url: { sortable: ['name', 'rut'] },
+  })
   const dialog = useCrudDialog(table.rows, studentsApi.useOne)
 
   return { table, ...dialog }

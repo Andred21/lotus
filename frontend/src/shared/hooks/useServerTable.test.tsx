@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
+import { useLocation } from 'react-router-dom'
 import { createWrapper } from '@shared/testing/providers'
 import type { Page, PageMeta } from '@shared/api/page'
 import { SERVER_TABLE_DEBOUNCE_MS, useServerTable } from './useServerTable'
@@ -234,5 +235,146 @@ describe('useServerTable — filtering mede EFEITO, não presença', () => {
     expect(result.current.error).toEqual({})
     expect(result.current.rows).toEqual([])
     expect(result.current.refetch?.()).toBeInstanceOf(Promise)
+  })
+})
+
+/* Estado na URL (C-3). O hook roda dentro de um router de dados (`route`) e
+ * `useLocation` devolve a URL REAL que ele escreveu. */
+describe('useServerTable — estado na URL', () => {
+  const trinta = () => vi.fn(() => Promise.resolve(pagina(linhas, { total: 30, last_page: 3, total_unfiltered: 30 })))
+  const comUrl = (fetchPage: ReturnType<typeof trinta>, route: string, url: Parameters<typeof useServerTable>[1]['url'] = { sortable: ['name'] }) =>
+    renderHook(
+      () => ({ table: useServerTable(fetchPage, { key: ['x'], url }), location: useLocation() }),
+      { wrapper: createWrapper({ route }).wrapper },
+    )
+  const params = (search: string) => new URLSearchParams(search)
+
+  it('busca, página e sort vão à URL e voltam dela', async () => {
+    vi.useFakeTimers()
+    const { result } = comUrl(trinta(), '/lista')
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    act(() => result.current.table.onPage({ first: 20 }))
+    expect(params(result.current.location.search).get('page')).toBe('3')
+
+    act(() => result.current.table.onSort({ sortField: 'name', sortOrder: -1 }))
+    // Sort novo volta à página 1: `page` sai da URL, que não guarda o default.
+    expect(params(result.current.location.search).get('sort')).toBe('-name')
+    expect(params(result.current.location.search).has('page')).toBe(false)
+
+    act(() => result.current.table.onFilterChange('ana'))
+    // Só o TERMO (depois do debounce) vai à URL, não cada tecla.
+    expect(params(result.current.location.search).has('q')).toBe(false)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SERVER_TABLE_DEBOUNCE_MS)
+    })
+    expect(params(result.current.location.search).get('q')).toBe('ana')
+
+    vi.useRealTimers()
+    // E volta dela: um hook novo sobre a mesma URL restaura tudo e o PRIMEIRO
+    // GET já sai com o estado restaurado.
+    const fetchPage = trinta()
+    const restaurado = comUrl(fetchPage, '/lista?q=ana&page=3&sort=-name')
+    await waitFor(() => expect(restaurado.result.current.table.rows).toHaveLength(2))
+    expect(fetchPage).toHaveBeenCalledTimes(1)
+    expect(fetchPage).toHaveBeenCalledWith({ page: 3, per_page: 10, q: 'ana', sort: '-name' })
+    expect(restaurado.result.current.table.filter).toBe('ana')
+    expect(restaurado.result.current.table.first).toBe(20)
+    expect(restaurado.result.current.table.sortField).toBe('name')
+    expect(restaurado.result.current.table.sortOrder).toBe(-1)
+  })
+
+  it('URL inválida cai nos defaults', async () => {
+    const fetchPage = trinta()
+    const { result } = comUrl(fetchPage, '/lista?page=-3&sort=xyz')
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+
+    expect(result.current.table.first).toBe(0)
+    expect(result.current.table.sortField).toBeUndefined()
+    expect(result.current.table.sortOrder).toBe(0)
+    expect(fetchPage).toHaveBeenCalledWith({ page: 1, per_page: 10 })
+  })
+
+  it.each(['abc', '0', '2.5', ''])('página %j na URL vira a primeira', async (page) => {
+    const fetchPage = trinta()
+    const { result } = comUrl(fetchPage, `/lista?page=${page}`)
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+
+    expect(result.current.table.first).toBe(0)
+    expect(fetchPage).toHaveBeenCalledWith({ page: 1, per_page: 10 })
+  })
+
+  it('sem colunas `sortable` declaradas, nenhum sort da URL vale', async () => {
+    const fetchPage = trinta()
+    const { result } = comUrl(fetchPage, '/lista?sort=name', {})
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+
+    expect(result.current.table.sortField).toBeUndefined()
+    expect(fetchPage).toHaveBeenCalledWith({ page: 1, per_page: 10 })
+  })
+
+  it('tab sobrevive à escrita da lista', async () => {
+    const { result } = comUrl(trinta(), '/personas?tab=alumnos')
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+
+    act(() => result.current.table.onPage({ first: 10 }))
+
+    expect(params(result.current.location.search).get('tab')).toBe('alumnos')
+    expect(params(result.current.location.search).get('page')).toBe('2')
+  })
+
+  it('prefixo isola duas tabelas: cada uma lê e escreve só as chaves dela', async () => {
+    const { result } = comUrl(trinta(), '/lista?c_page=3&b_page=2', { prefix: 'b' })
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+    expect(result.current.table.first).toBe(10)
+
+    act(() => result.current.table.onPage({ first: 20 }))
+
+    const p = params(result.current.location.search)
+    expect(p.get('b_page')).toBe('3')
+    expect(p.get('c_page')).toBe('3')
+  })
+
+  it('desligado (o default) não lê nem escreve', async () => {
+    const fetchPage = trinta()
+    const { result } = comUrl(fetchPage, '/lista?q=ana&page=3&sort=name', false)
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+    expect(fetchPage).toHaveBeenCalledWith({ page: 1, per_page: 10 })
+    expect(result.current.table.filter).toBe('')
+
+    act(() => result.current.table.onPage({ first: 10 }))
+
+    expect(result.current.location.search).toBe('?q=ana&page=3&sort=name')
+  })
+
+  it('trocar o filtro nomeado (escopo) tira a página da URL', async () => {
+    const fetchPage = trinta()
+    const { result, rerender } = renderHook(
+      ({ status }: { status: string | null }) => ({
+        table: useServerTable(fetchPage, { key: ['x'], filters: { status }, url: {} }),
+        location: useLocation(),
+      }),
+      { wrapper: createWrapper({ route: '/lista?page=3' }).wrapper, initialProps: { status: null as string | null } },
+    )
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+    expect(result.current.table.first).toBe(20)
+
+    rerender({ status: 'habilitada' })
+
+    await waitFor(() => expect(params(result.current.location.search).has('page')).toBe(false))
+    expect(fetchPage).toHaveBeenLastCalledWith({ page: 1, per_page: 10, status: 'habilitada' })
+  })
+
+  it('clear() limpa busca e página da URL', async () => {
+    const { result } = comUrl(trinta(), '/lista?q=ana&page=2&tab=x')
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+
+    act(() => result.current.table.clear())
+
+    await waitFor(() => expect(params(result.current.location.search).has('q')).toBe(false))
+    expect(params(result.current.location.search).has('page')).toBe(false)
+    expect(params(result.current.location.search).get('tab')).toBe('x')
   })
 })

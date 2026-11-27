@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLoadState, usePermissions, useServerTable } from '@shared/hooks'
+import { useLoadState, usePermissions, useServerTable, useTableUrlState } from '@shared/hooks'
 import type {
   CertificateData,
   CertificateDisplayStatus,
@@ -15,6 +15,11 @@ import {
   useEmissionPanel,
 } from '../api/certificatesApi'
 
+const CERTIFICATE_STATUSES: readonly CertificateDisplayStatus[] = ['vigente', 'por_vencer', 'vencido', 'revocado']
+
+/** As colunas `sortable` de `HistorialTable`: só elas valem como `sort` da URL. */
+const SORTABLE = ['codigo', 'created_at', 'valido_ate']
+
 export type ReissueTarget = { enrollment: EmissionPanelEnrollmentData; turma: EmissionPanelTurmaData }
 
 /**
@@ -27,14 +32,23 @@ export type ReissueTarget = { enrollment: EmissionPanelEnrollmentData; turma: Em
  * Reemitir. A query mora aqui, não no componente: `no-restricted-syntax`
  * reprova `useQuery`/`useMutation` sob `features/*\/components/**`.
  *
+ * Busca, página, sort e os dois filtros moram na URL (C-3, chaves `q`, `page`,
+ * `sort`, `display_status` e `quote_id`): recarregar ou voltar da revogação
+ * reabre a lista como estava. Valor que não decodifica — estado desconhecido,
+ * cotação que não é inteiro positivo — é "sem filtro", nunca erro.
+ *
  * `loadError` segue `loadFailure` (`{}` sem corpo) desde que a lista vem do
  * `useServerTable` — a exceção que a rule registrava para este hook acabou.
  */
 export function useHistorial() {
   const { can } = usePermissions()
 
-  const [statusFilter, setStatusFilter] = useState<CertificateDisplayStatus | null>(null)
-  const [quoteFilter, setQuoteFilter] = useState<number | null>(null)
+  const url = useTableUrlState({ enabled: true })
+  const statusFilter = CERTIFICATE_STATUSES.find((s) => s === url.read('display_status')) ?? null
+  const setStatusFilter = (next: CertificateDisplayStatus | null) => url.write({ display_status: next })
+  const rawQuote = url.read('quote_id')
+  const quoteFilter = rawQuote !== null && /^[1-9]\d*$/.test(rawQuote) ? Number(rawQuote) : null
+  const setQuoteFilter = (next: number | null) => url.write({ quote_id: next === null ? null : String(next) })
   const quotes = useLoadState(useCertificateQuotes())
   const [viewingCertificateId, setViewingCertificateId] = useState<number | null>(null)
   const [revoking, setRevoking] = useState<CertificateData | null>(null)
@@ -61,6 +75,7 @@ export function useHistorial() {
   const table = useServerTable<CertificateData, CertificatePageMetaData>(certificatesPage, {
     ...certificatesTableOptions,
     filters: { display_status: statusFilter, quote_id: quoteFilter },
+    url: { sortable: SORTABLE },
   })
 
   /** Reemissão concluída: fecha a confirmação e abre o diálogo do certificado
@@ -73,10 +88,7 @@ export function useHistorial() {
 
   // Os dois filtros nomeados (estado e cotação): a composição com a busca é da
   // moldura, que exige este callback junto do `filterSlot` (SearchableTableFrame).
-  const clearFilters = () => {
-    setStatusFilter(null)
-    setQuoteFilter(null)
-  }
+  const clearFilters = () => url.write({ display_status: null, quote_id: null })
 
   // Do `meta` (spec D6): contado no servidor sobre o escopo de `q`, com o
   // MESMO `CASE` do filtro. Zeros antes do primeiro GET.
