@@ -117,4 +117,22 @@ describe('os wrappers de shared/ui se associam ao rótulo do FormField', () => {
     const { container } = render(<FormField label="Campo"><AppInputText /></FormField>)
     expect(container.querySelector('.p-invalid')).toBeNull()
   })
+
+  /** Obrigatoriedade e ajuda chegam ao INPUT de cada wrapper, não ao nó raiz:
+   * mesma armadilha do erro, na mesma tabela. */
+  it.each(COM_CONTROLE)('required e hint chegam ao INPUT do %s', (_nome, controle) => {
+    render(
+      <FormField label="Campo" required hint="Dica de preenchimento" error="Requerido">
+        {controle}
+      </FormField>,
+    )
+
+    const alvo = screen.getByLabelText('Campo')
+    expect(alvo.getAttribute('aria-required')).toBe('true')
+    const ids = (alvo.getAttribute('aria-describedby') as string).split(' ')
+    expect(ids.map((id) => document.getElementById(id)?.textContent)).toEqual([
+      'Dica de preenchimento',
+      'Requerido',
+    ])
+  })
 })

@@ -57,7 +57,7 @@ export function SetPasswordPage() {
             dois nunca coexistem — e sem ele a falha de transporte ficaria muda. */}
         <FormErrorBanner message={generalError ?? fieldErrors?.email?.[0] ?? null} variant="inline" />
 
-        <FormField label={t('password.newPassword')} error={fieldErrors?.password?.[0]}>
+        <FormField label={t('password.newPassword')} required error={fieldErrors?.password?.[0]}>
           <AppPassword
             leftIcon="lock"
             value={password}
@@ -66,7 +66,7 @@ export function SetPasswordPage() {
           />
         </FormField>
 
-        <FormField label={t('password.confirmation')}>
+        <FormField label={t('password.confirmation')} required>
           <AppPassword
             leftIcon="lock"
             value={confirmation}

@@ -29,6 +29,12 @@ export type FormFieldProps = {
    * `<AppInputText disabled readOnly>`, que é o próprio débito do §4 (review do
    * BD-3, Q-1). Com `readOnly` e sem `children` o campo é texto e ponto. */
   children?: ReactNode
+  /** Campo obrigatório: asterisco decorativo ao lado do rótulo e `aria-required`
+   * no controle. Em leitura não marca — não há o que preencher. */
+  required?: boolean
+  /** Ajuda abaixo do controle, em `--text-color-secondary`, ligada ao controle
+   * por `aria-describedby` junto com o erro. Em leitura não aparece. */
+  hint?: string
   /** Valor e setter do form, quando o campo veio de um `Field` (§4.1 da spec).
    * Ausente no uso solto — login, filtro de tabela, célula de edição. */
   bind?: FieldBind
@@ -47,13 +53,16 @@ export type FormFieldProps = {
  * a própria porta (`id` ou `inputId`) — ver `fieldContext.ts`. Prop do chamador
  * vence a do contexto, sempre.
  */
-export function FormField({ label, error, readOnly, value, bind, children }: FormFieldProps) {
+export function FormField({ label, error, readOnly, value, bind, required, hint, children }: FormFieldProps) {
   const id = useId()
   const errorId = `${id}-error`
+  const hintId = `${id}-hint`
+  const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(' ')
   const field: FieldContextValue = {
     id,
     invalid: !!error,
-    describedBy: error ? errorId : undefined,
+    required: required || undefined,
+    describedBy: describedBy || undefined,
     bind,
   }
 
@@ -67,17 +76,36 @@ export function FormField({ label, error, readOnly, value, bind, children }: For
           dois sítios (`StaffUserDialog`, `CertificateViewDialog`), medidos no
           gate do BD-16. Valor que só se lê entra por `readOnly` + `value`, que
           aceita `ReactNode` justamente para isso. */}
-      <label
-        htmlFor={readOnly ? undefined : id}
-        className="mb-1 block text-sm font-medium"
-        style={{ color: 'var(--text-color)' }}
-      >
-        {label}
-      </label>
+      <div className="mb-1 flex gap-0.5">
+        <label
+          htmlFor={readOnly ? undefined : id}
+          className="text-sm font-medium"
+          style={{ color: 'var(--text-color)' }}
+        >
+          {label}
+        </label>
+        {/* Irmão da label, e não filho: o asterisco entraria no nome acessível
+            do controle ("RUT *"). Quem anuncia a obrigatoriedade é o
+            `aria-required` — o glifo é só para quem vê. */}
+        {required && !readOnly && (
+          <span aria-hidden="true" className="text-sm font-medium" style={{ color: dangerText }}>
+            *
+          </span>
+        )}
+      </div>
       {readOnly ? (
         <ReadOnlyValue value={value} />
       ) : (
         <FieldContext.Provider value={field}>{children}</FieldContext.Provider>
+      )}
+      {hint && !readOnly && (
+        <span
+          id={hintId}
+          className="mt-1 block text-sm"
+          style={{ color: 'var(--text-color-secondary)' }}
+        >
+          {hint}
+        </span>
       )}
       {error && (
         <span

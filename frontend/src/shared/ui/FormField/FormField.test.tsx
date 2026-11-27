@@ -250,3 +250,63 @@ describe('FormField associa o rótulo ao controle (P-37)', () => {
     expect(controle.getAttribute('aria-invalid')).toBeNull()
   })
 })
+
+describe('FormField: obrigatório e ajuda', () => {
+  it('required põe asterisco e aria-required', () => {
+    render(
+      <FormField label="RUT" required>
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    // O nome acessível segue sendo só o rótulo: o asterisco é decoração e quem
+    // anuncia a obrigatoriedade é o `aria-required`.
+    const controle = screen.getByLabelText('RUT')
+    expect(controle.getAttribute('aria-required')).toBe('true')
+    const asterisco = screen.getByText('*')
+    expect(asterisco.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('sem required não há asterisco nem aria-required', () => {
+    render(
+      <FormField label="RUT">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    expect(screen.queryByText('*')).toBeNull()
+    expect(screen.getByLabelText('RUT').getAttribute('aria-required')).toBeNull()
+  })
+
+  it('hint liga por aria-describedby, junto com o erro', () => {
+    render(
+      <FormField label="RUT" hint="Sin puntos ni guion" error="RUT inválido">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    const ids = (screen.getByLabelText('RUT').getAttribute('aria-describedby') as string).split(' ')
+    const textos = ids.map((id) => document.getElementById(id)?.textContent)
+    expect(textos).toEqual(['Sin puntos ni guion', 'RUT inválido'])
+  })
+
+  it('hint sozinho liga por aria-describedby e sem aria-invalid', () => {
+    render(
+      <FormField label="RUT" hint="Sin puntos ni guion">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    const controle = screen.getByLabelText('RUT')
+    const id = controle.getAttribute('aria-describedby') as string
+    expect(document.getElementById(id)?.textContent).toBe('Sin puntos ni guion')
+    expect(controle.getAttribute('aria-invalid')).toBeNull()
+  })
+
+  it('em leitura não mostra asterisco nem ajuda', () => {
+    render(<FormField label="RUT" required hint="Sin puntos" readOnly value="1-9" />)
+
+    expect(screen.queryByText('*')).toBeNull()
+    expect(screen.queryByText('Sin puntos')).toBeNull()
+  })
+})

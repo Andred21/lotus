@@ -47,7 +47,7 @@ export function CourseDialog({
       <section className="space-y-4">
         <FormSection title={t('course.sectionGeneral')} />
 
-        <campo.Field name="name" label={t('course.name')}>
+        <campo.Field name="name" label={t('course.name')} required>
           <AppInputText
             placeholder={t('course.namePlaceholder')}
             className="w-full"
@@ -83,7 +83,7 @@ export function CourseDialog({
               cru renderizaria sem o String (task-8 brief). */}
           <campo.Field
             name="workload_hours"
-            label={t('course.workloadHours')}
+            label={t('course.workloadHours')} required
             value={String(form.workload_hours)}
           >
             <AppInputText

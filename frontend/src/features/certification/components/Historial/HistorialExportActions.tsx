@@ -8,10 +8,10 @@ import { ExportConfirmDialog } from './ExportConfirmDialog'
 /** Planilla e ZIP no cabeçalho do Historial (spec §5.3). Exportam o conjunto da
  * listagem — mesmos `q`, estado e cotação —, não a página que está na tela.
  * O ZIP sem cotação fica desabilitado e diz por quê; a regra é do servidor
- * (422), o botão é conveniência. A razão vai em `title` num `span`, e não no
- * botão: o apagado não recebe hover (`pointer-events: none`), e o `span` do
- * React é onde a dica pega — o mesmo desenho do `RowActionButton` de `shared/ui`
- * (que serve a ação de linha e, por isso, não cabe aqui). */
+ * (422), o botão é conveniência. A razão aparece em TEXTO ao lado do botão e o
+ * liga por `aria-describedby`: dica só de mouse não chega ao toque nem ao
+ * teclado. O `title` no `span` fica como reforço — o apagado não recebe hover
+ * (`pointer-events: none`), e o `span` é onde a dica pega. */
 export function HistorialExportActions({ filters }: { filters: CertificateExportFilters }) {
   const { t } = useTranslation()
   const reasonId = useId()
@@ -39,7 +39,7 @@ export function HistorialExportActions({ filters }: { filters: CertificateExport
           />
         </span>
         {zipReason && (
-          <span id={reasonId} className="sr-only">
+          <span id={reasonId} className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {zipReason}
           </span>
         )}

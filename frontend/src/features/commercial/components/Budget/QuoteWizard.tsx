@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppDialog, AppButton, DiscardChangesDialog, FormErrorSummary, FormErrorBanner, useFormField } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
@@ -24,14 +25,28 @@ export function QuoteWizard({
   const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError, guard } = f
   const campo = useFormField(f)
   const courses = useQuoteCourseSearch()
+  const reasonId = useId()
   // Cancelar, X e Esc descartam o rascunho; salvar fecha pelo `onHide` direto.
   const sair = () => guard.confirmDiscard(onHide)
 
   const footer =
     step === 1 ? (
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* O porquê do Siguiente apagado, em texto e ligado ao botão. */}
+        {!canAdvance && (
+          <span id={reasonId} className="mr-auto text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+            {t('quote.nextNeedsCourse')}
+          </span>
+        )}
         <AppButton label={t('common.cancel')} text onClick={sair} />
-        <AppButton variant="primary" label={t('quote.next')} icon="arrowRight" disabled={!canAdvance} onClick={next} />
+        <AppButton
+          variant="primary"
+          label={t('quote.next')}
+          icon="arrowRight"
+          disabled={!canAdvance}
+          aria-describedby={canAdvance ? undefined : reasonId}
+          onClick={next}
+        />
       </div>
     ) : (
       <div className="flex justify-end gap-2">

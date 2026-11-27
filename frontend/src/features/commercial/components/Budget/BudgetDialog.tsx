@@ -68,7 +68,7 @@ export function BudgetDialog({
             continuam explícitos aqui (item 24, spec §5). */}
         <campo.Field
           name="client_id"
-          label={t('budget.client')}
+          label={t('budget.client')} required
           readOnly={readOnly || !isCreate}
           value={clients.clientOptions.find((o) => o.value === form.client_id)?.label ?? ''}
         >

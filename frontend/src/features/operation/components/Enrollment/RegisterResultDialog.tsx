@@ -56,7 +56,7 @@ export function RegisterResultDialog({ turmaId, enrollment, visible, approvalRul
         </div>
 
         <div className="sm:col-span-2">
-          <FormField label={t('certificate.result.status')} error={r.fieldErrors?.approval_status?.[0]}>
+          <FormField label={t('certificate.result.status')} required error={r.fieldErrors?.approval_status?.[0]}>
             <AppDropdown value={r.form.approval_status} options={r.statusOptions} onChange={(e) => r.setStatus(e.value)} />
           </FormField>
         </div>

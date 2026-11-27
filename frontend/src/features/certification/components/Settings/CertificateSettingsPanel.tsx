@@ -66,10 +66,10 @@ export function CertificateSettingsPanel() {
       <FormErrorBanner message={generalError} />
       <FormErrorSummary errors={fieldErrors} mapped={['manager_name', 'manager_title']} />
 
-      <campo.Field name="manager_name" label={t('certificateSettings.managerName')}>
+      <campo.Field name="manager_name" label={t('certificateSettings.managerName')} required>
         <AppInputText className="w-full" maxLength={TETOS_IMPRESSOS.nomeAssinante} disabled={saving} />
       </campo.Field>
-      <campo.Field name="manager_title" label={t('certificateSettings.managerTitle')}>
+      <campo.Field name="manager_title" label={t('certificateSettings.managerTitle')} required>
         <AppInputText className="w-full" maxLength={TETOS_IMPRESSOS.cargoAssinante} disabled={saving} />
       </campo.Field>
 

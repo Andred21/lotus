@@ -32,6 +32,10 @@ export type FieldProps<T> = {
    * domínio: `t('clientType.'+form.type)`, `readDate(form.start_date)`. Sem ele,
    * leitura mostra o valor cru do form. */
   value?: ReactNode
+  /** Obrigatório (regra `required` do FormRequest): asterisco + `aria-required`. */
+  required?: boolean
+  /** Ajuda abaixo do controle, ligada por `aria-describedby`. */
+  hint?: string
   children?: ReactNode
 }
 
@@ -91,13 +95,15 @@ export function useFormField<T>(bundle: FormBundle<T>): { Field: FieldComponent<
   // dispensa o disable neste ponto; os outros dois abaixo continuam
   // inevitáveis (ver o docblock acima).
   if (componente.current == null) {
-    componente.current = function Field({ name, label, error, readOnly, value, children }: FieldProps<T>) {
+    componente.current = function Field({ name, label, error, readOnly, value, required, hint, children }: FieldProps<T>) {
       const { form, set, fieldErrors, readOnly: leituraDoForm } = atual.current
       const bruto = form[name as keyof T]
 
       return (
         <FormField
           label={label}
+          required={required}
+          hint={hint}
           error={error ?? fieldErrors?.[name]?.[0]}
           readOnly={readOnly ?? leituraDoForm ?? false}
           value={value ?? (bruto as ReactNode)}

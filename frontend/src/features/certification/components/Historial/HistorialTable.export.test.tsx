@@ -89,7 +89,11 @@ describe('Historial — botões de exportação', () => {
     const zip = screen.getByRole('button', { name: 'certificate.exportZip' }) as HTMLButtonElement
     expect(zip.disabled).toBe(true)
     expect(zip.closest('span[title]')?.getAttribute('title')).toBe('certificate.exportZipNeedsQuote')
-    expect(screen.getByText('certificate.exportZipNeedsQuote', { selector: '.sr-only' })).toBeTruthy()
+    // Texto VISÍVEL ao lado do botão: o `title` não aparece no toque nem no
+    // teclado, e o botão apagado não recebe hover.
+    const motivo = screen.getByText('certificate.exportZipNeedsQuote')
+    expect(motivo.className).not.toContain('sr-only')
+    expect(zip.getAttribute('aria-describedby')).toBe(motivo.id)
   })
 
   it('o ZIP com cotação filtrada fica habilitado', () => {

@@ -92,8 +92,10 @@ describe('StaffUserDialog — campo Rol (UI-01)', () => {
     // fazia.
     // O seletor de país do `PhoneInput` também é um `.p-dropdown` e vem antes:
     // o do Rol se acha pelo campo da label.
-    const campoRol = screen.getByText('admin.role').parentElement as HTMLElement
-    fireEvent.click(campoRol.querySelector('.p-dropdown') as HTMLElement)
+    // Pelo rótulo ligado ao controle, e não pelo pai da label: o rótulo agora
+    // divide a linha com o asterisco de obrigatório.
+    const campoRol = screen.getByLabelText('admin.role')
+    fireEvent.click(campoRol.closest('.p-dropdown') as HTMLElement)
     const itens = Array.from(document.querySelectorAll('.p-dropdown-item')).map((li) => li.textContent)
 
     expect(itens).toEqual([

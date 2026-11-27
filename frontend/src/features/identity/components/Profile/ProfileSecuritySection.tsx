@@ -70,15 +70,15 @@ export function ProfileSecuritySection({ email }: { email: string }) {
             fosse digitado no meio do voo era APAGADO sem aviso — e o que se
             digita neste formulário é senha, que não se recupera relendo a
             tela. */}
-        <campo.Field name="current_password" label={t('profile.security.currentPassword')}>
+        <campo.Field name="current_password" label={t('profile.security.currentPassword')} required>
           <AppPassword autoComplete="current-password" disabled={pending} />
         </campo.Field>
 
-        <campo.Field name="password" label={t('profile.security.newPassword')}>
+        <campo.Field name="password" label={t('profile.security.newPassword')} required>
           <AppPassword autoComplete="new-password" disabled={pending} />
         </campo.Field>
 
-        <campo.Field name="password_confirmation" label={t('profile.security.confirmPassword')}>
+        <campo.Field name="password_confirmation" label={t('profile.security.confirmPassword')} required>
           <AppPassword autoComplete="new-password" disabled={pending} />
         </campo.Field>
 

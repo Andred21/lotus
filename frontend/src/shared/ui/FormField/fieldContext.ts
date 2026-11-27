@@ -13,6 +13,9 @@ export type FieldBind = { value: unknown; onChange: (raw: unknown) => void }
 export type FieldContextValue = {
   id: string
   invalid: boolean
+  /** Vem do `required` do `FormField`; chega ao controle como `aria-required`. */
+  required?: boolean
+  /** Ids da ajuda e do erro, separados por espaço. */
   describedBy?: string
   /** Ausente fora de um campo ligado a form: o wrapper continua exatamente
    * como era, controlado pelo call site. */
@@ -39,6 +42,7 @@ export const FieldContext = createContext<FieldContextValue | null>(null)
 function ariaProps(field: FieldContextValue) {
   return {
     'aria-invalid': field.invalid || undefined,
+    'aria-required': field.required || undefined,
     'aria-describedby': field.describedBy,
   }
 }

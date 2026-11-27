@@ -64,7 +64,7 @@ export function RoleDialog({
             texto — herdar do contexto trocaria o modo de leitura sem
             autorização. `readOnly={false}` explícito mantém o `Field` sempre
             em modo de controle; quem desabilita é o `disabled` de baixo. */}
-        <campo.Field name="name" label={t('role.name')} readOnly={false}>
+        <campo.Field name="name" label={t('role.name')} required readOnly={false}>
           <AppInputText disabled={!editable} className="w-full" />
         </campo.Field>
 

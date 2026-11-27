@@ -306,6 +306,16 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
 - **Style:** 1px `cinza-traco` no claro (3:1, único indicador), fundo do cartão, 4px, padding 12px,
   16px. Rótulo acima em 14px e `--text-color-secondary`, irmão do controle (`htmlFor`), nunca mãe.
 - **Focus:** borda celeste + anel do tema + outline de `--focus-stroke`. Hover: borda celeste.
+- **Obrigatório:** o campo cuja regra `required` do backend (o `rules()` do DTO) exige vem com
+  asterisco em `--tone-danger-ink` ao lado do rótulo — irmão da label, `aria-hidden`, para o nome
+  acessível seguir sendo só o rótulo — e `aria-required` no controle. Em leitura não marca. Regra
+  condicional (`required_if`) marca só enquanto vale.
+- **Ajuda:** `hint` vira texto de 14px em `--text-color-secondary` abaixo do controle, antes do erro,
+  ligado por `aria-describedby` junto com a mensagem de 422 (ids separados por espaço).
+- **Botão desabilitado com motivo:** quem apaga o confirmar por falta de dado (motivo, redator,
+  curso, cotação) escreve o porquê em texto visível, 14px em `--text-color-secondary`, perto do
+  botão — dica só de mouse (`title`) não chega ao toque nem ao teclado. O motivo some quando a
+  condição se cumpre; onde o botão aceita `aria-*`, é ligado por `aria-describedby`.
 - **Error / Disabled:** `.p-invalid` borda `#e24c4c`; mensagem de 422 abaixo em `--tone-danger-ink`;
   resumo de erros órfãos em caixa `dangerSurface` (vermelho a 10%). Disabled a 60% de opacidade.
   Leitura (`readOnly`) vira texto em `--text-color`; vazio vira travessão.

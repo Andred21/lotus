@@ -82,13 +82,17 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
       <div className="grid gap-4 sm:grid-cols-2">
         <campo.Field
           name="modalidade"
-          label={t('operation.config.modality')}
+          label={t('operation.config.modality')} required
           value={modalityOptions.find((o) => o.value === f.form.modalidade)?.label ?? f.form.modalidade}
         >
           <AppDropdown options={modalityOptions} />
         </campo.Field>
 
-        <campo.Field name="local_aplicacao" label={t('operation.config.local')}>
+        <campo.Field
+          name="local_aplicacao"
+          label={t('operation.config.local')}
+          required={f.form.modalidade === 'presencial'}
+        >
           {/* O `disabled` que sobra NÃO é modo leitura: turma online não tem
               local a preencher, e isso vale em EDIÇÃO. Modo leitura sai pelo
               `readOnly` do Field. */}
@@ -98,11 +102,11 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
           />
         </campo.Field>
 
-        <campo.Field name="start_date" label={t('operation.config.startDate')} value={readDate(f.form.start_date)}>
+        <campo.Field name="start_date" label={t('operation.config.startDate')} required value={readDate(f.form.start_date)}>
           <AppDatePicker value={f.form.start_date || null} onChange={(v) => f.set('start_date', v ?? '')} />
         </campo.Field>
 
-        <campo.Field name="end_date" label={t('operation.config.endDate')} value={readDate(f.form.end_date)}>
+        <campo.Field name="end_date" label={t('operation.config.endDate')} required value={readDate(f.form.end_date)}>
           <AppDatePicker value={f.form.end_date || null} onChange={(v) => f.set('end_date', v ?? '')} />
         </campo.Field>
 

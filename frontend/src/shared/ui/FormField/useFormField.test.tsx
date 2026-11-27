@@ -115,3 +115,23 @@ describe('useFormField — prop do chamador vence', () => {
     expect(screen.getByTestId('controle')).toBeTruthy()
   })
 })
+
+describe('useFormField — required e hint', () => {
+  function Obrigatorio() {
+    const [form, setForm] = useState<Campos>({ rut: '', nome: '' })
+    const set = <K extends keyof Campos>(k: K, v: Campos[K]) => setForm((f) => ({ ...f, [k]: v }))
+    const campo = useFormField({ form, set })
+    return (
+      <campo.Field name="rut" label="RUT" required hint="Sin puntos ni guion">
+        <ControleFake />
+      </campo.Field>
+    )
+  }
+
+  it('repassa required e hint ao FormField', () => {
+    render(<Obrigatorio />)
+
+    expect(screen.getByText('*')).toBeTruthy()
+    expect(screen.getByText('Sin puntos ni guion')).toBeTruthy()
+  })
+})

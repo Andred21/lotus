@@ -56,7 +56,7 @@ export function ForgotForm({ email, onEmailChange, autoFocusTitle }: Props) {
         <>
           <FormErrorBanner message={generalError} variant="inline" />
 
-          <FormField label={t('login.email')} error={fieldErrors?.email?.[0]}>
+          <FormField label={t('login.email')} required error={fieldErrors?.email?.[0]}>
             <AppInputText
               type="email"
               leftIcon='mail'

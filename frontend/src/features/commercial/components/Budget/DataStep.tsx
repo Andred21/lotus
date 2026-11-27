@@ -30,7 +30,7 @@ export function DataStep({
       <FormSection title={t('quote.stepData')} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field name="student_count" label={t('quote.students')} readOnly={onlyUf}>
+        <Field name="student_count" label={t('quote.students')} required readOnly={onlyUf}>
           <AppInputText
             value={String(form.student_count)}
             onChange={(e) => onChange('student_count', Number(e.target.value.replace(/\D/g, '')) || 0)}
@@ -45,7 +45,7 @@ export function DataStep({
             1,25?) e nenhuma heurística resolve isso sem errar outro caso.
             Mostrando de volta "1,250", o usuário VÊ que o valor virou
             decimal — o caso ambíguo falha à vista, não em silêncio. */}
-        <Field name="value_uf" label={t('quote.valueUf')}>
+        <Field name="value_uf" label={t('quote.valueUf')} required>
           <AppInputText
             value={form.value_uf.replace('.', ',')}
             onChange={(e) => onChange('value_uf', parseUfInput(e.target.value))}

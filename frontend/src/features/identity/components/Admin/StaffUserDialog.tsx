@@ -101,7 +101,7 @@ export function StaffUserDialog({
           />
           <campo.Field
             name="role"
-            label={t("admin.role")}
+            label={t("admin.role")} required
             value={roleLabel(form.role, t)}
           >
             <AppDropdown
