@@ -67,6 +67,21 @@ describe('IdentityCell', () => {
     expect(dica.textContent).toBe('Compañía General de Electricidad')
   })
 
+  /** WCAG 1.4.13: conteúdo que aparece em foco/hover precisa poder ser dispensado
+   * sem mover o ponteiro nem o foco. O Tooltip do Prime nasce com Esc desligado. */
+  it('a dica fecha com Esc, sem tirar o foco da célula', async () => {
+    render(<IdentityCell title="Compañía General de Electricidad" />)
+    const celula = screen.getByRole('group', { name: 'Compañía General de Electricidad' })
+    celula.focus()
+    fireEvent.focus(celula)
+    await waitFor(() => expect(document.querySelector('.p-tooltip')).not.toBeNull())
+
+    fireEvent.keyDown(document, { key: 'Escape', code: 'Escape', keyCode: 27 })
+
+    await waitFor(() => expect(document.querySelector('.p-tooltip')).toBeNull())
+    expect(document.activeElement).toBe(celula)
+  })
+
   /** Dica nativa E dica do Prime no mesmo hover seriam duas caixas. */
   it('não deixa o `title` nativo duplicar a dica', () => {
     const { container } = render(<IdentityCell title="Juan Soto" description="juan@lotus.cl" />)

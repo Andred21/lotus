@@ -119,7 +119,7 @@ export function IdentityCell({
       {/* O `useRef` do React 19 tipa `RefObject<T | null>`, e o d.ts do Prime
         * ainda pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
       {focusable && (
-        <Tooltip target={texto as RefObject<HTMLElement>} content={completo} event="both" position="top" />
+        <Tooltip target={texto as RefObject<HTMLElement>} content={completo} event="both" position="top" closeOnEscape />
       )}
     </div>
   )
