@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { useState } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import i18n from '@shared/config/i18n'
@@ -378,6 +379,34 @@ describe('CrudDialog — Enter envia', () => {
     fireEvent.click(screen.getByRole('button', { name: i18n.t('common.save') }))
 
     expect(externo).not.toHaveBeenCalled()
+  })
+
+  /** O Editar da leitura e o Salvar da edição ocupam a mesma posição no
+   * rodapé. Reaproveitado pelo React, o `<button>` do Editar virava
+   * `type="submit"` dentro do próprio clique, e o navegador enviava o form:
+   * clicar em Editar salvava sem mudança e voltava à leitura (PUT medido no
+   * navegador). O jsdom não roda a ativação depois da troca de tipo, então o
+   * teste prova a causa: o Salvar é um nó NOVO, não o Editar reaproveitado. */
+  it('clicar em Editar abre a edição e não envia', () => {
+    const onSubmit = vi.fn()
+    function LeituraEditavel() {
+      const [mode, setMode] = useState<DialogMode>('view')
+      return (
+        <CrudDialog
+          size="md" visible mode={mode} title="Curso" onHide={() => {}}
+          onEdit={() => setMode('edit')} onSubmit={onSubmit}
+        >
+          <input aria-label="Nombre" />
+        </CrudDialog>
+      )
+    }
+    render(<LeituraEditavel />)
+
+    const editar = screen.getByRole('button', { name: i18n.t('common.edit') })
+    fireEvent.click(editar)
+
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: i18n.t('common.save') })).not.toBe(editar)
   })
 
   it('o modo leitura não tem botão de envio', () => {
