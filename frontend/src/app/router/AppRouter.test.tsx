@@ -152,6 +152,9 @@ describe('routes', () => {
 
     // O usuário entra de novo: volta à tela em que estava, com a aba.
     vi.spyOn(api, 'post').mockResolvedValue({ data: usuario } as never)
+    // Entrando, o servidor volta a conhecer a sessão: o `/api/me` refeito responde.
+    get.mockImplementation(((url: string) =>
+      Promise.resolve({ data: url === '/api/me' ? usuario : [] })) as never)
     fireEvent.change(screen.getByLabelText('login.email'), { target: { value: 'q@lotus.cl' } })
     fireEvent.change(screen.getByLabelText('login.password'), { target: { value: 'segredo' } })
     fireEvent.click(screen.getByRole('button', { name: 'login.submit' }))
@@ -159,5 +162,8 @@ describe('routes', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/operacion'))
     expect(router.state.location.search).toBe('?tab=historial')
     expect(useSessionStore.getState().expired).toBe(false)
+    // A limpeza do cache no login não deixa o bootstrap derrubar a sessão nova.
+    expect(await screen.findByRole('heading', { name: 'module.operacion.title' })).toBeTruthy()
+    expect(useSessionStore.getState().status).toBe('authenticated')
   })
 })

@@ -31,10 +31,21 @@ interface LoginVars {
 
 export function useLogin() {
   const setUser = useSessionStore((s) => s.setUser)
+  const queryClient = useQueryClient()
 
   return useMutation<SessionUser, ProblemDetails, LoginVars>({
     mutationFn: ({ email, password }) => login(email, password),
-    onSuccess: (user) => setUser(user),
+    onSuccess: (user) => {
+      // Sessão que caiu com a aba aberta (401/419) não passa pelo `useLogout`, então
+      // nada limpou o QueryClient: o cache do usuário anterior — dados de tela e o
+      // `['me']` (`staleTime: Infinity`, que o bootstrap devolveria ao store) —
+      // atravessaria a fronteira de autorização para quem entra agora. A limpeza
+      // fica AQUI, e não na expiração: limpar ao expirar refaria o `/api/me` na
+      // tela de login, o 401 dele chamaria `clear()` e o aviso de sessão expirada
+      // sumiria antes de o usuário lê-lo. Antes do `setUser`, que zera `expired`.
+      if (useSessionStore.getState().expired) queryClient.clear()
+      setUser(user)
+    },
   })
 }
 
