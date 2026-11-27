@@ -8,13 +8,13 @@
 
 **Tech Stack:** React 19, TS, Vite, react-router-dom 7.18, TanStack Query 5, Zustand, PrimeReact 10 via `shared/ui`, Tailwind 4, Vitest + Testing Library, `@phosphor-icons/react`.
 
-**Spec:** `docs/superpowers/blocos/64-frontend-revisao-ui-ux-e-icones/spec.md` (compartilhada pelos blocos 64, 65 e 66; D12). Detalhe `arquivo:linha` de cada ID: `docs/superpowers/audits/2026-11-26-ui-ux-pro-max.md`.
+**Spec:** `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/spec.md` (recorte e D13), que aponta para a canônica `docs/superpowers/blocos/64-frontend-revisao-ui-ux-e-icones/spec.md` (compartilhada pelos blocos 64, 65 e 66; D1–D12). Detalhe `arquivo:linha` de cada ID: `docs/superpowers/audits/2026-11-26-ui-ux-pro-max.md`.
 
 Caminhos abaixo: `src/` = `frontend/src/`; `FE` = `frontend/`.
 
-**IDs da auditoria que este bloco fecha:** C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8 (o índigo de info é parte do B-2, que fecha no 66) e **D-6**, aberto no 64 (ver "D-6 levado do 64" abaixo).
+**IDs da auditoria que este bloco fecha (16):** C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8 (o índigo de info é parte do B-2, que fecha no 66). O **D-6** não é deste bloco: D13 o leva à ficha 67.
 
-**Depende:** bloco 64 mesclado na `main`.
+**Depende:** bloco 64 mesclado na `main` (feito: `main@7381665f`).
 
 ## Global Constraints
 
@@ -38,23 +38,14 @@ Caminhos abaixo: `src/` = `frontend/src/`; `FE` = `frontend/`.
 
 ---
 
-## D-6 levado do 64 (decisão do João, 2026-11-26, opção b)
-
-O 64 deixou o D-6 aberto: o chunk `ui` (barrel `@shared/ui`, com PrimeReact, Phosphor e libphonenumber) tem **465,48 kB gz** e entra no `modulepreload` do `index.html`, então o ganho de JS na carga inicial foi de 590 para uns 558 kB. O D-6 só fecha com esse chunk dividido. Duas saídas, a escolher no planejamento:
-- dividir o barrel `@shared/ui` (por peça ou por família) para que cada rota baixe só o que usa; ou
-- tirar o chunk `ui` do `modulepreload`, de modo que ele deixe de ser pedido já na entrada.
-
-Prova: o gzip do JS de entrada e dos chunks pré-carregados, medido antes e depois no `pnpm build`, no `fechamento.md`. Números de partida em `fechamento.md` do 64 (seção "D-6: números").
-
-**O rascunho já está no teto de 10 tasks.** O D-6 não tem task própria aqui: encaixar (task nova com o corte de outra, ou bloco à parte) é decisão do João, no `/planejar-bloco 65`. Os IDs do bloco passam de 16 para 17 se ele entrar.
-
 ## Fase 1 — Navegação (T5)
 
 ### Task 1: Estado de listagem na URL (C-3, listas)
 
 **Files:**
 - Create: `src/shared/hooks/useTableUrlState.ts`, `src/shared/hooks/useTableUrlState.test.tsx`
-- Modify: `src/shared/hooks/useServerTable.ts` (opção `url?: { prefix?: string } | false`, default `false`), `src/shared/hooks/useServerTable.test.tsx`, `src/shared/hooks/useArchivedPage.ts` (opção `urlKey?: string`; `mode` na URL como `archived=1`), `src/features/operation/hooks/useTurmasPage.ts`, `src/features/operation/components/OperationPage.tsx` (`status` na URL), `src/features/identity/hooks/useStudentsPage.ts`, `src/features/certification/hooks/useHistorial.ts` (`statusFilter`/`quoteFilter` na URL)
+- Create também: `src/features/operation/hooks/useTurmasArchived.test.tsx`
+- Modify: `src/shared/hooks/useServerTable.ts` (opção `url?: { prefix?: string } | false`, default `false`), `src/shared/hooks/useServerTable.test.tsx`, `src/features/operation/hooks/useTurmasArchived.ts` (o `mode` sai do `useState` para a URL como `archived=1`, via `useTableUrlState`), `src/features/operation/hooks/useTurmasPage.ts`, `src/features/operation/components/OperationPage.tsx` (`status` na URL), `src/features/identity/hooks/useStudentsPage.ts`, `src/features/certification/hooks/useHistorial.ts` (`statusFilter`/`quoteFilter` na URL)
 
 **Interfaces:**
 - Produces:
@@ -70,8 +61,8 @@ Prova: o gzip do JS de entrada e dos chunks pré-carregados, medido antes e depo
   - `tab sobrevive à escrita da lista`.
   - `prefixo isola duas tabelas`: `b_q` e `c_q`.
   - `desligado não lê nem escreve`.
-  - `archived=1 restaura o modo arquivado` (`useArchivedPage`).
-- [ ] **Step 2: Rodar** → FAIL. **Step 3:** Implementar e ligar nas três listas (`url: {}`) e nos arquivados de turmas. Lista em aba não montada não escreve: o `renderActiveOnly` já desmonta. No `CommercialPage`, onde as duas fontes vivem no pai, passe `enabled` só para a aba ativa.
+  - `archived=1 restaura o modo arquivado` e `voltar ao ativo remove archived da URL` (`useTurmasArchived.test.tsx`).
+- [ ] **Step 2: Rodar** → FAIL. **Step 3:** Implementar e ligar nas três listas (`url: {}`) e no modo arquivado de turmas. O modo de turmas mora em `useTurmasArchived` (a raiz que pagina compõe as peças sem o `useArchivedPage`); a mudança vai lá. **O `useArchivedPage` não muda:** ele serve as raízes que não paginam (clientes, orçamentos, cursos, redatores, usuários, e as listas internas de cotação e matrícula), quase todas em páginas com abas e com a fonte no pai, que precisariam de chave por aba. Fica fora deste bloco, e a Task 10 registra o recorte no `fechamento.md` (linha do C-3). Lista em aba não montada não escreve: o `renderActiveOnly` já desmonta.
 - [ ] **Step 4: Rodar** `pnpm vitest run src/shared/hooks src/features/operation src/features/identity src/features/certification` → PASS.
 - [ ] **Step 5: Commit** `feat(65): busca, filtro, página e sort na URL`.
 
@@ -137,7 +128,7 @@ Prova: o gzip do JS de entrada e dos chunks pré-carregados, medido antes e depo
 
 **Files:**
 - Modify: `src/app/pages/Dashboard/useDashboard.ts:95-120` (`refetchOnWindowFocus: true`, `placeholderData: keepPreviousData`, devolve `refreshing`), `src/app/pages/Dashboard/DashboardPage.tsx`, `src/app/pages/Dashboard/admin/AdminView.tsx` (prop `refreshing`)
-- Test: `src/app/pages/Dashboard/useDashboard.test.tsx` (crie se não existir), `src/app/pages/Dashboard/admin/AdminView.test.tsx` (idem)
+- Test: `src/app/pages/Dashboard/useDashboard.test.tsx`, `src/app/pages/Dashboard/admin/AdminView.test.tsx` (ambos existem; casos novos entram neles)
 
 **Interfaces:**
 - Produces: `useDashboard(period)` passa a incluir `refreshing: boolean` (= `isFetching && isPlaceholderData`). `AdminView` recebe `refreshing` e aplica `aria-busy` e `opacity-60` na seção de séries e rankings.
@@ -259,7 +250,7 @@ Prova: o gzip do JS de entrada e dos chunks pré-carregados, medido antes e depo
 ### Task 10: Passada visual e quadro de fechamento do bloco 65
 
 **Files:**
-- Create: `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/visual/<ID>.png` (uma por achado visual), `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/fechamento.md` (uma linha por ID deste bloco: C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8 e D-6, se o João o encaixar — com a prova: teste (arquivo e nome), captura (caminho) ou "veredito do João")
+- Create: `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/visual/<ID>.png` (uma por achado visual), `docs/superpowers/blocos/65-frontend-navegacao-sessao-e-formularios/fechamento.md` (uma linha por ID deste bloco: C-1, D-1, D-9, C-2, C-7, C-8, A-10, C-9, C-5, C-4, C-6, A-2, C-3, C-11, A-1, B-8 — com a prova: teste (arquivo e nome), captura (caminho) ou "veredito do João"; e, fora do quadro, uma linha "D-6 — levado à ficha 67 (D13 da spec do 65)")
 
 **Interfaces:**
 - Consumes: Tasks 1–9.
@@ -276,12 +267,13 @@ Prova: o gzip do JS de entrada e dos chunks pré-carregados, medido antes e depo
 
 | Grupo | Tasks | Files: disjuntos | Aresta Consumes/Produces |
 |---|---|---|---|
-| G1 | 1, 4, 9 | sim, nos três pares: hooks de lista (`useServerTable`, `useArchivedPage`, hooks de turmas/alunos/Historial, `OperationPage`) × `src/app/pages/Dashboard/**` × gerador de tema, temas gerados, `brand-theme.css`, `AppTag/tones.ts`, `AppCard`, `RecordCode`, `DESIGN.md`, `FE/tests/*`; nenhuma das três toca locales | nenhuma: a 2 consome a 1, mas está fora do grupo |
+| G1 | 1, 4, 9 | sim, nos três pares: hooks de lista (`useTableUrlState`, `useServerTable`, `useTurmasArchived`, hooks de turmas/alunos/Historial, `OperationPage`) × `src/app/pages/Dashboard/**` × gerador de tema, temas gerados, `brand-theme.css`, `AppTag/tones.ts`, `AppCard`, `RecordCode`, `DESIGN.md`, `FE/tests/*`; nenhuma das três toca locales | nenhuma: a 2 consome a 1, mas está fora do grupo |
 
 Task fora de grupo executa e revisa uma a uma (as demais compartilham locales ou wrappers de `shared/ui`).
 
 ## Handoff de execução
 
-- `executor: claude`. O bloco decide padrão em `shared/` e mexe em lei do §5 ou em julgamento visual; não há paths fechados para o Codex.
+- `executor: claude`. O bloco decide padrão em `shared/`, toca a lei 6 (só `shared/ui` importa PrimeReact/Phosphor) e exige julgamento visual na Task 10; não há paths fechados para o Codex.
 - Sessão: `opus`, esforço `high`.
+- Execução: `superpowers:subagent-driven-development`, com `superpowers:test-driven-development` em cada task (o `/executar-bloco` roteia).
 - Papéis (`.claude/papeis.md`): `implementador-mecanico` nas Tasks 4; `implementador-integracao` nas Tasks 1, 2, 3, 5, 6, 7, 8 e 9; a Task 10 é da sessão (navegador e conversa com o João); `revisor-task` em toda task, `re-revisor` nas rodadas de correção, `corretor-tardio` nas rodadas 4–5, `revisor-branch` ao fim.

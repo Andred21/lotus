@@ -24,7 +24,7 @@ Critério de aceite: itens **3, 5 e 6** da §7 da spec do 64.
 
 ## 2. Conferência do rascunho contra a `main`
 
-O rascunho `blocos/64-…/rascunho-plano-65.md` foi conferido contra `main@7381665f`, que o 64
+O rascunho `blocos/64-…/rascunho-plano-65.md` (movido para `plano.md` deste bloco) foi conferido contra `main@7381665f`, que o 64
 deixou:
 
 - todos os caminhos que ele cita existem;
