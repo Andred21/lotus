@@ -3,6 +3,11 @@ import type { AdminKpisData, DashboardVisibilityData } from '@shared/types/gener
 import type { Kpi } from '../KpiRow'
 import { secoesVisiveis } from './secoes'
 
+/** Severidade só com algo a sinalizar: zero é a boa notícia, não alarme (D-7). */
+function tomDe(valor: number, tom: Kpi['tone']): Kpi['tone'] {
+  return valor === 0 ? 'neutral' : tom
+}
+
 /**
  * O gate fechado NÃO vira card (D6 do B1, D8 do bloco 54). Nada de zero no
  * lugar do que não pode ser lido — essa é a lei do bloco A — e nada de rótulo
@@ -36,17 +41,17 @@ export function kpiCards(k: AdminKpisData, v: DashboardVisibilityData): Kpi[] {
     lista.push({
       key: 'dashboard.kpi.turmasEncerrandoEmBreve',
       value: String(k.turmas_encerrando_em_breve),
-      tone: 'warning',
+      tone: tomDe(k.turmas_encerrando_em_breve, 'warning'),
     })
   }
   if (secoes.turmas && k.turmas_atrasadas !== null) {
-    lista.push({ key: 'dashboard.kpi.turmasAtrasadas', value: String(k.turmas_atrasadas), tone: 'danger' })
+    lista.push({ key: 'dashboard.kpi.turmasAtrasadas', value: String(k.turmas_atrasadas), tone: tomDe(k.turmas_atrasadas, 'danger') })
   }
   if (secoes.turmas && k.conclusoes_por_confirmar !== null) {
     lista.push({
       key: 'dashboard.kpi.conclusoesPorConfirmar',
       value: String(k.conclusoes_por_confirmar),
-      tone: 'warning',
+      tone: tomDe(k.conclusoes_por_confirmar, 'warning'),
     })
   }
   if (secoes.cotacoes && k.cotacoes !== null) {

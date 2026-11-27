@@ -1,11 +1,12 @@
-/** Formata um valor em UF para exibição, SEM passar por float: o backend manda
- * decimal(12,4) como string ("450.0000") e converter para Number reintroduziria
- * o erro de representação que o decimal existe para evitar. Só corta zeros à
- * direita e troca o ponto pela vírgula (es-CL). */
-export function formatUf(value: string): string {
-  const [int, frac = ''] = value.split('.')
-  const trimmed = frac.replace(/0+$/, '')
-  return trimmed ? `${int},${trimmed}` : int
+import i18n from '@shared/config/i18n'
+
+/** Formata um valor em UF para exibição no idioma ativo (es-CL "12.345,67",
+ * en "12,345.67"), SEM passar por float: o backend manda decimal(12,4) como
+ * string ("450.0000") e converter para Number reintroduziria o erro de
+ * representação que o decimal existe para evitar. O Intl lê a string como
+ * decimal exato; zeros à direita somem e o sinal negativo é mantido. */
+export function formatUf(value: string, locale: string = i18n.language): string {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(value as unknown as number)
 }
 
 /** Normaliza o que o usuário digita (ou o que o campo pré-preenche em modo
