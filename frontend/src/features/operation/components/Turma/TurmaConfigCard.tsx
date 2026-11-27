@@ -1,8 +1,9 @@
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppButton, AppDropdown, DiscardChangesDialog, AppInputText, AppDatePicker, FormField, FormErrorSummary, SectionLabel, useFormField } from '@shared/ui'
 import { formatDate, type DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
-import { usePermissions } from '@shared/hooks'
+import { usePermissions, type UnsavedChangesGuard } from '@shared/hooks'
 import { useTurmaConfigForm } from '../../hooks/useTurmaConfigForm'
 import { registroAcademicoBloqueado } from '../../lib/turmaStatus'
 import { dangerText } from '@shared/styles/tokens'
@@ -14,14 +15,22 @@ type Props = {
   onSaved: (turmaId: number) => void
   onEdit?: () => void
   onCancel?: () => void
+  /** Entrega a guarda de rascunho do form a quem precisa perguntar por ele de
+   * fora (a página de detalhe, ao trocar de aba: o `TabView` desmonta este
+   * cartão e o rascunho some). `null` quando o cartão desmonta. */
+  onGuard?: (guard: UnsavedChangesGuard | null) => void
 }
 
 const MAPPED = ['modalidade', 'local_aplicacao', 'start_date', 'end_date']
 
-export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel }: Props) {
+export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel, onGuard }: Props) {
   const { t } = useTranslation()
   const f = useTurmaConfigForm({ mode, turma, quoteId, onSaved })
   const campo = useFormField(f)
+  useEffect(() => {
+    onGuard?.(f.guard)
+    return () => onGuard?.(null)
+  }, [onGuard, f.guard])
   const { can } = usePermissions()
   // Derivado AQUI, não no call-site: quem monta este cartão não precisa saber
   // da RN-15 para nascer correto. Em `create` ainda não há turma — nada a

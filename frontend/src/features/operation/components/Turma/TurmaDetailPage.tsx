@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AppTabView,
@@ -16,12 +16,27 @@ import { RedatorDesignation } from "./RedatorDesignation";
 import { EnrollmentSection } from "../Enrollment/EnrollmentSection";
 import { TurmaDocuments } from "../Document/TurmaDocuments";
 import { ConcludePanel } from "../Document/ConcludePanel";
+import type { UnsavedChangesGuard } from "@shared/hooks";
 import { loadErrorHint, screenDetail } from '@shared/lib'
 
 export function TurmaDetailPage() {
   const { t } = useTranslation();
   const d = useTurmaDetail();
   const [editingConfig, setEditingConfig] = useState(false);
+  // A guarda do rascunho mora no form do cartão de configuração, que o TabView
+  // desmonta ao trocar de aba; o cartão a entrega aqui para a troca perguntar.
+  const configGuard = useRef<UnsavedChangesGuard | null>(null);
+  const registerGuard = useCallback((g: UnsavedChangesGuard | null) => {
+    configGuard.current = g;
+  }, []);
+  const changeTab = (index: number) => {
+    const go = () => {
+      setEditingConfig(false);
+      d.setTab(index);
+    };
+    if (configGuard.current) configGuard.current.confirmDiscard(go);
+    else d.setTab(index);
+  };
 
   // Erro e notFound mantêm o `back`: sem ele um GET que falha e continua falhando
   // prende o usuário na rota — Reintentar recarrega, não sai.
@@ -96,7 +111,7 @@ export function TurmaDetailPage() {
           * medida em 390x844, onde três das cinco abas nasciam invisíveis
           * (UI-06). As outras quatro telas de aba do sistema não foram medidas
           * e por isso não pedem (Q-3 do mesmo review). */}
-        <AppTabView scrollable activeIndex={d.tab} onTabChange={(e) => d.setTab(e.index)}>
+        <AppTabView scrollable activeIndex={d.tab} onTabChange={(e) => changeTab(e.index)}>
           <AppTabPanel header={t("operation.detail.tabs.config")}>
             <TurmaConfigCard
               mode={editingConfig ? "edit" : "view"}
@@ -104,6 +119,7 @@ export function TurmaDetailPage() {
               onEdit={() => setEditingConfig(true)}
               onCancel={() => setEditingConfig(false)}
               onSaved={() => setEditingConfig(false)}
+              onGuard={registerGuard}
             />
           </AppTabPanel>
           <AppTabPanel header={t("operation.detail.tabs.students")}>
