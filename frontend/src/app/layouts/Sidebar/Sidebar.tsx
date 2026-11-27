@@ -29,7 +29,7 @@ export function Sidebar() {
   // seria foco invisível. Aqui vale celeste, que mede 5,29:1 sobre ela.
   return (
     <AppSidebar
-      className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-(--brand-navy) [--focus-stroke:var(--brand)] transition-all`}
+      className={`${collapsed ? 'w-20' : 'w-64'} border-white/10 bg-(--brand-navy) [--focus-stroke:var(--brand)] transition-[width] motion-reduce:transition-none`}
     >
       {/* Colapsada, a coluna empilha marca e toggle: lado a lado eles não cabem
         * nos 80px do rail. Expandida, o toggle fica na ponta oposta ao logo. */}

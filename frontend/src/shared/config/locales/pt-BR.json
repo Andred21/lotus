@@ -159,7 +159,16 @@
     "cursos": "Cursos",
     "certificados": "Certificados",
     "personas": "Pessoas",
-    "administracion": "Administração"
+    "administracion": "Administração",
+    "short": {
+      "dashboard": "Painel",
+      "comercial": "Comercial",
+      "operacion": "Operação",
+      "cursos": "Cursos",
+      "certificados": "Certific.",
+      "personas": "Pessoas",
+      "administracion": "Admin"
+    }
   },
   "errors": {
     "notFoundTitle": "Página não encontrada",

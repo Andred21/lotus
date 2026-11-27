@@ -40,6 +40,7 @@ function guarded(key: string, children: RouteObject[]): RouteObject {
         <Outlet />
       </ModuleGuard>
     ),
+    errorElement: <RouteError />,
     handle,
     children,
   }
@@ -71,6 +72,7 @@ export const routes: RouteObject[] = [
         <LoginRoute />
       </SessionBootstrap>
     ),
+    errorElement: <RouteError />,
     children: [page('/login', loadLogin), page('/recuperar-clave', loadLogin)],
   },
 
@@ -86,6 +88,7 @@ export const routes: RouteObject[] = [
         </ProtectedRoute>
       </SessionBootstrap>
     ),
+    errorElement: <RouteError />,
     children: [
       guarded('dashboard', [page('/', () => import('@app/pages/Dashboard').then((m) => m.DashboardPage))]),
       guarded('comercial', [

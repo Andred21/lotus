@@ -335,8 +335,9 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
 - **Sidebar:** azul-poste fixo, borda direita branca a 10%, wordmark claro (glifo no rail), rótulo
   do papel em caixa alta apagada, versão em mono no rodapé. Item: ícone Phosphor, `regular`; ativo `fill` + rótulo 500,
   `10px × 12px`, 4px, borda esquerda 2px; repouso em `tinta-painel`, hover branco a 10%, ativo
-  celeste sobre branco a 5% com a borda acesa. Colapsado, o item EMPILHA ícone e rótulo de 10px —
-  o rail é o único menu do celular.
+  celeste sobre branco a 5% com a borda acesa. Colapsado, o item EMPILHA ícone e rótulo CURTO de
+  12px (`nav.short.*`, até 9 caracteres, sem `truncate`; o nome integral fica no `title`) — o rail
+  é o único menu do celular.
 - **Header:** barra utilitária sem título — controles de idioma e tema (variante `shell`), divisor
   branco a 20%, relógio mono, avatar + nome (branco, 14px/600) + papel (branco a 75%) num gatilho só.
 

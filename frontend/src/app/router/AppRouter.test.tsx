@@ -56,6 +56,29 @@ function comChunkQuebrado(path: string, mensagem: string): RouteObject[] {
   return trocar(routes)
 }
 
+/** A mesma árvore de produção, com o elemento de UMA rota-layout trocado por um que
+ * lança no render. `profundidade` escolhe qual das rotas sem `path` que levam a `alvo`:
+ * 0 é a mais externa (bootstrap), a última é o guard por módulo. */
+function comLayoutQuebrado(alvo: string, profundidade: number, mensagem: string): RouteObject[] {
+  const Quebrado = () => {
+    throw new Error(mensagem)
+  }
+  const contem = (r: RouteObject): boolean =>
+    r.path === alvo || (r.children ?? []).some(contem)
+  const cadeia = (rs: RouteObject[]): RouteObject[] => {
+    const r = rs.find(contem)
+    return !r ? [] : [...(r.path === undefined ? [r] : []), ...cadeia(r.children ?? [])]
+  }
+  const escolhida = cadeia(routes)[profundidade]
+  const trocar = (rs: RouteObject[]): RouteObject[] =>
+    rs.map((r) => ({
+      ...r,
+      ...(r === escolhida ? { element: <Quebrado /> } : {}),
+      ...(r.children ? { children: trocar(r.children) } : {}),
+    }) as RouteObject)
+  return trocar(routes)
+}
+
 describe('routes', () => {
   it('rota /operacion carrega a página lazy', async () => {
     logado()
@@ -165,5 +188,26 @@ describe('routes', () => {
     // A limpeza do cache no login não deixa o bootstrap derrubar a sessão nova.
     expect(await screen.findByRole('heading', { name: 'module.operacion.title' })).toBeTruthy()
     expect(useSessionStore.getState().status).toBe('authenticated')
+  })
+
+  /** D16. `errorElement` só existia nas rotas de página: um render que lança no
+   * guard, no grupo de login ou no grupo protegido caía na tela default do React
+   * Router, com a stack à mostra. */
+  it.each([
+    ['grupo de login', '/login', 0],
+    ['grupo protegido', '/operacion', 0],
+    ['guard por módulo', '/operacion', 1],
+  ] as const)('erro de render na rota-layout cai no RouteError, sem stack (%s)', async (_nome, caminho, profundidade) => {
+    logado()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const tree = comLayoutQuebrado(caminho, profundidade, 'segredo-da-stack-xyz')
+
+    montar(tree, caminho)
+
+    expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toBeTruthy()
+    expect(screen.getByText('common.loadError')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'common.retry' })).toBeTruthy()
+    expect(screen.queryByText(/segredo-da-stack-xyz/)).toBeNull()
+    expect(screen.queryByText(/Unexpected Application Error/i)).toBeNull()
   })
 })

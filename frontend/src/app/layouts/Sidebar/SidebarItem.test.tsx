@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import type { NavModule } from '@shared/config/navigation'
+import { NAV_MODULES, type NavModule } from '@shared/config/navigation'
+import en from '@shared/config/locales/en.json'
+import esCL from '@shared/config/locales/es-CL.json'
+import ptBR from '@shared/config/locales/pt-BR.json'
 
 // Mesmo idiom do `PendenciasList.test.tsx`: `importOriginal` preserva o resto
 // do módulo, e o `t` devolve a chave — o que se prova aqui é QUAL texto a tela
@@ -20,6 +23,7 @@ import { SidebarItem } from './SidebarItem'
 const modulo: NavModule = {
   key: 'comercial',
   labelKey: 'nav.comercial',
+  shortLabelKey: 'nav.short.comercial',
   icon: 'file',
   path: '/comercial',
 }
@@ -50,7 +54,7 @@ describe('SidebarItem', () => {
   it('colapsado, mantém o rótulo no DOM', () => {
     montar(true)
 
-    expect(screen.getByText('nav.comercial')).toBeTruthy()
+    expect(screen.getByText('nav.short.comercial')).toBeTruthy()
   })
 
   /** Rótulo escondido de leitor de tela seria o mesmo defeito com outra roupa:
@@ -104,5 +108,41 @@ describe('SidebarItem', () => {
 
     expect(container.querySelector('a')?.getAttribute('aria-current')).toBeNull()
     expect(container.querySelector('a svg')?.innerHTML).toBe(desenho('regular'))
+  })
+
+  /** B-4. O rail cresceu de 10px para 12px: o rótulo integral não cabe nos 80px,
+   * então colapsado o texto visível é o curto e o integral fica no `title`. Sem
+   * `truncate`: um nome cortado em reticências deixa de ser lido. */
+  it('colapsado usa rótulo curto a 12px sem truncate', () => {
+    const { container } = montar(true)
+    const rotulo = screen.getByText('nav.short.comercial')
+
+    expect(rotulo.className).toContain('text-xs')
+    expect(rotulo.className).not.toContain('text-[10px]')
+    expect(rotulo.className).not.toContain('truncate')
+    expect(screen.queryByText('nav.comercial')).toBeNull()
+    expect(container.querySelector('a')?.getAttribute('title')).toBe('nav.comercial')
+  })
+
+  it('expandido mostra o rótulo integral, não o curto', () => {
+    montar(false)
+
+    expect(screen.getByText('nav.comercial')).toBeTruthy()
+    expect(screen.queryByText('nav.short.comercial')).toBeNull()
+  })
+})
+
+describe('rótulos curtos do rail', () => {
+  const locales = { 'es-CL': esCL, 'pt-BR': ptBR, en } as const
+  const MAX = 9
+
+  it.each(Object.entries(locales))('rótulos curtos cabem (%s)', (_nome, locale) => {
+    const curtos = (locale as { nav: { short: Record<string, string> } }).nav.short
+    for (const m of NAV_MODULES) {
+      expect(m.shortLabelKey).toBe(`nav.short.${m.key}`)
+      const texto = curtos[m.key]
+      expect(texto, `nav.short.${m.key}`).toBeTruthy()
+      expect(texto.length, `${m.key}: "${texto}"`).toBeLessThanOrEqual(MAX)
+    }
   })
 })

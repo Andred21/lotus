@@ -12,13 +12,14 @@ interface Props {
 export function SidebarItem({ module, collapsed }: Props) {
   const { t } = useTranslation()
   const label = t(module.labelKey)
+  const shortLabel = t(module.shortLabelKey)
   return (
     <NavLink
       to={module.path}
       end={module.path === '/'}
-      /* Só COLAPSADO. Ali o rótulo trunca dentro dos 80px do rail, e o `title`
-       * é onde o valor integral fica recuperável — deixou de ser o único
-       * portador do nome, não deixou de existir.
+      /* Só COLAPSADO. Ali o texto visível é o rótulo CURTO (cabe a 12px nos
+       * 80px do rail), e o `title` é onde o nome integral fica recuperável —
+       * deixou de ser o único portador do nome, não deixou de existir.
        *
        * Expandido ele fica FORA: o texto visível já é o rótulo, e `title` sobre
        * texto idêntico vira *accessible description*, fazendo o leitor de tela
@@ -52,9 +53,10 @@ export function SidebarItem({ module, collapsed }: Props) {
       {({ isActive }) => (
         <>
           <AppIcon name={module.icon} weight={isActive ? 'fill' : 'regular'} />
-          {/* Sempre no DOM. Colapsado ele encolhe e trunca dentro dos 80px do rail;
-            * expandido é o rótulo de sempre, sem classe extra. */}
-          <span className={collapsed ? 'w-full truncate text-[10px] leading-tight' : ''}>{label}</span>
+          {/* Sempre no DOM. Colapsado é o rótulo curto a 12px (`text-xs`), sem
+            * `truncate`: o texto cabe por construção (<= 9 caracteres) e um nome
+            * cortado em reticências deixa de ser lido. Expandido é o integral. */}
+          <span className={collapsed ? 'w-full text-xs leading-tight' : ''}>{collapsed ? shortLabel : label}</span>
         </>
       )}
     </NavLink>
