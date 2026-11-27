@@ -52,7 +52,6 @@ export function ContactCard({
               <AppButton
                 icon="delete"
                 text
-                rounded
                 severity="danger"
                 disabled={isLast}
                 aria-label={t('client.removeContact')}

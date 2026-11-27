@@ -4,8 +4,10 @@ import { AppLogo } from './AppLogo'
 
 /**
  * D-10 do audit de 2026-11-26: o `<img>` sem `width`/`height` não reserva
- * caixa antes do PNG chegar, e o login e a sidebar saltavam. Com o `h-auto` do
- * preflight, o atributo vira só a razão de aspecto. Que os números batam com o
+ * caixa antes do PNG chegar, e o login e a sidebar saltavam. Sem Preflight, o
+ * `height` do atributo vale: cada call site fixa a altura (`h-*`), e quem só
+ * manda a largura usa `h-auto`, que deixa o atributo virar razão de aspecto
+ * (`tests/jsx-ratchets.test.ts` cobra isso). Que os números batam com o
  * arquivo é de `tests/logo-dimensoes.test.ts`, que lê o cabeçalho do PNG (aqui,
  * em `src`, o tsconfig não tem os tipos do Node).
  */

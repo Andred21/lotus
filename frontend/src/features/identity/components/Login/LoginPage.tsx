@@ -27,7 +27,7 @@ export function LoginPage() {
         className="relative flex min-h-67.5 flex-col items-center justify-center gap-1 p-6 md:h-auto md:w-1/2 md:gap-4 md:p-10"
         style={{ background: 'var(--brand-gradient)' }}
       >
-        <AppLogo variant="on-dark" className="w-37.5 md:w-52" />
+        <AppLogo variant="on-dark" className="h-auto w-37.5 md:w-52" />
 
         <p className="my-0 text-center text-xl" style={{ color: 'var(--shell-ink)' }}>
           {t("brand.tagline")}
