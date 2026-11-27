@@ -56,6 +56,8 @@ class AnalyticsQuery
                         ->get(['start_date']),
                     'start_date',
                     instant: false,
+                    start: $start,
+                    end: $end,
                 )
                 : null,
             turmas_concluidas: $includeOperation
@@ -63,6 +65,8 @@ class AnalyticsQuery
                     Turma::query()->whereBetween('concluded_at', [$startInstant, $endInstant])->get(['concluded_at']),
                     'concluded_at',
                     instant: true,
+                    start: $start,
+                    end: $end,
                 )
                 : null,
             certificados_emitidos: $includeCertification
@@ -70,6 +74,8 @@ class AnalyticsQuery
                     Certificate::query()->emitidos()->whereBetween('created_at', [$startInstant, $endInstant])->get(['created_at']),
                     'created_at',
                     instant: true,
+                    start: $start,
+                    end: $end,
                 )
                 : null,
             matriculas: $includeOperation
@@ -77,6 +83,8 @@ class AnalyticsQuery
                     Enrollment::query()->whereBetween('created_at', [$startInstant, $endInstant])->get(['created_at']),
                     'created_at',
                     instant: true,
+                    start: $start,
+                    end: $end,
                 )
                 : null,
             uf_aprovada: $includeUf
@@ -87,6 +95,8 @@ class AnalyticsQuery
                         ->get(['approved_at', 'value_uf']),
                     'approved_at',
                     instant: true,
+                    start: $start,
+                    end: $end,
                 )
                 : null,
         );
@@ -244,12 +254,46 @@ class AnalyticsQuery
     }
 
     /**
+     * Todo mês `Y-m` da janela, do mês de `$start` ao de `$end`, em ordem. O mês
+     * vem do DIA do cliente — `$start` e `$end` já são dias de Santiago — e
+     * avança de 1º dia em 1º dia: `startOfMonth()` antes do `addMonthNoOverflow()`
+     * é o que impede uma janela iniciada no dia 31 de pular fevereiro, e o
+     * `format('Y-m')` carrega a virada do ano sem conta de calendário à mão.
+     * O balde de cada linha usa a mesma projeção (`month()`), então limite,
+     * balde e janela mudam juntos (D-2 do bloco 66).
+     *
+     * @return string[]
+     */
+    private function windowMonths(CarbonImmutable $start, CarbonImmutable $end): array
+    {
+        $months = [];
+        $cursor = $start->startOfMonth();
+        $last = $end->format('Y-m');
+
+        while ($cursor->format('Y-m') <= $last) {
+            $months[] = $cursor->format('Y-m');
+            $cursor = $cursor->addMonthNoOverflow();
+        }
+
+        return $months;
+    }
+
+    /**
+     * Mês sem registro sai com `0`, não ausente: o gráfico não liga Jan a Mar
+     * por cima de um fevereiro que existiu e foi vazio. Série que o chamador
+     * não pode ver nem chega aqui (`null`, D7).
+     *
      * @param  iterable<int, object>  $rows
      * @return MonthlyCountData[]
      */
-    private function monthlyCounts(iterable $rows, string $dateAttribute, bool $instant): array
-    {
-        $counts = [];
+    private function monthlyCounts(
+        iterable $rows,
+        string $dateAttribute,
+        bool $instant,
+        CarbonImmutable $start,
+        CarbonImmutable $end,
+    ): array {
+        $counts = array_fill_keys($this->windowMonths($start, $end), 0);
 
         foreach ($rows as $row) {
             $month = $this->month($row->{$dateAttribute}, $instant);
@@ -269,9 +313,14 @@ class AnalyticsQuery
      * @param  iterable<int, object>  $rows
      * @return MonthlyAmountData[]
      */
-    private function monthlyAmounts(iterable $rows, string $dateAttribute, bool $instant): array
-    {
-        $totals = [];
+    private function monthlyAmounts(
+        iterable $rows,
+        string $dateAttribute,
+        bool $instant,
+        CarbonImmutable $start,
+        CarbonImmutable $end,
+    ): array {
+        $totals = array_fill_keys($this->windowMonths($start, $end), '0.0000');
 
         foreach ($rows as $row) {
             $month = $this->month($row->{$dateAttribute}, $instant);

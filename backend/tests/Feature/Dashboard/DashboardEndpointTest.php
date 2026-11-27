@@ -144,18 +144,20 @@ class DashboardEndpointTest extends TestCase
             array_column($response->json('compliance_turmas'), 'turma_id'),
         );
 
-        $this->assertSame([
-            ['month' => '2026-07', 'count' => 2],
-            ['month' => '2026-08', 'count' => 1],
-        ], $response->json('series.turmas_iniciadas'));
-        $this->assertSame([['month' => '2026-07', 'count' => 1]], $response->json('series.turmas_concluidas'));
-        $this->assertSame([['month' => '2026-08', 'count' => 1]], $response->json('series.certificados_emitidos'));
-        $this->assertSame([['month' => '2026-08', 'count' => 2]], $response->json('series.matriculas'));
-        $this->assertSame([
-            ['month' => '2026-06', 'total_uf' => '500.0000'],
-            ['month' => '2026-07', 'total_uf' => '400.0000'],
-            ['month' => '2026-08', 'total_uf' => '500.0000'],
-        ], $response->json('series.uf_aprovada'));
+        // A janela default são 13 meses (2025-08 a 2026-08) e todo mês sem
+        // registro vem zero, não ausente (D-2 do bloco 66).
+        $this->assertSame(
+            $this->contagemPorMes(['2026-07' => 2, '2026-08' => 1]),
+            $response->json('series.turmas_iniciadas'),
+        );
+        $this->assertSame($this->contagemPorMes(['2026-07' => 1]), $response->json('series.turmas_concluidas'));
+        $this->assertSame($this->contagemPorMes(['2026-08' => 1]), $response->json('series.certificados_emitidos'));
+        $this->assertSame($this->contagemPorMes(['2026-08' => 2]), $response->json('series.matriculas'));
+        $this->assertSame($this->ufPorMes([
+            '2026-06' => '500.0000',
+            '2026-07' => '400.0000',
+            '2026-08' => '500.0000',
+        ]), $response->json('series.uf_aprovada'));
 
         $this->assertSame([
             ['id' => $cenario['alpha'], 'name' => 'Alpha', 'turmas' => 2, 'matriculas' => 0, 'certificados' => 0, 'uf_aprovada' => '800.0000'],
@@ -434,7 +436,13 @@ class DashboardEndpointTest extends TestCase
             $this->assertSame([], $response->json("agenda.{$janela}"));
         }
         foreach (['turmas_iniciadas', 'turmas_concluidas', 'certificados_emitidos', 'matriculas', 'uf_aprovada'] as $serie) {
-            $this->assertSame([], $response->json("series.{$serie}"), "Série {$serie} autorizada e vazia é `[]`, não `null`.");
+            $meses = $response->json("series.{$serie}");
+            $this->assertCount(13, $meses, "Série {$serie} autorizada e vazia traz a janela inteira, não `null`.");
+            $this->assertSame(
+                [$serie === 'uf_aprovada' ? '0.0000' : 0],
+                array_values(array_unique(array_column($meses, $serie === 'uf_aprovada' ? 'total_uf' : 'count'))),
+                "Série {$serie} vazia é toda zero.",
+            );
         }
     }
 
@@ -453,7 +461,7 @@ class DashboardEndpointTest extends TestCase
 
         // Julho e junho saem das séries...
         $this->assertSame([['month' => '2026-08', 'count' => 1]], $recorte->json('series.turmas_iniciadas'));
-        $this->assertSame([], $recorte->json('series.turmas_concluidas'));
+        $this->assertSame([['month' => '2026-08', 'count' => 0]], $recorte->json('series.turmas_concluidas'));
         $this->assertSame([['month' => '2026-08', 'total_uf' => '500.0000']], $recorte->json('series.uf_aprovada'));
 
         // ...e dos rankings, que também são do período: só T1 começou em
@@ -986,5 +994,43 @@ class DashboardEndpointTest extends TestCase
         sort($chaves);
 
         return $chaves;
+    }
+
+    /**
+     * A janela default termina em 2026-08 e começa 12 meses antes. Os meses que
+     * não vêm em `$porMes` são zero.
+     *
+     * @param  array<string, int>  $porMes
+     * @return array<int, array{month: string, count: int}>
+     */
+    private function contagemPorMes(array $porMes): array
+    {
+        return array_map(
+            fn (string $mes): array => ['month' => $mes, 'count' => $porMes[$mes] ?? 0],
+            $this->mesesDaJanelaDefault(),
+        );
+    }
+
+    /**
+     * @param  array<string, string>  $porMes
+     * @return array<int, array{month: string, total_uf: string}>
+     */
+    private function ufPorMes(array $porMes): array
+    {
+        return array_map(
+            fn (string $mes): array => ['month' => $mes, 'total_uf' => $porMes[$mes] ?? '0.0000'],
+            $this->mesesDaJanelaDefault(),
+        );
+    }
+
+    /** @return string[] */
+    private function mesesDaJanelaDefault(): array
+    {
+        $meses = [];
+        for ($mes = CarbonImmutable::parse('2025-08-01'); $mes->format('Y-m') <= '2026-08'; $mes = $mes->addMonthNoOverflow()) {
+            $meses[] = $mes->format('Y-m');
+        }
+
+        return $meses;
     }
 }
