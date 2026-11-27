@@ -157,29 +157,29 @@ export function FormErrorSummary({ errors, mapped, excludePrefixes = [] }: FormE
   )
   if (leftover.length === 0) return null
   return (
-    <ul
-      /* `role="alert"` e `tabIndex={-1}`: o resumo é a única indicação de um 422
-       * cujo campo não tem input — sem anúncio ele passa calado ao leitor de
-       * tela, e sem `tabIndex` o `CrudDialog` não tem como levar o foco até ele
-       * quando não há campo inválido. O `alert` troca o papel `list`: a leitura
-       * do conjunto como alerta é a que importa aqui.
-       * `list-disc` explícito: o mini-reset da P-46 zera o marcador de todo
-       * `ul`, e aqui os itens são FRASE — cada linha é uma mensagem de erro
-       * independente, e sem marcador três erros leem como um parágrafo
-       * quebrado. `list-inside` põe o glifo dentro da caixa, para não brigar
-       * com o `px-3` da faixa (Q-7 do review de 2026-08-27). */
-      role="alert"
-      tabIndex={-1}
-      className="mb-4 list-inside list-disc rounded-control px-3 py-2 text-sm"
-      style={{
-        background: dangerSurface,
-        color: dangerText,
-      }}
-    >
-      {leftover.map(([key, msgs]) => (
-        <li key={key}>{msgs[0]}</li>
-      ))}
-    </ul>
+    // `role="alert"` e `tabIndex={-1}` no INVÓLUCRO, e a lista segue lista: o
+    // resumo é a única indicação de um 422 cujo campo não tem input — sem anúncio
+    // ele passa calado ao leitor de tela, e sem `tabIndex` o `CrudDialog` não tem
+    // como levar o foco até ele quando não há campo inválido.
+    <div role="alert" tabIndex={-1} className="mb-4">
+      <ul
+        role="list"
+        /* `list-disc` explícito: o mini-reset da P-46 zera o marcador de todo
+         * `ul`, e aqui os itens são FRASE — cada linha é uma mensagem de erro
+         * independente, e sem marcador três erros leem como um parágrafo
+         * quebrado. `list-inside` põe o glifo dentro da caixa, para não brigar
+         * com o `px-3` da faixa (Q-7 do review de 2026-08-27). */
+        className="list-inside list-disc rounded-control px-3 py-2 text-sm"
+        style={{
+          background: dangerSurface,
+          color: dangerText,
+        }}
+      >
+        {leftover.map(([key, msgs]) => (
+          <li key={key}>{msgs[0]}</li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

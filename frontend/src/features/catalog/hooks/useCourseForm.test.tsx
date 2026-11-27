@@ -7,11 +7,12 @@ import { useCourseForm } from './useCourseForm'
 const create = vi.fn()
 const update = vi.fn()
 const sync = vi.fn()
+const falha = vi.hoisted(() => ({ erro: null as unknown }))
 
 vi.mock('@shared/api/coursesApi', () => ({
   coursesApi: {
     keys: { all: ['courses'] },
-    useCreate: () => ({ mutate: create, isPending: false, error: null }),
+    useCreate: () => ({ mutate: create, isPending: false, error: falha.erro }),
     useUpdate: () => ({ mutate: update, isPending: false, error: null }),
   },
 }))
@@ -94,5 +95,24 @@ describe('useCourseForm — código SENCE', () => {
     const payload = update.mock.calls[0][0].payload
     expect(payload.sence_code).toBe('99')
     expect(payload).not.toHaveProperty('code')
+  })
+})
+
+describe('useCourseForm — erro 422 do módulo some ao corrigir', () => {
+  it('editar um campo do módulo limpa o erro dele, e só dele', () => {
+    falha.erro = {
+      type: 'x', title: 'x', status: 422, detail: '', instance: '/x',
+      errors: { 'modules.0.name': ['obrigatório'], 'modules.0.theory_hours': ['inválido'], 'modules.1.name': ['obrigatório'] },
+    }
+    const { result } = renderHook(() => useCourseForm(null, 'create', vi.fn()), { wrapper })
+    act(() => result.current.addModule())
+    act(() => result.current.addModule())
+
+    act(() => result.current.patchModule(0, { name: 'Introdução' }))
+
+    expect(result.current.fieldErrors?.['modules.0.name']).toBeUndefined()
+    expect(result.current.fieldErrors?.['modules.0.theory_hours']).toEqual(['inválido'])
+    expect(result.current.fieldErrors?.['modules.1.name']).toEqual(['obrigatório'])
+    falha.erro = null
   })
 })

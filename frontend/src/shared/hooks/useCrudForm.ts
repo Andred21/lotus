@@ -1,5 +1,5 @@
 import { useRef, type Dispatch, type SetStateAction } from 'react'
-import { useEntityForm, useMutationErrors } from './useEntityForm'
+import { useEntityForm, useFormMutationErrors } from './useEntityForm'
 import { useUnsavedChangesGuard } from './useUnsavedChangesGuard'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
@@ -202,18 +202,11 @@ export function useCrudForm<F extends { id?: number }, T>(
     update.mutate({ id: entity.id, payload: toPayload(form, 'edit') }, { onSuccess: onDone })
   }
 
-  const { fieldErrors, generalError, clearField } = useMutationErrors([
+  const { fieldErrors, generalError, clearField, set } = useFormMutationErrors(setField, [
     create.error,
     update.error,
     ...extraMutations.map((m) => m.error),
   ])
-
-  // Editar o campo tira o 422 dele da tela (e só o dele): o erro apontava o
-  // valor antigo, e deixá-lo ali depois da correção diz que o conserto não pegou.
-  const set: typeof setField = (k, v) => {
-    setField(k, v)
-    clearField(String(k))
-  }
 
   return {
     // Tudo que o diálogo pode consumir vive AQUI dentro, porque os hooks de
@@ -221,6 +214,9 @@ export function useCrudForm<F extends { id?: number }, T>(
     crud: {
       form,
       set,
+      /** Limpa o 422 de uma chave exata — a edição aninhada (`setForm`) não
+       * passa pelo `set`, então o hook de feature a chama no patch. */
+      clearField,
       readOnly,
       didReset,
       dirty,

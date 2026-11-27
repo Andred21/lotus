@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useEntityForm, useMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
+import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
 import type { RedatorData } from '@shared/types/generated'
 import type { DialogMode, DocType } from '@shared/lib'
 import { redatoresApi } from '@shared/api/redatoresApi'
@@ -34,7 +34,7 @@ export function useRedatorForm(
   onDone: () => void,
   afterCreate?: (created: RedatorData) => Promise<void>,
 ) {
-  const { form, set, setForm, readOnly, didReset, dirty: formDirty } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
+  const { form, set: setField, setForm, readOnly, didReset, dirty: formDirty } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
 
   // Documentos escolhidos no `create`: ficam no estado local até o submit (não
   // há `redator.id` ainda para subir pelo endpoint aninhado). Limpo junto com
@@ -97,7 +97,7 @@ export function useRedatorForm(
     update.mutate({ id: redator!.id!, payload }, { onSuccess: onDone })
   }
 
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
+  const { fieldErrors, generalError, set } = useFormMutationErrors<RedatorFormFields>(setField, [create.error, update.error])
 
   return {
     form, set, toggleCourse, readOnly, submit, dirty, guard,

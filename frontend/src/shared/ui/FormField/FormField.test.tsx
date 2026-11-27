@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { FormField, FormErrorSummary, NestedField } from './FormField'
 import { useFieldProps } from './fieldContext'
 
@@ -136,6 +136,13 @@ describe('FormErrorSummary', () => {
     const resumo = screen.getByRole('alert')
     expect(resumo.getAttribute('tabindex')).toBe('-1')
     expect(resumo.textContent).toContain('Teléfono inválido')
+  })
+
+  it('o alert envolve a lista: a semântica de lista fica', () => {
+    render(<FormErrorSummary errors={{ phone: ['A'], city: ['B'] }} mapped={[]} />)
+
+    const lista = within(screen.getByRole('alert')).getByRole('list')
+    expect(within(lista).getAllByRole('listitem').map((i) => i.textContent)).toEqual(['A', 'B'])
   })
 
   it('mostra a chave que NAO esta em mapped', () => {

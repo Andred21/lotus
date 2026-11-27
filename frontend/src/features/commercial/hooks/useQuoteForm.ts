@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useEntityForm, useMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
+import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useCreateQuote, useUpdateQuote, type QuotePayload } from '../api/useQuotes'
 import { formatUf, parseUfInput } from '@shared/lib'
@@ -42,7 +42,7 @@ const toFields = (q: QuoteFormFields): QuoteFormFields =>
 
 export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: () => void) {
   const mode = quote ? 'edit' : 'create'
-  const { form, set, didReset, dirty } = useEntityForm<QuoteFormFields>(quote, mode, EMPTY, toFields)
+  const { form, set: setField, didReset, dirty } = useEntityForm<QuoteFormFields>(quote, mode, EMPTY, toFields)
   const guard = useUnsavedChangesGuard(dirty)
   const create = useCreateQuote()
   const update = useUpdateQuote()
@@ -73,7 +73,7 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
     create.mutate({ budgetId, payload: payload() }, { onSuccess: onDone })
   }
 
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
+  const { fieldErrors, generalError, set } = useFormMutationErrors<QuoteFormFields>(setField, [create.error, update.error])
 
   return {
     form,

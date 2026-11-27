@@ -431,3 +431,24 @@ describe('useCrudForm — erro some ao corrigir', () => {
     expect(result.current.crud.generalError).toBe('Falha')
   })
 })
+
+describe('useCrudForm — clearField exposto', () => {
+  it('crud.clearField limpa a chave exata (edição aninhada, que não passa pelo `set`)', () => {
+    const erro = {
+      type: 'about:blank', title: 'x', status: 422, detail: '', instance: '/api/x',
+      errors: { 'modules.0.name': ['obrigatório'], 'modules.1.name': ['obrigatório'] },
+    }
+    const recurso: MutableResource<{ id?: number }> = {
+      useCreate: () => ({ mutate: () => undefined, isPending: false, error: erro }),
+      useUpdate: () => ({ mutate: () => undefined, isPending: false, error: null }),
+    }
+    const { result } = renderHook(() =>
+      useCrudForm(recurso, { ...base, entity: null, mode: 'create' as const, excludePrefixes: ['modules.'] }),
+    )
+
+    act(() => result.current.crud.clearField('modules.0.name'))
+
+    expect(result.current.crud.fieldErrors?.['modules.0.name']).toBeUndefined()
+    expect(result.current.crud.fieldErrors?.['modules.1.name']).toEqual(['obrigatório'])
+  })
+})

@@ -104,8 +104,12 @@ export function useCourseForm(course: CourseData | null, mode: CourseDialogMode,
   const removeModule = (i: number) =>
     setForm((f) => ({ ...f, modules: f.modules.filter((_, idx) => idx !== i) }))
 
-  const patchModule = (i: number, patch: Partial<CourseModuleData>) =>
+  // Edição aninhada não passa pelo `set` do form: limpa à mão o 422 posicional
+  // de cada campo tocado (`modules.<i>.<campo>`), e só o dele.
+  const patchModule = (i: number, patch: Partial<CourseModuleData>) => {
+    Object.keys(patch).forEach((k) => crud.clearField(`modules.${i}.${k}`))
     setForm((f) => ({ ...f, modules: f.modules.map((m, idx) => (idx === i ? { ...m, ...patch } : m)) }))
+  }
 
   // A ordem do array É o sort_order (o backend o deriva do índice). Mover = trocar
   // com o vizinho. No-op nas pontas: os botões já vêm desabilitados lá, então um

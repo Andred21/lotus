@@ -1,4 +1,4 @@
-import { useEntityForm, useMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
+import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard } from '@shared/hooks'
 import type { DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
 import { coursesApi } from '@shared/api/coursesApi'
@@ -31,7 +31,7 @@ export function useTurmaConfigForm(params: {
 }) {
   const { mode, turma, quoteId, onSaved } = params
   const entity = turma ? ({ id: turma.id, ...toFields(turma) } as TurmaConfigPayload & { id?: number }) : null
-  const { form, set, readOnly, dirty } = useEntityForm<TurmaConfigPayload & { id?: number }>(
+  const { form, set: setField, readOnly, dirty } = useEntityForm<TurmaConfigPayload & { id?: number }>(
     entity,
     mode,
     { ...EMPTY },
@@ -42,7 +42,7 @@ export function useTurmaConfigForm(params: {
 
   const create = useCreateTurma()
   const update = useUpdateTurma()
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
+  const { fieldErrors, generalError, set } = useFormMutationErrors<TurmaConfigPayload & { id?: number }>(setField, [create.error, update.error])
 
   // Carga horária contratada é leitura de apoio do form (o campo é `disabled`),
   // não entra no payload. A query dispara nos 3 modos, como sempre disparou.

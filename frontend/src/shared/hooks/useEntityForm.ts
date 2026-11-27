@@ -111,3 +111,28 @@ export function useMutationErrors(errors: Array<ProblemDetails | null | undefine
     clearField,
   }
 }
+
+/**
+ * `useMutationErrors` mais o `set` do form, para o hook que tem um `useEntityForm`
+ * e mutações de escrita: editar um campo tira o 422 dele da tela (e só o dele).
+ * O erro apontava o valor antigo, e deixá-lo depois da correção diz que o conserto
+ * não pegou. Mora aqui, e não no `useEntityForm`, porque o erro nasce na mutação
+ * — que o `useEntityForm` não conhece e que só existe depois dele no hook.
+ *
+ * Devolve o `set` que limpa; `clearField` segue exposto para a edição aninhada,
+ * que passa por `setForm` e limpa a chave posicional (`modules.0.name`) à mão.
+ */
+export function useFormMutationErrors<T>(
+  setField: <K extends keyof T>(k: K, v: T[K]) => void,
+  errors: Array<ProblemDetails | null | undefined>,
+) {
+  const mutationErrors = useMutationErrors(errors)
+  const { clearField } = mutationErrors
+
+  const set = <K extends keyof T>(k: K, v: T[K]) => {
+    setField(k, v)
+    clearField(String(k))
+  }
+
+  return { ...mutationErrors, set }
+}

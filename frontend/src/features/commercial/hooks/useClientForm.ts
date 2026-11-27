@@ -86,8 +86,20 @@ export function useClientForm(
       return { ...f, addresses: [first, ...f.addresses.slice(1)] }
     })
 
-  const patchContact = (i: number, patch: Partial<ClientContactData>) =>
+  // Edição aninhada não passa pelo `set` do form: limpa à mão o 422 posicional
+  // de cada campo tocado (`contacts.<i>.<campo>`), e só o dele.
+  const patchContact = (i: number, patch: Partial<ClientContactData>) => {
+    Object.keys(patch).forEach((k) => crud.clearField(`contacts.${i}.${k}`))
     setForm((f) => ({ ...f, contacts: f.contacts.map((c, idx) => (idx === i ? { ...c, ...patch } : c)) }))
+  }
+
+  // O 422 do derivado volta como `name` e a tela o lê como `legal_name` (abaixo):
+  // editar a razão social tem de limpar as duas chaves, senão o erro renasce pelo
+  // espelho.
+  const set: typeof crud.set = (k, v) => {
+    crud.set(k, v)
+    if (k === 'legal_name') crud.clearField('name')
+  }
 
   const setPrimaryContact = (i: number) =>
     setForm((f) => ({ ...f, contacts: f.contacts.map((c, idx) => ({ ...c, is_primary: idx === i })) }))
@@ -123,6 +135,7 @@ export function useClientForm(
 
   return {
     ...crud,
+    set,
     fieldErrors,
     // Cliente criado fora da UI (seed/API) pode não ter endereço — cai para o
     // vazio em vez de quebrar ao ler `addr.region`. Resolvido aqui porque a

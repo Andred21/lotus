@@ -3,9 +3,11 @@ import { act, renderHook } from '@testing-library/react'
 import type { RedatorData } from '@shared/types/generated'
 import { useRedatorForm } from './useRedatorForm'
 
+const falha = vi.hoisted(() => ({ erro: null as unknown }))
+
 vi.mock('@shared/api/redatoresApi', () => ({
   redatoresApi: {
-    useCreate: () => ({ mutate: vi.fn(), isPending: false, error: null }),
+    useCreate: () => ({ mutate: vi.fn(), isPending: false, error: falha.erro }),
     useUpdate: () => ({ mutate: vi.fn(), isPending: false, error: null }),
   },
 }))
@@ -61,5 +63,19 @@ describe('useRedatorForm — rascunho', () => {
 
     expect(seguir).not.toHaveBeenCalled()
     expect(result.current.guard.dialogProps.visible).toBe(true)
+  })
+})
+
+describe('useRedatorForm — erro 422 some ao corrigir', () => {
+  it('editar o campo limpa o erro dele e só dele', () => {
+    falha.erro = { type: 'x', title: 'x', status: 422, detail: '', instance: '/x', errors: { rut: ['inválido'], email: ['em uso'] } }
+    const { result } = renderHook(() => useRedatorForm(null, 'create', () => {}))
+    expect(result.current.fieldErrors?.rut).toEqual(['inválido'])
+
+    act(() => result.current.set('rut', '1-9'))
+
+    expect(result.current.fieldErrors?.rut).toBeUndefined()
+    expect(result.current.fieldErrors?.email).toEqual(['em uso'])
+    falha.erro = null
   })
 })
