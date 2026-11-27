@@ -34,4 +34,19 @@ describe('Sidebar', () => {
 
     expect(screen.getByRole('button', { name: 'common.toggleMenu' }).getAttribute('aria-expanded')).toBe('false')
   })
+
+  /** M-5: o `CONTEUDO_DO_RAIL` do `SidebarItem.test.tsx` subtrai `nav px-1` (4+4).
+   * Este é o lado da sidebar da conta: mexer no padding do nav sem refazê-la
+   * deixa a prova dos rótulos curtos verde sobre uma largura que não existe. */
+  it('colapsada, o nav usa px-1; expandida, px-3', () => {
+    useUiStore.setState({ sidebarCollapsed: true })
+    const { container, unmount } = renderWithProviders(<Sidebar />, { route: '/' })
+    expect(container.querySelector('nav')?.className).toContain('px-1')
+    expect(container.querySelector('nav')?.className).not.toContain('px-3')
+    unmount()
+
+    useUiStore.setState({ sidebarCollapsed: false })
+    const expandida = renderWithProviders(<Sidebar />, { route: '/' })
+    expect(expandida.container.querySelector('nav')?.className).toContain('px-3')
+  })
 })

@@ -48,7 +48,7 @@ export function LoginPage() {
         className="relative flex flex-1 flex-col items-center justify-center gap-6 p-8 md:w-1/2 dark:border-t md:dark:border-t-0 md:dark:border-l"
         style={{ background: 'var(--surface-card)', borderColor: 'var(--surface-border)' }}
       >
-        <AppearanceControls className="self-end md:absolute md:top-4 md:right-4 select-none" />
+        <AppearanceControls surface="page" className="self-end md:absolute md:top-4 md:right-4 select-none" />
 
         <AuthPanel />
 

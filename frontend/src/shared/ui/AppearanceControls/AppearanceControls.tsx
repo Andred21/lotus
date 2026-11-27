@@ -16,18 +16,28 @@ import { LanguageMenu } from '../LanguageMenu'
  * seletor e quem decide o empate é a ordem do bundle do Tailwind, não a do
  * atributo — o espaçamento entre os dois controles é do componente, igual nos
  * dois usos. */
-export function AppearanceControls({ className }: { className?: string }) {
+export function AppearanceControls({
+  className,
+  surface = 'shell',
+}: {
+  className?: string
+  /** Onde o par pousa: `shell` (default) sobre o azul-poste fixo do header, com a
+   * tinta `--shell-ink`; `page` sobre `--surface-card` (o login), com a marca do
+   * tema (`iconToggle` no tema, `compact` no idioma). A tinta do shell sobre o
+   * cartão branco mede ~1,5:1 — a revisão final do bloco 66 (I-1). */
+  surface?: 'shell' | 'page'
+}) {
   const { t } = useTranslation()
   const theme = useUiStore((s) => s.theme)
   const toggleTheme = useUiStore((s) => s.toggleTheme)
 
   return (
     <div className={`flex items-center gap-4 ${className ?? ''}`}>
-      <LanguageMenu />
+      <LanguageMenu surface={surface} />
       {/* Toggle, não ação: o nome fica fixo e o estado vai em `aria-pressed`
         * (ligado = escuro). O ícone troca para o leitor de tela não depender dele. */}
       <AppButton
-        variant="shell"
+        variant={surface === 'page' ? 'iconToggle' : 'shell'}
         onClick={toggleTheme}
         aria-label={t('common.toggleTheme')}
         aria-pressed={theme === 'dark'}

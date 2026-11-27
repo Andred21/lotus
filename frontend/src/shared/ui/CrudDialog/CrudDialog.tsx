@@ -44,6 +44,10 @@ import type { DialogMode } from '@shared/lib'
  * quebrando linha; o que não é campo do cadastro vai em `afterForm`, fora do
  * form, para o Enter ali não salvar. O `stopPropagation` existe porque o submit de um form dentro
  * de um portal sobe pela árvore do React a um form ancestral.
+ *
+ * **Foco após Editar.** O `key` por modo do rodapé (abaixo) impede o submit
+ * mas desmonta o botão focado; na transição `view → edit` o foco vai ao
+ * primeiro campo do corpo, o mesmo alvo da abertura.
  */
 export function CrudDialog({
   size, visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, guard, submitLabel, headerExtra, afterForm, children,
@@ -124,6 +128,15 @@ export function CrudDialog({
     )
     ;(primeiro ?? corpo.current)?.focus()
   }
+
+  // Editar → edição: a `key` do rodapé desmonta o botão que tinha o foco e o
+  // navegador o solta no `<body>`. Quem pediu a edição vai ao primeiro campo.
+  const modoAnterior = useRef(mode)
+  useEffect(() => {
+    const entrouEmEdicao = modoAnterior.current === 'view' && mode === 'edit'
+    modoAnterior.current = mode
+    if (entrouEmEdicao && visible) focarCorpo()
+  }, [mode, visible])
 
   // Saída que descarta: com guarda e rascunho, pergunta antes de fechar.
   const sair = () => (guard ? guard.confirmDiscard(onHide) : onHide())

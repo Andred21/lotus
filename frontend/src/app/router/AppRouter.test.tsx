@@ -194,10 +194,10 @@ describe('routes', () => {
    * guard, no grupo de login ou no grupo protegido caía na tela default do React
    * Router, com a stack à mostra. */
   it.each([
-    ['grupo de login', '/login', 0],
-    ['grupo protegido', '/operacion', 0],
-    ['guard por módulo', '/operacion', 1],
-  ] as const)('erro de render na rota-layout cai no RouteError, sem stack (%s)', async (_nome, caminho, profundidade) => {
+    ['grupo de login', '/login', 0, false],
+    ['grupo protegido', '/operacion', 0, false],
+    ['guard por módulo', '/operacion', 1, true],
+  ] as const)('erro de render na rota-layout cai no RouteError, sem stack (%s)', async (_nome, caminho, profundidade, shellSegueMontado) => {
     logado()
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const tree = comLayoutQuebrado(caminho, profundidade, 'segredo-da-stack-xyz')
@@ -209,5 +209,8 @@ describe('routes', () => {
     expect(screen.getByRole('button', { name: 'common.retry' })).toBeTruthy()
     expect(screen.queryByText(/segredo-da-stack-xyz/)).toBeNull()
     expect(screen.queryByText(/Unexpected Application Error/i)).toBeNull()
+    // O `errorElement` do guard contém o erro DENTRO do shell; sem ele o erro sobe ao
+    // grupo protegido e o teste passaria igual, com o shell já desmontado.
+    if (shellSegueMontado) expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0)
   })
 })

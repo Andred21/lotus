@@ -1,4 +1,7 @@
-import i18n from '@shared/config/i18n'
+// A instância global do i18next, e não `@shared/config/i18n`: importar o módulo de
+// init arrasta o efeito colateral (inicialização) para todo consumidor do barrel
+// `@shared/lib`. Mesma razão do `primeLocale.ts`.
+import i18n from 'i18next'
 
 /** Formata um valor em UF para exibição no idioma ativo (es-CL "12.345,67",
  * en "12,345.67"), SEM passar por float: o backend manda decimal(12,4) como

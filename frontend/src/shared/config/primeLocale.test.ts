@@ -9,6 +9,11 @@ vi.mock('primereact/api', async (importOriginal) => {
   return { ...real, locale: vi.fn(real.locale) }
 })
 
+// As chaves de `aria` que o PRÓPRIO Prime traz no `en`, lidas antes de o
+// `registerPrimeLocales` rodar (o `beforeAll` abaixo). Comparar es/pt com o nosso
+// `ARIA_EN` deixaria escapar a chave que um upgrade do Prime acrescentar.
+const ARIA_EMBUTIDO_EN = Object.keys((localeOptions('en') as { aria: Record<string, string> }).aria).sort()
+
 beforeAll(registerPrimeLocales)
 afterEach(async () => {
   await i18n.changeLanguage('es-CL')
@@ -54,14 +59,16 @@ describe('primeLocale — rótulos aria', () => {
     expect(vi.mocked(locale).mock.calls.filter(([l]) => l === 'pt')).toHaveLength(1)
   })
 
-  it('en é registrado explícito, com o mesmo conjunto de chaves de es e pt', () => {
+  it('en é registrado explícito, com o mesmo conjunto de chaves do `aria` embutido no Prime', () => {
     locale('en')
     expect(ariaLabel('close', {})).toBe('Close')
     expect(ariaLabel('pageLabel', { page: 3 })).toBe('Page 3')
 
     const chaves = (idioma: string) => Object.keys(ariaLabelsDe(idioma)).sort()
-    expect(chaves('es')).toEqual(chaves('en'))
-    expect(chaves('pt')).toEqual(chaves('en'))
+    expect(ARIA_EMBUTIDO_EN.length).toBeGreaterThan(0)
+    expect(chaves('en')).toEqual(ARIA_EMBUTIDO_EN)
+    expect(chaves('es')).toEqual(ARIA_EMBUTIDO_EN)
+    expect(chaves('pt')).toEqual(ARIA_EMBUTIDO_EN)
   })
 
   it('nenhuma chave de es ou pt fica vazia', () => {

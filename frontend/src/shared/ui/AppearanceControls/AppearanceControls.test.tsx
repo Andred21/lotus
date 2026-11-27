@@ -22,6 +22,19 @@ describe('AppearanceControls', () => {
     expect(toggle.className).not.toContain('dark:')
   })
 
+  it('surface="page" devolve a marca do tema claro: iconToggle no tema, compact no idioma', () => {
+    render(<AppearanceControls surface="page" />)
+
+    const toggle = screen.getByLabelText('common.toggleTheme')
+    expect(toggle.className).toContain('border-[var(--brand-ink)]')
+    expect(toggle.className).not.toContain('--shell-ink')
+
+    const idioma = screen.getByRole('button', { name: /common\.language/ })
+    expect(idioma.className).toContain('border-[var(--brand-ink)]')
+    expect(idioma.className).toContain('px-3 py-2.5 text-sm')
+    expect(idioma.className).not.toContain('--shell-ink')
+  })
+
   it('toggle de tema expõe aria-pressed', () => {
     useUiStore.setState({ theme: 'light' })
     const { rerender } = render(<AppearanceControls />)

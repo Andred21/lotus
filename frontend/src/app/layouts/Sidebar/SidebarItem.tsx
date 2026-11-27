@@ -59,8 +59,9 @@ export function SidebarItem({ module, collapsed }: Props) {
         <>
           <AppIcon name={module.icon} weight={isActive ? 'fill' : 'regular'} />
           {/* Sempre no DOM. Colapsado é o rótulo curto a 12px (`text-xs`), sem
-            * `truncate`: o texto cabe por construção (<= 9 caracteres) e um nome
-            * cortado em reticências deixa de ser lido. Expandido é o integral. */}
+            * `truncate`: o encaixe vem das larguras medidas dos rótulos curtos mais
+            * o padding do rail (`SidebarItem.test.tsx`, `CONTEUDO_DO_RAIL`), e um
+            * nome cortado em reticências deixa de ser lido. Expandido é o integral. */}
           <span className={collapsed ? 'w-full text-xs leading-tight' : ''}>{collapsed ? shortLabel : label}</span>
         </>
       )}

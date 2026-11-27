@@ -409,6 +409,30 @@ describe('CrudDialog — Enter envia', () => {
     expect(screen.getByRole('button', { name: i18n.t('common.save') })).not.toBe(editar)
   })
 
+  /** Revisão final do bloco 66, I-2: a `key` por modo desmonta o rodapé, e com ele
+   * o Editar que tinha o foco; o navegador o solta no `<body>`. Quem clicou em
+   * Editar por teclado recomeçava o Tab do início do documento. */
+  it('depois de Editar, o foco vai ao primeiro campo do corpo e não ao body', () => {
+    function LeituraEditavel() {
+      const [mode, setMode] = useState<DialogMode>('view')
+      return (
+        <CrudDialog
+          size="md" visible mode={mode} title="Curso" onHide={() => {}}
+          onEdit={() => setMode('edit')} onSubmit={() => {}}
+        >
+          <input aria-label="Nombre" />
+        </CrudDialog>
+      )
+    }
+    render(<LeituraEditavel />)
+
+    const editar = screen.getByRole('button', { name: i18n.t('common.edit') })
+    editar.focus()
+    fireEvent.click(editar)
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Nombre'))
+  })
+
   it('o modo leitura não tem botão de envio', () => {
     render(
       <CrudDialog size="md" visible mode="view" title="Curso" onHide={() => {}} onSubmit={() => {}}>

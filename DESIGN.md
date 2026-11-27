@@ -229,9 +229,10 @@ caixa mista) são registros diferentes, não degraus da mesma escala. Não os un
 ## Layout
 
 Shell de duas colunas em `h-dvh` (altura dinâmica da viewport: a barra do navegador móvel não
-esconde o paginador): sidebar fixa à esquerda (256px expandida, rail de 80px colapsada; colapso imposto abaixo de 1024px sem tocar a preferência salva), header de 80px fixo
-no topo, `<main>` com rolagem própria e padding de 16px (24px a partir de `sm`). Skip-link
-"ir ao conteúdo" é o primeiro focável.
+esconde o paginador): sidebar fixa à esquerda (256px expandida, rail de 80px colapsada; colapso
+imposto abaixo de 1024px sem tocar a preferência salva), header de 80px fixo no topo, `<main>`
+com rolagem própria e padding de 16px (24px a partir de `sm`). Skip-link "ir ao conteúdo" é o
+primeiro focável.
 
 Página = `PageHeader` (título + descrição, tags à direita, `mb-6`) seguido de cartões. A ação
 primária do módulo mora na toolbar do cartão, nunca no cabeçalho de página. Cartões de KPI em
@@ -274,8 +275,8 @@ anúncio de rolagem. Hover é mudança de tom (`--surface-hover`, branco a 3% no
 Dois raios, por papel, e cada um tem um dono. **Controle** (botão, input, tag, item de nav,
 diálogo, faixa de erro) usa `rounded-control` = `--border-radius` do tema (4px). **Superfície**
 (cartão) usa `rounded-surface` (8px). Raio literal em classe é erro de lint (`RAIO_LITERAL`).
-O badge de contagem é a única pílula. Bordas são hairline de 1px; o botão de marca é o único com
-2px, e o cartão `stat` carrega um trilho de 3px na borda de início. Item de nav tem borda
+O badge de contagem é a única pílula. Bordas são hairline de 1px; os botões de marca e os controles
+do shell (`shell`) são os únicos com 2px, e o cartão `stat` carrega um trilho de 3px na borda de início. Item de nav tem borda
 esquerda de 2px que acende em celeste quando ativo. Nada é clipado, nada tem silhueta além da caixa.
 
 ## Components

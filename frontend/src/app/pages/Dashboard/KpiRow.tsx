@@ -119,8 +119,8 @@ export function KpiRow({ items }: { items: Kpi[] }) {
                     * que se trata. */}
                   {/* Ponto e grandeza num filho SO. O `sm:justify-between` do
                     * `<p>` distribui os FILHOS pela largura do card, e de `sm`
-                    * para cima o corpo e `flex-col items-stretch` — o `<p>`
-                    * ocupa a largura inteira. Com tres filhos o ponto ia parar
+                    * para cima o corpo e `flex-col` — o `<p>` ocupa a
+                    * largura inteira. Com tres filhos o ponto ia parar
                     * no MEIO do card, longe dos dois algarismos que ele separa,
                     * e quanto mais larga a coluna da grade, maior o afastamento
                     * (Q-1 do review de 2026-09-01). Agrupados, o

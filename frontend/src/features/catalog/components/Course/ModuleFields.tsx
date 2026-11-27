@@ -51,8 +51,9 @@ export function ModuleFields({
         <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.empty')}</p>
       )}
 
-      {/* `empty:hidden`: sem módulo e sem botão (leitura), o contêiner não pode
-        * deixar a margem de `space-y` de um filho vazio. */}
+      {/* O `div` existe para o `containerRef` do `useMoveFocus` (foco ao reordenar).
+        * `empty:hidden` o esconde quando não há módulo; o `space-y` do pai não muda
+        * por causa dele. */}
       <div ref={containerRef} className="space-y-4 empty:hidden">
         {modules.map((m, i) => (
           <ModuleCard
