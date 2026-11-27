@@ -9,8 +9,19 @@ export function formatUf(value: string, locale: string = i18n.language): string 
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(value as unknown as number)
 }
 
+/** Valor para PRÉ-PREENCHER o campo de UF em modo edição: sem agrupamento de
+ * milhar, vírgula decimal, zeros à direita cortados. Não é o `formatUf`
+ * (exibição, agrupa milhar): `parseUfInput` trata o último separador como
+ * decimal e leria "1.234" como 1,234 UF. Sem Intl e sem Number — só troca de
+ * caractere. */
+export function formatUfField(value: string): string {
+  const [int, frac = ''] = value.split('.')
+  const trimmed = frac.replace(/0+$/, '')
+  return trimmed ? `${int},${trimmed}` : int
+}
+
 /** Normaliza o que o usuário digita (ou o que o campo pré-preenche em modo
- * edição, via `formatUf`) para o formato canônico que o backend espera:
+ * edição, via `formatUfField`) para o formato canônico que o backend espera:
  * dígitos e UM ponto decimal, como string.
  *
  * O ÚLTIMO separador é o decimal; os anteriores são agrupamento de milhar e

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard, useToast } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useCreateQuote, useUpdateQuote, type QuotePayload } from '../api/useQuotes'
-import { formatUf, parseUfInput } from '@shared/lib'
+import { formatUfField, parseUfInput } from '@shared/lib'
 
 /** Campos que o wizard edita. `value_uf` fica STRING o caminho todo: converter
  * para Number reintroduziria o float que o decimal do backend existe para evitar. */
@@ -27,15 +27,16 @@ const toFields = (q: QuoteFormFields): QuoteFormFields =>
     id: q.id,
     course_id: q.course_id,
     student_count: q.student_count,
-    // Pré-preenche no MESMO formato que a lista mostra (vírgula, es-CL) — o
-    // valor cru do backend ("450.5000") ao lado da linha da lista mostrando
+    // Pré-preenche com vírgula decimal e SEM agrupar milhar (`formatUfField`,
+    // não o `formatUf` de exibição: o `parseUfInput` leria "1.234" como 1,234
+    // UF). O valor cru do backend ("450.5000") ao lado da lista mostrando
     // "450,5" induzia o usuário a "corrigir" para vírgula e gravar 10x o
     // valor. A EXIBIÇÃO é a vírgula (o `DataStep` troca o ponto ao mostrar); o
     // estado fica canônico (ponto), como o que a digitação grava via
     // `parseUfInput`. Sem isso, digitar de volta o valor original deixaria o
     // form "sujo" ("450,5" no baseline, "450.5" no estado) e a guarda de
     // rascunho perguntaria sem mudança nenhuma.
-    value_uf: parseUfInput(formatUf(q.value_uf)),
+    value_uf: parseUfInput(formatUfField(q.value_uf)),
     purchase_order: q.purchase_order,
     planned_start_date: q.planned_start_date,
     planned_end_date: q.planned_end_date,
