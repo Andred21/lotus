@@ -32,7 +32,7 @@ export type FieldProps<T> = {
    * domínio: `t('clientType.'+form.type)`, `readDate(form.start_date)`. Sem ele,
    * leitura mostra o valor cru do form. */
   value?: ReactNode
-  /** Obrigatório (regra `required` do FormRequest): asterisco + `aria-required`. */
+  /** Obrigatório (regra `required` do `rules()` do DTO spatie no backend): asterisco + `aria-required`. */
   required?: boolean
   /** Ajuda abaixo do controle, ligada por `aria-describedby`. */
   hint?: string

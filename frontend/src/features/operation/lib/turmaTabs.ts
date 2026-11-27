@@ -17,19 +17,6 @@ export const TURMA_TABS = ['config', 'students', 'redator', 'docs', 'conclusion'
 
 export type TurmaTab = (typeof TURMA_TABS)[number]
 
-/** Índice do painel a partir do nome. Nome ausente ou desconhecido cai na
- * primeira aba — URL adulterada abre a tela, não a quebra. */
-export function turmaTabIndex(tab: string | null | undefined): number {
-  const index = TURMA_TABS.indexOf(tab as TurmaTab)
-  return index === -1 ? 0 : index
-}
-
-/** Nome do painel a partir do índice — o caminho de volta, para escrever a URL
- * quando o usuário troca de aba. */
-export function turmaTabName(index: number): TurmaTab {
-  return TURMA_TABS[index] ?? TURMA_TABS[0]
-}
-
 /** Rota do detalhe já apontando para uma aba. Tipado no `tab`: apontar para uma
  * aba que não existe não compila. */
 export function turmaTabPath(turmaId: number, tab: TurmaTab): string {

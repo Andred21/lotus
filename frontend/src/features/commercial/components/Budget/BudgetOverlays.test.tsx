@@ -29,6 +29,12 @@ describe('BudgetOverlays — confirmação nomeada (C-4)', () => {
     expect(screen.getByRole('dialog').textContent).toContain('"code":"Scap 5-1"')
   })
 
+  it('cotação sem folio sai com "—", não com o nome em branco', () => {
+    render_({ confirm: { action: 'approve', quote: { id: 9 } as QuoteData } })
+
+    expect(screen.getByRole('dialog').textContent).toContain('"code":"—"')
+  })
+
   it('remover orçamento usa o texto de arquivar e não danger', () => {
     render_({ confirmDeleteBudget: true })
 

@@ -28,8 +28,8 @@ export function BudgetOverlays({ d, budgetId, budget }: { d: ReturnType<typeof u
       {d.confirm && (
         <ConfirmDialog
           visible
-          title={t(CONFIRM_COPY[d.confirm.action].title, { code: d.confirm.quote.code })}
-          message={t(CONFIRM_COPY[d.confirm.action].body, { code: d.confirm.quote.code })}
+          title={t(CONFIRM_COPY[d.confirm.action].title, { code: d.confirm.quote.code ?? '—' })}
+          message={t(CONFIRM_COPY[d.confirm.action].body, { code: d.confirm.quote.code ?? '—' })}
           confirmLabel={t(CONFIRM_COPY[d.confirm.action].label)}
           severity={d.confirm.action === 'approve' ? undefined : 'danger'}
           pending={d.confirmPending}
