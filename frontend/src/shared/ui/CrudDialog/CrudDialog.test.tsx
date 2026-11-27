@@ -307,6 +307,24 @@ describe('CrudDialog — Enter envia', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1)
   })
 
+  it('o conteúdo de `afterForm` fica fora do form: Enter nele não envia', () => {
+    const onSubmit = vi.fn()
+    render(
+      <CrudDialog
+        size="md" visible mode="edit" title="Curso" onHide={() => {}} onSubmit={onSubmit}
+        afterForm={<input aria-label="Buscar" />}
+      >
+        <input aria-label="Nombre" />
+      </CrudDialog>,
+    )
+    const busca = screen.getByLabelText('Buscar') as HTMLInputElement
+
+    enter(busca)
+
+    expect(busca.form).toBeNull()
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
   it('o clique em Salvar também envia uma vez só, pelo mesmo caminho', () => {
     const onSubmit = vi.fn()
     render(<Envio onSubmit={onSubmit} />)

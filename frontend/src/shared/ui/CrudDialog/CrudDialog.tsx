@@ -41,11 +41,12 @@ import type { DialogMode } from '@shared/lib'
  * chama o `onSubmit` do chamador — a guarda de rascunho e o `allowNavigation`
  * do salvar ficam nele, não aqui. O envio implícito é do navegador: com o Salvar
  * desabilitado (`pending`/`disabled`) ele não acontece, e `textarea` segue
- * quebrando linha. O `stopPropagation` existe porque o submit de um form dentro
+ * quebrando linha; o que não é campo do cadastro vai em `afterForm`, fora do
+ * form, para o Enter ali não salvar. O `stopPropagation` existe porque o submit de um form dentro
  * de um portal sobe pela árvore do React a um form ancestral.
  */
 export function CrudDialog({
-  size, visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, guard, submitLabel, headerExtra, children,
+  size, visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, guard, submitLabel, headerExtra, afterForm, children,
 }: {
   /** Teto de largura e maximizar (bloco 43) — repassado ao `AppDialog`. */
   size: AppDialogSize
@@ -84,6 +85,11 @@ export function CrudDialog({
   guard?: UnsavedChangesGuard
   submitLabel?: string
   headerExtra?: ReactNode
+  /** Conteúdo do corpo que NÃO é campo do cadastro (busca, filtros e tabela de
+   * uma seção relacionada). Fica depois do `<form>`, fora dele: dentro, o Enter
+   * numa busca acionaria o Salvar do footer pelo envio implícito e salvaria o
+   * registro pela metade. */
+  afterForm?: ReactNode
   children: ReactNode
 }) {
   const { t } = useTranslation()
@@ -172,6 +178,7 @@ export function CrudDialog({
       >
         <div ref={corpo} tabIndex={-1} className="outline-none">
           <form id={formId} onSubmit={enviar}>{children}</form>
+          {afterForm}
         </div>
       </AppDialog>
       {guard && <DiscardChangesDialog {...guard.dialogProps} />}
