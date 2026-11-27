@@ -210,11 +210,13 @@ export function AppDataTable<T extends DataTableValueArray>({
       // O NOME dos três controles é piso daqui. O PrimeReact os rotula com
       // `api.ariaLabel('prevPageLabel'|'nextPageLabel'|'pageLabel')`
       // (`primereact/paginator/paginator.cjs.js:789-795`), que resolve contra a
-      // locale GLOBAL dele — e `locale()` nunca é chamado no projeto
-      // (`primeLocale.ts` só registra), então o nome vinha do default inglês:
-      // "Page 2" em tela espanhola (P-109). Chamar `locale()` foi recusado:
-      // troca um estado global do PrimeReact para dizer o que três chaves nossas
-      // dizem, e ainda precisaria seguir `i18n.language` na troca de idioma.
+      // locale GLOBAL dele. Esse locale hoje segue o idioma da interface
+      // (`registerPrimeLocales`, em `shared/config/primeLocale.ts`, chama
+      // `locale()` na troca de idioma) e o bloco `aria` dele traz "Página 2" em
+      // es e pt. Antes do bloco 66 ele nunca era chamado e o nome vinha do
+      // inglês: "Page 2" em tela espanhola (P-109). O piso daqui fica como
+      // DEFESA explícita, por componente: o nome não depende de o espelho do
+      // locale estar registrado, e o número da página vem do nosso `t`.
       //
       // Template objeto e não `pt`: o contexto do `pageButton` traz só `active`,
       // não o número da página, e o nome precisa do número. Para os três

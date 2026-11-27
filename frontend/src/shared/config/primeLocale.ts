@@ -71,11 +71,16 @@ export function registerPrimeLocales(): void {
   // Prime lê do locale GLOBAL, e `addLocale` só registra. Sem este espelho o
   // bloco ficava instalado e o leitor de tela seguia no inglês (A-12). O
   // `Calendar` não depende disto: o `AppDatePicker` passa `locale` por componente.
-  const seguirIdioma = (lng?: string): void => {
-    locale(primeLocaleFor(lng))
-  }
+  //
+  // `off` antes do `on`, com o handler em escopo de módulo: registrar duas vezes
+  // (HMR do Vite, testes) não empilha listeners.
   seguirIdioma(i18n.language)
+  i18n.off('languageChanged', seguirIdioma)
   i18n.on('languageChanged', seguirIdioma)
+}
+
+const seguirIdioma = (lng?: string): void => {
+  locale(primeLocaleFor(lng))
 }
 
 /** `es-CL`/`pt-BR` → `es`/`pt`; o resto cai no `en` embutido. */

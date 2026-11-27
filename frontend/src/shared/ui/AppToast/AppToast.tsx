@@ -28,8 +28,10 @@ export const AppToast = forwardRef<AppToastHandle>((_props, ref) => {
 
   // O nome do fechar sai por mensagem (`pt.closeButton`): o Toast não repassa
   // `ariaCloseLabel` à mensagem, e o fallback do Prime é o locale GLOBAL dele,
-  // que `locale()` nunca troca no projeto. `t` entra nas deps para a troca de
-  // idioma valer na próxima mensagem.
+  // que hoje segue o idioma (`registerPrimeLocales`, `shared/config/primeLocale.ts`)
+  // e já diz "Cerrar". O piso daqui é DEFESA explícita, por componente, igual ao
+  // fechar do `AppDialog`. `t` entra nas deps para a troca de idioma valer na
+  // próxima mensagem.
   useImperativeHandle(ref, () => {
     const pt = { closeButton: { 'aria-label': t('common.close') } }
     return {
