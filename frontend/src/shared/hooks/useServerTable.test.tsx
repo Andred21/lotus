@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { createWrapper } from '@shared/testing/providers'
 import type { Page, PageMeta } from '@shared/api/page'
 import { SERVER_TABLE_DEBOUNCE_MS, useServerTable } from './useServerTable'
@@ -365,6 +365,52 @@ describe('useServerTable — estado na URL', () => {
 
     await waitFor(() => expect(params(result.current.location.search).has('page')).toBe(false))
     expect(fetchPage).toHaveBeenLastCalledWith({ page: 1, per_page: 10, status: 'habilitada' })
+  })
+
+  it('navegar para a mesma rota sem query zera busca, página e sort, e não reescreve a query antiga', async () => {
+    const fetchPage = trinta()
+    const { result } = renderHook(
+      () => ({
+        table: useServerTable(fetchPage, { key: ['x'], url: { sortable: ['name'] } }),
+        location: useLocation(),
+        navigate: useNavigate(),
+      }),
+      { wrapper: createWrapper({ route: '/lista?q=abc&page=2&sort=-name' }).wrapper },
+    )
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+    expect(result.current.table.filter).toBe('abc')
+    expect(result.current.table.first).toBe(10)
+    expect(result.current.table.sortField).toBe('name')
+
+    // O clique na sidebar: mesma rota, query vazia, sem remontar o hook.
+    act(() => void result.current.navigate('/lista'))
+
+    await waitFor(() => expect(result.current.table.filter).toBe(''))
+    expect(result.current.table.term).toBe('')
+    expect(result.current.table.first).toBe(0)
+    expect(result.current.table.sortField).toBeUndefined()
+    expect(result.current.location.search).toBe('')
+    await waitFor(() => expect(fetchPage).toHaveBeenLastCalledWith({ page: 1, per_page: 10 }))
+  })
+
+  it('navegar para a mesma rota com outra query faz a tabela acompanhar a URL', async () => {
+    const fetchPage = trinta()
+    const { result } = renderHook(
+      () => ({
+        table: useServerTable(fetchPage, { key: ['x'], url: {} }),
+        location: useLocation(),
+        navigate: useNavigate(),
+      }),
+      { wrapper: createWrapper({ route: '/lista?q=abc' }).wrapper },
+    )
+    await waitFor(() => expect(result.current.table.rows).toHaveLength(2))
+
+    act(() => void result.current.navigate('/lista?q=xyz&page=3'))
+
+    await waitFor(() => expect(result.current.table.filter).toBe('xyz'))
+    expect(result.current.table.term).toBe('xyz')
+    expect(result.current.table.first).toBe(20)
+    expect(result.current.location.search).toBe('?q=xyz&page=3')
   })
 
   it('clear() limpa busca e página da URL', async () => {

@@ -113,8 +113,10 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
   fetchPage: (query: PageQuery) => Promise<Page<T, M>>,
   { key, rows = 10, filters, staleTime, refetchOnWindowFocus, url = false }: ServerTableOptions,
 ): ServerTable<T, M> {
-  // O estado NASCE da URL (lazy: lido uma vez, no mount) e é espelhado nela
-  // pelo efeito mais abaixo; entre os dois, `useState` segue sendo a fonte.
+  // O estado NASCE da URL (lazy, no mount) e é espelhado nela pelo efeito mais
+  // abaixo; entre os dois, `useState` é a fonte. Quando a URL muda POR FORA
+  // (clique na sidebar para a mesma rota), o estado é ressemeado dela — ver
+  // "URL mudou por fora", logo após os filtros.
   const urlState = useTableUrlState({ prefix: url === false ? undefined : url.prefix, enabled: url !== false })
   const [filter, setFilter] = useState(() => urlState.read('q') ?? '')
   const [term, setTerm] = useState(() => (urlState.read('q') ?? '').trim())
@@ -132,6 +134,34 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
     Object.entries(filters ?? {}).filter(([, value]) => value !== null && value !== undefined && value !== ''),
   ) as Record<string, string | number>
 
+  // URL mudou por fora: `status` e o modo arquivado são derivados da URL a cada
+  // render, então `q`, `page` e `sort` precisam acompanhar — senão o clique na
+  // sidebar zerava os filtros e o efeito de espelho reescrevia a busca antiga.
+  // "Por fora" = a URL mudou E difere do que o estado pede; a escrita do próprio
+  // espelho também muda a URL, mas ela já coincide com o estado. Ajuste durante
+  // o render (como o `useEntityForm`), não efeito.
+  const sortableFields = url === false ? undefined : url.sortable
+  const urlSnapshot = JSON.stringify([urlState.read('q'), urlState.read('page'), urlState.read('sort')])
+  const [lastUrl, setLastUrl] = useState(urlSnapshot)
+  const stateSnapshot = JSON.stringify([
+    term !== '' ? term : null,
+    first > 0 ? String(Math.floor(first / rows) + 1) : null,
+    sort ? `${sort.order === -1 ? '-' : ''}${sort.field}` : null,
+  ])
+  const seededScope = (nextTerm: string) => `${JSON.stringify(key)}|${nextTerm}|${JSON.stringify(activeFilters)}`
+  const [lastScope, setLastScope] = useState(() => seededScope(term))
+  if (url !== false && urlSnapshot !== lastUrl) {
+    setLastUrl(urlSnapshot)
+    if (urlSnapshot !== stateSnapshot) {
+      const nextFilter = urlState.read('q') ?? ''
+      setFilter(nextFilter)
+      setTerm(nextFilter.trim())
+      setFirst(firstFromUrl(urlState.read('page'), rows))
+      setSort(sortFromUrl(urlState.read('sort'), sortableFields))
+      setLastScope(seededScope(nextFilter.trim()))
+    }
+  }
+
   // Chave, termo e filtros formam o "escopo". Escopo novo = página 1, no MESMO
   // render. A `key` entra porque ela é o que troca quando a tela troca de
   // FONTE (Ativas ↔ Arquivadas, `useTurmasPage`): sem ela, sair da página 3 de
@@ -139,7 +169,6 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
   // então o clamp voltava à 1 — um GET jogado fora e uma piscada de tabela
   // vazia sobre lista que tinha linhas (Q-3 do review de 2026-08-29).
   const scope = `${JSON.stringify(key)}|${term}|${JSON.stringify(activeFilters)}`
-  const [lastScope, setLastScope] = useState(scope)
   const scopeChanged = lastScope !== scope
   if (scopeChanged) {
     setLastScope(scope)
