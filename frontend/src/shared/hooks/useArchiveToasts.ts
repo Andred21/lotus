@@ -1,11 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { ProblemDetails } from '@shared/api/axios'
 import { problemMessage } from '@shared/api/problemMessage'
-// Caminho FUNDO e não o barrel `@shared/ui`: `shared/ui/index.ts` reexporta
-// `FormPhotoRow`, que importa o barrel `@shared/hooks` — pelo barrel, este
-// arquivo fecharia um ciclo de módulos com ele mesmo. O `AppToast` não importa
-// nada de `hooks`.
-import { useToast } from '@shared/ui/AppToast'
+import { useToast } from './useToast'
 
 /**
  * O par de toasts do arquivamento, num lugar só.

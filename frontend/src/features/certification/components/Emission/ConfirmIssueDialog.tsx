@@ -44,6 +44,7 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
       message={t('certificate.confirmBody')}
       confirmLabel={t('certificate.confirmEmit')}
       confirmDisabled={redatorId == null}
+      confirmDisabledReason={t('certificate.issueNeedsRedator')}
       pending={issue.isPending}
       error={message}
       onConfirm={submit}
@@ -58,7 +59,7 @@ export function ConfirmIssueDialog({ enrollment, turma, onHide, onIssued }: Prop
         <FormField label={t('certificate.fieldCurso')} readOnly value={turma.course_name} />
         <FormField label={t('certificate.fieldVigencia')} readOnly value={vigencia} />
 
-        <FormField label={t('certificate.fieldRedator')} error={fieldErrors?.redator_id?.[0]}>
+        <FormField label={t('certificate.fieldRedator')} required error={fieldErrors?.redator_id?.[0]}>
           <AppDropdown
             value={redatorId}
             options={turma.redatores.map((r) => ({ label: r.name, value: r.redator_id }))}

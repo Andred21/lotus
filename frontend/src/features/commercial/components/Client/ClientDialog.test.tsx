@@ -15,7 +15,12 @@ vi.mock('react-i18next', async (importOriginal) => {
 // O que se mede é SE a seção de orçamentos monta; o resto do diálogo vira stub.
 vi.mock('@shared/ui', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@shared/ui')>()),
-  CrudDialog: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CrudDialog: ({ children, afterForm }: { children: React.ReactNode; afterForm?: React.ReactNode }) => (
+    <div>
+      <form>{children}</form>
+      {afterForm}
+    </div>
+  ),
   FormPhotoRow: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 vi.mock('../../hooks/useClientForm', () => ({
@@ -66,5 +71,11 @@ describe('ClientDialog — orçamentos do cliente (review Q-2 do bloco 60)', () 
     comPermissoes(['commercial.client.view'])
     montar()
     expect(screen.queryByTestId('client-budgets')).toBeNull()
+  })
+
+  it('a seção fica fora do <form>: Enter na busca não salva o cliente', () => {
+    comPermissoes(['commercial.client.view', 'commercial.budget.view'])
+    montar()
+    expect(screen.getByTestId('client-budgets').closest('form')).toBeNull()
   })
 })

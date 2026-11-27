@@ -1,8 +1,9 @@
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppButton, AppDropdown, AppInputText, AppDatePicker, FormField, FormErrorSummary, SectionLabel, useFormField } from '@shared/ui'
+import { AppButton, AppDropdown, DiscardChangesDialog, AppInputText, AppDatePicker, FormField, FormErrorSummary, SectionLabel, useFormField } from '@shared/ui'
 import { formatDate, type DialogMode } from '@shared/lib'
 import type { TurmaData } from '@shared/types/generated'
-import { usePermissions } from '@shared/hooks'
+import { usePermissions, type UnsavedChangesGuard } from '@shared/hooks'
 import { useTurmaConfigForm } from '../../hooks/useTurmaConfigForm'
 import { registroAcademicoBloqueado } from '../../lib/turmaStatus'
 import { dangerText } from '@shared/styles/tokens'
@@ -14,14 +15,22 @@ type Props = {
   onSaved: (turmaId: number) => void
   onEdit?: () => void
   onCancel?: () => void
+  /** Entrega a guarda de rascunho do form a quem precisa perguntar por ele de
+   * fora (a página de detalhe, ao trocar de aba: o `TabView` desmonta este
+   * cartão e o rascunho some). `null` quando o cartão desmonta. */
+  onGuard?: (guard: UnsavedChangesGuard | null) => void
 }
 
 const MAPPED = ['modalidade', 'local_aplicacao', 'start_date', 'end_date']
 
-export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel }: Props) {
+export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, onCancel, onGuard }: Props) {
   const { t } = useTranslation()
   const f = useTurmaConfigForm({ mode, turma, quoteId, onSaved })
   const campo = useFormField(f)
+  useEffect(() => {
+    onGuard?.(f.guard)
+    return () => onGuard?.(null)
+  }, [onGuard, f.guard])
   const { can } = usePermissions()
   // Derivado AQUI, não no call-site: quem monta este cartão não precisa saber
   // da RN-15 para nascer correto. Em `create` ainda não há turma — nada a
@@ -38,6 +47,22 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
   // (Q-2 do review de 2026-08-24).
   const podeEditar = !bloqueado && can('operation.turma.update')
 
+  // Cancelar descarta o rascunho. Na criação o `onCancel` é o "volver" (navega),
+  // e o blocker o seguraria de novo logo depois do Descartar: o aviso já foi
+  // respondido, então a liberação vai junto. Em edição o `onCancel` só troca para
+  // leitura, o form reseta e a liberação não usada cai sozinha (rascunho limpo).
+  // Só libera com rascunho: com o form limpo ninguém a revoga, e ela sobraria para
+  // o próximo rascunho.
+  const cancelar = () => f.guard.confirmDiscard(() => {
+    if (f.dirty) f.guard.allowNavigation()
+    try {
+      onCancel?.()
+    } catch (error) {
+      f.guard.revoke()
+      throw error
+    }
+  })
+
   const modalityOptions = [
     { label: t('operation.modality.presencial'), value: 'presencial' },
     { label: t('operation.modality.online'), value: 'online' },
@@ -52,6 +77,7 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
 
   return (
     <div className="space-y-5 p-4">
+      <DiscardChangesDialog {...f.guard.dialogProps} />
       <div className="flex items-center justify-between">
         <SectionLabel as="h3" rule={false}>{t('operation.config.title')}</SectionLabel>
         {/* Escondido, não desabilitado: botão cinza ainda promete "isto seria
@@ -65,13 +91,17 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
       <div className="grid gap-4 sm:grid-cols-2">
         <campo.Field
           name="modalidade"
-          label={t('operation.config.modality')}
+          label={t('operation.config.modality')} required
           value={modalityOptions.find((o) => o.value === f.form.modalidade)?.label ?? f.form.modalidade}
         >
           <AppDropdown options={modalityOptions} />
         </campo.Field>
 
-        <campo.Field name="local_aplicacao" label={t('operation.config.local')}>
+        <campo.Field
+          name="local_aplicacao"
+          label={t('operation.config.local')}
+          required={f.form.modalidade === 'presencial'}
+        >
           {/* O `disabled` que sobra NÃO é modo leitura: turma online não tem
               local a preencher, e isso vale em EDIÇÃO. Modo leitura sai pelo
               `readOnly` do Field. */}
@@ -81,11 +111,11 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
           />
         </campo.Field>
 
-        <campo.Field name="start_date" label={t('operation.config.startDate')} value={readDate(f.form.start_date)}>
+        <campo.Field name="start_date" label={t('operation.config.startDate')} required value={readDate(f.form.start_date)}>
           <AppDatePicker value={f.form.start_date || null} onChange={(v) => f.set('start_date', v ?? '')} />
         </campo.Field>
 
-        <campo.Field name="end_date" label={t('operation.config.endDate')} value={readDate(f.form.end_date)}>
+        <campo.Field name="end_date" label={t('operation.config.endDate')} required value={readDate(f.form.end_date)}>
           <AppDatePicker value={f.form.end_date || null} onChange={(v) => f.set('end_date', v ?? '')} />
         </campo.Field>
 
@@ -109,7 +139,7 @@ export function TurmaConfigCard({ mode, turma = null, quoteId, onSaved, onEdit, 
 
       {mode !== 'view' && (
         <div className="flex justify-end gap-2">
-          {onCancel && <AppButton label={t('operation.config.cancel')} outlined onClick={onCancel} disabled={f.pending} />}
+          {onCancel && <AppButton label={t('operation.config.cancel')} outlined onClick={cancelar} disabled={f.pending} />}
           <AppButton variant="primary" label={t('operation.config.save')} icon="check" onClick={f.submit} disabled={f.pending} />
         </div>
       )}

@@ -1,7 +1,10 @@
 import { useRef, type Dispatch, type SetStateAction } from 'react'
-import { useEntityForm, useMutationErrors } from './useEntityForm'
+import { useTranslation } from 'react-i18next'
+import { useEntityForm, useFormMutationErrors } from './useEntityForm'
+import { useUnsavedChangesGuard } from './useUnsavedChangesGuard'
 import type { DialogMode } from '@shared/lib'
 import type { ProblemDetails } from '@shared/api/axios'
+import { useToast } from './useToast'
 
 /** Recurso mutável, estrutural — mesmo padrão do `ListableResource` do
  * `useCrudPage`: o teste passa um literal e não precisa de TanStack. */
@@ -98,7 +101,12 @@ export function useCrudForm<F extends { id?: number }, T>(
   const excludePrefixes = opts.excludePrefixes ?? []
   const extraMutations = extra ?? []
 
-  const { form, setForm, set, readOnly, didReset } = useEntityForm<F>(entity, mode, empty, toFields)
+  const { form, setForm, set: setField, readOnly, didReset, dirty } = useEntityForm<F>(entity, mode, empty, toFields)
+  // A guarda mora aqui, e não no `CrudDialog`, porque o salvar precisa liberá-la
+  // (`allowNavigation`, abaixo) e é este hook que sabe quando o salvar deu certo.
+  const guard = useUnsavedChangesGuard(dirty)
+  const { t } = useTranslation()
+  const toast = useToast()
 
   const create = resource.useCreate()
   const update = resource.useUpdate()
@@ -158,12 +166,26 @@ export function useCrudForm<F extends { id?: number }, T>(
    * `useCourseForm`, cuja segunda etapa é o `sync` de redatores.
    */
   async function runAfterCreate(created: T) {
+    // O `afterCreate` pode navegar (o `onCreated` do orçamento leva ao detalhe), e
+    // o form segue sujo até o diálogo desmontar: sem a liberação, o salvar que
+    // acabou de dar certo abriria "descartar?". Só quando há `afterCreate` — é o
+    // único caminho que navega; `onDone` só fecha, e fechar não passa pela guarda.
+    // E só com rascunho: limpo, não há blocker para consumi-la.
+    if (afterCreate && dirty) guard.allowNavigation()
     try {
       await afterCreate?.(created)
     } catch (error) {
+      // O diálogo segue aberto e sujo: a liberação concedida acima não foi usada
+      // e não pode sobrar para a próxima navegação.
+      guard.revoke()
       console.error('useCrudForm: afterCreate falhou, diálogo permanece aberto', error)
       return
     }
+    // O sucesso só se diz aqui, com a segunda etapa concluída: se o `afterCreate`
+    // reprovou o diálogo segue aberto com o erro, e "criado" seria meia verdade.
+    // Vem depois da guarda e da navegação (que mora no `afterCreate`) e antes do
+    // `onDone`, que fecha.
+    toast.success(t('common.createdToast'))
     onDone()
   }
 
@@ -186,10 +208,18 @@ export function useCrudForm<F extends { id?: number }, T>(
     // O id do PUT vem da ENTIDADE, nunca do form: o form é editável e o alvo
     // do update não pode depender do que o usuário digitou.
     if (entity?.id == null) return
-    update.mutate({ id: entity.id, payload: toPayload(form, 'edit') }, { onSuccess: onDone })
+    update.mutate(
+      { id: entity.id, payload: toPayload(form, 'edit') },
+      {
+        onSuccess: () => {
+          toast.success(t('common.updatedToast'))
+          onDone()
+        },
+      },
+    )
   }
 
-  const { fieldErrors, generalError } = useMutationErrors([
+  const { fieldErrors, generalError, clearField, set } = useFormMutationErrors(setField, [
     create.error,
     update.error,
     ...extraMutations.map((m) => m.error),
@@ -201,8 +231,13 @@ export function useCrudForm<F extends { id?: number }, T>(
     crud: {
       form,
       set,
+      /** Limpa o 422 de uma chave exata — a edição aninhada (`setForm`) não
+       * passa pelo `set`, então o hook de feature a chama no patch. */
+      clearField,
       readOnly,
       didReset,
+      dirty,
+      guard,
       submit,
       pending: create.isPending || update.isPending || extraMutations.some((m) => m.isPending),
       fieldErrors,

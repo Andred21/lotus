@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react'
+import { useContext, useId, type ReactNode } from 'react'
 import { dangerSurface, dangerText } from '../../styles/tokens'
 import { FieldContext, type FieldBind, type FieldContextValue } from './fieldContext'
 
@@ -29,6 +29,12 @@ export type FormFieldProps = {
    * `<AppInputText disabled readOnly>`, que é o próprio débito do §4 (review do
    * BD-3, Q-1). Com `readOnly` e sem `children` o campo é texto e ponto. */
   children?: ReactNode
+  /** Campo obrigatório: asterisco decorativo ao lado do rótulo e `aria-required`
+   * no controle. Em leitura não marca — não há o que preencher. */
+  required?: boolean
+  /** Ajuda abaixo do controle, em `--text-color-secondary`, ligada ao controle
+   * por `aria-describedby` junto com o erro. Em leitura não aparece. */
+  hint?: string
   /** Valor e setter do form, quando o campo veio de um `Field` (§4.1 da spec).
    * Ausente no uso solto — login, filtro de tabela, célula de edição. */
   bind?: FieldBind
@@ -47,13 +53,16 @@ export type FormFieldProps = {
  * a própria porta (`id` ou `inputId`) — ver `fieldContext.ts`. Prop do chamador
  * vence a do contexto, sempre.
  */
-export function FormField({ label, error, readOnly, value, bind, children }: FormFieldProps) {
+export function FormField({ label, error, readOnly, value, bind, required, hint, children }: FormFieldProps) {
   const id = useId()
   const errorId = `${id}-error`
+  const hintId = `${id}-hint`
+  const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(' ')
   const field: FieldContextValue = {
     id,
     invalid: !!error,
-    describedBy: error ? errorId : undefined,
+    required: required || undefined,
+    describedBy: describedBy || undefined,
     bind,
   }
 
@@ -67,17 +76,36 @@ export function FormField({ label, error, readOnly, value, bind, children }: For
           dois sítios (`StaffUserDialog`, `CertificateViewDialog`), medidos no
           gate do BD-16. Valor que só se lê entra por `readOnly` + `value`, que
           aceita `ReactNode` justamente para isso. */}
-      <label
-        htmlFor={readOnly ? undefined : id}
-        className="mb-1 block text-sm font-medium"
-        style={{ color: 'var(--text-color)' }}
-      >
-        {label}
-      </label>
+      <div className="mb-1 flex gap-0.5">
+        <label
+          htmlFor={readOnly ? undefined : id}
+          className="text-sm font-medium"
+          style={{ color: 'var(--text-color)' }}
+        >
+          {label}
+        </label>
+        {/* Irmão da label, e não filho: o asterisco entraria no nome acessível
+            do controle ("RUT *"). Quem anuncia a obrigatoriedade é o
+            `aria-required` — o glifo é só para quem vê. */}
+        {required && !readOnly && (
+          <span aria-hidden="true" className="text-sm font-medium" style={{ color: dangerText }}>
+            *
+          </span>
+        )}
+      </div>
       {readOnly ? (
         <ReadOnlyValue value={value} />
       ) : (
         <FieldContext.Provider value={field}>{children}</FieldContext.Provider>
+      )}
+      {hint && !readOnly && (
+        <span
+          id={hintId}
+          className="mt-1 block text-sm"
+          style={{ color: 'var(--text-color-secondary)' }}
+        >
+          {hint}
+        </span>
       )}
       {error && (
         <span
@@ -103,13 +131,32 @@ export type NestedFieldProps = {
 
 /** Campo aninhado (linhas de contato/endereço/módulo): sem label própria, mas
  * com o erro do backend visível. Sem isso, um 422 em `contacts.0.name` deixa o
- * botão de salvar aparentemente inerte. */
+ * botão de salvar aparentemente inerte.
+ *
+ * Com erro, publica o mesmo `FieldContext` do `FormField`: o controle filho sai
+ * `aria-invalid` e `aria-describedby` apontando para a mensagem — o que também
+ * o faz alvo do foco do `CrudDialog` após um envio reprovado. Sem erro
+ * republica o contexto de fora (o do `FormField` que o envolve, ou nenhum): a
+ * árvore tem a mesma forma com e sem erro — o input não remonta nem perde o
+ * foco quando o erro some ao editar. */
 export function NestedField({ error, readOnly, value, children }: NestedFieldProps) {
+  const id = useId()
+  const errorId = `${id}-error`
+  const outer = useContext(FieldContext)
+  const field: FieldContextValue | null = error
+    ? { id, invalid: true, describedBy: errorId }
+    : outer
+
   return (
     <div>
-      {readOnly ? <ReadOnlyValue value={value} /> : children}
+      {readOnly ? (
+        <ReadOnlyValue value={value} />
+      ) : (
+        <FieldContext.Provider value={field}>{children}</FieldContext.Provider>
+      )}
       {error && (
         <span
+          id={errorId}
           className="mt-1 block text-sm"
           style={{ color: dangerText }}
         >
@@ -138,23 +185,29 @@ export function FormErrorSummary({ errors, mapped, excludePrefixes = [] }: FormE
   )
   if (leftover.length === 0) return null
   return (
-    <ul
-      role="list"
-      /* `list-disc` explícito: o mini-reset da P-46 zera o marcador de todo
-       * `ul`, e aqui os itens são FRASE — cada linha é uma mensagem de erro
-       * independente, e sem marcador três erros leem como um parágrafo
-       * quebrado. `list-inside` põe o glifo dentro da caixa, para não brigar
-       * com o `px-3` da faixa (Q-7 do review de 2026-08-27). */
-      className="mb-4 list-inside list-disc rounded-control px-3 py-2 text-sm"
-      style={{
-        background: dangerSurface,
-        color: dangerText,
-      }}
-    >
-      {leftover.map(([key, msgs]) => (
-        <li key={key}>{msgs[0]}</li>
-      ))}
-    </ul>
+    // `role="alert"` e `tabIndex={-1}` no INVÓLUCRO, e a lista segue lista: o
+    // resumo é a única indicação de um 422 cujo campo não tem input — sem anúncio
+    // ele passa calado ao leitor de tela, e sem `tabIndex` o `CrudDialog` não tem
+    // como levar o foco até ele quando não há campo inválido.
+    <div role="alert" tabIndex={-1} className="mb-4">
+      <ul
+        role="list"
+        /* `list-disc` explícito: o mini-reset da P-46 zera o marcador de todo
+         * `ul`, e aqui os itens são FRASE — cada linha é uma mensagem de erro
+         * independente, e sem marcador três erros leem como um parágrafo
+         * quebrado. `list-inside` põe o glifo dentro da caixa, para não brigar
+         * com o `px-3` da faixa (Q-7 do review de 2026-08-27). */
+        className="list-inside list-disc rounded-control px-3 py-2 text-sm"
+        style={{
+          background: dangerSurface,
+          color: dangerText,
+        }}
+      >
+        {leftover.map(([key, msgs]) => (
+          <li key={key}>{msgs[0]}</li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

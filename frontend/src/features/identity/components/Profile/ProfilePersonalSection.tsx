@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useToast } from '@shared/hooks'
 import {
   AppButton,
   AppCard,
@@ -9,7 +10,6 @@ import {
   PhoneInput,
   technicalDataClass,
   useFormField,
-  useToast,
 } from '@shared/ui'
 import { TETOS_IMPRESSOS } from '@shared/config/tetosImpressos'
 import type { ProfileData } from '@shared/types/generated'
@@ -47,7 +47,7 @@ export function ProfilePersonalSection({ profile }: { profile: ProfileData }) {
             que a requisição em voo NÃO leva: o toast de sucesso aparecia sobre
             um texto na tela que nunca chegou ao servidor, e o refetch só o
             desmentia depois. */}
-        <campo.Field name="name" label={t('profile.personal.name')}>
+        <campo.Field name="name" label={t('profile.personal.name')} required>
           <AppInputText
             className="w-full"
             autoComplete="name"

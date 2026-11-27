@@ -18,7 +18,7 @@ function tag(nome: string) {
 describe('AppTag — tom não preenche mais', () => {
   it.each([
     ['success', 'green', '--tone-success-ink'],
-    ['info', 'blue', '--tone-info-ink'],
+    ['info', 'indigo', '--tone-info-ink'],
     ['warning', 'yellow', '--tone-warning-ink'],
     ['danger', 'red', '--tone-danger-ink'],
   ] as const)('%s compõe fundo suave e tinta de tom', (severity, hue, ink) => {

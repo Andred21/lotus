@@ -56,7 +56,7 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
         </div>
 
         <div className={f.step === 'rut' ? 'sm:col-span-2' : undefined}>
-          <FormField label={t('operation.enrollment.form.rutLabel')} error={err('rut')}>
+          <FormField label={t('operation.enrollment.form.rutLabel')} required error={err('rut')}>
             <RutInput
               className="w-full"
               value={f.rut}
@@ -68,7 +68,7 @@ export function EnrollStudentForm({ turmaId, turmaClientName, visible, onHide }:
 
         {f.step === 'details' && (
           <>
-            <FormField label={t('operation.enrollment.form.nameLabel')} error={err('name')}>
+            <FormField label={t('operation.enrollment.form.nameLabel')} required error={err('name')}>
               <AppInputText
                 className="w-full"
                 value={f.details.name}

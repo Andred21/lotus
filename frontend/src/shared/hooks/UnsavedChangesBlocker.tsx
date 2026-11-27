@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { useBlocker } from 'react-router-dom'
+import { useSessionStore } from '@shared/stores/sessionStore'
 import type { Allowance } from './Allowance'
 
 /** A navegação que o router segurou, com as duas saídas dela. */
@@ -19,6 +20,11 @@ type Navegacao = { currentLocation: { pathname: string }; nextLocation: { pathna
  * Só o `pathname` bloqueia: `?query` e hash não tiram o usuário da tela. A
  * liberação de `allowNavigation` é consumida pela primeira navegação avaliada,
  * bloqueável ou não.
+ *
+ * Sessão expirada não bloqueia: o diálogo "descartar?" seguraria o usuário numa
+ * tela cujo salvar já não funciona, e o único destino possível é o login (o
+ * `from` guarda a URL para a volta). O estado é lido NA HORA da navegação, não de
+ * um render anterior: o redirecionamento nasce no mesmo gesto que expira.
  */
 export function UnsavedChangesBlocker({ allowance, onBlock }: {
   allowance: Allowance
@@ -27,6 +33,7 @@ export function UnsavedChangesBlocker({ allowance, onBlock }: {
   const shouldBlock = useCallback(
     ({ currentLocation, nextLocation }: Navegacao) => {
       if (allowance.consume()) return false
+      if (useSessionStore.getState().expired) return false
       return currentLocation.pathname !== nextLocation.pathname
     },
     [allowance],

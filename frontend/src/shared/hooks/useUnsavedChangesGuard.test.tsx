@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { act, render } from '@testing-library/react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { createWrapper } from '@/shared/testing/providers'
+import { useSessionStore } from '@shared/stores/sessionStore'
 import { useUnsavedChangesGuard } from './useUnsavedChangesGuard'
 
 /** O hook sob teste, mais o que o teste precisa para navegar e para ler onde está. */
@@ -56,6 +57,8 @@ function montarDuas(a: boolean, b: boolean) {
 }
 
 describe('useUnsavedChangesGuard', () => {
+  afterEach(() => { useSessionStore.setState({ expired: false }) })
+
   it('sem mudança, navegar não bloqueia', () => {
     const { result } = montar(false)
 
@@ -111,6 +114,19 @@ describe('useUnsavedChangesGuard', () => {
     expect(result.current.guard.dialogProps.visible).toBe(true)
   })
 
+  it('revoke desfaz a liberação: o pós-salvar que falha não deixa a próxima navegação passar', () => {
+    const { result } = montar(true)
+
+    act(() => {
+      result.current.guard.allowNavigation()
+      result.current.guard.revoke()
+      void result.current.navigate('/b')
+    })
+
+    expect(result.current.location.pathname).toBe('/a')
+    expect(result.current.guard.dialogProps.visible).toBe(true)
+  })
+
   it('allowNavigation também é consumido por uma navegação só de query', () => {
     const { result } = montar(true)
 
@@ -143,6 +159,18 @@ describe('useUnsavedChangesGuard', () => {
     expect(result.current.location.pathname).toBe('/a')
     expect(result.current.b.dialogProps.visible).toBe(true)
     expect(result.current.a.dialogProps.visible).toBe(false)
+  })
+
+  it('sessão expirada com rascunho vai ao login sem diálogo', () => {
+    const { result } = montar(true)
+
+    act(() => {
+      useSessionStore.setState({ expired: true })
+      void result.current.navigate('/login')
+    })
+
+    expect(result.current.location.pathname).toBe('/login')
+    expect(result.current.guard.dialogProps.visible).toBe(false)
   })
 
   it('confirmDiscard sem mudança chama proceed direto', () => {

@@ -54,7 +54,7 @@ export function BatchIssueDialog({ turma, onHide }: Props) {
           <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>
             {t('certificate.batchConfirmBody', { count: batch.pendientes.length })}
           </p>
-          <FormField label={t('certificate.fieldRedator')} error={batch.fieldErrors?.redator_id?.[0]}>
+          <FormField label={t('certificate.fieldRedator')} required error={batch.fieldErrors?.redator_id?.[0]}>
             <AppDropdown
               value={batch.redatorId}
               options={turma.redatores.map((r) => ({ label: r.name, value: r.redator_id }))}

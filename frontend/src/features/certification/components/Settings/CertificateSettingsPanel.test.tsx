@@ -17,8 +17,8 @@ const espia = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } })
 
 // A limpeza em canvas não roda no jsdom: o teste mocka a ponte e o resto do fluxo é real.
 vi.mock('@shared/lib/signature/canvasBridge', () => ({ fileToRaster: vi.fn(), rasterToPngFile: vi.fn() }))
-vi.mock('@shared/ui', async (importOriginal) => {
-  const real = await importOriginal<typeof import('@shared/ui')>()
+vi.mock('@shared/hooks', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@shared/hooks')>()
   return { ...real, useToast: () => espia.toast }
 })
 

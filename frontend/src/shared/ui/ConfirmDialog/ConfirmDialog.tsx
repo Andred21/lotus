@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DialogFrame } from '../AppDialog/DialogFrame'
 import { AppButton } from '../AppButton'
@@ -17,7 +17,7 @@ export type { ConfirmDialogSeverity } from './style'
  * primeira vista (spec J3/J4). Apresentacional puro: não conhece feature nem
  * mutação. */
 export function ConfirmDialog({
-  visible, title, message, children, confirmLabel, cancelLabel, confirmIcon = 'check', confirmDisabled,
+  visible, title, message, children, confirmLabel, cancelLabel, confirmIcon = 'check', confirmDisabled, confirmDisabledReason,
   severity = 'confirm', pending, error, onConfirm, onCancel,
 }: {
   visible: boolean
@@ -31,6 +31,11 @@ export function ConfirmDialog({
   confirmIcon?: IconProp
   /** Desliga só o confirmar (ex.: motivo obrigatório ainda vazio). */
   confirmDisabled?: boolean
+  /** O porquê do confirmar apagado, em texto visível: só aparece com
+   * `confirmDisabled`, depois do `children`, e é a descrição acessível do
+   * botão (`aria-describedby`) — botão apagado não recebe foco, então sem o
+   * vínculo o leitor de tela não chega ao motivo. */
+  confirmDisabledReason?: string
   severity?: ConfirmDialogSeverity
   pending?: boolean
   error?: string | null
@@ -39,6 +44,8 @@ export function ConfirmDialog({
 }) {
   const { t } = useTranslation()
   const s = confirmSeverityStyle[severity]
+  const reasonId = useId()
+  const reason = confirmDisabled ? confirmDisabledReason : undefined
 
   const header = (
     <div data-severity={severity} className="flex items-center gap-3 pr-6">
@@ -67,6 +74,7 @@ export function ConfirmDialog({
         icon={confirmIcon}
         loading={pending}
         disabled={confirmDisabled}
+        aria-describedby={reason ? reasonId : undefined}
         onClick={onConfirm}
       />
     </div>
@@ -94,6 +102,11 @@ export function ConfirmDialog({
       <FormErrorBanner message={error} />
       <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{message}</p>
       {children}
+      {reason && (
+        <p id={reasonId} className="mt-4 text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+          {reason}
+        </p>
+      )}
     </DialogFrame>
   )
 }

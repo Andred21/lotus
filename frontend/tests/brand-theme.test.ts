@@ -12,6 +12,7 @@ import {
   AZUL_POSTE,
   TINTA_CLARA,
   CINZA_BORDA,
+  SELETORES_DE_CONTROLE,
   SEVERIDADES_CLARAS,
 } from '../scripts/generate-brand-theme.mjs'
 
@@ -487,7 +488,7 @@ describe('o tinte da coluna presa acompanha o hover do tema (Q-3)', () => {
 const DECLARACOES_COM = (css: string, hex: string) =>
   [...css.matchAll(new RegExp(`[-\\w]*\\s*:\\s*[^;{}]*${hex}[^;{}]*`, 'gi'))].map((m) => m[0].trim())
 
-describe('D-68 — borda de controle do tema claro', () => {
+describe('D-68 e A-1 — borda de controle, nos dois temas', () => {
   it('as bordas em slate-500 somam 24 (21 convertidas + 3 já vivas), e nenhuma sobra em slate-300', () => {
     const css = light()
     const bordas = DECLARACOES_COM(css, CINZA_BORDA).filter((d) => /^border/.test(d))
@@ -502,8 +503,153 @@ describe('D-68 — borda de controle do tema claro', () => {
     expect(sobrou.filter((d) => /^background/.test(d)).length).toBe(4)
   })
 
-  it('o escuro não recebe a passada — lá o traço não é o único indicador', () => {
-    expect(DECLARACOES_COM(dark(), CINZA_BORDA).filter((d) => /^border/.test(d)).length).toBe(0)
+  // A-1 (bloco 65): o escuro também, mas SÓ nos controles. O `#334155` do traço
+  // do input mede 1,41:1 sobre o card e 1,81:1 sobre o fundo — e ali o traço é o
+  // único indicador do limite, como no claro. Já divisor de tabela, borda de
+  // diálogo, paginador, menu e seta de tooltip são hairline de hierarquia: ficam
+  // em `#334155` (DESIGN.md: "Bordas são hairline de 1px"), do mesmo peso do
+  // `--surface-border` do `AppCard`. Uma lista de seletores, a mesma nos dois temas.
+  const bordasDe = (css: string, hex: string) => {
+    const achado = new Map<string, string[]>()
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const decls = [...m[2].matchAll(new RegExp(`(?<![-\\w])border[-\\w]*\\s*:[^;{}]*${hex}`, 'gi'))].map((d) => d[0])
+      if (decls.length) achado.set(m[1].trim().replace(/\s+/g, ' '), decls)
+    }
+    return achado
+  }
+
+  it('borda de controle do escuro é #64748b — input, dropdown, checkbox e radio', () => {
+    const css = bordasDe(dark(), CINZA_BORDA)
+    for (const seletor of [
+      '.p-inputtext',
+      '.p-dropdown',
+      '.p-multiselect',
+      '.p-checkbox .p-checkbox-box',
+      '.p-radiobutton .p-radiobutton-box',
+      '.p-togglebutton .p-button',
+    ]) {
+      expect(css.get(seletor)?.[0], seletor).toMatch(new RegExp(`${CINZA_BORDA}$`))
+    }
+  })
+
+  it('a hairline estrutural do escuro segue em #334155 — tabela, diálogo, paginador, menu, painel', () => {
+    const css = bordasDe(dark(), '#334155')
+    for (const seletor of [
+      '.p-datatable .p-datatable-thead > tr > th',
+      '.p-datatable .p-datatable-tbody > tr > td',
+      '.p-dialog',
+      '.p-paginator',
+      '.p-panel .p-panel-header',
+      '.p-tabview .p-tabview-nav',
+      '.p-toolbar',
+      '.p-fieldset',
+      '.p-divider.p-divider-horizontal:before',
+      '.p-menu .p-menu-separator',
+      '.p-overlaypanel',
+      '.p-tooltip.p-tooltip-top .p-tooltip-arrow',
+      '.p-dropdown-panel',
+      '.p-datepicker:not(.p-datepicker-inline)',
+      '.p-datepicker .p-datepicker-header',
+    ]) {
+      expect(css.has(seletor), seletor).toBe(true)
+    }
+    // e a recíproca: nenhuma hairline estrutural foi repintada.
+    const repintadas = [...bordasDe(dark(), CINZA_BORDA).keys()].filter((sel) => !SELETORES_DE_CONTROLE.includes(sel))
+    expect(repintadas.filter((sel) => !/p-button/.test(sel))).toEqual([])
+  })
+
+  it('a lista de controle é a mesma nos dois temas: todo bloco dela perde a origem, e só ele', () => {
+    for (const [css, origem] of [
+      [light(), '#cbd5e1'],
+      [dark(), '#334155'],
+    ] as const) {
+      const sobra = [...bordasDe(css, origem).keys()].filter((sel) => SELETORES_DE_CONTROLE.includes(sel))
+      expect(sobra).toEqual([])
+    }
+    const emLista = (css: string) => [...bordasDe(css, CINZA_BORDA).keys()].filter((sel) => SELETORES_DE_CONTROLE.includes(sel))
+    expect(emLista(dark()).sort()).toEqual(emLista(light()).sort())
+    expect(SELETORES_DE_CONTROLE.length).toBe(18)
+  })
+
+  it('o slate-500 mede 3:1 (WCAG 1.4.11) sobre o card e sobre o fundo do escuro', () => {
+    const css = dark()
+    const token = (nome: string) => css.match(new RegExp(`${nome}:\\s*(#[0-9a-f]{6})`, 'i'))![1]
+    expect(razao(CINZA_BORDA, token('--surface-card'))).toBeGreaterThanOrEqual(3)
+    expect(razao(CINZA_BORDA, token('--surface-ground'))).toBeGreaterThanOrEqual(3)
+  })
+})
+
+const luminanciaDe = (hex: string) =>
+  [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((s) => (s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4))
+    .reduce((soma, canal, i) => soma + [0.2126, 0.7152, 0.0722][i] * canal, 0)
+const razao = (a: string, b: string) => {
+  const [x, y] = [luminanciaDe(a), luminanciaDe(b)].sort((m, n) => n - m)
+  return (x + 0.05) / (y + 0.05)
+}
+
+// ── D7 (bloco 65): info em índigo ───────────────────────────────────────────
+// O celeste é a MARCA; info dele colidia com a primária (B-2). Message, toast,
+// tag e badge de info vão ao índigo: degrau 700 no claro e 300 no escuro, para
+// tinta E borda, com o fundo composto de `--indigo-500` sobre o card. Os palette
+// vars do Lara não invertem entre temas, então o degrau é por tema, na geração.
+const BLOCOS_INFO = (css: string) =>
+  [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter((m) => /p-(?:message-info|toast-message-info|tag-info|badge-info)\b/.test(m[1]))
+    .map((m) => ({ seletor: m[1].trim().replace(/\s+/g, ' '), corpo: m[2] }))
+
+describe('D7 — info de message/toast/tag/badge em índigo', () => {
+  it.each([
+    { tema: 'claro', css: light, ink: 'var(--indigo-700)' },
+    { tema: 'escuro', css: dark, ink: 'var(--indigo-300)' },
+  ])('info de message/toast/tag/badge é índigo nos dois temas ($tema)', ({ css, ink }) => {
+    const blocos = BLOCOS_INFO(css())
+    // message (3) + toast (2) + tag (1 ou 2) + badge (1)
+    expect(blocos.length).toBeGreaterThanOrEqual(7)
+    for (const { seletor, corpo } of blocos) {
+      expect(corpo, seletor).not.toMatch(/#(?:25a5e4|0ea5e9|38bdf8|186b94|80caef|082f49|ffffff)\b/i)
+      expect(corpo, seletor).not.toMatch(/rgba\(\s*(?:211|37)\s*,/)
+      for (const cor of corpo.matchAll(/(?<![-\w])color:\s*([^;]+)/g)) expect(cor[1].trim(), seletor).toBe(ink)
+      for (const borda of corpo.matchAll(/(?<![-\w])border:\s*solid\s+([^;]+)/g)) expect(borda[1].trim(), seletor).toBe(ink)
+      for (const fundo of corpo.matchAll(/(?<![-\w])background(?:-color)?:\s*([^;]+)/g))
+        expect(fundo[1].trim(), seletor).toBe('color-mix(in srgb, var(--indigo-500) 15%, var(--surface-card))')
+    }
+    // Os que pintam (message, toast, tag, badge) trazem as TRÊS camadas ou as duas que têm.
+    const raiz = blocos.filter(({ seletor }) => /(?:message-info|tag-info|badge-info)$/.test(seletor))
+    expect(raiz.every(({ corpo }) => /background/.test(corpo) && /(?<![-\w])color:/.test(corpo))).toBe(true)
+  })
+
+  it('a tinta e a borda do índigo medem AA sobre o fundo composto, nos dois temas', () => {
+    for (const { css, degrau, card } of [
+      { css: light(), degrau: '--indigo-700', card: '#ffffff' },
+      { css: dark(), degrau: '--indigo-300', card: '#1e293b' },
+    ]) {
+      const token = (n: string) => css.match(new RegExp(`${n}:\\s*(#[0-9a-f]{6})`, 'i'))![1]
+      const cardReal = token('--surface-card')
+      expect(cardReal).toBe(card)
+      const base = token('--indigo-500')
+      const fundo =
+        '#' +
+        [1, 3, 5]
+          .map((i) => Math.round(parseInt(base.slice(i, i + 2), 16) * 0.15 + parseInt(cardReal.slice(i, i + 2), 16) * 0.85))
+          .map((v) => v.toString(16).padStart(2, '0'))
+          .join('')
+      expect(razao(token(degrau), fundo)).toBeGreaterThanOrEqual(4.5)
+      expect(razao(token(degrau), cardReal)).toBeGreaterThanOrEqual(3)
+    }
+  })
+})
+
+// ── B-8 (bloco 65): a tag pesa 600 ──────────────────────────────────────────
+describe('B-8 — peso da tag', () => {
+  it.each([
+    ['claro', light],
+    ['escuro', dark],
+  ])('p-tag pesa 600 (%s)', (_tema, css) => {
+    const blocos = [...css().matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => m[1].trim() === '.p-tag')
+    expect(blocos.length).toBeGreaterThan(0)
+    for (const m of blocos) expect(m[2]).toMatch(/font-weight:\s*600\b/)
   })
 })
 

@@ -9,8 +9,9 @@ import type { DashboardSeverity } from '@shared/types/generated'
  *
  * NÃO exportado de propósito: o único consumidor é a linha logo abaixo. O
  * `export` custava um `eslint-disable` de `react-refresh/only-export-components`
- * e o precedente do `AppToast` não o cobria — lá o `useToast` é consumido por
- * features de fora (Q-2, review de 2026-08-16). */
+ * e o precedente do antigo `AppToast` não o cobria — lá o `useToast` morava
+ * junto do componente e era consumido por features de fora (Q-2, review de
+ * 2026-08-16; o contexto saiu de `shared/ui` no bloco 65). */
 function severityTagProps(severity: DashboardSeverity): { severity: 'danger' | 'warning' | 'info' } {
   if (severity === 'high') return { severity: 'danger' }
   if (severity === 'medium') return { severity: 'warning' }

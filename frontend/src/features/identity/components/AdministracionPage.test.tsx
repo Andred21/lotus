@@ -36,9 +36,10 @@ describe('AdministracionPage — aba Configuración (slot)', () => {
     expect(screen.queryByText('admin.tabConfiguracion')).toBeNull()
   })
 
-  it('com o slot, a aba Configuración existe e traz o conteúdo composto pela rota', () => {
+  it('com o slot, a aba Configuración existe e traz o conteúdo composto pela rota', async () => {
     montar(<p>conteudo-de-fora</p>)
     fireEvent.click(screen.getByText('admin.tabConfiguracion'))
-    expect(screen.getByText('conteudo-de-fora')).toBeTruthy()
+    // A aba vem da URL: a troca passa pelo router, não é mais síncrona.
+    expect(await screen.findByText('conteudo-de-fora')).toBeTruthy()
   })
 })

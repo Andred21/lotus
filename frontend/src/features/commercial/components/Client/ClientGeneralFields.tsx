@@ -26,15 +26,15 @@ export function ClientGeneralFields({
       {/* Empresa não tem "nome" separado da razón social — `name` (exigido pelo
           backend) é derivado de `legal_name` no submit, e o 422 pode voltar com
           a chave do derivado. O mapeamento vive no `useClientForm`. */}
-      <Field name="legal_name" label={t('client.legalName')}>
+      <Field name="legal_name" label={t('client.legalName')} required>
         <AppInputText className="w-full" maxLength={TETOS_IMPRESSOS.razaoSocial} />
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field name="rut" label={t('common.rut')}>
+        <Field name="rut" label={t('common.rut')} required>
           <RutInput className="w-full" />
         </Field>
-        <Field name="email" label={t('common.email')}>
+        <Field name="email" label={t('common.email')} required>
           <AppInputText className="w-full" />
         </Field>
       </div>

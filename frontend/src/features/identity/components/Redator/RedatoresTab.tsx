@@ -88,9 +88,14 @@ export function RedatoresTab() {
       {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
       <ArchiveConfirmDialog
         target={toArchive}
+        name={toArchive ? toArchive.name : ''}
         pending={redatoresArchived.archiving}
+        error={redatoresArchived.archiveError}
         onArchive={redatoresArchived.archive}
-        onCancel={() => setToArchive(null)}
+        onCancel={() => {
+          redatoresArchived.resetArchiveError()
+          setToArchive(null)
+        }}
       />
     </>
   )

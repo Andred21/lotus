@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode, type RefObject } from 'react'
+import { Tooltip } from 'primereact/tooltip'
 import { AppAvatar, type AppAvatarProps } from '../AppAvatar'
 
 export interface IdentityCellProps {
@@ -12,6 +13,12 @@ export interface IdentityCellProps {
    * (forma 1). */
   inline?: boolean
   size?: AppAvatarProps['size']
+  /** O texto truncado vira parada de Tab, com o nome inteiro e a dica no foco
+   * (A-2). Padrão `true`, que é o das tabelas. Desligue DENTRO de um controle
+   * interativo (o `<button aria-pressed>` do `AppSelectableCard`): filho
+   * focável num botão é HTML inválido, e o leitor de tela leria botão e grupo
+   * em duplicidade. Desligada, o corte volta a ser recuperável só pelo `title`. */
+  focusable?: boolean
 }
 
 /**
@@ -38,7 +45,7 @@ export interface IdentityCellProps {
  * catorze tabelas que usam esta célula.
  */
 export function IdentityCell({
-  title, description, image, inline = false, size = 'large',
+  title, description, image, inline = false, size = 'large', focusable = true,
 }: IdentityCellProps) {
   /* `aria-hidden` porque o avatar é ILUSTRAÇÃO do título que vem ao lado: sem
    * isto o leitor de tela anuncia o nome duas vezes por linha (uma pelo
@@ -52,6 +59,8 @@ export function IdentityCell({
    * nome truncava ("Subestación Norte"), e as de nome curto (CGE, Transelec)
    * ficavam redondas. O `min-w-0` do bloco de texto é o que faz o texto ceder
    * primeiro; sem esta trava, ele não cede sozinho. */
+  const texto = useRef<HTMLDivElement>(null)
+  const completo = typeof description === 'string' && description ? `${title}, ${description}` : title
   const avatar = <AppAvatar name={title} image={image} size={size} className="shrink-0" aria-hidden />
 
   if (inline)
@@ -80,25 +89,38 @@ export function IdentityCell({
         *
         * Nada muda onde a coluna NÃO limita a largura: sem teto, o bloco
         * continua ocupando o que o texto pede. */}
-      <div className="flex min-w-0 flex-col gap-2">
-        {/* Texto truncado sem recuperação é defeito (UI-03 da run 1 desta
-          * revisão, e UI-01 do `AppFileRow`): o `title` devolve o valor
-          * integral. Só na forma empilhada, que é a única que trunca.
-          *
-          * A descrição é `ReactNode` e só vira `title` quando é string — o
-          * `RedatorCard` passa `<span className="font-mono">{rut}</span>`, e
-          * `[object Object]` no tooltip seria pior que tooltip nenhum. */}
-        <span className="truncate font-semibold" title={title}>{title}</span>
+      {/* Texto truncado sem recuperação é defeito (UI-03 da run 1 desta
+        * revisão, e UI-01 do `AppFileRow`). O `title` devolvia o valor integral
+        * só no hover do mouse — teclado e leitor de tela não o alcançavam (A-2).
+        * Agora o bloco é focável (`tabIndex=0`), tem o texto inteiro como nome
+        * (`aria-label`) e abre a dica no foco E no hover. O `title` nativo saiu:
+        * com a dica do Prime seriam duas caixas no mesmo hover. Só na forma
+        * empilhada, que é a única que trunca.
+        *
+        * A descrição é `ReactNode` e só entra no nome quando é string — o
+        * `RedatorCard` passa `<span className="font-mono">{rut}</span>`, e
+        * `[object Object]` no nome seria pior que nome nenhum. */}
+      <div
+        ref={texto}
+        {...(focusable ? { tabIndex: 0, role: 'group', 'aria-label': completo } : {})}
+        className="flex min-w-0 flex-col gap-2"
+      >
+        <span className="truncate font-semibold" title={focusable ? undefined : title}>{title}</span>
         {description && (
           <span
             className="truncate text-sm font-medium"
-            title={typeof description === 'string' ? description : undefined}
+            title={focusable || typeof description !== 'string' ? undefined : description}
             style={{ color: 'var(--text-color-secondary)' }}
           >
             {description}
           </span>
         )}
       </div>
+      {/* O `useRef` do React 19 tipa `RefObject<T | null>`, e o d.ts do Prime
+        * ainda pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
+      {focusable && (
+        <Tooltip target={texto as RefObject<HTMLElement>} content={completo} event="both" position="top" closeOnEscape />
+      )}
     </div>
   )
 }

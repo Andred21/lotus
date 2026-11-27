@@ -33,6 +33,7 @@ export function BudgetDialog({
       onHide={onHide}
       onSubmit={submit}
       pending={pending}
+      guard={f.guard}
       // Sem lista utilizável não há `client_id` para escolher, e o create sai com
       // o `0` do form vazio — POST inválido por construção, respondido com 422.
       // O gêmeo `StudentDialog` já gateava assim, e o `disabled` do `CrudDialog`
@@ -67,7 +68,7 @@ export function BudgetDialog({
             continuam explícitos aqui (item 24, spec §5). */}
         <campo.Field
           name="client_id"
-          label={t('budget.client')}
+          label={t('budget.client')} required
           readOnly={readOnly || !isCreate}
           value={clients.clientOptions.find((o) => o.value === form.client_id)?.label ?? ''}
         >

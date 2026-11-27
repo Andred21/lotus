@@ -1,7 +1,10 @@
 import { useTranslation } from 'react-i18next'
+import { useUrlTab } from '@shared/hooks'
 import { ModulePage, ModuleTabs, ModuleTab, AppCard } from '@shared/ui'
 import { RedatoresTab } from './Redator/RedatoresTab'
 import { StudentsTab } from './Student/StudentsTab'
+
+const TABS = ['redatores', 'students'] as const
 
 /**
  * Casca de abas: cabeçalho, cartão e as duas abas. **Nenhum hook de dado.**
@@ -12,11 +15,12 @@ import { StudentsTab } from './Student/StudentsTab'
  */
 export function PeoplePage() {
   const { t } = useTranslation()
+  const { index, setTab } = useUrlTab(TABS)
 
   return (
     <ModulePage title={t('module.personas.title')} description={t('module.personas.description')}>
       <AppCard>
-        <ModuleTabs>
+        <ModuleTabs activeIndex={index} onTabChange={(e) => setTab(e.index)}>
           <ModuleTab header={t('redator.tabRedatores')}>
             <RedatoresTab />
           </ModuleTab>

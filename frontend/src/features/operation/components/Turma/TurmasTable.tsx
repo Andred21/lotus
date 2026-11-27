@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AppColumn, AppEmptyState, ArchiveSwitch, SearchableTableFrame, archivedColumns, narrowFloorTablePt,
   stickyActionsColumn, useCollapsibleActionsColumn,
 } from '@shared/ui'
+import { backState } from '@shared/hooks'
 import type { ArchiveMode, ServerTable } from '@shared/hooks'
 import type { TurmaData } from '@shared/types/generated'
 import type { TurmaDisplayStatus } from '../../lib/turmaStatus'
@@ -34,6 +35,7 @@ export function TurmasTable({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const archived = mode === 'archived'
   const largura = turmaWidths(archived)
   // Abaixo de `sm` a linha carrega um controle só e a presa encolhe junto
@@ -119,7 +121,7 @@ export function TurmasTable({
             turma={turma}
             archived={archived}
             busy={busy}
-            onView={(x) => navigate(`/operacion/turmas/${x.id}`)}
+            onView={(x) => navigate(`/operacion/turmas/${x.id}`, { state: backState(location) })}
             onArchive={onArchive}
             onRestore={onRestore}
             collapsed={colunaDeAcoes.collapsed}

@@ -45,9 +45,14 @@ export function CatalogPage() {
       {/* Restaurar NÃO pede confirmação: não é destrutivo (molde D9). */}
       <ArchiveConfirmDialog
         target={toArchive}
+        name={toArchive ? toArchive.name : ''}
         pending={archivedPage.archiving}
+        error={archivedPage.archiveError}
         onArchive={archivedPage.archive}
-        onCancel={() => setToArchive(null)}
+        onCancel={() => {
+          archivedPage.resetArchiveError()
+          setToArchive(null)
+        }}
       />
 
       {page.dialog && (

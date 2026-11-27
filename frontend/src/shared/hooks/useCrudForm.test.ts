@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import {
   useCrudForm,
@@ -7,6 +7,9 @@ import {
   forbiddenPayloadKeys,
   type MutableResource,
 } from './useCrudForm'
+
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
+vi.mock('./useToast', () => ({ useToast: () => toast }))
 
 type Fields = { id?: number; name: string; secret: string }
 
@@ -308,5 +311,196 @@ describe('useCrudForm — afterCreate retentável', () => {
     await act(async () => { result.current.crud.submit() })
 
     expect(done).toEqual(['done'])
+  })
+})
+
+describe('useCrudForm — rascunho', () => {
+  const create = () =>
+    renderHook(() => useCrudForm(fakeResource(), { ...base, entity: null, mode: 'create' as const }).crud)
+
+  it('nasce limpo e suja quando um campo muda', () => {
+    const { result } = create()
+    expect(result.current.dirty).toBe(false)
+
+    act(() => result.current.set('name', 'Lotus'))
+
+    expect(result.current.dirty).toBe(true)
+  })
+
+  it('desfazer a mudança à mão volta a limpo', () => {
+    const { result } = create()
+
+    act(() => result.current.set('name', 'Lotus'))
+    act(() => result.current.set('name', ''))
+
+    expect(result.current.dirty).toBe(false)
+  })
+
+  it('em edit, o limpo é a entidade, não o vazio', () => {
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), {
+        ...base, entity: { id: 7, name: 'a', secret: '' }, mode: 'edit' as const,
+      }).crud,
+    )
+    expect(result.current.dirty).toBe(false)
+
+    act(() => result.current.set('name', 'b'))
+    expect(result.current.dirty).toBe(true)
+
+    act(() => result.current.set('name', 'a'))
+    expect(result.current.dirty).toBe(false)
+  })
+
+  it('o reset (outra entidade) volta a limpo', () => {
+    const { result, rerender } = renderHook(
+      ({ id }: { id: number }) =>
+        useCrudForm(fakeResource(), {
+          ...base, entity: { id, name: 'a', secret: '' }, mode: 'edit' as const,
+        }).crud,
+      { initialProps: { id: 1 } },
+    )
+    act(() => result.current.set('name', 'sujo'))
+    expect(result.current.dirty).toBe(true)
+
+    rerender({ id: 2 })
+
+    expect(result.current.dirty).toBe(false)
+  })
+
+  it('a guarda só pergunta com rascunho: limpo segue direto, sujo abre o aviso', () => {
+    const { result } = create()
+    const seguir = vi.fn()
+
+    act(() => result.current.guard.confirmDiscard(seguir))
+    expect(seguir).toHaveBeenCalledTimes(1)
+    expect(result.current.guard.dialogProps.visible).toBe(false)
+
+    act(() => result.current.set('name', 'Lotus'))
+    act(() => result.current.guard.confirmDiscard(seguir))
+    expect(seguir).toHaveBeenCalledTimes(1)
+    expect(result.current.guard.dialogProps.visible).toBe(true)
+
+    act(() => result.current.guard.dialogProps.onConfirm())
+    expect(seguir).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('useCrudForm — erro some ao corrigir', () => {
+  const problema = (errors: Record<string, string[]>) => ({
+    type: 'about:blank', title: 'Unprocessable', status: 422, detail: '',
+    instance: '/api/x', errors,
+  })
+  const comErro = (error: ReturnType<typeof problema>): MutableResource<{ id?: number }> => ({
+    useCreate: () => ({ mutate: () => undefined, isPending: false, error }),
+    useUpdate: () => ({ mutate: () => undefined, isPending: false, error: null }),
+  })
+  const opts = {
+    ...base,
+    entity: null,
+    mode: 'create' as const,
+    mapped: ['name', 'secret'],
+    summaryOnly: [],
+  }
+
+  it('editar o campo limpa o erro 422 dele e só dele', () => {
+    const erro = problema({ name: ['obrigatório'], secret: ['curto'] })
+    const { result } = renderHook(() => useCrudForm(comErro(erro), opts))
+    expect(result.current.crud.fieldErrors?.name).toEqual(['obrigatório'])
+
+    act(() => result.current.crud.set('name', 'Lotus'))
+
+    expect(result.current.crud.fieldErrors?.name).toBeUndefined()
+    expect(result.current.crud.fieldErrors?.secret).toEqual(['curto'])
+  })
+
+  it('um 422 novo (outro envio) volta a mostrar o erro do campo já editado', () => {
+    let erro = problema({ name: ['obrigatório'] })
+    const { result, rerender } = renderHook(() => useCrudForm(comErro(erro), opts))
+    act(() => result.current.crud.set('name', 'Lotus'))
+    expect(result.current.crud.fieldErrors?.name).toBeUndefined()
+
+    erro = problema({ name: ['já existe'] })
+    rerender()
+
+    expect(result.current.crud.fieldErrors?.name).toEqual(['já existe'])
+  })
+
+  it('o erro geral (sem mapa por campo) não some ao editar', () => {
+    const erro = { type: 'about:blank', title: 'x', status: 500, detail: 'Falha', instance: '/api/x' }
+    const { result } = renderHook(() => useCrudForm(comErro(erro as never), opts))
+
+    act(() => result.current.crud.set('name', 'Lotus'))
+
+    expect(result.current.crud.generalError).toBe('Falha')
+  })
+})
+
+describe('useCrudForm — clearField exposto', () => {
+  it('crud.clearField limpa a chave exata (edição aninhada, que não passa pelo `set`)', () => {
+    const erro = {
+      type: 'about:blank', title: 'x', status: 422, detail: '', instance: '/api/x',
+      errors: { 'modules.0.name': ['obrigatório'], 'modules.1.name': ['obrigatório'] },
+    }
+    const recurso: MutableResource<{ id?: number }> = {
+      useCreate: () => ({ mutate: () => undefined, isPending: false, error: erro }),
+      useUpdate: () => ({ mutate: () => undefined, isPending: false, error: null }),
+    }
+    const { result } = renderHook(() =>
+      useCrudForm(recurso, { ...base, entity: null, mode: 'create' as const, excludePrefixes: ['modules.'] }),
+    )
+
+    act(() => result.current.crud.clearField('modules.0.name'))
+
+    expect(result.current.crud.fieldErrors?.['modules.0.name']).toBeUndefined()
+    expect(result.current.crud.fieldErrors?.['modules.1.name']).toEqual(['obrigatório'])
+  })
+})
+
+describe('useCrudForm — sucesso dito (C-5)', () => {
+  it('criar e editar mostram toast de sucesso', async () => {
+    toast.success.mockClear()
+    const criar = renderHook(() =>
+      useCrudForm(fakeResource(), { ...base, entity: null, mode: 'create' }).crud,
+    )
+    await act(async () => {
+      criar.result.current.submit()
+    })
+    expect(toast.success).toHaveBeenCalledTimes(1)
+    expect(toast.success).toHaveBeenLastCalledWith('common.createdToast')
+
+    const editar = renderHook(() =>
+      useCrudForm(fakeResource(), { ...base, entity: { id: 7, name: 'a', secret: '' }, mode: 'edit' }).crud,
+    )
+    await act(async () => {
+      editar.result.current.submit()
+    })
+    expect(toast.success).toHaveBeenCalledTimes(2)
+    expect(toast.success).toHaveBeenLastCalledWith('common.updatedToast')
+  })
+
+  it('criar que falha no afterCreate não diz sucesso; o resubmit que fecha diz uma vez', async () => {
+    toast.success.mockClear()
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    let falhar = true
+    const { result } = renderHook(() =>
+      useCrudForm(fakeResource(), {
+        ...base,
+        entity: null,
+        mode: 'create',
+        afterCreate: async () => {
+          if (falhar) throw new Error('sync falhou')
+        },
+      }).crud,
+    )
+    await act(async () => {
+      result.current.submit()
+    })
+    expect(toast.success).not.toHaveBeenCalled()
+
+    falhar = false
+    await act(async () => {
+      result.current.submit()
+    })
+    expect(toast.success).toHaveBeenCalledTimes(1)
   })
 })

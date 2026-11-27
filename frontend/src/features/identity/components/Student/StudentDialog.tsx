@@ -57,6 +57,7 @@ export function StudentDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
+      guard={f.guard}
       disabled={clientsUnusable || busy}
       closeBlocked={busy}
       submitLabel={mode === "create" ? t("student.create") : undefined}

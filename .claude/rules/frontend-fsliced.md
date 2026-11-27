@@ -270,6 +270,12 @@ exceção. Na dúvida, siga o vizinho da mesma
   `useFilePreview` (que serve o `AppPhotoField` sem conhecê-lo) e `SearchableTableFrame` (que
   consome `useTableFilter` sem que o hook saiba da moldura). Hook que precisa do tipo de um
   componente está desenhado ao contrário — quem depende é o componente.
+  Contexto de infraestrutura consumido por hook (o toast é o caso medido) mora fora de `shared/ui`;
+  `shared/ui` guarda só o componente visual que o renderiza. Foi assim que `useCrudForm` e
+  `useArchiveToasts` importavam `useToast` de `@shared/ui/AppToast` por caminho fundo, contorno de
+  ciclo de barrels (Q-4, bloco 65): o contexto (`useToast`/`ToastContext`) está em `shared/hooks`, a
+  superfície `AppToast` em `shared/ui` e o `ToastProvider` que os liga em `app/providers`.
+  Mecanismo: o bloco de `no-restricted-imports` de `src/shared/hooks/**` em `eslint.config.js`.
 - **Quem deriva status de documento depende do CONTRATO, não do lado.** Onde o DTO **não** traz
   `status`, o front deriva: `RedatorDocumentData` (tela administrativa) só tem `valid_until`, e ali
   valem as regras conservadoras — `valid_until` inparseável → **vencido** (peso legal); sem documento

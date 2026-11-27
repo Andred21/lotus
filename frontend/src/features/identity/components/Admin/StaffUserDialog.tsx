@@ -62,6 +62,7 @@ export function StaffUserDialog({
       onEdit={canManage ? onEdit : undefined}
       onSubmit={submit}
       pending={pending}
+      guard={f.guard}
       closeBlocked={busy}
       disabled={busy}
       submitLabel={mode === "create" ? t("admin.create") : undefined}
@@ -100,7 +101,7 @@ export function StaffUserDialog({
           />
           <campo.Field
             name="role"
-            label={t("admin.role")}
+            label={t("admin.role")} required
             value={roleLabel(form.role, t)}
           >
             <AppDropdown

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { createWrapper } from '@shared/testing/providers'
+import { focusManager } from '@tanstack/react-query'
 import { useDashboard } from './useDashboard'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
@@ -301,6 +302,38 @@ describe('useDashboard', () => {
     expect(result.current.kind).toBe('ready-admin')
     if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
     expect(result.current.data.kpis.turmas_em_andamento).toBe(4)
+  })
+
+  it('foco na janela refaz o painel', async () => {
+    get.mockResolvedValue({ data: admin() })
+    const { result } = renderHook(() => useDashboard(), { wrapper })
+    await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
+    get.mockClear()
+
+    act(() => {
+      focusManager.setFocused(false)
+      focusManager.setFocused(true)
+    })
+
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(1))
+    act(() => focusManager.setFocused(undefined))
+  })
+
+  it('troca de período devolve refreshing até a query nova resolver', async () => {
+    get.mockResolvedValue({ data: admin() })
+    const { result, rerender } = renderHook(
+      ({ p }: { p: { start: string; end: string } }) => useDashboard(p),
+      { wrapper, initialProps: { p: { start: '2026-01-01', end: '2026-06-30' } } },
+    )
+    await waitFor(() => expect(result.current.kind).toBe('ready-admin'))
+    if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
+    expect(result.current.refreshing).toBe(false)
+
+    get.mockImplementation(() => new Promise(() => {}))
+    rerender({ p: { start: '2026-07-01', end: '2026-12-31' } })
+
+    if (result.current.kind !== 'ready-admin') throw new Error('esperava kind ready-admin')
+    expect(result.current.refreshing).toBe(true)
   })
 
   // O outro ramo da D-05, para o silêncio acima não virar "o hook nunca fala":

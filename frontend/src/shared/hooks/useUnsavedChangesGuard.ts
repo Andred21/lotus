@@ -10,6 +10,13 @@ export type UnsavedChangesGuard = {
    * Chame no `onSuccess`, imediatamente antes do `navigate`.
    */
   allowNavigation: () => void
+  /**
+   * Desfaz uma liberação de `allowNavigation` ainda não consumida. Chame se o que vinha
+   * depois do `allowNavigation` falhou e a tela continua aberta com rascunho: a
+   * liberação só some sozinha quando o rascunho limpa, e sem isto a próxima
+   * navegação sairia sem aviso.
+   */
+  revoke: () => void
   dialogProps: {
     visible: boolean
     onConfirm: () => void
@@ -39,6 +46,10 @@ export type UnsavedChangesGuard = {
  *
  * O blocker exige data router — o app o monta em `app/router`, e o helper de
  * teste (`shared/testing/providers`) também.
+ *
+ * Com a sessão expirada (`sessionStore.expired`) o blocker deixa passar: o
+ * único destino é o login, e o rascunho já não tem como ser salvo. O
+ * `beforeunload` segue valendo — recarregar a aba é escolha do usuário.
  *
  * `allowNavigation()` existe para o salvar: ele limpa o rascunho e navega no
  * mesmo gesto, e sem a liberação a própria navegação de sucesso abriria o
@@ -74,6 +85,7 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
   }, [dirty])
 
   const allowNavigation = useCallback(() => { allowance.grant() }, [allowance])
+  const revoke = useCallback(() => { allowance.revoke() }, [allowance])
 
   const onConfirm = () => {
     if (blocked) blocked.proceed()
@@ -92,6 +104,7 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
   return {
     confirmDiscard,
     allowNavigation,
+    revoke,
     dialogProps: {
       visible: blocked !== null || pending !== null,
       onConfirm,

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ToastProvider } from "@shared/ui";
+import { ToastProvider } from "./ToastProvider";
 import { useApplyTheme } from "./useApplyTheme";
 
 const queryClient = new QueryClient({

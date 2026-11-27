@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { FormField, FormErrorSummary, NestedField } from './FormField'
 import { useFieldProps } from './fieldContext'
 
@@ -105,7 +105,46 @@ describe('NestedField em modo leitura', () => {
   })
 })
 
+describe('NestedField com erro', () => {
+  function Entrada() {
+    return <input aria-label="Módulo" {...useFieldProps('id')} />
+  }
+
+  it('marca o controle aria-invalid e o liga à mensagem por aria-describedby', () => {
+    render(
+      <NestedField error="Nombre requerido"><Entrada /></NestedField>,
+    )
+
+    const controle = screen.getByLabelText('Módulo')
+    expect(controle.getAttribute('aria-invalid')).toBe('true')
+    const mensagem = screen.getByText('Nombre requerido')
+    expect(controle.getAttribute('aria-describedby')).toBe(mensagem.id)
+    expect(mensagem.id).not.toBe('')
+  })
+
+  it('sem erro o controle não é marcado', () => {
+    render(<NestedField><Entrada /></NestedField>)
+
+    expect(screen.getByLabelText('Módulo').hasAttribute('aria-invalid')).toBe(false)
+  })
+})
+
 describe('FormErrorSummary', () => {
+  it('é um alert focável por programa', () => {
+    render(<FormErrorSummary errors={{ phone: ['Teléfono inválido'] }} mapped={[]} />)
+
+    const resumo = screen.getByRole('alert')
+    expect(resumo.getAttribute('tabindex')).toBe('-1')
+    expect(resumo.textContent).toContain('Teléfono inválido')
+  })
+
+  it('o alert envolve a lista: a semântica de lista fica', () => {
+    render(<FormErrorSummary errors={{ phone: ['A'], city: ['B'] }} mapped={[]} />)
+
+    const lista = within(screen.getByRole('alert')).getByRole('list')
+    expect(within(lista).getAllByRole('listitem').map((i) => i.textContent)).toEqual(['A', 'B'])
+  })
+
   it('mostra a chave que NAO esta em mapped', () => {
     // É o item (c) do BD-4: `phone` não tem `error=` em campo nenhum, então
     // sem o resumo um 422 nele não aparece em lugar algum da tela.
@@ -209,5 +248,65 @@ describe('FormField associa o rótulo ao controle (P-37)', () => {
     const controle = screen.getByTestId('controle')
     expect(controle.id).toBe('')
     expect(controle.getAttribute('aria-invalid')).toBeNull()
+  })
+})
+
+describe('FormField: obrigatório e ajuda', () => {
+  it('required põe asterisco e aria-required', () => {
+    render(
+      <FormField label="RUT" required>
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    // O nome acessível segue sendo só o rótulo: o asterisco é decoração e quem
+    // anuncia a obrigatoriedade é o `aria-required`.
+    const controle = screen.getByLabelText('RUT')
+    expect(controle.getAttribute('aria-required')).toBe('true')
+    const asterisco = screen.getByText('*')
+    expect(asterisco.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('sem required não há asterisco nem aria-required', () => {
+    render(
+      <FormField label="RUT">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    expect(screen.queryByText('*')).toBeNull()
+    expect(screen.getByLabelText('RUT').getAttribute('aria-required')).toBeNull()
+  })
+
+  it('hint liga por aria-describedby, junto com o erro', () => {
+    render(
+      <FormField label="RUT" hint="Sin puntos ni guion" error="RUT inválido">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    const ids = (screen.getByLabelText('RUT').getAttribute('aria-describedby') as string).split(' ')
+    const textos = ids.map((id) => document.getElementById(id)?.textContent)
+    expect(textos).toEqual(['Sin puntos ni guion', 'RUT inválido'])
+  })
+
+  it('hint sozinho liga por aria-describedby e sem aria-invalid', () => {
+    render(
+      <FormField label="RUT" hint="Sin puntos ni guion">
+        <ControleDeTeste />
+      </FormField>,
+    )
+
+    const controle = screen.getByLabelText('RUT')
+    const id = controle.getAttribute('aria-describedby') as string
+    expect(document.getElementById(id)?.textContent).toBe('Sin puntos ni guion')
+    expect(controle.getAttribute('aria-invalid')).toBeNull()
+  })
+
+  it('em leitura não mostra asterisco nem ajuda', () => {
+    render(<FormField label="RUT" required hint="Sin puntos" readOnly value="1-9" />)
+
+    expect(screen.queryByText('*')).toBeNull()
+    expect(screen.queryByText('Sin puntos')).toBeNull()
   })
 })

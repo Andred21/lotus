@@ -37,6 +37,7 @@ export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
       confirmLabel={t('certificate.revokeConfirm')}
       confirmIcon='block'
       confirmDisabled={reason.trim() === ''}
+      confirmDisabledReason={t('certificate.revokeNeedsReason')}
       pending={revoke.isPending}
       error={message}
       onConfirm={submit}
@@ -45,7 +46,7 @@ export function RevokeDialog({ certificate, onHide, onRevoked }: Props) {
       <div className="mt-4 space-y-4">
         <CertificateIdentityFields certificate={certificate} />
 
-        <FormField label={t('certificate.revokeReason')} error={fieldErrors?.reason?.[0]}>
+        <FormField label={t('certificate.revokeReason')} required error={fieldErrors?.reason?.[0]}>
           <AppTextarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} autoResize className="w-full" />
         </FormField>
       </div>

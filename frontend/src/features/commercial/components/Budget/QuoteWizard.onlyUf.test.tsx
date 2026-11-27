@@ -38,7 +38,11 @@ const COTACAO = {
 } as unknown as QuoteData
 
 const montar = (onlyUf: boolean) =>
-  renderWithProviders(<QuoteWizard visible budgetId={1} quote={COTACAO} onlyUf={onlyUf} onHide={() => {}} />)
+  // Router de dados: a guarda de rascunho do wizard monta um blocker com rascunho.
+  renderWithProviders(
+    <QuoteWizard visible budgetId={1} quote={COTACAO} onlyUf={onlyUf} onHide={() => {}} />,
+    { route: '/presupuestos/1' },
+  )
 
 const ROTULOS = ['quote.students', 'quote.purchaseOrder', 'quote.plannedStart', 'quote.plannedEnd']
 

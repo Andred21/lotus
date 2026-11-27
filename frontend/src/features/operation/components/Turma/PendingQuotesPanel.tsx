@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { backState } from '@shared/hooks'
 import { AppButton, AppCard, AppCardHeader, AppErrorState, AppIcon, RecordCode } from '@shared/ui'
 import type { PendingQuoteData } from '@shared/types/generated'
 import { loadErrorHint, screenDetail } from '@shared/lib'
@@ -16,6 +17,7 @@ export function PendingQuotesPanel({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
 
   // O erro vem antes do vazio: sem essa guarda, um GET falho caía no `null` de
   // lista vazia e a fila de cotizações pendentes simplesmente sumia da tela —
@@ -58,7 +60,7 @@ export function PendingQuotesPanel({
               variant="primary"
               label={t('operation.pending.configure')}
               icon="settings"
-              onClick={() => navigate(`/operacion/turmas/nueva/${q.quote_id}`)}
+              onClick={() => navigate(`/operacion/turmas/nueva/${q.quote_id}`, { state: backState(location) })}
             />
           </li>
         ))}

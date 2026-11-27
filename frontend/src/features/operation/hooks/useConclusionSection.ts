@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { TurmaData } from '@shared/types/generated'
-import { useMutationErrors, usePermissions } from '@shared/hooks'
-import { useToast } from '@shared/ui'
+import { useMutationErrors, usePermissions, useToast } from '@shared/hooks'
 import { useEnrollments } from '../api/useEnrollments'
 import { useConcludeTurma } from '../api/useTurmas'
 import { missingResultFields } from '../lib/enrollmentResult'

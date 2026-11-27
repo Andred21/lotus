@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from '@shared/api/axios'
 import type { ProblemDetails } from '@shared/api/axios'
 import type { AdminDashboardData, RedatorDashboardData } from '@shared/types/generated'
@@ -64,6 +64,8 @@ export type DashboardState =
       staleHint: LoadErrorHintKey
       /** Ausente quando repetir não é recuperação — ver `podeRepetir`. */
       staleRetry?: () => Promise<unknown>
+      /** Troca de período em voo: o dado em tela é o da janela anterior. */
+      refreshing: boolean
     }
   | {
       kind: 'ready-redator'
@@ -72,6 +74,8 @@ export type DashboardState =
       staleError: string | null
       staleHint: LoadErrorHintKey
       staleRetry?: () => Promise<unknown>
+      /** Troca de período em voo: o dado em tela é o da janela anterior. */
+      refreshing: boolean
     }
 
 /**
@@ -103,6 +107,10 @@ function nenhumModuloVisivel(d: AdminDashboardData): boolean {
 export function useDashboard(period?: DashboardPeriod): DashboardState {
   const query = useQuery<DashboardPayload, ProblemDetails>({
     queryKey: dashboardKeys.metrics(period),
+    // Voltar à aba refaz: o painel é leitura de estado vivo (D-1). O dado da
+    // janela anterior fica em tela, marcado como ocupado, até a nova chegar (D-9).
+    refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
     queryFn: () =>
       api
         .get<DashboardPayload>('/api/dashboard/metricas', {
@@ -134,9 +142,10 @@ export function useDashboard(period?: DashboardPeriod): DashboardState {
   // Com dado em mão, a falha do refetch é aviso AO LADO — a tela continua
   // utilizável (lição do BD-6).
   const staleErrored = staleFailed
+  const refreshing = query.isFetching && query.isPlaceholderData
 
-  if (data.view === 'redator') return { kind: 'ready-redator', data, staleErrored, staleError, staleHint, staleRetry }
+  if (data.view === 'redator') return { kind: 'ready-redator', data, staleErrored, staleError, staleHint, staleRetry, refreshing }
   if (nenhumModuloVisivel(data)) return { kind: 'unauthorized' }
 
-  return { kind: 'ready-admin', data, staleErrored, staleError, staleHint, staleRetry }
+  return { kind: 'ready-admin', data, staleErrored, staleError, staleHint, staleRetry, refreshing }
 }

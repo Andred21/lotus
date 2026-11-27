@@ -82,7 +82,7 @@ export function BudgetDetailPage() {
         }
         actions={
           <>
-            {/* Ação primária primeiro; destrutivo por último (UI-B5). */}
+            {/* Ação primária primeiro; a de arquivar por último (UI-B5). */}
             <AppButton
               variant="primary"
               label={t('budget.addQuote')}
@@ -91,11 +91,14 @@ export function BudgetDetailPage() {
             />
             {/* Único caminho de edição: o backend só deixa payment_terms mudar. */}
             <AppButton label={t('common.edit')} icon="edit" outlined onClick={d.openEdit} />
+            {/* Abre a confirmação de ARQUIVAR (as cotações vão junto, Restaurar
+              * desfaz): o rótulo e o tom são os do arquivamento, não de uma
+              * eliminação que não acontece (C-4). */}
             <AppButton
-              label={t('common.delete')}
-              icon="delete"
+              label={t('archive.archiveAction')}
+              icon="archive"
               outlined
-              severity="danger"
+              severity="warning"
               onClick={d.askDeleteBudget}
             />
           </>

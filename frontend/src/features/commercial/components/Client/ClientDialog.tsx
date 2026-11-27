@@ -63,9 +63,19 @@ export function ClientDialog({
       onEdit={onEdit}
       onSubmit={submit}
       pending={pending}
+      guard={f.guard}
       closeBlocked={busy}
       disabled={busy}
       submitLabel={mode === "create" ? t("client.create") : undefined}
+      afterForm={
+        // Fora do <form> (busca/filtros: Enter ali não salva o cliente). Sem
+        // `budget.view` a API recusa a lista: a seção nem monta (review Q-2).
+        mode !== "create" && client?.id !== undefined && can("commercial.budget.view") ? (
+          <div className="mt-4">
+            <ClientBudgetsSection clientId={client.id} />
+          </div>
+        ) : undefined
+      }
     >
       <FormErrorBanner message={generalError} />
       <FormErrorSummary errors={fieldErrors} {...errorSummary} />
@@ -92,11 +102,6 @@ export function ClientDialog({
           onAdd={addContact}
           onRemove={removeContact}
         />
-
-        {/* Sem `budget.view` a API recusa a lista: a seção nem monta (review Q-2). */}
-        {mode !== "create" && client?.id !== undefined && can("commercial.budget.view") && (
-          <ClientBudgetsSection clientId={client.id} />
-        )}
       </section>
     </CrudDialog>
   );

@@ -114,6 +114,7 @@ export function DashboardPage() {
         preset={preset}
         period={period}
         staleError={avisoStale(state)}
+        refreshing={state.refreshing}
         onPresetChange={trocarPreset}
         onPeriodChange={setPeriod}
         onRetry={state.staleRetry}

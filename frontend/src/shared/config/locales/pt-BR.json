@@ -1,4 +1,7 @@
 {
+  "auth": {
+    "sessionExpired": "Sua sessão expirou. Entre novamente para continuar."
+  },
   "login": {
     "title": "Entrar",
     "subtitle": "Acesso para administradores e redatores",
@@ -41,6 +44,8 @@
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
     "save": "Salvar",
+    "createdToast": "Registro criado.",
+    "updatedToast": "Registro atualizado.",
     "cancel": "Cancelar",
     "discardTitle": "Descartar as alterações?",
     "discardBody": "Há alterações não salvas. Se você sair agora, elas serão perdidas.",
@@ -621,9 +626,7 @@
       "purchase_order": "Ordem de compra",
       "invoice": "Fatura",
       "receipt": "Comprovante"
-    },
-    "confirmDeleteTitle": "Excluir orçamento?",
-    "confirmDeleteBody": "As cotações dele são arquivadas junto. Você poderá restaurá-lo em Arquivados."
+    }
   },
   "quote": {
     "turmaTag": {
@@ -645,16 +648,20 @@
     "plannedStart": "Início planejado",
     "plannedEnd": "Fim planejado",
     "next": "Seguinte",
+    "nextNeedsCourse": "Escolha um curso para continuar",
     "back": "Voltar",
     "approve": "Aprovar",
     "reject": "Recusar",
     "rejectedNote": "Cotação recusada — não gerará turma.",
-    "confirmApproveTitle": "Aprovar cotação?",
+    "confirmApproveTitle": "Aprovar a cotação {{code}}?",
     "confirmApproveBody": "Aprovar libera a geração de turma na Operação. Pode ser revertido recusando a cotação.",
-    "confirmRejectTitle": "Recusar cotação?",
+    "confirmRejectTitle": "Recusar a cotação {{code}}?",
     "confirmRejectBody": "Recusar desfaz a aprovação e libera a edição da cotação.",
-    "confirmDeleteTitle": "Excluir cotação?",
+    "confirmDeleteTitle": "Excluir a cotação {{code}}?",
     "confirmDeleteBody": "Você poderá restaurá-la em Arquivados.",
+    "approvedToast": "Cotação aprovada.",
+    "rejectedToast": "Cotação recusada.",
+    "deletedToast": "Cotação excluída.",
     "documents": "Documentos",
     "documentOf": "documento de {{curso}}",
     "studentsShort_one": "{{count}} aluno",
@@ -978,8 +985,8 @@
       "ready": "A turma está pronta para ser concluída.",
       "warning": "Ao confirmar, os certificados dos alunos aprovados passam a estar disponíveis para emissão. Depois disso, só o administrador corrige nota, presença e status, e só de alunos ainda sem certificado. A ação não pode ser desfeita.",
       "confirm": "Confirmar conclusão",
-      "confirmTitle": "Confirmar conclusão da turma",
-      "confirmBody": "Concluir a turma é definitivo: ela não poderá ser reaberta, e alunos, redator, datas e local ficam fixos. Depois, só se corrigem nota, presença e status de alunos ainda sem certificado vigente, e se anexam as avaliações de Alunos e de Cliente. Confirma a conclusão da turma?",
+      "confirmTitle": "Confirmar conclusão da turma {{name}}",
+      "confirmBody": "Concluir a turma é definitivo: ela não poderá ser reaberta, e alunos, redator, datas e local ficam fixos. Depois, só se corrigem nota, presença e status de alunos ainda sem certificado vigente, e se anexam as avaliações de Alunos e de Cliente. Confirma a conclusão da turma {{name}}?",
       "success": "Conclusão confirmada. Certificados disponíveis para emissão.",
       "concludedAt": "Concluída em {{date}}",
       "noPermission": "Você não tem permissão para concluir turmas.",
@@ -1049,6 +1056,7 @@
     "fieldCurso": "Curso",
     "fieldVigencia": "Validade",
     "fieldRedator": "Redator",
+    "issueNeedsRedator": "Escolha o redator que assina o certificado para continuar",
     "vigenciaIndefinida": "Indeterminada",
     "confirmEmit": "Confirmar emissão",
     "issuedTitle": "Certificado emitido",
@@ -1107,7 +1115,9 @@
     "revokeTitle": "Revogar certificado",
     "revokeBody": "Esta ação é irreversível: o certificado deixará de ser válido.",
     "revokeReason": "Motivo da revogação",
+    "revokeNeedsReason": "Escreva o motivo da revogação para continuar",
     "revokeConfirm": "Revogar",
+    "revokedToast": "Certificado revogado.",
     "statusSummary": "{{vigentes}} vigentes · {{porVencer}} a vencer · {{vencidos}} vencidos · {{revocados}} revogados",
     "popupBlocked": "O navegador bloqueou a aba do PDF",
     "result": {
@@ -1128,8 +1138,8 @@
     "archivedAt": "Arquivado em",
     "archivedBy": "Arquivado por",
     "unknownAuthor": "—",
-    "confirmArchiveTitle": "Arquivar este registro?",
-    "confirmArchiveBody": "Ele sai da lista ativa. Você poderá restaurá-lo em Arquivados.",
+    "confirmArchiveTitle": "Arquivar «{{name}}»?",
+    "confirmArchiveBody": "«{{name}}» sai da lista ativa. Você poderá restaurá-lo em Arquivados.",
     "archivedToast": "Registro arquivado.",
     "restoredToast": "Registro restaurado.",
     "empty": "Nenhum registro arquivado",

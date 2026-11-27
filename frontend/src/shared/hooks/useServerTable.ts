@@ -4,6 +4,7 @@ import type { ProblemDetails } from '@shared/api/axios'
 import type { Page, PageMeta, PageQuery } from '@shared/api/page'
 import { retryFor, type ScreenDetailSource } from '@shared/lib'
 import { loadFailure } from './listSource'
+import { useTableUrlState } from './useTableUrlState'
 
 /** Janela entre a última tecla e o GET. Abaixo disso a API recebe um request
  * por letra; acima, a busca parece travada. */
@@ -12,6 +13,16 @@ export const SERVER_TABLE_DEBOUNCE_MS = 300
 /** `null`/`undefined`/`''` = "sem filtro": a chave é OMITIDA da query, não
  * mandada vazia — é o que deixa o backend ler "ausente" como "todos". */
 export type ServerTableFilters = Record<string, string | number | null | undefined>
+
+/** Liga a tabela à query string (C-3): `q`, `page` e `sort` — mais os filtros
+ * nomeados, que quem os possui lê e escreve pelo `useTableUrlState`. */
+export interface ServerTableUrlOptions {
+  /** Isola duas tabelas na mesma URL (`b_q`, `c_q`). Sem ele, chaves nuas. */
+  prefix?: string
+  /** Os `field` das colunas `sortable`. É a única lista que valida o `sort` da
+   * URL: campo fora dela (ou lista ausente) cai no sort do servidor. */
+  sortable?: readonly string[]
+}
 
 export interface ServerTableOptions {
   /** Prefixo da query key. A página entra depois dele (`[...key, 'page', query]`),
@@ -22,6 +33,25 @@ export interface ServerTableOptions {
   filters?: ServerTableFilters
   staleTime?: number
   refetchOnWindowFocus?: boolean
+  /** Default `false`: o estado vive só em memória, como antes do C-3. Com
+   * `{}` (ou `{ prefix, sortable }`) ele nasce da URL e volta para ela. */
+  url?: ServerTableUrlOptions | false
+}
+
+/** Página 1-based da URL → `first`. Qualquer coisa que não seja inteiro >= 1
+ * é a primeira página, nunca erro. */
+function firstFromUrl(raw: string | null, rows: number): number {
+  if (raw === null || !/^[1-9]\d*$/.test(raw)) return 0
+  const page = Number(raw)
+  return Number.isSafeInteger(page) ? (page - 1) * rows : 0
+}
+
+/** `campo` ou `-campo` → sort, só se o campo é uma coluna `sortable`. */
+function sortFromUrl(raw: string | null, sortable: readonly string[] = []): { field: string; order: 1 | -1 } | null {
+  if (raw === null) return null
+  const order = raw.startsWith('-') ? -1 : 1
+  const field = order === -1 ? raw.slice(1) : raw
+  return sortable.includes(field) ? { field, order } : null
 }
 
 /** A ordem que o `DataTable` do PrimeReact emite: `1`, `-1` e, com
@@ -81,12 +111,19 @@ export interface ServerTable<T, M extends PageMeta = PageMeta> {
  */
 export function useServerTable<T, M extends PageMeta = PageMeta>(
   fetchPage: (query: PageQuery) => Promise<Page<T, M>>,
-  { key, rows = 10, filters, staleTime, refetchOnWindowFocus }: ServerTableOptions,
+  { key, rows = 10, filters, staleTime, refetchOnWindowFocus, url = false }: ServerTableOptions,
 ): ServerTable<T, M> {
-  const [filter, setFilter] = useState('')
-  const [term, setTerm] = useState('')
-  const [first, setFirst] = useState(0)
-  const [sort, setSort] = useState<{ field: string; order: 1 | -1 } | null>(null)
+  // O estado NASCE da URL (lazy, no mount) e é espelhado nela pelo efeito mais
+  // abaixo; entre os dois, `useState` é a fonte. Quando a URL muda POR FORA
+  // (clique na sidebar para a mesma rota), o estado é ressemeado dela — ver
+  // "URL mudou por fora", logo após os filtros.
+  const urlState = useTableUrlState({ prefix: url === false ? undefined : url.prefix, enabled: url !== false })
+  const [filter, setFilter] = useState(() => urlState.read('q') ?? '')
+  const [term, setTerm] = useState(() => (urlState.read('q') ?? '').trim())
+  const [first, setFirst] = useState(() => firstFromUrl(urlState.read('page'), rows))
+  const [sort, setSort] = useState<{ field: string; order: 1 | -1 } | null>(() =>
+    sortFromUrl(urlState.read('sort'), url === false ? undefined : url.sortable),
+  )
 
   useEffect(() => {
     const id = setTimeout(() => setTerm(filter.trim()), SERVER_TABLE_DEBOUNCE_MS)
@@ -97,6 +134,34 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
     Object.entries(filters ?? {}).filter(([, value]) => value !== null && value !== undefined && value !== ''),
   ) as Record<string, string | number>
 
+  // URL mudou por fora: `status` e o modo arquivado são derivados da URL a cada
+  // render, então `q`, `page` e `sort` precisam acompanhar — senão o clique na
+  // sidebar zerava os filtros e o efeito de espelho reescrevia a busca antiga.
+  // "Por fora" = a URL mudou E difere do que o estado pede; a escrita do próprio
+  // espelho também muda a URL, mas ela já coincide com o estado. Ajuste durante
+  // o render (como o `useEntityForm`), não efeito.
+  const sortableFields = url === false ? undefined : url.sortable
+  const urlSnapshot = JSON.stringify([urlState.read('q'), urlState.read('page'), urlState.read('sort')])
+  const [lastUrl, setLastUrl] = useState(urlSnapshot)
+  const stateSnapshot = JSON.stringify([
+    term !== '' ? term : null,
+    first > 0 ? String(Math.floor(first / rows) + 1) : null,
+    sort ? `${sort.order === -1 ? '-' : ''}${sort.field}` : null,
+  ])
+  const seededScope = (nextTerm: string) => `${JSON.stringify(key)}|${nextTerm}|${JSON.stringify(activeFilters)}`
+  const [lastScope, setLastScope] = useState(() => seededScope(term))
+  if (url !== false && urlSnapshot !== lastUrl) {
+    setLastUrl(urlSnapshot)
+    if (urlSnapshot !== stateSnapshot) {
+      const nextFilter = urlState.read('q') ?? ''
+      setFilter(nextFilter)
+      setTerm(nextFilter.trim())
+      setFirst(firstFromUrl(urlState.read('page'), rows))
+      setSort(sortFromUrl(urlState.read('sort'), sortableFields))
+      setLastScope(seededScope(nextFilter.trim()))
+    }
+  }
+
   // Chave, termo e filtros formam o "escopo". Escopo novo = página 1, no MESMO
   // render. A `key` entra porque ela é o que troca quando a tela troca de
   // FONTE (Ativas ↔ Arquivadas, `useTurmasPage`): sem ela, sair da página 3 de
@@ -104,7 +169,6 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
   // então o clamp voltava à 1 — um GET jogado fora e uma piscada de tabela
   // vazia sobre lista que tinha linhas (Q-3 do review de 2026-08-29).
   const scope = `${JSON.stringify(key)}|${term}|${JSON.stringify(activeFilters)}`
-  const [lastScope, setLastScope] = useState(scope)
   const scopeChanged = lastScope !== scope
   if (scopeChanged) {
     setLastScope(scope)
@@ -139,6 +203,23 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
     setFirst(0)
   }
 
+  const shownFirst = meta !== undefined && currentFirst >= total ? 0 : currentFirst
+
+  // Espelho do estado na URL, SEM `deps`: roda a cada commit e só escreve o que
+  // difere — idempotente, então não há laço, e a URL acompanha a tela até
+  // quando o clamp ou a troca de escopo mexem na página por baixo. Termo, e
+  // não o texto digitado: a URL recebe a busca depois do debounce, não a tecla.
+  useEffect(() => {
+    if (url === false) return
+    const wanted: Record<string, string | null> = {
+      q: term !== '' ? term : null,
+      page: shownFirst > 0 ? String(Math.floor(shownFirst / rows) + 1) : null,
+      sort: sort ? `${sort.order === -1 ? '-' : ''}${sort.field}` : null,
+    }
+    const patch = Object.fromEntries(Object.entries(wanted).filter(([key, value]) => urlState.read(key) !== value))
+    if (Object.keys(patch).length > 0) urlState.write(patch)
+  })
+
   const hasFilters = Object.keys(activeFilters).length > 0
   const filteredByScope = hasFilters && meta !== undefined && meta.total !== meta.total_unfiltered
 
@@ -148,7 +229,7 @@ export function useServerTable<T, M extends PageMeta = PageMeta>(
     filtering: term !== '' || filteredByScope,
     filteredByScope,
     rows: result.data?.data ?? [],
-    first: meta !== undefined && currentFirst >= total ? 0 : currentFirst,
+    first: shownFirst,
     onFilterChange: (value) => setFilter(value),
     onPage: (event) => setFirst(event.first),
     resetPage: () => setFirst(0),

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSessionStore } from "@shared/stores/sessionStore";
 import { useLogin } from "../api/authApi";
 
 /**
@@ -18,7 +19,11 @@ export function useLoginForm(email: string) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // `from` já traz `pathname + search` (o `ProtectedRoute` o monta assim): a volta
+  // do login cai na aba e no filtro em que o usuário estava.
   const from = (location.state as { from?: string } | null)?.from ?? "/";
+  // A sessão caiu com a aba aberta: a tela explica por que ele voltou para cá.
+  const sessionExpired = useSessionStore((s) => s.expired);
 
   // 422 traz erros por campo; 401/inativo trazem só a mensagem geral.
   const fieldErrors = login.error?.errors;
@@ -37,6 +42,7 @@ export function useLoginForm(email: string) {
     setPassword,
     submit,
     isSubmitting: login.isPending,
+    sessionExpired,
     fieldErrors,
     generalError,
   };

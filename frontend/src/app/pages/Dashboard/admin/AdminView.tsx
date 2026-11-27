@@ -32,6 +32,7 @@ export function AdminView({
   preset,
   period,
   staleError,
+  refreshing,
   onPresetChange,
   onPeriodChange,
   onRetry,
@@ -40,6 +41,8 @@ export function AdminView({
   preset: PeriodPresetKey
   period: DashboardPeriod
   staleError: string | null
+  /** Troca de período em voo: séries e rankings mostram a janela anterior. */
+  refreshing: boolean
   onPresetChange: (p: PeriodPresetKey) => void
   onPeriodChange: (p: DashboardPeriod) => void
   /** Ausente quando repetir não recupera a falha (`useDashboard.podeRepetir`).
@@ -112,8 +115,13 @@ export function AdminView({
             onPeriodChange={onPeriodChange}
             onRetry={onRetry}
           />
-          {secoes.series && data.series !== null && <SeriesPanel series={data.series} visibility={data.visibility} />}
-          {secoes.rankings && data.rankings !== null && <RankingsPanel rankings={data.rankings} secoes={secoes} />}
+          <div
+            aria-busy={refreshing}
+            className={`space-y-3 transition-opacity ${refreshing ? 'opacity-60' : ''}`}
+          >
+            {secoes.series && data.series !== null && <SeriesPanel series={data.series} visibility={data.visibility} />}
+            {secoes.rankings && data.rankings !== null && <RankingsPanel rankings={data.rankings} secoes={secoes} />}
+          </div>
         </section>
       )}
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useEntityForm, useMutationErrors } from '@shared/hooks'
+import { useTranslation } from 'react-i18next'
+import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard, useToast } from '@shared/hooks'
 import type { RedatorData } from '@shared/types/generated'
 import type { DialogMode, DocType } from '@shared/lib'
 import { redatoresApi } from '@shared/api/redatoresApi'
@@ -34,7 +35,9 @@ export function useRedatorForm(
   onDone: () => void,
   afterCreate?: (created: RedatorData) => Promise<void>,
 ) {
-  const { form, set, setForm, readOnly, didReset } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
+  const { t } = useTranslation()
+  const toast = useToast()
+  const { form, set: setField, setForm, readOnly, didReset, dirty: formDirty } = useEntityForm<RedatorFormFields>(redator, mode, EMPTY, toFields)
 
   // Documentos escolhidos no `create`: ficam no estado local até o submit (não
   // há `redator.id` ainda para subir pelo endpoint aninhado). Limpo junto com
@@ -42,6 +45,11 @@ export function useRedatorForm(
   // guarda de tamanho para não regerar o objeto e disparar um loop de renders.
   const [stagedDocs, setStagedDocs] = useState<Partial<Record<DocType, File>>>({})
   if (didReset && Object.keys(stagedDocs).length > 0) setStagedDocs({})
+
+  // O redator não passa pelo `useCrudForm`, então a guarda de rascunho é montada
+  // aqui. Documento escolhido no create é rascunho, embora não seja campo do form.
+  const dirty = formDirty || Object.keys(stagedDocs).length > 0
+  const guard = useUnsavedChangesGuard(dirty)
 
   const create = redatoresApi.useCreate()
   const update = redatoresApi.useUpdate()
@@ -79,7 +87,15 @@ export function useRedatorForm(
       Object.entries(stagedDocs).forEach(([type, file]) => fd.append(`documents[${type}]`, file))
       create.mutate(fd, {
         onSuccess: async (created) => {
-          await afterCreate?.(created)
+          try {
+            await afterCreate?.(created)
+          } catch (error) {
+            // O diálogo segue aberto: "creado" seria meia verdade (molde do
+            // `runAfterCreate` do `useCrudForm`).
+            console.error('useRedatorForm: afterCreate falhou, diálogo permanece aberto', error)
+            return
+          }
+          toast.success(t('common.createdToast'))
           onDone()
         },
       })
@@ -89,13 +105,18 @@ export function useRedatorForm(
       name: form.name, rut: form.rut, email: form.email, phone: form.phone,
       course_ids: form.course_ids, is_active: form.is_active ?? true,
     }
-    update.mutate({ id: redator!.id!, payload }, { onSuccess: onDone })
+    update.mutate({ id: redator!.id!, payload }, {
+      onSuccess: () => {
+        toast.success(t('common.updatedToast'))
+        onDone()
+      },
+    })
   }
 
-  const { fieldErrors, generalError } = useMutationErrors([create.error, update.error])
+  const { fieldErrors, generalError, set } = useFormMutationErrors<RedatorFormFields>(setField, [create.error, update.error])
 
   return {
-    form, set, toggleCourse, readOnly, submit,
+    form, set, toggleCourse, readOnly, submit, dirty, guard,
     pending: create.isPending || update.isPending,
     stagedDocs, stageDoc, unstageDoc,
     fieldErrors, generalError,

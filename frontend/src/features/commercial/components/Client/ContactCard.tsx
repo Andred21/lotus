@@ -64,7 +64,7 @@ export function ContactCard({
 
         <div className="grid gap-3 sm:grid-cols-2">
           <FormField
-            label={t('client.contactName')}
+            label={t('client.contactName')} required
             error={fieldErrors?.[`contacts.${index}.name`]?.[0]}
             readOnly={readOnly}
             value={contact.name}

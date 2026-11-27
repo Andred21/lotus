@@ -14,7 +14,28 @@ import type { DialogMode } from '@shared/lib'
  *
  * `toFields` permite projetar a entidade só nos campos editáveis (o redator
  * exclui `documents`, que são geridos por mutações próprias).
+ *
+ * `dirty` compara o `form` com o valor inicial do ÚLTIMO reset (guardado em
+ * `baseline`, um objeto à parte do `form`), então desfazer a mudança à mão
+ * volta a limpo, e o reset zera. Um refetch com o mesmo id não reseta — e
+ * portanto não mexe no baseline.
  */
+/** Igualdade estrutural de valores JSON-like (o que o form carrega). Chave
+ * `undefined` vale como ausente: o `Optional` do DTO chega assim e o form o
+ * normaliza sem que isso seja edição do usuário. */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false
+  if (Array.isArray(a) !== Array.isArray(b)) return false
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((v, i) => sameValue(v, b[i]))
+  }
+  const left = a as Record<string, unknown>
+  const right = b as Record<string, unknown>
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)])
+  return [...keys].every((k) => sameValue(left[k], right[k]))
+}
+
 export function useEntityForm<T extends { id?: number }>(
   entity: T | null,
   mode: DialogMode,
@@ -24,6 +45,9 @@ export function useEntityForm<T extends { id?: number }>(
   const initial = () => (entity ? toFields(entity) : structuredClone(empty))
 
   const [form, setForm] = useState<T>(initial)
+  // Segundo `initial()`, e não o mesmo objeto: o form é editado a partir dele, e
+  // um baseline compartilhado mudaria junto com ele.
+  const [baseline, setBaseline] = useState<T>(initial)
   const [prev, setPrev] = useState({ id: entity?.id ?? null, mode })
 
   // Ajuste de estado durante o render — o padrão do React para "resetar estado
@@ -34,11 +58,19 @@ export function useEntityForm<T extends { id?: number }>(
   if (didReset) {
     setPrev({ id: currentId, mode })
     setForm(initial)
+    setBaseline(initial)
   }
 
   const set = <K extends keyof T>(k: K, v: T[K]) => setForm((f) => ({ ...f, [k]: v }))
 
-  return { form, setForm, set, readOnly: mode === 'view', didReset }
+  return {
+    form,
+    setForm,
+    set,
+    readOnly: mode === 'view',
+    didReset,
+    dirty: !sameValue(form, baseline),
+  }
 }
 
 /**
@@ -53,12 +85,54 @@ export function useEntityForm<T extends { id?: number }>(
  */
 export function useMutationErrors(errors: Array<ProblemDetails | null | undefined>) {
   const first = errors.find(Boolean) ?? null
+  // Campos já corrigidos desde que ESTE erro chegou. O erro mora na mutação
+  // (TanStack), não aqui; o que sobra do lado de cá é só a lista do que sumir.
+  // Ajuste de estado durante o render, como no `useEntityForm`: o erro novo
+  // (outro envio) é outro objeto e zera a lista — o 422 do reenvio é de verdade.
+  const [cleared, setCleared] = useState<{ source: ProblemDetails | null; names: string[] }>({
+    source: first,
+    names: [],
+  })
+  if (cleared.source !== first) setCleared({ source: first, names: [] })
+  const names = cleared.source === first ? cleared.names : []
+
+  const clearField = (name: string) =>
+    setCleared((c) => (c.source === first && !c.names.includes(name) ? { source: first, names: [...c.names, name] } : c))
+
   const fieldErrors = first?.errors
+    ? Object.fromEntries(Object.entries(first.errors).filter(([key]) => !names.includes(key)))
+    : first?.errors
   const generalError = first && !first.errors ? first.detail : null
 
   return {
     fieldErrors,
     generalError,
     message: generalError ?? Object.values(fieldErrors ?? {})[0]?.[0] ?? null,
+    clearField,
   }
+}
+
+/**
+ * `useMutationErrors` mais o `set` do form, para o hook que tem um `useEntityForm`
+ * e mutações de escrita: editar um campo tira o 422 dele da tela (e só o dele).
+ * O erro apontava o valor antigo, e deixá-lo depois da correção diz que o conserto
+ * não pegou. Mora aqui, e não no `useEntityForm`, porque o erro nasce na mutação
+ * — que o `useEntityForm` não conhece e que só existe depois dele no hook.
+ *
+ * Devolve o `set` que limpa; `clearField` segue exposto para a edição aninhada,
+ * que passa por `setForm` e limpa a chave posicional (`modules.0.name`) à mão.
+ */
+export function useFormMutationErrors<T>(
+  setField: <K extends keyof T>(k: K, v: T[K]) => void,
+  errors: Array<ProblemDetails | null | undefined>,
+) {
+  const mutationErrors = useMutationErrors(errors)
+  const { clearField } = mutationErrors
+
+  const set = <K extends keyof T>(k: K, v: T[K]) => {
+    setField(k, v)
+    clearField(String(k))
+  }
+
+  return { ...mutationErrors, set }
 }

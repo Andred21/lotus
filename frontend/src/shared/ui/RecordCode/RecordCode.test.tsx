@@ -9,11 +9,18 @@ import { RecordCode } from './RecordCode'
  * tabela de presupuestos em todos (bloco 60, 2026-11-23).
  */
 describe('RecordCode', () => {
-  it('sai em negrito, no corpo da tabela e na cor primária do tema', () => {
+  it('RecordCode é 600', () => {
     render(<RecordCode>Scap 100</RecordCode>)
 
     const codigo = screen.getByText('Scap 100')
-    expect(codigo.className).toContain('font-bold')
+    expect(codigo.className).toContain('font-semibold')
+    expect(codigo.className).not.toContain('font-bold')
+  })
+
+  it('sai no corpo da tabela e na cor primária do tema', () => {
+    render(<RecordCode>Scap 100</RecordCode>)
+
+    const codigo = screen.getByText('Scap 100')
     expect(codigo.className).toContain('text-sm')
     expect(codigo.style.color).toBe('var(--primary-color)')
   })

@@ -26,8 +26,11 @@ export function ModuleCard({
     <div className="space-y-3 rounded-surface border p-3" style={{ borderColor: 'var(--surface-border)' }}>
       <div className="flex items-start gap-2">
         <span className="mt-2.5 text-xs font-semibold" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.itemLabel', { n: index + 1 })}</span>
-        <NestedField error={fieldErrors?.[`modules.${index}.name`]?.[0]} readOnly={readOnly} value={module.name}>
-          <div className="flex-1">
+        {/* O `flex-1` vai FORA do NestedField: a raiz dele é o item do flex, e o
+            `flex-1` por dentro não alargava nada — o erro, que mora junto do
+            input, ficava espremido na largura do conteúdo. */}
+        <div className="flex-1">
+          <NestedField error={fieldErrors?.[`modules.${index}.name`]?.[0]} readOnly={readOnly} value={module.name}>
             <AppInputText
               placeholder={t('courseModule.namePlaceholder')}
               aria-label={t('courseModule.name')}
@@ -35,8 +38,8 @@ export function ModuleCard({
               onChange={(e) => onPatch({ name: e.target.value })}
               className="w-full"
             />
-          </div>
-        </NestedField>
+          </NestedField>
+        </div>
         {!readOnly && (
           <div className="flex gap-1">
             <AppButton icon="arrowUp" text aria-label={t('courseModule.moveUp')} tooltip={t('courseModule.moveUp')} disabled={isFirst} onClick={onMoveUp} />

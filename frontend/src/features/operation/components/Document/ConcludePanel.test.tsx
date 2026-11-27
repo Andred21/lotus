@@ -84,4 +84,25 @@ describe('ConcludePanel', () => {
     expect(screen.getByRole('dialog')).toBeTruthy()
     expect(screen.queryByText(/operation\.conclusion\.incomplete\.title/)).toBeNull()
   })
+
+  /** Concluir é definitivo e de peso legal: a confirmação diz QUAL turma (C-4). */
+  it('a confirmação de concluir nomeia a turma', () => {
+    section = base()
+    render(<ConcludePanel turma={{ id: 1, quote_code: 'Scap 5-1', course_name: 'Trabajo en altura' } as TurmaData} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /operation.conclusion.confirm/ }))
+
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.textContent).toContain('operation.conclusion.confirmTitle|{"name":"Scap 5-1"}')
+    expect(dialog.textContent).toContain('operation.conclusion.confirmBody|{"name":"Scap 5-1"}')
+  })
+
+  it('sem código de cotação, o nome da turma é o do curso', () => {
+    section = base()
+    render(<ConcludePanel turma={{ id: 1, quote_code: null, course_name: 'Trabajo en altura' } as TurmaData} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /operation.conclusion.confirm/ }))
+
+    expect(screen.getByRole('dialog').textContent).toContain('"name":"Trabajo en altura"')
+  })
 })

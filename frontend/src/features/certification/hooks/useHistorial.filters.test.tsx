@@ -38,7 +38,7 @@ describe('useHistorial — filtro de cotação', () => {
   })
 
   it('escolher a cotação manda quote_id e volta à página 1', async () => {
-    const { wrapper } = createWrapper()
+    const { wrapper } = createWrapper({ route: '/historial' })
     const { result } = renderHook(() => useHistorial(), { wrapper })
     await waitFor(() => expect(paginasPedidas()).toHaveLength(1))
 
@@ -52,19 +52,18 @@ describe('useHistorial — filtro de cotação', () => {
   })
 
   it('lista as opções vindas de /api/certificates/quotes', async () => {
-    const { wrapper } = createWrapper()
+    const { wrapper } = createWrapper({ route: '/historial' })
     const { result } = renderHook(() => useHistorial(), { wrapper })
 
     await waitFor(() => expect(result.current.quoteOptions).toEqual([{ id: 7, code: 'Scap 4 - R2' }]))
   })
 
   it('clearFilters zera o estado E a cotação, e a query sai sem os dois', async () => {
-    const { wrapper } = createWrapper()
+    const { wrapper } = createWrapper({ route: '/historial' })
     const { result } = renderHook(() => useHistorial(), { wrapper })
-    act(() => {
-      result.current.setStatusFilter('vigente')
-      result.current.setQuoteFilter(7)
-    })
+    // Um por vez, como o usuário: duas escritas no mesmo tick não se compõem.
+    act(() => result.current.setStatusFilter('vigente'))
+    act(() => result.current.setQuoteFilter(7))
     await waitFor(() => expect(paginasPedidas().at(-1)).toMatchObject({ display_status: 'vigente', quote_id: 7 }))
 
     act(() => result.current.clearFilters())
@@ -78,13 +77,41 @@ describe('useHistorial — filtro de cotação', () => {
     })
   })
 
+  it('estado, cotação, busca, página e sort vêm da URL, e o primeiro GET já sai com eles', async () => {
+    const { wrapper } = createWrapper({
+      route: '/historial?display_status=vencido&quote_id=7&q=scap&page=2&sort=-valido_ate',
+    })
+    const { result } = renderHook(() => useHistorial(), { wrapper })
+
+    await waitFor(() => expect(paginasPedidas()).toHaveLength(1))
+    expect(paginasPedidas()[0]).toMatchObject({
+      display_status: 'vencido', quote_id: 7, q: 'scap', page: 2, sort: '-valido_ate',
+    })
+    expect(result.current.statusFilter).toBe('vencido')
+    expect(result.current.quoteFilter).toBe(7)
+  })
+
+  it('valor de filtro inválido na URL é "sem filtro", e sort fora das colunas é ignorado', async () => {
+    const { wrapper } = createWrapper({
+      route: '/historial?display_status=qualquer&quote_id=7x&sort=nome',
+    })
+    const { result } = renderHook(() => useHistorial(), { wrapper })
+
+    await waitFor(() => expect(paginasPedidas()).toHaveLength(1))
+    expect(paginasPedidas()[0]).not.toHaveProperty('display_status')
+    expect(paginasPedidas()[0]).not.toHaveProperty('quote_id')
+    expect(paginasPedidas()[0]).not.toHaveProperty('sort')
+    expect(result.current.statusFilter).toBeNull()
+    expect(result.current.quoteFilter).toBeNull()
+  })
+
   it('GET de cotações falho sem cache: expõe a falha e o retry, e a lista segue carregando', async () => {
     get.mockImplementation((url) =>
       url === '/api/certificates/quotes'
         ? Promise.reject({ status: 500, title: 'x', detail: 'x', type: 'x', instance: 'x' })
         : Promise.resolve({ data: pagina }),
     )
-    const { wrapper } = createWrapper()
+    const { wrapper } = createWrapper({ route: '/historial' })
     const { result } = renderHook(() => useHistorial(), { wrapper })
 
     await waitFor(() => expect(result.current.quoteLoadFailure).toBeTruthy())
@@ -94,7 +121,7 @@ describe('useHistorial — filtro de cotação', () => {
   })
 
   it('cotações carregadas: não há falha a anunciar', async () => {
-    const { wrapper } = createWrapper()
+    const { wrapper } = createWrapper({ route: '/historial' })
     const { result } = renderHook(() => useHistorial(), { wrapper })
 
     await waitFor(() => expect(result.current.quoteOptions).toHaveLength(1))

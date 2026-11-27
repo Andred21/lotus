@@ -1,5 +1,6 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppDialog, AppButton, FormErrorSummary, FormErrorBanner, useFormField } from '@shared/ui'
+import { AppDialog, AppButton, DiscardChangesDialog, FormErrorSummary, FormErrorBanner, useFormField } from '@shared/ui'
 import type { QuoteData } from '@shared/types/generated'
 import { dangerText } from '@shared/styles/tokens'
 import { useQuoteForm } from '../../hooks/useQuoteForm'
@@ -21,20 +22,36 @@ export function QuoteWizard({
 }) {
   const { t } = useTranslation()
   const f = useQuoteForm(budgetId, quote, onHide)
-  const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError } = f
+  const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError, guard } = f
   const campo = useFormField(f)
   const courses = useQuoteCourseSearch()
+  const reasonId = useId()
+  // Cancelar, X e Esc descartam o rascunho; salvar fecha pelo `onHide` direto.
+  const sair = () => guard.confirmDiscard(onHide)
 
   const footer =
     step === 1 ? (
-      <div className="flex justify-end gap-2">
-        <AppButton label={t('common.cancel')} text onClick={onHide} />
-        <AppButton variant="primary" label={t('quote.next')} icon="arrowRight" disabled={!canAdvance} onClick={next} />
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* O porquê do Siguiente apagado, em texto e ligado ao botão. */}
+        {!canAdvance && (
+          <span id={reasonId} className="mr-auto text-sm" style={{ color: 'var(--text-color-secondary)' }}>
+            {t('quote.nextNeedsCourse')}
+          </span>
+        )}
+        <AppButton label={t('common.cancel')} text onClick={sair} />
+        <AppButton
+          variant="primary"
+          label={t('quote.next')}
+          icon="arrowRight"
+          disabled={!canAdvance}
+          aria-describedby={canAdvance ? undefined : reasonId}
+          onClick={next}
+        />
       </div>
     ) : (
       <div className="flex justify-end gap-2">
         {!onlyUf && <AppButton label={t('quote.back')} text icon="arrowLeft" onClick={back} />}
-        <AppButton label={t('common.cancel')} text onClick={onHide} />
+        <AppButton label={t('common.cancel')} text onClick={sair} />
         <AppButton
           variant="primary"
           label={quote ? t('common.save') : t('quote.create')}
@@ -46,47 +63,50 @@ export function QuoteWizard({
     )
 
   return (
-    <AppDialog
-      size="lg"
-      header={
-        <div className="flex items-center justify-between gap-4">
-          <span>{quote ? t('quote.edit') : t('quote.new')}</span>
-          <span className="text-xs font-normal" style={{ color: 'var(--text-color-secondary)' }}>{t('quote.step', { current: step, total: 2 })}</span>
-        </div>
-      }
-      visible={visible}
-      onHide={onHide}
-      footer={footer}
-    >
-      <FormErrorBanner message={generalError} />
-      <FormErrorSummary
-        errors={fieldErrors}
-        mapped={['course_id', 'student_count', 'value_uf', 'purchase_order', 'planned_start_date', 'planned_end_date']}
-      />
-
-      {/* Fora do passo: o campo do curso só existe no passo 1, mas o 422 de
-          course_id (curso removido entre a escolha e o submit) chega com o
-          wizard no passo 2 — dentro do passo 1 ele ficaria invisível. */}
-      {/* A catraca do item 24 mede a extração à mão porque o campo ligado ao
-          form já traz o erro pelo `name` — mas aqui não há campo: o `course_id`
-          vive no passo 1 e esta mensagem precisa aparecer no passo 2, fora de
-          qualquer `Field`. Suprimido nas duas linhas, e não no arquivo, para a
-          régua seguir valendo nos campos de verdade. */}
-      {/* eslint-disable-next-line no-restricted-syntax */}
-      {fieldErrors?.course_id?.[0] && (
-        // eslint-disable-next-line no-restricted-syntax
-        <p className="mb-4 text-sm" style={{ color: dangerText }}>{fieldErrors.course_id[0]}</p>
-      )}
-
-      {step === 1 && !onlyUf ? (
-        <CourseStep
-          courses={courses}
-          selectedId={form.course_id}
-          onSelect={(id) => set('course_id', id)}
+    <>
+      <AppDialog
+        size="lg"
+        header={
+          <div className="flex items-center justify-between gap-4">
+            <span>{quote ? t('quote.edit') : t('quote.new')}</span>
+            <span className="text-xs font-normal" style={{ color: 'var(--text-color-secondary)' }}>{t('quote.step', { current: step, total: 2 })}</span>
+          </div>
+        }
+        visible={visible}
+        onHide={sair}
+        footer={footer}
+      >
+        <FormErrorBanner message={generalError} />
+        <FormErrorSummary
+          errors={fieldErrors}
+          mapped={['course_id', 'student_count', 'value_uf', 'purchase_order', 'planned_start_date', 'planned_end_date']}
         />
-      ) : (
-        <DataStep Field={campo.Field} form={form} onChange={set} onlyUf={onlyUf} />
-      )}
-    </AppDialog>
+
+        {/* Fora do passo: o campo do curso só existe no passo 1, mas o 422 de
+            course_id (curso removido entre a escolha e o submit) chega com o
+            wizard no passo 2 — dentro do passo 1 ele ficaria invisível. */}
+        {/* A catraca do item 24 mede a extração à mão porque o campo ligado ao
+            form já traz o erro pelo `name` — mas aqui não há campo: o `course_id`
+            vive no passo 1 e esta mensagem precisa aparecer no passo 2, fora de
+            qualquer `Field`. Suprimido nas duas linhas, e não no arquivo, para a
+            régua seguir valendo nos campos de verdade. */}
+        {/* eslint-disable-next-line no-restricted-syntax */}
+        {fieldErrors?.course_id?.[0] && (
+          // eslint-disable-next-line no-restricted-syntax
+          <p className="mb-4 text-sm" style={{ color: dangerText }}>{fieldErrors.course_id[0]}</p>
+        )}
+
+        {step === 1 && !onlyUf ? (
+          <CourseStep
+            courses={courses}
+            selectedId={form.course_id}
+            onSelect={(id) => set('course_id', id)}
+          />
+        ) : (
+          <DataStep Field={campo.Field} form={form} onChange={set} onlyUf={onlyUf} />
+        )}
+      </AppDialog>
+      <DiscardChangesDialog {...guard.dialogProps} />
+    </>
   )
 }
