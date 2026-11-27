@@ -2,9 +2,9 @@
 schema_version: 3
 id: 66
 slug: 66-frontend-identidade-graficos-e-acessibilidade
-workflow_state: executing
+workflow_state: ready_for_review
 next_owner: claude
-next_action: continue_active_plan
+next_action: request_code_review
 resume_state: null
 active_spec: docs/superpowers/blocos/66-frontend-identidade-graficos-e-acessibilidade/spec.md
 active_plan: docs/superpowers/blocos/66-frontend-identidade-graficos-e-acessibilidade/plano.md
@@ -17,10 +17,10 @@ branch: feat/66-frontend-identidade-graficos-e-acessibilidade
 worktree: ../lotus-66-frontend-identidade-graficos-e-acessibilidade
 offset: 1
 lane_base: 9447d785
-commit: bc27bd4f
+commit: cb9a52cb
 blocker: null
-updated_at: 2026-11-27T13:05:02-03:00
-updated_by: jvbat@DESKTOP-U9PVHKH / sonnet
+updated_at: 2026-11-27T18:17:50-03:00
+updated_by: jvbat@DESKTOP-U9PVHKH / opus
 ---
 
 # Bloco 66 — estado
