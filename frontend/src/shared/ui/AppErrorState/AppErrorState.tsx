@@ -32,7 +32,7 @@ export function AppErrorState({ title, detail, retryLabel, onRetry }: AppErrorSt
 
   return (
     <div role="alert" className="flex flex-col items-center gap-3 px-4 py-10 text-center">
-      {/* `size-[1.875rem]` mantém os 30px do `text-3xl` de antes (o `lg` do AppIcon pára em 24). */}
+      {/* `size-[1.875rem]` mantém os 30px do `text-3xl` de antes (o `lg` do AppIcon pára em 28). */}
       <span className="inline-flex" style={{ color: dangerText }}>
         <AppIcon name="warning" className="size-[1.875rem]" />
       </span>

@@ -27,8 +27,8 @@ export function AppButton({ variant, className, type = 'button', icon, loadingIc
       className={merged || undefined}
       type={type}
       {...props}
-      icon={primeIcon(icon)}
-      loadingIcon={loadingIcon ? primeIcon(loadingIcon) : primeIcon('spinner', 'animate-spin')}
+      icon={primeIcon(icon, '-my-0.5')}
+      loadingIcon={loadingIcon ? primeIcon(loadingIcon, '-my-0.5') : primeIcon('spinner', 'animate-spin -my-0.5')}
     />
   )
 }

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { primeSlotIcon } from '../AppIcon'
 import { mergePt } from '../mergePt'
 
-// Ícones do cabeçalho: o Prime os desenha em SVG próprio (1rem, `.p-icon`).
+// Ícones do cabeçalho: o Prime os desenha em SVG próprio; aqui vão no `md` (20px).
 // Module-level: função estável entre renders.
 const CLOSE_ICON = primeSlotIcon('close')
 const MAXIMIZE_ICON = primeSlotIcon('maximize')

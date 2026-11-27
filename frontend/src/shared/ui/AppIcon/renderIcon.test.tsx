@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { render } from '@testing-library/react'
 import { AppButton } from '../AppButton'
 import { AppTag } from '../AppTag'
-import { primeIcon, renderIcon } from './renderIcon'
+import { primeIcon, primeSlotIcon, renderIcon } from './renderIcon'
 
 function montar(node: ReturnType<typeof renderIcon>) {
   return render(<div>{node}</div>).container
@@ -22,7 +22,7 @@ describe('renderIcon', () => {
   it('repassa peso, tamanho e classe ao AppIcon', () => {
     const svg = montar(renderIcon('check', { weight: 'fill', size: 'lg', className: 'shrink-0' })).querySelector('svg')
 
-    expect(svg?.getAttribute('width')).toBe('24')
+    expect(svg?.getAttribute('width')).toBe('28')
     expect(svg?.getAttribute('class')).toContain('shrink-0')
   })
 })
@@ -56,6 +56,21 @@ describe('primeIcon', () => {
   })
 })
 
+describe('primeSlotIcon', () => {
+  const slot = (px?: number) => {
+    const fn = px === undefined ? primeSlotIcon('check') : primeSlotIcon('check', px)
+    return montar(fn({ iconProps: { className: 'p-icon' } })).querySelector('svg')
+  }
+
+  it('mede 20px por padrão', () => {
+    expect(slot()?.getAttribute('width')).toBe('20')
+  })
+
+  it('px explícito vale (o 32 do cabeçalho de diálogo segue em 32)', () => {
+    expect(slot(32)?.getAttribute('width')).toBe('32')
+  })
+})
+
 /** Os slots do Prime recebem o ícone pela mão do `primeIcon`: o que se prova é
  * o resultado no DOM, com a classe do slot que dá o espaço ao lado do rótulo. */
 describe('IconName nos wrappers do Prime', () => {
@@ -65,6 +80,12 @@ describe('IconName nos wrappers do Prime', () => {
 
     expect(svg?.getAttribute('class')).toContain('p-button-icon-left')
     expect(svg?.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('AppButton: o glifo de 20px não empurra a altura do botão (margem vertical negativa)', () => {
+    const { container } = render(<AppButton label="Guardar" icon="check" />)
+
+    expect(container.querySelector('button svg')?.getAttribute('class')).toContain('-my-0.5')
   })
 
   it('AppButton em loading troca o ícone pelo spinner girando', () => {

@@ -205,7 +205,7 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     }
     return (
       <IconField iconPosition="left">
-        <InputIcon className="z-10 flex items-center">{renderIcon(leftIcon)}</InputIcon>
+        <InputIcon className="z-10 flex items-center -translate-y-0.5">{renderIcon(leftIcon)}</InputIcon>
         {/* Mesclado DEPOIS do spread, igual ao ramo sem ícone. Antes dele, um
             `inputClassName` do chamador apagava `w-full pl-10` inteiro — e o
             `pl-10` é o offset que impede o texto de correr por baixo do ícone,

@@ -38,7 +38,7 @@ export const AppInputText = forwardRef<HTMLInputElement, AppInputTextProps>(
     }
     return (
       <IconField iconPosition="left">
-        <InputIcon className="flex items-center">{renderIcon(leftIcon)}</InputIcon>
+        <InputIcon className="flex items-center -translate-y-0.5">{renderIcon(leftIcon)}</InputIcon>
         <InputText
           ref={ref}
           {...fieldProps}

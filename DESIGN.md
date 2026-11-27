@@ -323,8 +323,8 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
 Phosphor, atrás de um registro: só `shared/ui/AppIcon` importa `@phosphor-icons/react` (o lint
 reprova em qualquer outro lugar), e a tela chama `<AppIcon name="..." />` ou passa o nome ao wrapper
 (`icon="check"`). O nome é semântico — o que o ícone significa, não o desenho. Nome novo entra em
-`shared/ui/AppIcon/icons.ts`. Três tamanhos: `sm` 14, `md` 16 (padrão), `lg` 24. `regular` por padrão;
-`fill` só para estado ativo. O SVG não responde a `font-size`: dimensione por `size` ou por
+`shared/ui/AppIcon/icons.ts`. Três tamanhos: `sm` 16, `md` 20 (padrão), `lg` 28; os ícones internos
+do Prime seguem o `md` (o check do checkbox, 16). `regular` por padrão; `fill` só para estado ativo. O SVG não responde a `font-size`: dimensione por `size` ou por
 `size-*` no `className`, nunca por `text-*`.
 
 ### Tables

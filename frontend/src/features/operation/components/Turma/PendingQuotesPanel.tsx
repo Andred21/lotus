@@ -45,7 +45,7 @@ export function PendingQuotesPanel({
             style={{ borderColor: 'var(--surface-border)' }}
           >
             <span className="text-sm" style={{ color: 'var(--text-color)' }}>
-              <AppIcon name="file" className="mr-2 text-(--text-color-secondary)" />
+              <AppIcon name="file" className="mr-2 -my-0.5 align-middle text-(--text-color-secondary)" />
               {(q.quote_code ?? q.budget_code) && (
                 <><RecordCode className="whitespace-nowrap">{q.quote_code ?? q.budget_code}</RecordCode> · </>
               )}

@@ -51,7 +51,7 @@ export function Sidebar() {
           * de girar em falso) é o que preserva a pref persistida (UI-02). */}
         {!compact && (
           <AppButton variant="iconToggle" onClick={toggle} aria-label={t('common.toggleMenu')}>
-            <AppIcon name={collapsed ? 'chevronRight' : 'chevronLeft'} />
+            <AppIcon name={collapsed ? 'chevronRight' : 'chevronLeft'} className="-my-0.5" />
           </AppButton>
         )}
       </div>

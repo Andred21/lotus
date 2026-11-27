@@ -20,7 +20,7 @@ export function AppEmptyState({ icon = 'archive', title, description, action }: 
   return (
     <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
       {/* `size-[1.875rem]` vence os atributos width/height do svg e mantém os
-        * 30px do `text-3xl` de antes (o `lg` do AppIcon pára em 24). */}
+        * 30px do `text-3xl` de antes (o `lg` do AppIcon pára em 28). */}
       <span className="inline-flex" style={{ color: 'var(--text-color-secondary)' }}>
         {renderIcon(icon, { className: 'size-[1.875rem] text-3xl' })}
       </span>

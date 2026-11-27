@@ -2,8 +2,9 @@ import { Checkbox } from 'primereact/checkbox'
 import type { CheckboxProps } from 'primereact/checkbox'
 import { primeSlotIcon } from '../AppIcon'
 
-// 14px: o tema crava o check do Prime em 14px (`.p-checkbox-icon.p-icon`).
-const CHECK_ICON = primeSlotIcon('check', 14)
+// 16px: dentro da caixa de 22px (borda de 2px) sobram 18px. O Phosphor não leva `.p-icon`,
+// então o 14px do tema não o alcança.
+const CHECK_ICON = primeSlotIcon('check', 16)
 
 export type { CheckboxProps as AppCheckboxProps } from 'primereact/checkbox'
 

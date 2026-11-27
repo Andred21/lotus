@@ -10,8 +10,8 @@ export interface AppIconProps {
   className?: string
 }
 
-// md = o `1rem` do PrimeIcons de hoje.
-const SIZES = { sm: 14, md: 16, lg: 24 } as const
+// Escala do Lotus (a passada de 2026-11 subiu um degrau: o 16px de antes ficou pequeno).
+const SIZES = { sm: 16, md: 20, lg: 28 } as const
 
 /**
  * Ícone do Lotus: um Phosphor atrás do registro `IconName` (única porta;

@@ -410,6 +410,16 @@ describe('AppDataTable — ícones internos (bloco 64)', () => {
     phosphor(container.querySelector('.p-paginator-next'))
   })
 
+  it('o glifo de ordenação não empurra a altura do cabeçalho', () => {
+    const { container } = render(
+      <AppDataTable value={TRES}>
+        <AppColumn field="id" header="id" sortable />
+      </AppDataTable>,
+    )
+
+    expect(container.querySelector('.p-sortable-column svg')?.getAttribute('class')).toContain('-my-0.5')
+  })
+
   it('usa ícone Phosphor na ordenação, nos três estados', () => {
     const { container } = render(
       <AppDataTable value={TRES}>

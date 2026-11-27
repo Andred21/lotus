@@ -31,18 +31,18 @@ describe('AppIcon', () => {
     expect(svgOf(fill.container).innerHTML).not.toBe(svgOf(regular.container).innerHTML)
   })
 
-  it('size md mede 16px', () => {
+  it('size md (padrão) mede 20px', () => {
     const { container } = render(<AppIcon name="close" />)
 
-    expect(svgOf(container).getAttribute('width')).toBe('16')
+    expect(svgOf(container).getAttribute('width')).toBe('20')
   })
 
-  it('size sm mede 14px e lg mede 24px', () => {
+  it('size sm mede 16px e lg mede 28px', () => {
     const sm = render(<AppIcon name="close" size="sm" />)
     const lg = render(<AppIcon name="close" size="lg" />)
 
-    expect(svgOf(sm.container).getAttribute('width')).toBe('14')
-    expect(svgOf(lg.container).getAttribute('width')).toBe('24')
+    expect(svgOf(sm.container).getAttribute('width')).toBe('16')
+    expect(svgOf(lg.container).getAttribute('width')).toBe('28')
   })
 
   it('herda a cor do texto', () => {

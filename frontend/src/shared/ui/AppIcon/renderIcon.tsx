@@ -46,10 +46,11 @@ export function primeIcon(icon: IconProp | undefined, className?: string) {
  * e o teclado. Daí o spread: `primeIcon` só repassa a classe, o que basta para
  * slot de `Button`, mas não para estes.
  *
- * `className` soma à classe do slot (o `animate-spin` do spinner). `px` é o tamanho que o Prime dava ao slot (1rem no `.p-icon` do tema, 14px no
- * check): o Phosphor não responde a `font-size`.
+ * `className` soma à classe do slot (o `animate-spin` do spinner). `px` é o
+ * tamanho do ícone no slot (20 por padrão, o `md` do `AppIcon`; 16 no check):
+ * o Phosphor não responde a `font-size`.
  */
-export function primeSlotIcon(name: IconName, px = 16, className?: string) {
+export function primeSlotIcon(name: IconName, px = 20, className?: string) {
   const Glyph = ICONS[name]
   return (options: { iconProps?: object }) => {
     const props = (options.iconProps ?? {}) as IconProps
