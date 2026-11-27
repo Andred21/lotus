@@ -988,3 +988,7 @@ Medido em 2026-11-26, no `/finalizar-bloco 64`, HEAD `0d64503f`; origem em `fech
   64 era tela branca.
 - **Por que nenhuma ficha carrega:** `rascunho-plano-65.md` e `rascunho-plano-66.md` não citam nenhum
   dos dois (grep em 2026-11-26), e o 65 já está no teto de 10 tasks.
+- **Gatilho do 65 passou sem decisão (2026-11-27, `/finalizar-bloco 65`).** A spec e o plano do 65
+  não citam esta pendência, e o bloco não pagou nenhum dos dois itens: o `refetch` cru segue em
+  `useHistorial.ts:144,148` (as linhas desceram com o C-3) e as rotas-layout seguem sem
+  `errorElement`. Gatilho novo: o `/planejar-bloco` do 66 decide os dois itens (task ou ficha).

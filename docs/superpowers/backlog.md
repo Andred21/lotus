@@ -146,7 +146,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
-| 8 | **65** `frontend-navegacao-sessao-e-formularios` | Frontend | Depende do 64 (data router, `IconName`, hook da guarda) |
 | 9 | **66** `frontend-identidade-graficos-e-acessibilidade` | Frontend | Depende do 65 (tokens de tema); monta o quadro dos 46 |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
 | 11 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
@@ -288,37 +287,6 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 > `main@c6b06e2f`. O João pediu o menor número de blocos. Ficaram três porque duas divisões são
 > reais: a validação tem metade no repositório `Andred21/lotus-site`, e a Certificação precisa do
 > código de cotação novo (60) e do download público (61).
-
----
-
-## 65. `frontend-navegacao-sessao-e-formularios`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** 64
-**Fonte:** `audits/2026-11-26-ui-ux-pro-max.md` e a spec do 64 (D12). Plano em rascunho:
-`blocos/64-frontend-revisao-ui-ux-e-icones/rascunho-plano-65.md`.
-
-**Objetivo:** segundo dos três blocos da revisão ui-ux-pro-max. Cobre navegação, sessão,
-formulários e o gerador de tema.
-
-**Escopo** (IDs da auditoria):
-- C-3 e C-11: lista e abas na URL, voltar pelo histórico.
-- C-1, D-1 e D-9: sessão e dado fresco.
-- C-2, C-7, C-8, A-10 e C-9: formulários protegidos.
-- C-5, C-4, C-6 e A-2: feedback e confirmações.
-- A-1 e B-8: gerador de tema, com borda no escuro, info em índigo e peso 600.
-- D-6 (aberto no 64, por decisão do João em 2026-11-26): dividir o barrel `@shared/ui` ou tirar o
-  chunk `ui` (465,48 kB gz) do `modulepreload`. O rascunho já está no teto de 10 tasks; o encaixe é
-  decisão do João no `/planejar-bloco 65`.
-
-**Planejar:** a spec já está aprovada (spec do 64, D1–D12). O `/planejar-bloco 65` faz o
-brainstorming curto, só para conferir o rascunho contra a `main` que o 64 deixou. Depois grava
-`spec.md` apontando para a spec compartilhada, com a própria `## Verificação externa`, e move o
-rascunho para `plano.md`.
-
-**Fora:** o que é do 64 e do 66.
-
-**DoD:** os critérios 3, 5 e 6 da spec §7 provados. `fechamento.md` do bloco com os 17 IDs (os 16
-do escopo e o D-6, se o João o encaixar).
 
 ---
 
