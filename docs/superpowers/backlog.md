@@ -146,7 +146,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
-| 7 | **64** `frontend-revisao-ui-ux-e-icones` | Frontend | Ícones e roteador: base que o 65 e o 66 consomem |
 | 8 | **65** `frontend-navegacao-sessao-e-formularios` | Frontend | Depende do 64 (data router, `IconName`, hook da guarda) |
 | 9 | **66** `frontend-identidade-graficos-e-acessibilidade` | Frontend | Depende do 65 (tokens de tema); monta o quadro dos 46 |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
@@ -284,43 +283,6 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 > `main@c6b06e2f`. O João pediu o menor número de blocos. Ficaram três porque duas divisões são
 > reais: a validação tem metade no repositório `Andred21/lotus-site`, e a Certificação precisa do
 > código de cotação novo (60) e do download público (61).
-
----
-
-## 64. `frontend-revisao-ui-ux-e-icones`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
-**Fonte:** `audits/2026-11-26-ui-ux-pro-max.md` — análise com a skill ui-ux-pro-max v2.15.0 contra
-`main@c576bc35`, 46 achados em 9 temas, cada um com `arquivo:linha` — e o pedido do João de
-2026-11-26 de trocar os ícones por uma biblioteca mais moderna e condizente com o tema.
-
-**Objetivo:** primeiro de três blocos (64 → 65 → 66) que fecham os 46 achados da análise. A divisão
-é do João, em 2026-11-26: um plano de até 10 tasks por bloco. A spec dos três é
-`blocos/64-frontend-revisao-ui-ux-e-icones/spec.md` (D12). Este bloco troca a família PrimeIcons
-(fonte) por Phosphor e migra o roteador para data router.
-
-**Escopo:**
-- **T10 Ícones — Phosphor** (`@phosphor-icons/react`, decidido pelo João em 2026-11-26):
-  - fica atrás de um registro `IconName` em `shared/ui`, que nenhuma feature contorna;
-  - peso `regular` no repouso e `fill` no item ativo da navegação;
-  - os 57 ícones dos 95 arquivos migrados;
-  - os ícones internos do Prime trocados pelos props dos wrappers;
-  - `primeicons` fora do `package.json` e do `main.tsx`, com catraca.
-- **Roteador:**
-  - data router com rotas `lazy` e bandeiras fora do CSS global (D-6);
-  - título por rota e foco no `<main>` (C-12);
-  - 404 e 403 por módulo (C-10);
-  - o hook `useUnsavedChangesGuard`, que os formulários ligam no 65.
-
-**Entrada na fila:** pela PR da própria lane, com o mesmo desvio da invariante 10 e a mesma cópia
-provisória do `42`, por decisão do João em 2026-11-26. As fichas 65 e 66 entram pela mesma PR.
-
-**Fora:** tudo o que é do 65 e do 66. Também redesenho de tela (Administración é do 9), tom de voz e
-resgate dos commits da branch Impeccable.
-
-**DoD:** os critérios 2, 3 e 4 da spec §7 provados: nenhum `pi pi-` nem `primeicons` em `frontend/`,
-gate verde, e DESIGN.md com a seção de ícones. `fechamento.md` do bloco com T10, C-12 e C-10,
-cada um com teste ou captura; D-6 aberto, levado ao 65.
 
 ---
 
