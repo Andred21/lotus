@@ -12,6 +12,7 @@ import {
   AZUL_POSTE,
   TINTA_CLARA,
   CINZA_BORDA,
+  SELETORES_DE_CONTROLE,
   SEVERIDADES_CLARAS,
 } from '../scripts/generate-brand-theme.mjs'
 
@@ -487,7 +488,7 @@ describe('o tinte da coluna presa acompanha o hover do tema (Q-3)', () => {
 const DECLARACOES_COM = (css: string, hex: string) =>
   [...css.matchAll(new RegExp(`[-\\w]*\\s*:\\s*[^;{}]*${hex}[^;{}]*`, 'gi'))].map((m) => m[0].trim())
 
-describe('D-68 — borda de controle do tema claro', () => {
+describe('D-68 e A-1 — borda de controle, nos dois temas', () => {
   it('as bordas em slate-500 somam 24 (21 convertidas + 3 já vivas), e nenhuma sobra em slate-300', () => {
     const css = light()
     const bordas = DECLARACOES_COM(css, CINZA_BORDA).filter((d) => /^border/.test(d))
@@ -502,16 +503,72 @@ describe('D-68 — borda de controle do tema claro', () => {
     expect(sobrou.filter((d) => /^background/.test(d)).length).toBe(4)
   })
 
-  // A-1 (bloco 65): o escuro também. O `#334155` de borda mede 1,5:1 sobre o card
-  // e 2,18:1 sobre o proprio preenchimento — o input do escuro NÃO tem poço que
-  // carregue o limite do controle, então o traço volta a ser o único indicador.
-  it('borda de controle do escuro é #64748b', () => {
-    const css = dark()
-    expect(DECLARACOES_COM(css, '#334155').filter((d) => /^border/.test(d))).toEqual([])
-    expect(DECLARACOES_COM(css, CINZA_BORDA).filter((d) => /^border/.test(d)).length).toBeGreaterThan(0)
-    // Os preenchimentos e a rampa de neutros do escuro seguem em slate-700.
-    expect(DECLARACOES_COM(css, '#334155').filter((d) => /^background/.test(d)).length).toBeGreaterThan(0)
-    expect(DECLARACOES_COM(css, '#334155').filter((d) => /^--/.test(d)).length).toBeGreaterThan(0)
+  // A-1 (bloco 65): o escuro também, mas SÓ nos controles. O `#334155` do traço
+  // do input mede 1,41:1 sobre o card e 1,81:1 sobre o fundo — e ali o traço é o
+  // único indicador do limite, como no claro. Já divisor de tabela, borda de
+  // diálogo, paginador, menu e seta de tooltip são hairline de hierarquia: ficam
+  // em `#334155` (DESIGN.md: "Bordas são hairline de 1px"), do mesmo peso do
+  // `--surface-border` do `AppCard`. Uma lista de seletores, a mesma nos dois temas.
+  const bordasDe = (css: string, hex: string) => {
+    const achado = new Map<string, string[]>()
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const decls = [...m[2].matchAll(new RegExp(`(?<![-\\w])border[-\\w]*\\s*:[^;{}]*${hex}`, 'gi'))].map((d) => d[0])
+      if (decls.length) achado.set(m[1].trim().replace(/\s+/g, ' '), decls)
+    }
+    return achado
+  }
+
+  it('borda de controle do escuro é #64748b — input, dropdown, checkbox e radio', () => {
+    const css = bordasDe(dark(), CINZA_BORDA)
+    for (const seletor of [
+      '.p-inputtext',
+      '.p-dropdown',
+      '.p-multiselect',
+      '.p-checkbox .p-checkbox-box',
+      '.p-radiobutton .p-radiobutton-box',
+      '.p-togglebutton .p-button',
+    ]) {
+      expect(css.get(seletor)?.[0], seletor).toMatch(new RegExp(`${CINZA_BORDA}$`))
+    }
+  })
+
+  it('a hairline estrutural do escuro segue em #334155 — tabela, diálogo, paginador, menu, painel', () => {
+    const css = bordasDe(dark(), '#334155')
+    for (const seletor of [
+      '.p-datatable .p-datatable-thead > tr > th',
+      '.p-datatable .p-datatable-tbody > tr > td',
+      '.p-dialog',
+      '.p-paginator',
+      '.p-panel .p-panel-header',
+      '.p-tabview .p-tabview-nav',
+      '.p-toolbar',
+      '.p-fieldset',
+      '.p-divider.p-divider-horizontal:before',
+      '.p-menu .p-menu-separator',
+      '.p-overlaypanel',
+      '.p-tooltip.p-tooltip-top .p-tooltip-arrow',
+      '.p-dropdown-panel',
+      '.p-datepicker:not(.p-datepicker-inline)',
+      '.p-datepicker .p-datepicker-header',
+    ]) {
+      expect(css.has(seletor), seletor).toBe(true)
+    }
+    // e a recíproca: nenhuma hairline estrutural foi repintada.
+    const repintadas = [...bordasDe(dark(), CINZA_BORDA).keys()].filter((sel) => !SELETORES_DE_CONTROLE.includes(sel))
+    expect(repintadas.filter((sel) => !/p-button/.test(sel))).toEqual([])
+  })
+
+  it('a lista de controle é a mesma nos dois temas: todo bloco dela perde a origem, e só ele', () => {
+    for (const [css, origem] of [
+      [light(), '#cbd5e1'],
+      [dark(), '#334155'],
+    ] as const) {
+      const sobra = [...bordasDe(css, origem).keys()].filter((sel) => SELETORES_DE_CONTROLE.includes(sel))
+      expect(sobra).toEqual([])
+    }
+    const emLista = (css: string) => [...bordasDe(css, CINZA_BORDA).keys()].filter((sel) => SELETORES_DE_CONTROLE.includes(sel))
+    expect(emLista(dark()).sort()).toEqual(emLista(light()).sort())
+    expect(SELETORES_DE_CONTROLE.length).toBe(18)
   })
 
   it('o slate-500 mede 3:1 (WCAG 1.4.11) sobre o card e sobre o fundo do escuro', () => {
