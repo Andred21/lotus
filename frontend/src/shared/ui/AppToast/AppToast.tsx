@@ -1,4 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Toast } from 'primereact/toast'
 import { primeSlotIcon } from '../AppIcon'
 
@@ -23,15 +24,23 @@ export type AppToastHandle = {
  * liga os dois por `ref`. */
 export const AppToast = forwardRef<AppToastHandle>((_props, ref) => {
   const toast = useRef<Toast>(null)
+  const { t } = useTranslation()
 
-  useImperativeHandle(ref, () => ({
-    success: (detail) => {
-      toast.current?.show({ severity: 'success', icon: SUCCESS_ICON, closeIcon: CLOSE_ICON, detail, life: 5000 })
-    },
-    error: (detail) => {
-      toast.current?.show({ severity: 'error', icon: ERROR_ICON, closeIcon: CLOSE_ICON, detail, life: 8000 })
-    },
-  }), [])
+  // O nome do fechar sai por mensagem (`pt.closeButton`): o Toast não repassa
+  // `ariaCloseLabel` à mensagem, e o fallback do Prime é o locale GLOBAL dele,
+  // que `locale()` nunca troca no projeto. `t` entra nas deps para a troca de
+  // idioma valer na próxima mensagem.
+  useImperativeHandle(ref, () => {
+    const pt = { closeButton: { 'aria-label': t('common.close') } }
+    return {
+      success: (detail) => {
+        toast.current?.show({ severity: 'success', icon: SUCCESS_ICON, closeIcon: CLOSE_ICON, detail, life: 5000, pt })
+      },
+      error: (detail) => {
+        toast.current?.show({ severity: 'error', icon: ERROR_ICON, closeIcon: CLOSE_ICON, detail, life: 8000, pt })
+      },
+    }
+  }, [t])
 
   return <Toast ref={toast} position="bottom-right" />
 })

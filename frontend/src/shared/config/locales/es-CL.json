@@ -70,6 +70,7 @@
     "active": "Activo",
     "inactive": "Inactivo",
     "view": "Ver",
+    "table": "Tabla",
     "moreActions": "Más acciones",
     "upload": "Subir documento",
     "replace": "Reemplazar",
@@ -1142,6 +1143,7 @@
     }
   },
   "archive": {
+    "groupLabel": "Registros activos o archivados",
     "active": "Activos",
     "archived": "Archivados",
     "archiveAction": "Archivar",

@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUiStore } from '@shared/stores/uiStore'
 import { usePermissions, useIsCompactViewport } from '@shared/hooks'
@@ -10,6 +11,7 @@ import { SidebarItem } from './SidebarItem'
 export function Sidebar() {
 
   const { t } = useTranslation()
+  const navId = useId()
   const compact = useIsCompactViewport()
   // Abaixo de 1024px a sidebar expandida come a largura útil e empurra a tabela
   // para fora da janela. O colapso é imposto pela viewport sem tocar no estado
@@ -50,7 +52,13 @@ export function Sidebar() {
         {/* Em compact o colapso é imposto pela viewport: o botão sumir (em vez
           * de girar em falso) é o que preserva a pref persistida (UI-02). */}
         {!compact && (
-          <AppButton variant="iconToggle" onClick={toggle} aria-label={t('common.toggleMenu')}>
+          <AppButton
+            variant="iconToggle"
+            onClick={toggle}
+            aria-label={t('common.toggleMenu')}
+            aria-expanded={!collapsed}
+            aria-controls={navId}
+          >
             <AppIcon name={collapsed ? 'chevronRight' : 'chevronLeft'} className="-my-0.5" />
           </AppButton>
         )}
@@ -62,7 +70,7 @@ export function Sidebar() {
         </p>
       )}
 
-      <nav className={`flex flex-1 flex-col gap-4 ${collapsed ? 'px-1' : 'px-3'}`}>
+      <nav id={navId} className={`flex flex-1 flex-col gap-4 ${collapsed ? 'px-1' : 'px-3'}`}>
         {modules.map((m) => (
           <SidebarItem key={m.key} module={m} collapsed={collapsed} />
         ))}

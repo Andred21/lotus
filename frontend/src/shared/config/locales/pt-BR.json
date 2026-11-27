@@ -70,6 +70,7 @@
     "active": "Ativo",
     "inactive": "Inativo",
     "view": "Ver",
+    "table": "Tabela",
     "moreActions": "Mais ações",
     "upload": "Enviar documento",
     "replace": "Substituir",
@@ -1142,6 +1143,7 @@
     }
   },
   "archive": {
+    "groupLabel": "Registros ativos ou arquivados",
     "active": "Ativos",
     "archived": "Arquivados",
     "archiveAction": "Arquivar",

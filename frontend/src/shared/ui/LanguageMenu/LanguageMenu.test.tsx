@@ -14,17 +14,17 @@ vi.mock('react-i18next', async (importOriginal) => {
 })
 
 // O menu é popup: só existe no DOM depois de abrir. Sob o mock, `t` devolve a
-// CHAVE — o aria-label do botão sai como `common.language`, não como texto
-// traduzido.
+// CHAVE — o aria-label do botão sai como `common.language: EN` (chave + rótulo
+// visível), não como texto traduzido.
 const abrirMenu = () => {
-  fireEvent.click(screen.getByLabelText('common.language'))
+  fireEvent.click(screen.getByLabelText('common.language: EN'))
 }
 
 describe('LanguageMenu', () => {
   it('controles do header usam shell: o botão do idioma não traz a marca dos dois temas', () => {
     render(<LanguageMenu />)
 
-    const gatilho = screen.getByLabelText('common.language')
+    const gatilho = screen.getByLabelText('common.language: EN')
     expect(gatilho.className).toContain('text-[var(--shell-ink)]')
     expect(gatilho.className).not.toContain('dark:')
   })
@@ -76,7 +76,7 @@ describe('LanguageMenu', () => {
     const { container } = render(<LanguageMenu />)
 
     // Gatilho: a bandeira do idioma atual (EN) é um <img> decorativo.
-    const gatilho = screen.getByLabelText('common.language')
+    const gatilho = screen.getByLabelText('common.language: EN')
     expect(gatilho.querySelector('img')).toBeTruthy()
     expect(gatilho.querySelector('img')?.getAttribute('alt')).toBe('')
 
@@ -88,5 +88,14 @@ describe('LanguageMenu', () => {
     itens.forEach((li) => expect(li.querySelector('img')).toBeTruthy())
     expect(container.querySelector('.fi')).toBeNull()
     expect(document.querySelector('.fi')).toBeNull()
+  })
+
+  /** WCAG 2.5.3 (A-9): o nome acessível contém o texto visível do botão. Sob o
+   * mock em `en`, o botão mostra "EN" e o `t` devolve a chave. */
+  it('nome acessível do idioma contém o rótulo visível', () => {
+    render(<LanguageMenu />)
+
+    expect(screen.getByRole('button', { name: /EN/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'common.language: EN' })).toBeTruthy()
   })
 })

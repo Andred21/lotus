@@ -69,4 +69,18 @@ describe('ArchiveSwitch', () => {
     expect(ativos.className).not.toContain('p-button-text')
     expect(arquivados.className).toContain('p-button-text')
   })
+
+  it('switch de arquivados expõe aria-pressed', () => {
+    const { rerender } = render(<ArchiveSwitch value="active" onChange={() => {}} />)
+    const ativos = () => screen.getByRole('button', { name: /^(archive\.active|Activos|Ativos|Active)$/i })
+    const arquivados = () => screen.getByRole('button', { name: /^(archive\.archived|Archivados|Arquivados|Archived)$/i })
+
+    expect(ativos().getAttribute('aria-pressed')).toBe('true')
+    expect(arquivados().getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByRole('group').getAttribute('aria-label')).toBeTruthy()
+
+    rerender(<ArchiveSwitch value="archived" onChange={() => {}} />)
+    expect(ativos().getAttribute('aria-pressed')).toBe('false')
+    expect(arquivados().getAttribute('aria-pressed')).toBe('true')
+  })
 })

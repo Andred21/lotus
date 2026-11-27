@@ -63,6 +63,20 @@ describe('RowActions', () => {
     expect(botao.querySelector('svg')?.hasAttribute('aria-label')).toBe(false)
   })
 
+  it('gatilhos de menu expõem aria-expanded', () => {
+    render(<RowActions collapsed actions={[acao('Reenviar'), acao('Ver')]} />)
+
+    const gatilho = screen.getByRole('button', { name: 'common.moreActions' })
+    expect(gatilho.getAttribute('aria-expanded')).toBe('false')
+
+    fireEvent.click(gatilho)
+
+    expect(gatilho.getAttribute('aria-expanded')).toBe('true')
+    const controla = gatilho.getAttribute('aria-controls')
+    expect(controla).toBeTruthy()
+    expect(document.getElementById(controla!)).not.toBeNull()
+  })
+
   it('o gatilho do menu colapsado segue nomeado e com o svg decorativo', () => {
     render(<RowActions collapsed actions={[acao('Reenviar'), acao('Ver')]} />)
 

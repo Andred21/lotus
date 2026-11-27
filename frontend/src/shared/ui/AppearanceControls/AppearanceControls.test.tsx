@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { useUiStore } from '@shared/stores/uiStore'
 import { AppearanceControls } from './AppearanceControls'
 
 vi.mock('react-i18next', async (importOriginal) => {
@@ -19,5 +20,15 @@ describe('AppearanceControls', () => {
     const toggle = screen.getByLabelText('common.toggleTheme')
     expect(toggle.className).toContain('text-[var(--shell-ink)]')
     expect(toggle.className).not.toContain('dark:')
+  })
+
+  it('toggle de tema expõe aria-pressed', () => {
+    useUiStore.setState({ theme: 'light' })
+    const { rerender } = render(<AppearanceControls />)
+    expect(screen.getByLabelText('common.toggleTheme').getAttribute('aria-pressed')).toBe('false')
+
+    useUiStore.setState({ theme: 'dark' })
+    rerender(<AppearanceControls />)
+    expect(screen.getByLabelText('common.toggleTheme').getAttribute('aria-pressed')).toBe('true')
   })
 })

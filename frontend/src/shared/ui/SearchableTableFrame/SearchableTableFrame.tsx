@@ -177,6 +177,7 @@ export function SearchableTableFrame<T>({
               <AppInputText
                 leftIcon="search"
                 placeholder={searchPlaceholder}
+                aria-label={searchPlaceholder}
                 value={table.filter}
                 onChange={(e) => table.onFilterChange(e.target.value)}
               />

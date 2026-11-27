@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppAvatar, AppButton, AppIcon, AppMenu } from '@shared/ui'
@@ -13,6 +13,10 @@ export function UserMenu() {
   const logout = useLogout()
   const navigate = useNavigate()
   const menuRef = useRef<AppMenuRef>(null)
+  // Estado do popup para o leitor de tela: o Prime avisa abrir/fechar (inclusive
+  // o clique fora e o Esc) por `onShow`/`onHide`; o `id` liga o gatilho ao menu.
+  const menuId = useId()
+  const [open, setOpen] = useState(false)
 
   if (!user) return null
 
@@ -53,6 +57,9 @@ export function UserMenu() {
         variant="noSurface"
         text
         onClick={(e) => menuRef.current?.toggle(e)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
         className="flex min-w-0 items-center gap-1 sm:gap-2"
       >
 
@@ -105,7 +112,14 @@ export function UserMenu() {
 
       {/* Fora do gatilho: <button> não pode conter conteúdo interativo, e o
         * popup do Prime renderiza no lugar onde é declarado. */}
-      <AppMenu ref={menuRef} model={items} className="mt-2" />
+      <AppMenu
+        ref={menuRef}
+        id={menuId}
+        model={items}
+        className="mt-2"
+        onShow={() => setOpen(true)}
+        onHide={() => setOpen(false)}
+      />
 
     </div>
   )

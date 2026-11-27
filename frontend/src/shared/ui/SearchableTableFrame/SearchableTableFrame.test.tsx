@@ -127,3 +127,12 @@ describe('SearchableTableFrame — modo lazy', () => {
     expect(onSort).toHaveBeenCalledWith(expect.objectContaining({ sortField: 'name', sortOrder: 1 }))
   })
 })
+
+describe('SearchableTableFrame — busca', () => {
+  /** A-6: o placeholder some ao digitar e não é nome acessível confiável. */
+  it('busca tem nome acessível', () => {
+    montar(estado())
+
+    expect(screen.getByRole('textbox', { name: 'common.search' })).toBeTruthy()
+  })
+})

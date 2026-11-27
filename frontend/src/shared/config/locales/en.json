@@ -70,6 +70,7 @@
     "active": "Active",
     "inactive": "Inactive",
     "view": "View",
+    "table": "Table",
     "moreActions": "More actions",
     "upload": "Upload document",
     "replace": "Replace",
@@ -1142,6 +1143,7 @@
     }
   },
   "archive": {
+    "groupLabel": "Active or archived records",
     "active": "Active",
     "archived": "Archived",
     "archiveAction": "Archive",

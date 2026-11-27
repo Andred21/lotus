@@ -19,7 +19,8 @@ export interface AppSubNavProps {
  * Apresentacional puro: não conhece rota nem feature, e o item atual é marcado
  * com `aria-current="page"` para o leitor de tela, não só com cor.
  *
- * Fundo do item atual por `color-mix` com `--surface-card`, a mesma fórmula do
+ * O item atual leva também borda inferior em `--brand-ink` e peso 600, para o
+ * estado não depender só do tinte. Fundo por `color-mix` com `--surface-card`, a mesma fórmula do
  * `AppSelectableCard`: mantém contraste nos dois temas.
  */
 export function AppSubNav({ items, activeKey, onSelect, ariaLabel }: AppSubNavProps) {
@@ -37,7 +38,16 @@ export function AppSubNav({ items, activeKey, onSelect, ariaLabel }: AppSubNavPr
                 aria-current={active ? 'page' : undefined}
                 onClick={() => onSelect(item.key)}
                 className="w-full justify-start text-left text-[var(--text-color)]!"
-                style={active ? { background: 'color-mix(in srgb, var(--primary-color) 10%, var(--surface-card))' } : undefined}
+                style={{
+                  // Borda de 2px nos DOIS estados (transparente no inativo): o
+                  // item atual não desloca a lista. O tinte sozinho não chega a
+                  // 3:1 contra o card; `--brand-ink` chega nos dois temas (A-12).
+                  borderBottom: `2px solid ${active ? 'var(--brand-ink)' : 'transparent'}`,
+                  ...(active && {
+                    fontWeight: 600,
+                    background: 'color-mix(in srgb, var(--primary-color) 10%, var(--surface-card))',
+                  }),
+                }}
               />
             </li>
           )

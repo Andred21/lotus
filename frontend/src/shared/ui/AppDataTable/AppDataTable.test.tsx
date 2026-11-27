@@ -435,3 +435,45 @@ describe('AppDataTable — ícones internos (bloco 64)', () => {
     phosphor(cabecalho())
   })
 })
+
+describe('AppDataTable — acessibilidade do rodapé e da rolagem', () => {
+  const TRES = [{ id: 1 }, { id: 2 }, { id: 3 }]
+
+  /** A-6: a contagem muda com a busca e o filtro, e o leitor de tela só a
+   * anuncia se estiver numa região viva. */
+  it('contagem é anunciada', () => {
+    const { container } = render(
+      <AppDataTable value={TRES} rows={1} footerCount="3 registros">
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    const viva = container.querySelector('[aria-live="polite"]')
+    expect(viva?.textContent).toBe('3 registros')
+    expect(container.querySelector('.p-paginator-left-content')?.contains(viva)).toBe(true)
+  })
+
+  it('o "carregando" também entra na região viva', () => {
+    const { container } = render(
+      <AppDataTable value={TRES} rows={1} footerCount="3 registros" loading>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    expect(container.querySelector('[aria-live="polite"]')?.textContent).toBe('Cargando...')
+  })
+
+  /** A-6: o contêiner de rolagem horizontal só é alcançável por teclado se for
+   * focável, e uma região focável precisa de nome. */
+  it('rolagem da tabela alcançável por teclado', () => {
+    render(
+      <AppDataTable value={TRES}>
+        <AppColumn field="id" header="id" />
+      </AppDataTable>,
+    )
+
+    const regiao = screen.getByRole('region', { name: 'Tabla' })
+    expect(regiao.tabIndex).toBe(0)
+    expect(regiao.className).toContain('overflow-x-auto')
+  })
+})

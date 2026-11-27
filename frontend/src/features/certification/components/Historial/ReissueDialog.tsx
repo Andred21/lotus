@@ -12,7 +12,8 @@ type Props = {
   target: ReissueTarget | null
   panelLoading: boolean
   panelError: ProblemDetails | null
-  onRetryPanel: () => void
+  /** `undefined` no 403 (`retryFor`): sem handler o `AppErrorState` não oferece repetir. */
+  onRetryPanel?: () => Promise<unknown>
   onHide: () => void
   onIssued: (certificate: CertificateData) => void
 }

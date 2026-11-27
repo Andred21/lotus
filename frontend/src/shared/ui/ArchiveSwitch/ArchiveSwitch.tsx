@@ -22,13 +22,14 @@ export function ArchiveSwitch({ value, onChange }: { value: Mode; onChange: (mod
   const { t } = useTranslation()
 
   return (
-    <div className="inline-flex gap-1" role="group">
+    <div className="inline-flex gap-1" role="group" aria-label={t('archive.groupLabel')}>
       {/* Selecionado `secondary outlined`, o outro `text plain`: sem papel o lado
         * corrente caía no `.p-button` preenchido do Lara e disputava com a CTA da
         * mesma barra (f1 UI-01, run de 2026-08-28). Desde o B-2 nenhum dos dois
         * é celeste — o celeste é da CTA —, e a tinta neutra vem do tema. */}
       <AppButton
         label={t('archive.active')}
+        aria-pressed={value === 'active'}
         size="small"
         outlined={value === 'active'}
         text={value !== 'active'}
@@ -39,6 +40,7 @@ export function ArchiveSwitch({ value, onChange }: { value: Mode; onChange: (mod
       />
       <AppButton
         label={t('archive.archived')}
+        aria-pressed={value === 'archived'}
         icon="archive"
         size="small"
         outlined={value === 'archived'}

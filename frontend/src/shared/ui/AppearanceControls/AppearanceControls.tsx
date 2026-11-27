@@ -24,7 +24,14 @@ export function AppearanceControls({ className }: { className?: string }) {
   return (
     <div className={`flex items-center gap-4 ${className ?? ''}`}>
       <LanguageMenu />
-      <AppButton variant="shell" onClick={toggleTheme} aria-label={t('common.toggleTheme')}>
+      {/* Toggle, não ação: o nome fica fixo e o estado vai em `aria-pressed`
+        * (ligado = escuro). O ícone troca para o leitor de tela não depender dele. */}
+      <AppButton
+        variant="shell"
+        onClick={toggleTheme}
+        aria-label={t('common.toggleTheme')}
+        aria-pressed={theme === 'dark'}
+      >
         <AppIcon name={theme === 'dark' ? 'sun' : 'moon'} className="-my-0.5" />
       </AppButton>
     </div>

@@ -161,7 +161,9 @@ export function AppDataTable<T extends DataTableValueArray>({
       alwaysShowPaginator
       // Desligar o paginador durante o `loading` foi recusado: a faixa some e
       // volta, e o card salta de altura a cada GET. O que muda é o TEXTO.
-      paginatorLeft={loading ? t('common.loading') : footerCount}
+      // `aria-live`: a contagem muda com a busca e o filtro, e só uma região viva
+      // a anuncia. `polite` espera o leitor terminar a frase em curso.
+      paginatorLeft={<span aria-live="polite">{loading ? t('common.loading') : footerCount}</span>}
       // `widthPt` funde por ÚLTIMO, e não o `pt` do chamador: o guard "sem
       // linha, sem largura mínima" (comentário acima) tem que vencer o piso
       // default de `appDataTablePt` e também qualquer `pt` de CHAMADOR que
@@ -173,7 +175,13 @@ export function AppDataTable<T extends DataTableValueArray>({
       // nada e o `pt` do chamador segue vencendo.
       pt={mergePt<DataTableProps<DataTableValueArray>['pt']>(
         mergePt<DataTablePassThroughOptions>(
-          { ...appDataTablePt, paginator: appPaginatorPt },
+          // A rolagem horizontal é do `wrapper`: sem foco o teclado não a
+          // alcança, e uma região focável precisa de nome (A-6). Piso do
+          // componente, por baixo do `pt` do chamador como o resto do default.
+          mergePt<DataTablePassThroughOptions>(
+            { ...appDataTablePt, paginator: appPaginatorPt },
+            { wrapper: { tabIndex: 0, role: 'region', 'aria-label': t('common.table') } },
+          ),
           pt as DataTablePassThroughOptions,
         ),
         widthPt as DataTableProps<DataTableValueArray>['pt'],
