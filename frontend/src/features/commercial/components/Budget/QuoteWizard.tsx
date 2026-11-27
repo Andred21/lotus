@@ -22,7 +22,7 @@ export function QuoteWizard({
 }) {
   const { t } = useTranslation()
   const f = useQuoteForm(budgetId, quote, onHide)
-  const { form, set, step, next, back, canAdvance, submit, pending, fieldErrors, generalError, guard } = f
+  const { form, set, setValueUf, step, next, back, canAdvance, submit, pending, fieldErrors, generalError, guard } = f
   const campo = useFormField(f)
   const courses = useQuoteCourseSearch()
   const reasonId = useId()
@@ -103,7 +103,7 @@ export function QuoteWizard({
             onSelect={(id) => set('course_id', id)}
           />
         ) : (
-          <DataStep Field={campo.Field} form={form} onChange={set} onlyUf={onlyUf} />
+          <DataStep Field={campo.Field} form={form} onChange={set} onValueUf={setValueUf} onlyUf={onlyUf} />
         )}
       </AppDialog>
       <DiscardChangesDialog {...guard.dialogProps} />

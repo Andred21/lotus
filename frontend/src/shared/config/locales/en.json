@@ -656,6 +656,7 @@
     "courseSearchPlaceholder": "Search course...",
     "students": "Students",
     "valueUf": "Value UF",
+    "ufAmbiguous": "Ambiguous value: type 1500 for one thousand five hundred, or 1,5 for one and a half.",
     "purchaseOrder": "Purchase order",
     "plannedStart": "Planned start",
     "plannedEnd": "Planned end",

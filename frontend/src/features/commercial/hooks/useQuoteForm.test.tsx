@@ -42,3 +42,30 @@ describe('useQuoteForm — UF em edição', () => {
     expect(atualizar.mock.calls[0][0].payload.value_uf).toBe('1234')
   })
 })
+
+describe('useQuoteForm — entrada de UF ambígua (Q-2 do bloco 66)', () => {
+  it('"1,500" vira erro no campo e não chega ao payload', () => {
+    atualizar.mockClear()
+    const quote = { id: 7, course_id: 2, student_count: 3, value_uf: '10.0000' } as QuoteData
+    const { result } = renderHook(() => useQuoteForm(1, quote, () => {}), { wrapper })
+
+    act(() => result.current.setValueUf('1,500'))
+
+    expect(result.current.fieldErrors?.value_uf).toHaveLength(1)
+    act(() => result.current.submit())
+    expect(atualizar).not.toHaveBeenCalled()
+  })
+
+  it('corrigir para uma forma não ambígua limpa o erro e envia o valor', () => {
+    atualizar.mockClear()
+    const quote = { id: 7, course_id: 2, student_count: 3, value_uf: '10.0000' } as QuoteData
+    const { result } = renderHook(() => useQuoteForm(1, quote, () => {}), { wrapper })
+
+    act(() => result.current.setValueUf('1,500'))
+    act(() => result.current.setValueUf('1500'))
+
+    expect(result.current.fieldErrors?.value_uf).toBeUndefined()
+    act(() => result.current.submit())
+    expect(atualizar.mock.calls[0][0].payload.value_uf).toBe('1500')
+  })
+})

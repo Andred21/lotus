@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AppInputText, AppDatePicker, FormSection, type FieldComponent } from '@shared/ui'
 import type { QuoteFormFields } from '../../hooks/useQuoteForm'
-import { parseUfInput } from '@shared/lib'
 
 /** Passo 2 do wizard: alunos, valor UF, ordem de compra e datas previstas.
  *
@@ -16,11 +15,13 @@ import { parseUfInput } from '@shared/lib'
  * mostra o valor gravado como texto — o idioma do repositório para campo
  * travado, e não `disabled`, que trunca o valor (spec BD-3 §4). */
 export function DataStep({
-  Field, form, onChange, onlyUf = false,
+  Field, form, onChange, onValueUf, onlyUf = false,
 }: {
   Field: FieldComponent<QuoteFormFields>
   form: QuoteFormFields
   onChange: <K extends keyof QuoteFormFields>(k: K, v: QuoteFormFields[K]) => void
+  /** Texto cru do campo de UF: quem interpreta (e recusa o ambíguo) é o hook. */
+  onValueUf: (raw: string) => void
   onlyUf?: boolean
 }) {
   const { t } = useTranslation()
@@ -40,15 +41,15 @@ export function DataStep({
 
         {/* value_uf NUNCA vira Number: aceita vírgula OU ponto na digitação
             e normaliza para ponto — troca de caractere, não aritmética.
-            O estado é canônico (ponto), mas a EXIBIÇÃO é sempre es-CL
-            (vírgula): "1.250" é ambíguo (mil duzentos e cinquenta, ou
-            1,25?) e nenhuma heurística resolve isso sem errar outro caso.
-            Mostrando de volta "1,250", o usuário VÊ que o valor virou
-            decimal — o caso ambíguo falha à vista, não em silêncio. */}
+            O estado é canônico (ponto), e o eco é sempre vírgula decimal.
+            O eco sozinho não bastava: em inglês a lista mostra 1500 como
+            "1,500", igual ao eco de 1,5. Por isso a forma ambígua ("1,500",
+            "1.500", "1.500.000") é recusada pelo hook com erro no campo, em
+            qualquer idioma (Q-2 da revisão do bloco 66). */}
         <Field name="value_uf" label={t('quote.valueUf')} required>
           <AppInputText
             value={form.value_uf.replace('.', ',')}
-            onChange={(e) => onChange('value_uf', parseUfInput(e.target.value))}
+            onChange={(e) => onValueUf(e.target.value)}
             className="w-full"
           />
         </Field>

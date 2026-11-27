@@ -19,8 +19,36 @@ export function formatUf(value: string, locale: string = i18n.language): string 
  * caractere. */
 export function formatUfField(value: string): string {
   const [int, frac = ''] = value.split('.')
-  const trimmed = frac.replace(/0+$/, '')
+  let trimmed = frac.replace(/0+$/, '')
+  // Até três dígitos inteiros e exatamente três casas ("12,345") é a forma que
+  // `isAmbiguousUfInput` recusa: o campo não pode pré-preencher o que ele mesmo
+  // reprova. A quarta casa volta ("12,3450") e o valor não muda.
+  if (trimmed.length === 3 && /^-?[1-9]\d{0,2}$/.test(int)) trimmed += '0'
   return trimmed ? `${int},${trimmed}` : int
+}
+
+/** A entrada de UF que nenhuma convenção decide sozinha, e que por isso o campo
+ * recusa em qualquer idioma (Q-2 da revisão do bloco 66):
+ *
+ * - um separador só, com um a três dígitos antes (o primeiro não é zero) e
+ *   exatamente três depois ("1,500", "1.500"): mil e quinhentos em inglês ou em
+ *   es-CL, conforme o separador, e 1,5 para o `parseUfInput`. "0,125" passa:
+ *   milhar não começa com zero;
+ * - o separador que seria o decimal aparece mais de uma vez ("1.500.000"):
+ *   repetido, ele só pode ser agrupamento de milhar, e o parser o leria como
+ *   decimal.
+ *
+ * O `formatUf` da lista agrupa milhar pelo idioma ativo, e é essa grafia que o
+ * usuário copia. Valor rejeitado é aceitável; valor silenciosamente errado,
+ * não. Quem quer decimal escreve "1,5"; quem quer mil e quinhentos, "1500". */
+export function isAmbiguousUfInput(raw: string): boolean {
+  const cleaned = raw.replace(/[^\d.,]/g, '')
+  if (/^[1-9]\d{0,2}[.,]\d{3}$/.test(cleaned)) return true
+
+  const last = Math.max(cleaned.lastIndexOf('.'), cleaned.lastIndexOf(','))
+  if (last === -1) return false
+  const separador = cleaned[last]
+  return cleaned.split(separador).length > 2
 }
 
 /** Normaliza o que o usuário digita (ou o que o campo pré-preenche em modo

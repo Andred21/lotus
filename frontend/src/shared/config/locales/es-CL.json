@@ -656,6 +656,7 @@
     "courseSearchPlaceholder": "Buscar curso...",
     "students": "Alumnos",
     "valueUf": "Valor UF",
+    "ufAmbiguous": "Valor ambiguo: escriba 1500 para mil quinientos o 1,5 para uno coma cinco.",
     "purchaseOrder": "Orden de compra",
     "plannedStart": "Inicio planificado",
     "plannedEnd": "Fin planificado",

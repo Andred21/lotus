@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard, useToast } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useCreateQuote, useUpdateQuote, type QuotePayload } from '../api/useQuotes'
-import { formatUfField, parseUfInput } from '@shared/lib'
+import { formatUfField, isAmbiguousUfInput, parseUfInput } from '@shared/lib'
 
 /** Campos que o wizard edita. `value_uf` fica STRING o caminho todo: converter
  * para Number reintroduziria o float que o decimal do backend existe para evitar. */
@@ -53,7 +53,14 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
 
   // Editar já tem curso escolhido: abre direto no passo 2 (dá para voltar e trocar).
   const [step, setStep] = useState<1 | 2>(quote ? 2 : 1)
-  if (didReset) setStep(quote ? 2 : 1)
+  // Entrada de UF que nenhuma convenção decide ("1,500", "1.500.000"): fica no
+  // estado como o parser a leria, mas trava o envio e vira erro no campo até o
+  // usuário reescrever (Q-2 da revisão do bloco 66, `isAmbiguousUfInput`).
+  const [ufAmbiguous, setUfAmbiguous] = useState(false)
+  if (didReset) {
+    setStep(quote ? 2 : 1)
+    setUfAmbiguous(false)
+  }
 
   const payload = (): QuotePayload => ({
     course_id: form.course_id,
@@ -70,6 +77,7 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
   })
 
   function submit() {
+    if (ufAmbiguous) return
     if (quote) {
       update.mutate({ quoteId: quote.id!, payload: payload() }, {
         onSuccess: () => {
@@ -87,11 +95,23 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
     })
   }
 
-  const { fieldErrors, generalError, set } = useFormMutationErrors<QuoteFormFields>(setField, [create.error, update.error])
+  const { fieldErrors: mutationFieldErrors, generalError, set } = useFormMutationErrors<QuoteFormFields>(
+    setField,
+    [create.error, update.error],
+  )
+  const fieldErrors = ufAmbiguous
+    ? { ...mutationFieldErrors, value_uf: [t('quote.ufAmbiguous')] }
+    : mutationFieldErrors
+
+  function setValueUf(raw: string) {
+    set('value_uf', parseUfInput(raw))
+    setUfAmbiguous(isAmbiguousUfInput(raw))
+  }
 
   return {
     form,
     set,
+    setValueUf,
     step,
     next: () => setStep(2),
     back: () => setStep(1),
