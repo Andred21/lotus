@@ -148,7 +148,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
 | 8 | **65** `frontend-navegacao-sessao-e-formularios` | Frontend | Depende do 64 (data router, `IconName`, hook da guarda) |
 | 9 | **66** `frontend-identidade-graficos-e-acessibilidade` | Frontend | Depende do 65 (tokens de tema); monta o quadro dos 46 |
-| 8 | **67** `frontend-divisao-do-chunk-ui` | Frontend | Corre junto com o 65: a correção é configuração do build, com arquivos disjuntos dos dele |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
 | 11 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
 
@@ -346,42 +345,6 @@ só deixam de quebrar.
 
 **DoD:** os critérios 1, 3 e 4 da spec §7 provados. `fechamento.md` com os 27 IDs do bloco e o
 "Quadro dos 46" apontando para o fechamento de cada bloco.
-
----
-
-## 67. `frontend-divisao-do-chunk-ui`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** —
-**Fonte:** D-6 de `audits/2026-11-26-ui-ux-pro-max.md`; seção "D-6: números" do
-`blocos/64-frontend-revisao-ui-ux-e-icones/fechamento.md`; §3 e D13 da spec do 65. Spec:
-`blocos/67-frontend-divisao-do-chunk-ui/spec.md`.
-
-**Objetivo:** fechar o D-6, aberto no 64 pelo veredito do João (opção b): a carga inicial só
-melhora com o chunk `ui` dividido, de modo que a entrada puxe só o que a casca usa.
-
-**Ponto de partida:** a entrada importa de forma estática o chunk `ui` (1.682,47 kB brutos e
-465,48 kB gz), que leva o barrel `@shared/ui` inteiro, com recharts, DataTable, Calendar e
-FileUpload. Tirá-lo do `modulepreload` não reduz a carga: a entrada o pede de qualquer jeito. A
-medição do planejamento (2026-11-27) achou a causa: `frontend/package.json` não declara
-`sideEffects`. Com a declaração o `ui` some, e entrada mais pré-carga caem de cerca de 558 para
-cerca de 270 kB gz.
-
-**Escopo:**
-- Declarar `sideEffects` em `frontend/package.json`.
-- Uma catraca em `frontend/tests/` contra a remoção da declaração e contra import nu de módulo que
-  não seja CSS em `src/`, que com ela some do build de produção em silêncio.
-- Medição de antes e depois em gzip e uma passada visual curta no build de produção.
-
-**Paralelismo:** a correção é configuração, com arquivos disjuntos do plano do 65, e o 67 corre em
-paralelo com ele. Se a configuração não bastar e for preciso trocar os imports dos 161 arquivos
-(178 hoje), o `lane.sh conferir 67` acusa conflito com o 65, e o 67 espera.
-
-**Fora:** dividir o chunk comum que sobra (é o que a casca usa); trocar PrimeReact, Phosphor ou
-recharts; mexer nos imports das features.
-
-**DoD:** os critérios 1 a 6 da §6 da spec provados: o build não emite mais o chunk `ui`, entrada
-mais pré-carga até 300 kB gz, catraca vermelha nas duas regressões, passada visual sem erro de
-console, gate verde, e o `fechamento.md` com o D-6 fechado e os números de antes e depois.
 
 ---
 
