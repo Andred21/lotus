@@ -84,6 +84,33 @@ describe('IdentityCell', () => {
     expect(screen.getByRole('group', { name: 'Juan Soto' })).toBeTruthy()
   })
 
+  /** Dentro de um controle interativo (o `<button aria-pressed>` do
+   * `AppSelectableCard`) um filho focável é HTML inválido: leitor de tela lê
+   * botão e grupo em duplicidade e a dica abriria dentro do botão. Sem o foco,
+   * a recuperação do corte volta a ser o `title`, como antes de A-2. */
+  it('com `focusable={false}` não vira parada de Tab, nem grupo, nem abre dica', async () => {
+    const { container } = render(
+      <IdentityCell focusable={false} title="Compañía General de Electricidad" description="76.123.456-7" />,
+    )
+
+    expect(screen.queryByRole('group')).toBeNull()
+    expect(container.querySelector('[tabindex]')).toBeNull()
+
+    fireEvent.mouseEnter(container.querySelector('span.truncate')!)
+    await new Promise((r) => setTimeout(r, 50))
+    expect(document.querySelector('.p-tooltip')).toBeNull()
+  })
+
+  it('com `focusable={false}` o texto inteiro volta ao `title` das linhas que truncam', () => {
+    const { container } = render(
+      <IdentityCell focusable={false} title="Compañía General de Electricidad" description="76.123.456-7" />,
+    )
+
+    const linhas = container.querySelectorAll('span.truncate')
+    expect(linhas[0].getAttribute('title')).toBe('Compañía General de Electricidad')
+    expect(linhas[1].getAttribute('title')).toBe('76.123.456-7')
+  })
+
   it('na forma inline não trunca, e mantém título e descrição na mesma linha', () => {
     const { container } = render(
       <IdentityCell title="Enel Chile" description="RUT 76.123.456-7" inline />,

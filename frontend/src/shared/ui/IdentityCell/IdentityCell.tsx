@@ -13,6 +13,12 @@ export interface IdentityCellProps {
    * (forma 1). */
   inline?: boolean
   size?: AppAvatarProps['size']
+  /** O texto truncado vira parada de Tab, com o nome inteiro e a dica no foco
+   * (A-2). Padrão `true`, que é o das tabelas. Desligue DENTRO de um controle
+   * interativo (o `<button aria-pressed>` do `AppSelectableCard`): filho
+   * focável num botão é HTML inválido, e o leitor de tela leria botão e grupo
+   * em duplicidade. Desligada, o corte volta a ser recuperável só pelo `title`. */
+  focusable?: boolean
 }
 
 /**
@@ -39,7 +45,7 @@ export interface IdentityCellProps {
  * catorze tabelas que usam esta célula.
  */
 export function IdentityCell({
-  title, description, image, inline = false, size = 'large',
+  title, description, image, inline = false, size = 'large', focusable = true,
 }: IdentityCellProps) {
   /* `aria-hidden` porque o avatar é ILUSTRAÇÃO do título que vem ao lado: sem
    * isto o leitor de tela anuncia o nome duas vezes por linha (uma pelo
@@ -96,15 +102,14 @@ export function IdentityCell({
         * `[object Object]` no nome seria pior que nome nenhum. */}
       <div
         ref={texto}
-        tabIndex={0}
-        role="group"
-        aria-label={completo}
+        {...(focusable ? { tabIndex: 0, role: 'group', 'aria-label': completo } : {})}
         className="flex min-w-0 flex-col gap-2"
       >
-        <span className="truncate font-semibold">{title}</span>
+        <span className="truncate font-semibold" title={focusable ? undefined : title}>{title}</span>
         {description && (
           <span
             className="truncate text-sm font-medium"
+            title={focusable || typeof description !== 'string' ? undefined : description}
             style={{ color: 'var(--text-color-secondary)' }}
           >
             {description}
@@ -113,7 +118,9 @@ export function IdentityCell({
       </div>
       {/* O `useRef` do React 19 tipa `RefObject<T | null>`, e o d.ts do Prime
         * ainda pede `RefObject<HTMLElement>`: a forma em runtime é a mesma. */}
-      <Tooltip target={texto as RefObject<HTMLElement>} content={completo} event="both" position="top" />
+      {focusable && (
+        <Tooltip target={texto as RefObject<HTMLElement>} content={completo} event="both" position="top" />
+      )}
     </div>
   )
 }

@@ -36,7 +36,11 @@ export function RedatorCard({
         ) : undefined
       }
     >
+      {/* Com `onToggle` o card inteiro é um `<button aria-pressed>`: a célula não
+        * pode ser focável lá dentro (HTML inválido, leitura duplicada). Só
+        * leitura, ela é. */}
       <IdentityCell
+        focusable={!onToggle}
         title={redator.name}
         description={<span className={identifierClass}>{redator.rut}</span>}
         image={redator.photo_url}
