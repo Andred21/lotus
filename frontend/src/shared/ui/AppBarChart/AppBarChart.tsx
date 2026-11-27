@@ -4,18 +4,29 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 // media query arrastaria metade da camada para dentro de um gráfico.
 import { useIsNarrowViewport } from '@shared/hooks/useViewport'
 import { chartInks } from '../../styles/tokens'
+import { ChartDataTable } from '../ChartDataTable'
+
+const FAIXA_POR_BARRA = 26
+const ALTURA_MINIMA = 120
 
 export type BarDatum = { label: string; value: number }
 
 export type AppBarChartProps = {
   data: BarDatum[]
+  /** Nome do gráfico, já traduzido: vira o `caption` da tabela acessível que
+   * substitui o desenho para leitor de tela. */
   ariaLabel: string
+  /** Cabeçalho da coluna de categoria (o curso, o cliente) na tabela acessível. */
+  categoryLabel: string
   /** Nome da grandeza, já traduzido. Obrigatório: sem ele o Recharts nomeia a
    * série pelo `dataKey` e o tooltip imprime "value : 2" — o nome interno do
    * campo no lugar da métrica, em qualquer idioma (UI-01 da revisão de
    * 2026-08-22). O irmão de linha nunca teve o defeito porque sempre passou
    * `name`. */
   valueLabel: string
+  /** Sobrescreve a altura derivada. Sem ela: uma faixa de `FAIXA_POR_BARRA` px
+   * por barra, com piso de `ALTURA_MINIMA` — o `260` fixo esticava 3 barras e
+   * espremia 10. */
   height?: number
   /** Índice em `chartInks`. Índice, nunca cor (D11). */
   inkIndex?: number
@@ -32,7 +43,15 @@ export type AppBarChartProps = {
  * Mesma tese de cor do irmão de linha: tudo por `chartInks` e vars do tema, e
  * o call-site passa índice.
  */
-export function AppBarChart({ data, ariaLabel, valueLabel, height = 260, inkIndex = 0, formatValue }: AppBarChartProps) {
+export function AppBarChart({
+  data,
+  ariaLabel,
+  categoryLabel,
+  valueLabel,
+  height,
+  inkIndex = 0,
+  formatValue,
+}: AppBarChartProps) {
   // A faixa de categoria é a única medida do gráfico que não escala sozinha: o
   // `ResponsiveContainer` reparte a largura que sobra, então uma faixa fixa de
   // 160px consome metade dos ~300px úteis do telefone e deixa a barra sem curso
@@ -40,42 +59,64 @@ export function AppBarChart({ data, ariaLabel, valueLabel, height = 260, inkInde
   // é o custo aceito, e a régua do eixo perde dois ticks para os que restam não
   // se tocarem (UI-04 da revisão de 2026-08-22).
   const estreito = useIsNarrowViewport()
+  const altura = height ?? Math.max(ALTURA_MINIMA, data.length * FAIXA_POR_BARRA)
 
   return (
-    <div role="img" aria-label={ariaLabel} style={{ width: '100%', height }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 8, right: 24, bottom: 0, left: 8 }}>
-          <CartesianGrid stroke="var(--surface-border)" strokeDasharray="3 3" horizontal={false} />
-          <XAxis
-            type="number"
-            allowDecimals={false}
-            tickCount={estreito ? 3 : 5}
-            tickFormatter={formatValue}
-            tick={{ fill: 'var(--text-color-secondary)', fontSize: 12 }}
-            stroke="var(--surface-border)"
-          />
-          <YAxis
-            type="category"
-            dataKey="label"
-            width={estreito ? 96 : 160}
-            tick={{ fill: 'var(--text-color-secondary)', fontSize: estreito ? 11 : 12 }}
-            stroke="var(--surface-border)"
-          />
-          <Tooltip
-            cursor={{ fill: 'var(--surface-hover)' }}
-            // Mesmo estreitamento do irmão de linha: `ValueType | undefined`,
-            // não `number` (`DefaultTooltipContent.d.ts:8-10`).
-            formatter={(valor) => (formatValue && typeof valor === 'number' ? formatValue(valor) : valor)}
-            contentStyle={{
-              background: 'var(--surface-card)',
-              border: '1px solid var(--surface-border)',
-              borderRadius: '6px',
-              color: 'var(--text-color)',
-            }}
-          />
-          <Bar dataKey="value" name={valueLabel} fill={chartInks[inkIndex % chartInks.length]} radius={[0, 4, 4, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+    <div>
+      <div aria-hidden="true" style={{ width: '100%', height: altura }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="vertical" margin={{ top: 8, right: 24, bottom: 0, left: 8 }}>
+            <CartesianGrid stroke="var(--surface-border)" strokeDasharray="3 3" horizontal={false} />
+            <XAxis
+              type="number"
+              allowDecimals={false}
+              tickCount={estreito ? 3 : 5}
+              tickFormatter={formatValue}
+              tick={{ fill: 'var(--text-color-secondary)', fontSize: 12 }}
+              stroke="var(--surface-border)"
+            />
+            <YAxis
+              type="category"
+              dataKey="label"
+              width={estreito ? 96 : 160}
+              tick={{
+                fill: 'var(--text-color-secondary)',
+                fontSize: estreito ? 11 : 12,
+              }}
+              stroke="var(--surface-border)"
+            />
+            <Tooltip
+              cursor={{ fill: 'var(--surface-hover)' }}
+              // Mesmo estreitamento do irmão de linha: `ValueType | undefined`,
+              // não `number` (`DefaultTooltipContent.d.ts:8-10`).
+              formatter={(valor) => (formatValue && typeof valor === 'number' ? formatValue(valor) : valor)}
+              contentStyle={{
+                background: 'var(--surface-card)',
+                border: '1px solid var(--surface-border)',
+                borderRadius: '6px',
+                color: 'var(--text-color)',
+              }}
+            />
+            <Bar
+              dataKey="value"
+              name={valueLabel}
+              fill={chartInks[inkIndex % chartInks.length]}
+              radius={[0, 4, 4, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <ChartDataTable
+        caption={ariaLabel}
+        columns={[
+          { key: 'label', label: categoryLabel },
+          { key: 'value', label: valueLabel },
+        ]}
+        rows={data.map((d) => ({
+          label: d.label,
+          value: formatValue ? formatValue(d.value) : d.value,
+        }))}
+      />
     </div>
   )
 }

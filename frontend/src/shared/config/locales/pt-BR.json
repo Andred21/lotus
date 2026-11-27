@@ -325,7 +325,9 @@
       "custom": "Personalizado"
     },
     "series": {
-      "countsTitle": "Evolução mensal",
+      "turmasTitle": "Turmas por mês",
+      "alumnosTitle": "Alunos por mês",
+      "month": "Mês",
       "ufTitle": "UF aprovada por mês",
       "empty": "Sem registros no período",
       "turmas_iniciadas": "Turmas iniciadas",

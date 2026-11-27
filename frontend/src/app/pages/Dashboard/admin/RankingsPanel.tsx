@@ -35,11 +35,23 @@ function valor(linha: RankingRowData, metrica: Metrica): number {
   return linha[metrica]
 }
 
+/** Quantas barras o ranking desenha. Ranking é "os que mais", e 30 barras de
+ * 26px não cabem num card nem se leem. */
+const TOP = 10
+
+/**
+ * Só as 10 maiores da métrica ESCOLHIDA — o corte é depois de ordenar, então
+ * trocar a métrica troca quem entra, não só a ordem. O empate desempata por
+ * nome: sem isso a vaga da décima posição ficaria à mercê da ordem em que o
+ * backend entregou as linhas, e o mesmo dado desenharia dois top 10 (Review
+ * Focus 2 do bloco 66).
+ */
 function barras(linhas: RankingRowData[], metrica: Metrica): BarDatum[] {
   return linhas
     .map((l) => ({ label: l.name, value: valor(l, metrica) }))
     .filter((b) => !Number.isNaN(b.value))
-    .sort((a, b) => b.value - a.value)
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+    .slice(0, TOP)
 }
 
 function Ranking({
@@ -73,6 +85,7 @@ function Ranking({
             // e sobre qual grandeza —, porque para quem ouve não há eixo nem
             // cabeçalho ao lado.
             ariaLabel={`${titulo} — ${rotuloMetrica}`}
+            categoryLabel={titulo}
             valueLabel={rotuloMetrica}
             inkIndex={inkIndex}
             formatValue={metrica === 'uf_aprovada' ? (v) => formatUf(v.toFixed(4)) : undefined}
@@ -106,11 +119,11 @@ export function RankingsPanel({ rankings, secoes }: { rankings: RankingsData; se
   return (
     <div className="space-y-3">
       {/* Sem `AppCardToolbar`: o toolbar carrega o `px-4` do card, e este seletor
-        * não está dentro de card nenhum — ele comanda os DOIS cards abaixo. Com o
-        * recuo, ele partia de x=296 enquanto o seletor de período, irmão dele na
-        * mesma seção, partia de x=280, junto com as `section` e todos os cards
-        * (UI-03 da revisão de 2026-08-17). A largura é a mesma do outro seletor:
-        * 14rem. */}
+       * não está dentro de card nenhum — ele comanda os DOIS cards abaixo. Com o
+       * recuo, ele partia de x=296 enquanto o seletor de período, irmão dele na
+       * mesma seção, partia de x=280, junto com as `section` e todos os cards
+       * (UI-03 da revisão de 2026-08-17). A largura é a mesma do outro seletor:
+       * 14rem. */}
       <div className="w-full sm:w-56">
         <AppDropdown
           value={metrica}

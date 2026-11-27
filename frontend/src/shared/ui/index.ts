@@ -44,6 +44,7 @@ export * from './ArchiveConfirmDialog'
 export * from './ArchiveRowActions'
 export * from './ArchiveSwitch'
 export * from './CertificateFolio'
+export * from './ChartDataTable'
 // Arquivo plano, e não pasta: as pastas deste barrel são pasta-por-COMPONENTE, e
 // esta peça deliberadamente não é componente (ver o docblock dela).
 export * from './archivedColumns'

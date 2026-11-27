@@ -18,8 +18,24 @@ describe('ChartLegend', () => {
     expect(lista.tagName).toBe('UL')
     expect(lista.getAttribute('style')).toContain('var(--text-color-secondary)')
     expect(screen.getByText('Matrículas')).toBeTruthy()
-    const marcador = lista.querySelector('[aria-hidden="true"]') as HTMLElement
-    expect(marcador.getAttribute('style')).toContain('var(--surface-border)')
+    const traco = lista.querySelector('line') as SVGLineElement
+    expect(traco.getAttribute('stroke')).toBe('var(--surface-border)')
+  })
+
+  it('o marcador repete o traço da série', () => {
+    render(
+      <ChartLegend
+        payload={[
+          { value: 'Contínua', color: 'var(--surface-border)', payload: { strokeDasharray: '' } },
+          { value: 'Tracejada', color: 'var(--surface-border)', payload: { strokeDasharray: '6 3' } },
+        ]}
+      />,
+    )
+
+    const tracos = Array.from(screen.getByRole('list').querySelectorAll('line')).map((l) =>
+      l.getAttribute('stroke-dasharray'),
+    )
+    expect(tracos).toEqual([null, '6 3'])
   })
 
   it('sem séries não renderiza nada', () => {
