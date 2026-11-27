@@ -65,7 +65,15 @@ export function AppBarChart({
     <div>
       <div aria-hidden="true" style={{ width: '100%', height: altura }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ top: 8, right: 24, bottom: 0, left: 8 }}>
+          {/* `accessibilityLayer` é `true` por padrão no Recharts 3 e põe `tabIndex=0` e
+           * `role="application"` no <svg>. Aqui o desenho é `aria-hidden` (a tabela o
+           * substitui): foco dentro de subárvore escondida viola WCAG 4.1.2. */}
+          <BarChart
+            accessibilityLayer={false}
+            data={data}
+            layout="vertical"
+            margin={{ top: 8, right: 24, bottom: 0, left: 8 }}
+          >
             <CartesianGrid stroke="var(--surface-border)" strokeDasharray="3 3" horizontal={false} />
             <XAxis
               type="number"

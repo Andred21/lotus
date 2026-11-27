@@ -53,7 +53,10 @@ export function AppLineChart({
     <div>
       <div aria-hidden="true" style={{ width: '100%', height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={linhas} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
+          {/* `accessibilityLayer` é `true` por padrão no Recharts 3 e põe `tabIndex=0` e
+           * `role="application"` no <svg>. Aqui o desenho é `aria-hidden` (a tabela o
+           * substitui): foco dentro de subárvore escondida viola WCAG 4.1.2. */}
+          <LineChart accessibilityLayer={false} data={linhas} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
             <CartesianGrid stroke="var(--surface-border)" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="x"

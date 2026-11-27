@@ -87,6 +87,19 @@ describe('AppLineChart', () => {
     expect(legenda).toEqual({ Iniciadas: '', Concluídas: '6 3', Terceira: '2 3', Quarta: '8 3 2 3' })
   }, 10_000)
 
+  it('o desenho aria-hidden não tem elemento focável nem role application', () => {
+    const { container } = renderChart()
+
+    const escondido = container.querySelector('[aria-hidden="true"]') as HTMLElement
+    // O SVG tem de existir, senão a ausência de foco não prova nada.
+    expect(escondido.querySelector('svg')).toBeTruthy()
+    // `tabindex="-1"` (portais de z-index e caixa do tooltip do Recharts) fica fora
+    // da ordem de tabulação, e o axe `aria-hidden-focus` o aceita: o que vale é a
+    // sequência de Tab, então qualquer tabindex diferente de -1 reprova.
+    expect(escondido.querySelectorAll('[tabindex]:not([tabindex="-1"])')).toHaveLength(0)
+    expect(escondido.querySelectorAll('[role="application"]')).toHaveLength(0)
+  })
+
   it('expõe tabela acessível com os dados das séries', () => {
     renderChart()
 

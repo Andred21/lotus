@@ -1,5 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { cloneElement } from 'react'
+import type { ReactElement } from 'react'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
+
+// O jsdom não mede layout e o `ResponsiveContainer` não desenha nada sem
+// tamanho: o stub devolve o filho com largura e altura fixas para o SVG existir.
+vi.mock('recharts', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('recharts')>()),
+  ResponsiveContainer: ({ children }: { children: ReactElement<{ width?: number; height?: number }> }) =>
+    cloneElement(children, { width: 600, height: 260 }),
+}))
+
 import { AppBarChart } from './AppBarChart'
 
 const barras = (n: number) => Array.from({ length: n }, (_, i) => ({ label: `Curso ${i + 1}`, value: i + 1 }))
@@ -53,5 +64,18 @@ describe('AppBarChart', () => {
 
     expect(desenho(container)).toBeTruthy()
     expect(desenho(container).contains(screen.getByRole('table', { name: 'A', hidden: true }))).toBe(false)
+  })
+
+  it('o desenho aria-hidden não tem elemento focável nem role application', () => {
+    const { container } = render(<AppBarChart data={barras(3)} ariaLabel="A" valueLabel="V" categoryLabel="C" />)
+
+    const escondido = desenho(container)
+    // O SVG tem de existir, senão a ausência de foco não prova nada.
+    expect(escondido.querySelector('svg')).toBeTruthy()
+    // `tabindex="-1"` (portais de z-index e caixa do tooltip do Recharts) fica fora
+    // da ordem de tabulação, e o axe `aria-hidden-focus` o aceita: o que vale é a
+    // sequência de Tab, então qualquer tabindex diferente de -1 reprova.
+    expect(escondido.querySelectorAll('[tabindex]:not([tabindex="-1"])')).toHaveLength(0)
+    expect(escondido.querySelectorAll('[role="application"]')).toHaveLength(0)
   })
 })
