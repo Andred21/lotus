@@ -51,4 +51,6 @@ que o próprio João tomou durante a execução (o adiamento das mudanças visua
     do M-13. Ficam para ficha ou para o João: M-6 (teto da janela do painel), M-7 (tinta da barra por
     token), M-8 (`tabIndex` e região viva do `AppDataTable`), M-9 (badge do ranking) e M-11
     (digitação de UF "1.500"), listados no `fechamento.md`. Se errado: um deles vira achado do
-    `/revisar-bloco`.
+    `/revisar-bloco`. **Atualização no fechamento (2026-11-27):** o `/revisar-bloco` pegou o M-6 e o M-11 como Q-1 e Q-2
+    da rodada 1, e o João mandou corrigir os dois (`697723ce` e `df8e6cad`). O M-7, o M-8 e o M-9
+    seguem fora do bloco, na **P-121**.

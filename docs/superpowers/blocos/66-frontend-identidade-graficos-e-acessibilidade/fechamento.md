@@ -92,6 +92,12 @@ Depois da leva da revisão final da branch (`b6ee8dc0`, só frontend e docs): `p
 `pnpm test` exit 0 (316 arquivos, 2589 testes); `pnpm build` exit 0. O backend não mudou desde a
 rodada acima.
 
+Depois das correções da revisão do bloco (`697723ce` e `df8e6cad`), no HEAD `25d847c1`, refeito contra
+a `origin/main` sem novidade, 2026-11-27: `pnpm lint` exit 0; `pnpm test` exit 0 (316 arquivos, 2611
+testes); `pnpm build` exit 0; `php artisan test` exit 0 (2112 passados, 7 pulados, 14789
+asserções); Pint passou nos sete arquivos PHP do bloco; `typescript:transform` sem diff; `.claude/tests/run-all.sh`
+com 18 arquivos sem falha.
+
 ## Carga (Task 9)
 
 `gzip -c` dos `.js` que o `dist/index.html` carrega (entrada mais `modulepreload`), no método do
@@ -126,13 +132,17 @@ abaixo do teto de 300 kB.
    em inglês.
 8. **Reintentar em 403 nas listas do Historial:** `reload`/`reloadQuotes` (`useHistorial.ts:126,131`)
    seguem sem `retryFor`. Mesma classe do T8, fora do escopo do brief.
-9. **Digitar "1.500" no campo de UF grava 1,5 UF** (revisão final, M-11). O `parseUfInput` lê o
-   último separador como decimal; o parser já era assim, mas agora a tela EXIBE "1.500 UF" em es-CL,
-   e quem copia a grafia exibida grava mil vezes menos. Dinheiro com peso legal: pede ficha ou
-   decisão (prévia formatada sob o campo, ou recusar `\d{1,3}\.\d{3}` sem vírgula).
-10. **Janela do painel sem teto** (revisão final, M-6). Depois do D-2, `period_start=0001-01-01` com
-    `period_end=9999-12-31` gera ~120 mil meses por série. Só alcança usuário interno autenticado.
-    Sugestão: 422 acima de 120 meses, numa ficha.
+9. **Digitar "1.500" no campo de UF grava 1,5 UF** (revisão final, M-11) — **corrigido em `df8e6cad`**
+   (decisão do João, revisão do bloco, Q-2). O `parseUfInput` lê o último separador como decimal, e a
+   tela passou a exibir "1.500 UF" em es-CL (em `en`, "1,500 UF"), então quem copiava a grafia exibida
+   gravava mil vezes menos. O campo agora recusa a entrada ambígua (`quote.ufAmbiguous`), em vez de
+   gravar. Resta o Q-3 da rodada 2 (digitar `1.500.000` tecla a tecla grava `1500.000`) e o Q-4 (a
+   mensagem não mostra a saída de três casas), os dois na **P-121**.
+10. **Janela do painel sem teto** (revisão final, M-6) — **corrigido em `697723ce`** (decisão do João,
+    revisão do bloco, Q-1). Depois do D-2, `period_end=9999-12-31` não terminava (o cursor de mês
+    comparava texto) e a janela não tinha teto. O laço compara datas, e acima de 120 meses a resposta
+    é 422 em `period_end`. Provado contra a API real no fechamento: 200 em 12 meses, 422 para
+    `9999-12-31`, para 21 anos e para janela invertida.
 11. **Contador do ranking mostra o número depois do corte** (revisão final, M-9): diz "10" quando há
     30 linhas. Decidir se o badge conta o total ou o exibido.
 12. **Menores de acessibilidade em toda tabela** (revisão final, M-7 e M-8): a moldura rolável é
