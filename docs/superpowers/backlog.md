@@ -146,7 +146,6 @@ posição 1 — a aceitação do **13** parou no smoke porque produção recusa 
 |---|---|---|---|
 | — | **56** `infra-deploy-gate-up` | Infra | Frente própria; pode correr a qualquer momento |
 | — | **57** `harness-pontas-e-politicas` | Harness | Frente própria; pode correr a qualquer momento |
-| 9 | **66** `frontend-identidade-graficos-e-acessibilidade` | Frontend | Depende do 65 (tokens de tema); monta o quadro dos 46 |
 | 10 | **58** `docs-sincronizacao-de-mapa` | Docs | Por último: a P-97 é coordenada de linha que os blocos 50 a 55 deslocam |
 | 11 | **9** `administracao-roles-permissoes-redesign` | Frontend | Exige Context Packet e brainstorming. A `D-34` e a `D-71` saíram dele em 2026-11-02 (para o 54 e o 49). A colisão com o 16 saiu com ele — ver a nota abaixo |
 
@@ -287,32 +286,6 @@ lição 13 passa a conferir classe, e não path (**P-32**).
 > `main@c6b06e2f`. O João pediu o menor número de blocos. Ficaram três porque duas divisões são
 > reais: a validação tem metade no repositório `Andred21/lotus-site`, e a Certificação precisa do
 > código de cotação novo (60) e do download público (61).
-
----
-
-## 66. `frontend-identidade-graficos-e-acessibilidade`
-
-**Prioridade:** P2 · **Frente:** Frontend · **Contexto:** não · **Depende:** 65
-**Fonte:** `audits/2026-11-26-ui-ux-pro-max.md` e a spec do 64 (D12). Plano em rascunho:
-`blocos/64-frontend-revisao-ui-ux-e-icones/rascunho-plano-66.md`.
-
-**Objetivo:** terceiro e último bloco da revisão ui-ux-pro-max. Cobre identidade, gráficos,
-teclado e leitor de tela, e polimento, e monta o quadro final dos 46 IDs.
-
-**Escopo** (IDs da auditoria):
-- B-2, B-5, B-3/A-11 e B-4: identidade (celeste raro, header fixo, movimento reduzido, rail a 12px).
-- B-1, B-7 e B-11: identificadores.
-- D-2 (backend `AnalyticsQuery`), D-3, D-4, D-5, D-7 e D-8: gráficos do painel.
-- A-3, A-4, A-5, A-6, A-7, A-8, A-9 e A-12: teclado e leitor de tela.
-- D-10, B-6, B-9, B-10 e B-12: carga e polimento.
-
-**Planejar:** igual ao 65, a partir do rascunho.
-
-**Fora:** o que é do 64 e do 65. Também o uso autenticado no celular como contexto novo: B-6 e B-9
-só deixam de quebrar.
-
-**DoD:** os critérios 1, 3 e 4 da spec §7 provados. `fechamento.md` com os 27 IDs do bloco e o
-"Quadro dos 46" apontando para o fechamento de cada bloco.
 
 ---
 

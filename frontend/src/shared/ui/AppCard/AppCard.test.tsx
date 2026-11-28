@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { AppCard, AppCardToolbar } from './AppCard'
+import { AppCard, AppCardHeader, AppCardToolbar } from './AppCard'
 
 function card() {
   return screen.getByTestId('conteudo').parentElement as HTMLElement
@@ -77,5 +77,20 @@ describe('AppCardToolbar', () => {
 
     expect(end?.className).toContain('flex-wrap')
     expect(end?.className).not.toContain('shrink-0')
+  })
+})
+
+describe('AppCardHeader', () => {
+  it('card header é h2 por padrão', () => {
+    render(<AppCardHeader title="Pendencias" />)
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Pendencias' })).toBeTruthy()
+  })
+
+  it('level={3} troca o nivel sem trocar o visual', () => {
+    render(<AppCardHeader title="Pendencias" level={3} />)
+
+    const titulo = screen.getByRole('heading', { level: 3, name: 'Pendencias' })
+    expect(titulo.className).toBe('text-base font-semibold')
   })
 })

@@ -70,6 +70,7 @@
     "active": "Activo",
     "inactive": "Inactivo",
     "view": "Ver",
+    "table": "Tabla",
     "moreActions": "Más acciones",
     "upload": "Subir documento",
     "replace": "Reemplazar",
@@ -159,7 +160,16 @@
     "cursos": "Cursos",
     "certificados": "Certificados",
     "personas": "Personas",
-    "administracion": "Administración"
+    "administracion": "Administración",
+    "short": {
+      "dashboard": "Dashboard",
+      "comercial": "Comercial",
+      "operacion": "Operación",
+      "cursos": "Cursos",
+      "certificados": "Certific.",
+      "personas": "Personas",
+      "administracion": "Admin"
+    }
   },
   "errors": {
     "notFoundTitle": "Página no encontrada",
@@ -316,7 +326,9 @@
       "custom": "Personalizado"
     },
     "series": {
-      "countsTitle": "Evolución mensual",
+      "turmasTitle": "Clases por mes",
+      "alumnosTitle": "Alumnos por mes",
+      "month": "Mes",
       "ufTitle": "UF aprobada por mes",
       "empty": "Sin registros en el período",
       "turmas_iniciadas": "Clases iniciadas",
@@ -644,6 +656,7 @@
     "courseSearchPlaceholder": "Buscar curso...",
     "students": "Alumnos",
     "valueUf": "Valor UF",
+    "ufAmbiguous": "Valor ambiguo: escriba 1500 para mil quinientos o 1,5 para uno coma cinco.",
     "purchaseOrder": "Orden de compra",
     "plannedStart": "Inicio planificado",
     "plannedEnd": "Fin planificado",
@@ -1131,6 +1144,7 @@
     }
   },
   "archive": {
+    "groupLabel": "Registros activos o archivados",
     "active": "Activos",
     "archived": "Archivados",
     "archiveAction": "Archivar",

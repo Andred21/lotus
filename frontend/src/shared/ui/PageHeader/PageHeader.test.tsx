@@ -53,13 +53,29 @@ describe('voz única do título de página', () => {
    * espaçamento acima passa a ser do contêiner.
    */
   it.each([
-    ['PageHeader', <PageHeader title="Personas" />],
-    ['DetailHeader', <DetailHeader title="Presupuesto 12" />],
-  ])('%s não carrega mais a margem do agente do usuário', (_nome, elemento) => {
+    ['PageHeader', <PageHeader title="Personas" />, 'mb-1'],
+    ['DetailHeader', <DetailHeader title="Presupuesto 12" />, 'mb-4'],
+  ])('%s não carrega mais a margem do agente do usuário', (_nome, elemento, degrau) => {
     const { container } = render(elemento)
 
     const h1 = container.querySelector('h1')!
     expect(h1.className).not.toContain('my-[0.83em]')
-    expect(h1.className).toContain('mb-4')
+    expect(h1.className).toContain(degrau)
+  })
+})
+
+/**
+ * B-12 do audit de 2026-11-26: o `h1` ficava a 16px da descrição e lia como um
+ * bloco solto dela. No `PageHeader` o título e a descrição são um par: o vão é
+ * `mb-1`, sem somar `mt-*` na descrição.
+ */
+describe('título colado na descrição', () => {
+  it('o h1 do PageHeader tem mb-1 e a descrição não soma margem de cima', () => {
+    const { container } = render(<PageHeader title="Personas" description="Instructores" />)
+
+    const h1 = container.querySelector('h1')!
+    expect(h1.className).toContain('mb-1')
+    expect(h1.className).not.toContain('mb-4')
+    expect(container.querySelector('p')!.className).not.toMatch(/\bmt-/)
   })
 })

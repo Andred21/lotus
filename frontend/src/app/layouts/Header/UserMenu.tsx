@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AppAvatar, AppButton, AppIcon, AppMenu } from '@shared/ui'
@@ -13,6 +13,10 @@ export function UserMenu() {
   const logout = useLogout()
   const navigate = useNavigate()
   const menuRef = useRef<AppMenuRef>(null)
+  // Estado do popup para o leitor de tela: o Prime avisa abrir/fechar (inclusive
+  // o clique fora e o Esc) por `onShow`/`onHide`; o `id` liga o gatilho ao menu.
+  const menuId = useId()
+  const [open, setOpen] = useState(false)
 
   if (!user) return null
 
@@ -53,13 +57,25 @@ export function UserMenu() {
         variant="noSurface"
         text
         onClick={(e) => menuRef.current?.toggle(e)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
         className="flex min-w-0 items-center gap-1 sm:gap-2"
       >
 
         {/* Decorativo para o leitor de tela: as iniciais (ou o alt da foto)
           * repetiriam o nome que vem logo abaixo, agora que o nome acessível do
           * gatilho é o conteúdo e não mais um rótulo à parte. */}
-        <AppAvatar name={user.name} image={user.photo_url} size="large" aria-hidden className="shrink-0!" />
+        <AppAvatar
+          name={user.name}
+          image={user.photo_url}
+          size="large"
+          aria-hidden
+          className="shrink-0!"
+          // Sobre o shell as iniciais seguem na marca: o neutro de `AppAvatar` é
+          // cinza de superfície do tema, e aqui o fundo é o navy fixo.
+          style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-navy)' }}
+        />
 
       {/* Texto branco cravado, não token de tema: a navy do header é fixa nos
         * dois temas e `--text-color` é cinza de superfície clara — media 1,42:1
@@ -96,7 +112,14 @@ export function UserMenu() {
 
       {/* Fora do gatilho: <button> não pode conter conteúdo interativo, e o
         * popup do Prime renderiza no lugar onde é declarado. */}
-      <AppMenu ref={menuRef} model={items} className="mt-2" />
+      <AppMenu
+        ref={menuRef}
+        id={menuId}
+        model={items}
+        className="mt-2"
+        onShow={() => setOpen(true)}
+        onHide={() => setOpen(false)}
+      />
 
     </div>
   )

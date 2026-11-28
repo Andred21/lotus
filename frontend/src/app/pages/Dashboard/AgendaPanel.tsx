@@ -83,7 +83,7 @@ export function AgendaPanel<L extends AgendaLinha>({ agenda }: { agenda: AgendaJ
 
   return (
     <AppCard>
-      <AppCardHeader title={t('dashboard.agenda.title')} count={total} />
+      <AppCardHeader title={t('dashboard.agenda.title')} count={total} level={3} />
       {total === 0 ? (
         <AppEmptyState icon="calendar" title={t('dashboard.agenda.empty')} />
       ) : (

@@ -117,7 +117,6 @@ export function AppPhotoField({
               <AppButton
                 icon="close"
                 text
-                rounded
                 severity="danger"
                 aria-label={t("photo.remove")}
                 tooltip={t("photo.remove")}

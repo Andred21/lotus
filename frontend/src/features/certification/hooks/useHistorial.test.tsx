@@ -69,3 +69,47 @@ describe('useHistorial — Reemitir', () => {
     expect(result.current.findReissueTarget(certificado)?.turma.turma_id).toBe(7)
   })
 })
+
+/** T8: um 403 é recusa de permissão, e repetir devolve a mesma recusa. O hook
+ * entrega ao diálogo `undefined` no lugar do handler — sem handler o
+ * `AppErrorState` não desenha "Reintentar" (`retryFor`).
+ *
+ * Sem `beforeEach(get.mockReset)` de propósito: depois de um `mockReset` o
+ * vitest 4 marca como falha do caso a rejeição que a query JÁ tratou. Cada
+ * caso refaz a implementação do `get` por inteiro. */
+describe('useHistorial — Reintentar nos diálogos', () => {
+  async function comAsDuasQueriesEmErro(status: number) {
+    get.mockImplementation((url) =>
+      url === '/api/certificates/quotes'
+        ? Promise.resolve({ data: [] })
+        : Promise.reject({ status, title: 'Falha', detail: '', type: '', instance: '' }),
+    )
+    const { wrapper } = createWrapper()
+    const { result } = renderHook(() => useHistorial(), { wrapper })
+
+    act(() => {
+      result.current.setViewingCertificateId(1)
+      result.current.setReissuing(certificado)
+    })
+
+    await waitFor(() => {
+      expect(result.current.viewingCertificateError).not.toBeNull()
+      expect(result.current.reissuePanelError).not.toBeNull()
+    })
+    return result
+  }
+
+  it('403 no certificado aberto e no painel de reemissão não oferece Reintentar', async () => {
+    const result = await comAsDuasQueriesEmErro(403)
+
+    expect(result.current.reloadViewingCertificate).toBeUndefined()
+    expect(result.current.reissuePanelReload).toBeUndefined()
+  })
+
+  it('500 no certificado aberto e no painel de reemissão oferece Reintentar', async () => {
+    const result = await comAsDuasQueriesEmErro(500)
+
+    expect(result.current.reloadViewingCertificate).toBeTypeOf('function')
+    expect(result.current.reissuePanelReload).toBeTypeOf('function')
+  })
+})

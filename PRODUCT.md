@@ -81,7 +81,7 @@ sem login.
 
 ## Brand Commitments
 
-- O nome é **Lotus** (Lotus OTEC). Os logos estão em `frontend/src/assets/`: `Logo.png`,
+- O nome é **Lotus** (Lotus OTEC). Os logos estão em `frontend/src/assets/`:
   `LogoLight.png`, `LogoDark.png` e `LogoGlyph.png`.
 - A identidade visual em vigor é uma decisão fechada no ADR-16, ponto 5 (`docs/adrs.md`). Mudá-la
   exige o João Victor.

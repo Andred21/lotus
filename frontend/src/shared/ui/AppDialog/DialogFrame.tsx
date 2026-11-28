@@ -84,10 +84,10 @@ export function DialogFrame({ pt, visible, ...props }: DialogProps) {
         // O irmão que faltava. O botão de maximizar ganhou nome traduzido e o de
         // FECHAR ficou no default do Prime — `localeOption('close')`, isto é
         // "Close" em inglês, em TODO diálogo da aplicação (medido no gate do
-        // BD-16). Não vem pela locale global do Prime porque `locale('es')`
-        // nunca é chamado no projeto: `primeLocale.ts` só faz `addLocale`, e um
-        // rótulo pendurado lá ficaria congelado na troca de idioma — o mesmo
-        // motivo pelo qual o olho do `AppPassword` se nomeia no wrapper (UI-08).
+        // BD-16). O locale global do Prime hoje segue o idioma
+        // (`registerPrimeLocales`) e o bloco `aria` dele traz `close`; o nome
+        // fica aqui como DEFESA explícita, por componente — o mesmo motivo pelo
+        // qual o olho do `AppPassword` se nomeia no wrapper (UI-08).
         closeButton: { 'aria-label': t('common.close') },
       })}
       {...props}

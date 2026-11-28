@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLoadState, usePermissions, useServerTable, useTableUrlState } from '@shared/hooks'
+import { retryFor } from '@shared/lib'
 import type {
   CertificateData,
   CertificateDisplayStatus,
@@ -141,10 +142,11 @@ export function useHistorial() {
     viewingCertificate: viewingCertificate.data ?? null,
     viewingCertificateLoading: viewingCertificate.isLoading,
     viewingCertificateError: viewingCertificate.isError ? (viewingCertificate.error ?? null) : null,
-    reloadViewingCertificate: (): Promise<unknown> => viewingCertificate.refetch(),
+    // `undefined` no 403 (`retryFor`): sem handler o diálogo não desenha "Reintentar".
+    reloadViewingCertificate: retryFor(viewingCertificate.error, (): Promise<unknown> => viewingCertificate.refetch()),
     findReissueTarget,
     reissuePanelLoading: panel.isLoading,
     reissuePanelError: panel.isError ? (panel.error ?? null) : null,
-    reissuePanelReload: (): Promise<unknown> => panel.refetch(),
+    reissuePanelReload: retryFor(panel.error, (): Promise<unknown> => panel.refetch()),
   }
 }

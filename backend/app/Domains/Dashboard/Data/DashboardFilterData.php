@@ -30,6 +30,14 @@ class DashboardFilterData extends Data
     /** Janela default quando o chamador não pede período (plano, Task 6). */
     public const DEFAULT_MONTHS = 12;
 
+    /**
+     * Teto da janela, em meses de calendário (ponta a ponta, inclusive). Cada mês
+     * vira uma linha em cada série (D-2 do bloco 66), então janela sem teto é
+     * resposta sem teto: `0001-01-01..9999-12-31` passava pela regra `date`.
+     * 120 = 10 anos, decisão do João na revisão do bloco 66 (Q-1).
+     */
+    public const MAX_MONTHS = 120;
+
     public function __construct(
         public ?string $period_start = null,
         public ?string $period_end = null,
@@ -67,8 +75,21 @@ class DashboardFilterData extends Data
                 $payload['period_end'] ?? null,
             );
 
-            if ($filtro->start()->greaterThan($filtro->end())) {
+            $start = $filtro->start();
+            $end = $filtro->end();
+
+            if ($start->greaterThan($end)) {
                 $validator->errors()->add('period_end', __('dashboard.filter.inverted_period'));
+
+                return;
+            }
+
+            $meses = ($end->year - $start->year) * 12 + ($end->month - $start->month) + 1;
+            if ($meses > self::MAX_MONTHS) {
+                $validator->errors()->add(
+                    'period_end',
+                    __('dashboard.filter.window_too_long', ['max' => self::MAX_MONTHS]),
+                );
             }
         });
     }

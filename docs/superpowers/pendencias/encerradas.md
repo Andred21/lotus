@@ -7,16 +7,18 @@
 
 ## Em rastro (saem no próximo `/fechar-sprint`)
 
-### P-89 — o QR em `https://lotusotec.cl/validar/…` não foi decodificado de um PDF de produção
+### P-120 — duas sobras do bloco 64 que nenhuma ficha carregava: `refetch` cru no `useHistorial` e rotas-layout sem `errorElement`
 
-**Encerrada em 2026-11-25**, na aceitação do bloco 63 (`certificacao-virada-validacao-site`), pelo
-próprio gatilho: o QR do certificado LOT-2026-125 (PDF `4ce4def5-4955-453e-a88e-f411aafa9663.pdf`,
-renderizado pelo Gotenberg de produção), decodificado com `pdftoppm` + `zbarimg`, leva a
-`https://lotusotec.cl/validar/b7904ed9-9dcd-4873-94c7-d833f46119e0`, e a página do site abre com
-VIGENTE e os dados do registro. Item 4 do `aceitacao.md` do bloco, resultado do João. A ficha
-original (item 32, `app.lotusotec.cl`) está no histórico do git de `abertas.md`.
+**Encerrada em 2026-11-27**, no fechamento do bloco 66, pelo próprio gatilho: o `/planejar-bloco`
+do 66 deu destino aos dois itens (D16 e Task 7) e o bloco os pagou. Item 1: `useHistorial.test.tsx`
+› "403 no certificado aberto e no painel de reemissão não oferece Reintentar". Item 2:
+`AppRouter.test.tsx` › "erro de render na rota-layout cai no RouteError, sem stack (%s)". As duas
+listas `reload`/`reloadQuotes` do Historial seguiram sem `retryFor` e viraram a **P-121**. A ficha
+original está no histórico do git de `abertas.md`.
 
 ## Rastro anterior, já removido
+
+**A P-89 saiu no fechamento do item 66 (2026-11-27)**, o primeiro depois do item 63, que a encerrou em 2026-11-25: o QR do certificado LOT-2026-125, decodificado de um PDF de produção, leva a `https://lotusotec.cl/validar/<uuid>`. O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 
 **A P-91 saiu no fechamento do `certificacao-paineis-lote-e-planilha` (item 62, 2026-11-25)**, o primeiro depois do item 61, que a encerrou em 2026-11-24 ao achá-la já paga pelo item 55 (`0b40be13`, com `UnauthenticatedWithoutAcceptTest`). O rastro durável está nos commits e na linha de entrega em [`../historico/progress.md`](../historico/progress.md).
 

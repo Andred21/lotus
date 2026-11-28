@@ -70,6 +70,7 @@
     "active": "Active",
     "inactive": "Inactive",
     "view": "View",
+    "table": "Table",
     "moreActions": "More actions",
     "upload": "Upload document",
     "replace": "Replace",
@@ -159,7 +160,16 @@
     "cursos": "Courses",
     "certificados": "Certificates",
     "personas": "People",
-    "administracion": "Administration"
+    "administracion": "Administration",
+    "short": {
+      "dashboard": "Dashboard",
+      "comercial": "Sales",
+      "operacion": "Operation",
+      "cursos": "Courses",
+      "certificados": "Certs",
+      "personas": "People",
+      "administracion": "Admin"
+    }
   },
   "errors": {
     "notFoundTitle": "Page not found",
@@ -316,7 +326,9 @@
       "custom": "Custom"
     },
     "series": {
-      "countsTitle": "Monthly trend",
+      "turmasTitle": "Classes per month",
+      "alumnosTitle": "Students per month",
+      "month": "Month",
       "ufTitle": "Approved UF per month",
       "empty": "No records in the period",
       "turmas_iniciadas": "Classes started",
@@ -644,6 +656,7 @@
     "courseSearchPlaceholder": "Search course...",
     "students": "Students",
     "valueUf": "Value UF",
+    "ufAmbiguous": "Ambiguous value: type 1500 for one thousand five hundred, or 1,5 for one and a half.",
     "purchaseOrder": "Purchase order",
     "plannedStart": "Planned start",
     "plannedEnd": "Planned end",
@@ -1131,6 +1144,7 @@
     }
   },
   "archive": {
+    "groupLabel": "Active or archived records",
     "active": "Active",
     "archived": "Archived",
     "archiveAction": "Archive",

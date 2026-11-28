@@ -21,6 +21,11 @@ export interface IdentityCellProps {
   focusable?: boolean
 }
 
+/** 40px (B-2): o `large` do Prime mede 48 e fica maior que as duas linhas de
+ * texto da célula. A fonte das iniciais acompanha — a do `large` (1,5rem) não
+ * cabe em 40. */
+const AVATAR_PX = '40px'
+
 /**
  * Avatar + título + descrição, a célula que 14 sítios copiavam a olho em duas
  * grafias diferentes. Apresentacional puro: recebe texto pronto, não conhece
@@ -61,7 +66,16 @@ export function IdentityCell({
    * primeiro; sem esta trava, ele não cede sozinho. */
   const texto = useRef<HTMLDivElement>(null)
   const completo = typeof description === 'string' && description ? `${title}, ${description}` : title
-  const avatar = <AppAvatar name={title} image={image} size={size} className="shrink-0" aria-hidden />
+  const avatar = (
+    <AppAvatar
+      name={title}
+      image={image}
+      size={size}
+      className="shrink-0"
+      style={{ width: AVATAR_PX, height: AVATAR_PX, fontSize: '1rem' }}
+      aria-hidden
+    />
+  )
 
   if (inline)
     return (

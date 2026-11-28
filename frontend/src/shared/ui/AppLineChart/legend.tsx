@@ -9,10 +9,20 @@ import type { LegendPayload } from 'recharts'
  * `AppLineChart` já resolve por índice em `chartInks`; este arquivo não nomeia
  * token nenhum (D11, `tests/chart-tokens.test.ts` é quem guarda isso).
  *
+ * O marcador é um segmento SVG que repete o `strokeDasharray` da linha (vem no
+ * `payload` do item, é a prop que o `AppLineChart` pôs na `Line`): sem isso a
+ * legenda mostraria tracejados que o marcador não explica.
+ *
  * `role="list"`: o mini-reset da P-46 zera `list-style` em todo `ul` e o
  * WebKit tira a semântica junto; a régua de lint só alcança JSX nosso, e a
  * legenda do Recharts era a lista de terceiro que ficava de fora (P-63).
  */
+/** `''` (série contínua) vira ausência do atributo. */
+const tracoDoItem = (item: LegendPayload): string | undefined => {
+  const traco = (item.payload as { strokeDasharray?: string | number } | undefined)?.strokeDasharray
+  return traco ? String(traco) : undefined
+}
+
 export function ChartLegend({ payload }: { payload?: ReadonlyArray<LegendPayload> }) {
   if (!payload?.length) return null
   return (
@@ -23,7 +33,17 @@ export function ChartLegend({ payload }: { payload?: ReadonlyArray<LegendPayload
     >
       {payload.map((item) => (
         <li key={String(item.value)} className="flex items-center gap-1.5">
-          <span aria-hidden="true" className="inline-block h-0.5 w-3.5 rounded-full" style={{ background: item.color }} />
+          <svg aria-hidden="true" width="22" height="4" viewBox="0 0 22 4" className="shrink-0">
+            <line
+              x1="0"
+              y1="2"
+              x2="22"
+              y2="2"
+              stroke={item.color}
+              strokeWidth="2"
+              strokeDasharray={tracoDoItem(item)}
+            />
+          </svg>
           {item.value}
         </li>
       ))}

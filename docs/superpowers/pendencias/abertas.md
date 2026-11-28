@@ -970,25 +970,30 @@ ficaram verdes.
 - **Como pegar da próxima vez:** rodar a suíte salvando a saída inteira num arquivo
   (`php artisan test > "$f" 2>&1`) e ler o resumo e as linhas `FAIL` dele, nunca por `tail` direto.
 
-## P-120 — duas sobras do bloco 64 que nenhuma ficha carrega: `refetch` cru no `useHistorial` e rotas-layout sem `errorElement`
+## P-121 — sobras do bloco 66 que nenhuma ficha carrega: tabelas sem largura mínima, rail, 403 no Historial e Menores da revisão
 
-**Bloco:** — (aberta em 2026-11-26, pelo fechamento do 64) · **Gatilho:** o `/planejar-bloco` do 65
-decide, na hora de montar o plano, se leva o item 1 (ele toca o mesmo `retryFor`); o item 2 vai para o 66 ou
-vira ficha. A pendência fecha quando os dois tiverem destino escrito (task ou ficha) ou veredito do João.
-Revisar em **2026-12-10**.
+**Bloco:** — (aberta em 2026-11-27, pelo fechamento do 66) · **Gatilho:** o João decidir cada linha,
+ou bloco que tocar `COL.*`/`AppDataTable`, `nav.short.*`, `useHistorial.ts`, `RankingsPanel` ou o
+`EvaluacionesCard`. Revisar em **2026-12-11**.
 
-Medido em 2026-11-26, no `/finalizar-bloco 64`, HEAD `0d64503f`; origem em `fechamento.md` do bloco
-(seção "Pendências registradas"), que são os achados M-9 e T8 da revisão final da branch.
+Medido em 2026-11-27, no `/finalizar-bloco 66`; origem em `blocos/66-frontend-identidade-graficos-e-acessibilidade/fechamento.md`
+(seção "Achados da passada e da execução") e em `revisao.md` (Q-3 e Q-4 da rodada 2).
 
-- **`useHistorial.ts:132,136` usa o `refetch` cru.** O `retryFor` (bloco 64) decide onde nasce o
-  `onRetry` para o 403 não oferecer "Reintentar", mas esses dois diálogos não passam por ele; num 403
-  eles ainda mostram o botão. Estão fora do caminho do C-10.
-- **`SessionBootstrap`, `AppLayout` e `ModuleGuard` não têm `errorElement`.** Um erro de render neles
-  cai no `DefaultErrorComponent` do react-router, que mostra mensagem e stack. Não é regressão: antes do
-  64 era tela branca.
-- **Por que nenhuma ficha carrega:** `rascunho-plano-65.md` e `rascunho-plano-66.md` não citam nenhum
-  dos dois (grep em 2026-11-26), e o 65 já está no teto de 10 tasks.
-- **Gatilho do 65 passou sem decisão (2026-11-27, `/finalizar-bloco 65`).** A spec e o plano do 65
-  não citam esta pendência, e o bloco não pagou nenhum dos dois itens: o `refetch` cru segue em
-  `useHistorial.ts:144,148` (as linhas desceram com o C-3) e as rotas-layout seguem sem
-  `errorElement`. Gatilho novo: o `/planejar-bloco` do 66 decide os dois itens (task ou ficha).
+- **Tabela `table-fixed` sem largura mínima não rola na horizontal quando a moldura aperta** (achados
+  2 e 3). Historial a 1024 com a sidebar aberta: o aluno cai a 89 px e mostra uma letra. Operación a
+  1280: Código×Curso e Estudiantes×Estado se sobrepõem (anterior ao bloco).
+- **Hierarquia da aba Documentos da turma** (achado 4): o `EvaluacionesCard` ficou `h2` depois do
+  `h3` "Documentos" e dos `h4` dos cards de tipo.
+- **Textos curtos do rail** (`nav.short.*`, achado 6) e o veredito sobre B-1, A-7 e B-4, que o
+  `fechamento.md` deixa para o João.
+- **Cor dos ícones de linha e controles do header** (achado 5): pedido do João de 2026-11-27,
+  adiado para bloco futuro; o patch está fora da árvore.
+- **`reload`/`reloadQuotes` do Historial sem `retryFor`** (achado 8): num 403 ainda oferecem
+  Reintentar, mesma classe do T8 que o bloco pagou.
+- **Menores da revisão final** (M-7, M-8 e M-9): barra de documentos escolhe o degrau de verde por
+  `dark:` em vez de `--tone-success-ink`; a moldura rolável é focável sem rolagem e a região viva
+  anuncia "Cargando…" a cada busca; o contador do ranking mostra o número depois do corte.
+- **Q-3 da rodada 2:** digitar `1.500.000` no campo de UF grava `1500.000` sem erro, porque o campo
+  reescreve o texto a cada tecla; só valores de sete dígitos em UF caem no caso.
+- **Q-4 da rodada 2:** `quote.ufAmbiguous` não mostra como digitar três casas decimais (`12,345`
+  recusado, saída `12,3450`).

@@ -6793,20 +6793,20 @@
     border-radius: 4px;
   }
   .p-tag.p-tag-success {
-    background-color: #4ade80;
-    color: #052e16;
+    background-color: color-mix(in srgb, var(--green-500) 15%, var(--surface-card));
+    color: var(--green-400);
   }
   .p-tag.p-tag-info {
     background-color: color-mix(in srgb, var(--indigo-500) 15%, var(--surface-card));
     color: var(--indigo-300);
   }
   .p-tag.p-tag-warning {
-    background-color: #eec137;
-    color: #5e4803;
+    background-color: color-mix(in srgb, var(--yellow-500) 15%, var(--surface-card));
+    color: var(--yellow-400);
   }
   .p-tag.p-tag-danger {
-    background-color: #f87171;
-    color: #450a0a;
+    background-color: color-mix(in srgb, var(--red-500) 15%, var(--surface-card));
+    color: var(--red-300);
   }
   .p-tag .p-tag-icon {
     margin-right: 0.25rem;
@@ -6928,20 +6928,20 @@
     color: #020617;
   }
   .p-badge.p-badge-success {
-    background-color: #4ade80;
-    color: #052e16;
+    background-color: color-mix(in srgb, var(--green-500) 15%, var(--surface-card));
+    color: var(--green-400);
   }
   .p-badge.p-badge-info {
     background-color: color-mix(in srgb, var(--indigo-500) 15%, var(--surface-card));
     color: var(--indigo-300);
   }
   .p-badge.p-badge-warning {
-    background-color: #eec137;
-    color: #5e4803;
+    background-color: color-mix(in srgb, var(--yellow-500) 15%, var(--surface-card));
+    color: var(--yellow-400);
   }
   .p-badge.p-badge-danger {
-    background-color: #f87171;
-    color: #450a0a;
+    background-color: color-mix(in srgb, var(--red-500) 15%, var(--surface-card));
+    color: var(--red-300);
   }
   .p-badge.p-badge-lg {
     font-size: 1.125rem;
@@ -6964,20 +6964,20 @@
     border-radius: 4px;
   }
   .p-tag.p-tag-success {
-    background-color: #4ade80;
-    color: #052e16;
+    background-color: color-mix(in srgb, var(--green-500) 15%, var(--surface-card));
+    color: var(--green-400);
   }
   .p-tag.p-tag-info {
     background-color: color-mix(in srgb, var(--indigo-500) 15%, var(--surface-card));
     color: var(--indigo-300);
   }
   .p-tag.p-tag-warning {
-    background-color: #eec137;
-    color: #5e4803;
+    background-color: color-mix(in srgb, var(--yellow-500) 15%, var(--surface-card));
+    color: var(--yellow-400);
   }
   .p-tag.p-tag-danger {
-    background-color: #f87171;
-    color: #450a0a;
+    background-color: color-mix(in srgb, var(--red-500) 15%, var(--surface-card));
+    color: var(--red-300);
   }
 }
 @layer primereact {

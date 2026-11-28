@@ -242,7 +242,7 @@ class AnalyticsQueryTest extends TestCase
         // A prova de que a linha não sumiu por acaso: a série que a alimenta
         // segue contando a mesma turma.
         $this->assertSame(
-            [['month' => '2026-01', 'count' => 1]],
+            [['month' => '2026-01', 'count' => 1], ['month' => '2026-02', 'count' => 0]],
             $this->series(app(AnalyticsQuery::class), $start, $end)['turmas_iniciadas'],
         );
     }
@@ -280,7 +280,7 @@ class AnalyticsQueryTest extends TestCase
         $query = app(AnalyticsQuery::class);
 
         $this->assertSame(
-            [['month' => '2026-01', 'count' => 1]],
+            [['month' => '2026-01', 'count' => 1], ['month' => '2026-02', 'count' => 0]],
             $this->series($query, $start, $end)['certificados_emitidos'],
             "Os dois certificados existem; só o {$emitido->codigo} segue emitido.",
         );
@@ -361,15 +361,21 @@ class AnalyticsQueryTest extends TestCase
         $this->createCertificate($this->createEnrollment($turma, $instante), $instante);
 
         $filtro = new DashboardFilterData;
-        $setembro = [['month' => '2026-09', 'count' => 1]];
+        $series = $this->series(app(AnalyticsQuery::class), $filtro->start(), $filtro->end());
 
-        $this->assertSame([
-            'turmas_iniciadas' => $setembro,
-            'turmas_concluidas' => $setembro,
-            'certificados_emitidos' => $setembro,
-            'matriculas' => $setembro,
-            'uf_aprovada' => [['month' => '2026-09', 'total_uf' => '75.0000']],
-        ], $this->series(app(AnalyticsQuery::class), $filtro->start(), $filtro->end()));
+        // A janela default são 13 meses (2025-09 a 2026-09) e só o último tem
+        // linha: o que a prova é o mês corrente com o dado e os 12 anteriores em zero.
+        $this->assertCount(13, $series['turmas_iniciadas']);
+        foreach (['turmas_iniciadas', 'turmas_concluidas', 'certificados_emitidos', 'matriculas'] as $nome) {
+            $this->assertSame(['month' => '2026-09', 'count' => 1], $series[$nome][12], $nome);
+            $this->assertSame(1, array_sum(array_column($series[$nome], 'count')), $nome);
+        }
+        $this->assertSame(['month' => '2026-09', 'total_uf' => '75.0000'], $series['uf_aprovada'][12]);
+        $this->assertSame('75.0000', array_reduce(
+            $series['uf_aprovada'],
+            fn (string $soma, array $mes): string => bcadd($soma, $mes['total_uf'], 4),
+            '0.0000',
+        ));
     }
 
     /**
@@ -398,6 +404,153 @@ class AnalyticsQueryTest extends TestCase
         $rankings = $query->rankings($start, $end, true)->toArray();
         $this->assertSame(1, $rankings['courses'][0]['turmas']);
         $this->assertSame(1, $rankings['clients'][0]['turmas']);
+    }
+
+    /**
+     * D-2 do bloco 66: o backend preenche com zero todo mês da janela. Mês sem
+     * registro vinha AUSENTE e o gráfico ligava Jan a Mar por cima de fevereiro.
+     */
+    public function test_mes_sem_registro_no_meio_da_janela_vem_zero(): void
+    {
+        $this->createConcludedTurma('2026-01-10 12:00:00', '10.0000', '2026-01-10', '2026-01-12', '2026-01-12 12:00:00');
+        $this->createConcludedTurma('2026-03-10 12:00:00', '20.0000', '2026-03-10', '2026-03-12', '2026-03-12 12:00:00');
+
+        $series = $this->series(
+            app(AnalyticsQuery::class),
+            CarbonImmutable::parse('2026-01-01')->startOfDay(),
+            CarbonImmutable::parse('2026-03-31')->endOfDay(),
+        );
+
+        $this->assertSame([
+            ['month' => '2026-01', 'count' => 1],
+            ['month' => '2026-02', 'count' => 0],
+            ['month' => '2026-03', 'count' => 1],
+        ], $series['turmas_iniciadas']);
+        $this->assertSame([
+            ['month' => '2026-01', 'total_uf' => '10.0000'],
+            ['month' => '2026-02', 'total_uf' => '0.0000'],
+            ['month' => '2026-03', 'total_uf' => '20.0000'],
+        ], $series['uf_aprovada']);
+    }
+
+    public function test_meses_vazios_nas_pontas_vem_zero(): void
+    {
+        $this->createConcludedTurma('2026-02-10 12:00:00', '10.0000', '2026-02-10', '2026-02-12', '2026-02-12 12:00:00');
+
+        $series = $this->series(
+            app(AnalyticsQuery::class),
+            CarbonImmutable::parse('2026-01-01')->startOfDay(),
+            CarbonImmutable::parse('2026-03-31')->endOfDay(),
+        );
+
+        $this->assertSame([
+            ['month' => '2026-01', 'count' => 0],
+            ['month' => '2026-02', 'count' => 1],
+            ['month' => '2026-03', 'count' => 0],
+        ], $series['turmas_iniciadas']);
+        foreach (['turmas_concluidas', 'certificados_emitidos', 'matriculas'] as $nome) {
+            $this->assertSame(['2026-01', '2026-02', '2026-03'], array_column($series[$nome], 'month'), $nome);
+        }
+    }
+
+    public function test_janela_parcial_15_mar_a_10_jun_tem_quatro_meses(): void
+    {
+        $this->createConcludedTurma('2026-04-10 12:00:00', '10.0000', '2026-04-10', '2026-04-12', '2026-04-12 12:00:00');
+
+        $series = $this->series(
+            app(AnalyticsQuery::class),
+            CarbonImmutable::parse('2026-03-15')->startOfDay(),
+            CarbonImmutable::parse('2026-06-10')->endOfDay(),
+        );
+
+        $this->assertSame([
+            ['month' => '2026-03', 'count' => 0],
+            ['month' => '2026-04', 'count' => 1],
+            ['month' => '2026-05', 'count' => 0],
+            ['month' => '2026-06', 'count' => 0],
+        ], $series['turmas_iniciadas']);
+    }
+
+    public function test_janela_que_cruza_o_ano_e_continua(): void
+    {
+        $series = $this->series(
+            app(AnalyticsQuery::class),
+            CarbonImmutable::parse('2026-11-20')->startOfDay(),
+            CarbonImmutable::parse('2027-02-05')->endOfDay(),
+        );
+
+        $meses = ['2026-11', '2026-12', '2027-01', '2027-02'];
+        foreach (['turmas_iniciadas', 'turmas_concluidas', 'certificados_emitidos', 'matriculas'] as $nome) {
+            $this->assertSame($meses, array_column($series[$nome], 'month'), $nome);
+        }
+        $this->assertSame($meses, array_column($series['uf_aprovada'], 'month'));
+    }
+
+    /** Janela que começa no dia 31 não pode pular o mês curto que vem depois. */
+    public function test_janela_que_comeca_no_dia_31_nao_pula_fevereiro(): void
+    {
+        $series = $this->series(
+            app(AnalyticsQuery::class),
+            CarbonImmutable::parse('2026-01-31')->startOfDay(),
+            CarbonImmutable::parse('2026-04-30')->endOfDay(),
+        );
+
+        $this->assertSame(
+            ['2026-01', '2026-02', '2026-03', '2026-04'],
+            array_column($series['turmas_iniciadas'], 'month'),
+        );
+    }
+
+    /**
+     * O laço de meses compara datas, não texto: depois de `9999-12` o cursor vira
+     * `10000-01`, que como string é "menor" que `9999-12`, e o laço não acabava
+     * (Q-1 da revisão do bloco 66). O teto da janela mora no `DashboardFilterData`;
+     * esta prova é da própria query, que não pode depender dele para terminar.
+     */
+    public function test_janela_que_termina_em_9999_para_no_ultimo_mes(): void
+    {
+        $series = $this->series(
+            app(AnalyticsQuery::class),
+            CarbonImmutable::parse('9999-11-01')->startOfDay(),
+            CarbonImmutable::parse('9999-12-31')->endOfDay(),
+        );
+
+        $this->assertSame(['9999-11', '9999-12'], array_column($series['turmas_iniciadas'], 'month'));
+        $this->assertSame(['9999-11', '9999-12'], array_column($series['uf_aprovada'], 'month'));
+    }
+
+    public function test_uf_vazia_vem_0_0000(): void
+    {
+        $series = $this->series(
+            app(AnalyticsQuery::class),
+            CarbonImmutable::parse('2026-01-01')->startOfDay(),
+            CarbonImmutable::parse('2026-02-28')->endOfDay(),
+        );
+
+        $this->assertSame([
+            ['month' => '2026-01', 'total_uf' => '0.0000'],
+            ['month' => '2026-02', 'total_uf' => '0.0000'],
+        ], $series['uf_aprovada']);
+    }
+
+    /** O zero é da janela que se lê; série que o chamador não pode ver segue `null` (D7). */
+    public function test_serie_sem_permissao_continua_null(): void
+    {
+        $series = app(AnalyticsQuery::class)->series(
+            CarbonImmutable::parse('2026-01-01')->startOfDay(),
+            CarbonImmutable::parse('2026-03-31')->endOfDay(),
+            includeOperation: false,
+            includeCertification: false,
+            includeUf: false,
+        )->toArray();
+
+        $this->assertSame([
+            'turmas_iniciadas' => null,
+            'turmas_concluidas' => null,
+            'certificados_emitidos' => null,
+            'matriculas' => null,
+            'uf_aprovada' => null,
+        ], $series);
     }
 
     /**

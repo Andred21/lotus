@@ -44,6 +44,10 @@ import type { DialogMode } from '@shared/lib'
  * quebrando linha; o que não é campo do cadastro vai em `afterForm`, fora do
  * form, para o Enter ali não salvar. O `stopPropagation` existe porque o submit de um form dentro
  * de um portal sobe pela árvore do React a um form ancestral.
+ *
+ * **Foco após Editar.** O `key` por modo do rodapé (abaixo) impede o submit
+ * mas desmonta o botão focado; na transição `view → edit` o foco vai ao
+ * primeiro campo do corpo, o mesmo alvo da abertura.
  */
 export function CrudDialog({
   size, visible, mode, title, onHide, onEdit, onSubmit, pending, disabled, closeBlocked, guard, submitLabel, headerExtra, afterForm, children,
@@ -125,6 +129,15 @@ export function CrudDialog({
     ;(primeiro ?? corpo.current)?.focus()
   }
 
+  // Editar → edição: a `key` do rodapé desmonta o botão que tinha o foco e o
+  // navegador o solta no `<body>`. Quem pediu a edição vai ao primeiro campo.
+  const modoAnterior = useRef(mode)
+  useEffect(() => {
+    const entrouEmEdicao = modoAnterior.current === 'view' && mode === 'edit'
+    modoAnterior.current = mode
+    if (entrouEmEdicao && visible) focarCorpo()
+  }, [mode, visible])
+
   // Saída que descarta: com guarda e rascunho, pergunta antes de fechar.
   const sair = () => (guard ? guard.confirmDiscard(onHide) : onHide())
 
@@ -142,14 +155,17 @@ export function CrudDialog({
     </div>
   )
 
+  // `key` por modo: sem ela o React reaproveita o `<button>` do Editar como o
+  // Salvar (mesma posição), ele vira `type="submit"` dentro do próprio clique e
+  // o navegador envia o form. Clicar em Editar salvava e voltava à leitura.
   const footer =
     mode === 'view' ? (
-      <div ref={rodape} className="flex justify-end gap-2">
+      <div key="view" ref={rodape} className="flex justify-end gap-2">
         <AppButton label={t('common.close')} text disabled={closeBlocked} onClick={sair} />
         {onEdit && <AppButton variant="primary" label={t('common.edit')} icon="edit" onClick={onEdit} />}
       </div>
     ) : (
-      <div ref={rodape} className="flex justify-end gap-2">
+      <div key="edit" ref={rodape} className="flex justify-end gap-2">
         <AppButton label={t('common.cancel')} text disabled={closeBlocked} onClick={sair} />
         <AppButton
           variant="primary"

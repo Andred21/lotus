@@ -127,3 +127,34 @@ describe('SearchableTableFrame — modo lazy', () => {
     expect(onSort).toHaveBeenCalledWith(expect.objectContaining({ sortField: 'name', sortOrder: 1 }))
   })
 })
+
+describe('SearchableTableFrame — busca', () => {
+  /** A-6: o placeholder some ao digitar e não é nome acessível confiável. */
+  it('busca tem nome acessível', () => {
+    montar(estado())
+
+    expect(screen.getByRole('textbox', { name: 'common.search' })).toBeTruthy()
+  })
+})
+
+/**
+ * B-6 do audit de 2026-11-26: o piso `min-w-64` (16rem) da busca estourava o
+ * contêiner a 390px e cortava o campo. O piso só vale de `sm` para cima; abaixo
+ * dele a busca encolhe até caber.
+ */
+describe('busca encolhe abaixo de sm', () => {
+  it('nenhum ancestral do campo impõe min-w-64 sem o prefixo sm:', () => {
+    montar(estado())
+
+    const campo = screen.getByPlaceholderText('common.search')
+    const pisos: string[] = []
+    for (let el = campo.parentElement; el; el = el.parentElement) {
+      for (const token of el.className.split(/\s+/)) {
+        if (/(^|:)min-w-64$/.test(token)) pisos.push(token)
+      }
+    }
+
+    expect(pisos.length).toBeGreaterThan(0)
+    expect(pisos.every((token) => token === 'sm:min-w-64')).toBe(true)
+  })
+})

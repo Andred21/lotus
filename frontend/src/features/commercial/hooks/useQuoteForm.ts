@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useEntityForm, useFormMutationErrors, useUnsavedChangesGuard, useToast } from '@shared/hooks'
 import type { QuoteData } from '@shared/types/generated'
 import { useCreateQuote, useUpdateQuote, type QuotePayload } from '../api/useQuotes'
-import { formatUf, parseUfInput } from '@shared/lib'
+import { formatUfField, isAmbiguousUfInput, parseUfInput } from '@shared/lib'
 
 /** Campos que o wizard edita. `value_uf` fica STRING o caminho todo: converter
  * para Number reintroduziria o float que o decimal do backend existe para evitar. */
@@ -27,15 +27,16 @@ const toFields = (q: QuoteFormFields): QuoteFormFields =>
     id: q.id,
     course_id: q.course_id,
     student_count: q.student_count,
-    // Pré-preenche no MESMO formato que a lista mostra (vírgula, es-CL) — o
-    // valor cru do backend ("450.5000") ao lado da linha da lista mostrando
+    // Pré-preenche com vírgula decimal e SEM agrupar milhar (`formatUfField`,
+    // não o `formatUf` de exibição: o `parseUfInput` leria "1.234" como 1,234
+    // UF). O valor cru do backend ("450.5000") ao lado da lista mostrando
     // "450,5" induzia o usuário a "corrigir" para vírgula e gravar 10x o
     // valor. A EXIBIÇÃO é a vírgula (o `DataStep` troca o ponto ao mostrar); o
     // estado fica canônico (ponto), como o que a digitação grava via
     // `parseUfInput`. Sem isso, digitar de volta o valor original deixaria o
     // form "sujo" ("450,5" no baseline, "450.5" no estado) e a guarda de
     // rascunho perguntaria sem mudança nenhuma.
-    value_uf: parseUfInput(formatUf(q.value_uf)),
+    value_uf: parseUfInput(formatUfField(q.value_uf)),
     purchase_order: q.purchase_order,
     planned_start_date: q.planned_start_date,
     planned_end_date: q.planned_end_date,
@@ -52,7 +53,14 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
 
   // Editar já tem curso escolhido: abre direto no passo 2 (dá para voltar e trocar).
   const [step, setStep] = useState<1 | 2>(quote ? 2 : 1)
-  if (didReset) setStep(quote ? 2 : 1)
+  // Entrada de UF que nenhuma convenção decide ("1,500", "1.500.000"): fica no
+  // estado como o parser a leria, mas trava o envio e vira erro no campo até o
+  // usuário reescrever (Q-2 da revisão do bloco 66, `isAmbiguousUfInput`).
+  const [ufAmbiguous, setUfAmbiguous] = useState(false)
+  if (didReset) {
+    setStep(quote ? 2 : 1)
+    setUfAmbiguous(false)
+  }
 
   const payload = (): QuotePayload => ({
     course_id: form.course_id,
@@ -69,6 +77,7 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
   })
 
   function submit() {
+    if (ufAmbiguous) return
     if (quote) {
       update.mutate({ quoteId: quote.id!, payload: payload() }, {
         onSuccess: () => {
@@ -86,11 +95,23 @@ export function useQuoteForm(budgetId: number, quote: QuoteData | null, onDone: 
     })
   }
 
-  const { fieldErrors, generalError, set } = useFormMutationErrors<QuoteFormFields>(setField, [create.error, update.error])
+  const { fieldErrors: mutationFieldErrors, generalError, set } = useFormMutationErrors<QuoteFormFields>(
+    setField,
+    [create.error, update.error],
+  )
+  const fieldErrors = ufAmbiguous
+    ? { ...mutationFieldErrors, value_uf: [t('quote.ufAmbiguous')] }
+    : mutationFieldErrors
+
+  function setValueUf(raw: string) {
+    set('value_uf', parseUfInput(raw))
+    setUfAmbiguous(isAmbiguousUfInput(raw))
+  }
 
   return {
     form,
     set,
+    setValueUf,
     step,
     next: () => setStep(2),
     back: () => setStep(1),

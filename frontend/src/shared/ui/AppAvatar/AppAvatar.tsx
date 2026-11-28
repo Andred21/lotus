@@ -43,8 +43,9 @@ export function AppAvatar({ name, image, style, ...props }: AppAvatarProps) {
       shape="circle"
       // `style` do chamador entra DEPOIS e por spread: quem precisa de um
       // diâmetro próprio (o `AppPhotoField`) sobrescreve só o que passar, sem
-      // apagar a tinta de marca das iniciais.
-      style={{ backgroundColor: 'var(--brand)', color: 'var(--brand-navy)', ...style }}
+      // apagar a tinta neutra das iniciais. O celeste é raro (B-2): sobre o
+      // shell, quem quer a marca (o `UserMenu`) a declara por aqui.
+      style={{ backgroundColor: 'var(--surface-200)', color: 'var(--text-color)', fontWeight: 600, ...style }}
       {...props}
     />
   )

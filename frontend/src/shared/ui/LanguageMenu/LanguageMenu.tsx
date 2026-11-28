@@ -23,8 +23,11 @@ const Flag = ({ code, className }: { code: keyof typeof FLAGS; className?: strin
  * Seletor de idioma. O AppButton mostra a bandeira + código atual; ao clicar
  * abre o AppMenu com as 3 línguas — cada item com sua bandeira (SVG local no
  * ícone do item) chamando i18n.changeLanguage.
+ *
+ * `surface` escolhe o gatilho: `shell` (header, sobre o navy) ou `page` (login,
+ * sobre o cartão branco), onde o gatilho é o `compact` da marca.
  */
-export function LanguageMenu() {
+export function LanguageMenu({ surface = 'shell' }: { surface?: 'shell' | 'page' }) {
   const { t, i18n } = useTranslation()
   const menuRef = useRef<AppMenuRef>(null)
 
@@ -54,8 +57,9 @@ export function LanguageMenu() {
   return (
     <>
       <AppButton
-        variant="compact"
-        aria-label={t('common.language')}
+        variant={surface === 'page' ? 'compact' : 'shell'}
+        className={surface === 'page' ? undefined : 'px-3 py-2.5 text-sm'}
+        aria-label={`${t('common.language')}: ${current.label}`}
         onClick={(e) => menuRef.current?.toggle(e)}
       >
         <Flag code={current.flag} /> {current.label}

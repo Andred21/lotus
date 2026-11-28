@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppDataTable, AppColumn, AppTag, AppEmptyState, IdentityCell, narrowFloorTablePt, stickyActionsColumn, identifierClass, useCollapsibleActionsColumn } from '@shared/ui'
+import { AppDataTable, AppColumn, AppIcon, AppTag, AppEmptyState, IdentityCell, narrowFloorTablePt, stickyActionsColumn, identifierClass, useCollapsibleActionsColumn } from '@shared/ui'
 import { useTableFilter } from '@shared/hooks'
 import type { EmissionPanelEnrollmentData, EnrollmentApprovalStatus } from '@shared/types/generated'
 import { rowCertKind } from '../../lib/certStatus'
@@ -85,7 +85,13 @@ export function EmissionStudentsTable({ enrollments, counts, loading, blocked, b
         header={t('certificate.colCertificate')}
         body={(e: EmissionPanelEnrollmentData) => {
           const kind = rowCertKind(e)
-          if (kind === 'emitido') return `✓ ${e.certificate?.codigo}`
+          if (kind === 'emitido')
+            return (
+              <span className={`${identifierClass} inline-flex items-center gap-1`}>
+                <AppIcon name="check" size="sm" />
+                {e.certificate?.codigo}
+              </span>
+            )
           return t(kind === 'sin_emitir' ? 'certificate.sinEmitir' : 'certificate.noCorresponde')
         }}
         style={largura.certificate}

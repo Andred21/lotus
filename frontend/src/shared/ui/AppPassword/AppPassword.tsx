@@ -75,10 +75,11 @@ export const AppPassword = forwardRef<HTMLInputElement, AppPasswordProps>(
     const onChange = props.onChange ?? bind.onChange
     // Nome acessível do olho. O default do Prime é "Show/Hide Password" em
     // inglês (password.cjs.js:605,614) e chega a TODA tela com senha — o
-    // wrapper é a única porta (UI-08). Não vai pela locale global do Prime:
-    // `locale('es')` nunca é chamado no projeto (primeLocale.ts só faz
-    // `addLocale`), então um rótulo pendurado lá ficaria congelado na troca de
-    // idioma. Pinado DEPOIS do `pt` do chamador: nome acessível não é opcional.
+    // wrapper é a única porta (UI-08). O locale global do Prime hoje segue o
+    // idioma (`registerPrimeLocales`) e o bloco `aria` dele traz
+    // `passwordShow`/`passwordHide`, mas o nome fica pinado aqui como DEFESA
+    // explícita, por componente, e vem do nosso `t`. Pinado DEPOIS do `pt` do
+    // chamador: nome acessível não é opcional.
     // O olho é BOTÃO, não `switch`. O Prime crava `role="switch"` com
     // `aria-checked` fixo por ícone — `'true'` no showIcon e `'false'` no
     // hideIcon (password.cjs.js:600-615) —, e isso é o inverso do estado da

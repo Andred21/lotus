@@ -12,7 +12,7 @@ type Props = {
 /** Confirmação + relatório de emissão em lote. Ao contrário do
  * `ConfirmIssueDialog`, o diálogo NÃO fecha após o POST — a resposta vira o
  * próprio corpo: uma linha por item do `report` (nome do aluno já resolvido
- * pelo hook), `AppTag` ✓código quando `ok`, severity danger com o `error`
+ * pelo hook), `AppTag` com ícone check e o código quando `ok`, severity danger com o `error`
  * cru do backend (já es-CL — não traduzir, não envolver em `t()`) quando
  * não. Lote parcial (alguns emitidos, outros rejeitados) é o caso normal,
  * não um erro — a invalidação do painel (`useIssueBatch`) já repintou a
@@ -76,7 +76,7 @@ export function BatchIssueDialog({ turma, onHide }: Props) {
               <div key={row.enrollmentId} className="flex items-center justify-between gap-3">
                 <span className="text-sm">{row.studentName}</span>
                 {row.ok ? (
-                  <AppTag severity="success" value={`✓ ${row.codigo}`} />
+                  <AppTag severity="success" icon="check" className="whitespace-nowrap" value={row.codigo} />
                 ) : (
                   <AppTag severity="danger" value={row.error ?? ''} />
                 )}

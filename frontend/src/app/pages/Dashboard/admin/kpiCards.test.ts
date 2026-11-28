@@ -86,4 +86,14 @@ describe('kpiCards', () => {
   it('a derivação cobre todas as chaves do contrato', () => {
     expect(kpiCards(cheio, tudoVisivel)).toHaveLength(Object.keys(cheio).length)
   })
+
+  // Zero com o gate aberto é a boa notícia: pintar de alarme "0 atrasadas" era o D-7.
+  it('KPI em 0 não pinta severidade', () => {
+    const k: AdminKpisData = { ...cheio, turmas_atrasadas: 0, turmas_encerrando_em_breve: 0, conclusoes_por_confirmar: 0 }
+    const tons = Object.fromEntries(kpiCards(k, tudoVisivel).map((c) => [c.key, c.tone]))
+    expect(tons['dashboard.kpi.turmasAtrasadas']).toBe('neutral')
+    expect(tons['dashboard.kpi.turmasEncerrandoEmBreve']).toBe('neutral')
+    expect(tons['dashboard.kpi.conclusoesPorConfirmar']).toBe('neutral')
+    expect(tons['dashboard.kpi.turmasEmAndamento']).toBe('info')
+  })
 })

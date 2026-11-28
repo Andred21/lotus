@@ -23,5 +23,6 @@ return [
     ],
     'filter' => [
         'inverted_period' => 'La fecha de término no puede ser anterior a la de inicio.',
+        'window_too_long' => 'El período no puede abarcar más de :max meses.',
     ],
 ];

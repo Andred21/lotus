@@ -12,10 +12,11 @@ import { pageTitleClass } from '../typography'
  * o nível 1 e toda rota autenticada passou a abrir a árvore de cabeçalhos no
  * nível 2, pressupondo um pai inexistente (UI-02 do review de 2026-08-12).
  *
- * A margem de baixo é degrau da escala (`mb-4`), não mais o valor que o agente
- * do usuário dava ao `h2`. A de CIMA não existe: o mini-reset de `index.css`
- * (P-46) zera `h1..h6`, e o respiro acima do cabeçalho é responsabilidade do
- * contêiner da página — achado E2 do audit de 2026-08-26. */
+ * A margem de baixo é degrau da escala (`mb-1`), não mais o valor que o agente
+ * do usuário dava ao `h2`; título e descrição são um par, e `mb-4` os soltava
+ * um do outro (B-12 do audit de 2026-11-26). A de CIMA não existe: o mini-reset
+ * de `index.css` (P-46) zera `h1..h6`, e o respiro acima do cabeçalho é
+ * responsabilidade do contêiner da página — achado E2 do audit de 2026-08-26. */
 export function PageHeader({
   title,
   description,
@@ -28,9 +29,9 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <h1 className={`mb-4 ${pageTitleClass}`} style={{ color: 'var(--text-color)' }}>{title}</h1>
+        <h1 className={`mb-1 ${pageTitleClass}`} style={{ color: 'var(--text-color)' }}>{title}</h1>
         {description && (
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-color-secondary)' }}>{description}</p>
+          <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{description}</p>
         )}
       </div>
       {tags && <div className="flex shrink-0 flex-wrap items-center gap-2">{tags}</div>}

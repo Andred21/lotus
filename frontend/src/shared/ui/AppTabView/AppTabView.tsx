@@ -36,11 +36,12 @@ export function AppTabView({ pt, ...props }: TabViewProps) {
   //
   // O NOME desses dois botões é piso daqui, pelo `pt`. O PrimeReact os rotula
   // com `api.ariaLabel('prevPageLabel')`/`'nextPageLabel'`
-  // (`tabview.cjs.js:782,804`), que resolvem contra a locale GLOBAL dele — e
-  // `locale()` nunca é chamado no projeto (`primeLocale.ts` só registra), então
-  // o valor vinha sempre do default inglês: "Next Page" medido em tela
-  // espanhola. Dois erros num rótulo só, porque o controle rola ABAS e não
-  // páginas. Mesma classe do "Choose Date" (UI-09 de 2026-08-17) e do
+  // (`tabview.cjs.js:782,804`), que resolvem contra a locale GLOBAL dele. Esse
+  // locale hoje segue o idioma da interface (`registerPrimeLocales`, em
+  // `shared/config/primeLocale.ts`), mas o texto dele é "Página siguiente": o
+  // controle rola ABAS e não páginas — e antes do bloco 66 o valor vinha do
+  // inglês, "Next Page" medido em tela espanhola. Dois erros num rótulo só. O
+  // piso daqui fica como DEFESA explícita, por componente, com palavra de aba. Mesma classe do "Choose Date" (UI-09 de 2026-08-17) e do
   // `emptyMessage` do `AppDropdown`, e mesmo remédio: chave nossa nas 3 locales.
   //
   // O piso entra DEPOIS do `pt` do chamador, pela mesma disciplina do

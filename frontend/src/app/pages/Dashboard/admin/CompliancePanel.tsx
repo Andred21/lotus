@@ -70,7 +70,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
 
   return (
     <AppCard>
-      <AppCardHeader title={t('dashboard.compliance.title')} count={turmas.length} />
+      <AppCardHeader title={t('dashboard.compliance.title')} count={turmas.length} level={3} />
       <AppDataTable
         value={turmas}
         dataKey="turma_id"
@@ -87,7 +87,7 @@ export function CompliancePanel({ turmas }: { turmas: TurmaComplianceData[] }) {
           sortable
           body={(r: TurmaComplianceData) => (
             <>
-              <Link to={`/operacion/turmas/${r.turma_id}`} className="no-underline wrap-break-word" style={{ color: 'var(--text-color)' }}>
+              <Link to={`/operacion/turmas/${r.turma_id}`} className="no-underline hover:underline focus-visible:underline wrap-break-word" style={{ color: 'var(--brand-ink)' }}>
                 {r.course_name}
               </Link>
               {r.concluded && (

@@ -30,6 +30,15 @@ describe('LoginPage', () => {
     expect(screen.queryByText('auth.sessionExpired')).toBeNull()
   })
 
+  // Revisão final do bloco 66, I-1: o par pousa sobre `--surface-card` (branco no
+  // claro); a tinta `--shell-ink` do `shell` mede ~1,5:1 ali.
+  it('os controles de idioma e tema não usam a tinta do shell', () => {
+    renderWithProviders(<LoginPage />, { route: '/login' })
+
+    expect(screen.getByLabelText('common.toggleTheme').className).not.toContain('--shell-ink')
+    expect(screen.getByRole('button', { name: /common\.language/ }).className).not.toContain('--shell-ink')
+  })
+
   // Bloco 45, Q-2: o login é rota pública e o CHANGELOG diz o que cada versão
   // corrige; a versão de produção só aparece para quem tem sessão (sidebar).
   it('não mostra a versão do produto a quem não autenticou', () => {

@@ -70,6 +70,7 @@
     "active": "Ativo",
     "inactive": "Inativo",
     "view": "Ver",
+    "table": "Tabela",
     "moreActions": "Mais ações",
     "upload": "Enviar documento",
     "replace": "Substituir",
@@ -159,7 +160,16 @@
     "cursos": "Cursos",
     "certificados": "Certificados",
     "personas": "Pessoas",
-    "administracion": "Administração"
+    "administracion": "Administração",
+    "short": {
+      "dashboard": "Painel",
+      "comercial": "Comercial",
+      "operacion": "Operação",
+      "cursos": "Cursos",
+      "certificados": "Certific.",
+      "personas": "Pessoas",
+      "administracion": "Admin"
+    }
   },
   "errors": {
     "notFoundTitle": "Página não encontrada",
@@ -316,7 +326,9 @@
       "custom": "Personalizado"
     },
     "series": {
-      "countsTitle": "Evolução mensal",
+      "turmasTitle": "Turmas por mês",
+      "alumnosTitle": "Alunos por mês",
+      "month": "Mês",
       "ufTitle": "UF aprovada por mês",
       "empty": "Sem registros no período",
       "turmas_iniciadas": "Turmas iniciadas",
@@ -644,6 +656,7 @@
     "courseSearchPlaceholder": "Buscar curso...",
     "students": "Alunos",
     "valueUf": "Valor UF",
+    "ufAmbiguous": "Valor ambíguo: escreva 1500 para mil e quinhentos ou 1,5 para um vírgula cinco.",
     "purchaseOrder": "Ordem de compra",
     "plannedStart": "Início planejado",
     "plannedEnd": "Fim planejado",
@@ -1131,6 +1144,7 @@
     }
   },
   "archive": {
+    "groupLabel": "Registros ativos ou arquivados",
     "active": "Ativos",
     "archived": "Arquivados",
     "archiveAction": "Arquivar",

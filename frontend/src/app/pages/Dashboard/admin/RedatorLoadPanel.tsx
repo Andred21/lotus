@@ -42,7 +42,7 @@ export function RedatorLoadPanel({ redatores }: { redatores: RedatorLoadData[] }
 
   return (
     <AppCard>
-      <AppCardHeader title={t('dashboard.redatorLoad.title')} count={redatores.length} />
+      <AppCardHeader title={t('dashboard.redatorLoad.title')} count={redatores.length} level={3} />
       <AppDataTable
         value={redatores}
         dataKey="redator_id"
@@ -64,8 +64,13 @@ export function RedatorLoadPanel({ redatores }: { redatores: RedatorLoadData[] }
             // ("listagem com diálogo, sem rota de detalhe"). Ancorar na entidade
             // é o FUT-2 do backlog e depende de decisão do João; inventar
             // `/personas/{id}` aqui daria 404 depois do clique, que é pior que
-            // link nenhum.
-            <Link to="/personas" className="no-underline" style={{ color: 'var(--text-color)' }}>
+            // link nenhum. Nem `?q=<nome>`: a listagem de redatores filtra em
+            // memória (`useCrudPage`) e não lê a busca da URL — o parâmetro seria
+            // ignorado (spec do 64, §6, fase 7).
+            // Tinta de link (A-8): `--brand-ink` muda por tema e passa de 4,5:1 no
+            // cartão nos dois; o sublinhado no hover e no foco é o que o distingue
+            // do texto vizinho sem depender só da cor.
+            <Link to="/personas" className="no-underline hover:underline focus-visible:underline" style={{ color: 'var(--brand-ink)' }}>
               {r.name}
             </Link>
           )}

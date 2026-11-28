@@ -1,4 +1,4 @@
-import { useRef, type RefObject } from 'react'
+import { useId, useRef, useState, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Tooltip } from 'primereact/tooltip'
 import { AppButton } from '../AppButton'
@@ -44,7 +44,7 @@ function RowActionButton({ acao }: { acao: RowAction }) {
         <AppButton
           icon={acao.icon}
           text
-          rounded
+          plain={!acao.severity}
           severity={acao.severity}
           aria-label={acao.label}
           aria-describedby={acao.describedBy}
@@ -89,6 +89,10 @@ function RowActionButton({ acao }: { acao: RowAction }) {
 export function RowActions({ actions, collapsed }: { actions: RowAction[]; collapsed: boolean }) {
   const { t } = useTranslation()
   const menu = useRef<AppMenuRef>(null)
+  // Estado do popup para o leitor de tela (`onShow`/`onHide` cobrem também o
+  // clique fora e o Esc); o `id` liga o gatilho ao menu.
+  const menuId = useId()
+  const [open, setOpen] = useState(false)
 
   if (actions.length === 0) return null
 
@@ -107,13 +111,18 @@ export function RowActions({ actions, collapsed }: { actions: RowAction[]; colla
       <AppButton
         icon="more"
         text
-        rounded
+        plain
         aria-label={t('common.moreActions')}
         aria-haspopup
+        aria-expanded={open}
+        aria-controls={menuId}
         onClick={(event) => menu.current?.toggle(event)}
       />
       <AppMenu
         ref={menu}
+        id={menuId}
+        onShow={() => setOpen(true)}
+        onHide={() => setOpen(false)}
         // Mesma grafia do `LanguageMenu`: a largura fixa do tema (12.5rem)
         // quebrava "Reenviar invitación" em duas linhas em 390x844, e o
         // gatilho mora na borda direita da tabela — o menu abre para dentro.

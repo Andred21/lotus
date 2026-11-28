@@ -28,7 +28,10 @@ export type { DropdownProps as AppDropdownProps } from 'primereact/dropdown'
  * `localeOption('emptyMessage')` (`dropdown.cjs.js:497`), isto é
  * "No available options" — inglês numa interface em espanhol, medido no gate
  * do BD-16 com a lista vazia. Mesmo motivo do rótulo do `AppFileUpload` e do
- * botão de fechar do `AppDialog`: `locale('es')` nunca é chamado no projeto.
+ * botão de fechar do `AppDialog`. O locale global do Prime segue o idioma
+ * (`registerPrimeLocales`), mas o `es`/`pt` dele só traduz datas e o bloco
+ * `aria`: o `emptyMessage` segue o do `en`, então o piso daqui continua
+ * necessário, e não só como defesa.
  *
  * `emptyFilterMessage` fica de fora de propósito — nenhum dos 14 sítios liga
  * `filter`, e piso para caminho que não existe é peso morto. Quem ligar o

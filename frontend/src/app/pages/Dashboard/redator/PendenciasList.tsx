@@ -29,7 +29,7 @@ export function PendenciasList({ items }: { items: RedatorTurmaPendenciaData[] }
 
   return (
     <AppCard>
-      <AppCardHeader title={t('dashboard.redator.pendencias.title')} count={pendentes} />
+      <AppCardHeader title={t('dashboard.redator.pendencias.title')} count={pendentes} level={3} />
       {items.length === 0 ? (
         <AppEmptyState
           icon="checkCircle"

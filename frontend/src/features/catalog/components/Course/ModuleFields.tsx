@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { AppButton } from '@shared/ui'
 import type { CourseModuleData } from '@shared/types/generated'
+import { useMoveFocus } from '../../hooks/useMoveFocus'
 import { ModuleCard } from './ModuleCard'
 import { warningSurface, warningText } from '@shared/styles/tokens'
 
@@ -10,7 +11,10 @@ import { warningSurface, warningText } from '@shared/styles/tokens'
  *
  * `key={i}`, nunca `key={m.id}`: o backend faz replace dos módulos, então os
  * ids trocam a cada save — um id como key remontaria as linhas e perderia o
- * foco. A ordem só muda por ação explícita do usuário (onMove). */
+ * foco. A ordem só muda por ação explícita do usuário (onMove).
+ *
+ * Como o índice é a identidade, o foco não acompanha o módulo sozinho: o
+ * `useMoveFocus` o leva ao mesmo botão no índice novo (A-3). */
 export function ModuleFields({
   modules, readOnly, fieldErrors, workloadHours, modulesTotal, hoursMismatch,
   onAdd, onRemove, onPatch, onMove,
@@ -27,6 +31,19 @@ export function ModuleFields({
   onMove: (i: number, dir: -1 | 1) => void
 }) {
   const { t } = useTranslation()
+  const { containerRef, focusAfter } = useMoveFocus()
+
+  const move = (i: number, dir: -1 | 1) => {
+    focusAfter(i + dir, dir === -1 ? 'up' : 'down')
+    onMove(i, dir)
+  }
+  // Sobrando módulo, o foco fica no botão de remover do mesmo índice (ou do novo
+  // último, quando o removido era ele); sem nenhum, o botão de adicionar.
+  const remove = (i: number) => {
+    if (modules.length === 1) focusAfter(0, 'add')
+    else focusAfter(Math.min(i, modules.length - 2), 'remove')
+    onRemove(i)
+  }
 
   return (
     <>
@@ -34,25 +51,30 @@ export function ModuleFields({
         <p className="text-sm" style={{ color: 'var(--text-color-secondary)' }}>{t('courseModule.empty')}</p>
       )}
 
-      {modules.map((m, i) => (
-        <ModuleCard
-          key={i}
-          module={m}
-          index={i}
-          isFirst={i === 0}
-          isLast={i === modules.length - 1}
-          readOnly={readOnly}
-          fieldErrors={fieldErrors}
-          onPatch={(patch) => onPatch(i, patch)}
-          onMoveUp={() => onMove(i, -1)}
-          onMoveDown={() => onMove(i, 1)}
-          onRemove={() => onRemove(i)}
-        />
-      ))}
+      {/* O `div` existe para o `containerRef` do `useMoveFocus` (foco ao reordenar).
+        * `empty:hidden` o esconde quando não há módulo; o `space-y` do pai não muda
+        * por causa dele. */}
+      <div ref={containerRef} className="space-y-4 empty:hidden">
+        {modules.map((m, i) => (
+          <ModuleCard
+            key={i}
+            module={m}
+            index={i}
+            isFirst={i === 0}
+            isLast={i === modules.length - 1}
+            readOnly={readOnly}
+            fieldErrors={fieldErrors}
+            onPatch={(patch) => onPatch(i, patch)}
+            onMoveUp={() => move(i, -1)}
+            onMoveDown={() => move(i, 1)}
+            onRemove={() => remove(i)}
+          />
+        ))}
 
-      {!readOnly && (
-        <AppButton label={t('courseModule.add')} icon="add" text onClick={onAdd} />
-      )}
+        {!readOnly && (
+          <AppButton label={t('courseModule.add')} icon="add" text onClick={onAdd} data-move="add" />
+        )}
+      </div>
 
       {modules.length > 0 && (
         <p className="text-right text-sm" style={{ color: 'var(--text-color-secondary)' }}>

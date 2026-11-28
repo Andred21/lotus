@@ -61,7 +61,8 @@ html,
 body,
 #root {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100vh; /* fallback de navegador sem `dvh` */
+  min-height: 100dvh;
 }
 
 /* Mini-reset escopado (P-46). Sem Preflight, toda tag de bloco herda a margem
@@ -101,5 +102,25 @@ body,
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+}
+
+/* Movimento reduzido (A-11/WCAG 2.3.3). Zera a duração em vez de remover a
+ * regra: o estado final das transições e animações ainda é alcançado, só não é
+ * percorrido. `!important` porque a folha do tema PrimeReact entra por `<link>`
+ * de runtime e as utilities do Tailwind vivem em layer. O pulso do skeleton é um
+ * `animation` no `:after`, e `0.01ms` com `infinite` ainda cintilaria: ali vai
+ * `animation: none`. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .p-skeleton:after {
+    animation: none !important;
   }
 }

@@ -641,6 +641,63 @@ describe('D7 — info de message/toast/tag/badge em índigo', () => {
   })
 })
 
+// ── D15 (bloco 66): as irmãs da tinta suave ─────────────────────────────────
+// O `info` foi à tinta suave no 65; success/warning/danger de tag e badge seguem,
+// para a classe crua e o `AppTag` (`severityTone`) pintarem igual. A tinta é o
+// degrau do `--tone-<sev>-ink` de cada tema (`brand-theme.css`); o contraste desses
+// pares é o que `tone-ink.test.ts` já mede, e aqui se prova a IDENTIDADE de tokens.
+describe('D15 — irmãs da tinta suave em tag e badge', () => {
+  const MATIZ = { success: 'green', warning: 'yellow', danger: 'red' } as const
+  const TINTA = {
+    claro: { success: '--green-800', warning: '--yellow-800', danger: '--red-700' },
+    escuro: { success: '--green-400', warning: '--yellow-400', danger: '--red-300' },
+  } as const
+  const combos = (['claro', 'escuro'] as const).flatMap((tema) =>
+    (['success', 'warning', 'danger'] as const).flatMap((sev) =>
+      (['tag', 'badge'] as const).map((comp) => ({ tema, sev, comp })),
+    ),
+  )
+  const blocosDe = (css: string, seletor: string) =>
+    [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .filter((m) => m[1].trim().replace(/\s+/g, ' ') === seletor)
+      .map((m) => m[2])
+
+  it.each(combos)('$comp $sev compõe o fundo do matiz a 15% e a tinta do tom ($tema)', ({ tema, sev, comp }) => {
+    const css = tema === 'claro' ? light() : dark()
+    const corpos = blocosDe(css, `.p-${comp}.p-${comp}-${sev}`)
+    const fundo = `color-mix(in srgb, var(--${MATIZ[sev]}-500) 15%, var(--surface-card))`
+
+    expect(corpos.length).toBeGreaterThan(0)
+    for (const corpo of corpos) {
+      expect(corpo).toContain(`background-color: ${fundo}`)
+      expect(corpo).toContain(`color: var(${TINTA[tema][sev]});`)
+    }
+  })
+
+  it.each(['claro', 'escuro'] as const)('a tinta é o degrau do --tone-<sev>-ink do tema (%s)', (tema) => {
+    // `:root` carrega o escuro; `html:not(.dark)` sobrescreve para o claro.
+    const [escuro, claro] = brand().split('html:not(.dark) {')
+    const bloco = tema === 'claro' ? claro : escuro
+    for (const sev of ['success', 'warning', 'danger'] as const)
+      expect(bloco).toMatch(new RegExp(`--tone-${sev}-ink:\\s*var\\(${TINTA[tema][sev]}\\)`))
+  })
+
+  it.each(['claro', 'escuro'] as const)('message e toast ficam fora do D15 (%s)', (tema) => {
+    const css = tema === 'claro' ? light() : dark()
+    const alvo = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) =>
+      /\.p-(?:message|toast-message)-(?:success|warning|danger)\b/.test(m[1]),
+    )
+    expect(alvo.length).toBeGreaterThan(0)
+    for (const m of alvo) expect(m[2], m[1].trim()).not.toMatch(/color-mix\(in srgb, var\(--(?:green|yellow|red)-500\) 15%/)
+  })
+
+  it('lista mista (tag de severidade com outro seletor) falha alto, nomeando o seletor', () => {
+    const css = '.p-tag.p-tag-success, .p-chip {\n  background-color: #22c55e;\n  color: #ffffff;\n}'
+
+    expect(() => transform(css, LIGHT_MAP, TINTA_CLARA)).toThrow(/\.p-chip/)
+  })
+})
+
 // ── B-8 (bloco 65): a tag pesa 600 ──────────────────────────────────────────
 describe('B-8 — peso da tag', () => {
   it.each([

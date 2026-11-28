@@ -110,7 +110,6 @@ export function AppFileActions<T extends PreviewableFile>({
       <AppButton
         icon="view"
         text
-        rounded
         aria-label={t('common.preview')}
         tooltip={t('common.preview')}
         tooltipOptions={DICA_ESQUERDA}
@@ -123,7 +122,6 @@ export function AppFileActions<T extends PreviewableFile>({
           <AppButton
             icon="delete"
             text
-            rounded
             severity="danger"
             aria-label={removeName}
             tooltip={removeName}

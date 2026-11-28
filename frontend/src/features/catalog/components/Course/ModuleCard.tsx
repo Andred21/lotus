@@ -42,9 +42,9 @@ export function ModuleCard({
         </div>
         {!readOnly && (
           <div className="flex gap-1">
-            <AppButton icon="arrowUp" text aria-label={t('courseModule.moveUp')} tooltip={t('courseModule.moveUp')} disabled={isFirst} onClick={onMoveUp} />
-            <AppButton icon="arrowDown" text aria-label={t('courseModule.moveDown')} tooltip={t('courseModule.moveDown')} disabled={isLast} onClick={onMoveDown} />
-            <AppButton icon="delete" text aria-label={t('courseModule.remove')} tooltip={t('courseModule.remove')} onClick={onRemove} />
+            <AppButton icon="arrowUp" text aria-label={t('courseModule.moveUp')} tooltip={t('courseModule.moveUp')} disabled={isFirst} onClick={onMoveUp} data-move-index={index} data-move="up" />
+            <AppButton icon="arrowDown" text aria-label={t('courseModule.moveDown')} tooltip={t('courseModule.moveDown')} disabled={isLast} onClick={onMoveDown} data-move-index={index} data-move="down" />
+            <AppButton icon="delete" text aria-label={t('courseModule.remove')} tooltip={t('courseModule.remove')} onClick={onRemove} data-move-index={index} data-move="remove" />
           </div>
         )}
       </div>

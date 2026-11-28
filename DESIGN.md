@@ -185,7 +185,9 @@ Uma paleta de instrumento: um celeste vivo como acento único, navy como carcaç
 
 ### Named Rules
 **The Fixed Dial Rule.** Sidebar e header são azul-poste nos dois temas. Nenhum `dark:` ali; quem
-pousa sobre o navy redeclara `--focus-stroke`, `--divider-stroke` e usa `--shell-ink`.
+pousa sobre o navy redeclara `--focus-stroke`, `--divider-stroke` e usa `--shell-ink`. Os controles
+do header (idioma e tema) são a variante `shell` do `AppButton`: contorno `--shell-ink` a 50% (a 40% media 2,80:1),
+rótulo `--shell-ink`, hover branco a 10%, idêntica nos dois temas e sem `dark:`.
 
 **The Ink, Not Fill Rule.** Cor de severidade entra como trilho de 3px ou como tinta de texto. Texto
 branco sobre hue saturado está banido: a tag `Vigente` media 2,28:1 assim.
@@ -226,10 +228,11 @@ caixa mista) são registros diferentes, não degraus da mesma escala. Não os un
 
 ## Layout
 
-Shell de duas colunas em `h-screen`: sidebar fixa à esquerda (256px expandida, rail de 80px
-colapsada; colapso imposto abaixo de 1024px sem tocar a preferência salva), header de 80px fixo
-no topo, `<main>` com rolagem própria e padding de 16px (24px a partir de `sm`). Skip-link
-"ir ao conteúdo" é o primeiro focável.
+Shell de duas colunas em `h-dvh` (altura dinâmica da viewport: a barra do navegador móvel não
+esconde o paginador): sidebar fixa à esquerda (256px expandida, rail de 80px colapsada; colapso
+imposto abaixo de 1024px sem tocar a preferência salva), header de 80px fixo no topo, `<main>`
+com rolagem própria e padding de 16px (24px a partir de `sm`). Skip-link "ir ao conteúdo" é o
+primeiro focável.
 
 Página = `PageHeader` (título + descrição, tags à direita, `mb-6`) seguido de cartões. A ação
 primária do módulo mora na toolbar do cartão, nunca no cabeçalho de página. Cartões de KPI em
@@ -240,7 +243,10 @@ desenhada por gradientes presos à moldura, e a coluna de ações presa à direi
 (`stickyActionsColumn`). Abaixo de `sm` cada tabela declara o próprio piso. Colapsar coluna é
 proibido em tela com peso de auditoria.
 
-Diálogos: 95vw → 85vw (`sm`) → 70vw (`lg`), maximizáveis, não arrastáveis. Espaçamento interno
+Diálogos: todos abrem a 95vw em tela estreita e ganham teto por tamanho: `sm` 32rem (512px),
+`md` 48rem (768px) e `lg` 85vw a partir de `sm` e 70vw a partir de `lg`, com teto de 84rem (para não
+virar faixa em ultrawide). Só o `lg` é maximizável (solta o teto), e nenhum é arrastável. A
+confirmação (`ConfirmDialog`) é a exceção: teto próprio de 28rem. Espaçamento interno
 padrão: cabeçalho e toolbar de cartão `16px × 12px`, célula `16px × 12px`, cabeçalho de célula
 `16px × 10px`, cartão `stat` `16px × 14px`.
 
@@ -269,8 +275,8 @@ anúncio de rolagem. Hover é mudança de tom (`--surface-hover`, branco a 3% no
 Dois raios, por papel, e cada um tem um dono. **Controle** (botão, input, tag, item de nav,
 diálogo, faixa de erro) usa `rounded-control` = `--border-radius` do tema (4px). **Superfície**
 (cartão) usa `rounded-surface` (8px). Raio literal em classe é erro de lint (`RAIO_LITERAL`).
-O badge de contagem é a única pílula. Bordas são hairline de 1px; o botão de marca é o único com
-2px, e o cartão `stat` carrega um trilho de 3px na borda de início. Item de nav tem borda
+O badge de contagem é a única pílula. Bordas são hairline de 1px; os botões de marca e os controles
+do shell (`shell`) são os únicos com 2px, e o cartão `stat` carrega um trilho de 3px na borda de início. Item de nav tem borda
 esquerda de 2px que acende em celeste quando ativo. Nada é clipado, nada tem silhueta além da caixa.
 
 ## Components
@@ -286,6 +292,12 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
 - **Marca (`variant="primary"`, `iconToggle`, `compact`):** no claro, cartão branco com contorno
   2px e rótulo em `celeste-tinta`, hover leva o rótulo a `--text-color`; no escuro, preenchido
   celeste com borda branca e rótulo azul-poste. É o botão que abre módulo, salva e confirma emissão.
+- **`shell`:** o controle do header sobre o navy fixo (seletor de idioma, toggle de tema): transparente,
+  contorno 2px `--shell-ink` a 50% (3,58:1 sobre o navy; a 40% media 2,80:1), rótulo `--shell-ink`, hover branco a 10%. Igual nos dois temas —
+  a marca de cartão branco/celeste cheio não pousa sobre o shell.
+- **Ação de linha e filtro (celeste raro):** a ação comum de uma linha de tabela é `text plain`
+  (neutra); a destrutiva segue `danger`. O `ArchiveSwitch` usa `secondary outlined` no lado
+  selecionado e `text plain` no outro, com o rótulo em `--text-color` (o cinza do `plain` reprova 4,5:1 no hover e no active). O celeste fica com a CTA, o foco e o item ativo.
 - **Focus:** anel do tema (`0 0 0 0.2rem #b2dff5` / celeste a 20%) SOMADO a `outline: 2px solid
   var(--focus-stroke)` com offset 2px, só em `:focus-visible`. Nunca zerar o anel.
 - **`noSurface`:** sem fundo nem padding; só área de clique e anel. O gatilho do menu do usuário.
@@ -327,9 +339,12 @@ Contidos e precisos. Nada se infla no hover; o estado muda por tom e por traço.
 - **Sidebar:** azul-poste fixo, borda direita branca a 10%, wordmark claro (glifo no rail), rótulo
   do papel em caixa alta apagada, versão em mono no rodapé. Item: ícone Phosphor, `regular`; ativo `fill` + rótulo 500,
   `10px × 12px`, 4px, borda esquerda 2px; repouso em `tinta-painel`, hover branco a 10%, ativo
-  celeste sobre branco a 5% com a borda acesa. Colapsado, o item EMPILHA ícone e rótulo de 10px —
-  o rail é o único menu do celular.
-- **Header:** barra utilitária sem título — controles de idioma e tema (botões de marca), divisor
+  celeste sobre branco a 5% com a borda acesa. Colapsado, o item EMPILHA ícone e rótulo CURTO de
+  12px (`nav.short.*`, até 9 caracteres, sem `truncate`; o nome integral fica no `title`) — o rail
+  é o único menu do celular. Para o rótulo caber nos 80px, o `nav` colapsado perde o padding
+  lateral (4px) e o item colapsado não tem padding horizontal: sobram 69px de conteúdo para um
+  rótulo que mede no máximo 62px (Dashboard, Inter 500 a 12px).
+- **Header:** barra utilitária sem título — controles de idioma e tema (variante `shell`), divisor
   branco a 20%, relógio mono, avatar + nome (branco, 14px/600) + papel (branco a 75%) num gatilho só.
 
 ### Ícones
@@ -344,7 +359,9 @@ do Prime seguem o `md` (o check do checkbox, 16). `regular` por padrão; `fill` 
 `text-sm`, sem zebra. Cabeçalho em `fieldLabelClass` sobre `--surface-section`, `16px × 10px`,
 tinta secundária. Linha transparente (a sombra de rolagem precisa aparecer), hover em `--surface-hover`.
 Paginador É o rodapé: contagem à esquerda, controles à direita, hairline acima. Larguras declaradas
-em razão com `table-fixed`.
+em razão com `table-fixed`. Identidade da linha: avatar de iniciais NEUTRO de 40px
+(`--surface-200`, rótulo `--text-color` a 600), nunca celeste — só o gatilho do usuário no header
+mantém as iniciais na marca, porque pousa sobre o navy.
 
 ### Signature: o Folio
 `CertificateFolio` trata o número `LOT-ano-seq` como artefato: legenda em rótulo de campo (`dt`),

@@ -3,6 +3,18 @@ import logoLight from '@/assets/LogoLight.png'
 import logoDark from '@/assets/LogoDark.png'
 import logoGlyph from '@/assets/LogoGlyph.png'
 
+/** Dimensões intrínsecas de cada PNG (D-10): reservam a caixa antes de o
+ * arquivo chegar. O projeto NÃO tem Preflight, então nada zera o `height` do
+ * atributo: quem passa só a largura leva o logo esticado. Todo call site
+ * resolve a altura no `className` (`h-*`; `h-auto` quando só a largura manda),
+ * e `tests/jsx-ratchets.test.ts` cobra isso. `tests/logo-dimensoes.test.ts`
+ * confere os números contra o cabeçalho do PNG. */
+const LOGOS = {
+  light: { src: logoLight, width: 335, height: 466 },
+  dark: { src: logoDark, width: 335, height: 466 },
+  glyph: { src: logoGlyph, width: 224, height: 274 },
+}
+
 type AppLogoProps = {
   className?: string
   alt?: string
@@ -17,12 +29,12 @@ type AppLogoProps = {
 export function AppLogo({ className, alt = 'Lotus', variant = 'auto' }: AppLogoProps) {
   const theme = useUiStore((s) => s.theme)
 
-  const currentLogo =
+  const { src, width, height } =
     variant === 'glyph'
-      ? logoGlyph
+      ? LOGOS.glyph
       : variant === 'on-dark' || theme === 'dark'
-        ? logoDark
-        : logoLight
+        ? LOGOS.dark
+        : LOGOS.light
 
-  return <img src={currentLogo} alt={alt} className={className} />
+  return <img src={src} width={width} height={height} alt={alt} className={className} />
 }

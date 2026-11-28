@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '@shared/testing/providers'
 import { useSessionStore } from '@shared/stores/sessionStore'
 import { UserMenu } from './UserMenu'
@@ -52,5 +52,37 @@ describe('UserMenu — rótulo do role', () => {
     renderWithProviders(<UserMenu />, { route: '/' })
 
     expect(screen.queryByText(/^roleName\./)).toBeNull()
+  })
+})
+
+/** B-2: o avatar de iniciais virou neutro em `shared/ui`, mas o header é navy
+ * fixo nos dois temas — o cinza de superfície do tema não pousa ali. */
+describe('UserMenu — avatar sobre o shell', () => {
+  it('as iniciais seguem na marca, não no neutro', () => {
+    logadoCom(['superadmin'])
+    const { container } = renderWithProviders(<UserMenu />, { route: '/' })
+
+    const avatar = container.querySelector<HTMLElement>('.p-avatar')!
+    expect(avatar.style.backgroundColor).toContain('--brand')
+    expect(avatar.style.backgroundColor).not.toContain('--surface-200')
+  })
+})
+
+/** A-4: o gatilho abre um popup, e o leitor de tela precisa saber se está aberto. */
+describe('UserMenu — estado do gatilho', () => {
+  it('gatilhos de menu expõem aria-expanded', () => {
+    logadoCom(['superadmin'])
+    renderWithProviders(<UserMenu />, { route: '/' })
+
+    const gatilho = screen.getByRole('button', { name: /Quien Sea/ })
+    expect(gatilho.getAttribute('aria-expanded')).toBe('false')
+    expect(gatilho.getAttribute('aria-haspopup')).toBe('menu')
+
+    fireEvent.click(gatilho)
+
+    expect(gatilho.getAttribute('aria-expanded')).toBe('true')
+    const controla = gatilho.getAttribute('aria-controls')
+    expect(controla).toBeTruthy()
+    expect(document.getElementById(controla!)).not.toBeNull()
   })
 })

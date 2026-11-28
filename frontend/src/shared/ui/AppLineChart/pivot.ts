@@ -14,13 +14,14 @@ export type ChartSeries = {
  * série. É o formato que o Recharts consome, e a única lógica de verdade dos
  * wrappers — por isso mora fora do componente e é o que se testa.
  *
- * Mês sem registro NÃO vira zero: a chave da série some daquela linha, e o
- * Recharts pula o ponto. O backend só projeta o mês que tem registro, e
- * desenhar 0 ali afirmaria "aconteceu nada" onde a verdade é "não se sabe" —
- * a mesma lei que a D7 aplica à seção inteira, aqui dentro da linha.
+ * O backend preenche a janela inteira com zero (D-2 do bloco 66): mês sem
+ * registro chega como `0`, então a linha desenha o vale. Série que o chamador
+ * não pode ver chega nula e SOME do gráfico pela D7 — desenhar 0 ali afirmaria
+ * "aconteceu nada" onde a verdade é "não se sabe". Aqui o pivot não inventa
+ * ponto: se a chave de uma série falta numa linha, o Recharts pula o ponto.
  *
  * A ordenação é do `x` como string: o backend manda `YYYY-MM`
- * (`AnalyticsQuery.php:230`), formato em que a ordem lexicográfica É a
+ * (`AnalyticsQuery::month()`), formato em que a ordem lexicográfica É a
  * cronológica. Ordenar por data exigiria parse e traria fuso para dentro de um
  * módulo que não tem nada com isso.
  */
